@@ -1,0 +1,7 @@
+HPWH_tier 5
+HPWH_type 1
+HPWH_size 83.2
+HPWH_setpoint 149
+length_of_test 1440
+HPWH_location 4
+HPWH_ductingType 2
