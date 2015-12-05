@@ -1,3 +1,9 @@
+#ifndef HPWH_hh
+#define HPWH_hh
+
+#include <string>
+
+
 class HPWH
 {
 public:
@@ -13,7 +19,7 @@ public:
 	 * The return value is 0 for successful init, something else otherwise
 	 */
 
-	int HPWHinit_file(string configFile);
+	int HPWHinit_file(std::string configFile);
 	/* This function will load in a set of parameters from a file
 	 * The file name is the input - there should be at most one set of parameters per file
 	 * This is useful for testing new variations, and for the sort of variability
@@ -60,3 +66,8 @@ private:
 	
 	
 };
+
+
+
+
+#endif
