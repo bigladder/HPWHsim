@@ -28,17 +28,17 @@ int HPWH::HPWHinit_presets(int presetNum)
 		
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
-		setpoint_C = 53;  //about 127 F
+		setpoint_C = 50;
 		for(int i = 0; i < numNodes; i++){
 			tankTemps_C[i] = setpoint_C;
 		}
 		
 		
 		tankVolume_L = 120; 
-		tankUA_kJperHrC = 8; //idk, check on this
+		tankUA_kJperHrC = 0; //idk, check on this
 		
 		doTempDepression = false;
-		tankMixing = true;
+		tankMixing = false;
 
 
 
@@ -91,7 +91,7 @@ int HPWH::HPWHinit_presets(int presetNum)
 
 void HPWH::printTankTemps() const
 {
-	cout << tankTemps_C[0] << ", " << tankTemps_C[1] << ", " << tankTemps_C[2] << ", " << tankTemps_C[3] << ", " << tankTemps_C[4] << ", " << tankTemps_C[5] << ", " << tankTemps_C[6] << ", " << tankTemps_C[7] << ", " << tankTemps_C[8] << ", " << tankTemps_C[9] << ", " << tankTemps_C[10] << ", " << tankTemps_C[11] << endl;
+	cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << endl;
 }
 
 
@@ -123,6 +123,31 @@ updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
 
 
 //do element choice
+for(int i = 0; i < numElements; i++){
+	//if there's a priority element (e.g. upper resistor) and it needs to 
+	//come on, then turn everything off and start it up
+	if(setOfElements[i].isVIP && setOfElements[i].shouldHeat()){
+		allElementsOff();
+		setOfElements[i].engageElement();
+		//stop looking when you've found such an element
+		break;
+	}
+	//is nothing is currently on, then check if something should come on
+	else if(!isHeating){
+		if(setOfElements[i].shouldHeat()){
+			setOfElements[i].engageElement();
+			//engaging and element sets isHeating to true, so this will only trigger once
+		}
+	}
+	//check if anything that is on needs to turn off (generally for lowT cutoffs)
+	else{
+		if(setOfElements[i].cannotContinue){
+			setOfElements[i].disengageElement();
+			setOfElements[i].engageBackup();
+		}
+	}
+
+}	//end loop over elements
 
 
 
@@ -233,6 +258,20 @@ for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 
 }	//end updateTankTemps
 
+void HPWH::allElementsOff()
+{
+for(int i = 0; i < numElements; i++){
+	setOfElements[i].disengageElement();
+	isHeating = false;
+}
+	
+	
+}
+
+
+
+
+
 
 
 HPWH::Element::Element(HPWH *parentInput)
@@ -258,5 +297,24 @@ condensity[11] = cnd12;
 }
 									
 									
+void HPWH::Element::engageElement()
+{
+isEngaged = true;
+hpwh->isHeating = true;
+}							
 									
+void HPWH::Element::disengageElement()
+{
+isEngaged = false;
+}							
 									
+bool HPWH::Element::shouldHeat()
+{
+bool shouldEngage;
+//a temporary setting, for testing
+if(hpwh->tankTemps_C[8] < hpwh->setpoint_C - 20){
+	shouldEngage = true;
+}
+
+return shouldEngage;
+}

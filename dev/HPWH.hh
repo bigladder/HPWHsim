@@ -5,6 +5,7 @@
 using std::string;
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
@@ -88,8 +89,10 @@ private:
 	class Element;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
+	void allElementsOff();
 
-
+	bool isHeating;
+	//is the hpwh currently heating or not?
 	
 	int numElements;
 	//how many elements this HPWH has
@@ -153,6 +156,9 @@ public:
 	void disengageElement();
 	//turn element off, i.e. set isEngaged to FALSE
 	
+	bool shouldHeat() const;
+	//queries the element as to whether or not it should turn on
+	
 	void addHeat();
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
@@ -180,6 +186,8 @@ private:
 
 
 	//these are the element property variables
+	bool isVIP;
+	//is this element a high priority element? (e.g. upper resisitor)
 	
 	double condensity[12];
 	//The condensity function is always composed of 12 nodes.  
