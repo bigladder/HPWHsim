@@ -158,8 +158,11 @@ public:
 	
 	bool shouldHeat() const;
 	//queries the element as to whether or not it should turn on
-	
-	void addHeat();
+	bool cannotContinue() const;
+	//queries the element whether is should shut off (typically lowT shutoff)
+
+
+	void addHeat(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
 	
@@ -175,11 +178,14 @@ private:
 	//these are the element state/output variables
 	bool isEngaged;
 	//is the element running or not	
-	double runtime;
+	
+	
+	//some outputs
+	double runtime_min;
 	//this is the percentage of the step that the element was running
-	double energyInput;
+	double energyInput_kWh;
 	//the energy used by the element
-	double energyOutput;
+	double energyOutput_kWh;
 	//the energy put into the water by the element
 
 
@@ -188,6 +194,8 @@ private:
 	//these are the element property variables
 	bool isVIP;
 	//is this element a high priority element? (e.g. upper resisitor)
+	Element* backupElement;
+	//a pointer to the element which serves as backup to this one - should be NULL if no backup exists
 	
 	double condensity[12];
 	//The condensity function is always composed of 12 nodes.  

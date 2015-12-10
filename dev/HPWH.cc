@@ -110,9 +110,9 @@ energyRemovedFromEnvironment_kWh = 0;
 standbyLosses_kWh = 0;
 
 for(int i = 0; i < numElements; i++){
-	setOfElements[i].runtime = 0;
-	setOfElements[i].energyInput = 0;
-	setOfElements[i].energyOutput = 0;
+	setOfElements[i].runtime_min = 0;
+	setOfElements[i].energyInput_kWh = 0;
+	setOfElements[i].energyOutput_kWh = 0;
 }
 
 
@@ -141,9 +141,13 @@ for(int i = 0; i < numElements; i++){
 	}
 	//check if anything that is on needs to turn off (generally for lowT cutoffs)
 	else{
-		if(setOfElements[i].cannotContinue){
+		if(setOfElements[i].cannotContinue()){
 			setOfElements[i].disengageElement();
-			setOfElements[i].engageBackup();
+			//check if the backup element would have to shut off too
+			if(!setOfElements[i].backupElement->cannotContinue()){
+				//and if not, go ahead and turn it on 
+				setOfElements[i].backupElement->engageElement();
+			}
 		}
 	}
 
@@ -275,7 +279,7 @@ for(int i = 0; i < numElements; i++){
 
 
 HPWH::Element::Element(HPWH *parentInput)
-	:hpwh(parentInput), isEngaged(false)
+	:hpwh(parentInput), isEngaged(false), backupElement(NULL)
 {}
 
 void HPWH::Element::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
@@ -302,13 +306,15 @@ void HPWH::Element::engageElement()
 isEngaged = true;
 hpwh->isHeating = true;
 }							
+
 									
 void HPWH::Element::disengageElement()
 {
 isEngaged = false;
 }							
+
 									
-bool HPWH::Element::shouldHeat()
+bool HPWH::Element::shouldHeat() const
 {
 bool shouldEngage;
 //a temporary setting, for testing
@@ -317,4 +323,15 @@ if(hpwh->tankTemps_C[8] < hpwh->setpoint_C - 20){
 }
 
 return shouldEngage;
+}
+
+
+bool HPWH::Element::cannotContinue() const
+{
+return false;
+}
+
+
+void HPWH::Element::addHeat(double externalT_C, double minutesPerStep)
+{
 }
