@@ -4,10 +4,11 @@
 #include <string>
 using std::string;
 #include <cmath>
-
+#include <iostream>
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
+
 
 
 class HPWH
@@ -15,6 +16,7 @@ class HPWH
 public:
 	
 	HPWH();  //default constructor
+	~HPWH(); //destructor - will be defined
 	
 	int HPWHinit_presets(int presetNum);
 	/* This function will load in a set of parameters that are hardcoded in this function - 
@@ -60,6 +62,8 @@ public:
 	//get the number of nodes
 	double* getTankTemps() const;
 	// get the array of tank temperatures
+	void printTankTemps() const;
+
 	
 	int getNumElements() const;
 	//get the number of elements
@@ -97,8 +101,11 @@ private:
 	double tankVolume_L;
 	//the volume in liters of the tank
 	double tankUA_kJperHrC;
+	//the UA of the tank, in metric units
 	
 	
+	double setpoint_C;
+	//the setpoint of the tank
 	double *tankTemps_C;
 	//an array holding the temperature of each node - 0 is the bottom node, numNodes is the top
 	
@@ -115,6 +122,7 @@ private:
 	
 	//special variables for adding abilities
 	bool tankMixing;
+	//whether or not the bottom third of the tank should mix during draws
 	
 	bool doTempDepression;
 	//whether the HPWH should track an alternate ambient temperature and 

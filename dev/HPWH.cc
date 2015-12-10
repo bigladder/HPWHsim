@@ -1,9 +1,25 @@
 #include "HPWH.hh"
 
-using namespace std;
+
+#define F_TO_C(T) ((T-32.0)*5.0/9.0)
+#define GAL_TO_L(GAL) (GAL*3.78541)
+
+using std::cout;
+using std::endl;
 
 HPWH::HPWH()
 {}
+
+HPWH::~HPWH()
+{
+delete[] tankTemps_C;
+
+for(int i = 0; i < numElements; i++){
+	delete[] setOfElements;
+}
+	
+}
+
 
 int HPWH::HPWHinit_presets(int presetNum)
 {
@@ -11,10 +27,21 @@ int HPWH::HPWHinit_presets(int presetNum)
 	if(presetNum == 1){
 		
 		numNodes = 12;
-		tankVolume_L = 189.271; //50 gallons
+		tankTemps_C = new double[numNodes];
+		setpoint_C = 53;  //about 127 F
+		for(int i = 0; i < numNodes; i++){
+			tankTemps_C[i] = setpoint_C;
+		}
+		
+		
+		tankVolume_L = 120; 
+		tankUA_kJperHrC = 8; //idk, check on this
 		
 		doTempDepression = false;
-		
+		tankMixing = true;
+
+
+
 		numElements = 1;
 		setOfElements = new Element[numElements];
 
@@ -61,6 +88,11 @@ int HPWH::HPWHinit_presets(int presetNum)
 	
 }  //end HPWHinit_presets
 
+
+void HPWH::printTankTemps() const
+{
+	cout << tankTemps_C[0] << ", " << tankTemps_C[1] << ", " << tankTemps_C[2] << ", " << tankTemps_C[3] << ", " << tankTemps_C[4] << ", " << tankTemps_C[5] << ", " << tankTemps_C[6] << ", " << tankTemps_C[7] << ", " << tankTemps_C[8] << ", " << tankTemps_C[9] << ", " << tankTemps_C[10] << ", " << tankTemps_C[11] << endl;
+}
 
 
 
@@ -203,11 +235,28 @@ for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 
 
 
-
-
-
-
 HPWH::Element::Element(HPWH *parentInput)
 	:hpwh(parentInput), isEngaged(false)
 {}
 
+void HPWH::Element::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
+									double cnd5, double cnd6, double cnd7, double cnd8, 
+									double cnd9, double cnd10, double cnd11, double cnd12)
+{
+condensity[0] = cnd1;	
+condensity[1] = cnd2;	
+condensity[2] = cnd3;	
+condensity[3] = cnd4;	
+condensity[4] = cnd5;	
+condensity[5] = cnd6;	
+condensity[6] = cnd7;	
+condensity[7] = cnd8;	
+condensity[8] = cnd9;	
+condensity[9] = cnd10;	
+condensity[10] = cnd11;	
+condensity[11] = cnd12;	
+}
+									
+									
+									
+									
