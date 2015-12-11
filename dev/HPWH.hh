@@ -69,41 +69,41 @@ public:
 	void printTankTemps() const;
 
 	
-	int getNumElements() const;
-	//get the number of elements
-	double* getElementsEnergyInput() const;
-	//get an array of the energy input to each element, in order of element priority
-	double* getElementsEnergyOutput() const;
-	//get an array of the energy output to each element, in order of element priority
-	double* getElementsRunTime() const;
-	//get an array of the run time for each element, in order of element priority - 
-	//this may sum to more than 1 time step for concurrently running elements
+	int getNumHeatSources() const;
+	//get the number of heat sources
+	double* getHeatSourcesEnergyInput() const;
+	//get an array of the energy input to each heat source, in order of heat source priority
+	double* getHeatSourcesEnergyOutput() const;
+	//get an array of the energy output to each heat source, in order of heat source priority
+	double* getHeatSourcesRunTime() const;
+	//get an array of the run time for each heat source, in order of heat source priority - 
+	//this may sum to more than 1 time step for concurrently running heat sources
 	
 	double getOutletTemp(string units) const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	double getEnergyRemovedFromEnvironment(string units) const;
-	//get the total energy removed from the environment by all elements (not net energy - does not include standby)
+	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
 	double getStandbyLosses(string units) const;
 	//get the amount of heat lost through the tank
 	 
 	 
 	 
 private:	
-	class Element;
+	class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
-	bool areAllElementsOff();
-	//test if all the elements are off
-	void turnAllElementsOff();
-	//disengage each element
+	bool areAllHeatSourcesOff();
+	//test if all the heat sources are off
+	void turnAllHeatSourcesOff();
+	//disengage each heat source
 	
 	bool isHeating;
 	//is the hpwh currently heating or not?
 	
-	int numElements;
-	//how many elements this HPWH has
-	Element *setOfElements;
-	//an array containing the Elements, in order of priority
+	int numHeatSources;
+	//how many heat sources this HPWH has
+	HeatSource *setOfSources;
+	//an array containing the HeatSources, in order of priority
 	
 	int numNodes;
 	//the number of nodes in the tank
@@ -147,29 +147,29 @@ private:
 
 
 
-class HPWH::Element
+class HPWH::HeatSource
 {
 friend class HPWH;
 public:
-	Element() {};
-	//default constructor, does not create a useful Element
+	HeatSource() {};
+	//default constructor, does not create a useful HeatSource
 	
-	Element(HPWH *parentHPWH);
-	//constructor assigns a pointer to the hpwh creating this element 
+	HeatSource(HPWH *parentHPWH);
+	//constructor assigns a pointer to the hpwh creating this heat source 
 	
 	bool isEngaged() const;
-	//return whether or not the element is engaged
-	void engageElement();
-	//turn element on, i.e. set isEngaged to TRUE
-	void disengageElement();
-	//turn element off, i.e. set isEngaged to FALSE
+	//return whether or not the heat source is engaged
+	void engageHeatSource();
+	//turn heat source on, i.e. set isEngaged to TRUE
+	void disengageHeatSource();
+	//turn heat source off, i.e. set isEngaged to FALSE
 	
 	bool shouldHeat() const;
-	//queries the element as to whether or not it should turn on
+	//queries the heat source as to whether or not it should turn on
 	bool shutsOff() const;
-	//queries the element whether should shut off (typically lowT shutoff)
+	//queries the heat source whether should shut off (typically lowT shutoff)
 
-	void addHeat(double externalT_C, double minutesPerStep);
+	void addHeat_temp(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
 	
@@ -180,36 +180,36 @@ public:
 	
 private:
 	HPWH *hpwh;
-	//the creator of the element, necessary to access HPWH variables
+	//the creator of the heat source, necessary to access HPWH variables
 	
-	//these are the element state/output variables
+	//these are the heat source state/output variables
 	bool isOn;
-	//is the element running or not	
+	//is the heat source running or not	
 	
 	
 	//some outputs
 	double runtime_min;
-	//this is the percentage of the step that the element was running
+	//this is the percentage of the step that the heat source was running
 	double energyInput_kWh;
-	//the energy used by the element
+	//the energy used by the heat source
 	double energyOutput_kWh;
-	//the energy put into the water by the element
+	//the energy put into the water by the heat source
 
 
 
 
-	//these are the element property variables
+	//these are the heat source property variables
 	bool isVIP;
-	//is this element a high priority element? (e.g. upper resisitor)
-	Element* backupElement;
-	//a pointer to the element which serves as backup to this one - should be NULL if no backup exists
+	//is this heat source a high priority heat source? (e.g. upper resisitor)
+	HeatSource* backupHeatSource;
+	//a pointer to the heat source which serves as backup to this one - should be NULL if no backup exists
 	
 	double condensity[12];
 	//The condensity function is always composed of 12 nodes.  
 	//It represents the location within the tank where heat will be distributed,
 	//and it also is used to calculate the condenser temperature for inputPower/COP calcs.
 	//It is conceptually linked to the way condenser coils are wrapped around 
-	//(or within) the tank, however a resistance element can also be simulated
+	//(or within) the tank, however a resistance heat source can also be simulated
 	//by specifying the entire condensity in one node.
 	
 	double T1, T2;
@@ -227,17 +227,17 @@ private:
 
 
 	double lowTlockout;
-	//the lowest ambient temperature at which this element will work
+	//the lowest ambient temperature at which this heat source will work
 	double hysteresis;
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
 
 	bool depressesTemperature;
 	//heat pumps can depress the temperature of their space in certain instances - 
-	//whether or not this occurs is a bool in HPWH, but an element must 
+	//whether or not this occurs is a bool in HPWH, but an heat source must 
 	//know if it is capable of contributing to this effect or not
 
 
-};  //end of Element class
+};  //end of HeatSource class
 
 
 

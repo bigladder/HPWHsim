@@ -15,7 +15,7 @@ HPWH::~HPWH()
 {
 delete[] tankTemps_C;
 
-delete[] setOfElements;	
+delete[] setOfSources;	
 
 }
 
@@ -40,11 +40,11 @@ int HPWH::HPWHinit_presets(int presetNum)
 		tankMixing = false;
 
 
-		numElements = 2;
-		setOfElements = new Element[numElements];
+		numHeatSources = 2;
+		setOfSources = new HeatSource[numHeatSources];
 
 		//set up a resistive element at the bottom, 4500 kW
-		Element resistiveElement(this);
+		HeatSource resistiveElement(this);
 		
 		resistiveElement.isOn = false;
 		resistiveElement.isVIP = false;
@@ -76,7 +76,7 @@ int HPWH::HPWHinit_presets(int presetNum)
 		resistiveElement.depressesTemperature = false;  //no temp depression
 
 		//set up a resistive element at the top, 4500 kW
-		Element resistiveElementTop(this);
+		HeatSource resistiveElementTop(this);
 		
 		resistiveElementTop.isOn = false;
 		resistiveElementTop.isVIP = true;
@@ -108,9 +108,9 @@ int HPWH::HPWHinit_presets(int presetNum)
 		resistiveElementTop.depressesTemperature = false;  //no temp depression
 
 		
-		//assign elements into array in order of priority
-		setOfElements[0] = resistiveElementTop;
-		setOfElements[1] = resistiveElement;
+		//assign heat sources into array in order of priority
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElement;
 		
 	}
 	
@@ -138,10 +138,10 @@ outletTemp_C = 0;
 energyRemovedFromEnvironment_kWh = 0;
 standbyLosses_kWh = 0;
 
-for(int i = 0; i < numElements; i++){
-	setOfElements[i].runtime_min = 0;
-	setOfElements[i].energyInput_kWh = 0;
-	setOfElements[i].energyOutput_kWh = 0;
+for(int i = 0; i < numHeatSources; i++){
+	setOfSources[i].runtime_min = 0;
+	setOfSources[i].energyInput_kWh = 0;
+	setOfSources[i].energyOutput_kWh = 0;
 }
 
 
@@ -149,36 +149,36 @@ for(int i = 0; i < numElements; i++){
 updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
 
 
-//do element choice
-for(int i = 0; i < numElements; i++){
-	//if there's a priority element (e.g. upper resistor) and it needs to 
+//do HeatSource choice
+for(int i = 0; i < numHeatSources; i++){
+	//if there's a priority HeatSource (e.g. upper resistor) and it needs to 
 	//come on, then turn everything off and start it up
-	if(setOfElements[i].isVIP && setOfElements[i].shouldHeat()){
-		turnAllElementsOff();
-		setOfElements[i].engageElement();
-		//stop looking when you've found such an element
+	if(setOfSources[i].isVIP && setOfSources[i].shouldHeat()){
+		turnAllHeatSourcesOff();
+		setOfSources[i].engageHeatSource();
+		//stop looking when you've found such a HeatSource
 		break;
 	}
 	//is nothing is currently on, then check if something should come on
 	else if(!isHeating){
-		if(setOfElements[i].shouldHeat()){
-			setOfElements[i].engageElement();
-			//engaging and element sets isHeating to true, so this will only trigger once
+		if(setOfSources[i].shouldHeat()){
+			setOfSources[i].engageHeatSource();
+			//engaging a heat source sets isHeating to true, so this will only trigger once
 		}
 	}
 	//check if anything that is on needs to turn off (generally for lowT cutoffs)
 	else{
-		if(setOfElements[i].isEngaged() && setOfElements[i].shutsOff()){
-			setOfElements[i].disengageElement();
-			//check if the backup element would have to shut off too
-			if(setOfElements[i].backupElement != NULL && setOfElements[i].backupElement->shutsOff() != true){
+		if(setOfSources[i].isEngaged() && setOfSources[i].shutsOff()){
+			setOfSources[i].disengageHeatSource();
+			//check if the backup heat source would have to shut off too
+			if(setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true){
 				//and if not, go ahead and turn it on 
-				setOfElements[i].backupElement->engageElement();
+				setOfSources[i].backupHeatSource->engageHeatSource();
 			}
 		}
 	}
 
-}	//end loop over elements
+}	//end loop over heat sources
 
 
 
@@ -187,25 +187,25 @@ for(int i = 0; i < numElements; i++){
 
 
 //do heating logic
-for(int i = 0; i < numElements; i++){
-	//going through in order, check if the element is on
-	if(setOfElements[i].isEngaged()){
+for(int i = 0; i < numHeatSources; i++){
+	//going through in order, check if the heat source is on
+	if(setOfSources[i].isEngaged()){
 		//add heat
-		setOfElements[i].addHeat_temp(externalT_C, minutesPerStep);
+		setOfSources[i].addHeat_temp(externalT_C, minutesPerStep);
 		//if it finished early
-		if(setOfElements[i].runtime_min < minutesPerStep){
+		if(setOfSources[i].runtime_min < minutesPerStep){
 			//turn it off
-			setOfElements[i].disengageElement();
-			//and if there's another element in the list, that can come on
-			if(numElements > i+1 && setOfElements[i + 1].shutsOff() == false){
-				setOfElements[i + 1].engageElement();
+			setOfSources[i].disengageHeatSource();
+			//and if there's another heat source in the list, that can come on
+			if(numHeatSources > i+1 && setOfSources[i + 1].shutsOff() == false){
+				setOfSources[i + 1].engageHeatSource();
 			}
 		}
 	}
 }
 
 
-if(areAllElementsOff()){
+if(areAllHeatSourcesOff()){
 	isHeating = false;
 }
 
@@ -310,19 +310,19 @@ for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 
 }	//end updateTankTemps
 
-void HPWH::turnAllElementsOff()
+void HPWH::turnAllHeatSourcesOff()
 {
-for(int i = 0; i < numElements; i++){
-	setOfElements[i].disengageElement();
+for(int i = 0; i < numHeatSources; i++){
+	setOfSources[i].disengageHeatSource();
 	isHeating = false;
 }
 }
 
-bool HPWH::areAllElementsOff()
+bool HPWH::areAllHeatSourcesOff()
 {
 bool allOff = true;
-for(int i = 0; i < numElements; i++){
-	if(setOfElements[i].isEngaged() == true){
+for(int i = 0; i < numHeatSources; i++){
+	if(setOfSources[i].isEngaged() == true){
 		allOff = false;
 	}
 }
@@ -335,11 +335,11 @@ return allOff;
 
 
 
-HPWH::Element::Element(HPWH *parentInput)
-	:hpwh(parentInput), isOn(false), backupElement(NULL)
+HPWH::HeatSource::HeatSource(HPWH *parentInput)
+	:hpwh(parentInput), isOn(false), backupHeatSource(NULL)
 {}
 
-void HPWH::Element::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
+void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
 									double cnd5, double cnd6, double cnd7, double cnd8, 
 									double cnd9, double cnd10, double cnd11, double cnd12)
 {
@@ -358,26 +358,26 @@ condensity[11] = cnd12;
 }
 									
 
-bool HPWH::Element::isEngaged() const
+bool HPWH::HeatSource::isEngaged() const
 {
 return isOn;
 }
 
 
-void HPWH::Element::engageElement()
+void HPWH::HeatSource::engageHeatSource()
 {
 isOn = true;
 hpwh->isHeating = true;
 }							
 
 									
-void HPWH::Element::disengageElement()
+void HPWH::HeatSource::disengageHeatSource()
 {
 isOn = false;
 }							
 
 									
-bool HPWH::Element::shouldHeat() const
+bool HPWH::HeatSource::shouldHeat() const
 {
 bool shouldEngage = false;
 //a temporary setting, for testing
@@ -389,13 +389,13 @@ return shouldEngage;
 }
 
 
-bool HPWH::Element::shutsOff() const
+bool HPWH::HeatSource::shutsOff() const
 {
 return false;
 }
 
 
-void HPWH::Element::addHeat_temp(double externalT_C, double minutesPerStep)
+void HPWH::HeatSource::addHeat_temp(double externalT_C, double minutesPerStep)
 {
 cout << "isHeating: " << hpwh->isHeating <<  endl;
 //a temporary function, for testing
