@@ -7,6 +7,9 @@ using std::string;
 #include <iostream>
 #include <iomanip>
 
+//for printf
+#include <cstdio>
+
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
 
@@ -89,8 +92,11 @@ private:
 	class Element;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
-	void allElementsOff();
-
+	bool areAllElementsOff();
+	//test if all the elements are off
+	void turnAllElementsOff();
+	//disengage each element
+	
 	bool isHeating;
 	//is the hpwh currently heating or not?
 	
@@ -151,6 +157,8 @@ public:
 	Element(HPWH *parentHPWH);
 	//constructor assigns a pointer to the hpwh creating this element 
 	
+	bool isEngaged() const;
+	//return whether or not the element is engaged
 	void engageElement();
 	//turn element on, i.e. set isEngaged to TRUE
 	void disengageElement();
@@ -158,9 +166,8 @@ public:
 	
 	bool shouldHeat() const;
 	//queries the element as to whether or not it should turn on
-	bool cannotContinue() const;
-	//queries the element whether is should shut off (typically lowT shutoff)
-
+	bool shutsOff() const;
+	//queries the element whether should shut off (typically lowT shutoff)
 
 	void addHeat(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
@@ -176,7 +183,7 @@ private:
 	//the creator of the element, necessary to access HPWH variables
 	
 	//these are the element state/output variables
-	bool isEngaged;
+	bool isOn;
 	//is the element running or not	
 	
 	

@@ -7,17 +7,16 @@
 using std::cout;
 using std::endl;
 
-HPWH::HPWH()
+HPWH::HPWH() :
+	isHeating(false)
 {}
 
 HPWH::~HPWH()
 {
 delete[] tankTemps_C;
 
-for(int i = 0; i < numElements; i++){
-	delete[] setOfElements;
-}
-	
+delete[] setOfElements;	
+
 }
 
 
@@ -41,16 +40,16 @@ int HPWH::HPWHinit_presets(int presetNum)
 		tankMixing = false;
 
 
-
-		numElements = 1;
+		numElements = 2;
 		setOfElements = new Element[numElements];
 
 		//set up a resistive element at the bottom, 4500 kW
 		Element resistiveElement(this);
 		
-		resistiveElement.isEngaged = false;
-		
-		resistiveElement.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+		resistiveElement.isOn = false;
+		resistiveElement.isVIP = false;
+
+		resistiveElement.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 				
 		resistiveElement.T1 = 50;
 		resistiveElement.T2 = 67;
@@ -76,9 +75,42 @@ int HPWH::HPWHinit_presets(int presetNum)
 
 		resistiveElement.depressesTemperature = false;  //no temp depression
 
+		//set up a resistive element at the top, 4500 kW
+		Element resistiveElementTop(this);
+		
+		resistiveElementTop.isOn = false;
+		resistiveElementTop.isVIP = true;
+
+		resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+				
+		resistiveElementTop.T1 = 50;
+		resistiveElementTop.T2 = 67;
+		
+		resistiveElementTop.inputPower_T1_constant = 4500;
+		resistiveElementTop.inputPower_T1_linear = 0;
+		resistiveElementTop.inputPower_T1_quadratic = 0;
+		
+		resistiveElementTop.inputPower_T2_constant = 4500;
+		resistiveElementTop.inputPower_T2_linear = 0;
+		resistiveElementTop.inputPower_T2_quadratic = 0;
+		
+		resistiveElementTop.COP_T1_constant = 1;
+		resistiveElementTop.COP_T1_linear = 0;
+		resistiveElementTop.COP_T1_quadratic = 0;
+		
+		resistiveElementTop.COP_T2_constant = 1;
+		resistiveElementTop.COP_T2_linear = 0;
+		resistiveElementTop.COP_T2_quadratic = 0;
+		
+		resistiveElementTop.lowTlockout = -100;	//no lockout
+		resistiveElementTop.hysteresis = 0;	//no hysteresis
+
+		resistiveElementTop.depressesTemperature = false;  //no temp depression
+
 		
 		//assign elements into array in order of priority
-		setOfElements[0] = resistiveElement;
+		setOfElements[0] = resistiveElementTop;
+		setOfElements[1] = resistiveElement;
 		
 	}
 	
@@ -101,9 +133,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 					double DRstatus, double minutesPerStep)
 {
 
-
-
-
 //reset the output variables
 outletTemp_C = 0;
 energyRemovedFromEnvironment_kWh = 0;
@@ -116,10 +145,8 @@ for(int i = 0; i < numElements; i++){
 }
 
 
-
 //process draws and standby losses
 updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
-
 
 
 //do element choice
@@ -127,7 +154,7 @@ for(int i = 0; i < numElements; i++){
 	//if there's a priority element (e.g. upper resistor) and it needs to 
 	//come on, then turn everything off and start it up
 	if(setOfElements[i].isVIP && setOfElements[i].shouldHeat()){
-		allElementsOff();
+		turnAllElementsOff();
 		setOfElements[i].engageElement();
 		//stop looking when you've found such an element
 		break;
@@ -141,10 +168,10 @@ for(int i = 0; i < numElements; i++){
 	}
 	//check if anything that is on needs to turn off (generally for lowT cutoffs)
 	else{
-		if(setOfElements[i].cannotContinue()){
+		if(setOfElements[i].isEngaged() && setOfElements[i].shutsOff()){
 			setOfElements[i].disengageElement();
 			//check if the backup element would have to shut off too
-			if(!setOfElements[i].backupElement->cannotContinue()){
+			if(setOfElements[i].backupElement != NULL && setOfElements[i].backupElement->shutsOff() != true){
 				//and if not, go ahead and turn it on 
 				setOfElements[i].backupElement->engageElement();
 			}
@@ -160,6 +187,27 @@ for(int i = 0; i < numElements; i++){
 
 
 //do heating logic
+for(int i = 0; i < numElements; i++){
+	//going through in order, check if the element is on
+	if(setOfElements[i].isEngaged()){
+		//add heat
+		setOfElements[i].addHeat(externalT_C, minutesPerStep);
+		//if it finished early
+		if(setOfElements[i].runtime_min < minutesPerStep){
+			//turn it off
+			setOfElements[i].disengageElement();
+			//and if there's another element in the list, that can come on
+			if(numElements > i+1 && setOfElements[i + 1].shutsOff() == false){
+				setOfElements[i + 1].engageElement();
+			}
+		}
+	}
+}
+
+
+if(areAllElementsOff()){
+	isHeating = false;
+}
 
 
 
@@ -262,14 +310,23 @@ for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 
 }	//end updateTankTemps
 
-void HPWH::allElementsOff()
+void HPWH::turnAllElementsOff()
 {
 for(int i = 0; i < numElements; i++){
 	setOfElements[i].disengageElement();
 	isHeating = false;
 }
-	
-	
+}
+
+bool HPWH::areAllElementsOff()
+{
+bool allOff = true;
+for(int i = 0; i < numElements; i++){
+	if(setOfElements[i].isEngaged() == true){
+		allOff = false;
+	}
+}
+return allOff;
 }
 
 
@@ -279,7 +336,7 @@ for(int i = 0; i < numElements; i++){
 
 
 HPWH::Element::Element(HPWH *parentInput)
-	:hpwh(parentInput), isEngaged(false), backupElement(NULL)
+	:hpwh(parentInput), isOn(false), backupElement(NULL)
 {}
 
 void HPWH::Element::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
@@ -300,25 +357,31 @@ condensity[10] = cnd11;
 condensity[11] = cnd12;	
 }
 									
-									
+
+bool HPWH::Element::isEngaged() const
+{
+return isOn;
+}
+
+
 void HPWH::Element::engageElement()
 {
-isEngaged = true;
+isOn = true;
 hpwh->isHeating = true;
 }							
 
 									
 void HPWH::Element::disengageElement()
 {
-isEngaged = false;
+isOn = false;
 }							
 
 									
 bool HPWH::Element::shouldHeat() const
 {
-bool shouldEngage;
+bool shouldEngage = false;
 //a temporary setting, for testing
-if(hpwh->tankTemps_C[8] < hpwh->setpoint_C - 20){
+if(hpwh->tankTemps_C[4] < hpwh->setpoint_C - 20){
 	shouldEngage = true;
 }
 
@@ -326,7 +389,7 @@ return shouldEngage;
 }
 
 
-bool HPWH::Element::cannotContinue() const
+bool HPWH::Element::shutsOff() const
 {
 return false;
 }
@@ -334,4 +397,32 @@ return false;
 
 void HPWH::Element::addHeat(double externalT_C, double minutesPerStep)
 {
+cout << "isHeating: " << hpwh->isHeating <<  endl;
+//a temporary function, for testing
+int lowerBound = 0;
+for(int i = 0; i < hpwh->numNodes; i++){
+	if(condensity[i] == 1){
+		lowerBound = i;
+		}
+}
+
+
+for(int i = lowerBound; i < hpwh->numNodes; i++){
+	if(hpwh->tankTemps_C[i] < hpwh->setpoint_C){
+		if(hpwh->tankTemps_C[i] + 2.0 > hpwh->setpoint_C){
+			hpwh->tankTemps_C[i] = hpwh->setpoint_C;
+			if(i == 0){
+				runtime_min = 0.5*minutesPerStep;
+			}
+			
+		
+		}
+		else{
+			hpwh->tankTemps_C[i] += 2.0;
+			runtime_min = minutesPerStep;
+		}
+	}
+}
+
+
 }
