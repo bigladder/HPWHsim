@@ -191,7 +191,7 @@ for(int i = 0; i < numElements; i++){
 	//going through in order, check if the element is on
 	if(setOfElements[i].isEngaged()){
 		//add heat
-		setOfElements[i].addHeat(externalT_C, minutesPerStep);
+		setOfElements[i].addHeat_temp(externalT_C, minutesPerStep);
 		//if it finished early
 		if(setOfElements[i].runtime_min < minutesPerStep){
 			//turn it off
@@ -395,7 +395,7 @@ return false;
 }
 
 
-void HPWH::Element::addHeat(double externalT_C, double minutesPerStep)
+void HPWH::Element::addHeat_temp(double externalT_C, double minutesPerStep)
 {
 cout << "isHeating: " << hpwh->isHeating <<  endl;
 //a temporary function, for testing
