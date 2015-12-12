@@ -2,6 +2,8 @@
 
 
 #define F_TO_C(T) ((T-32.0)*5.0/9.0)
+#define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
+#define KWH_TO_BTU(kwh) (3412.14 * kwh)
 #define GAL_TO_L(GAL) (GAL*3.78541)
 
 using std::cout;
@@ -145,8 +147,11 @@ for(int i = 0; i < numHeatSources; i++){
 }
 
 
+
+
 //process draws and standby losses
 updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
+
 
 
 //do HeatSource choice
@@ -182,7 +187,24 @@ for(int i = 0; i < numHeatSources; i++){
 
 
 
+
 //change the things according to DR schedule
+if(DRstatus == 0){
+	//force off
+	turnAllHeatSourcesOff();
+	isHeating = false;
+}
+else if(DRstatus == 1){
+	//do nothing
+}
+else if(DRstatus == 2){
+	//if nothing else is on, force the first heat source on
+	if(areAllHeatSourcesOff() == true){
+		setOfSources[0].engageHeatSource();
+	}
+}
+
+
 
 
 
@@ -196,25 +218,32 @@ for(int i = 0; i < numHeatSources; i++){
 		if(setOfSources[i].runtime_min < minutesPerStep){
 			//turn it off
 			setOfSources[i].disengageHeatSource();
-			//and if there's another heat source in the list, that can come on
+			//and if there's another heat source in the list, that's able to come on,
 			if(numHeatSources > i+1 && setOfSources[i + 1].shutsOff() == false){
+				//turn it on
 				setOfSources[i + 1].engageHeatSource();
 			}
 		}
 	}
 }
 
-
-if(areAllHeatSourcesOff()){
+if(areAllHeatSourcesOff() == true){
 	isHeating = false;
 }
 
 
 
 
+
+
 //settle outputs
 
+//outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
 
+
+//energyRemovedFromEnvironment_kWh;
+
+	
 
 
 
@@ -310,13 +339,15 @@ for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 
 }	//end updateTankTemps
 
+
 void HPWH::turnAllHeatSourcesOff()
 {
 for(int i = 0; i < numHeatSources; i++){
 	setOfSources[i].disengageHeatSource();
-	isHeating = false;
 }
+isHeating = false;
 }
+
 
 bool HPWH::areAllHeatSourcesOff()
 {
@@ -330,7 +361,56 @@ return allOff;
 }
 
 
+double HPWH::getOutletTemp(string units) const
+{
+double returnVal = 0;
 
+if(units == "C"){
+	returnVal = outletTemp_C;
+}
+else if(units == "F"){
+	returnVal = C_TO_F(outletTemp_C);
+	}
+else{
+	cout << "Incorrect unit specification for getOutletTemp" << endl;
+	exit(1);
+}
+return returnVal;
+}
+
+double HPWH::getEnergyRemovedFromEnvironment(string units) const
+{
+double returnVal = 0;
+
+if(units == "kWh"){
+	returnVal = energyRemovedFromEnvironment_kWh;
+}
+else if(units == "btu"){
+	returnVal = KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
+	}
+else{
+	cout << "Incorrect unit specification for getEnergyRemovedFromEnvironment" << endl;
+	exit(1);
+}
+return returnVal;
+}
+
+double HPWH::getStandbyLosses(string units) const
+{
+double returnVal = 0;
+
+if(units == "kWh"){
+	returnVal = standbyLosses_kWh;
+}
+else if(units == "btu"){
+	returnVal = KWH_TO_BTU(standbyLosses_kWh);
+	}
+else{
+	cout << "Incorrect unit specification for getStandbyLosses" << endl;
+	exit(1);
+}
+return returnVal;
+}
 
 
 

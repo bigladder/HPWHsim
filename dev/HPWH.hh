@@ -9,6 +9,9 @@ using std::string;
 
 //for printf
 #include <cstdio>
+//for exit
+#include <cstdlib>
+
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
@@ -79,13 +82,16 @@ public:
 	//get an array of the run time for each heat source, in order of heat source priority - 
 	//this may sum to more than 1 time step for concurrently running heat sources
 	
-	double getOutletTemp(string units) const;
+	double getOutletTemp(string units = "C") const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
-	double getEnergyRemovedFromEnvironment(string units) const;
+	//the input is a string containing the desired units, F or C
+	double getEnergyRemovedFromEnvironment(string units = "kWh") const;
 	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
-	double getStandbyLosses(string units) const;
+	//the input is a string containing the desired units, kWh or btu
+	double getStandbyLosses(string units = "kWh") const;
 	//get the amount of heat lost through the tank
-	 
+ 	//the input is a string containing the desired units, kWh or btu
+
 	 
 	 
 private:	
