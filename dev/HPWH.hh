@@ -7,11 +7,10 @@ using std::string;
 #include <iostream>
 #include <iomanip>
 
-//for printf
 #include <cstdio>
 //for exit
 #include <cstdlib>
-
+#include <vector>
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
@@ -98,10 +97,14 @@ private:
 	class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
-	bool areAllHeatSourcesOff();
+	bool areAllHeatSourcesOff() const;
 	//test if all the heat sources are off
 	void turnAllHeatSourcesOff();
 	//disengage each heat source
+	
+	double topThirdAvg_C() const;
+	double bottomThirdAvg_C() const;
+	//functions to calculate what the temperature in a portion of the tank is
 	
 	bool isHeating;
 	//is the hpwh currently heating or not?
@@ -184,6 +187,8 @@ public:
 						double cnd9, double cnd10, double cnd11, double cnd12);
 	//a function to set the condensity values, it pretties up the init funcs.
 	
+	
+	
 private:
 	HPWH *hpwh;
 	//the creator of the heat source, necessary to access HPWH variables
@@ -232,8 +237,23 @@ private:
 	//defining the COP as a function of the condenser temperature
 
 
-	double lowTlockout;
-	//the lowest ambient temperature at which this heat source will work
+	
+	//the heating logic instructions come in pairs - a string to select
+	//which logic function to use, and a double to give the setpoint
+	//for that function
+	struct heatingLogicPair{
+		string selector;
+		double decisionPoint_C;
+		//and a constructor to allow creating anonymous structs for easy assignment
+		heatingLogicPair(string x, double y) : selector(x), decisionPoint_C(y) {};
+		};
+	
+	//a vector to hold the set of logical choices for turning this element on
+	std::vector<heatingLogicPair> turnOnLogicSet;
+	//a vector to hold the set of logical choices that can cause an element to turn off
+	std::vector<heatingLogicPair> shutOffLogicSet;
+
+
 	double hysteresis;
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
 

@@ -36,7 +36,7 @@ int HPWH::HPWHinit_presets(int presetNum)
 		
 		
 		tankVolume_L = 120; 
-		tankUA_kJperHrC = 0; //idk, check on this
+		tankUA_kJperHrC = 0; //0 to turn off
 		
 		doTempDepression = false;
 		tankMixing = false;
@@ -46,36 +46,41 @@ int HPWH::HPWHinit_presets(int presetNum)
 		setOfSources = new HeatSource[numHeatSources];
 
 		//set up a resistive element at the bottom, 4500 kW
-		HeatSource resistiveElement(this);
+		HeatSource resistiveElementBottom(this);
 		
-		resistiveElement.isOn = false;
-		resistiveElement.isVIP = false;
+		resistiveElementBottom.isOn = false;
+		resistiveElementBottom.isVIP = false;
 
-		resistiveElement.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 				
-		resistiveElement.T1 = 50;
-		resistiveElement.T2 = 67;
+		resistiveElementBottom.T1 = 50;
+		resistiveElementBottom.T2 = 67;
 		
-		resistiveElement.inputPower_T1_constant = 4500;
-		resistiveElement.inputPower_T1_linear = 0;
-		resistiveElement.inputPower_T1_quadratic = 0;
+		resistiveElementBottom.inputPower_T1_constant = 4500;
+		resistiveElementBottom.inputPower_T1_linear = 0;
+		resistiveElementBottom.inputPower_T1_quadratic = 0;
 		
-		resistiveElement.inputPower_T2_constant = 4500;
-		resistiveElement.inputPower_T2_linear = 0;
-		resistiveElement.inputPower_T2_quadratic = 0;
+		resistiveElementBottom.inputPower_T2_constant = 4500;
+		resistiveElementBottom.inputPower_T2_linear = 0;
+		resistiveElementBottom.inputPower_T2_quadratic = 0;
 		
-		resistiveElement.COP_T1_constant = 1;
-		resistiveElement.COP_T1_linear = 0;
-		resistiveElement.COP_T1_quadratic = 0;
+		resistiveElementBottom.COP_T1_constant = 1;
+		resistiveElementBottom.COP_T1_linear = 0;
+		resistiveElementBottom.COP_T1_quadratic = 0;
 		
-		resistiveElement.COP_T2_constant = 1;
-		resistiveElement.COP_T2_linear = 0;
-		resistiveElement.COP_T2_quadratic = 0;
+		resistiveElementBottom.COP_T2_constant = 1;
+		resistiveElementBottom.COP_T2_linear = 0;
+		resistiveElementBottom.COP_T2_quadratic = 0;
 		
-		resistiveElement.lowTlockout = -100;	//no lockout
-		resistiveElement.hysteresis = 0;	//no hysteresis
+		resistiveElementBottom.hysteresis = 0;	//no hysteresis
 
-		resistiveElement.depressesTemperature = false;  //no temp depression
+		//standard logic conditions
+		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+				
+		resistiveElementBottom.depressesTemperature = false;  //no temp depression
+
+
 
 		//set up a resistive element at the top, 4500 kW
 		HeatSource resistiveElementTop(this);
@@ -104,15 +109,17 @@ int HPWH::HPWHinit_presets(int presetNum)
 		resistiveElementTop.COP_T2_linear = 0;
 		resistiveElementTop.COP_T2_quadratic = 0;
 		
-		resistiveElementTop.lowTlockout = -100;	//no lockout
 		resistiveElementTop.hysteresis = 0;	//no hysteresis
 
 		resistiveElementTop.depressesTemperature = false;  //no temp depression
 
+		//standard logic conditions
+		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+		
 		
 		//assign heat sources into array in order of priority
 		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElement;
+		setOfSources[1] = resistiveElementBottom;
 		
 	}
 	
@@ -145,8 +152,6 @@ for(int i = 0; i < numHeatSources; i++){
 	setOfSources[i].energyInput_kWh = 0;
 	setOfSources[i].energyOutput_kWh = 0;
 }
-
-
 
 
 //process draws and standby losses
@@ -349,7 +354,7 @@ isHeating = false;
 }
 
 
-bool HPWH::areAllHeatSourcesOff()
+bool HPWH::areAllHeatSourcesOff() const
 {
 bool allOff = true;
 for(int i = 0; i < numHeatSources; i++){
@@ -413,7 +418,35 @@ return returnVal;
 }
 
 
+double HPWH::topThirdAvg_C() const
+{
+	double sum = 0;
+	int num = 0;
+	
+	for(int i = 2*(numNodes/3); i < numNodes; i++){
+		sum += tankTemps_C[i];
+		num++;
+	}
+	
+	return sum/num;
+}
 
+double HPWH::bottomThirdAvg_C() const
+{
+	double sum = 0;
+	int num = 0;
+	
+	for(int i = 0; i < numNodes/3; i++){
+		sum += tankTemps_C[i];
+		num++;
+	}
+	
+	return sum/num;
+}
+
+
+
+//these are the HeatSource functions
 
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), backupHeatSource(NULL)
@@ -460,9 +493,47 @@ isOn = false;
 bool HPWH::HeatSource::shouldHeat() const
 {
 bool shouldEngage = false;
-//a temporary setting, for testing
-if(hpwh->tankTemps_C[4] < hpwh->setpoint_C - 20){
-	shouldEngage = true;
+int selection = 0;
+
+if(turnOnLogicSet[0].selector == "topThird"){
+	selection = 1;
+}
+else if(turnOnLogicSet[0].selector == "bottomThird"){
+	selection = 2;
+}
+else if(turnOnLogicSet[0].selector == "standby"){
+	selection = 3;
+}
+
+
+
+
+for(int i = 0; i < (int)turnOnLogicSet.size(); i++){
+	switch (selection){
+		case 1:
+			//when the top third is too cold - typically used for upper resistance/VIP heat sources
+			if(hpwh->topThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+				shouldEngage = true;
+			}
+			break;
+		
+		case 2:
+			//when the bottom third is too cold - typically used for compressors
+			if(hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+				shouldEngage = true;
+			}		
+			break;
+			
+		case 3:
+			//when the top node is too cold - typically used for standby heating
+			if(hpwh->tankTemps_C[hpwh->numNodes] < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+				shouldEngage = true;
+			}
+			break;
+			
+		default:
+			break;
+	}
 }
 
 return shouldEngage;
@@ -477,7 +548,7 @@ return false;
 
 void HPWH::HeatSource::addHeat_temp(double externalT_C, double minutesPerStep)
 {
-cout << "isHeating: " << hpwh->isHeating <<  endl;
+cout << "heat source 0: " << hpwh->setOfSources[0].isEngaged() <<  "\theat source 1: " << hpwh->setOfSources[1].isEngaged() << endl;
 //a temporary function, for testing
 int lowerBound = 0;
 for(int i = 0; i < hpwh->numNodes; i++){
