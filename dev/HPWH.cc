@@ -77,6 +77,7 @@ int HPWH::HPWHinit_presets(int presetNum)
 		//standard logic conditions
 		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
 		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+
 				
 		resistiveElementBottom.depressesTemperature = false;  //no temp depression
 
@@ -114,13 +115,16 @@ int HPWH::HPWHinit_presets(int presetNum)
 		resistiveElementTop.depressesTemperature = false;  //no temp depression
 
 		//standard logic conditions
-		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+		resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
 		
 		
 		//assign heat sources into array in order of priority
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		
+		
+		//cout << "logic set address in set of sources: " << &setOfSources[1].turnOnLogicSet[0].selector << " " << &setOfSources[1].turnOnLogicSet[0].decisionPoint_C << endl;
+
 	}
 	
 	
@@ -452,6 +456,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), backupHeatSource(NULL)
 {}
 
+
 void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
 									double cnd5, double cnd6, double cnd7, double cnd8, 
 									double cnd9, double cnd10, double cnd11, double cnd12)
@@ -494,6 +499,7 @@ bool HPWH::HeatSource::shouldHeat() const
 {
 bool shouldEngage = false;
 int selection = 0;
+
 
 if(turnOnLogicSet[0].selector == "topThird"){
 	selection = 1;
