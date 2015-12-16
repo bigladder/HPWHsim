@@ -36,6 +36,7 @@ int HPWH::HPWHinit_presets(int presetNum)
 		
 		
 		tankVolume_L = 120; 
+		//tankUA_kJperHrC = 500; //0 to turn off
 		tankUA_kJperHrC = 0; //0 to turn off
 		
 		doTempDepression = false;
@@ -122,8 +123,6 @@ int HPWH::HPWHinit_presets(int presetNum)
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		
-		
-		//cout << "logic set address in set of sources: " << &setOfSources[1].turnOnLogicSet[0].selector << " " << &setOfSources[1].turnOnLogicSet[0].decisionPoint_C << endl;
 
 	}
 	
@@ -136,7 +135,8 @@ int HPWH::HPWHinit_presets(int presetNum)
 
 void HPWH::printTankTemps() const
 {
-	cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << endl;
+	cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << " ";
+	cout << "heat source 0: " << setOfSources[0].isEngaged() <<  "\theat source 1: " << setOfSources[1].isEngaged() << endl;
 }
 
 
@@ -513,31 +513,32 @@ else if(turnOnLogicSet[0].selector == "standby"){
 
 
 
-
 for(int i = 0; i < (int)turnOnLogicSet.size(); i++){
 	switch (selection){
 		case 1:
 			//when the top third is too cold - typically used for upper resistance/VIP heat sources
-			if(hpwh->topThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+			if(hpwh->topThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
 				shouldEngage = true;
 			}
 			break;
 		
 		case 2:
 			//when the bottom third is too cold - typically used for compressors
-			if(hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+			if(hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
 				shouldEngage = true;
 			}		
 			break;
 			
 		case 3:
 			//when the top node is too cold - typically used for standby heating
-			if(hpwh->tankTemps_C[hpwh->numNodes] < hpwh->setpoint_C - turnOnLogicSet[0].decisionPoint_C){
+			if(hpwh->tankTemps_C[hpwh->numNodes] < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
 				shouldEngage = true;
 			}
 			break;
 			
 		default:
+			cout << "You have input an incorrect logic choice specifier, exiting now" << endl;
+			exit(1);
 			break;
 	}
 }
@@ -554,7 +555,7 @@ return false;
 
 void HPWH::HeatSource::addHeat_temp(double externalT_C, double minutesPerStep)
 {
-cout << "heat source 0: " << hpwh->setOfSources[0].isEngaged() <<  "\theat source 1: " << hpwh->setOfSources[1].isEngaged() << endl;
+//cout << "heat source 0: " << hpwh->setOfSources[0].isEngaged() <<  "\theat source 1: " << hpwh->setOfSources[1].isEngaged() << endl;
 //a temporary function, for testing
 int lowerBound = 0;
 for(int i = 0; i < hpwh->numNodes; i++){
