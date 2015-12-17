@@ -175,7 +175,7 @@ public:
 	
 	bool shouldHeat() const;
 	//queries the heat source as to whether or not it should turn on
-	bool shutsOff() const;
+	bool shutsOff(double heatSourceAmbientT_C) const;
 	//queries the heat source whether should shut off (typically lowT shutoff)
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);

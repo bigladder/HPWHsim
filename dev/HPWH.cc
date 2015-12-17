@@ -79,6 +79,11 @@ int HPWH::HPWHinit_presets(int presetNum)
 		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
 		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
 
+		
+		//lowT cutoff
+		resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
+		
+		
 				
 		resistiveElementBottom.depressesTemperature = false;  //no temp depression
 
@@ -126,7 +131,110 @@ int HPWH::HPWHinit_presets(int presetNum)
 
 	}
 	
+	else if(presetNum == 2){
+		
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = 50;
+		for(int i = 0; i < numNodes; i++){
+			tankTemps_C[i] = setpoint_C;
+		}
+		
+		
+		tankVolume_L = 120; 
+		tankUA_kJperHrC = 500; //0 to turn off
+		//tankUA_kJperHrC = 0; //0 to turn off
+		
+		doTempDepression = false;
+		tankMixing = false;
+
+
+		numHeatSources = 2;
+		setOfSources = new HeatSource[numHeatSources];
+
+		//set up a resistive element at the bottom, 4500 kW
+		HeatSource resistiveElementBottom(this);
+		
+		resistiveElementBottom.isOn = false;
+		resistiveElementBottom.isVIP = false;
+
+		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+				
+		resistiveElementBottom.T1 = 50;
+		resistiveElementBottom.T2 = 67;
+		
+		resistiveElementBottom.inputPower_T1_constant = 4500;
+		resistiveElementBottom.inputPower_T1_linear = 0;
+		resistiveElementBottom.inputPower_T1_quadratic = 0;
+		
+		resistiveElementBottom.inputPower_T2_constant = 4500;
+		resistiveElementBottom.inputPower_T2_linear = 0;
+		resistiveElementBottom.inputPower_T2_quadratic = 0;
+		
+		resistiveElementBottom.COP_T1_constant = 1;
+		resistiveElementBottom.COP_T1_linear = 0;
+		resistiveElementBottom.COP_T1_quadratic = 0;
+		
+		resistiveElementBottom.COP_T2_constant = 1;
+		resistiveElementBottom.COP_T2_linear = 0;
+		resistiveElementBottom.COP_T2_quadratic = 0;
+		
+		resistiveElementBottom.hysteresis = 0;	//no hysteresis
+
+		//standard logic conditions
+		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+		resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+
+		//lowT cutoff
+		resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
 	
+		
+		resistiveElementBottom.depressesTemperature = false;  //no temp depression
+
+
+
+		//set up a resistive element at the top, 4500 kW
+		HeatSource resistiveElementTop(this);
+		
+		resistiveElementTop.isOn = false;
+		resistiveElementTop.isVIP = true;
+
+		resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+				
+		resistiveElementTop.T1 = 50;
+		resistiveElementTop.T2 = 67;
+		
+		resistiveElementTop.inputPower_T1_constant = 4500;
+		resistiveElementTop.inputPower_T1_linear = 0;
+		resistiveElementTop.inputPower_T1_quadratic = 0;
+		
+		resistiveElementTop.inputPower_T2_constant = 4500;
+		resistiveElementTop.inputPower_T2_linear = 0;
+		resistiveElementTop.inputPower_T2_quadratic = 0;
+		
+		resistiveElementTop.COP_T1_constant = 1;
+		resistiveElementTop.COP_T1_linear = 0;
+		resistiveElementTop.COP_T1_quadratic = 0;
+		
+		resistiveElementTop.COP_T2_constant = 1;
+		resistiveElementTop.COP_T2_linear = 0;
+		resistiveElementTop.COP_T2_quadratic = 0;
+		
+		resistiveElementTop.hysteresis = 0;	//no hysteresis
+
+		resistiveElementTop.depressesTemperature = false;  //no temp depression
+
+		//standard logic conditions
+		resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+		
+		
+		//assign heat sources into array in order of priority
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		
+
+	}
+		
 	
 	return 0;
 	
@@ -142,7 +250,7 @@ void HPWH::printTankTemps() const
 
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
-					double ambientT_C, double externalT_C,
+					double tankAmbientT_C, double heatSourceAmbientT_C,
 					double DRstatus, double minutesPerStep)
 {
 
@@ -159,7 +267,7 @@ for(int i = 0; i < numHeatSources; i++){
 
 
 //process draws and standby losses
-updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
+updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep);
 
 
 
@@ -167,6 +275,7 @@ updateTankTemps(drawVolume_L, inletT_C, ambientT_C, minutesPerStep);
 for(int i = 0; i < numHeatSources; i++){
 	//if there's a priority HeatSource (e.g. upper resistor) and it needs to 
 	//come on, then turn everything off and start it up
+	//cout << "check vip should heat source[i]: " << i << endl;
 	if(setOfSources[i].isVIP && setOfSources[i].shouldHeat()){
 		turnAllHeatSourcesOff();
 		setOfSources[i].engageHeatSource();
@@ -174,7 +283,9 @@ for(int i = 0; i < numHeatSources; i++){
 		break;
 	}
 	//is nothing is currently on, then check if something should come on
-	else if(!isHeating){
+	else if(isHeating == false){
+	//cout << "check all-off should heat source[i]: " << i << endl;
+
 		if(setOfSources[i].shouldHeat()){
 			setOfSources[i].engageHeatSource();
 			//engaging a heat source sets isHeating to true, so this will only trigger once
@@ -182,10 +293,10 @@ for(int i = 0; i < numHeatSources; i++){
 	}
 	//check if anything that is on needs to turn off (generally for lowT cutoffs)
 	else{
-		if(setOfSources[i].isEngaged() && setOfSources[i].shutsOff()){
+		if(setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)){
 			setOfSources[i].disengageHeatSource();
 			//check if the backup heat source would have to shut off too
-			if(setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true){
+			if(setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true){
 				//and if not, go ahead and turn it on 
 				setOfSources[i].backupHeatSource->engageHeatSource();
 			}
@@ -194,7 +305,7 @@ for(int i = 0; i < numHeatSources; i++){
 
 }	//end loop over heat sources
 
-
+//cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
 
 
 //change the things according to DR schedule
@@ -222,13 +333,13 @@ for(int i = 0; i < numHeatSources; i++){
 	//going through in order, check if the heat source is on
 	if(setOfSources[i].isEngaged()){
 		//add heat
-		setOfSources[i].addHeat_temp(externalT_C, minutesPerStep);
+		setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
 		//if it finished early
 		if(setOfSources[i].runtime_min < minutesPerStep){
 			//turn it off
 			setOfSources[i].disengageHeatSource();
 			//and if there's another heat source in the list, that's able to come on,
-			if(numHeatSources > i+1 && setOfSources[i + 1].shutsOff() == false){
+			if(numHeatSources > i+1 && setOfSources[i + 1].shutsOff(heatSourceAmbientT_C) == false){
 				//turn it on
 				setOfSources[i + 1].engageHeatSource();
 			}
@@ -266,7 +377,7 @@ return 0;
 } //end runOneStep
 
 
-void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double ambientT_C, double minutesPerStep)
+void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep)
 {
 //set up some useful variables for calculations
 double volPerNode_L = tankVolume_L/numNodes;
@@ -338,13 +449,12 @@ for(int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
 avgTemp /= numNodes;
 
 //kJ's lost as standby in the current time step
-double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - ambientT_C) * (minutesPerStep / 60.0));	
+double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));	
 standbyLosses_kWh = standbyLosses_kJ / 3600.0;
 
 //The effect of standby loss on temperature in each segment
 double lossPerNode_C = (standbyLosses_kJ / numNodes)    /    ((volPerNode_L * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 for(int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
-
 
 }	//end updateTankTemps
 
@@ -501,23 +611,25 @@ bool shouldEngage = false;
 int selection = 0;
 
 
-if(turnOnLogicSet[0].selector == "topThird"){
-	selection = 1;
-}
-else if(turnOnLogicSet[0].selector == "bottomThird"){
-	selection = 2;
-}
-else if(turnOnLogicSet[0].selector == "standby"){
-	selection = 3;
-}
-
-
-
 for(int i = 0; i < (int)turnOnLogicSet.size(); i++){
+
+	if(turnOnLogicSet[i].selector == "topThird"){
+		selection = 1;
+	}
+	else if(turnOnLogicSet[i].selector == "bottomThird"){
+		selection = 2;
+	}
+	else if(turnOnLogicSet[i].selector == "standby"){
+		selection = 3;
+	}
+
+	//cout << "selection: " << selection << endl;
+
 	switch (selection){
 		case 1:
 			//when the top third is too cold - typically used for upper resistance/VIP heat sources
 			if(hpwh->topThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
+				//cout << "engage 1\n";
 				shouldEngage = true;
 			}
 			break;
@@ -525,19 +637,22 @@ for(int i = 0; i < (int)turnOnLogicSet.size(); i++){
 		case 2:
 			//when the bottom third is too cold - typically used for compressors
 			if(hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
+				//cout << "engage 2\n";
 				shouldEngage = true;
 			}		
 			break;
 			
 		case 3:
 			//when the top node is too cold - typically used for standby heating
-			if(hpwh->tankTemps_C[hpwh->numNodes] < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
+			if(hpwh->tankTemps_C[hpwh->numNodes - 1] < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C){
+				//cout << "engage 3\n";
+				//cout << "tanktoptemp:  setpoint:  decisionPoint:  " << hpwh->tankTemps_C[hpwh->numNodes - 1] << " " << hpwh->setpoint_C << " " << turnOnLogicSet[i].decisionPoint_C << endl;
 				shouldEngage = true;
 			}
 			break;
 			
 		default:
-			cout << "You have input an incorrect logic choice specifier, exiting now" << endl;
+			cout << "You have input an incorrect turnOn logic choice specifier, exiting now" << endl;
 			exit(1);
 			break;
 	}
@@ -547,13 +662,38 @@ return shouldEngage;
 }
 
 
-bool HPWH::HeatSource::shutsOff() const
+bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const
 {
-return false;
+bool shutsOff = false;
+int selection = 0;
+
+for(int i = 0; i < (int)shutOffLogicSet.size(); i++){
+	if(shutOffLogicSet[i].selector == "lowT"){
+		selection = 1;
+	}
+
+
+	switch (selection){
+		case 1:
+			//when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
+			if(heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint_C){
+				cout << "shut down" << endl;
+				shutsOff = true;
+			}
+			break;
+		
+		default:
+			cout << "You have input an incorrect shutOff logic choice specifier, exiting now" << endl;
+			exit(1);
+			break;
+	}
+}
+
+return shutsOff;
 }
 
 
-void HPWH::HeatSource::addHeat_temp(double externalT_C, double minutesPerStep)
+void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesPerStep)
 {
 //cout << "heat source 0: " << hpwh->setOfSources[0].isEngaged() <<  "\theat source 1: " << hpwh->setOfSources[1].isEngaged() << endl;
 //a temporary function, for testing
