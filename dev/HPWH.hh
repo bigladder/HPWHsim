@@ -17,11 +17,9 @@ using std::string;
 
 
 
-class HPWH
-{
-public:
-	
-	HPWH();  //default constructor
+class HPWH {
+ public:
+  HPWH();  //default constructor
 	~HPWH(); //destructor - will be defined
 	
 	int HPWHinit_presets(int presetNum);
@@ -52,8 +50,7 @@ public:
 	 * The return value is 0 for successful simulation run, something else otherwise
 	 */
 	 
-
-	int runNSteps(int N,  double inletT_C, double drawVolume_L, 
+  int runNSteps(int N,  double inletT_C, double drawVolume_L, 
 					double ambientT_C, double externalT_C,
 					double DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by N steps
@@ -90,11 +87,9 @@ public:
 	double getStandbyLosses(string units = "kWh") const;
 	//get the amount of heat lost through the tank
  	//the input is a string containing the desired units, kWh or btu
-
-	 
-	 
-private:	
-	class HeatSource;
+ 
+ private:
+  class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
 	bool areAllHeatSourcesOff() const;
@@ -121,13 +116,11 @@ private:
 	double tankUA_kJperHrC;
 	//the UA of the tank, in metric units
 	
-	
 	double setpoint_C;
 	//the setpoint of the tank
 	double *tankTemps_C;
 	//an array holding the temperature of each node - 0 is the bottom node, numNodes is the top
-	
-	
+
 
 	//Some outputs
 	double outletTemp_C;
@@ -141,25 +134,21 @@ private:
 	//special variables for adding abilities
 	bool tankMixing;
 	//whether or not the bottom third of the tank should mix during draws
-	
 	bool doTempDepression;
 	//whether the HPWH should track an alternate ambient temperature and 
 	//cause it to be depressed when running
 	double locationTemperature;
 	//this is the special location temperature that stands in for the the 
 	//ambient temperature if you are doing temp. depression
-	
+
 };  //end of HPWH class
 
 
 
 
-
-
-class HPWH::HeatSource
-{
-friend class HPWH;
-public:
+class HPWH::HeatSource {
+  friend class HPWH;
+ public:
 	HeatSource() {};
 	//default constructor, does not create a useful HeatSource
 	
@@ -183,20 +172,19 @@ public:
 	//various configurations (internal/external, resistance/heat pump) to add heat
 	
 	void setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
-						double cnd5, double cnd6, double cnd7, double cnd8, 
-						double cnd9, double cnd10, double cnd11, double cnd12);
+                     double cnd5, double cnd6, double cnd7, double cnd8, 
+                     double cnd9, double cnd10, double cnd11, double cnd12);
 	//a function to set the condensity values, it pretties up the init funcs.
 	
 	
 	
-private:
+ private:
 	HPWH *hpwh;
 	//the creator of the heat source, necessary to access HPWH variables
 	
 	//these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
-	
 	
 	//some outputs
 	double runtime_min;
@@ -205,9 +193,6 @@ private:
 	//the energy used by the heat source
 	double energyOutput_kWh;
 	//the energy put into the water by the heat source
-
-
-
 
 	//these are the heat source property variables
 	bool isVIP;
@@ -237,7 +222,6 @@ private:
 	//defining the COP as a function of the condenser temperature
 
 
-	
 	//the heating logic instructions come in pairs - a string to select
 	//which logic function to use, and a double to give the setpoint
 	//for that function
@@ -261,7 +245,6 @@ private:
 	//heat pumps can depress the temperature of their space in certain instances - 
 	//whether or not this occurs is a bool in HPWH, but an heat source must 
 	//know if it is capable of contributing to this effect or not
-
 
 };  //end of HeatSource class
 
