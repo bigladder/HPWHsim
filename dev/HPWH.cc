@@ -1,13 +1,9 @@
 #include "HPWH.hh"
 
 
-#define F_TO_C(T) ((T-32.0)*5.0/9.0)
-#define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
-#define KWH_TO_BTU(kwh) (3412.14 * kwh)
-#define GAL_TO_L(GAL) (GAL*3.78541)
-
 using std::cout;
 using std::endl;
+using std::string;
 
 HPWH::HPWH() :
   isHeating(false) {
@@ -15,7 +11,6 @@ HPWH::HPWH() :
 
 HPWH::~HPWH() {
   delete[] tankTemps_C;
-
   delete[] setOfSources;  
 }
 
@@ -249,6 +244,17 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     setOfSources[i].energyOutput_kWh = 0;
   }
 
+  // if you are doing temp. depression, set tank and heatSource ambient temps
+  // to the tracked locationTemperature
+  double temperatureGoal = tankAmbientT_C;
+  if (doTempDepression) {
+    tankAmbientT_C = locationTemperature;
+    heatSourceAmbientT_C = locationTemperature;
+  }
+  
+
+
+
 
   //process draws and standby losses
   updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep);
@@ -336,8 +342,31 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   }
 
 
+  //track the depressed local temperature
+  if (doTempDepression) {
+    bool compressorRan = false;
+    for (int i = 0; i < numHeatSources; i++) {
+      if (setOfSources[i].isEngaged() && setOfSources[i].depressesTemperature) {
+        compressorRan = true;
+      }
+    }
+    
+    if(compressorRan){
+      temperatureGoal -= 4.5;		//hardcoded 4.5 degree total drop - from experimental data
+    }
+    else{
+      //otherwise, do nothing, we're going back to ambient
+    }
 
-
+    // shrink the gap by the same percentage every minute - that gives us
+    // exponential behavior the percentage was determined by a fit to
+    // experimental data - 9.4 minute half life and 4.5 degree total drop
+    //minus-equals is important, and fits with the order of locationTemperature
+    //and temperatureGoal, so as to not use fabs() and conditional tests
+    locationTemperature -= (locationTemperature - temperatureGoal)*(1 - 0.9289);
+  }
+  
+  
 
 
   //settle outputs

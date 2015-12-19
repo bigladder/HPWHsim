@@ -2,7 +2,6 @@
 #define HPWH_hh
 
 #include <string>
-using std::string;
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -32,7 +31,7 @@ class HPWH {
 	 * The return value is 0 for successful init, something else otherwise
 	 */
 
-	int HPWHinit_file(string configFile);
+	int HPWHinit_file(std::string configFile);
 	/* This function will load in a set of parameters from a file
 	 * The file name is the input - there should be at most one set of parameters per file
 	 * This is useful for testing new variations, and for the sort of variability
@@ -78,13 +77,13 @@ class HPWH {
 	//get an array of the run time for each heat source, in order of heat source priority - 
 	//this may sum to more than 1 time step for concurrently running heat sources
 	
-	double getOutletTemp(string units = "C") const;
+	double getOutletTemp(std::string units = "C") const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	//the input is a string containing the desired units, F or C
-	double getEnergyRemovedFromEnvironment(string units = "kWh") const;
+	double getEnergyRemovedFromEnvironment(std::string units = "kWh") const;
 	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
 	//the input is a string containing the desired units, kWh or btu
-	double getStandbyLosses(string units = "kWh") const;
+	double getStandbyLosses(std::string units = "kWh") const;
 	//get the amount of heat lost through the tank
  	//the input is a string containing the desired units, kWh or btu
  
@@ -133,13 +132,14 @@ class HPWH {
 	
 	//special variables for adding abilities
 	bool tankMixing;
-	//whether or not the bottom third of the tank should mix during draws
+	// whether or not the bottom third of the tank should mix during draws
 	bool doTempDepression;
-	//whether the HPWH should track an alternate ambient temperature and 
-	//cause it to be depressed when running
-	double locationTemperature;
-	//this is the special location temperature that stands in for the the 
-	//ambient temperature if you are doing temp. depression
+	// whether the HPWH should use the alternate ambient temperature that  
+	// gets depressed when a compressor is running
+  // NOTE: this only works for 1 minute steps
+  double locationTemperature;
+	// this is the special location temperature that stands in for the the 
+	// ambient temperature if you are doing temp. depression
 
 };  //end of HPWH class
 
@@ -147,8 +147,9 @@ class HPWH {
 
 
 class HPWH::HeatSource {
-  friend class HPWH;
  public:
+  friend class HPWH;
+
 	HeatSource() {};
 	//default constructor, does not create a useful HeatSource
 	
@@ -226,10 +227,10 @@ class HPWH::HeatSource {
 	//which logic function to use, and a double to give the setpoint
 	//for that function
 	struct heatingLogicPair{
-		string selector;
+		std::string selector;
 		double decisionPoint_C;
 		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(string x, double y) : selector(x), decisionPoint_C(y) {};
+		heatingLogicPair(std::string x, double y) : selector(x), decisionPoint_C(y) {};
 		};
 	
 	//a vector to hold the set of logical choices for turning this element on
@@ -242,15 +243,18 @@ class HPWH::HeatSource {
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
 
 	bool depressesTemperature;
-	//heat pumps can depress the temperature of their space in certain instances - 
-	//whether or not this occurs is a bool in HPWH, but an heat source must 
-	//know if it is capable of contributing to this effect or not
+	// heat pumps can depress the temperature of their space in certain instances - 
+	// whether or not this occurs is a bool in HPWH, but a heat source must 
+	// know if it is capable of contributing to this effect or not
+  // NOTE: this only works for 1 minute steps
 
 };  //end of HeatSource class
 
 
-
-
-
+//a few extra functions for unit converesion
+inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
+inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
+inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
+inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 
 #endif
