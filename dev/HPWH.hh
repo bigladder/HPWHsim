@@ -2,7 +2,6 @@
 #define HPWH_hh
 
 #include <string>
-using std::string;
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -17,11 +16,9 @@ using std::string;
 
 
 
-class HPWH
-{
-public:
-	
-	HPWH();  //default constructor
+class HPWH {
+ public:
+  HPWH();  //default constructor
 	~HPWH(); //destructor - will be defined
 	
 	int HPWHinit_presets(int presetNum);
@@ -34,7 +31,7 @@ public:
 	 * The return value is 0 for successful init, something else otherwise
 	 */
 
-	int HPWHinit_file(string configFile);
+	int HPWHinit_file(std::string configFile);
 	/* This function will load in a set of parameters from a file
 	 * The file name is the input - there should be at most one set of parameters per file
 	 * This is useful for testing new variations, and for the sort of variability
@@ -52,8 +49,7 @@ public:
 	 * The return value is 0 for successful simulation run, something else otherwise
 	 */
 	 
-
-	int runNSteps(int N,  double inletT_C, double drawVolume_L, 
+  int runNSteps(int N,  double inletT_C, double drawVolume_L, 
 					double ambientT_C, double externalT_C,
 					double DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by N steps
@@ -81,20 +77,18 @@ public:
 	//get an array of the run time for each heat source, in order of heat source priority - 
 	//this may sum to more than 1 time step for concurrently running heat sources
 	
-	double getOutletTemp(string units = "C") const;
+	double getOutletTemp(std::string units = "C") const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	//the input is a string containing the desired units, F or C
-	double getEnergyRemovedFromEnvironment(string units = "kWh") const;
+	double getEnergyRemovedFromEnvironment(std::string units = "kWh") const;
 	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
 	//the input is a string containing the desired units, kWh or btu
-	double getStandbyLosses(string units = "kWh") const;
+	double getStandbyLosses(std::string units = "kWh") const;
 	//get the amount of heat lost through the tank
  	//the input is a string containing the desired units, kWh or btu
-
-	 
-	 
-private:	
-	class HeatSource;
+ 
+ private:
+  class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
 	bool areAllHeatSourcesOff() const;
@@ -121,13 +115,11 @@ private:
 	double tankUA_kJperHrC;
 	//the UA of the tank, in metric units
 	
-	
 	double setpoint_C;
 	//the setpoint of the tank
 	double *tankTemps_C;
 	//an array holding the temperature of each node - 0 is the bottom node, numNodes is the top
-	
-	
+
 
 	//Some outputs
 	double outletTemp_C;
@@ -140,26 +132,24 @@ private:
 	
 	//special variables for adding abilities
 	bool tankMixing;
-	//whether or not the bottom third of the tank should mix during draws
-	
+	// whether or not the bottom third of the tank should mix during draws
 	bool doTempDepression;
-	//whether the HPWH should track an alternate ambient temperature and 
-	//cause it to be depressed when running
-	double locationTemperature;
-	//this is the special location temperature that stands in for the the 
-	//ambient temperature if you are doing temp. depression
-	
+	// whether the HPWH should use the alternate ambient temperature that  
+	// gets depressed when a compressor is running
+  // NOTE: this only works for 1 minute steps
+  double locationTemperature;
+	// this is the special location temperature that stands in for the the 
+	// ambient temperature if you are doing temp. depression
+
 };  //end of HPWH class
 
 
 
 
+class HPWH::HeatSource {
+ public:
+  friend class HPWH;
 
-
-class HPWH::HeatSource
-{
-friend class HPWH;
-public:
 	HeatSource() {};
 	//default constructor, does not create a useful HeatSource
 	
@@ -183,20 +173,19 @@ public:
 	//various configurations (internal/external, resistance/heat pump) to add heat
 	
 	void setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
-						double cnd5, double cnd6, double cnd7, double cnd8, 
-						double cnd9, double cnd10, double cnd11, double cnd12);
+                     double cnd5, double cnd6, double cnd7, double cnd8, 
+                     double cnd9, double cnd10, double cnd11, double cnd12);
 	//a function to set the condensity values, it pretties up the init funcs.
 	
 	
 	
-private:
+ private:
 	HPWH *hpwh;
 	//the creator of the heat source, necessary to access HPWH variables
 	
 	//these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
-	
 	
 	//some outputs
 	double runtime_min;
@@ -205,9 +194,6 @@ private:
 	//the energy used by the heat source
 	double energyOutput_kWh;
 	//the energy put into the water by the heat source
-
-
-
 
 	//these are the heat source property variables
 	bool isVIP;
@@ -237,15 +223,14 @@ private:
 	//defining the COP as a function of the condenser temperature
 
 
-	
 	//the heating logic instructions come in pairs - a string to select
 	//which logic function to use, and a double to give the setpoint
 	//for that function
 	struct heatingLogicPair{
-		string selector;
+		std::string selector;
 		double decisionPoint_C;
 		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(string x, double y) : selector(x), decisionPoint_C(y) {};
+		heatingLogicPair(std::string x, double y) : selector(x), decisionPoint_C(y) {};
 		};
 	
 	//a vector to hold the set of logical choices for turning this element on
@@ -258,16 +243,18 @@ private:
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
 
 	bool depressesTemperature;
-	//heat pumps can depress the temperature of their space in certain instances - 
-	//whether or not this occurs is a bool in HPWH, but an heat source must 
-	//know if it is capable of contributing to this effect or not
-
+	// heat pumps can depress the temperature of their space in certain instances - 
+	// whether or not this occurs is a bool in HPWH, but a heat source must 
+	// know if it is capable of contributing to this effect or not
+  // NOTE: this only works for 1 minute steps
 
 };  //end of HeatSource class
 
 
-
-
-
+//a few extra functions for unit converesion
+inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
+inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
+inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
+inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 
 #endif
