@@ -118,9 +118,10 @@ HPWH hpwh;
 //hpwh.printTankTemps();
 
 
-hpwh.HPWHinit_presets(2);
+hpwh.HPWHinit_presets(3);
 
 hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+
 hpwh.printTankTemps();
 hpwh.runOneStep(0, 0, 0, 50, 1, 1);
 hpwh.printTankTemps();

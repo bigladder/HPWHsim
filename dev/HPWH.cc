@@ -221,10 +221,75 @@ int HPWH::HPWHinit_presets(int presetNum) {
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
     setOfSources[1] = resistiveElementBottom;
+  } else if(presetNum == 3) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = 50;
+
+    for (int i = 0; i < numNodes; i++) {
+      tankTemps_C[i] = setpoint_C;
+    }
+    
+    tankVolume_L = 120; 
+    tankUA_kJperHrC = 500; //0 to turn off
+    //tankUA_kJperHrC = 0; //0 to turn off
+    
+    doTempDepression = false;
+    tankMixing = false;
+
+    numHeatSources = 2;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+    resistiveElementBottom.resistiveElement(0, 4500);
+    resistiveElementTop.resistiveElement(0, 4500);
+
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = resistiveElementBottom;
   }
 
   return 0;
 }  //end HPWHinit_presets
+
+
+void HPWH::HeatSource::resistiveElement(int node, double Watts) {
+    int i;
+
+    isOn = false;
+    isVIP = false;
+    for(i = 0; i < 12; i++) {
+      condensity[i] = 0;
+    }
+    condensity[node] = 1;
+    T1 = 50;
+    T2 = 67;
+    inputPower_T1_constant = Watts;
+    inputPower_T1_linear = 0;
+    inputPower_T1_quadratic = 0;
+    inputPower_T2_constant = Watts;
+    inputPower_T2_linear = 0;
+    inputPower_T2_quadratic = 0;
+    COP_T1_constant = 1;
+    COP_T1_linear = 0;
+    COP_T1_quadratic = 0;
+    COP_T2_constant = 1;
+    COP_T2_linear = 0;
+    COP_T2_quadratic = 0;
+    hysteresis = 0;  //no hysteresis
+
+    //standard logic conditions
+    if(node < 3) {
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+    } else {
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+    }
+    turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+
+    //lowT cutoff
+    shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
+    depressesTemperature = false;  //no temp depression
+}
 
 
 void HPWH::printTankTemps() const {

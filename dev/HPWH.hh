@@ -155,6 +155,8 @@ class HPWH::HeatSource {
 	
 	HeatSource(HPWH *parentHPWH);
 	//constructor assigns a pointer to the hpwh creating this heat source 
+
+        void resistiveElement(int node, double Watts);
 	
 	bool isEngaged() const;
 	//return whether or not the heat source is engaged
