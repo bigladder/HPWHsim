@@ -169,8 +169,17 @@ class HPWH::HeatSource {
 	//queries the heat source whether should shut off (typically lowT shutoff)
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);
+        void addHeat(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
+
+	// I wrote some methods to help with the add heat interface - MJL
+	void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
+	void calcHeatDist(double *heatDistribution);
+	int lowestNode();
+ 	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
+	double addHeatExternal(double cap, double minutesPerStep);
+	double getCondenserTemp();
 	
 	void setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
                      double cnd5, double cnd6, double cnd7, double cnd8, 
@@ -248,6 +257,8 @@ class HPWH::HeatSource {
 	// know if it is capable of contributing to this effect or not
   // NOTE: this only works for 1 minute steps
 
+	int location; // 1 = in tank, 2 = wrapped around tank, 3 = external
+
 };  //end of HeatSource class
 
 
@@ -255,6 +266,10 @@ class HPWH::HeatSource {
 inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
 inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
 inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
+inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
+inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
+
+
 
 #endif

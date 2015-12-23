@@ -112,6 +112,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
     //standard logic conditions
     resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
     
+    resistiveElementTop.location = 1;
+    resistiveElementBottom.location = 1;
     
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
@@ -213,6 +215,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
     //standard logic conditions
     resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
     
+    resistiveElementTop.location = 1;
+    resistiveElementBottom.location = 1;
     
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
@@ -323,7 +327,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     //going through in order, check if the heat source is on
     if (setOfSources[i].isEngaged()) {
       //add heat
-      setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
+      // setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
+      setOfSources[i].addHeat(heatSourceAmbientT_C, minutesPerStep);
       //if it finished early
       if (setOfSources[i].runtime_min < minutesPerStep) {
         //turn it off
