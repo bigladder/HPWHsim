@@ -38,8 +38,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
 
 void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop) {
   double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
-  double inputPower_T1_Watts = 0, inputPower_T2_Watts = 0; //input power at ambient temperatures T1 and T2	
-  double condenserTemp_C = 0, externalT_F, condenserTemp_F;
+  double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
+  double condenserTemp_C, externalT_F, condenserTemp_F;
 
   // Calculate the current water temp at the "condenser"
   condenserTemp_C = getCondenserTemp();
@@ -66,8 +66,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
 
 
   // Interpolate to get COP and input power at the current ambient temperature
-  *cop = COP_T1 + (externalT_F - T1) * ((COP_T2 - COP_T1) / (T2 - T1));
-  *input_BTUperHr = (inputPower_T1_Watts + (externalT_F - T1) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2 - T1))) * 3412;
+  *cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
+  *input_BTUperHr = (inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) * 3412;
   *cap_BTUperHr = (*cop) * (*input_BTUperHr);
 
 /*

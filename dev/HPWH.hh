@@ -218,7 +218,7 @@ class HPWH::HeatSource {
 	//(or within) the tank, however a resistance heat source can also be simulated
 	//by specifying the entire condensity in one node.
 	
-	double T1, T2;
+	double T1_F, T2_F;
 	//the two temperatures where the input and COP curves are defined
 	double inputPower_T1_constant, inputPower_T2_constant;
 	double inputPower_T1_linear, inputPower_T2_linear;

@@ -44,8 +44,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         
-    resistiveElementBottom.T1 = 50;
-    resistiveElementBottom.T2 = 67;
+    resistiveElementBottom.T1_F = 50;
+    resistiveElementBottom.T2_F = 67;
     
     resistiveElementBottom.inputPower_T1_constant = 4500;
     resistiveElementBottom.inputPower_T1_linear = 0;
@@ -86,8 +86,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         
-    resistiveElementTop.T1 = 50;
-    resistiveElementTop.T2 = 67;
+    resistiveElementTop.T1_F = 50;
+    resistiveElementTop.T2_F = 67;
     
     resistiveElementTop.inputPower_T1_constant = 4500;
     resistiveElementTop.inputPower_T1_linear = 0;
@@ -148,8 +148,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         
-    resistiveElementBottom.T1 = 50;
-    resistiveElementBottom.T2 = 67;
+    resistiveElementBottom.T1_F = 50;
+    resistiveElementBottom.T2_F = 67;
     
     resistiveElementBottom.inputPower_T1_constant = 4500;
     resistiveElementBottom.inputPower_T1_linear = 0;
@@ -189,8 +189,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         
-    resistiveElementTop.T1 = 50;
-    resistiveElementTop.T2 = 67;
+    resistiveElementTop.T1_F = 50;
+    resistiveElementTop.T2_F = 67;
     
     resistiveElementTop.inputPower_T1_constant = 4500;
     resistiveElementTop.inputPower_T1_linear = 0;
@@ -262,8 +262,8 @@ void HPWH::HeatSource::resistiveElement(int node, double Watts) {
       condensity[i] = 0;
     }
     condensity[node] = 1;
-    T1 = 50;
-    T2 = 67;
+    T1_F = 50;
+    T2_F = 67;
     inputPower_T1_constant = Watts;
     inputPower_T1_linear = 0;
     inputPower_T1_quadratic = 0;
