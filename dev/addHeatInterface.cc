@@ -145,11 +145,9 @@ double HPWH::HeatSource::getCondenserTemp() {
 
 
 double HPWH::HeatSource::addHeatOneNode(double cap_kJ, int node, double minutesPerStep) {
-  double Q, deltaT, target, runtime;
-  int i, j, setPointNodeNum;
-  i=0; j=0;
-  runtime = 0.0;
-
+  double Q_kJ, deltaT_C, targetTemp_C, runtime = 0.0;
+  int i = 0, j = 0, setPointNodeNum;
+  
   
   // find the first node (from the bottom) that does not have the same temperature as the one above it
   // if they all have the same temp., use the top node, hpwh->numNodes-1
@@ -161,47 +159,47 @@ double HPWH::HeatSource::addHeatOneNode(double cap_kJ, int node, double minutesP
     else{
       setPointNodeNum = i+1;
     }
-  }	
+  }
 
   // maximum heat deliverable in this timestep
   while(cap_kJ > 0 && setPointNodeNum < hpwh->numNodes) {
     // if the whole tank is at the same temp, the target temp is the setpoint
     if(setPointNodeNum == (hpwh->numNodes-1)) {
-      target = hpwh->setpoint_C;
+      targetTemp_C = hpwh->setpoint_C;
     }
     //otherwise the target temp is the first non-equal-temp node
     else {
-      target = hpwh->tankTemps_C[setPointNodeNum+1];
+      targetTemp_C = hpwh->tankTemps_C[setPointNodeNum+1];
     }
 
-    deltaT = target - hpwh->tankTemps_C[setPointNodeNum];
+    deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
     
     //heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
-    Q = CPWATER_kJperkgC * hpwh->tankVolume_L * DENSITYWATER_kgperL * (setPointNodeNum+1 - node) * deltaT;
+    Q_kJ = CPWATER_kJperkgC * hpwh->tankVolume_L * DENSITYWATER_kgperL * (setPointNodeNum+1 - node) * deltaT_C;
 
     //Running the rest of the time won't recover
-    if(Q > cap_kJ){
+    if(Q_kJ > cap_kJ){
       for(j = node; j <= setPointNodeNum; j++) {
         hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / hpwh->tankVolume_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
       }
-      runtime = minutesPerStep;
+      runtime_min = minutesPerStep;
       cap_kJ = 0;
     }
     //temp will recover by/before end of timestep
     else{
       for(j = node; j <= setPointNodeNum; j++){
-        hpwh->tankTemps_C[j] = target;
+        hpwh->tankTemps_C[j] = targetTemp_C;
       }
       ++setPointNodeNum;
-      //calculate how long the element was on, in minutes (should be less than 1...), based on the power of the resistor and the required amount of heat
-      runtime += Q / cap_kJ * minutesPerStep;
-      cap_kJ -= Q;
+      //calculate how long the element was on, in minutes
+      //(should be less than minutesPerStep, typically 1...),
+      //based on the capacity and the required amount of heat
+      runtime_min += (Q_kJ / cap_kJ) * minutesPerStep;
+      cap_kJ -= Q_kJ;
     }
   }
   
-  return runtime;
-
-
+  return runtime_min;
 }
 
 // Add heat from a source outside of the tank. Assume the condensity is where the water is drawn from

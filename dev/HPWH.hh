@@ -179,7 +179,6 @@ class HPWH::HeatSource {
 	void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
 	void calcHeatDist(double *heatDistribution);
 	int lowestNode();
- 	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
 	double addHeatExternal(double cap, double minutesPerStep);
 	double getCondenserTemp();
 	
@@ -260,6 +259,12 @@ class HPWH::HeatSource {
   // NOTE: this only works for 1 minute steps
 
 	int location; // 1 = in tank, 2 = wrapped around tank, 3 = external
+
+
+ 	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
+
+
+
 
 };  //end of HeatSource class
 
