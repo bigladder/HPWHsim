@@ -116,31 +116,6 @@ void HPWH::HeatSource::calcHeatDist(double *heatDistribution) {
 }
 
 
-// Return the lowest node of the HeatSource
-int HPWH::HeatSource::lowestNode() {
-  int i, lowest;
-  for(i = 0; i < hpwh->numNodes; i++) {
-    if(condensity[i] > 0) {
-      lowest = i;
-      break;
-    }
-  }
-  return lowest;
-}
-
-// Return the temperature at the condenser
-double HPWH::HeatSource::getCondenserTemp() {
-  double condenserTemp_C = 0.0;
-  int i;
-
-  for(i = 0; i < hpwh->numNodes; i++) {
-    condenserTemp_C += condensity[i] * hpwh->tankTemps_C[i];
-  }
-  
-  return condenserTemp_C;
-}
-
-
 double HPWH::HeatSource::addHeatOneNode(double cap_kJ, int node, double minutesPerStep) {
   double Q_kJ, deltaT_C, targetTemp_C, runtime = 0.0;
   int i = 0, j = 0, setPointNodeNum;

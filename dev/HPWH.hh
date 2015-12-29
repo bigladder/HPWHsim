@@ -178,9 +178,8 @@ class HPWH::HeatSource {
 	// I wrote some methods to help with the add heat interface - MJL
 	void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
 	void calcHeatDist(double *heatDistribution);
-	int lowestNode();
+
 	double addHeatExternal(double cap, double minutesPerStep);
-	double getCondenserTemp();
 	
 	void setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
                      double cnd5, double cnd6, double cnd7, double cnd8, 
@@ -261,9 +260,18 @@ class HPWH::HeatSource {
 	int location; // 1 = in tank, 2 = wrapped around tank, 3 = external
 
 
+
+  //some private functions, mostly used for addHeat
+
  	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
 
 
+	int lowestNode();
+  //returns the number of the first non-zero condensity entry
+	double getCondenserTemp();
+  //returns the temperature of the condensor - it's a weighted average of the
+  //tank temperature, using the condensity as weights
+  
   // A few helper functions
   double expitFunc(double x, double offset);
   void normalize(double *Z, int n);
