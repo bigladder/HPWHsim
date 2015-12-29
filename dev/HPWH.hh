@@ -171,13 +171,9 @@ class HPWH::HeatSource {
 	//queries the heat source whether should shut off (typically lowT shutoff)
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);
-        void addHeat(double externalT_C, double minutesPerStep);
+  void addHeat(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
-
-	// I wrote some methods to help with the add heat interface - MJL
-	void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
-	void calcHeatDist(double *heatDistribution);
 
 	double addHeatExternal(double cap, double minutesPerStep);
 	
@@ -261,9 +257,14 @@ class HPWH::HeatSource {
 
 
 
-  //some private functions, mostly used for addHeat
+  //some private functions, mostly used for heating the water
 
- 	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
+ 	double addHeatAboveNode(double cap_kJ, int node, double minutesPerStep);
+
+
+	// I wrote some methods to help with the add heat interface - MJL
+  void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
+	void calcHeatDist(double *heatDistribution);
 
 
 	int lowestNode();
