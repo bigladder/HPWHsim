@@ -264,6 +264,9 @@ class HPWH::HeatSource {
  	double addHeatOneNode(double cap_kJ, int node, double minutesPerStep);
 
 
+  // A few helper functions
+  double expitFunc(double x, double offset);
+  void normalize(double *Z, int n);
 
 
 };  //end of HeatSource class

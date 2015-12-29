@@ -1,8 +1,5 @@
 #include "HPWH.hh"
 
-// A few helper functions
-double expitFunc(double x, double offset);
-void normalize(double *Z, int n);
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
   double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ;
@@ -243,28 +240,4 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerS
   //This is runtime - is equal to timestep if compressor ran the whole time
   return (1 - remainingCapacity_kJ / heatingCapacity_kJ) * minutesPerStep;
 }
-
-
-
-double expitFunc(double x, double offset) {
-  double val;
-  val = 1 / (1 + exp(x - offset));
-  return val;
-}
-
-
-void normalize(double *Z, int n) {
-  double sum_tmp = 0.0;
-  int i;
-
-  for(i = 0; i < n; i++) {
-    sum_tmp += Z[i];
-  }
-
-  for(i = 0; i < n; i++) {
-    Z[i] /= sum_tmp;
-  }
-}
-
-
 

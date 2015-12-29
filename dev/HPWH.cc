@@ -788,3 +788,26 @@ void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesP
     }
   }
 }  //end addheat_temp function
+
+
+
+double HPWH::HeatSource::expitFunc(double x, double offset) {
+  double val;
+  val = 1 / (1 + exp(x - offset));
+  return val;
+}
+
+
+void HPWH::HeatSource::normalize(double *Z, int n) {
+  double sum_tmp = 0.0;
+  int i;
+
+  for(i = 0; i < n; i++) {
+    sum_tmp += Z[i];
+  }
+
+  for(i = 0; i < n; i++) {
+    Z[i] /= sum_tmp;
+  }
+}
+
