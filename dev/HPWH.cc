@@ -242,8 +242,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     HeatSource resistiveElementBottom(this);
     HeatSource resistiveElementTop(this);
-    resistiveElementBottom.resistiveElement(0, 4500);
-    resistiveElementTop.resistiveElement(0, 4500);
+    resistiveElementBottom.setupAsResistiveElement(0, 4500);
+    resistiveElementTop.setupAsResistiveElement(9, 4500);
 
     setOfSources[0] = resistiveElementTop;
     setOfSources[1] = resistiveElementBottom;
@@ -253,7 +253,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
 }  //end HPWHinit_presets
 
 
-void HPWH::HeatSource::resistiveElement(int node, double Watts) {
+void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     int i;
 
     isOn = false;
@@ -281,10 +281,11 @@ void HPWH::HeatSource::resistiveElement(int node, double Watts) {
     //standard logic conditions
     if(node < 3) {
       turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
     } else {
       turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+      isVIP = true;
     }
-    turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
 
     //lowT cutoff
     shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
@@ -323,11 +324,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   
 
 
-
-
   //process draws and standby losses
   updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep);
-
 
 
   //do HeatSource choice
@@ -364,7 +362,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
   }  //end loop over heat sources
 
-  //cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
+  cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
 
 
   //change the things according to DR schedule
@@ -394,6 +392,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
       //add heat
       // setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
       setOfSources[i].addHeat(heatSourceAmbientT_C, minutesPerStep);
+      cout << "input output " << setOfSources[i].energyInput_kWh << " " << setOfSources[i].energyOutput_kWh << endl;
       //if it finished early
       if (setOfSources[i].runtime_min < minutesPerStep) {
         //turn it off

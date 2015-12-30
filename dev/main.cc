@@ -119,78 +119,88 @@ HPWH hpwh;
 
 
 hpwh.HPWHinit_presets(3);
+//int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
+					//double ambientT_C, double externalT_C,
+					//double DRstatus, double minutesPerStep)
 
+          
+hpwh.runOneStep(0, 10, 0, 50, 1, 1);
+hpwh.printTankTemps();
 hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, -10, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, -10, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, -10, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
+hpwh.runOneStep(0, 0, 0, 50, 1, 1);
+hpwh.printTankTemps();
 
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
+
+
+//hpwh.HPWHinit_presets(3);
+//for (int i = 0; i < 1440*365; i++) {
+    //hpwh.runOneStep(0, 0.2, 0, 50, 1, 1);
+//}
 
 
 
