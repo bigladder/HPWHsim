@@ -175,8 +175,6 @@ class HPWH::HeatSource {
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
 
-	double addHeatExternal(double cap, double minutesPerStep);
-	
 	void setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
                      double cnd5, double cnd6, double cnd7, double cnd8, 
                      double cnd9, double cnd10, double cnd11, double cnd12);
@@ -204,7 +202,8 @@ class HPWH::HeatSource {
 	bool isVIP;
 	//is this heat source a high priority heat source? (e.g. upper resisitor)
 	HeatSource* backupHeatSource;
-	//a pointer to the heat source which serves as backup to this one - should be NULL if no backup exists
+	//a pointer to the heat source which serves as backup to this one
+  //should be NULL if no backup exists
 	
 	double condensity[12];
 	//The condensity function is always composed of 12 nodes.  
@@ -253,19 +252,23 @@ class HPWH::HeatSource {
 	// know if it is capable of contributing to this effect or not
   // NOTE: this only works for 1 minute steps
 
-	int location; // 1 = in tank, 2 = wrapped around tank, 3 = external
+	int configuration; // 1 = in tank, 2 = wrapped around tank, 3 = external
 
 
 
-  //some private functions, mostly used for heating the water
+  //some private functions, mostly used for heating the water with the addHeat function
 
  	double addHeatAboveNode(double cap_kJ, int node, double minutesPerStep);
-
+  //adds heat to the set of nodes that are at the same temperature, above the
+  //specified node number
+  double addHeatExternal(double cap_BTUperHr, double minutesPerStep);
+  // Add heat from a source outside of the tank. Assume the condensity is where
+  // the water is drawn from and hot water is put at the top of the tank.
+  
 
 	// I wrote some methods to help with the add heat interface - MJL
   void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
 	void calcHeatDist(double *heatDistribution);
-
 
 	int lowestNode();
   //returns the number of the first non-zero condensity entry
@@ -276,7 +279,6 @@ class HPWH::HeatSource {
   // A few helper functions
   double expitFunc(double x, double offset);
   void normalize(double *Z, int n);
-
 
 };  //end of HeatSource class
 
