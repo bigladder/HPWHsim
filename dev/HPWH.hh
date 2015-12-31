@@ -49,7 +49,7 @@ class HPWH {
 	 * The return value is 0 for successful simulation run, something else otherwise
 	 */
 	 
-  int runNSteps(int N,  double inletT_C, double drawVolume_L, 
+	int runNSteps(int N,  double inletT_C, double drawVolume_L, 
 					double ambientT_C, double externalT_C,
 					double DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by N steps
@@ -65,13 +65,14 @@ class HPWH {
 	double* getTankTemps() const;
 	// get the array of tank temperatures
 	void printTankTemps() const;
+	void getSimTcouples(double *tcouples);
 
 	
 	int getNumHeatSources() const;
 	//get the number of heat sources
-	double* getHeatSourcesEnergyInput() const;
+	void getHeatSourcesEnergyInput(double *energyInput) const;
 	//get an array of the energy input to each heat source, in order of heat source priority
-	double* getHeatSourcesEnergyOutput() const;
+	void getHeatSourcesEnergyOutput(double *energyOutput) const;
 	//get an array of the energy output to each heat source, in order of heat source priority
 	double* getHeatSourcesRunTime() const;
 	//get an array of the run time for each heat source, in order of heat source priority - 
@@ -173,7 +174,7 @@ class HPWH::HeatSource {
 	//queries the heat source whether should shut off (typically lowT shutoff)
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);
-  void addHeat(double externalT_C, double minutesPerStep);
+	void addHeat(double externalT_C, double minutesPerStep);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
 
@@ -181,7 +182,6 @@ class HPWH::HeatSource {
                      double cnd5, double cnd6, double cnd7, double cnd8, 
                      double cnd9, double cnd10, double cnd11, double cnd12);
 	//a function to set the condensity values, it pretties up the init funcs.
-	
 	
 	
  private:
