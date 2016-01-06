@@ -38,82 +38,10 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     //set up a resistive element at the bottom, 4500 kW
     HeatSource resistiveElementBottom(this);
-    
-    resistiveElementBottom.isOn = false;
-    resistiveElementBottom.isVIP = false;
-
-    resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-        
-    resistiveElementBottom.T1_F = 50;
-    resistiveElementBottom.T2_F = 67;
-    
-    resistiveElementBottom.inputPower_T1_constant = 4500;
-    resistiveElementBottom.inputPower_T1_linear = 0;
-    resistiveElementBottom.inputPower_T1_quadratic = 0;
-    
-    resistiveElementBottom.inputPower_T2_constant = 4500;
-    resistiveElementBottom.inputPower_T2_linear = 0;
-    resistiveElementBottom.inputPower_T2_quadratic = 0;
-    
-    resistiveElementBottom.COP_T1_constant = 1;
-    resistiveElementBottom.COP_T1_linear = 0;
-    resistiveElementBottom.COP_T1_quadratic = 0;
-    
-    resistiveElementBottom.COP_T2_constant = 1;
-    resistiveElementBottom.COP_T2_linear = 0;
-    resistiveElementBottom.COP_T2_quadratic = 0;
-    
-    resistiveElementBottom.hysteresis = 0;  //no hysteresis
-
-    //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
-
-    
-    //lowT cutoff
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
-    
-        
-    resistiveElementBottom.depressesTemperature = false;  //no temp depression
-
-
-
-    //set up a resistive element at the top, 4500 kW
     HeatSource resistiveElementTop(this);
     
-    resistiveElementTop.isOn = false;
-    resistiveElementTop.isVIP = true;
-
-    resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
-        
-    resistiveElementTop.T1_F = 50;
-    resistiveElementTop.T2_F = 67;
-    
-    resistiveElementTop.inputPower_T1_constant = 4500;
-    resistiveElementTop.inputPower_T1_linear = 0;
-    resistiveElementTop.inputPower_T1_quadratic = 0;
-    
-    resistiveElementTop.inputPower_T2_constant = 4500;
-    resistiveElementTop.inputPower_T2_linear = 0;
-    resistiveElementTop.inputPower_T2_quadratic = 0;
-    
-    resistiveElementTop.COP_T1_constant = 1;
-    resistiveElementTop.COP_T1_linear = 0;
-    resistiveElementTop.COP_T1_quadratic = 0;
-    
-    resistiveElementTop.COP_T2_constant = 1;
-    resistiveElementTop.COP_T2_linear = 0;
-    resistiveElementTop.COP_T2_quadratic = 0;
-    
-    resistiveElementTop.hysteresis = 0;  //no hysteresis
-
-    resistiveElementTop.depressesTemperature = false;  //no temp depression
-
-    //standard logic conditions
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
-    
-    resistiveElementTop.configuration = 1;
-    resistiveElementBottom.configuration = 1;
+    resistiveElementBottom.setupAsResistiveElement(0, 4500);
+    resistiveElementTop.setupAsResistiveElement(9, 4500);
     
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
@@ -142,85 +70,16 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     //set up a resistive element at the bottom, 4500 kW
     HeatSource resistiveElementBottom(this);
-    
-    resistiveElementBottom.isOn = false;
-    resistiveElementBottom.isVIP = false;
-
-    resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-        
-    resistiveElementBottom.T1_F = 50;
-    resistiveElementBottom.T2_F = 67;
-    
-    resistiveElementBottom.inputPower_T1_constant = 4500;
-    resistiveElementBottom.inputPower_T1_linear = 0;
-    resistiveElementBottom.inputPower_T1_quadratic = 0;
-    
-    resistiveElementBottom.inputPower_T2_constant = 4500;
-    resistiveElementBottom.inputPower_T2_linear = 0;
-    resistiveElementBottom.inputPower_T2_quadratic = 0;
-    
-    resistiveElementBottom.COP_T1_constant = 1;
-    resistiveElementBottom.COP_T1_linear = 0;
-    resistiveElementBottom.COP_T1_quadratic = 0;
-    
-    resistiveElementBottom.COP_T2_constant = 1;
-    resistiveElementBottom.COP_T2_linear = 0;
-    resistiveElementBottom.COP_T2_quadratic = 0;
-    
-    resistiveElementBottom.hysteresis = 0;  //no hysteresis
-
-    //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
-
-    //lowT cutoff
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
-  
-    
-    resistiveElementBottom.depressesTemperature = false;  //no temp depression
-
-
-
-    //set up a resistive element at the top, 4500 kW
     HeatSource resistiveElementTop(this);
     
-    resistiveElementTop.isOn = false;
-    resistiveElementTop.isVIP = true;
-
-    resistiveElementTop.setCondensity(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
-        
-    resistiveElementTop.T1_F = 50;
-    resistiveElementTop.T2_F = 67;
-    
-    resistiveElementTop.inputPower_T1_constant = 4500;
-    resistiveElementTop.inputPower_T1_linear = 0;
-    resistiveElementTop.inputPower_T1_quadratic = 0;
-    
-    resistiveElementTop.inputPower_T2_constant = 4500;
-    resistiveElementTop.inputPower_T2_linear = 0;
-    resistiveElementTop.inputPower_T2_quadratic = 0;
-    
-    resistiveElementTop.COP_T1_constant = 1;
-    resistiveElementTop.COP_T1_linear = 0;
-    resistiveElementTop.COP_T1_quadratic = 0;
-    
-    resistiveElementTop.COP_T2_constant = 1;
-    resistiveElementTop.COP_T2_linear = 0;
-    resistiveElementTop.COP_T2_quadratic = 0;
-    
-    resistiveElementTop.hysteresis = 0;  //no hysteresis
-
-    resistiveElementTop.depressesTemperature = false;  //no temp depression
-
-    //standard logic conditions
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
-    
-    resistiveElementTop.configuration = 1;
-    resistiveElementBottom.configuration = 1;
+    resistiveElementBottom.setupAsResistiveElement(0, 4500);
+    resistiveElementTop.setupAsResistiveElement(9, 4500);
     
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
     setOfSources[1] = resistiveElementBottom;
+
+
   } else if(presetNum == 3) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
@@ -231,7 +90,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     }
     
     tankVolume_L = 120; 
-    tankUA_kJperHrC = 500; //0 to turn off
+    tankUA_kJperHrC = 10; //0 to turn off
     //tankUA_kJperHrC = 0; //0 to turn off
     
     doTempDepression = false;
@@ -277,7 +136,8 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     COP_T2_linear = 0;
     COP_T2_quadratic = 0;
     hysteresis = 0;  //no hysteresis
-
+    configuration = 1; //immersed in tank
+    
     //standard logic conditions
     if(node < 3) {
       turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
@@ -296,6 +156,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 void HPWH::printTankTemps() const {
   cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << " ";
   cout << "heat source 0: " << setOfSources[0].isEngaged() <<  "\theat source 1: " << setOfSources[1].isEngaged() << endl;
+  cout << endl << endl;
 }
 
 
@@ -348,18 +209,18 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
         //engaging a heat source sets isHeating to true, so this will only trigger once
       }
     }
+
     //check if anything that is on needs to turn off (generally for lowT cutoffs)
-    else {
-      if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)) {
-        setOfSources[i].disengageHeatSource();
-        //check if the backup heat source would have to shut off too
-        if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
-          //and if not, go ahead and turn it on 
-          setOfSources[i].backupHeatSource->engageHeatSource();
-        }
+    //even for things that just turned on this step - otherwise they don't stay
+    //off when they should
+    if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)) {
+      setOfSources[i].disengageHeatSource();
+      //check if the backup heat source would have to shut off too
+      if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
+        //and if not, go ahead and turn it on 
+        setOfSources[i].backupHeatSource->engageHeatSource();
       }
     }
-
   }  //end loop over heat sources
 
   cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
@@ -376,6 +237,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   }
   else if (DRstatus == 2) {
     //if nothing else is on, force the first heat source on
+    //this may or may not be desired behavior, pending more research (and funding)
     if (areAllHeatSourcesOff() == true) {
       setOfSources[0].engageHeatSource();
     }
@@ -389,10 +251,10 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   for (int i = 0; i < numHeatSources; i++) {
     //going through in order, check if the heat source is on
     if (setOfSources[i].isEngaged()) {
-      //add heat
+      //and add heat if it is
       // setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
       setOfSources[i].addHeat(heatSourceAmbientT_C, minutesPerStep);
-      cout << "input output " << setOfSources[i].energyInput_kWh << " " << setOfSources[i].energyOutput_kWh << endl;
+      cout << "input_kwh output_kwh " << setOfSources[i].energyInput_kWh << " " << setOfSources[i].energyOutput_kWh << endl;
       //if it finished early
       if (setOfSources[i].runtime_min < minutesPerStep) {
         //turn it off
@@ -461,13 +323,13 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep) {
   //set up some useful variables for calculations
-  double volPerNode_L = tankVolume_L/numNodes;
+  double volPerNode_LperNode = tankVolume_L/numNodes;
   double drawFraction;
   int wholeNodesToDraw;
   outletTemp_C = 0;
 
   //calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
-  drawFraction = drawVolume_L/volPerNode_L;
+  drawFraction = drawVolume_L/volPerNode_LperNode;
   wholeNodesToDraw = (int)std::floor(drawFraction);
   drawFraction -= wholeNodesToDraw;
 
@@ -534,7 +396,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
   standbyLosses_kWh = standbyLosses_kJ / 3600.0;
 
   //The effect of standby loss on temperature in each segment
-  double lossPerNode_C = (standbyLosses_kJ / numNodes)    /    ((volPerNode_L * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+  double lossPerNode_C = (standbyLosses_kJ / numNodes)    /    ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
   for (int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 }  //end updateTankTemps
 
@@ -802,18 +664,28 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
   // calculate capacity btu/hr? Just btu??
   getCapacity(externalT_C, &input_BTUperHr, &cap_BTUperHr, &cop);
 
-  if((configuration == 1) | (configuration == 3)) {
+  //cout << "intput_BTUperHr cap_BTUperHr " << input_BTUperHr << " " << cap_BTUperHr << endl;
+
+  if((configuration == 1) || (configuration == 3)) {
     // Either the heat source is within the tank or wrapped around it
     calcHeatDist(heatDistribution);
+    //the loop over nodes here is intentional - essentially each node that has
+    //some amount of heatDistribution acts as a separate resistive element
     for(int i = 0; i < hpwh->numNodes; i++){
       captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesPerStep / 60.0 * heatDistribution[i]);
-      runtime_min += addHeatAboveNode(captmp_kJ, i, minutesPerStep);
+      if(captmp_kJ != 0){
+        runtime_min += addHeatAboveNode(captmp_kJ, i, minutesPerStep);
+      }
     }
-  } else {
+  } else if(configuration == 2){
     // Else the heat source is external. Sanden thingy
     runtime_min = addHeatExternal(cap_BTUperHr, minutesPerStep);
   }
-
+  else{
+    cout << "Invalid heat source configuration chosen: " << configuration << endl;
+    cout << "Ending program!" << endl;
+    exit(1);
+    }
   // Write the input & output energy
   energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
   energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
@@ -863,6 +735,7 @@ double HPWH::HeatSource::getCondenserTemp() {
 
   for(i = 0; i < hpwh->numNodes; i++) {
     condenserTemp_C += condensity[i] * hpwh->tankTemps_C[i];
+    //cout << "condenserTemp_C i condensity tankTemps_C " << condenserTemp_C << " " << i << " " << condensity[i] << " " << hpwh->tankTemps_C[i] << endl;
   }
   
   return condenserTemp_C;
@@ -876,6 +749,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
 
   // Calculate the current water temp at the "condenser"
   condenserTemp_C = getCondenserTemp();
+
+  cout << "condenserTemp_C " << condenserTemp_C << endl;
   // Convert Celsius to Fahrenheit for the curve fits
   condenserTemp_F = C_TO_F(condenserTemp_C);
   externalT_F = C_TO_F(externalT_C);
@@ -893,15 +768,23 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
   inputPower_T1_Watts += inputPower_T1_linear * condenserTemp_F;
   inputPower_T1_Watts += inputPower_T1_quadratic * condenserTemp_F * condenserTemp_F;
 
-  inputPower_T2_Watts = inputPower_T2_constant;
-  inputPower_T2_Watts += inputPower_T2_constant * condenserTemp_F;
-  inputPower_T2_Watts += inputPower_T2_constant * condenserTemp_F * condenserTemp_F;
+//cout << "inputPower_T1_constant inputPower_T1_linear inputPower_T1_quadratic " << inputPower_T1_constant << " " << inputPower_T1_linear << " " << inputPower_T1_quadratic << endl;
 
+
+  inputPower_T2_Watts = inputPower_T2_constant;
+  inputPower_T2_Watts += inputPower_T2_linear * condenserTemp_F;
+  inputPower_T2_Watts += inputPower_T2_quadratic * condenserTemp_F * condenserTemp_F;
+
+//cout << "inputPower_T2_constant inputPower_T2_linear inputPower_T2_quadratic " << inputPower_T2_constant << " " << inputPower_T2_linear << " " << inputPower_T2_quadratic << endl;
+
+//cout << "inputPower_T1_Watts inputPower_T2_Watts " << inputPower_T1_Watts << " " << inputPower_T2_Watts << endl;
 
   // Interpolate to get COP and input power at the current ambient temperature
   *cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
-  *input_BTUperHr = (inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) * 3412;
+  *input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) / 1000.0);  //1000 converts w to kw
   *cap_BTUperHr = (*cop) * (*input_BTUperHr);
+
+  //cout << "cop input_BTUperHr cap_BTUperHr " << *cop << " " << *input_BTUperHr << " " << *cap_BTUperHr << endl;
 
 /*
   //here is where the scaling for flow restriction goes
@@ -953,8 +836,10 @@ void HPWH::HeatSource::calcHeatDist(double *heatDistribution) {
 double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesPerStep) {
   double Q_kJ, deltaT_C, targetTemp_C, runtime_min = 0.0;
   int i = 0, j = 0, setPointNodeNum;
+
+  double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
   
-  
+  cout << "node cap_kJ " << node << " " << cap_kJ << endl;
   // find the first node (from the bottom) that does not have the same temperature as the one above it
   // if they all have the same temp., use the top node, hpwh->numNodes-1
   setPointNodeNum = node;
@@ -981,12 +866,12 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
     deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
     
     //heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
-    Q_kJ = CPWATER_kJperkgC * hpwh->tankVolume_L * DENSITYWATER_kgperL * (setPointNodeNum+1 - node) * deltaT_C;
+    Q_kJ = CPWATER_kJperkgC * volumePerNode_L * DENSITYWATER_kgperL * (setPointNodeNum+1 - node) * deltaT_C;
 
     //Running the rest of the time won't recover
     if(Q_kJ > cap_kJ){
       for(j = node; j <= setPointNodeNum; j++) {
-        hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / hpwh->tankVolume_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
+        hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / volumePerNode_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
       }
       runtime_min = minutesPerStep;
       cap_kJ = 0;
@@ -1010,9 +895,11 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 
 
 double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerStep) {
-  double nodeHeat_kJ, heatingCapacity_kJ, remainingCapacity_kJ, deltaT_C, nodeFrac;
+  double nodeHeat_kJperNode, heatingCapacity_kJ, remainingCapacity_kJ, deltaT_C, nodeFrac;
   int n;
   double heatingCutoff_C = 20; // When to turn off the compressor. Should be a property of the HeatSource?
+
+  double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 
   //how much heat is available this timestep
   heatingCapacity_kJ = BTU_TO_KJ(cap_BTUperHr * (minutesPerStep / 60.0));
@@ -1023,14 +910,14 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerS
     // calculate what percentage of the bottom node can be heated to setpoint
     //with amount of heat available this timestep
     deltaT_C = hpwh->setpoint_C - getCondenserTemp();
-    nodeHeat_kJ = hpwh->tankVolume_L * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
-    nodeFrac = remainingCapacity_kJ / nodeHeat_kJ;
+    nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
+    nodeFrac = remainingCapacity_kJ / nodeHeat_kJperNode;
 
   //if more than one, round down to 1 and subtract that amount of heat energy
   // from the capacity
     if(nodeFrac > 1){
       nodeFrac = 1;
-      remainingCapacity_kJ -= nodeHeat_kJ;
+      remainingCapacity_kJ -= nodeHeat_kJperNode;
     }
     //substract the amount of heat used - a full node's heat if nodeFrac == 1,
     //otherwise just the fraction available 
