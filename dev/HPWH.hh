@@ -163,18 +163,18 @@ class HPWH::HeatSource {
   
 	bool isEngaged() const;
 	//return whether or not the heat source is engaged
-	void engageHeatSource();
+	void engageHeatSource(double heatSourceAmbientT_C);
 	//turn heat source on, i.e. set isEngaged to TRUE
 	void disengageHeatSource();
 	//turn heat source off, i.e. set isEngaged to FALSE
 	
-	bool shouldHeat() const;
+	bool shouldHeat(double heatSourceAmbientT_C) const;
 	//queries the heat source as to whether or not it should turn on
 	bool shutsOff(double heatSourceAmbientT_C) const;
 	//queries the heat source whether should shut off (typically lowT shutoff)
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);
-	void addHeat(double externalT_C, double minutesPerStep);
+	void addHeat(double externalT_C, double minutesToRun);
 	//adds head to the hpwh - this is the function that interprets the 
 	//various configurations (internal/external, resistance/heat pump) to add heat
 
@@ -206,6 +206,9 @@ class HPWH::HeatSource {
 	HeatSource* backupHeatSource;
 	//a pointer to the heat source which serves as backup to this one
   //should be NULL if no backup exists
+	HeatSource* companionHeatSource;
+	//a pointer to the heat source which will run concurrently with this one
+  //it still will only turn on if shutsOff is false
 	
 	double condensity[12];
 	//The condensity function is always composed of 12 nodes.  
@@ -260,10 +263,10 @@ class HPWH::HeatSource {
 
   //some private functions, mostly used for heating the water with the addHeat function
 
- 	double addHeatAboveNode(double cap_kJ, int node, double minutesPerStep);
+ 	double addHeatAboveNode(double cap_kJ, int node, double minutesToRun);
   //adds heat to the set of nodes that are at the same temperature, above the
   //specified node number
-  double addHeatExternal(double cap_BTUperHr, double minutesPerStep);
+  double addHeatExternal(double cap_BTUperHr, double minutesToRun);
   // Add heat from a source outside of the tank. Assume the condensity is where
   // the water is drawn from and hot water is put at the top of the tank.
   
@@ -292,7 +295,7 @@ inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
-
+inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 
 
 #endif

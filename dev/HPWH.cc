@@ -5,6 +5,9 @@ using std::cout;
 using std::endl;
 using std::string;
 
+
+//the HPWH functions
+//the publics
 HPWH::HPWH() :
   isHeating(false) {
   }
@@ -112,53 +115,11 @@ int HPWH::HPWHinit_presets(int presetNum) {
 }  //end HPWHinit_presets
 
 
-void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
-    int i;
-
-    isOn = false;
-    isVIP = false;
-    for(i = 0; i < 12; i++) {
-      condensity[i] = 0;
-    }
-    condensity[node] = 1;
-    T1_F = 50;
-    T2_F = 67;
-    inputPower_T1_constant = Watts;
-    inputPower_T1_linear = 0;
-    inputPower_T1_quadratic = 0;
-    inputPower_T2_constant = Watts;
-    inputPower_T2_linear = 0;
-    inputPower_T2_quadratic = 0;
-    COP_T1_constant = 1;
-    COP_T1_linear = 0;
-    COP_T1_quadratic = 0;
-    COP_T2_constant = 1;
-    COP_T2_linear = 0;
-    COP_T2_quadratic = 0;
-    hysteresis = 0;  //no hysteresis
-    configuration = 1; //immersed in tank
-    
-    //standard logic conditions
-    if(node < 3) {
-      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
-    } else {
-      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
-      isVIP = true;
-    }
-
-    //lowT cutoff
-    shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
-    depressesTemperature = false;  //no temp depression
-}
-
-
 void HPWH::printTankTemps() const {
   cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << " ";
   cout << "heat source 0: " << setOfSources[0].isEngaged() <<  "\theat source 1: " << setOfSources[1].isEngaged() << endl;
   cout << endl << endl;
 }
-
 
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
@@ -194,9 +155,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     //if there's a priority HeatSource (e.g. upper resistor) and it needs to 
     //come on, then turn everything off and start it up
     //cout << "check vip should heat source[i]: " << i << endl;
-    if (setOfSources[i].isVIP && setOfSources[i].shouldHeat()) {
+    if (setOfSources[i].isVIP && setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
       turnAllHeatSourcesOff();
-      setOfSources[i].engageHeatSource();
+      setOfSources[i].engageHeatSource(heatSourceAmbientT_C);
       //stop looking when you've found such a HeatSource
       break;
     }
@@ -204,23 +165,24 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     else if (isHeating == false) {
     //cout << "check all-off should heat source[i]: " << i << endl;
 
-      if (setOfSources[i].shouldHeat()) {
-        setOfSources[i].engageHeatSource();
+      if (setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
+        setOfSources[i].engageHeatSource(heatSourceAmbientT_C);
         //engaging a heat source sets isHeating to true, so this will only trigger once
       }
     }
-
-    //check if anything that is on needs to turn off (generally for lowT cutoffs)
-    //even for things that just turned on this step - otherwise they don't stay
-    //off when they should
-    if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)) {
-      setOfSources[i].disengageHeatSource();
-      //check if the backup heat source would have to shut off too
-      if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
-        //and if not, go ahead and turn it on 
-        setOfSources[i].backupHeatSource->engageHeatSource();
+    else {
+      //check if anything that is on needs to turn off (generally for lowT cutoffs)
+      //even for things that just turned on this step - otherwise they don't stay
+      //off when they should
+      if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)) {
+        setOfSources[i].disengageHeatSource();
+        //check if the backup heat source would have to shut off too
+        if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
+          //and if not, go ahead and turn it on 
+          setOfSources[i].backupHeatSource->engageHeatSource(heatSourceAmbientT_C);
+        }
       }
-    }
+    } 
   }  //end loop over heat sources
 
   cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
@@ -239,7 +201,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     //if nothing else is on, force the first heat source on
     //this may or may not be desired behavior, pending more research (and funding)
     if (areAllHeatSourcesOff() == true) {
-      setOfSources[0].engageHeatSource();
+      setOfSources[0].engageHeatSource(heatSourceAmbientT_C);
     }
   }
 
@@ -248,21 +210,23 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
   //do heating logic
+  double minutesToRun = minutesPerStep;
+  
   for (int i = 0; i < numHeatSources; i++) {
     //going through in order, check if the heat source is on
     if (setOfSources[i].isEngaged()) {
       //and add heat if it is
-      // setOfSources[i].addHeat_temp(heatSourceAmbientT_C, minutesPerStep);
-      setOfSources[i].addHeat(heatSourceAmbientT_C, minutesPerStep);
+      setOfSources[i].addHeat(heatSourceAmbientT_C, minutesToRun);
       cout << "input_kwh output_kwh " << setOfSources[i].energyInput_kWh << " " << setOfSources[i].energyOutput_kWh << endl;
       //if it finished early
-      if (setOfSources[i].runtime_min < minutesPerStep) {
-        //turn it off
+      if (setOfSources[i].runtime_min < minutesToRun) {
+        //subtract time it ran and turn it off
+        minutesToRun -= setOfSources[i].runtime_min;
         setOfSources[i].disengageHeatSource();
         //and if there's another heat source in the list, that's able to come on,
         if (numHeatSources > i+1 && setOfSources[i + 1].shutsOff(heatSourceAmbientT_C) == false) {
           //turn it on
-          setOfSources[i + 1].engageHeatSource();
+          setOfSources[i + 1].engageHeatSource(heatSourceAmbientT_C);
         }
       }
     }
@@ -320,7 +284,57 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   return 0;
 } //end runOneStep
 
+double HPWH::getOutletTemp(string units) const {
+  double returnVal = 0;
 
+  if (units == "C") {
+    returnVal = outletTemp_C;
+  }
+  else if (units == "F") {
+    returnVal = C_TO_F(outletTemp_C);
+    }
+  else {
+    cout << "Incorrect unit specification for getOutletTemp" << endl;
+    exit(1);
+  }
+  return returnVal;
+}
+
+double HPWH::getEnergyRemovedFromEnvironment(string units) const {
+  double returnVal = 0;
+
+  if (units == "kWh") {
+    returnVal = energyRemovedFromEnvironment_kWh;
+  }
+  else if (units == "btu") {
+    returnVal = KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
+    }
+  else {
+    cout << "Incorrect unit specification for getEnergyRemovedFromEnvironment" << endl;
+    exit(1);
+  }
+  return returnVal;
+}
+
+double HPWH::getStandbyLosses(string units) const {
+  double returnVal = 0;
+
+  if (units == "kWh") {
+    returnVal = standbyLosses_kWh;
+  }
+  else if (units == "btu") {
+    returnVal = KWH_TO_BTU(standbyLosses_kWh);
+    }
+  else {
+    cout << "Incorrect unit specification for getStandbyLosses" << endl;
+    exit(1);
+  }
+  return returnVal;
+}
+
+
+
+//the privates
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep) {
   //set up some useful variables for calculations
   double volPerNode_LperNode = tankVolume_L/numNodes;
@@ -420,55 +434,6 @@ bool HPWH::areAllHeatSourcesOff() const {
 }
 
 
-double HPWH::getOutletTemp(string units) const {
-  double returnVal = 0;
-
-  if (units == "C") {
-    returnVal = outletTemp_C;
-  }
-  else if (units == "F") {
-    returnVal = C_TO_F(outletTemp_C);
-    }
-  else {
-    cout << "Incorrect unit specification for getOutletTemp" << endl;
-    exit(1);
-  }
-  return returnVal;
-}
-
-double HPWH::getEnergyRemovedFromEnvironment(string units) const {
-  double returnVal = 0;
-
-  if (units == "kWh") {
-    returnVal = energyRemovedFromEnvironment_kWh;
-  }
-  else if (units == "btu") {
-    returnVal = KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
-    }
-  else {
-    cout << "Incorrect unit specification for getEnergyRemovedFromEnvironment" << endl;
-    exit(1);
-  }
-  return returnVal;
-}
-
-double HPWH::getStandbyLosses(string units) const {
-  double returnVal = 0;
-
-  if (units == "kWh") {
-    returnVal = standbyLosses_kWh;
-  }
-  else if (units == "btu") {
-    returnVal = KWH_TO_BTU(standbyLosses_kWh);
-    }
-  else {
-    cout << "Incorrect unit specification for getStandbyLosses" << endl;
-    exit(1);
-  }
-  return returnVal;
-}
-
-
 double HPWH::topThirdAvg_C() const {
   double sum = 0;
   int num = 0;
@@ -480,6 +445,7 @@ double HPWH::topThirdAvg_C() const {
   
   return sum/num;
 }
+
 
 double HPWH::bottomThirdAvg_C() const {
   double sum = 0;
@@ -495,10 +461,11 @@ double HPWH::bottomThirdAvg_C() const {
 
 
 
+
 //these are the HeatSource functions
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
-  :hpwh(parentInput), isOn(false), backupHeatSource(NULL) {}
+  :hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL) {}
 
 
 void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
@@ -524,9 +491,15 @@ bool HPWH::HeatSource::isEngaged() const {
 }
 
 
-void HPWH::HeatSource::engageHeatSource() {
+void HPWH::HeatSource::engageHeatSource(double heatSourceAmbientT_C) {
   isOn = true;
   hpwh->isHeating = true;
+  if (companionHeatSource != NULL &&
+        companionHeatSource->shutsOff(heatSourceAmbientT_C) != true &&
+        companionHeatSource->isEngaged() == false) {
+    companionHeatSource->engageHeatSource(heatSourceAmbientT_C);
+  }
+  
 }              
 
                   
@@ -535,7 +508,7 @@ void HPWH::HeatSource::disengageHeatSource() {
 }              
 
                   
-bool HPWH::HeatSource::shouldHeat() const {
+bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
   bool shouldEngage = false;
   int selection = 0;
 
@@ -586,6 +559,12 @@ bool HPWH::HeatSource::shouldHeat() const {
         break;
     }
   }  //end loop over set of logic conditions
+
+  //if everything else wants it to come on, if it would shut off anyways don't turn it on
+  if (shouldEngage == true && shutsOff(heatSourceAmbientT_C) == true ) {
+    shouldEngage = false;
+  }
+  
 
   return shouldEngage;
 }
@@ -651,7 +630,7 @@ void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesP
 }  //end addheat_temp function
 
 
-void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
+void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ;
   double *heatDistribution;
 
@@ -661,7 +640,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
   // Could also have heatDistribution be part of the HeatSource class, rather than creating and destroying a vector every time we add heat
   heatDistribution = new double [hpwh->numNodes];
 
-  // calculate capacity btu/hr? Just btu??
+  // calculate capacity btu/hr
   getCapacity(externalT_C, &input_BTUperHr, &cap_BTUperHr, &cop);
 
   //cout << "intput_BTUperHr cap_BTUperHr " << input_BTUperHr << " " << cap_BTUperHr << endl;
@@ -672,14 +651,14 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesPerStep) {
     //the loop over nodes here is intentional - essentially each node that has
     //some amount of heatDistribution acts as a separate resistive element
     for(int i = 0; i < hpwh->numNodes; i++){
-      captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesPerStep / 60.0 * heatDistribution[i]);
+      captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
       if(captmp_kJ != 0){
-        runtime_min += addHeatAboveNode(captmp_kJ, i, minutesPerStep);
+        runtime_min += addHeatAboveNode(captmp_kJ, i, minutesToRun);
       }
     }
   } else if(configuration == 2){
     // Else the heat source is external. Sanden thingy
-    runtime_min = addHeatExternal(cap_BTUperHr, minutesPerStep);
+    runtime_min = addHeatExternal(cap_BTUperHr, minutesToRun);
   }
   else{
     cout << "Invalid heat source configuration chosen: " << configuration << endl;
@@ -833,13 +812,13 @@ void HPWH::HeatSource::calcHeatDist(double *heatDistribution) {
 }
 
 
-double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesPerStep) {
+double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesToRun) {
   double Q_kJ, deltaT_C, targetTemp_C, runtime_min = 0.0;
   int i = 0, j = 0, setPointNodeNum;
 
   double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
   
-  cout << "node cap_kJ " << node << " " << cap_kJ << endl;
+  cout << "node cap_kwh " << node << " " << KJ_TO_KWH(cap_kJ) << endl;
   // find the first node (from the bottom) that does not have the same temperature as the one above it
   // if they all have the same temp., use the top node, hpwh->numNodes-1
   setPointNodeNum = node;
@@ -873,7 +852,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
       for(j = node; j <= setPointNodeNum; j++) {
         hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / volumePerNode_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
       }
-      runtime_min = minutesPerStep;
+      runtime_min = minutesToRun;
       cap_kJ = 0;
     }
     //temp will recover by/before end of timestep
@@ -883,9 +862,9 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
       }
       ++setPointNodeNum;
       //calculate how long the element was on, in minutes
-      //(should be less than minutesPerStep, typically 1...),
+      //(should be less than minutesToRun, typically 1...),
       //based on the capacity and the required amount of heat
-      runtime_min += (Q_kJ / cap_kJ) * minutesPerStep;
+      runtime_min += (Q_kJ / cap_kJ) * minutesToRun;
       cap_kJ -= Q_kJ;
     }
   }
@@ -894,7 +873,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 }
 
 
-double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerStep) {
+double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesToRun) {
   double nodeHeat_kJperNode, heatingCapacity_kJ, remainingCapacity_kJ, deltaT_C, nodeFrac;
   int n;
   double heatingCutoff_C = 20; // When to turn off the compressor. Should be a property of the HeatSource?
@@ -902,7 +881,7 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerS
   double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 
   //how much heat is available this timestep
-  heatingCapacity_kJ = BTU_TO_KJ(cap_BTUperHr * (minutesPerStep / 60.0));
+  heatingCapacity_kJ = BTU_TO_KJ(cap_BTUperHr * (minutesToRun / 60.0));
   remainingCapacity_kJ = heatingCapacity_kJ;
 	
   //if there's still remaining capacity and you haven't heated to "setpoint", keep heating
@@ -936,5 +915,48 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesPerS
   }
 		
   //This is runtime - is equal to timestep if compressor ran the whole time
-  return (1 - (remainingCapacity_kJ / heatingCapacity_kJ)) * minutesPerStep;
+  return (1 - (remainingCapacity_kJ / heatingCapacity_kJ)) * minutesToRun;
 }
+
+
+void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
+    int i;
+
+    isOn = false;
+    isVIP = false;
+    for(i = 0; i < 12; i++) {
+      condensity[i] = 0;
+    }
+    condensity[node] = 1;
+    T1_F = 50;
+    T2_F = 67;
+    inputPower_T1_constant = Watts;
+    inputPower_T1_linear = 0;
+    inputPower_T1_quadratic = 0;
+    inputPower_T2_constant = Watts;
+    inputPower_T2_linear = 0;
+    inputPower_T2_quadratic = 0;
+    COP_T1_constant = 1;
+    COP_T1_linear = 0;
+    COP_T1_quadratic = 0;
+    COP_T2_constant = 1;
+    COP_T2_linear = 0;
+    COP_T2_quadratic = 0;
+    hysteresis = 0;  //no hysteresis
+    configuration = 1; //immersed in tank
+    
+    //standard logic conditions
+    if(node < 3) {
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    } else {
+      turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+      isVIP = true;
+    }
+
+    //lowT cutoff
+    shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
+    depressesTemperature = false;  //no temp depression
+}
+
+
