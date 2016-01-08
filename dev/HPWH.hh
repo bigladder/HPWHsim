@@ -62,9 +62,11 @@ class HPWH {
 	int getNumNodes() const;
 	//get the number of nodes
   double getTankNodeTemp(int nodeNum) const;
-	// get the array of tank temperatures
-	void getSimTcouples(double *tcouples) const;
-
+	//get the array of tank temperatures
+	double getNthSimTcouple(int N, std::string units = "C") const;
+  //get a temperature from a set of 6 virtual "thermocouples", which are constructed
+  //from the node temperature array.  Specify t-couple from 1-6, 1 at the bottom
+  
 	
 	int getNumHeatSources() const;
 	//get the number of heat sources

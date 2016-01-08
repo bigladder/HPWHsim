@@ -260,21 +260,17 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
   //outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
 
-
-  //energyRemovedFromEnvironment_kWh;
-
-    
-
-
-
-
-
-
+  //sum energyRemovedFromEnvironment_kWh for each heat source;
+  for (int i = 0; i < numHeatSources; i++) {
+    energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
+  }
 
 
 
   return 0;
 } //end runOneStep
+
+
 
 
 int HPWH::getNumNodes() const {
@@ -290,8 +286,29 @@ double HPWH::getTankNodeTemp(int nodeNum) const {
 }
 
 
-void HPWH::getSimTcouples(double *tcouples) const {
+double HPWH::getNthSimTcouple(int N, string units) const {
+  if (N > 6 || N < 1) {
+    cout << "You have attempted to access a simulated thermocouple that does not exist.  Exiting..." << endl;
+    exit(1);
+  }
+  
+  double averageTemp_C = 0;
+  //specify N from 1-6, so use N-1 for node number
+  for (int i = (N-1)*(numNodes/6); i < N*(numNodes/6); i++) {
+    averageTemp_C += getTankNodeTemp(i);
+  }
+  averageTemp_C /= (numNodes/6);
 
+  if (units == "C") {
+    return averageTemp_C;
+  }
+  else if (units == "F") {
+    return C_TO_F(averageTemp_C);
+  }
+ else {
+    cout << "Incorrect unit specification for getNthSimTcouple" << endl;
+    exit(1);
+ }
 }
 
 
@@ -308,7 +325,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, string units) const {
   }
   double returnVal = setOfSources[N].energyInput_kWh;
 
-  if (units == "kWh") {
+  if (units == "kWh" || units == "kwh") {
     return returnVal;
   }
   else if (units == "btu") {
@@ -329,7 +346,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, string units) const {
   }
   double returnVal = setOfSources[N].energyOutput_kWh;
 
-  if (units == "kWh") {
+  if (units == "kWh" || units == "kwh") {
     return returnVal;
   }
   else if (units == "btu") {
@@ -378,7 +395,7 @@ double HPWH::getOutletTemp(string units) const {
 double HPWH::getEnergyRemovedFromEnvironment(string units) const {
   double returnVal = 0;
 
-  if (units == "kWh") {
+  if (units == "kWh" || units == "kwh") {
     returnVal = energyRemovedFromEnvironment_kWh;
   }
   else if (units == "btu") {
@@ -394,7 +411,7 @@ double HPWH::getEnergyRemovedFromEnvironment(string units) const {
 double HPWH::getStandbyLosses(string units) const {
   double returnVal = 0;
 
-  if (units == "kWh") {
+  if (units == "kWh" || units == "kwh") {
     returnVal = standbyLosses_kWh;
   }
   else if (units == "btu") {
