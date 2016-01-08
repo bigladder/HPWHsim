@@ -7,8 +7,7 @@
 #include <iomanip>
 
 #include <cstdio>
-//for exit
-#include <cstdlib>
+#include <cstdlib>   //for exit
 #include <vector>
 
 #define DENSITYWATER_kgperL 0.998
@@ -60,24 +59,26 @@ class HPWH {
 	 */
 	 
 
-	double getNumNodes() const;
+	int getNumNodes() const;
 	//get the number of nodes
-	double* getTankTemps() const;
+  double getTankNodeTemp(int nodeNum) const;
 	// get the array of tank temperatures
-	void printTankTemps() const;
-	void getSimTcouples(double *tcouples);
+	void getSimTcouples(double *tcouples) const;
 
 	
 	int getNumHeatSources() const;
 	//get the number of heat sources
-	void getHeatSourcesEnergyInput(double *energyInput) const;
-	//get an array of the energy input to each heat source, in order of heat source priority
-	void getHeatSourcesEnergyOutput(double *energyOutput) const;
-	//get an array of the energy output to each heat source, in order of heat source priority
-	double* getHeatSourcesRunTime() const;
-	//get an array of the run time for each heat source, in order of heat source priority - 
-	//this may sum to more than 1 time step for concurrently running heat sources
-	
+	double getNthHeatSourceEnergyInput(int N, std::string units = "kWh") const;
+	//get the energy input to the Nth heat source
+	double getNthHeatSourceEnergyOutput(int N, std::string units = "kWh") const;
+	//get the energy output from the Nth heat source
+	double getNthHeatSourceRunTime(int N) const;
+	//get the run time for the Nth heat source
+	//note: they may sum to more than 1 time step for concurrently running heat sources
+  bool isNthHeatSourceRunning(int N) const;
+  //return true if the Nth heat source is currently engaged
+
+  
 	double getOutletTemp(std::string units = "C") const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	//the input is a string containing the desired units, F or C
@@ -292,10 +293,11 @@ class HPWH::HeatSource {
 inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
 inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
 inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
+inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
-inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
-inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
+inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
+inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 
 
 #endif

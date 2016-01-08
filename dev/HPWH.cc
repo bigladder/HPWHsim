@@ -115,13 +115,6 @@ int HPWH::HPWHinit_presets(int presetNum) {
 }  //end HPWHinit_presets
 
 
-void HPWH::printTankTemps() const {
-  cout << std::setw(7) << std::left << tankTemps_C[0] << ", " << std::setw(7) << tankTemps_C[1] << ", " << std::setw(7) << tankTemps_C[2] << ", " << std::setw(7) << tankTemps_C[3] << ", " << std::setw(7) << tankTemps_C[4] << ", " << std::setw(7) << tankTemps_C[5] << ", " << std::setw(7) << tankTemps_C[6] << ", " << std::setw(7) << tankTemps_C[7] << ", " << std::setw(7) << tankTemps_C[8] << ", " << std::setw(7) << tankTemps_C[9] << ", " << std::setw(7) << tankTemps_C[10] << ", " << std::setw(7) << tankTemps_C[11] << " ";
-  cout << "heat source 0: " << setOfSources[0].isEngaged() <<  "\theat source 1: " << setOfSources[1].isEngaged() << endl;
-  cout << endl << endl;
-}
-
-
 int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
                      double tankAmbientT_C, double heatSourceAmbientT_C,
                      double DRstatus, double minutesPerStep) {
@@ -217,7 +210,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     if (setOfSources[i].isEngaged()) {
       //and add heat if it is
       setOfSources[i].addHeat(heatSourceAmbientT_C, minutesToRun);
-      cout << "input_kwh output_kwh " << setOfSources[i].energyInput_kWh << " " << setOfSources[i].energyOutput_kWh << endl;
       //if it finished early
       if (setOfSources[i].runtime_min < minutesToRun) {
         //subtract time it ran and turn it off
@@ -284,20 +276,103 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   return 0;
 } //end runOneStep
 
-double HPWH::getOutletTemp(string units) const {
-  double returnVal = 0;
 
+int HPWH::getNumNodes() const {
+  return numNodes;
+  }
+
+double HPWH::getTankNodeTemp(int nodeNum) const {
+  if (nodeNum > numNodes || nodeNum < 0) {
+    cout << "You have attempted to access the temperature of a tank node that does not exist.  Exiting..." << endl;
+    exit(1);
+  }
+  return tankTemps_C[nodeNum];
+}
+
+
+void HPWH::getSimTcouples(double *tcouples) const {
+
+}
+
+
+int HPWH::getNumHeatSources() const {
+  return numHeatSources;
+}
+
+
+
+double HPWH::getNthHeatSourceEnergyInput(int N, string units) const {
+  if (N > numNodes || N < 0) {
+    cout << "You have attempted to access the energy input of a heat source that does not exist.  Exiting..." << endl;
+    exit(1);
+  }
+  double returnVal = setOfSources[N].energyInput_kWh;
+
+  if (units == "kWh") {
+    return returnVal;
+  }
+  else if (units == "btu") {
+    return KWH_TO_BTU(returnVal);
+  }
+  else if (units == "kJ") {
+    return KWH_TO_KJ(returnVal);
+  }
+ else {
+    cout << "Incorrect unit specification for getNthHeatSourceEnergyInput" << endl;
+    exit(1);
+ }
+}
+
+double HPWH::getNthHeatSourceEnergyOutput(int N, string units) const {
+  if (N > numNodes || N < 0) {
+    cout << "You have attempted to access the energy output of a heat source that does not exist.  Exiting..." << endl;
+  }
+  double returnVal = setOfSources[N].energyOutput_kWh;
+
+  if (units == "kWh") {
+    return returnVal;
+  }
+  else if (units == "btu") {
+    return KWH_TO_BTU(returnVal);
+  }
+  else if (units == "kJ") {
+    return KWH_TO_KJ(returnVal);
+  }
+ else {
+    cout << "Incorrect unit specification for getNthHeatSourceEnergyInput" << endl;
+    exit(1);
+ }
+}
+
+double HPWH::getNthHeatSourceRunTime(int N) const {
+  if (N > numNodes || N < 0) {
+    cout << "You have attempted to access the run time of a heat source that does not exist.  Exiting..." << endl;
+    exit(1);
+  }
+  return setOfSources[N].runtime_min;
+}	
+
+
+bool HPWH::isNthHeatSourceRunning(int N) const{
+  if (N > numNodes || N < 0) {
+    cout << "You have attempted to access the status of a heat source that does not exist.  Exiting..." << endl;
+    exit(1);
+  }
+  return setOfSources[N].isEngaged();
+}
+
+
+double HPWH::getOutletTemp(string units) const {
   if (units == "C") {
-    returnVal = outletTemp_C;
+    return outletTemp_C;
   }
   else if (units == "F") {
-    returnVal = C_TO_F(outletTemp_C);
+    return C_TO_F(outletTemp_C);
     }
   else {
     cout << "Incorrect unit specification for getOutletTemp" << endl;
     exit(1);
   }
-  return returnVal;
 }
 
 double HPWH::getEnergyRemovedFromEnvironment(string units) const {
@@ -554,7 +629,8 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
         break;
         
       default:
-        cout << "You have input an incorrect turnOn logic choice specifier, exiting now" << endl;
+        cout << "You have input an incorrect turnOn logic choice specifier: "
+             << selection << "  Exiting now" << endl;
         exit(1);
         break;
     }
@@ -584,7 +660,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
       case 1:
         //when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
         if (heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint_C) {
-          cout << "shut down" << endl;
+          cout << "shut down" << endl << endl;
           shutsOff = true;
         }
         break;
