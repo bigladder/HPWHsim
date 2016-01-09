@@ -178,7 +178,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     } 
   }  //end loop over heat sources
 
-  cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
+  //cout << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << endl;
 
 
   //change the things according to DR schedule
@@ -269,6 +269,58 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
   return 0;
 } //end runOneStep
+
+
+
+int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
+                    double *tankAmbientT_C, double *heatSourceAmbientT_C,
+                    double *DRstatus, double minutesPerStep) {
+  //these are all the accumulating variables we'll need
+  double energyRemovedFromEnvironment_kWh_SUM = 0;
+  double standbyLosses_kWh_SUM = 0;
+  double outletTemp_C_AVG = 0;
+  double totalDrawVolume_L = 0;
+  std::vector<double> heatSources_runTimes_SUM(numHeatSources);
+  std::vector<double> heatSources_energyInputs_SUM(numHeatSources);
+  std::vector<double> heatSources_energyOutputs_SUM(numHeatSources);
+
+
+  //run the sim one step at a time, accumulating the outputs as you go
+  for (int i = 0; i < N; i++) {
+    runOneStep( inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i],
+                DRstatus[i], minutesPerStep );
+
+    energyRemovedFromEnvironment_kWh_SUM += energyRemovedFromEnvironment_kWh;
+    standbyLosses_kWh_SUM += standbyLosses_kWh;
+
+    totalDrawVolume_L += drawVolume_L[i];
+    outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
+    
+    for (int i = 0; i < numHeatSources; i++) {
+      heatSources_runTimes_SUM[i] += getNthHeatSourceRunTime(i);
+      heatSources_energyInputs_SUM[i] += getNthHeatSourceEnergyInput(i);
+      heatSources_energyOutputs_SUM[i] += getNthHeatSourceEnergyOutput(i);
+    }
+
+  }
+
+  //finish weighted avg. of outlet temp by dividing by the total drawn volume
+  outletTemp_C_AVG /= totalDrawVolume_L;
+
+
+  //now, reassign all of the accumulated values to their original spots
+  energyRemovedFromEnvironment_kWh = energyRemovedFromEnvironment_kWh_SUM;
+  standbyLosses_kWh = standbyLosses_kWh_SUM;
+  outletTemp_C = outletTemp_C_AVG;
+
+  for (int i = 0; i < numHeatSources; i++) {
+    setNthHeatSourceRunTime(i, heatSources_runTimes_SUM[i]);
+    setNthHeatSourceEnergyInput(i, heatSources_energyInputs_SUM[i]);
+    setNthHeatSourceEnergyOutput(i, heatSources_energyOutputs_SUM[i]);
+  }
+
+  return 0;
+}
 
 
 
@@ -552,6 +604,22 @@ double HPWH::bottomThirdAvg_C() const {
 }
 
 
+void HPWH::setNthHeatSourceEnergyInput(int N, double value){
+  setOfSources[N].energyInput_kWh = value;
+}
+
+void HPWH::setNthHeatSourceEnergyOutput(int N, double value){
+  setOfSources[N].energyOutput_kWh = value;
+}
+
+void HPWH::setNthHeatSourceRunTime(int N, double value){
+  setOfSources[N].runtime_min = value;
+}
+
+
+
+
+
 
 
 //these are the HeatSource functions
@@ -725,16 +793,17 @@ void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesP
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ;
-  double *heatDistribution;
+  static std::vector<double> heatDistribution(hpwh->numNodes);
 
+  //clear the heatDistribution vector, since it's static it is still holding the
+  //distribution from the last go around
+  heatDistribution.clear();
+  
   // Reset the runtime of the Heat Source
   runtime_min = 0.0;
 
-  // Could also have heatDistribution be part of the HeatSource class, rather than creating and destroying a vector every time we add heat
-  heatDistribution = new double [hpwh->numNodes];
-
   // calculate capacity btu/hr
-  getCapacity(externalT_C, &input_BTUperHr, &cap_BTUperHr, &cop);
+  getCapacity(externalT_C, input_BTUperHr, cap_BTUperHr, cop);
 
   //cout << "intput_BTUperHr cap_BTUperHr " << input_BTUperHr << " " << cap_BTUperHr << endl;
 
@@ -761,8 +830,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   // Write the input & output energy
   energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
   energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
-
-  delete[] heatDistribution;
 }
 
 
@@ -775,23 +842,22 @@ double HPWH::HeatSource::expitFunc(double x, double offset) {
 }
 
 
-void HPWH::HeatSource::normalize(double *Z, int n) {
+void HPWH::HeatSource::normalize(std::vector<double> &distribution, int n) {
   double sum_tmp = 0.0;
-  int i;
 
-  for(i = 0; i < n; i++) {
-    sum_tmp += Z[i];
+  for(int i = 0; i < n; i++) {
+    sum_tmp += distribution[i];
   }
 
-  for(i = 0; i < n; i++) {
-    Z[i] /= sum_tmp;
+  for(int i = 0; i < n; i++) {
+    distribution[i] /= sum_tmp;
   }
 }
 
 
 int HPWH::HeatSource::lowestNode() {
-  int i, lowest;
-  for(i = 0; i < hpwh->numNodes; i++) {
+  int lowest = 0;
+  for(int i = 0; i < hpwh->numNodes; i++) {
     if(condensity[i] > 0) {
       lowest = i;
       break;
@@ -814,7 +880,7 @@ double HPWH::HeatSource::getCondenserTemp() {
 }
 
 
-void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop) {
+void HPWH::HeatSource::getCapacity(double externalT_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
   double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
   double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
   double condenserTemp_C, externalT_F, condenserTemp_F;
@@ -822,7 +888,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
   // Calculate the current water temp at the "condenser"
   condenserTemp_C = getCondenserTemp();
 
-  cout << "condenserTemp_C " << condenserTemp_C << endl;
+  //cout << "condenserTemp_C " << condenserTemp_C << endl;
   // Convert Celsius to Fahrenheit for the curve fits
   condenserTemp_F = C_TO_F(condenserTemp_C);
   externalT_F = C_TO_F(externalT_C);
@@ -852,11 +918,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
 //cout << "inputPower_T1_Watts inputPower_T2_Watts " << inputPower_T1_Watts << " " << inputPower_T2_Watts << endl;
 
   // Interpolate to get COP and input power at the current ambient temperature
-  *cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
-  *input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) / 1000.0);  //1000 converts w to kw
-  *cap_BTUperHr = (*cop) * (*input_BTUperHr);
+  cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
+  input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) / 1000.0);  //1000 converts w to kw
+  cap_BTUperHr = cop * input_BTUperHr;
 
-  //cout << "cop input_BTUperHr cap_BTUperHr " << *cop << " " << *input_BTUperHr << " " << *cap_BTUperHr << endl;
+  //cout << "cop input_BTUperHr cap_BTUperHr " << cop << " " << input_BTUperHr << " " << cap_BTUperHr << endl;
 
 /*
   //here is where the scaling for flow restriction goes
@@ -870,16 +936,16 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double *input_BTUperHr, d
 }
 
 
-void HPWH::HeatSource::calcHeatDist(double *heatDistribution) {
+void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
   double condentropy, s; // Should probably have shrinkage (by way of condensity) be a property of the HeatSource class
   double alpha = 1;
   double beta = 2; // Mapping from condentropy to shrinkage
   double offset = 5;
-  int i, k;
+  int k;
 
   // Calculate condentropy and ==> shrinkage. Again this could/should be a property of the HeatSource.
   condentropy = 0;
-  for(i = 0; i < hpwh->numNodes; i++) {
+  for(int i = 0; i < hpwh->numNodes; i++) {
     if(condensity[i] > 0) {
       condentropy -= condensity[i] * log(condensity[i]);
     }
@@ -887,7 +953,7 @@ void HPWH::HeatSource::calcHeatDist(double *heatDistribution) {
   s = alpha + condentropy * beta;
 
   // Populate the vector of heat distribution
-  for(i = 0; i < hpwh->numNodes; i++) {
+  for(int i = 0; i < hpwh->numNodes; i++) {
     if(i < lowestNode()) {
       heatDistribution[i] = 0;
     } else {
@@ -911,7 +977,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 
   double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
   
-  cout << "node cap_kwh " << node << " " << KJ_TO_KWH(cap_kJ) << endl;
+  //cout << "node cap_kwh " << node << " " << KJ_TO_KWH(cap_kJ) << endl;
   // find the first node (from the bottom) that does not have the same temperature as the one above it
   // if they all have the same temp., use the top node, hpwh->numNodes-1
   setPointNodeNum = node;

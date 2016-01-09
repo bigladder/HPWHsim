@@ -48,10 +48,10 @@ class HPWH {
 	 * The return value is 0 for successful simulation run, something else otherwise
 	 */
 	 
-	int runNSteps(int N,  double inletT_C, double drawVolume_L, 
-					double ambientT_C, double externalT_C,
-					double DRstatus, double minutesPerStep);
-	/* This function will progress the simulation forward in time by N steps
+	int runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
+					double *tankAmbientT_C, double *heatSourceAmbientT_C,
+					double *DRstatus, double minutesPerStep);
+	/* This function will progress the simulation forward in time by N (equal) steps
 	 * The calculated values will be summed or averaged, as appropriate, and 
 	 * then stored in the usual variables to be accessed through functions
 	 * 
@@ -80,7 +80,6 @@ class HPWH {
   bool isNthHeatSourceRunning(int N) const;
   //return true if the Nth heat source is currently engaged
 
-  
 	double getOutletTemp(std::string units = "C") const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	//the input is a string containing the desired units, F or C
@@ -90,6 +89,8 @@ class HPWH {
 	double getStandbyLosses(std::string units = "kWh") const;
 	//get the amount of heat lost through the tank
  	//the input is a string containing the desired units, kWh or btu
+
+
  
  private:
   class HeatSource;
@@ -103,7 +104,16 @@ class HPWH {
 	double topThirdAvg_C() const;
 	double bottomThirdAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
-	
+
+  //a few setters, used for runNsteps
+	void setNthHeatSourceEnergyInput(int N, double value);
+	//set the energy input to the Nth heat source
+	void setNthHeatSourceEnergyOutput(int N, double value);
+	//set the energy output from the Nth heat source
+	void setNthHeatSourceRunTime(int N, double value);
+	//set the run time for the Nth heat source
+
+
 	bool isHeating;
 	//is the hpwh currently heating or not?
 	
@@ -275,8 +285,8 @@ class HPWH::HeatSource {
   
 
 	// I wrote some methods to help with the add heat interface - MJL
-  void getCapacity(double externalT_C, double *input_BTUperHr, double *cap_BTUperHr, double *cop);
-	void calcHeatDist(double *heatDistribution);
+  void getCapacity(double externalT_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+	void calcHeatDist(std::vector<double> &heatDistribution);
 
 	int lowestNode();
   //returns the number of the first non-zero condensity entry
@@ -286,7 +296,7 @@ class HPWH::HeatSource {
   
   // A few helper functions
   double expitFunc(double x, double offset);
-  void normalize(double *Z, int n);
+  void normalize(std::vector<double> &distribution, int n);
 
 };  //end of HeatSource class
 

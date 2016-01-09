@@ -374,9 +374,9 @@ printHeatSourceInfo(hpwh);
 
 
 //hpwh.HPWHinit_presets(3);
-//for (int i = 0; i < 1440*365; i++) {
-    //hpwh.runOneStep(0, 0.2, 0, 50, 1, 1);
-//}
+for (int i = 0; i < 1440*365; i++) {
+    hpwh.runOneStep(0, 0.2, 0, 50, 1, 1);
+}
 
 
 
