@@ -270,7 +270,7 @@ class HPWH::HeatSource {
 	// know if it is capable of contributing to this effect or not
   // NOTE: this only works for 1 minute steps
 
-	int configuration; // 1 = in tank, 2 = wrapped around tank, 3 = external
+	std::string configuration; // submerged, wrapped, external
 
 
 

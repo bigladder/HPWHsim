@@ -171,7 +171,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     compressor.COP_T2_linear = -0.0252;
     compressor.COP_T2_quadratic = 0.00000254;
     compressor.hysteresis = 0;  //no hysteresis
-    compressor.configuration = 2; //wrapped around tank
+    compressor.configuration = "wrapped"; //wrapped around tank
     
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
@@ -911,10 +911,11 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   cout << "capacity " << cap_BTUperHr << endl;
   //cout << "intput_BTUperHr cap_BTUperHr " << input_BTUperHr << " " << cap_BTUperHr << endl;
 
-  if((configuration == 1) || (configuration == 2)) {
-    // Either the heat source is within the tank or wrapped around it
+  if((configuration == "submerged") || (configuration == "wrapped")) {
     calcHeatDist(heatDistribution);
+    //calcHeatDist takes care of the swooping for wrapped configurations
     cout << "heatDistribution: " << heatDistribution[0] << " "<< heatDistribution[1] << " "<< heatDistribution[2] << " "<< heatDistribution[3] << " "<< heatDistribution[4] << " "<< heatDistribution[5] << " "<< heatDistribution[6] << " "<< heatDistribution[7] << " "<< heatDistribution[8] << " "<< heatDistribution[9] << " "<< heatDistribution[10] << " "<< heatDistribution[11] << endl;
+
     //the loop over nodes here is intentional - essentially each node that has
     //some amount of heatDistribution acts as a separate resistive element
     for(int i = 0; i < hpwh->numNodes; i++){
@@ -923,7 +924,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
         runtime_min += addHeatAboveNode(captmp_kJ, i, minutesToRun);
       }
     }
-  } else if(configuration == 3){
+  }
+  else if(configuration == "external"){
     // Else the heat source is external. Sanden thingy
     runtime_min = addHeatExternal(cap_BTUperHr, minutesToRun);
   }
@@ -931,7 +933,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
     cout << "Invalid heat source configuration chosen: " << configuration << endl;
     cout << "Ending program!" << endl;
     exit(1);
-    }
+  }
   // Write the input & output energy
   energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
   energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
@@ -1061,11 +1063,13 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
   for(int i = 0; i < hpwh->numNodes; i++) {
     if(i < lowestNode()) {
       heatDistribution[i] = 0;
-    } else {
-      if(configuration == 1) { // Inside the tank, no swoopiness required
+    }
+    else {
+      if(configuration == "submerged") { // Inside the tank, no swoopiness required
         k = floor(i / 12.0 * hpwh->numNodes);
         heatDistribution[i] = condensity[k];
-      } else if(configuration == 2) { // Wrapped around the tank, send through the logistic function
+      }
+      else if(configuration == "wrapped") { // Wrapped around the tank, send through the logistic function
         heatDistribution[i] = expitFunc( (hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode()]) / s , offset);
         heatDistribution[i] *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
       }
@@ -1207,7 +1211,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     COP_T2_linear = 0;
     COP_T2_quadratic = 0;
     hysteresis = 0;  //no hysteresis
-    configuration = 1; //immersed in tank
+    configuration = "submerged"; //immersed in tank
     
     //standard logic conditions
     if(node < 3) {

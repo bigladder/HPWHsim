@@ -385,9 +385,9 @@ return 0;
 
 void printTankTemps(HPWH& hpwh) {
   cout << std::left;
-
+  
   for (int i = 0; i < hpwh.getNumNodes(); i++) {
-    cout << std::setw(7) << hpwh.getTankNodeTemp(i) << " ";
+    cout << std::setw(9) << hpwh.getTankNodeTemp(i) << " ";
   }
   cout << endl;
 
@@ -395,6 +395,8 @@ void printTankTemps(HPWH& hpwh) {
 
 void printHeatSourceInfo(HPWH& hpwh){
   cout << std::left;
+  cout << std::fixed;
+  cout << std::setprecision(2);
   for (int i = 0; i < hpwh.getNumHeatSources(); i++) {
     cout << "heat source " << i << ": " << hpwh.isNthHeatSourceRunning(i) << "\t\t";   
   }
@@ -406,7 +408,17 @@ void printHeatSourceInfo(HPWH& hpwh){
   cout << endl;
 
   for (int i = 0; i < hpwh.getNumHeatSources(); i++) {
+    cout << "input power kw: " << std::setw(7) << hpwh.getNthHeatSourceEnergyInput(i) / (hpwh.getNthHeatSourceRunTime(i)/60.0) << "\t\t";   
+  }
+  cout << endl;
+
+  for (int i = 0; i < hpwh.getNumHeatSources(); i++) {
     cout << "output energy kwh: " << std::setw(7) << hpwh.getNthHeatSourceEnergyOutput(i) << "\t";   
+  }
+  cout << endl;
+  
+  for (int i = 0; i < hpwh.getNumHeatSources(); i++) {
+    cout << "output power kw: " << std::setw(7) << hpwh.getNthHeatSourceEnergyOutput(i) / (hpwh.getNthHeatSourceRunTime(i)/60.0) << "\t";   
   }
   cout << endl;
   
