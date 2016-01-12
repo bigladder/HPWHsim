@@ -9,6 +9,16 @@
  * 
  */
 #include "HPWH.hh"
+#include <iostream>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_DIR_LENGTH 255
+#define DEBUG 0
+
+using std::cout;
+using std::endl;
+using std::string;
 
 
 #define F_TO_C(T) ((T-32.0)*5.0/9.0)
@@ -18,7 +28,7 @@
 char *dynamicstrcat(int n,...);
 int readSchedule(double *scheduleArray, int scheduleLength, char *scheduleFileName, char *scheduleName, char *scheduleHeaders);
 
-int main(void)
+int main(int argc, char *argv[])
 {
   HPWH hpwh;
 
@@ -39,7 +49,7 @@ int main(void)
   char *fileToOpen = NULL;    //also do not malloc, this gets the malloc from dynamicstrcat
   char *scheduleName = NULL, *scheduleHeaders = NULL;    //these two receive string literals, and so don't need to be malloced
   
-  char *inputVariableName = malloc(MAX_DIR_LENGTH*sizeof(*inputVariableName));
+  string inputVariableName;
 
   int i, j, minutesToRun;
 
@@ -63,13 +73,20 @@ int main(void)
 
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = strdup(argv[1]);
+  testDirectory = argv[1];
   
-  drawSchedule = malloc(minutesToRun*sizeof(*drawSchedule));
+  /*drawSchedule = malloc(minutesToRun*sizeof(*drawSchedule));
   DRSchedule = malloc(minutesToRun*sizeof(*DRSchedule));
   inletTschedule = malloc(minutesToRun*sizeof(*inletTschedule));
   ambientTschedule = malloc(minutesToRun*sizeof(*ambientTschedule));
-  evaporatorTschedule = malloc(minutesToRun*sizeof(*evaporatorTschedule));
+  evaporatorTschedule = malloc(minutesToRun*sizeof(*evaporatorTschedule));*/
+
+  drawSchedule = new double[minutesToRun];
+  DRSchedule = new double[minutesToRun];
+  inletTschedule = new double[minutesToRun];
+  ambientTschedule = new double[minutesToRun];
+  evaporatorTschedule = new double[minutesToRun];
+  
   if(drawSchedule == NULL || DRSchedule == NULL || inletTschedule == NULL || ambientTschedule == NULL || evaporatorTschedule == NULL){
     printf("One of the schedule arrays has failed to malloc.  Yikes, I'm out.\n");
     return 1;
