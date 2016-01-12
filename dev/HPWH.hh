@@ -145,7 +145,7 @@ class HPWH {
 	
 	
 	//special variables for adding abilities
-	bool tankMixing;
+	bool tankMixesOnDraw;
 	// whether or not the bottom third of the tank should mix during draws
 	bool doTempDepression;
 	// whether the HPWH should use the alternate ambient temperature that  
@@ -233,9 +233,9 @@ class HPWH::HeatSource {
 	
 	double T1_F, T2_F;
 	//the two temperatures where the input and COP curves are defined
-	double inputPower_T1_constant, inputPower_T2_constant;
-	double inputPower_T1_linear, inputPower_T2_linear;
-	double inputPower_T1_quadratic, inputPower_T2_quadratic;
+	double inputPower_T1_constant_W, inputPower_T2_constant_W;
+	double inputPower_T1_linear_WperF, inputPower_T2_linear_WperF;
+	double inputPower_T1_quadratic_WperF2, inputPower_T2_quadratic_WperF2;
 	//these are the coefficients for the quadratic function 
 	//defining the input power as a function of the condenser temperature
 	double COP_T1_constant, COP_T2_constant;
