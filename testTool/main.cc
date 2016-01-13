@@ -10,8 +10,8 @@
  */
 #include "HPWH.hh"
 #include <iostream>
-#include <string.h>
-#include <stdlib.h>
+#include <fstream>
+#include <sstream>
 
 #define MAX_DIR_LENGTH 255
 #define DEBUG 0
@@ -19,374 +19,146 @@
 using std::cout;
 using std::endl;
 using std::string;
+using std::ifstream;
+using std::ofstream;
 
 
 #define F_TO_C(T) ((T-32.0)*5.0/9.0)
 #define GAL_TO_L(GAL) (GAL*3.78541)
 
+typedef std::vector<double> schedule;
 
-char *dynamicstrcat(int n,...);
-int readSchedule(double *scheduleArray, int scheduleLength, char *scheduleFileName, char *scheduleName, char *scheduleHeaders);
+
+int readSchedule(schedule &scheduleArray, string scheduleFileName, int minutesOfTest);
+int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples);
+int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs);
 
 int main(int argc, char *argv[])
 {
   HPWH hpwh;
 
+  std::vector<double> simTCouples(6);
+  std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
 
-  double *drawSchedule = NULL;
-  double *DRSchedule = NULL;
-  double *inletTschedule = NULL;
-  double *ambientTschedule = NULL;
-  double *evaporatorTschedule = NULL;
+  // Schedule stuff  
+  std::vector<string> scheduleNames;
+  std::vector<schedule> allSchedules(5);
 
-  double *heatSourcesEnergyInput, *heatSourcesEnergyOutput;
-  double simTcouples[6];
-  
-  FILE *hpwhTestToolOutputFILE = NULL;
-  FILE *inputFILE = NULL;
-
-  char *testDirectory = NULL;  //no need to malloc, it will receive a strdup
-  char *fileToOpen = NULL;    //also do not malloc, this gets the malloc from dynamicstrcat
-  char *scheduleName = NULL, *scheduleHeaders = NULL;    //these two receive string literals, and so don't need to be malloced
-  
+  string testDirectory, fileToOpen, scheduleName, var1, input1;
   string inputVariableName;
+  int i, j, minutesToRun, outputCode, nSources;
 
-  int i, j, minutesToRun;
+  ofstream outputFile;
+  ifstream controlFile;
 
   //.......................................
   //process command line arguments
   //.......................................  
+
 
   //Obvious wrong number of command line arguments
   if ((argc >=3)) {
     printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
     }
   //Help message
-  if ((argc != 2) || ( *argv[1] == '?') || (strcmp(argv[1],"help") == 0)) {
-    printf("Standard usage: \"hpwhTestTool.x test_directory\"\n");
-    printf("All input files should be located in the test directory, with these names:\n");
-    printf("drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n");
-    printf("An output file, hpwhTestOutput.csv, will be written in the test directory\n");
-    return 2;
-    }
-
-
+  if(argc > 1) {
+    input1 = argv[1];
+  } else {
+    input1 = "asdf";
+  }
+  if ((argc != 2) || (input1 == "?") || (input1 == "help")) {
+    cout << "Standard usage: \"hpwhTestTool.x test_directory\"\n";
+    cout << "All input files should be located in the test directory, with these names:\n"; 
+    cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n"; 
+    cout << "An output file, hpwhTestOutput.csv, will be written in the test directory\n";
+    exit(1);
+  }
 
   //Only input file specified -- don't suffix with .csv
   testDirectory = argv[1];
-  
-  /*drawSchedule = malloc(minutesToRun*sizeof(*drawSchedule));
-  DRSchedule = malloc(minutesToRun*sizeof(*DRSchedule));
-  inletTschedule = malloc(minutesToRun*sizeof(*inletTschedule));
-  ambientTschedule = malloc(minutesToRun*sizeof(*ambientTschedule));
-  evaporatorTschedule = malloc(minutesToRun*sizeof(*evaporatorTschedule));*/
 
-  drawSchedule = new double[minutesToRun];
-  DRSchedule = new double[minutesToRun];
-  inletTschedule = new double[minutesToRun];
-  ambientTschedule = new double[minutesToRun];
-  evaporatorTschedule = new double[minutesToRun];
-  
-  if(drawSchedule == NULL || DRSchedule == NULL || inletTschedule == NULL || ambientTschedule == NULL || evaporatorTschedule == NULL){
-    printf("One of the schedule arrays has failed to malloc.  Yikes, I'm out.\n");
-    return 1;
-    }
-  
+  // Read the test control file
+  fileToOpen = testDirectory + "/" + "hpwhProperties.txt";
+  controlFile.open(fileToOpen.c_str());
+  while(controlFile >> var1 >> minutesToRun) {
+    if(var1 == "length_of_test") break;
+  }
+
+  if(var1 != "length_of_test") {
+    cout << "Error, first line of hpwhProperties.txt should have length_of_test\n";
+    exit(1);
+  }
+
   
   // ------------------------------------- Read Schedules--------------------------------------- //
-  //first, let's get the draw schedule
-  //---------------------------------------
-  scheduleName = "draw";
-  scheduleHeaders = "minutes,flow";
-  fileToOpen = dynamicstrcat(4, testDirectory, "/", scheduleName, "schedule.csv");
-
-  outputCode = readSchedule(drawSchedule, minutesToRun, fileToOpen, scheduleName, scheduleHeaders);
-  if(outputCode != 0){
-    printf("readSchedule returns an error on %s schedule!\n", scheduleName);
-    exit(outputCode);
+  scheduleNames.push_back("inletT");
+  scheduleNames.push_back("draw");
+  scheduleNames.push_back("ambientT");
+  scheduleNames.push_back("evaporatorT");
+  scheduleNames.push_back("DR");
+  for(i = 0; (unsigned)i < scheduleNames.size(); i++) {
+    fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
+    outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
+    if(outputCode != 0) {
+      cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
+      exit(1);
     }
-  free(fileToOpen);  fileToOpen = NULL;
-  
-  
-  //now, let's get the DR schedule
-  //---------------------------------------
-  scheduleName = "DR";
-  scheduleHeaders = "minutes,OnOff";
-  fileToOpen = dynamicstrcat(4, testDirectory, "/", scheduleName, "schedule.csv");
-
-  outputCode = readSchedule(DRSchedule, minutesToRun, fileToOpen, scheduleName, scheduleHeaders);
-  if(outputCode != 0){
-    printf("readSchedule returns an error on %s schedule!\n", scheduleName);
-    exit(outputCode);
-    }
-  free(fileToOpen);  fileToOpen = NULL;
-  
-  
-  //next, let's get the inletT schedule
-  //---------------------------------------
-  scheduleName = "inletT";
-  scheduleHeaders = "minutes,temperature";
-  fileToOpen = dynamicstrcat(4, testDirectory, "/", scheduleName, "schedule.csv");
-
-  outputCode = readSchedule(inletTschedule, minutesToRun, fileToOpen, scheduleName, scheduleHeaders);
-  if(outputCode != 0){
-    printf("readSchedule returns an error on %s schedule!\n", scheduleName);
-    exit(outputCode);
-    }
-  free(fileToOpen);  fileToOpen = NULL;
-
-
-  //penultimately, let's get the ambientT schedule
-  //---------------------------------------
-  scheduleName = "ambientT";
-  scheduleHeaders = "minutes,temperature";
-  fileToOpen = dynamicstrcat(4, testDirectory, "/", scheduleName, "schedule.csv");
-
-  outputCode = readSchedule(ambientTschedule, minutesToRun, fileToOpen, scheduleName, scheduleHeaders);
-  if(outputCode != 0){
-    printf("readSchedule returns an error on %s schedule!\n", scheduleName);
-    exit(outputCode);
-    }
-  free(fileToOpen);  fileToOpen = NULL;
-
-
-  //ultimately, let's get the evaporatorT schedule
-  //---------------------------------------
-  scheduleName = "evaporatorT";
-  scheduleHeaders = "minutes,temperature";
-  fileToOpen = dynamicstrcat(4, testDirectory, "/", scheduleName, "schedule.csv");
-
-  outputCode = readSchedule(evaporatorTschedule, minutesToRun, fileToOpen, scheduleName, scheduleHeaders);
-  if(outputCode != 0){
-    printf("readSchedule returns an error on %s schedule!\n", scheduleName);
-    exit(outputCode);
-    }
-  free(fileToOpen);  fileToOpen = NULL;
-
-  
-
-  // Open the output file and print the header
-  fileToOpen = dynamicstrcat(3, testDirectory, "/", "hpwhTestToolOutput.csv");
-  hpwhTestToolOutputFILE = fopen(fileToOpen,"w");
-  fprintf(hpwhTestToolOutputFILE, "%s,%s,%s,%s,", "minute_of_year", "Ta", "inletT", "draw");
-  for(i = 0; i < hpwh.getNumHeatSources(); i++) {
-    fprintf(hpwhTestToolOutputFILE, "%s%d,%s%d,", "input_kJ", i + 1, "output_kJ", i + 1);
   }
-  fprintf(hpwhTestToolOutputFILE, "%s,%s,%s,%s,%s,%s\n", "simTCouples1", "simTCouples2", "simTCouples3", "simTCouples4", "simTCouples5", "simTcouples6");
+
+  // Set the hpwh properties
+  hpwh.HPWHinit_presets(4);
+  nSources = hpwh.getNumHeatSources();
+  for(i = 0; i < nSources; i++) {
+    heatSourcesEnergyInput.push_back(0.0);
+    heatSourcesEnergyOutput.push_back(0.0);
+  } 
 
 
+  // ----------------------Open the Output File and Print the Header---------------------------- //
+  fileToOpen = testDirectory + "/hpwhTestToolOutput.csv";
+  outputFile.open(fileToOpen.c_str());
+  outputFile << "minute_of_year,Ta,inletT,draw";
+  for(i = 0; i < hpwh.getNumHeatSources(); i++) {
+    outputFile << ",input_kWh" << i + 1 << ",output_kWh" << i + 1;
+  }
+  outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6\n";
 
 
   // ------------------------------------- Simulate --------------------------------------- //
 
-  // Set the hpwh properties
-  hpwh.HPWHinit_presets(3);
-
   // Loop over the minutes in the test
-  minutesToRun = 100; // Need to figure out how to read this...
+  cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
   for(i = 0; i < minutesToRun; i++) {
     // Run the step
-    hpwh.runOneStep(inletTschedule[i], drawSchedule[i], ambientTschedule[i], evaporatorTschedule[i], DRSchedule[i], 1.0);
+    hpwh.runOneStep(F_TO_C(allSchedules[0][i]),    // Inlet water temperature (C)
+                      allSchedules[1][i],          // Flow in gallons
+                      F_TO_C(allSchedules[2][i]),  // Ambient Temp (C)
+                      F_TO_C(allSchedules[3][i]),  // External Temp (C)
+                      allSchedules[4][i], 1.0);    // DDR Status (1 or 0)
 
-    // ???
-    // hpwh.getHeatSourcesEnergyInput(heatSourcesEnergyInput);
-    // hpwh.getHeatSourcesEnergyOutput(heatSourcesEnergyOutput);
-    // hpwh.getSimTcouples(simTcouples);
+    // Grab the current status
+    getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
+    getSimTcouples(hpwh, simTCouples);
+    /*for(int k = 0; k < 6; k++) simTCouples[k] = 25;
+    for(int k = 0; k < nSources; k++) {
+      heatSourcesEnergyInput[k] = 0;
+      heatSourcesEnergyOutput[k] = 0;
+    }*/
 
     // Copy current status into the output file
-    fprintf(hpwhTestToolOutputFILE, "%d,%f,%f,%f,", i, ambientTschedule[i], inletTschedule[i], drawSchedule[i]);
+    outputFile << i << "," << allSchedules[2][i] << "," << allSchedules[0][i] << "," << allSchedules[1][i];
     for(j = 0; j < hpwh.getNumHeatSources(); j++) {
-      fprintf(hpwhTestToolOutputFILE, "%f,%f,", heatSourcesEnergyInput[j], heatSourcesEnergyOutput[j]);
+      outputFile << "," << heatSourcesEnergyInput[j] << "," << heatSourcesEnergyOutput[j];
     }
-    fprintf(hpwhTestToolOutputFILE, "%f,%f,%f,%f,%f,%f\n", simTCouples[0], simTCouples[1], simTCouples[2], simTCouples[3], simTCouples[4], simTCouples[5]);
-
-
+    outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] << 
+      "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
   }
 
+  controlFile.close();
+  outputFile.close();
 
 
-//hpwh.HPWHinit_presets(1);
-
-//int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
-          //double ambientT_C, double externalT_C,
-          //double DRstatus, double minutesPerStep)
-//hpwh.runOneStep(0, 120, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 5, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 5, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 5, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 5, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 5, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 10, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-//hpwh.runOneStep(0, 0, 50, 50, 1, 1);
-//hpwh.printTankTemps();
-
-/*
-hpwh.runOneStep(0, 10, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, -10, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-hpwh.runOneStep(0, 0, 0, 50, 1, 1);
-hpwh.printTankTemps();
-*/
-
-
-//hpwh.HPWHinit_presets(3);
-//for (int i = 0; i < 1440*365; i++) {
-    //hpwh.runOneStep(0, 0.2, 0, 50, 1, 1);
-//}
-
-
-
-return 0;
+  return 0;
 
 }
 
@@ -394,112 +166,88 @@ return 0;
 
 
   
-  
-  
-//concatenate strings - there's apparently not a good library function to do this in C
-char *dynamicstrcat(int n,...) {
-  char *newstr;
-  int sum, i;
-  va_list ap;
-
-  sum=0;
-  va_start(ap,n);
-
-  //Go through once to determine the final length
-  for(i=0;i<n;i++)
-    sum+=strlen(va_arg(ap,char *));
-  sum++;
-  va_end(ap);
-
-  //Allocate memory for new, concatenated string
-  newstr=(char *) malloc(sum);
-  if(newstr == NULL){
-    printf("Error: malloc returns NULL in dynamicstrcat\n");
-    return NULL;
-    }
-  //Go through again to concatenate
-  va_start(ap,n);
-  strcpy(newstr,va_arg(ap,char *));
-  for(i=1;i<n;i++)
-    strcat(newstr,va_arg(ap,char *));
-  va_end(ap);
-
-  //Return the new string
-  return newstr;
-}
 
 
-//this function reads the named schedule into the provided array
-int readSchedule(double *scheduleArray, int scheduleLength, char *scheduleFileName, char *scheduleName, char *scheduleHeaders){
-  int i;
-  double inputVariable, inputVariable2, defaultVal;
-  
-  char *inputVariableName = malloc(MAX_DIR_LENGTH*sizeof(*inputVariableName));
-  
-  FILE *inputFILE = NULL;
-
-
+// this function reads the named schedule into the provided array
+int readSchedule(schedule &scheduleArray, string scheduleFileName, int minutesOfTest) {
+  int i, minuteTmp;
+  string line, snippet, s;
+  double valTmp;
+  ifstream inputFile(scheduleFileName.c_str());  
   //open the schedule file provided
-  printf("Opening %s\n", scheduleFileName);
-  inputFILE = fopen(scheduleFileName,"r");
-  if (inputFILE == NULL){
-    perror("Error: ");
-    return 1;
-    }
-      
-  //check for contents - it should not be empty, and begin with the default value
-  if(fscanf(inputFILE, "%s %lf", inputVariableName, &inputVariable) == EOF){
-    printf("The %s file is empty.  Please use your words.\n", scheduleFileName);
-    return 1;
-    }
-  else if(strcmp(inputVariableName, "default") != 0){
-    printf("The %s file should begin with \"default\".  \nSelf Destruct in \n3...\n", scheduleFileName);
-    printf("2...\n");
-    printf("1...\n");
-    return 1;
-    }
-  else{
-    defaultVal = inputVariable;
-    printf("Default %s value is: %0.1lf\n", scheduleName, defaultVal);
-    }  
-  
-  //fill schedule array with its default value
-  for(i = 0; i < scheduleLength; i++){
-    scheduleArray[i] = defaultVal;
-    }
-  
-  
-  //read in header line and check it for validity
-  if(fscanf(inputFILE, "%s", inputVariableName) == EOF || strcmp(inputVariableName, scheduleHeaders) != 0 ){
-    printf("\n\nThe %s file is missing headers.  Please be more specific.\n", scheduleFileName);
-    return 1;
-    }
+  cout << "Opening " << scheduleFileName << '\n';
 
+  if(!inputFile.is_open()) {
+    cout << "Unable to open file" << '\n';
+    return 1;
+  } 
 
-  //at last, put the schedule in to the array
-  while(fscanf(inputFILE, "%lf,%lf", &inputVariable, &inputVariable2) != EOF){
-    //if(DEBUG == 1) printf("inputVariable: %0.2lf   inputVariable2: %0.2lf\n", inputVariable, inputVariable2);
-    if((int)inputVariable - 1 > scheduleLength){
-      printf("Warning:  This schedule has more values than there are minutes of test\n");
-      break;
-      }
-    
-    scheduleArray[(int)inputVariable - 1] = inputVariable2;
-    }
+  inputFile >> snippet >> valTmp;
+  if(snippet != "default") {
+    cout << "First line of " << scheduleFileName << " must specify default\n";
+    return 1;
+  }
+  // cout << valTmp << " minutes = " << minutesOfTest << "\n";
+  // cout << "size " << scheduleArray.size() << "\n";
+  // Fill with the default value
+  for(i = 0; i < minutesOfTest; i++) {
+    scheduleArray.push_back(valTmp);
+    // scheduleArray[i] = valTmp;
+  }
+
+  // Burn the first two lines
+  std::getline(inputFile, line);
+  std::getline(inputFile, line);
+
+  // Read all the exceptions
+  while(std::getline(inputFile, line)) {
+    std::stringstream ss(line); // Will parse with a stringstream
+
+    // Grab the first token, which is the minute
+    std::getline(ss, s, ',');
+    std::istringstream(s) >> minuteTmp;
+
+    // Grab the second token, which is the value
+    std::getline(ss, s, ',');
+    std::istringstream(s) >> valTmp;
+
+    // Update the value
+    scheduleArray[minuteTmp - 1] = valTmp;
+  }
 
   //print out the whole schedule
   if(DEBUG == 1){
-    for(i = 0; i < scheduleLength; i++){
-      printf("scheduleArray[%d] = %0.1lf\n", i, scheduleArray[i]);
-      }
+    for(i = 0; (unsigned)i < scheduleArray.size(); i++){
+      cout << "scheduleArray[" << i << "] = " << scheduleArray[i] << "\n";
     }
-  
-  
-  printf("\n");
-  fclose(inputFILE);
-  free(inputVariableName);
+  }
+
+  inputFile.close();
 
   return 0;
   
+}
+
+
+int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples) {
+  int i;
+
+  tcouples.clear();
+  for(i = 0; i < 6; i++) {
+    tcouples[i] = hpwh.getNthSimTcouple(i + 1); 
   }
-  
+  return 0;
+}
+
+int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs) {
+  int i;
+  inputs.clear();
+  outputs.clear();
+  for(i = 0; i < hpwh.getNumHeatSources(); i++) {
+    inputs[i] = hpwh.getNthHeatSourceEnergyInput(i);
+    outputs[i] = hpwh.getNthHeatSourceEnergyOutput(i);
+  }
+  return 0;
+}
+
+
