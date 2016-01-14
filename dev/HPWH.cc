@@ -30,7 +30,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
       tankTemps_C[i] = setpoint_C;
     }
     
-    tankVolume_L = 120; 
+    tankVolume_L = 12; 
     tankUA_kJperHrC = 0; //0 to turn off
     
     doTempDepression = false;
@@ -45,6 +45,10 @@ int HPWH::HPWHinit_presets(int presetNum) {
     
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
     resistiveElementTop.setupAsResistiveElement(9, 4500);
+
+    //temporary for testing
+    resistiveElementBottom.configuration = "external";
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("bottomTwelthMaxTemp", 40));
     
     //assign heat sources into array in order of priority
     setOfSources[0] = resistiveElementTop;
@@ -198,9 +202,9 @@ int HPWH::HPWHinit_presets(int presetNum) {
   //compressor.backupHeatSource = &resistiveElementBottom;
    
 
-  cout << "heat source 1 " << &setOfSources[0] << endl;
-  cout << "heat source 2 " << &setOfSources[1] << endl;
-  cout << "heat source 3 " << &setOfSources[2] << endl;
+  //cout << "heat source 1 " << &setOfSources[0] << endl;
+  //cout << "heat source 2 " << &setOfSources[1] << endl;
+  //cout << "heat source 3 " << &setOfSources[2] << endl;
 
   return 0;
 }  //end HPWHinit_presets
@@ -389,10 +393,10 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
     totalDrawVolume_L += drawVolume_L[i];
     outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
     
-    for (int i = 0; i < numHeatSources; i++) {
-      heatSources_runTimes_SUM[i] += getNthHeatSourceRunTime(i);
-      heatSources_energyInputs_SUM[i] += getNthHeatSourceEnergyInput(i);
-      heatSources_energyOutputs_SUM[i] += getNthHeatSourceEnergyOutput(i);
+    for (int j = 0; j < numHeatSources; j++) {
+      heatSources_runTimes_SUM[j] += getNthHeatSourceRunTime(j);
+      heatSources_energyInputs_SUM[j] += getNthHeatSourceEnergyInput(j);
+      heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
     }
 
   }
@@ -697,6 +701,19 @@ double HPWH::bottomThirdAvg_C() const {
 }
 
 
+double HPWH::bottomTwelthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 0; i < numNodes/12; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  
+  return sum/num;
+}
+
+
 void HPWH::setNthHeatSourceEnergyInput(int N, double value){
   setOfSources[N].energyInput_kWh = value;
 }
@@ -825,7 +842,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
 
 
 bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
-  bool shutsOff = false;
+  bool shutOff = false;
   int selection = 0;
 
   for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
@@ -835,6 +852,12 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
     else if (shutOffLogicSet[i].selector == "lowTreheat") {
       selection = 2;
     }
+    else if (shutOffLogicSet[i].selector == "bottomNodeMaxTemp") {
+      selection = 3;
+    }
+    else if (shutOffLogicSet[i].selector == "bottomTwelthMaxTemp") {
+      selection = 4;
+    }
 
 
     switch (selection) {
@@ -842,7 +865,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
         if (heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint_C) {
           cout << "shut down lowT" << endl << endl;
-          shutsOff = true;
+          shutOff = true;
         }
         break;
 
@@ -850,7 +873,24 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //don't run is the temperature is too warm
         if (heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint_C) {
           cout << "shut down lowTreheat" << endl << endl;
-          shutsOff = true;
+          shutOff = true;
+        }
+        break;
+      
+      case 3:
+        //don't run if the bottom node is too hot - typically for "external" configuration
+        if (hpwh->tankTemps_C[0] > shutOffLogicSet[i].decisionPoint_C) {
+          cout << "shut down bottom node temp" << endl << endl;
+          shutOff = true;
+        }
+        break;
+
+      case 4:
+        //don't run if the bottom twelth of the tank is too hot
+        //typically for "external" configuration
+        if (hpwh->bottomTwelthAvg_C() > shutOffLogicSet[i].decisionPoint_C) {
+          cout << "shut down bottom twelth temp" << endl << endl;
+          shutOff = true;
         }
         break;
       
@@ -861,7 +901,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
     }
   }
 
-  return shutsOff;
+  return shutOff;
 }
 
 
@@ -896,7 +936,7 @@ void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesP
 
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
-  double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ;
+  double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ;
   static std::vector<double> heatDistribution(hpwh->numNodes);
 
   //clear the heatDistribution vector, since it's static it is still holding the
@@ -904,13 +944,15 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   heatDistribution.clear();
   
   // Reset the runtime of the Heat Source
-  runtime_min = 0.0;
+  this->runtime_min = 0.0;
 
-  // calculate capacity btu/hr
+  // calculate capacity btu/hr, input btu/hr, and cop
   getCapacity(externalT_C, input_BTUperHr, cap_BTUperHr, cop);
-  cout << "capacity " << cap_BTUperHr << endl;
-  //cout << "intput_BTUperHr cap_BTUperHr " << input_BTUperHr << " " << cap_BTUperHr << endl;
+  leftoverCap_kJ = 0.0;
 
+  cout << "capacity_kJ " << BTU_TO_KJ(cap_BTUperHr)*(minutesToRun)/60.0 << endl;
+
+  
   if((configuration == "submerged") || (configuration == "wrapped")) {
     calcHeatDist(heatDistribution);
     //calcHeatDist takes care of the swooping for wrapped configurations
@@ -918,22 +960,30 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 
     //the loop over nodes here is intentional - essentially each node that has
     //some amount of heatDistribution acts as a separate resistive element
-    for(int i = 0; i < hpwh->numNodes; i++){
+//maybe start from the top and go down?  test this with graphs
+    for(int i = hpwh->numNodes -1; i >= 0; i--){
+    //for(int i = 0; i < hpwh->numNodes; i++){
       captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
       if(captmp_kJ != 0){
-        runtime_min += addHeatAboveNode(captmp_kJ, i, minutesToRun);
+        //add leftoverCap to the next run, and keep passing it on
+        leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
       }
     }
+   
   }
   else if(configuration == "external"){
     // Else the heat source is external. Sanden thingy
-    runtime_min = addHeatExternal(cap_BTUperHr, minutesToRun);
+    leftoverCap_kJ = addHeatExternal(externalT_C, cap_BTUperHr, minutesToRun);
   }
   else{
     cout << "Invalid heat source configuration chosen: " << configuration << endl;
     cout << "Ending program!" << endl;
     exit(1);
   }
+
+  //after you've done everything, any leftover capacity is time that didn't run
+  this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
+ 
   // Write the input & output energy
   energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
   energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
@@ -1081,8 +1131,8 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 
 double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesToRun) {
-  double Q_kJ, deltaT_C, targetTemp_C, runtime_min = 0.0;
-  int i = 0, j = 0, setPointNodeNum;
+  double Q_kJ, deltaT_C, targetTemp_C;
+  int setPointNodeNum;
 
   double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
   
@@ -1090,7 +1140,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
   // find the first node (from the bottom) that does not have the same temperature as the one above it
   // if they all have the same temp., use the top node, hpwh->numNodes-1
   setPointNodeNum = node;
-  for(i = node; i < hpwh->numNodes-1; i++){
+  for(int i = node; i < hpwh->numNodes-1; i++){
     if(hpwh->tankTemps_C[i] != hpwh->tankTemps_C[i+1]) {
       break;
     }
@@ -1117,34 +1167,29 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 
     //Running the rest of the time won't recover
     if(Q_kJ > cap_kJ){
-      for(j = node; j <= setPointNodeNum; j++) {
+      for(int j = node; j <= setPointNodeNum; j++) {
         hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / volumePerNode_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
       }
-      runtime_min = minutesToRun;
       cap_kJ = 0;
     }
     //temp will recover by/before end of timestep
     else{
-      for(j = node; j <= setPointNodeNum; j++){
+      for(int j = node; j <= setPointNodeNum; j++){
         hpwh->tankTemps_C[j] = targetTemp_C;
       }
-      ++setPointNodeNum;
-      //calculate how long the element was on, in minutes
-      //(should be less than minutesToRun, typically 1...),
-      //based on the capacity and the required amount of heat
-      runtime_min += (Q_kJ / cap_kJ) * minutesToRun;
+      setPointNodeNum++;
       cap_kJ -= Q_kJ;
     }
   }
-  
-  return runtime_min;
+
+  //return the unused capacity
+  return cap_kJ;
 }
 
 
-double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesToRun) {
+double HPWH::HeatSource::addHeatExternal(double externalT_C, double cap_BTUperHr, double minutesToRun) {
   double nodeHeat_kJperNode, heatingCapacity_kJ, remainingCapacity_kJ, deltaT_C, nodeFrac;
-  int n;
-  double heatingCutoff_C = 20; // When to turn off the compressor. Should be a property of the HeatSource?
+  double heatingCutoff_C = 20.0; // When to turn off the compressor. Should be a property of the HeatSource?
 
   double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 
@@ -1153,13 +1198,17 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesToRu
   remainingCapacity_kJ = heatingCapacity_kJ;
 	
   //if there's still remaining capacity and you haven't heated to "setpoint", keep heating
-  while(remainingCapacity_kJ > 0 && getCondenserTemp() <= hpwh->setpoint_C - heatingCutoff_C) {
-    // calculate what percentage of the bottom node can be heated to setpoint
+  while(remainingCapacity_kJ > 0 && shutsOff(externalT_C) != true) {
+    cout << "condenserTemp: " << getCondenserTemp();
+    cout << "\tsetpoint - heatingCutff: " << hpwh->setpoint_C - heatingCutoff_C << endl;
+    cout << "bottom tank temp: " << getCondenserTemp();
+    cout << "\tremainingCapacity_kJ: " << remainingCapacity_kJ << endl;
+    //calculate what percentage of the bottom node can be heated to setpoint
     //with amount of heat available this timestep
     deltaT_C = hpwh->setpoint_C - getCondenserTemp();
     nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
     nodeFrac = remainingCapacity_kJ / nodeHeat_kJperNode;
-
+    cout << "nodeHeat_kJperNode: " << nodeHeat_kJperNode << " nodeFrac: " << nodeFrac << endl << endl;
   //if more than one, round down to 1 and subtract that amount of heat energy
   // from the capacity
     if(nodeFrac > 1){
@@ -1174,7 +1223,7 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesToRu
     }
 	
     //move all nodes down, mixing if less than a full node
-    for(n = 0; n < hpwh->numNodes - 1; n++) {
+    for(int n = 0; n < hpwh->numNodes - 1; n++) {
       hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
     }
     //add water to top node, heated to setpoint
@@ -1183,7 +1232,8 @@ double HPWH::HeatSource::addHeatExternal(double cap_BTUperHr, double minutesToRu
   }
 		
   //This is runtime - is equal to timestep if compressor ran the whole time
-  return (1 - (remainingCapacity_kJ / heatingCapacity_kJ)) * minutesToRun;
+  cout << "final remaining capacity: " << remainingCapacity_kJ << endl;
+  return remainingCapacity_kJ;
 }
 
 

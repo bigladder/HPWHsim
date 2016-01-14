@@ -1,6 +1,6 @@
 
 
-options = -g -Wall
+options = -g -Wall -Wshadow
 #options = -O3
 
 

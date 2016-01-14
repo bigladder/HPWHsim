@@ -103,6 +103,7 @@ class HPWH {
 	
 	double topThirdAvg_C() const;
 	double bottomThirdAvg_C() const;
+	double bottomTwelthAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
 
   //a few setters, used for runNsteps
@@ -279,7 +280,7 @@ class HPWH::HeatSource {
  	double addHeatAboveNode(double cap_kJ, int node, double minutesToRun);
   //adds heat to the set of nodes that are at the same temperature, above the
   //specified node number
-  double addHeatExternal(double cap_BTUperHr, double minutesToRun);
+  double addHeatExternal(double externalT_C, double cap_BTUperHr, double minutesToRun);
   // Add heat from a source outside of the tank. Assume the condensity is where
   // the water is drawn from and hot water is put at the top of the tank.
   
