@@ -132,8 +132,8 @@ int HPWH::HPWHinit_presets(int presetNum) {
     }
     
     tankVolume_L = 120; 
-    //tankUA_kJperHrC = 10; //0 to turn off
-    tankUA_kJperHrC = 0; //0 to turn off
+    tankUA_kJperHrC = 10; //0 to turn off
+    //tankUA_kJperHrC = 0; //0 to turn off
     
     doTempDepression = false;
     tankMixesOnDraw = false;
@@ -197,10 +197,64 @@ int HPWH::HPWHinit_presets(int presetNum) {
    
   }
 
+  else if (presetNum == 5) {
+    numNodes = 96;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = 50;
 
-  //resistiveElementBottom.backupHeatSource = &compressor;
-  //compressor.backupHeatSource = &resistiveElementBottom;
-   
+    //start tank off at setpoint
+    for (int i = 0; i < numNodes; i++) {
+      tankTemps_C[i] = setpoint_C;
+    }
+    
+    tankVolume_L = 120; 
+    //tankUA_kJperHrC = 10; //0 to turn off
+    tankUA_kJperHrC = 0; //0 to turn off
+    
+    doTempDepression = false;
+    tankMixesOnDraw = false;
+
+    numHeatSources = 1;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+
+    compressor.isOn = false;
+    compressor.isVIP = false;
+
+    compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    //GE tier 1 values
+    compressor.T1_F = 47;
+    compressor.T2_F = 67;
+
+    compressor.inputPower_T1_constant_W = 0.290*1000;
+    compressor.inputPower_T1_linear_WperF = 0.00159*1000;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.00000107*1000;
+    compressor.inputPower_T2_constant_W = 0.375*1000;
+    compressor.inputPower_T2_linear_WperF = 0.00121*1000;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.00000216*1000;
+    compressor.COP_T1_constant = 4.49;
+    compressor.COP_T1_linear = -0.0187;
+    compressor.COP_T1_quadratic = -0.0000133;
+    compressor.COP_T2_constant = 5.60;
+    compressor.COP_T2_linear = -0.0252;
+    compressor.COP_T2_quadratic = 0.00000254;
+    compressor.hysteresis = 0;  //no hysteresis
+    compressor.configuration = "external";
+    
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+
+    //lowT cutoff
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("bottomNodeMaxTemp", 20));
+
+    compressor.depressesTemperature = false;  //no temp depression
+
+    //set everything in its places
+    setOfSources[0] = compressor;
+  }
+
 
   //cout << "heat source 1 " << &setOfSources[0] << endl;
   //cout << "heat source 2 " << &setOfSources[1] << endl;
@@ -937,26 +991,29 @@ void HPWH::HeatSource::addHeat_temp(double heatSourceAmbientT_C, double minutesP
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ;
-  static std::vector<double> heatDistribution(hpwh->numNodes);
 
-  //clear the heatDistribution vector, since it's static it is still holding the
-  //distribution from the last go around
-  heatDistribution.clear();
-  
   // Reset the runtime of the Heat Source
   this->runtime_min = 0.0;
-
-  // calculate capacity btu/hr, input btu/hr, and cop
-  getCapacity(externalT_C, input_BTUperHr, cap_BTUperHr, cop);
   leftoverCap_kJ = 0.0;
 
-  cout << "capacity_kJ " << BTU_TO_KJ(cap_BTUperHr)*(minutesToRun)/60.0 << endl;
 
-  
   if((configuration == "submerged") || (configuration == "wrapped")) {
-    calcHeatDist(heatDistribution);
+    static std::vector<double> heatDistribution(hpwh->numNodes);
+
+    //clear the heatDistribution vector, since it's static it is still holding the
+    //distribution from the last go around
+    heatDistribution.clear();
     //calcHeatDist takes care of the swooping for wrapped configurations
-    cout << "heatDistribution: " << heatDistribution[0] << " "<< heatDistribution[1] << " "<< heatDistribution[2] << " "<< heatDistribution[3] << " "<< heatDistribution[4] << " "<< heatDistribution[5] << " "<< heatDistribution[6] << " "<< heatDistribution[7] << " "<< heatDistribution[8] << " "<< heatDistribution[9] << " "<< heatDistribution[10] << " "<< heatDistribution[11] << endl;
+    calcHeatDist(heatDistribution);
+
+    // calculate capacity btu/hr, input btu/hr, and cop
+    getCapacity(externalT_C, getCondenserTemp(), input_BTUperHr, cap_BTUperHr, cop);
+    //cout << "capacity_kJ " << BTU_TO_KJ(cap_BTUperHr)*(minutesToRun)/60.0 << endl;
+    //cout << "cap_BTUperHr " << cap_BTUperHr << endl;
+
+    //cout << std::fixed;
+    //cout << std::setprecision(3);
+    //cout << "heatDistribution: " << heatDistribution[0] << " "<< heatDistribution[1] << " "<< heatDistribution[2] << " "<< heatDistribution[3] << " "<< heatDistribution[4] << " "<< heatDistribution[5] << " "<< heatDistribution[6] << " "<< heatDistribution[7] << " "<< heatDistribution[8] << " "<< heatDistribution[9] << " "<< heatDistribution[10] << " "<< heatDistribution[11] << endl;
 
     //the loop over nodes here is intentional - essentially each node that has
     //some amount of heatDistribution acts as a separate resistive element
@@ -969,11 +1026,15 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
         leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
       }
     }
-   
+
+    //after you've done everything, any leftover capacity is time that didn't run
+    this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
+ 
   }
   else if(configuration == "external"){
-    // Else the heat source is external. Sanden thingy
-    leftoverCap_kJ = addHeatExternal(externalT_C, cap_BTUperHr, minutesToRun);
+    //Else the heat source is external. Sanden system is only current example
+    //capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
+    this->runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
   }
   else{
     cout << "Invalid heat source configuration chosen: " << configuration << endl;
@@ -981,9 +1042,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
     exit(1);
   }
 
-  //after you've done everything, any leftover capacity is time that didn't run
-  this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
- 
   // Write the input & output energy
   energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
   energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
@@ -1015,35 +1073,44 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution, int n) {
 int HPWH::HeatSource::lowestNode() {
   int lowest = 0;
   for(int i = 0; i < hpwh->numNodes; i++) {
-    if(condensity[i] > 0) {
+    if(condensity[ (i/CONDENSITY_SIZE) ] > 0) {
+      //cout << "i/CONDENSITY_SIZE " << i/CONDENSITY_SIZE << endl;
       lowest = i;
       break;
     }
   }
+  //cout << " lowest : " << lowest << endl;
   return lowest;
 }
 
 
 double HPWH::HeatSource::getCondenserTemp() {
   double condenserTemp_C = 0.0;
-  int i;
-
-  for(i = 0; i < hpwh->numNodes; i++) {
-    condenserTemp_C += condensity[i] * hpwh->tankTemps_C[i];
-    //cout << "condenserTemp_C i condensity tankTemps_C " << condenserTemp_C << " " << i << " " << condensity[i] << " " << hpwh->tankTemps_C[i] << endl;
-  }
+  int tempNodesPerCondensityNode = hpwh->numNodes / CONDENSITY_SIZE;
+  int j = 0;
   
+  for(int i = 0; i < hpwh->numNodes; i++) {
+    j = i / tempNodesPerCondensityNode;
+    if (condensity[j] != 0) {
+      condenserTemp_C += (condensity[j] / tempNodesPerCondensityNode) * hpwh->tankTemps_C[i];
+      //the weights don't need to be added to divide out later because they should always sum to 1
+      //cout << "condenserTemp_C\t" << condenserTemp_C << "\ti\t" << i << "\tj\t"
+            //<< j <<  "\tcondensity\t" << condensity[j] << "\ttankTemps_C\t" << hpwh->tankTemps_C[i] << endl;
+    }
+  }
+  cout << "condenser temp " << condenserTemp_C << endl;
   return condenserTemp_C;
 }
 
 
-void HPWH::HeatSource::getCapacity(double externalT_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
+void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
   double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
   double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
-  double condenserTemp_C, externalT_F, condenserTemp_F;
-
+  double externalT_F, condenserTemp_F;
+  //double condenserTemp_C
+  
   // Calculate the current water temp at the "condenser"
-  condenserTemp_C = getCondenserTemp();
+  //condenserTemp_C = getCondenserTemp();
 
   //cout << "condenserTemp_C " << condenserTemp_C << endl;
   // Convert Celsius to Fahrenheit for the curve fits
@@ -1076,16 +1143,20 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double &input_BTUperHr, d
 
   // Interpolate to get COP and input power at the current ambient temperature
   cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
-  input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts) / (T2_F - T1_F))) / 1000.0);  //1000 converts w to kw
+  input_BTUperHr = KWH_TO_BTU(  (inputPower_T1_Watts + (externalT_F - T1_F) *
+                                  ( (inputPower_T2_Watts - inputPower_T1_Watts)
+                                            / (T2_F - T1_F) )
+                                  ) / 1000.0);  //1000 converts w to kw
   cap_BTUperHr = cop * input_BTUperHr;
 
   //cout << "cop input_BTUperHr cap_BTUperHr " << cop << " " << input_BTUperHr << " " << cap_BTUperHr << endl;
 
 /*
   //here is where the scaling for flow restriction goes
-  //the input power doesn't change, we just scale the cop by a small percentage that is based on the ducted flow rate
-  //the equation is a fit to three points, measured experimentally - 12 percent reduction at 150 cfm, 10 percent at 200, and 0 at 375
-  //it's slightly adjust to be equal to 1 at 375
+  //the input power doesn't change, we just scale the cop by a small percentage
+  //that is based on the ducted flow rate the equation is a fit to three points,
+  //measured experimentally - 12 percent reduction at 150 cfm, 10 percent at
+  //200, and 0 at 375 it's slightly adjust to be equal to 1 at 375
   if(hpwh->ductingType != 0){
     cop_interpolated *= 0.00056*hpwh->fanFlow + 0.79;
   }
@@ -1102,7 +1173,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
   // Calculate condentropy and ==> shrinkage. Again this could/should be a property of the HeatSource.
   condentropy = 0;
-  for(int i = 0; i < hpwh->numNodes; i++) {
+  for(int i = 0; i < CONDENSITY_SIZE; i++) {
     if(condensity[i] > 0) {
       condentropy -= condensity[i] * log(condensity[i]);
     }
@@ -1116,7 +1187,8 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
     }
     else {
       if(configuration == "submerged") { // Inside the tank, no swoopiness required
-        k = floor(i / 12.0 * hpwh->numNodes);
+        //intentional integer division
+        k = i / int(hpwh->numNodes / CONDENSITY_SIZE);
         heatDistribution[i] = condensity[k];
       }
       else if(configuration == "wrapped") { // Wrapped around the tank, send through the logistic function
@@ -1187,53 +1259,79 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 }
 
 
-double HPWH::HeatSource::addHeatExternal(double externalT_C, double cap_BTUperHr, double minutesToRun) {
-  double nodeHeat_kJperNode, heatingCapacity_kJ, remainingCapacity_kJ, deltaT_C, nodeFrac;
-  double heatingCutoff_C = 20.0; // When to turn off the compressor. Should be a property of the HeatSource?
+double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr,  double &input_BTUperHr, double &cop) {
+  double heatingCapacity_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac;
 
+  double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
+    
   double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
+  double timeRemaining_min = minutesToRun;
 
-  //how much heat is available this timestep
-  heatingCapacity_kJ = BTU_TO_KJ(cap_BTUperHr * (minutesToRun / 60.0));
-  remainingCapacity_kJ = heatingCapacity_kJ;
-	
-  //if there's still remaining capacity and you haven't heated to "setpoint", keep heating
-  while(remainingCapacity_kJ > 0 && shutsOff(externalT_C) != true) {
-    cout << "condenserTemp: " << getCondenserTemp();
-    cout << "\tsetpoint - heatingCutff: " << hpwh->setpoint_C - heatingCutoff_C << endl;
-    cout << "bottom tank temp: " << getCondenserTemp();
-    cout << "\tremainingCapacity_kJ: " << remainingCapacity_kJ << endl;
+  input_BTUperHr = 0;
+  cap_BTUperHr   = 0;
+  cop            = 0;
+
+  do{
+    cout << "bottom tank temp: " << hpwh->tankTemps_C[0];
+    
+    //how much heat is available this timestep
+    getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+    heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
+    cout << "\theatingCapacity_kJ stepwise: " << heatingCapacity_kJ << endl;
+ 
+  
+    //adjust capacity for how much time is left in this step
+    heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
+    cout << "\theatingCapacity_kJ remaining this node: " << heatingCapacity_kJ << endl;
+
     //calculate what percentage of the bottom node can be heated to setpoint
     //with amount of heat available this timestep
-    deltaT_C = hpwh->setpoint_C - getCondenserTemp();
+    deltaT_C = hpwh->setpoint_C - hpwh->tankTemps_C[0];
     nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
-    nodeFrac = remainingCapacity_kJ / nodeHeat_kJperNode;
+    nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
     cout << "nodeHeat_kJperNode: " << nodeHeat_kJperNode << " nodeFrac: " << nodeFrac << endl << endl;
-  //if more than one, round down to 1 and subtract that amount of heat energy
-  // from the capacity
+
+    //if more than one, round down to 1 and subtract the amount of time it would
+    //take to heat that node from the timeRemaining
     if(nodeFrac > 1){
       nodeFrac = 1;
-      remainingCapacity_kJ -= nodeHeat_kJperNode;
+      timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
+      timeRemaining_min -= timeUsed_min;
     }
-    //substract the amount of heat used - a full node's heat if nodeFrac == 1,
     //otherwise just the fraction available 
     //this should make heatingCapacity == 0  if nodeFrac < 1
     else{
-      remainingCapacity_kJ = 0;
+      timeUsed_min = timeRemaining_min;
+      timeRemaining_min = 0;
     }
-	
+
     //move all nodes down, mixing if less than a full node
     for(int n = 0; n < hpwh->numNodes - 1; n++) {
       hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
     }
     //add water to top node, heated to setpoint
     hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + hpwh->setpoint_C * nodeFrac;
-		
-  }
-		
-  //This is runtime - is equal to timestep if compressor ran the whole time
-  cout << "final remaining capacity: " << remainingCapacity_kJ << endl;
-  return remainingCapacity_kJ;
+    
+
+    //track outputs - weight by the time ran
+    input_BTUperHr  += inputTemp_BTUperHr*timeUsed_min;
+    cap_BTUperHr    += capTemp_BTUperHr*timeUsed_min;
+    cop             += copTemp*timeUsed_min;
+
+  
+  //if there's still time remaining and you haven't heated to the cutoff
+  //specified in shutsOff logic, keep heating
+  } while(timeRemaining_min > 0 && shutsOff(externalT_C) != true);
+
+  //divide outputs by sum of weight - the total time ran
+  input_BTUperHr  /= (minutesToRun - timeRemaining_min);
+  cap_BTUperHr    /= (minutesToRun - timeRemaining_min);
+  cop             /= (minutesToRun - timeRemaining_min);
+
+  	
+  cout << "final remaining time: " << timeRemaining_min << endl;
+  //return the time left
+  return minutesToRun - timeRemaining_min;
 }
 
 
@@ -1242,7 +1340,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 
     isOn = false;
     isVIP = false;
-    for(i = 0; i < 12; i++) {
+    for(i = 0; i < CONDENSITY_SIZE; i++) {
       condensity[i] = 0;
     }
     condensity[node] = 1;

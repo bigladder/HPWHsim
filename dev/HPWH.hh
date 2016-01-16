@@ -12,8 +12,8 @@
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
-
-
+#define CONDENSITY_SIZE 12  //this must be an integer, and only the value 12
+//change at your own risk
 
 class HPWH {
  public:
@@ -124,7 +124,7 @@ class HPWH {
 	//an array containing the HeatSources, in order of priority
 	
 	int numNodes;
-	//the number of nodes in the tank
+	//the number of nodes in the tank - must be >= 12, in multiples of 12
 	double tankVolume_L;
 	//the volume in liters of the tank
 	double tankUA_kJperHrC;
@@ -224,7 +224,7 @@ class HPWH::HeatSource {
 	//a pointer to the heat source which will run concurrently with this one
   //it still will only turn on if shutsOff is false
 	
-	double condensity[12];
+	double condensity[CONDENSITY_SIZE];
 	//The condensity function is always composed of 12 nodes.  
 	//It represents the location within the tank where heat will be distributed,
 	//and it also is used to calculate the condenser temperature for inputPower/COP calcs.
@@ -280,14 +280,14 @@ class HPWH::HeatSource {
  	double addHeatAboveNode(double cap_kJ, int node, double minutesToRun);
   //adds heat to the set of nodes that are at the same temperature, above the
   //specified node number
-  double addHeatExternal(double externalT_C, double cap_BTUperHr, double minutesToRun);
+  double addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop);
   // Add heat from a source outside of the tank. Assume the condensity is where
   // the water is drawn from and hot water is put at the top of the tank.
   
 
 	// I wrote some methods to help with the add heat interface - MJL
-  void getCapacity(double externalT_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
-	void calcHeatDist(std::vector<double> &heatDistribution);
+  void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+  void calcHeatDist(std::vector<double> &heatDistribution);
 
 	int lowestNode();
   //returns the number of the first non-zero condensity entry
