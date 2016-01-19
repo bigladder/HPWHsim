@@ -78,14 +78,14 @@ int main(int argc, char *argv[])
   testDirectory = argv[1];
 
   // Read the test control file
-  fileToOpen = testDirectory + "/" + "hpwhProperties.txt";
+  fileToOpen = testDirectory + "/" + "testInfo.txt";
   controlFile.open(fileToOpen.c_str());
   while(controlFile >> var1 >> minutesToRun) {
     if(var1 == "length_of_test") break;
   }
 
   if(var1 != "length_of_test") {
-    cout << "Error, first line of hpwhProperties.txt should have length_of_test\n";
+    cout << "Error, first line of testInfo.txt should have length_of_test\n";
     exit(1);
   }
 
