@@ -1,0 +1,2 @@
+HPWH_setpoint 126.5
+length_of_test 1440
