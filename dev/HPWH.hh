@@ -40,8 +40,8 @@ class HPWH {
 	 */
 
 	int runOneStep(double inletT_C, double drawVolume_L, 
-					double ambientT_C, double externalT_C,
-					double DRstatus, double minutesPerStep);
+                  double ambientT_C, double externalT_C,
+                  double DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 * 
@@ -49,8 +49,8 @@ class HPWH {
 	 */
 	 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
-					double *tankAmbientT_C, double *heatSourceAmbientT_C,
-					double *DRstatus, double minutesPerStep);
+                  double *tankAmbientT_C, double *heatSourceAmbientT_C,
+                  double *DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by N (equal) steps
 	 * The calculated values will be summed or averaged, as appropriate, and 
 	 * then stored in the usual variables to be accessed through functions
@@ -61,34 +61,41 @@ class HPWH {
 
 	int getNumNodes() const;
 	//get the number of nodes
-  double getTankNodeTemp(int nodeNum) const;
-	//get the array of tank temperatures
-	double getNthSimTcouple(int N, std::string units = "C") const;
+  double getTankNodeTemp(int nodeNum /*default units C*/) const;
+  double getTankNodeTemp(int nodeNum, std::string units) const;
+	//get the temperature of the water at the specified node - with or without units
+	double getNthSimTcouple(int N /*default units C*/) const;
+  double getNthSimTcouple(int N, std::string units) const;
   //get a temperature from a set of 6 virtual "thermocouples", which are constructed
   //from the node temperature array.  Specify t-couple from 1-6, 1 at the bottom
-  
+  //with or without units
 	
 	int getNumHeatSources() const;
 	//get the number of heat sources
-	double getNthHeatSourceEnergyInput(int N, std::string units = "kWh") const;
-	//get the energy input to the Nth heat source
-	double getNthHeatSourceEnergyOutput(int N, std::string units = "kWh") const;
-	//get the energy output from the Nth heat source
+	double getNthHeatSourceEnergyInput(int N /*default units kWh*/) const;
+	double getNthHeatSourceEnergyInput(int N, std::string units) const;
+	//get the energy input to the Nth heat source, with or without units
+	double getNthHeatSourceEnergyOutput(int N /*default units kWh*/) const;
+	double getNthHeatSourceEnergyOutput(int N, std::string units) const;
+	//get the energy output from the Nth heat source, with or without units
 	double getNthHeatSourceRunTime(int N) const;
 	//get the run time for the Nth heat source
 	//note: they may sum to more than 1 time step for concurrently running heat sources
   bool isNthHeatSourceRunning(int N) const;
   //return true if the Nth heat source is currently engaged
 
-	double getOutletTemp(std::string units = "C") const;
+	double getOutletTemp(/*default units C*/) const;
+	double getOutletTemp(std::string units) const;
 	//a function to get the outlet temperature - returns 0 when no draw occurs
 	//the input is a string containing the desired units, F or C
-	double getEnergyRemovedFromEnvironment(std::string units = "kWh") const;
+	double getEnergyRemovedFromEnvironment(/*default units kWh*/) const;
+	double getEnergyRemovedFromEnvironment(std::string units) const;
 	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
-	//the input is a string containing the desired units, kWh or btu
-	double getStandbyLosses(std::string units = "kWh") const;
+	//one version takes as input a string containing the desired units, kWh or btu
+	double getStandbyLosses(/*default units kWh*/) const;
+	double getStandbyLosses(std::string units) const;
 	//get the amount of heat lost through the tank
- 	//the input is a string containing the desired units, kWh or btu
+ 	//one version takes as input a string containing the desired units, kWh or btu
 
 
  
