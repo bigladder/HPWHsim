@@ -229,7 +229,25 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
 
 
 
+int HPWH::setSetpoint(double newSetpoint){
+  setpoint_C = newSetpoint;
+  return 0;
+  }
+int HPWH::setSetpoint(double newSetpoint, string units) {
+  if (units == "C") {
+    setpoint_C = newSetpoint;
+  }
+  else if (units == "F") {
+    setpoint_C = F_TO_C(newSetpoint);
+  }
+  else {
+    cout << "Incorrect unit specification for getNthSimTcouple" << endl;
+    exit(1);
+  }
+  return 0;
+}
 
+  
 int HPWH::getNumNodes() const {
   return numNodes;
   }
@@ -1544,8 +1562,6 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setOfSources[2].backupHeatSource = &setOfSources[1];
     setOfSources[1].backupHeatSource = &setOfSources[2];
 
-    //if the lower is running, the compressor should run too
-    setOfSources[2].companionHeatSource = &setOfSources[1];
   }
   
 

@@ -57,8 +57,13 @@ class HPWH {
 	 * 
 	 * The return value is 0 for successful simulation run, something else otherwise
 	 */
-	 
 
+
+
+  int setSetpoint(double newSetpoint);
+  int setSetpoint(double newSetpoint, std::string units);
+  //a function to change the setpoint - useful for dynamically setting it
+   
 	int getNumNodes() const;
 	//get the number of nodes
   double getTankNodeTemp(int nodeNum /*default units C*/) const;
