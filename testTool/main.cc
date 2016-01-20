@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
 
-  string testDirectory, fileToOpen, scheduleName, var1, input1;
+  string testDirectory, fileToOpen, scheduleName, var1, input1, input2;
   string inputVariableName;
   int i, j, minutesToRun, outputCode, nSources;
 
@@ -57,25 +57,29 @@ int main(int argc, char *argv[])
 
 
   //Obvious wrong number of command line arguments
-  if ((argc >=3)) {
-    printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
-    }
+  if ((argc > 3)) {
+    // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
+    cout << "Invalid input. This program takes two arguments. test name and model name\n";
+    exit(1);
+  }
   //Help message
   if(argc > 1) {
     input1 = argv[1];
+    input2 = argv[2];
   } else {
-    input1 = "asdf";
+    input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
+    input2 = "def";
   }
-  if ((argc != 2) || (input1 == "?") || (input1 == "help")) {
-    cout << "Standard usage: \"hpwhTestTool.x test_directory\"\n";
+  if ((argc != 3) || (input1 == "?") || (input1 == "help")) {
+    cout << "Standard usage: \"hpwhTestTool.x test_name model_name\"\n";
     cout << "All input files should be located in the test directory, with these names:\n"; 
     cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n"; 
-    cout << "An output file, hpwhTestOutput.csv, will be written in the test directory\n";
+    cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
     exit(1);
   }
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = argv[1];
+  testDirectory = "tests/" + input1;
 
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Set the hpwh properties
+  // Set the hpwh properties. I'll need to update this to select the appropriate model
   hpwh.HPWHinit_presets(4);
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
@@ -115,9 +119,9 @@ int main(int argc, char *argv[])
 
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
-  fileToOpen = testDirectory + "/hpwhTestToolOutput.csv";
+  fileToOpen = testDirectory + "/" + input2 + "TestToolOutput.csv";
   outputFile.open(fileToOpen.c_str());
-  outputFile << "minute_of_year,Ta,inletT,draw";
+  outputFile << "minutes,Ta,inletT,draw";
   for(i = 0; i < hpwh.getNumHeatSources(); i++) {
     outputFile << ",input_kWh" << i + 1 << ",output_kWh" << i + 1;
   }
