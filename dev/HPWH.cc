@@ -1538,10 +1538,10 @@ int HPWH::HPWHinit_presets(int presetNum) {
 
     
     //logic conditions
-    double compStart = 43.6;
+    double compStart = F_TO_C(43.6);
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 23.8));
-    double lowTcutoff = 40;
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", F_TO_C(23.8)));
+    double lowTcutoff = F_TO_C(40.0);
     compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
     
     resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
@@ -1549,7 +1549,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
                   "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 36.0));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", F_TO_C(36.0)));
 
 
     //set everything in its places
