@@ -60,10 +60,13 @@ class HPWH {
 
 
 
-  int setSetpoint(double newSetpoint);
+  int setSetpoint(double newSetpoint /*default units C*/);
   int setSetpoint(double newSetpoint, std::string units);
   //a function to change the setpoint - useful for dynamically setting it
-   
+  int resetTankToSetpoint();
+  //this function resets the tank temperature profile to be completely at setpoint
+
+  
 	int getNumNodes() const;
 	//get the number of nodes
   double getTankNodeTemp(int nodeNum /*default units C*/) const;
@@ -80,11 +83,13 @@ class HPWH {
 	double getNthHeatSourceEnergyInput(int N /*default units kWh*/) const;
 	double getNthHeatSourceEnergyInput(int N, std::string units) const;
 	//get the energy input to the Nth heat source, with or without units
-	double getNthHeatSourceEnergyOutput(int N /*default units kWh*/) const;
+  //energy used by the heat source is positive - should always be positive
+  double getNthHeatSourceEnergyOutput(int N /*default units kWh*/) const;
 	double getNthHeatSourceEnergyOutput(int N, std::string units) const;
 	//get the energy output from the Nth heat source, with or without units
+  //energy put into the water is positive - should always be positive
 	double getNthHeatSourceRunTime(int N) const;
-	//get the run time for the Nth heat source
+	//get the run time for the Nth heat source, in minutes
 	//note: they may sum to more than 1 time step for concurrently running heat sources
   bool isNthHeatSourceRunning(int N) const;
   //return true if the Nth heat source is currently engaged
@@ -95,13 +100,16 @@ class HPWH {
 	//the input is a string containing the desired units, F or C
 	double getEnergyRemovedFromEnvironment(/*default units kWh*/) const;
 	double getEnergyRemovedFromEnvironment(std::string units) const;
-	//get the total energy removed from the environment by all heat sources (not net energy - does not include standby)
-	//one version takes as input a string containing the desired units, kWh or btu
-	double getStandbyLosses(/*default units kWh*/) const;
+	//get the total energy removed from the environment by all heat sources
+  //(not net energy - does not include standby)
+  //moving heat from the space to the water is the positive direction
+	//with or without units - kWh or btu
+  double getStandbyLosses(/*default units kWh*/) const;
 	double getStandbyLosses(std::string units) const;
 	//get the amount of heat lost through the tank
- 	//one version takes as input a string containing the desired units, kWh or btu
-
+  //moving heat from the water to the space is the positive direction
+  //negative should occur seldom
+  //with or without units - kWh or btu
 
  
  private:

@@ -178,8 +178,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
-                    double *tankAmbientT_C, double *heatSourceAmbientT_C,
-                    double *DRstatus, double minutesPerStep) {
+                            double *tankAmbientT_C, double *heatSourceAmbientT_C,
+                            double *DRstatus, double minutesPerStep) {
   //these are all the accumulating variables we'll need
   double energyRemovedFromEnvironment_kWh_SUM = 0;
   double standbyLosses_kWh_SUM = 0;
@@ -246,6 +246,12 @@ int HPWH::setSetpoint(double newSetpoint, string units) {
   }
   return 0;
 }
+int HPWH::resetTankToSetpoint(){
+  for (int i = 0; i < numNodes; i++) {
+    tankTemps_C[i] = setpoint_C;
+  }
+  return 0;
+  }
 
   
 int HPWH::getNumNodes() const {
@@ -1204,9 +1210,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = 50;
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = 12; 
     tankUA_kJperHrC = 0; //0 to turn off
@@ -1240,9 +1244,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = 50;
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = 120; 
     tankUA_kJperHrC = 500; //0 to turn off
@@ -1275,9 +1277,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = F_TO_C(127);
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = GAL_TO_L(50); 
     tankUA_kJperHrC = 10; //0 to turn off
@@ -1305,9 +1305,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = 50;
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = 120; 
     tankUA_kJperHrC = 10; //0 to turn off
@@ -1382,9 +1380,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = 50;
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = 120; 
     //tankUA_kJperHrC = 10; //0 to turn off
@@ -1440,9 +1436,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setpoint_C = F_TO_C(127.0);
 
     //start tank off at setpoint
-    for (int i = 0; i < numNodes; i++) {
-      tankTemps_C[i] = setpoint_C;
-    }
+    resetTankToSetpoint();
     
     tankVolume_L = 215.8; 
     tankUA_kJperHrC = 7.31;
