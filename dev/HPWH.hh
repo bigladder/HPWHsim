@@ -19,7 +19,20 @@ class HPWH {
  public:
   HPWH();  //default constructor
 	~HPWH(); //destructor - will be defined
-	
+
+  //an enum to specify the various modes for the Demand Response (DR) abilities
+  //values may vary - names should be used
+  enum DRMODES{
+    DR_BLOCK = 0,   //this mode prohibits the elements from engaging and turns
+                    //off any currently running
+    DR_ALLOW = 1,   //this mode allows the water heater to run normally
+    DR_ENGAGE = 2  //this mode forces an element to turn on
+    };
+  
+
+
+
+  
 	int HPWHinit_presets(int presetNum);
 	/* This function will load in a set of parameters that are hardcoded in this function - 
 	 * which particular set of parameters is selected by presetNum.
@@ -41,7 +54,7 @@ class HPWH {
 
 	int runOneStep(double inletT_C, double drawVolume_L, 
                   double ambientT_C, double externalT_C,
-                  double DRstatus, double minutesPerStep);
+                  DRMODES DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 * 
@@ -50,7 +63,7 @@ class HPWH {
 	 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
                   double *tankAmbientT_C, double *heatSourceAmbientT_C,
-                  double *DRstatus, double minutesPerStep);
+                  DRMODES *DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by N (equal) steps
 	 * The calculated values will be summed or averaged, as appropriate, and 
 	 * then stored in the usual variables to be accessed through functions

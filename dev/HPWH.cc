@@ -20,7 +20,7 @@ HPWH::~HPWH() {
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
                      double tankAmbientT_C, double heatSourceAmbientT_C,
-                     double DRstatus, double minutesPerStep) {
+                     DRMODES DRstatus, double minutesPerStep) {
 
   //reset the output variables
   outletTemp_C = 0;
@@ -86,15 +86,15 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
   //change the things according to DR schedule
-  if (DRstatus == 0) {
+  if (DRstatus == DR_BLOCK) {
     //force off
     turnAllHeatSourcesOff();
     isHeating = false;
   }
-  else if (DRstatus == 1) {
+  else if (DRstatus == DR_ALLOW) {
     //do nothing
   }
-  else if (DRstatus == 2) {
+  else if (DRstatus == DR_ENGAGE) {
     //if nothing else is on, force the first heat source on
     //this may or may not be desired behavior, pending more research (and funding)
     if (areAllHeatSourcesOff() == true) {
@@ -179,7 +179,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
                             double *tankAmbientT_C, double *heatSourceAmbientT_C,
-                            double *DRstatus, double minutesPerStep) {
+                            DRMODES *DRstatus, double minutesPerStep) {
   //these are all the accumulating variables we'll need
   double energyRemovedFromEnvironment_kWh_SUM = 0;
   double standbyLosses_kWh_SUM = 0;
@@ -189,7 +189,6 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
   std::vector<double> heatSources_energyInputs_SUM(numHeatSources);
   std::vector<double> heatSources_energyOutputs_SUM(numHeatSources);
 
-
   //run the sim one step at a time, accumulating the outputs as you go
   for (int i = 0; i < N; i++) {
     runOneStep( inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i],
@@ -198,8 +197,8 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
     energyRemovedFromEnvironment_kWh_SUM += energyRemovedFromEnvironment_kWh;
     standbyLosses_kWh_SUM += standbyLosses_kWh;
 
-    totalDrawVolume_L += drawVolume_L[i];
     outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
+    totalDrawVolume_L += drawVolume_L[i];
     
     for (int j = 0; j < numHeatSources; j++) {
       heatSources_runTimes_SUM[j] += getNthHeatSourceRunTime(j);
@@ -208,10 +207,8 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
     }
 
   }
-
   //finish weighted avg. of outlet temp by dividing by the total drawn volume
   outletTemp_C_AVG /= totalDrawVolume_L;
-
 
   //now, reassign all of the accumulated values to their original spots
   energyRemovedFromEnvironment_kWh = energyRemovedFromEnvironment_kWh_SUM;
