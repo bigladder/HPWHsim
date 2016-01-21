@@ -1,7 +1,7 @@
 # Make all of the output...
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
 
-tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
+tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
 models <- c("Voltex60", "ATI66", "GEred", "Sanden80", "GE2014")
 
 # Simulate every combination of test and model
@@ -61,3 +61,9 @@ allResults <- allResults[, c("minutes", "test", "model", "flow", "inputPower", "
 allResults$type <- "Simulated"
 
 write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
+
+
+
+# What about the field data???
+system(paste("./testTool.x", "site11531", "Voltex60"))
+

@@ -50,7 +50,10 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   lineVars <- data.frame("vname" = c("aveTankTemp", "flow", "inputPower"),
                          "var" = c("Average Tank Temp", "Draw", "Input Power"))
   lineVars <- lineVars[lineVars$var %in% vars, ]
-  
+
+  dset$colourVar <- paste(dset$type, dset$category)
+    
+  colourScale <- 0
   p <- ggplot(dset) + theme_bw()
   if("Thermocouples" %in% vars) {
     p <- p + geom_line(data = dset[grep("tcouples", dset$variable), ],
@@ -59,19 +62,21 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   } 
   if("Output Power" %in% vars) {
     p <- p + geom_point(data = dset[grep("output", dset$variable), ], 
-               aes(minutes, value, col = interaction(variable, type), shape = type))     
+               aes(minutes, value, col = colourVar, shape = type))
+    colourScale <- 1
   } 
   if(nrow(lineVars)) {
     p <- p + geom_line(data = dset[dset$variable %in% lineVars$vname, ],
-                           aes(minutes, value, col = interaction(variable, type), linetype = type))
+                           aes(minutes, value, col = colourVar, linetype = type))
+    colourScale <- 1
+  }
+  if(colourScale) {
+    p <- p + scale_colour_discrete(name = "Variable")
   }
 
   p <- p + facet_wrap(~units, scales = "free_y", ncol = 1) +
-    xlab("Minutes Into Test") + ylab("Value")
+    xlab("Minutes Into Test") + ylab("Value") +
+    scale_linetype_discrete(name = "Type")
   p
 }
-
-# onePlot("Voltex60", "DOE_24hr67", "Input Power", 400)
-
-
 

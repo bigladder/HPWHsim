@@ -29,7 +29,7 @@ using std::ofstream;
 typedef std::vector<double> schedule;
 
 
-int readSchedule(schedule &scheduleArray, string scheduleFileName, int minutesOfTest);
+int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
 int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples);
 int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs);
 
@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2;
   string inputVariableName;
   double testVal, newSetpoint;
-  int i, j, minutesToRun, outputCode, nSources;
+  int i, j, outputCode, nSources;
+  long minutesToRun;
 
   ofstream outputFile;
   ifstream controlFile;
@@ -85,6 +86,10 @@ int main(int argc, char *argv[])
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
   controlFile.open(fileToOpen.c_str());
+  if(!controlFile.is_open()) {
+    cout << "Could not open control file " << fileToOpen << "\n";
+    exit(1);
+  }
   minutesToRun = 0;
   newSetpoint = 0.0;
   while(controlFile >> var1 >> testVal) {
@@ -134,6 +139,10 @@ int main(int argc, char *argv[])
   // ----------------------Open the Output File and Print the Header---------------------------- //
   fileToOpen = testDirectory + "/" + input2 + "TestToolOutput.csv";
   outputFile.open(fileToOpen.c_str());
+  if(!outputFile.is_open()) {
+    cout << "Could not open output file " << fileToOpen << "\n";
+    exit(1);
+  }
   outputFile << "minutes,Ta,inletT,draw";
   for(i = 0; i < hpwh.getNumHeatSources(); i++) {
     outputFile << ",input_kWh" << i + 1 << ",output_kWh" << i + 1;
@@ -186,8 +195,8 @@ int main(int argc, char *argv[])
 
 
 // this function reads the named schedule into the provided array
-int readSchedule(schedule &scheduleArray, string scheduleFileName, int minutesOfTest) {
-  int i, minuteTmp;
+int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
+  long i, minuteTmp;
   string line, snippet, s;
   double valTmp;
   ifstream inputFile(scheduleFileName.c_str());  
