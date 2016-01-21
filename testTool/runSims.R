@@ -22,9 +22,18 @@ allResults[, tempVars] <- allResults[, tempVars] * 1.8 + 32
 allResults$aveTankTemp <- apply(allResults[, tempVars], 1, mean)
 
 inputVars <- grep("input_kWh", names(allResults))
-allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
+if(length(inputVars) > 1) {
+  allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
+} else {
+  allResults$inputTotal_W <- allResults[, inputVars]
+}
 outputVars <- grep("output_kWh", names(allResults))
-allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000
+if(length(outputVars) > 1) {
+  allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000  
+} else {
+  allResults$outputTotal_W <- allResults[, outputVars]
+}
+
 
 allResults[] <- lapply(names(allResults), function(v) {
   if(length(grep("input_kWh", v)) | length(grep("output_kWh", v))) {

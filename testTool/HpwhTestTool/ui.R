@@ -15,13 +15,18 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
+      actionButton("go", "Plot"),
       selectInput("model", "HPWH Model", choices = unique(as.character(allLong$model))),
       selectInput("test", "Lab Test", choices = unique(as.character(allLong$test))),
+      selectInput("vars", "Variables", choices = c("Thermocouples", "Average Tank Temp",
+                                                   "Draw", "Input Power", "Output Power"),
+                  multiple = TRUE, selected = "Thermocouples"),
       sliderInput("testlength",
-                  "% of Test To View",
+                  "Hours of Test",
                   min = 0,
-                  max = 1,
-                  value = 1)
+                  max = 24,
+                  value = c(0, 24),
+                  step = .5)
     ),
 
     # Show a plot of the generated distribution

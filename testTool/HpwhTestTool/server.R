@@ -7,10 +7,25 @@
 
 library(shiny)
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
 
-  output$testPlot <- renderPlot({
-   onePlot(input$model, input$test, input$testlength)
+  # Update test minutes based on test selected
+  observe({
+    x <- input$test
+    y <- input$model
+    testMinutes <- max(allLong$minutes[allLong$model == y & allLong$test == x])
+    updateSliderInput(session, "testlength", min = 0, max = ceiling(testMinutes / 60))
   })
+  
+  p <- eventReactive(input$go, {
+    onePlot(input$model, input$test, input$vars, input$testlength[1], input$testlength[2])
+  })
+  output$testPlot <- renderPlot({
+    p()
+  })
+  
+#   output$testPlot <- renderPlot({
+#    onePlot(input$model, input$test, input$vars, input$testlength)
+#   })
 
 })

@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2;
   string inputVariableName;
+  double testVal, newSetpoint;
   int i, j, minutesToRun, outputCode, nSources;
 
   ofstream outputFile;
@@ -84,12 +85,20 @@ int main(int argc, char *argv[])
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
   controlFile.open(fileToOpen.c_str());
-  while(controlFile >> var1 >> minutesToRun) {
-    if(var1 == "length_of_test") break;
+  minutesToRun = 0;
+  newSetpoint = 0.0;
+  while(controlFile >> var1 >> testVal) {
+    if(var1 == "setpoint") { // If a setpoint was specified then override the default
+      newSetpoint = testVal;
+      cout << "New setpoint: " << testVal << "\n";
+    }
+    if(var1 == "length_of_test") {
+      minutesToRun = (int) testVal;
+    }
   }
 
-  if(var1 != "length_of_test") {
-    cout << "Error, first line of testInfo.txt should have length_of_test\n";
+  if(minutesToRun == 0) {
+    cout << "Error, must record length_of_test in testInfo.txt file\n";
     exit(1);
   }
 
@@ -110,7 +119,11 @@ int main(int argc, char *argv[])
   }
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
-  hpwh.HPWHinit_presets(4);
+  hpwh.HPWHinit_presets(102);
+  if(newSetpoint > 0) {
+    hpwh.setSetpoint(newSetpoint, "F");
+    hpwh.resetTankToSetpoint();
+  }
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
