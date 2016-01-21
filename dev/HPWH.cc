@@ -219,9 +219,9 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
   outletTemp_C = outletTemp_C_AVG;
 
   for (int i = 0; i < numHeatSources; i++) {
-    setNthHeatSourceRunTime(i, heatSources_runTimes_SUM[i]);
-    setNthHeatSourceEnergyInput(i, heatSources_energyInputs_SUM[i]);
-    setNthHeatSourceEnergyOutput(i, heatSources_energyOutputs_SUM[i]);
+    setOfSources[i].runtime_min = heatSources_runTimes_SUM[i];
+    setOfSources[i].energyInput_kWh = heatSources_energyInputs_SUM[i];
+    setOfSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
   }
 
   return 0;
@@ -319,6 +319,7 @@ int HPWH::getNumHeatSources() const {
 
 
 double HPWH::getNthHeatSourceEnergyInput(int N) const {
+  //energy used by the heat source is positive - this should always be positive
   if (N > numNodes || N < 0) {
     cout << "You have attempted to access the energy input of a heat source that does not exist.  Exiting..." << endl;
     exit(1);
@@ -327,6 +328,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N) const {
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, string units) const {
+  //energy used by the heat source is positive - this should always be positive
   double returnVal = getNthHeatSourceEnergyInput(N);
   
   if (units == "kWh" || units == "kwh") {
@@ -346,6 +348,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, string units) const {
 
 
 double HPWH::getNthHeatSourceEnergyOutput(int N) const {
+//returns energy from the heat source into the water - this should always be positive
   if (N > numNodes || N < 0) {
     cout << "You have attempted to access the energy output of a heat source that does not exist.  Exiting..." << endl;
     exit(1);
@@ -354,6 +357,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N) const {
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, string units) const {
+//returns energy from the heat source into the water - this should always be positive
   double returnVal = getNthHeatSourceEnergyOutput(N);
 
   if (units == "kWh" || units == "kwh") {
@@ -411,10 +415,12 @@ double HPWH::getOutletTemp(string units) const {
 
 
 double HPWH::getEnergyRemovedFromEnvironment() const {
+  //moving heat from the space to the water is the positive direction
   return energyRemovedFromEnvironment_kWh;
 }
 
 double HPWH::getEnergyRemovedFromEnvironment(string units) const {
+  //moving heat from the space to the water is the positive direction
   double returnVal = getEnergyRemovedFromEnvironment();
 
   if (units == "kWh" || units == "kwh") {
@@ -431,10 +437,12 @@ double HPWH::getEnergyRemovedFromEnvironment(string units) const {
 
 
 double HPWH::getStandbyLosses() const {
+  //moving heat from the water to the space is the positive direction
   return standbyLosses_kWh;
 }
 
 double HPWH::getStandbyLosses(string units) const {
+  //moving heat from the water to the space is the positive direction
   double returnVal = getStandbyLosses();
 
   if (units == "kWh" || units == "kwh") {
@@ -590,20 +598,6 @@ double HPWH::bottomTwelthAvg_C() const {
 }
 
 
-void HPWH::setNthHeatSourceEnergyInput(int N, double value){
-  setOfSources[N].energyInput_kWh = value;
-}
-
-void HPWH::setNthHeatSourceEnergyOutput(int N, double value){
-  setOfSources[N].energyOutput_kWh = value;
-}
-
-void HPWH::setNthHeatSourceRunTime(int N, double value){
-  setOfSources[N].runtime_min = value;
-}
-
-
-
 
 
 
@@ -685,7 +679,8 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
       case 2:
         //when the bottom third is too cold - typically used for compressors
         if (hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C) {
-          //cout << "engage 2\n";
+          cout << "engage 2\n";
+          cout << "bottom third: " << hpwh->bottomThirdAvg_C() << " setpoint: " << hpwh->setpoint_C << " decisionPoint:  " << turnOnLogicSet[i].decisionPoint_C << endl;
           shouldEngage = true;
         }    
         break;
@@ -693,8 +688,8 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
       case 3:
         //when the top node is too cold - typically used for standby heating
         if (hpwh->tankTemps_C[hpwh->numNodes - 1] < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C) {
-          //cout << "engage 3\n";
-          //cout << "tanktoptemp:  setpoint:  decisionPoint:  " << hpwh->tankTemps_C[hpwh->numNodes - 1] << " " << hpwh->setpoint_C << " " << turnOnLogicSet[i].decisionPoint_C << endl;
+          cout << "engage 3\n";
+          cout << "tanktoptemp:  setpoint:  decisionPoint:  " << hpwh->tankTemps_C[hpwh->numNodes - 1] << " " << hpwh->setpoint_C << " " << turnOnLogicSet[i].decisionPoint_C << endl;
           shouldEngage = true;
         }
         break;
@@ -1274,7 +1269,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
   else if(presetNum == 3) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
-    setpoint_C = F_TO_C(127);
+    setpoint_C = F_TO_C(127.0);
 
     //start tank off at setpoint
     resetTankToSetpoint();
@@ -1526,16 +1521,16 @@ int HPWH::HPWHinit_presets(int presetNum) {
     resistiveElementBottom.COP_T2_constant = 1;
     resistiveElementBottom.COP_T2_linear = 0;
     resistiveElementBottom.COP_T2_quadratic = 0;
-    resistiveElementBottom.hysteresis = F_TO_C(4);  //turns off with 4 F hysteresis
+    resistiveElementBottom.hysteresis = dF_TO_dC(4);  //turns off with 4 F hysteresis
     resistiveElementBottom.configuration = "submerged"; //immersed in tank
     resistiveElementBottom.depressesTemperature = false;  //no temp depression
 
     
     //logic conditions
-    double compStart = F_TO_C(43.6);
+    double compStart = dF_TO_dC(43.6);
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", F_TO_C(23.8)));
-    double lowTcutoff = F_TO_C(40.0);
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", dF_TO_dC(23.8)));
+    double lowTcutoff = dF_TO_dC(40.0);
     compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
     
     resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
@@ -1543,7 +1538,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
                   "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", F_TO_C(36.0)));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(36.0)));
 
 
     //set everything in its places

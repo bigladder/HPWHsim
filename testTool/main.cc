@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
   for(i = 0; i < minutesToRun; i++) {
     // Run the step
     hpwh.runOneStep(F_TO_C(allSchedules[0][i]),    // Inlet water temperature (C)
-                      allSchedules[1][i],          // Flow in gallons
+                      GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
                       F_TO_C(allSchedules[2][i]),  // Ambient Temp (C)
                       F_TO_C(allSchedules[3][i]),  // External Temp (C)
                       allSchedules[4][i], 1.0);    // DDR Status (1 or 0)
