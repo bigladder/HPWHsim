@@ -3,9 +3,11 @@ library(ggplot2)
 
 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
-# source("../runSims.R")
-# rm(list = ls())
-# 
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
+source("./runSims.R")
+rm(list = ls())
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/HpwhTestTool")
+
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 # source("../collectLabResults.R")
 # rm(list = ls())

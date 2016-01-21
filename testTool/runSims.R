@@ -1,5 +1,5 @@
 # Make all of the output...
-setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+# setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
 
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
 models <- c("Voltex60", "ATI66", "GEred", "Sanden80", "GE2014")
