@@ -126,15 +126,8 @@ class HPWH {
 	double bottomTwelthAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
 
-  //a few setters, used for runNsteps
-	void setNthHeatSourceEnergyInput(int N, double value);
-	//set the energy input to the Nth heat source
-	void setNthHeatSourceEnergyOutput(int N, double value);
-	//set the energy output from the Nth heat source
-	void setNthHeatSourceRunTime(int N, double value);
-	//set the run time for the Nth heat source
 
-
+ 
 	bool isHeating;
 	//is the hpwh currently heating or not?
 	
@@ -323,6 +316,7 @@ class HPWH::HeatSource {
 
 
 //a few extra functions for unit converesion
+inline double dF_TO_dC(double temperature) { return (temperature*5.0/9.0); }
 inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
 inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
 inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }

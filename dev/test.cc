@@ -221,11 +221,11 @@ HPWH hpwh;
 
 
 
-hpwh.HPWHinit_presets(5);
+hpwh.HPWHinit_presets(102);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
-int minutes = 2; int liters = 20;
+int minutes = 1; int liters = 20;
           
 hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
 printTankTemps(hpwh);
@@ -235,25 +235,25 @@ hpwh.runOneStep(0, 0, 0, 50, 1, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
 hpwh.runOneStep(0, 0, 0, 50, 1, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
 hpwh.runOneStep(0, 0, 0, 50, 1, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, liters, 0, 50, 1, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
 hpwh.runOneStep(0, 0, 0, 50, 1, minutes);
 printTankTemps(hpwh);
