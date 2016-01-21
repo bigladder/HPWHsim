@@ -5,3 +5,5 @@
 *.x
 *.png
 .Rproj.user
+*TestToolOutput.csv
+

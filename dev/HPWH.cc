@@ -915,7 +915,7 @@ double HPWH::HeatSource::getCondenserTemp() {
             //<< j <<  "\tcondensity\t" << condensity[j] << "\ttankTemps_C\t" << hpwh->tankTemps_C[i] << endl;
     }
   }
-  cout << "condenser temp " << condenserTemp_C << endl;
+//  cout << "condenser temp " << condenserTemp_C << endl;
   return condenserTemp_C;
 }
 
@@ -985,7 +985,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
   double condentropy, s; // Should probably have shrinkage (by way of condensity) be a property of the HeatSource class
   double alpha = 1;
   double beta = 2; // Mapping from condentropy to shrinkage
-  double offset = 5;
+  double offset = 5.0 / 1.8;
   int k;
 
   // Calculate condentropy and ==> shrinkage. Again this could/should be a property of the HeatSource.
