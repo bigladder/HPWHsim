@@ -1531,7 +1531,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     double compStart = dF_TO_dC(43.6);
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", dF_TO_dC(23.8)));
-    double lowTcutoff = dF_TO_dC(40.0);
+    double lowTcutoff = F_TO_C(40.0);
     compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
     
     resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
