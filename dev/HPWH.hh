@@ -32,17 +32,28 @@ class HPWH {
   //specifies the allowable preset HPWH models
   //values may vary - names should be used
   enum MODELS{
-    //these first models are used for testing purposes
+    //these models are used for testing purposes
     MODELS_restankNoUA = 1,       //a simple resistance tank, but with no tank losses
     MODELS_restankHugeUA = 2,     //a simple resistance tank, but with very large tank losses
     MODELS_restankRealistic = 3,  //a more-or-less realistic resistance tank
     MODELS_basicIntegrated = 4,   //a standard integrated HPWH
     MODELS_externalTest = 5,      //a single compressor tank, using "external" topology
 
+    //these models are based on real tanks and measured lab data
     MODELS_Voltex60 = 102         //this is the Ecotope model for the 60 gallon Voltex HPWH
     };
 
+  enum UNITS{
+    UNITS_C,          //celsius
+    UNITS_F,           //fahrenheit
+    UNITS_KWH,        //kilowatt hours
+    UNITS_BTU,        //british thermal units
+    UNITS_KJ          //kilojoules
+    };
 
+  //this is the value that the public functions will return in case of a simulation
+  //destroying error
+  const int HPWH_ABORT = -274 ;
 
 
     
@@ -53,7 +64,7 @@ class HPWH {
 	 * but not quite as versatile.
 	 * My impression is that this could be a useful input paradigm for CSE
 	 * 
-	 * The return value is 0 for successful init, something else otherwise
+	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
 	int HPWHinit_file(std::string configFile);
@@ -62,7 +73,7 @@ class HPWH {
 	 * This is useful for testing new variations, and for the sort of variability
 	 * that we typically do when creating SEEM runs
 	 * 
-	 * The return value is 0 for successful init, something else otherwise
+	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
 	int runOneStep(double inletT_C, double drawVolume_L, 
@@ -71,7 +82,7 @@ class HPWH {
 	/* This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 * 
-	 * The return value is 0 for successful simulation run, something else otherwise
+	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 	 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L, 
@@ -81,62 +92,74 @@ class HPWH {
 	 * The calculated values will be summed or averaged, as appropriate, and 
 	 * then stored in the usual variables to be accessed through functions
 	 * 
-	 * The return value is 0 for successful simulation run, something else otherwise
+	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
 
 
   int setSetpoint(double newSetpoint /*default units C*/);
-  int setSetpoint(double newSetpoint, std::string units);
+  int setSetpoint(double newSetpoint, UNITS units);
   //a function to change the setpoint - useful for dynamically setting it
+  //The return value is 0 for successful setting, HPWH_ABORT for units failure
+
   int resetTankToSetpoint();
   //this function resets the tank temperature profile to be completely at setpoint
+	//The return value is 0 for successful completion
 
   
 	int getNumNodes() const;
-	//get the number of nodes
+	//returns the number of nodes
   double getTankNodeTemp(int nodeNum /*default units C*/) const;
-  double getTankNodeTemp(int nodeNum, std::string units) const;
-	//get the temperature of the water at the specified node - with or without units
+  double getTankNodeTemp(int nodeNum, UNITS units) const;
+	//returns the temperature of the water at the specified node - with specified units
+  //or HPWH_ABORT for incorrect node number or unit failure
+
 	double getNthSimTcouple(int N /*default units C*/) const;
-  double getNthSimTcouple(int N, std::string units) const;
-  //get a temperature from a set of 6 virtual "thermocouples", which are constructed
+  double getNthSimTcouple(int N, UNITS units) const;
+  //returns the temperature from a set of 6 virtual "thermocouples", which are constructed
   //from the node temperature array.  Specify t-couple from 1-6, 1 at the bottom
-  //with or without units
-	
+  //using specified units
+  //returns HPWH_ABORT for N < 0, > 6, or incorrect units
+
 	int getNumHeatSources() const;
-	//get the number of heat sources
+	//returns the number of heat sources
 	double getNthHeatSourceEnergyInput(int N /*default units kWh*/) const;
-	double getNthHeatSourceEnergyInput(int N, std::string units) const;
-	//get the energy input to the Nth heat source, with or without units
+	double getNthHeatSourceEnergyInput(int N, UNITS units) const;
+	//returns the energy input to the Nth heat source, with the specified units
   //energy used by the heat source is positive - should always be positive
+  //returns HPWH_ABORT for N out of bounds or incorrect units
+
+  
   double getNthHeatSourceEnergyOutput(int N /*default units kWh*/) const;
-	double getNthHeatSourceEnergyOutput(int N, std::string units) const;
-	//get the energy output from the Nth heat source, with or without units
+	double getNthHeatSourceEnergyOutput(int N, UNITS units) const;
+	//returns the energy output from the Nth heat source, with the specified units
   //energy put into the water is positive - should always be positive
+  //returns HPWH_ABORT for N out of bounds or incorrect units
 	double getNthHeatSourceRunTime(int N) const;
-	//get the run time for the Nth heat source, in minutes
+	//returns the run time for the Nth heat source, in minutes
 	//note: they may sum to more than 1 time step for concurrently running heat sources
-  bool isNthHeatSourceRunning(int N) const;
-  //return true if the Nth heat source is currently engaged
+  //returns HPWH_ABORT for N out of bounds
+  int isNthHeatSourceRunning(int N) const;
+  //returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
+  //returns HPWH_ABORT for N out of bounds
 
 	double getOutletTemp(/*default units C*/) const;
-	double getOutletTemp(std::string units) const;
-	//a function to get the outlet temperature - returns 0 when no draw occurs
-	//the input is a string containing the desired units, F or C
+	double getOutletTemp(UNITS units) const;
+	//returns the outlet temperature in the specified units
+  //returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier
+
 	double getEnergyRemovedFromEnvironment(/*default units kWh*/) const;
-	double getEnergyRemovedFromEnvironment(std::string units) const;
-	//get the total energy removed from the environment by all heat sources
+	double getEnergyRemovedFromEnvironment(UNITS units) const;
+	//get the total energy removed from the environment by all heat sources in specified units
   //(not net energy - does not include standby)
   //moving heat from the space to the water is the positive direction
-	//with or without units - kWh or btu
+  //returns HPWH_ABORT for incorrect units
   double getStandbyLosses(/*default units kWh*/) const;
-	double getStandbyLosses(std::string units) const;
-	//get the amount of heat lost through the tank
+	double getStandbyLosses(UNITS units) const;
+	//get the amount of heat lost through the tank in specified units
   //moving heat from the water to the space is the positive direction
   //negative should occur seldom
-  //with or without units - kWh or btu
-
+  //returns HPWH_ABORT for incorrect units
 
  
  private:
@@ -302,7 +325,7 @@ class HPWH::HeatSource {
 	std::vector<heatingLogicPair> shutOffLogicSet;
 
 
-	double hysteresis;
+	double hysteresis_dC;
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
 
 	bool depressesTemperature;

@@ -229,17 +229,17 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
 int HPWH::setSetpoint(double newSetpoint){
   setpoint_C = newSetpoint;
   return 0;
-  }
-int HPWH::setSetpoint(double newSetpoint, string units) {
-  if (units == "C") {
+}
+int HPWH::setSetpoint(double newSetpoint, UNITS units) {
+  if (units == UNITS_C) {
     setpoint_C = newSetpoint;
   }
-  else if (units == "F") {
+  else if (units == UNITS_F) {
     setpoint_C = F_TO_C(newSetpoint);
   }
   else {
     cout << "Incorrect unit specification for getNthSimTcouple" << endl;
-    exit(1);
+    return HPWH_ABORT;
   }
   return 0;
 }
@@ -248,7 +248,7 @@ int HPWH::resetTankToSetpoint(){
     tankTemps_C[i] = setpoint_C;
   }
   return 0;
-  }
+}
 
   
 int HPWH::getNumNodes() const {
@@ -257,32 +257,35 @@ int HPWH::getNumNodes() const {
 
 double HPWH::getTankNodeTemp(int nodeNum) const {
   if (nodeNum > numNodes || nodeNum < 0) {
-    cout << "You have attempted to access the temperature of a tank node that does not exist.  Exiting..." << endl;
-    exit(1);
+    cout << "You have attempted to access the temperature of a tank node that does not exist." << endl;
+    return double(HPWH_ABORT);
   }
   return tankTemps_C[nodeNum];
 }
 
-double HPWH::getTankNodeTemp(int nodeNum,  string units) const {
+double HPWH::getTankNodeTemp(int nodeNum,  UNITS units) const {
   double result = getTankNodeTemp(nodeNum);
-  
-  if (units == "C") {
+  if (result == double(HPWH_ABORT)) {
     return result;
   }
-  else if (units == "F") {
+  
+  if (units == UNITS_C) {
+    return result;
+  }
+  else if (units == UNITS_F) {
     return C_TO_F(result);
   }
   else {
     cout << "Incorrect unit specification for getTankNodeTemp" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
 
 double HPWH::getNthSimTcouple(int N) const {
   if (N > 6 || N < 1) {
-    cout << "You have attempted to access a simulated thermocouple that does not exist.  Exiting..." << endl;
-    exit(1);
+    cout << "You have attempted to access a simulated thermocouple that does not exist.  " << endl;
+    return double(HPWH_ABORT);
   }
   
   double averageTemp_C = 0;
@@ -294,18 +297,21 @@ double HPWH::getNthSimTcouple(int N) const {
   return averageTemp_C;
 }
 
-double HPWH::getNthSimTcouple(int N, string units) const {
+double HPWH::getNthSimTcouple(int N, UNITS units) const {
   double result = getNthSimTcouple(N);
-  
-  if (units == "C") {
+  if (result == double(HPWH_ABORT)) {
     return result;
   }
-  else if (units == "F") {
+  
+  if (units == UNITS_C) {
+    return result;
+  }
+  else if (units == UNITS_F) {
     return C_TO_F(result);
   }
   else {
     cout << "Incorrect unit specification for getNthSimTcouple" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
@@ -317,77 +323,88 @@ int HPWH::getNumHeatSources() const {
 
 double HPWH::getNthHeatSourceEnergyInput(int N) const {
   //energy used by the heat source is positive - this should always be positive
-  if (N > numNodes || N < 0) {
-    cout << "You have attempted to access the energy input of a heat source that does not exist.  Exiting..." << endl;
-    exit(1);
+  if (N > numHeatSources || N < 0) {
+    cout << "You have attempted to access the energy input of a heat source that does not exist.  " << endl;
+    return double(HPWH_ABORT);
   }
   return setOfSources[N].energyInput_kWh;
 }
 
-double HPWH::getNthHeatSourceEnergyInput(int N, string units) const {
+double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
   //energy used by the heat source is positive - this should always be positive
   double returnVal = getNthHeatSourceEnergyInput(N);
-  
-  if (units == "kWh" || units == "kwh") {
+  if (returnVal == double(HPWH_ABORT) ) {
     return returnVal;
   }
-  else if (units == "btu") {
+  
+  if (units == UNITS_KWH) {
+    return returnVal;
+  }
+  else if (units == UNITS_BTU) {
     return KWH_TO_BTU(returnVal);
   }
-  else if (units == "kJ") {
+  else if (units == UNITS_KJ) {
     return KWH_TO_KJ(returnVal);
   }
   else {
     cout << "Incorrect unit specification for getNthHeatSourceEnergyInput" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
 
 double HPWH::getNthHeatSourceEnergyOutput(int N) const {
 //returns energy from the heat source into the water - this should always be positive
-  if (N > numNodes || N < 0) {
-    cout << "You have attempted to access the energy output of a heat source that does not exist.  Exiting..." << endl;
-    exit(1);
+  if (N > numHeatSources || N < 0) {
+    cout << "You have attempted to access the energy output of a heat source that does not exist.  " << endl;
+    return double(HPWH_ABORT);
   }
   return setOfSources[N].energyOutput_kWh;
 }
 
-double HPWH::getNthHeatSourceEnergyOutput(int N, string units) const {
+double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
 //returns energy from the heat source into the water - this should always be positive
   double returnVal = getNthHeatSourceEnergyOutput(N);
-
-  if (units == "kWh" || units == "kwh") {
+  if (returnVal == double(HPWH_ABORT) ) {
     return returnVal;
   }
-  else if (units == "btu") {
+  
+  if (units == UNITS_KWH) {
+    return returnVal;
+  }
+  else if (units == UNITS_BTU) {
     return KWH_TO_BTU(returnVal);
   }
-  else if (units == "kJ") {
+  else if (units == UNITS_KJ) {
     return KWH_TO_KJ(returnVal);
   }
- else {
+  else {
     cout << "Incorrect unit specification for getNthHeatSourceEnergyInput" << endl;
-    exit(1);
- }
+    return double(HPWH_ABORT);
+  }
 }
 
 
 double HPWH::getNthHeatSourceRunTime(int N) const {
-  if (N > numNodes || N < 0) {
-    cout << "You have attempted to access the run time of a heat source that does not exist.  Exiting..." << endl;
-    exit(1);
+  if (N > numHeatSources || N < 0) {
+    cout << "You have attempted to access the run time of a heat source that does not exist.  " << endl;
+    return double(HPWH_ABORT);
   }
   return setOfSources[N].runtime_min;
 }	
 
 
-bool HPWH::isNthHeatSourceRunning(int N) const{
-  if (N > numNodes || N < 0) {
+int HPWH::isNthHeatSourceRunning(int N) const{
+  if (N > numHeatSources || N < 0) {
     cout << "You have attempted to access the status of a heat source that does not exist.  Exiting..." << endl;
-    exit(1);
+    return HPWH_ABORT;
   }
-  return setOfSources[N].isEngaged();
+  if ( setOfSources[N].isEngaged() ){
+    return 1;
+    }
+  else{
+    return 0;
+  }
 }
 
 
@@ -395,18 +412,21 @@ double HPWH::getOutletTemp() const {
     return outletTemp_C;
 }
 
-double HPWH::getOutletTemp(string units) const {
+double HPWH::getOutletTemp(UNITS units) const {
   double returnVal = getOutletTemp();
-
-  if (units == "C") {
+  if (returnVal == double(HPWH_ABORT) ) {
     return returnVal;
   }
-  else if (units == "F") {
+  
+  if (units == UNITS_C) {
+    return returnVal;
+  }
+  else if (units == UNITS_F) {
     return C_TO_F(returnVal);
-    }
+  }
   else {
     cout << "Incorrect unit specification for getOutletTemp" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
@@ -416,19 +436,22 @@ double HPWH::getEnergyRemovedFromEnvironment() const {
   return energyRemovedFromEnvironment_kWh;
 }
 
-double HPWH::getEnergyRemovedFromEnvironment(string units) const {
+double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
   //moving heat from the space to the water is the positive direction
   double returnVal = getEnergyRemovedFromEnvironment();
 
-  if (units == "kWh" || units == "kwh") {
+  if (units == UNITS_KWH) {
     return returnVal;
   }
-  else if (units == "btu") {
+  else if (units == UNITS_BTU) {
     return KWH_TO_BTU(returnVal);
-    }
+  }
+  else if (units == UNITS_KJ){
+    return KWH_TO_KJ(returnVal);
+  }
   else {
     cout << "Incorrect unit specification for getEnergyRemovedFromEnvironment" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
@@ -438,19 +461,22 @@ double HPWH::getStandbyLosses() const {
   return standbyLosses_kWh;
 }
 
-double HPWH::getStandbyLosses(string units) const {
+double HPWH::getStandbyLosses(UNITS units) const {
   //moving heat from the water to the space is the positive direction
   double returnVal = getStandbyLosses();
 
-  if (units == "kWh" || units == "kwh") {
+ if (units == UNITS_KWH) {
     return returnVal;
   }
-  else if (units == "btu") {
+  else if (units == UNITS_BTU) {
     return KWH_TO_BTU(returnVal);
-    }
+  }
+  else if (units == UNITS_KJ){
+    return KWH_TO_KJ(returnVal);
+  }
   else {
     cout << "Incorrect unit specification for getStandbyLosses" << endl;
-    exit(1);
+    return double(HPWH_ABORT);
   }
 }
 
@@ -1177,7 +1203,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     COP_T2_constant = 1;
     COP_T2_linear = 0;
     COP_T2_quadratic = 0;
-    hysteresis = 0;  //no hysteresis
+    hysteresis_dC = 0;  //no hysteresis
     configuration = "submerged"; //immersed in tank
     
     //standard logic conditions
@@ -1343,7 +1369,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 5.60;
     compressor.COP_T2_linear = -0.0252;
     compressor.COP_T2_quadratic = 0.00000254;
-    compressor.hysteresis = 0;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = "wrapped"; //wrapped around tank
     
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
@@ -1408,7 +1434,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 5.60;
     compressor.COP_T2_linear = -0.0252;
     compressor.COP_T2_quadratic = 0.00000254;
-    compressor.hysteresis = 0;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = "external";
     
     compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
@@ -1467,7 +1493,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 6.58;
     compressor.COP_T2_linear = -0.0392;
     compressor.COP_T2_quadratic = 0.0000407;
-    compressor.hysteresis = 0;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = "wrapped";
     compressor.depressesTemperature = true;
     //true for compressors, however tempDepression is turned off so it won't depress
@@ -1493,7 +1519,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementTop.COP_T2_constant = 1;
     resistiveElementTop.COP_T2_linear = 0;
     resistiveElementTop.COP_T2_quadratic = 0;
-    resistiveElementTop.hysteresis = 0;  //no hysteresis
+    resistiveElementTop.hysteresis_dC = 0;  //no hysteresis
     resistiveElementTop.configuration = "submerged"; //immersed in tank
     resistiveElementTop.depressesTemperature = false;  //no temp depression
 
@@ -1519,22 +1545,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.COP_T2_constant = 1;
     resistiveElementBottom.COP_T2_linear = 0;
     resistiveElementBottom.COP_T2_quadratic = 0;
-    resistiveElementBottom.hysteresis = dF_TO_dC(4);  //turns off with 4 F hysteresis
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);  //turns off with 4 F hysteresis
     resistiveElementBottom.configuration = "submerged"; //immersed in tank
     resistiveElementBottom.depressesTemperature = false;  //no temp depression
 
     
     //logic conditions
     double compStart = dF_TO_dC(43.6);
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", dF_TO_dC(23.8)));
     double lowTcutoff = F_TO_C(40.0);
+    double standby = dF_TO_dC(23.8);
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
     compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
     
     resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
                   "bottomThird", compStart));
     resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis));
+                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
 
     resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(36.0)));
 
