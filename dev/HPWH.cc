@@ -1016,7 +1016,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
   for(int i = 0; i < CONDENSITY_SIZE; i++) {
     if(condensity[i] > 0) {
       condentropy -= condensity[i] * log(condensity[i]);
-      cout << "condentropy " << condentropy << endl;
+//      cout << "condentropy " << condentropy << endl;
     }
   }
   s = alpha + condentropy * beta;
