@@ -20,7 +20,7 @@ class HPWH {
   HPWH();  //default constructor
 	~HPWH(); //destructor - will be defined
 
-  //an enum to specify the various modes for the Demand Response (DR) abilities
+  //specifies the various modes for the Demand Response (DR) abilities
   //values may vary - names should be used
   enum DRMODES{
     DR_BLOCK = 0,   //this mode prohibits the elements from engaging and turns
@@ -28,12 +28,25 @@ class HPWH {
     DR_ALLOW = 1,   //this mode allows the water heater to run normally
     DR_ENGAGE = 2  //this mode forces an element to turn on
     };
-  
+
+  //specifies the allowable preset HPWH models
+  //values may vary - names should be used
+  enum MODELS{
+    //these first models are used for testing purposes
+    MODELS_restankNoUA = 1,       //a simple resistance tank, but with no tank losses
+    MODELS_restankHugeUA = 2,     //a simple resistance tank, but with very large tank losses
+    MODELS_restankRealistic = 3,  //a more-or-less realistic resistance tank
+    MODELS_basicIntegrated = 4,   //a standard integrated HPWH
+    MODELS_externalTest = 5,      //a single compressor tank, using "external" topology
+
+    MODELS_Voltex60 = 102         //this is the Ecotope model for the 60 gallon Voltex HPWH
+    };
 
 
 
-  
-	int HPWHinit_presets(int presetNum);
+
+    
+	int HPWHinit_presets(MODELS presetNum);
 	/* This function will load in a set of parameters that are hardcoded in this function - 
 	 * which particular set of parameters is selected by presetNum.
 	 * This is similar to the way the HPWHsim currently operates, as used in SEEM,
@@ -123,6 +136,7 @@ class HPWH {
   //moving heat from the water to the space is the positive direction
   //negative should occur seldom
   //with or without units - kWh or btu
+
 
  
  private:

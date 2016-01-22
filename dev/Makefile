@@ -1,6 +1,6 @@
 
 
-options = -g -Wall -Wshadow
+options = -g -Wall -Wshadow -std=c++11
 #options = -O3
 
 

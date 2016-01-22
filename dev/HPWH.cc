@@ -1195,9 +1195,9 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 }
 
 
-int HPWH::HPWHinit_presets(int presetNum) {
+int HPWH::HPWHinit_presets(MODELS presetNum) {
   //resistive with no UA losses for testing
-  if (presetNum == 1) {
+  if (presetNum == MODELS_restankNoUA) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = 50;
@@ -1231,7 +1231,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
   }
 
   //resistive tank with massive UA loss for testing
-  else if (presetNum == 2) {
+  else if (presetNum == MODELS_restankHugeUA) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = 50;
@@ -1264,7 +1264,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
   }
 
   //realistic resistive tank
-  else if(presetNum == 3) {
+  else if(presetNum == MODELS_restankRealistic) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = F_TO_C(127.0);
@@ -1292,7 +1292,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
   }
 
   //basic compressor tank for testing
-  else if (presetNum == 4) {
+  else if (presetNum == MODELS_basicIntegrated) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = 50;
@@ -1367,7 +1367,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
   }
 
   //simple external style for testing
-  else if (presetNum == 5) {
+  else if (presetNum == MODELS_externalTest) {
     numNodes = 96;
     tankTemps_C = new double[numNodes];
     setpoint_C = 50;
@@ -1423,7 +1423,7 @@ int HPWH::HPWHinit_presets(int presetNum) {
     setOfSources[0] = compressor;
   }
   //voltex 60 gallon
-  else if (presetNum == 102) {
+  else if (presetNum == MODELS_Voltex60) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = F_TO_C(127.0);

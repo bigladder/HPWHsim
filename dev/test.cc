@@ -221,7 +221,7 @@ HPWH hpwh;
 
 
 
-hpwh.HPWHinit_presets(102);
+hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
