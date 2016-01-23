@@ -1,7 +1,8 @@
 
 
-options = -g -Wall -Wshadow -std=c++11
+options = -g -Wall -Wshadow
 #options = -O3
+#options = -pg -O3
 
 
 #testTool.x : main.cc HPWH.o

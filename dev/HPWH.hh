@@ -53,7 +53,7 @@ class HPWH {
 
   //this is the value that the public functions will return in case of a simulation
   //destroying error
-  const int HPWH_ABORT = -274 ;
+  static const int HPWH_ABORT = -274000;
 
 
     
@@ -177,6 +177,8 @@ class HPWH {
 	//functions to calculate what the temperature in a portion of the tank is
 
 
+  bool simHasFailed;
+  //did an internal error cause the simulation to fail?
  
 	bool isHeating;
 	//is the hpwh currently heating or not?
@@ -265,7 +267,14 @@ class HPWH::HeatSource {
 	HPWH *hpwh;
 	//the creator of the heat source, necessary to access HPWH variables
 	
-	//these are the heat source state/output variables
+  enum COIL_CONFIG {
+    CONFIG_SUBMERGED,
+    CONFIG_WRAPPED,
+    CONFIG_EXTERNAL
+    };
+
+
+  //these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
 	
@@ -334,7 +343,7 @@ class HPWH::HeatSource {
 	// know if it is capable of contributing to this effect or not
   // NOTE: this only works for 1 minute steps
 
-	std::string configuration; // submerged, wrapped, external
+	COIL_CONFIG configuration; // submerged, wrapped, external
 
 
 
@@ -360,7 +369,7 @@ class HPWH::HeatSource {
   
   // A few helper functions
   double expitFunc(double x, double offset);
-  void normalize(std::vector<double> &distribution, int n);
+  void normalize(std::vector<double> &distribution);
 
 };  //end of HeatSource class
 
