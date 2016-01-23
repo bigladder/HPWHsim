@@ -17,6 +17,7 @@ library(ggplot2)
 
 allSimResults <- read.csv("allResults.csv")
 allLabResults <- read.csv("allLabResults.csv")
+fieldResults <- read.csv("fieldResults.csv")
 
 varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
                                       "tcouples1", "tcouples2", "tcouples3",
@@ -79,4 +80,65 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
     scale_linetype_discrete(name = "Type")
   p
 }
+
+
+
+fieldPlot <- function(model) {
+  fieldResults$X <- NULL
+  fieldResults2 <- fieldResults[fieldResults$model == model, ]
+  if(!nrow(fieldResults2)) {
+    stop(paste("Model", model, "not simulated yet."))
+  }
+  flong <- reshape2::melt(fieldResults2, 
+                          id.vars = c("siteid", "model"))
+  flong$type <- gsub("^(.+)\\.(.+)\\.(.+)$", "\\1", flong$variable)
+  flong$heatSource <- gsub("^(.+)\\.(.+)\\.(.+)$", "\\2", flong$variable)
+  simRows <- grep("Sim", flong$variable)
+  measRows <- grep("Measured", flong$variable)
+  flong$variable <- NULL
+  f2 <- tidyr::spread(flong, type, value)
+  
+  ggplot(f2) + theme_bw() +
+    geom_point(aes(Measured, Sim, col = heatSource)) +
+    geom_smooth(aes(Measured, Sim, col = heatSource), method = "lm") +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+    facet_wrap(~heatSource, nrow = 2, scales = "free_x")
+  
+#   means <- (fieldResults2$Sim.Total.kWh + fieldResults2$Measured.Total.kWh) / 2
+#   
+#   flong$siteid <- factor(flong$siteid, 
+#                          levels = fieldResults2$siteid[sort(means, index.return = TRUE, decreasing = TRUE)$ix])
+#   
+#   ggplot(flong[-grep("Total", flong$variable), ]) + theme_bw() + 
+#     geom_bar(aes(x = type, y = value, fill = heatSource), 
+#              position = "stack", stat = "identity") +
+#     facet_wrap(~siteid)
+  
+#   breaks1 <- c(2, 3, 5, 8, 10, 12, 15)
+#   ggplot(fieldResults2) + theme_bw() + 
+#     geom_point(aes(Measured.Total.kWh, Sim.Total.kWh)) + 
+#     geom_smooth(aes(Measured.Total.kWh, Sim.Total.kWh), method = "lm") + 
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     scale_x_log10(breaks = breaks1) + scale_y_log10(breaks = breaks1) +
+#     xlab("Measured Total kWh") + ylab("Simulated Total kWh")
+#   
+#   ggplot(fieldResults) + theme_bw() + 
+#     geom_point(aes(Measured.Resistance.kWh, Sim.Resistance.kWh)) + 
+#     geom_smooth(aes(Measured.Resistance.kWh, Sim.Resistance.kWh), method = "lm") + 
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     # scale_x_log10(breaks = breaks1) + scale_y_log10(breaks = breaks1) +
+#     xlab("Measured Resistance kWh") + ylab("Simulated Resistance kWh")
+#   
+#   
+#   ggplot(fieldResults) + theme_bw() + 
+#     geom_point(aes(Measured.Compressor.kWh, Sim.Compressor.kWh)) + 
+#     geom_smooth(aes(Measured.Compressor.kWh, Sim.Compressor.kWh), method = "lm") + 
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     scale_x_log10(breaks = breaks1) + scale_y_log10(breaks = breaks1) +
+#     xlab("Measured Compressor kWh") + ylab("Simulated Compressor kWh")
+#   
+#   
+}
+
+
 

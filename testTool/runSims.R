@@ -65,5 +65,102 @@ write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
 
 
 # What about the field data???
-system(paste("./testTool.x", "site11531", "Voltex60"))
+runOneField <- function(siteid = "11531", model = "Voltex60") {
+  # Run the simulation
+  system(paste("./testTool.x ", "site", siteid, " Voltex60", sep = ""))
+  
+  # Read the Output
+  simOutput <- read.csv(paste0("tests/site", siteid, "/", model, "TestToolOutput.csv"))
+  fieldOutput <- read.csv(paste0("tests/site", siteid, "/fieldResults.csv"))
+  names(fieldOutput)[names(fieldOutput) == "minute"] <- "minutes"
+  dset <- merge(simOutput, fieldOutput)
+  
+  if(model == "Voltex60") {
+    dset$simCompWatts <- dset$input_kWh2 * 60000
+    dset$simResWatts <- (dset$input_kWh1 + dset$input_kWh3) * 60000    
+  }
+  dset$simWatts <- dset$simCompWatts + dset$simResWatts
+  dset$measCompWatts <- dset$compW
+  dset$measResWatts <- dset$resW
+  dset$measWatts <- dset$measCompWatts + dset$measResWatts
+  
+  dset <- dset[, c("time", "simCompWatts", "simResWatts", "simWatts",
+                   "measCompWatts", "measResWatts", "measWatts")]
+  sumResults <- apply(dset[, c("simCompWatts", "simResWatts", "simWatts",
+                 "measCompWatts", "measResWatts", "measWatts")], 2, mean, na.rm = TRUE) *
+    24 / 1000
+  sumResults <- data.frame(t(sumResults))
+  names(sumResults) <- c("Sim.Compressor.kWh", "Sim.Resistance.kWh", "Sim.Total.kWh",
+                         "Measured.Compressor.kWh", "Measured.Resistance.kWh", "Measured.Total.kWh")
+  sumResults$siteid <- siteid
+  sumResults$model <- model
+  sumResults
+#   
+#   ggplot(dset) + theme_bw() + 
+#     geom_point(aes(measCompWatts, simCompWatts), alpha = .1)
+#   
+#   dset$date <- as.Date(dset$time)
+#   dset$hour <- lubridate::hour(dset$time) + lubridate::minute(dset$time) / 60
+#   dset$wday <- lubridate::wday(dset$time, label = TRUE, abbr = FALSE)
+#   dset$weekend <- dset$wday %in% c("Saturday", "Sunday")
+#   dlong <- reshape2::melt(dset, id.vars = c("time", "date", "hour", "wday", "weekend"))
+#   
+#   hourlyDset <- aggregate(cbind(simCompWatts, simResWatts, simWatts, 
+#                                 measCompWatts, measResWatts, measWatts) ~ hour + weekend,
+#                           data = dset, FUN = mean)
+#   hlong <- reshape2::melt(hourlyDset, id.vars = c("hour", "weekend"))
+#   hlong$type <- "Measured"
+#   hlong$type[grep("sim", hlong$variable)] <- "Simulated"
+#   
+#   ggplot(hlong[!(hlong$variable %in% c("simWatts", "measWatts")), ]) + theme_bw() +
+#     geom_line(aes(hour, value, col = variable, linetype = type)) + 
+#     facet_wrap(~weekend, nrow = 2)
+#   
+#   ggplot(hlong[(hlong$variable %in% c("simWatts", "measWatts")), ]) + theme_bw() +
+#     geom_line(aes(hour, value, col = variable, linetype = type)) +
+#     facet_wrap(~weekend, nrow = 2) 
+#   
+#   daily <- aggregate(cbind(simCompWatts, simResWatts, simWatts, 
+#                            measCompWatts, measResWatts, measWatts) ~ date,
+#                      data = dset, FUN = mean)
+#   dlong2 <- reshape2::melt(daily, id.vars = c("date"))
+#   dlong2$value <- dlong2$value * 24 / 1000
+#   
+#   ggplot(dlong2[dlong2$variable %in% c("simWatts", "measWatts"), ]) + theme_bw() + 
+#     geom_line(aes(date, value, col = variable))
+#   
+#   daily[, -1] <- daily[, -1] * 24 / 1000
+#   ggplot(daily) + theme_bw() + 
+#     geom_point(aes(measWatts, simWatts, col = measResWatts)) +
+#     geom_smooth(aes(measWatts, simWatts), method = "lm") +
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     xlab("Measured Daily kWh") +
+#     ylab("Simulated Daily kWh")
+#   
+#   ggplot(daily) + theme_bw() + 
+#     geom_point(aes(measCompWatts, simCompWatts, col = measResWatts)) +
+#     geom_smooth(aes(measCompWatts, simCompWatts), method = "lm") +
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     xlab("Measured Daily Compressor kWh") +
+#     ylab("Simulated Daily Compressor kWh")
+#   
+#   
+#   ggplot(daily) + theme_bw() + 
+#     geom_point(aes(measResWatts, simResWatts, col = measResWatts)) +
+#     geom_smooth(aes(measResWatts, simResWatts), method = "lm") +
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#     xlab("Measured Daily Compressor kWh") +
+#     ylab("Simulated Daily Compressor kWh")  
+}
 
+
+fieldResults <- lapply(voltex$siteid[!(voltex$siteid %in% dontUse)], function(x) {
+  tmp <- try(runOneField(x))
+  if(inherits(tmp, "try-error")) {
+    NULL
+  } else {
+    tmp
+  }
+})
+fieldResults <- do.call('rbind', fieldResults)
+write.csv(file = "HpwhTestTool/fieldResults.csv", fieldResults)
