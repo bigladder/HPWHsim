@@ -37,6 +37,10 @@ int main(int argc, char *argv[])
 {
   HPWH hpwh;
 
+  HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
+  HPWH::MODELS model = HPWH::MODELS_Voltex60;
+  HPWH::UNITS units = HPWH::UNITS_F;
+
   std::vector<double> simTCouples(6);
   std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
 
@@ -124,9 +128,9 @@ int main(int argc, char *argv[])
   }
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
-  hpwh.HPWHinit_presets(102);
+  hpwh.HPWHinit_presets(model);
   if(newSetpoint > 0) {
-    hpwh.setSetpoint(newSetpoint, "F");
+    hpwh.setSetpoint(newSetpoint, units);
     hpwh.resetTankToSetpoint();
   }
   nSources = hpwh.getNumHeatSources();
@@ -160,7 +164,7 @@ int main(int argc, char *argv[])
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
                       F_TO_C(allSchedules[2][i]),  // Ambient Temp (C)
                       F_TO_C(allSchedules[3][i]),  // External Temp (C)
-                      allSchedules[4][i], 1.0);    // DDR Status (1 or 0)
+                      drStatus, 1.0);    // DDR Status (now an enum. Fixed for now as allow)
 
     // Grab the current status
     getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);

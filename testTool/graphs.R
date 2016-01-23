@@ -14,3 +14,7 @@ p <- onePlot("Voltex60", "DP_SHW50", c("Thermocouples", "Average Tank Temp", "In
   ggtitle("Voltex 60 Gallon Shower Test")
 ggsave(file = "graphs/DP_SHW5050_Voltex60.png", p, width = 7, height = 5)
 
+
+px <- fieldPlot("Voltex60")
+px <- px + ggtitle("Voltex 60 gallon Field vs HPWHsim 2.0")
+ggsave(file = "graphs/voltex60field.png", px, width = 7, height = 5)

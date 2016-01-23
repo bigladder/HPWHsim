@@ -31,7 +31,10 @@ shinyUI(fluidPage(
 
     # Show a plot of the generated distribution
     mainPanel(
-      plotOutput("testPlot")
+      tabsetPanel(
+        tabPanel("Lab Data", plotOutput("testPlot"), width = "100%", height = "600px"),
+        tabPanel("Field Data", plotOutput("fieldPlot"), width = "100%", height = "600px")
+      )
     )
   )
 ))

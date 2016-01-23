@@ -24,6 +24,13 @@ shinyServer(function(input, output, session) {
     p()
   })
   
+  p2 <- eventReactive(input$go, {
+    fieldPlot(input$model)
+  })
+  output$fieldPlot <- renderPlot({
+    p2()
+  })
+  
 #   output$testPlot <- renderPlot({
 #    onePlot(input$model, input$test, input$vars, input$testlength)
 #   })

@@ -12,6 +12,7 @@ voltex <- sites[grep("Voltex", sites$make), ]
 
 siteid <- "11531"
 readOne <- function(siteid) {
+  print(siteid)
   cdx("hpwh")
   dset <- read.dta(file = paste("../data", siteid, "reshaped.dta", sep = "/"))
   dset <- dset[!is.na(dset$Flow) & !is.na(dset$Tintake) & !is.na(dset$Tin), ]
@@ -29,6 +30,10 @@ readOne <- function(siteid) {
   setwd(dirTmp)
   dir2 <- paste0("tests/site", siteid)
   dir.create(dir2)
+  dset$time <- stata_time_to_R_time(dset$readTime)
+  write.csv(dset[, c("time", "minute", "hpwhW", "compW", "resW")], 
+            file = paste(dir2, "fieldResults.csv", sep = "/"),
+            row.names = FALSE)
   flowDset <- dset[dset$Flow > 0, c("minute", "Flow")]
   
   # Write out the draw schedule
@@ -71,3 +76,9 @@ readOne <- function(siteid) {
 
   
 }
+
+
+voltex$siteid
+dontUse <- c(23860, 99094)
+lapply(voltex$siteid[!(voltex$siteid %in% dontUse)], readOne)
+
