@@ -1560,6 +1560,173 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     setOfSources[1].backupHeatSource = &setOfSources[2];
 
   }
+  else if (presetNum == MODELS_Voltex80) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(127.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = 283.9; 
+    tankUA_kJperHrC = 8.8;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+
+    double split = 1.0/5.0;
+    compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+
+    //voltex60 tier 1 values
+    compressor.T1_F = 47;
+    compressor.T2_F = 67;
+
+    compressor.inputPower_T1_constant_W = 0.467*1000;
+    compressor.inputPower_T1_linear_WperF = 0.00281*1000;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.0000072*1000;
+    compressor.inputPower_T2_constant_W = 0.541*1000;
+    compressor.inputPower_T2_linear_WperF = 0.00147*1000;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0000176*1000;
+    compressor.COP_T1_constant = 4.86;
+    compressor.COP_T1_linear = -0.0222;
+    compressor.COP_T1_quadratic = -0.00001;
+    compressor.COP_T2_constant = 6.58;
+    compressor.COP_T2_linear = -0.0392;
+    compressor.COP_T2_quadratic = 0.0000407;
+    compressor.hysteresis_dC = 0;  //no hysteresis
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+    compressor.depressesTemperature = true;
+    //true for compressors, however tempDepression is turned off so it won't depress
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(8, 4250);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 2000);
+
+   
+    //logic conditions
+    double compStart = dF_TO_dC(43.6);
+    double lowTcutoff = F_TO_C(40.0);
+    double standby = dF_TO_dC(23.8);
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
+    
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
+                  "bottomThird", compStart));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
+                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(36.0)));
+
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = compressor;
+    setOfSources[2] = resistiveElementBottom;
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
+
+  }
+  else if (presetNum == MODELS_GEGeospring) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(127.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = 172; 
+    tankUA_kJperHrC = 6.8;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+
+    double split = 1.0/5.0;
+    compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+
+    compressor.T1_F = 47;
+    compressor.T2_F = 67;
+
+    compressor.inputPower_T1_constant_W = 0.247*1000;
+    compressor.inputPower_T1_linear_WperF = 0.00159*1000;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.00000107*1000;
+    compressor.inputPower_T2_constant_W = 0.328*1000;
+    compressor.inputPower_T2_linear_WperF = 0.00121*1000;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.00000216*1000;
+    compressor.COP_T1_constant = 4.92;
+    compressor.COP_T1_linear = -0.0210;
+    compressor.COP_T1_quadratic = 0.0;
+    compressor.COP_T2_constant = 5.03;
+    compressor.COP_T2_linear = -0.0167;
+    compressor.COP_T2_quadratic = 0.0;
+    compressor.hysteresis_dC = 0;  //no hysteresis
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+    compressor.depressesTemperature = true;
+    //true for compressors, however tempDepression is turned off so it won't depress
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(8, 4250);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 2000);
+
+   
+    //logic conditions
+    double compStart = dF_TO_dC(24.4);
+    double lowTcutoff = F_TO_C(40.0);
+    double standby = dF_TO_dC(29.1);
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
+    
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
+                  "bottomThird", compStart));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
+                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(30.0)));
+
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = compressor;
+    setOfSources[2] = resistiveElementBottom;
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
+
+  }
   else {
     cout << "You have tried to select a preset which does not exist.  " << endl;
     return HPWH_ABORT;

@@ -40,7 +40,10 @@ class HPWH {
     MODELS_externalTest = 5,      //a single compressor tank, using "external" topology
 
     //these models are based on real tanks and measured lab data
-    MODELS_Voltex60 = 102         //this is the Ecotope model for the 60 gallon Voltex HPWH
+    MODELS_Voltex60 = 102,         //this is the Ecotope model for the 60 gallon Voltex HPWH
+    MODELS_Voltex80 = 103,         // Voltex 80 gallon tank
+
+    MODELS_GEGeospring = 104      // Original GE
     };
 
   enum UNITS{
