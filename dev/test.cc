@@ -222,6 +222,7 @@ HPWH hpwh;
 
 
 hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
+hpwh.setVerbosity(HPWH::VRB_emetic);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
@@ -232,13 +233,7 @@ hpwh.runOneStep(0, liters, 0, 50, drStatus, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-printTankTemps(hpwh);
-printHeatSourceInfo(hpwh);
-
-hpwh.runOneStep(0, liters, 0, 50, drStatus, minutes);
-printTankTemps(hpwh);
-printHeatSourceInfo(hpwh);
+hpwh.getTankNodeTemp(5);
 
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 printTankTemps(hpwh);
@@ -252,7 +247,39 @@ hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-hpwh.runOneStep(0, liters, 0, 50, drStatus, minutes);
+//hpwh.runOneStep(0, liters, 0, 50, drStatus, minutes);
+//printTankTemps(hpwh);
+//printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+//hpwh.runOneStep(0, liters, 0, 50, drStatus, minutes);
+//printTankTemps(hpwh);
+//printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
+
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
@@ -280,97 +307,73 @@ hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 printTankTemps(hpwh);
 printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
-//hpwh.runOneStep(0, 0, 0, -10, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
-
-//hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-//printTankTemps(hpwh);
-//printHeatSourceInfo(hpwh);
+hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+printTankTemps(hpwh);
+printHeatSourceInfo(hpwh);
 
 
 
@@ -389,6 +392,7 @@ return 0;
 
 
 void printTankTemps(HPWH& hpwh) {
+  return;
   cout << std::left;
   
   for (int i = 0; i < hpwh.getNumNodes(); i++) {
@@ -399,6 +403,7 @@ void printTankTemps(HPWH& hpwh) {
 }
 
 void printHeatSourceInfo(HPWH& hpwh){
+  return;
   cout << std::left;
   cout << std::fixed;
   cout << std::setprecision(2);

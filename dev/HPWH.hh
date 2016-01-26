@@ -2,6 +2,7 @@
 #define HPWH_hh
 
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -43,9 +44,19 @@ class HPWH {
     MODELS_Voltex60 = 102         //this is the Ecotope model for the 60 gallon Voltex HPWH
     };
 
+  //specifies the modes for writing output
+  //the specified values are used for >= comparisons, so the numerical order is relevant
+  enum VERBOSITY {
+    VRB_silent = 0,     //print no outputs
+    VRB_reluctant = 1,  //print only outputs for fatal errors
+    VRB_typical = 2,    //print some basic debugging info
+    VRB_emetic = 3     //print all the things
+    };
+    
+
   enum UNITS{
     UNITS_C,          //celsius
-    UNITS_F,           //fahrenheit
+    UNITS_F,          //fahrenheit
     UNITS_KWH,        //kilowatt hours
     UNITS_BTU,        //british thermal units
     UNITS_KJ          //kilojoules
@@ -95,6 +106,11 @@ class HPWH {
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
+
+  void setVerbosity(VERBOSITY hpwhVrb);
+  //sets the verbosity to the specified level
+  void setMessageCallback( int (*callbackFunc)(const std::string message) );
+  //sets the function to be used for message passing
 
 
   int setSetpoint(double newSetpoint /*default units C*/);
@@ -176,12 +192,24 @@ class HPWH {
 	double bottomTwelthAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
 
+  void sayMessage(const std::string message, VERBOSITY messagePriority) const;
+  //if the messagePriority is >= the hpwh verbosity,
+  //either pass your message out to the callback function or print it to cout
+  //otherwise do nothing
+
 
   bool simHasFailed;
   //did an internal error cause the simulation to fail?
  
 	bool isHeating;
 	//is the hpwh currently heating or not?
+
+  VERBOSITY hpwhVerbosity;
+  //an enum to let the sim know how much output to say
+
+  int (*messageCallback)(const std::string message);
+  //function pointer to indicate an external processing function
+ 
 	
 	int numHeatSources;
 	//how many heat sources this HPWH has
