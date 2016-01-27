@@ -304,7 +304,21 @@ class HPWH::HeatSource {
     CONFIG_EXTERNAL
     };
 
-
+  //this is the set of logics available for shouldHeat
+  enum ONLOGIC{
+    ONLOGIC_topThird,
+    ONLOGIC_bottomThird,
+    ONLOGIC_standby
+    };
+  //this is the set of logics available for shutsDown
+  enum OFFLOGIC{
+    OFFLOGIC_lowT,
+    OFFLOGIC_lowTreheat,
+    OFFLOGIC_bottomNodeMaxTemp,
+    OFFLOGIC_bottomTwelthMaxTemp
+    };
+      
+    
   //these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
@@ -334,7 +348,12 @@ class HPWH::HeatSource {
 	//It is conceptually linked to the way condenser coils are wrapped around 
 	//(or within) the tank, however a resistance heat source can also be simulated
 	//by specifying the entire condensity in one node.
-	
+  double shrinkage;
+  //the shrinkage is a derived value, using parameters alpha, beta,
+  //and the condentropy, which is derived from the condensity
+  //alpha and beta are not intended to be settable
+  //see the hpwh_init functions for calculation of shrinkage
+  
 	double T1_F, T2_F;
 	//the two temperatures where the input and COP curves are defined
 	double inputPower_T1_constant_W, inputPower_T2_constant_W;
@@ -352,17 +371,18 @@ class HPWH::HeatSource {
 	//the heating logic instructions come in pairs - a string to select
 	//which logic function to use, and a double to give the setpoint
 	//for that function
+  template <typename T>
 	struct heatingLogicPair{
-		std::string selector;
+		T selector;
 		double decisionPoint_C;
 		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(std::string x, double y) : selector(x), decisionPoint_C(y) {};
+		heatingLogicPair(T x, double y) : selector(x), decisionPoint_C(y) {};
 		};
 	
 	//a vector to hold the set of logical choices for turning this element on
-	std::vector<heatingLogicPair> turnOnLogicSet;
+	std::vector<heatingLogicPair<ONLOGIC> > turnOnLogicSet;
 	//a vector to hold the set of logical choices that can cause an element to turn off
-	std::vector<heatingLogicPair> shutOffLogicSet;
+	std::vector<heatingLogicPair<OFFLOGIC> > shutOffLogicSet;
 
 
 	double hysteresis_dC;

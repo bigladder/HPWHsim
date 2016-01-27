@@ -24,7 +24,14 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 //returns 0 on successful completion, HPWH_ABORT on failure
   ostringstream ss;  //this is used for output debugging
   sayMessage("Beginning runOneStep.  \n", VRB_typical);
-    
+
+  //is the failure flag is set, don't run
+  if (simHasFailed) {
+    sayMessage("simHasFailed is set, aborting.  \n", VRB_reluctant);
+    return HPWH_ABORT;
+  }
+  
+
   
   //reset the output variables
   outletTemp_C = 0;
@@ -52,6 +59,10 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
   //do HeatSource choice
   for (int i = 0; i < numHeatSources; i++) {
+    ss << "Heat source choice:\theatsource " << i << " can choose from " << setOfSources[i].turnOnLogicSet.size() << " turn on logics" <<  endl;
+    sayMessage(ss.str(), VRB_emetic);
+    ss.str("");
+    
     //if there's a priority HeatSource (e.g. upper resistor) and it needs to 
     //come on, then turn everything off and start it up
     if (setOfSources[i].isVIP && setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
@@ -82,9 +93,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     } 
   }  //end loop over heat sources
 
-  ss << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << " heatsource 1: " << setOfSources[1].isEngaged() << " heatsource 2: " << setOfSources[2].isEngaged() << endl;
+  ss << "after heat source choosing:  heatsource 0: " << setOfSources[0].isEngaged() << "\t heatsource 1: " << setOfSources[1].isEngaged() << "\t heatsource 2: " << setOfSources[2].isEngaged() << endl;
   sayMessage(ss.str(), VRB_emetic);
-    
+  ss.str("");
 
   //change the things according to DR schedule
   if (DRstatus == DR_BLOCK) {
@@ -120,6 +131,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
         //debugging message handling
         ss << "done heating! runtime_min minutesToRun " << setOfSources[i].runtime_min << " " << minutesToRun << endl;
         sayMessage(ss.str(), VRB_emetic);
+        ss.str("");
 
         //subtract time it ran and turn it off
         minutesToRun -= setOfSources[i].runtime_min;
@@ -712,58 +724,49 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
   //return true if the heat source logic tells it to come on, false if it doesn't,
   //or if an unsepcified selector was used
   bool shouldEngage = false;
-  int selection = 0;
 
   ostringstream ss;  //this is used in debugging outputs
 
 
   for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
-    if (turnOnLogicSet[i].selector == "topThird") {
-      selection = 1;
-    }
-    else if (turnOnLogicSet[i].selector == "bottomThird") {
-      selection = 2;
-    }
-    else if (turnOnLogicSet[i].selector == "standby") {
-      selection = 3;
-    }
-
-    ss << "selection: " << selection << endl;
+    ss << "\tshouldHeat logic #" << turnOnLogicSet[i].selector << " ";
     hpwh->sayMessage(ss.str(), VRB_emetic);
-
+    ss.str("");
     
-    switch (selection) {
-      case 1:
+    switch (turnOnLogicSet[i].selector) {
+      case ONLOGIC_topThird:
         //when the top third is too cold - typically used for upper resistance/VIP heat sources
         if (hpwh->topThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C) {
           shouldEngage = true;
 
           //debugging message handling
-          hpwh->sayMessage("engage 1\n", VRB_typical);
+          hpwh->sayMessage("engages!\n", VRB_typical);
         }
         break;
       
-      case 2:
+      case ONLOGIC_bottomThird:
         //when the bottom third is too cold - typically used for compressors
         if (hpwh->bottomThirdAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C) {
           shouldEngage = true;
 
           //debugging message handling
-          hpwh->sayMessage("engage 2\n", VRB_typical);
+          hpwh->sayMessage("engages!\n", VRB_typical);
           ss << "bottom third: " << hpwh->bottomThirdAvg_C() << " setpoint: " << hpwh->setpoint_C << " decisionPoint:  " << turnOnLogicSet[i].decisionPoint_C << endl;
           hpwh->sayMessage(ss.str(), VRB_emetic);
+          ss.str("");
         }    
         break;
         
-      case 3:
+      case ONLOGIC_standby:
         //when the top node is too cold - typically used for standby heating
         if (hpwh->tankTemps_C[hpwh->numNodes - 1] < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint_C) {
           shouldEngage = true;
 
           //debugging message handling
-          hpwh->sayMessage("engage 3\n", VRB_typical);
-          ss << "tanktoptemp:  setpoint:  decisionPoint:  " << hpwh->tankTemps_C[hpwh->numNodes - 1] << " " << hpwh->setpoint_C << " " << turnOnLogicSet[i].decisionPoint_C << endl;
+          hpwh->sayMessage("engages!\n", VRB_typical);
+          ss << "tanktoptemp: " << hpwh->tankTemps_C[hpwh->numNodes - 1] << " setpoint: "  << hpwh->setpoint_C << " decisionPoint:  " << turnOnLogicSet[i].decisionPoint_C << endl;
           hpwh->sayMessage(ss.str(), VRB_emetic);
+          ss.str("");
         }
         break;
         
@@ -771,43 +774,38 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
         hpwh->simHasFailed = true;
         
         //debugging message handling
-        ss << "You have input an incorrect turnOn logic choice specifier: " << selection << endl;
+        ss << "You have input an incorrect turnOn logic choice specifier: " << turnOnLogicSet[i].selector << endl;
         hpwh->sayMessage(ss.str(), VRB_reluctant);
-
+        ss.str("");
         break;
     }
+
+  //quit searching the logics if one of them turns it on
+  if (shouldEngage) break; 
+  
+  ss << "returns: " << shouldEngage << "\t";
+  hpwh->sayMessage(ss.str(), VRB_emetic);
+  ss.str("");
   }  //end loop over set of logic conditions
+
 
   //if everything else wants it to come on, but if it would shut off anyways don't turn it on
   if (shouldEngage == true && shutsOff(heatSourceAmbientT_C) == true ) {
     shouldEngage = false;
+    hpwh->sayMessage("but is turned off by shutsOff", VRB_emetic);
   }
-  
+
+  hpwh->sayMessage("\n", VRB_emetic);
   return shouldEngage;
 }
 
 
 bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
   bool shutOff = false;
-  int selection = 0;
 
   for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
-    if (shutOffLogicSet[i].selector == "lowT") {
-      selection = 1;
-    }
-    else if (shutOffLogicSet[i].selector == "lowTreheat") {
-      selection = 2;
-    }
-    else if (shutOffLogicSet[i].selector == "bottomNodeMaxTemp") {
-      selection = 3;
-    }
-    else if (shutOffLogicSet[i].selector == "bottomTwelthMaxTemp") {
-      selection = 4;
-    }
-
-
-    switch (selection) {
-      case 1:
+    switch (shutOffLogicSet[i].selector) {
+      case OFFLOGIC_lowT:
         //when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
         if (heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint_C) {
           shutOff = true;
@@ -815,7 +813,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         }
         break;
 
-      case 2:
+      case OFFLOGIC_lowTreheat:
         //don't run if the temperature is too warm
         if (heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint_C) {
           shutOff = true;
@@ -823,7 +821,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         }
         break;
       
-      case 3:
+      case OFFLOGIC_bottomNodeMaxTemp:
         //don't run if the bottom node is too hot - typically for "external" configuration
         if (hpwh->tankTemps_C[0] > shutOffLogicSet[i].decisionPoint_C) {
           shutOff = true;
@@ -831,7 +829,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         }
         break;
 
-      case 4:
+      case OFFLOGIC_bottomTwelthMaxTemp:
         //don't run if the bottom twelth of the tank is too hot
         //typically for "external" configuration
         if (hpwh->bottomTwelthAvg_C() > shutOffLogicSet[i].decisionPoint_C) {
@@ -875,11 +873,13 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
       //some outputs for debugging
       ss << "capacity_kJ " << BTU_TO_KJ(cap_BTUperHr)*(minutesToRun)/60.0 << "\t\t" << "cap_BTUperHr " << cap_BTUperHr << endl;
       hpwh->sayMessage(ss.str(), VRB_typical);
+      ss.str("");
 
       ss << std::fixed;
       ss << std::setprecision(3);
       ss << "heatDistribution: " << heatDistribution[0] << " "<< heatDistribution[1] << " "<< heatDistribution[2] << " "<< heatDistribution[3] << " "<< heatDistribution[4] << " "<< heatDistribution[5] << " "<< heatDistribution[6] << " "<< heatDistribution[7] << " "<< heatDistribution[8] << " "<< heatDistribution[9] << " "<< heatDistribution[10] << " "<< heatDistribution[11] << endl;
       hpwh->sayMessage(ss.str(), VRB_emetic);
+      ss.str("");
 
       //the loop over nodes here is intentional - essentially each node that has
       //some amount of heatDistribution acts as a separate resistive element
@@ -907,6 +907,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
       hpwh->simHasFailed = true;
       ss << "Invalid heat source configuration chosen: " << configuration << endl;
       hpwh->sayMessage(ss.str(), VRB_reluctant);
+      ss.str("");
       break;
   }
   
@@ -947,6 +948,7 @@ int HPWH::HeatSource::lowestNode() {
       
       ss << "i/CONDENSITY_SIZE " << i/CONDENSITY_SIZE << endl;
       hpwh->sayMessage(ss.str(), VRB_emetic);
+      ss.str("");
       break;
     }
   }
@@ -970,6 +972,7 @@ double HPWH::HeatSource::getCondenserTemp() {
       ss << "condenserTemp_C:\t" << condenserTemp_C << "\ti:\t" << i << "\tj\t"
             << j <<  "\tcondensity[j]:\t" << condensity[j] << "\ttankTemps_C[i]:\t" << hpwh->tankTemps_C[i] << endl;
       hpwh->sayMessage(ss.str(), VRB_emetic);
+      ss.str("");
     }
   }
   ss << "condenser temp " << condenserTemp_C << endl;
@@ -1001,18 +1004,20 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   inputPower_T1_Watts += inputPower_T1_linear_WperF * condenserTemp_F;
   inputPower_T1_Watts += inputPower_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
 
-  ss << "inputPower_T1_constant_W inputPower_T1_linear_WperF inputPower_T1_quadratic_WperF2 " << inputPower_T1_constant_W << " " << inputPower_T1_linear_WperF << " " << inputPower_T1_quadratic_WperF2 << endl;
+  ss << "inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t" << inputPower_T1_constant_W << " " << inputPower_T1_linear_WperF << " " << inputPower_T1_quadratic_WperF2 << endl;
   hpwh->sayMessage(ss.str(), VRB_emetic);
-
+  ss.str("");
 
   inputPower_T2_Watts = inputPower_T2_constant_W;
   inputPower_T2_Watts += inputPower_T2_linear_WperF * condenserTemp_F;
   inputPower_T2_Watts += inputPower_T2_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
 
-  ss << "inputPower_T2_constant_W inputPower_T2_linear_WperF inputPower_T2_quadratic_WperF2 " << inputPower_T2_constant_W << " " << inputPower_T2_linear_WperF << " " << inputPower_T2_quadratic_WperF2 << endl;
+  ss << "inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t" << inputPower_T2_constant_W << " " << inputPower_T2_linear_WperF << " " << inputPower_T2_quadratic_WperF2 << endl;
   hpwh->sayMessage(ss.str(), VRB_emetic);
-  ss << "inputPower_T1_Watts inputPower_T2_Watts " << inputPower_T1_Watts << " " << inputPower_T2_Watts << endl;
+  ss.str("");
+  ss << "inputPower_T1_Watts:  " << inputPower_T1_Watts << "\tinputPower_T2_Watts:  " << inputPower_T2_Watts << endl;
   hpwh->sayMessage(ss.str(), VRB_emetic);
+  ss.str("");
 
   // Interpolate to get COP and input power at the current ambient temperature
   cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
@@ -1041,24 +1046,12 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
-  double condentropy, s; // Should probably have shrinkage (by way of condensity) be a property of the HeatSource class
-  double alpha = 1;
-  double beta = 2; // Mapping from condentropy to shrinkage
   double offset = 5.0 / 1.8;
   double temp = 0;  //temp for temporary not temperature
   int k;
   ostringstream ss;  //this is used for debugging output
 
-  // Calculate condentropy and ==> shrinkage. Again this could/should be a property of the HeatSource.
-  condentropy = 0;
-  for(int i = 0; i < CONDENSITY_SIZE; i++) {
-    if(condensity[i] > 0) {
-      condentropy -= condensity[i] * log(condensity[i]);
-      ss << "condentropy " << condentropy << endl;
-      hpwh->sayMessage(ss.str(), VRB_emetic);
-    }
-  }
-  s = alpha + condentropy * beta;
+
 
   // Populate the vector of heat distribution
   for(int i = 0; i < hpwh->numNodes; i++) {
@@ -1072,7 +1065,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
         heatDistribution.push_back( condensity[k] );
       }
       else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-        temp = expitFunc( (hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode()]) / s , offset);
+        temp = expitFunc( (hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode()]) / this->shrinkage , offset);
         temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
         heatDistribution.push_back( temp );
       }
@@ -1157,19 +1150,22 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
   do{
     ss << "bottom tank temp: " << hpwh->tankTemps_C[0];
     hpwh->sayMessage(ss.str(), VRB_emetic);
+    ss.str("");
 
     //how much heat is available this timestep
     getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
     ss << "\theatingCapacity_kJ stepwise: " << heatingCapacity_kJ << endl;
     hpwh->sayMessage(ss.str(), VRB_emetic);
-    
+    ss.str("");
+
   
     //adjust capacity for how much time is left in this step
     heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
     ss << "\theatingCapacity_kJ remaining this node: " << heatingCapacity_kJ << endl;
     hpwh->sayMessage(ss.str(), VRB_emetic);
-    
+    ss.str("");
+
     //calculate what percentage of the bottom node can be heated to setpoint
     //with amount of heat available this timestep
     deltaT_C = hpwh->setpoint_C - hpwh->tankTemps_C[0];
@@ -1177,7 +1173,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
     nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
     ss << "nodeHeat_kJperNode: " << nodeHeat_kJperNode << " nodeFrac: " << nodeFrac << endl << endl;
     hpwh->sayMessage(ss.str(), VRB_emetic);
-    
+    ss.str("");
+
     //if more than one, round down to 1 and subtract the amount of time it would
     //take to heat that node from the timeRemaining
     if(nodeFrac > 1){
@@ -1288,10 +1285,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementTop.setupAsResistiveElement(9, 4500);
 
     //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, 20));
     resistiveElementTop.isVIP = true;
     
     //assign heat sources into array in order of priority
@@ -1326,10 +1323,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementTop.setupAsResistiveElement(9, 4500);
 
     //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, 20));
     resistiveElementTop.isVIP = true;
    
     
@@ -1365,10 +1362,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementTop.setupAsResistiveElement(9, 4500);
 
     //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, 20));
     resistiveElementTop.isVIP = true;
    
     setOfSources[0] = resistiveElementTop;
@@ -1402,11 +1399,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementTop.setupAsResistiveElement(9, 4500);
 
     //standard logic conditions
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowTreheat", 5));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_lowTreheat, 5));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", 20));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, 20));
     resistiveElementTop.isVIP = true;
    
 
@@ -1435,11 +1432,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_WRAPPED; //wrapped around tank
     
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
 
     //lowT cutoff
-    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", 0));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_lowT, 0));
 
     compressor.depressesTemperature = false;  //no temp depression
 
@@ -1500,11 +1497,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
     
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", 20));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", 15));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, 20));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, 15));
 
     //lowT cutoff
-    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("bottomNodeMaxTemp", 20));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_bottomNodeMaxTemp, 20));
 
     compressor.depressesTemperature = false;  //no temp depression
 
@@ -1573,16 +1570,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     double compStart = dF_TO_dC(43.6);
     double lowTcutoff = F_TO_C(40.0);
     double standby = dF_TO_dC(23.8);
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
-    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, standby));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_lowT, lowTcutoff));
     
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "bottomThird", compStart));
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(
+                  HeatSource::ONLOGIC_bottomThird, compStart));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(
+                  HeatSource::OFFLOGIC_lowTreheat, lowTcutoff + resistiveElementBottom.hysteresis_dC));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(36.0)));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0)));
 
 
     //set everything in its places
@@ -1657,16 +1654,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     double compStart = dF_TO_dC(43.6);
     double lowTcutoff = F_TO_C(40.0);
     double standby = dF_TO_dC(23.8);
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
-    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, standby));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_lowT, lowTcutoff));
     
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "bottomThird", compStart));
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(
+                  HeatSource::ONLOGIC_bottomThird, compStart));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(
+                  HeatSource::OFFLOGIC_lowTreheat, lowTcutoff + resistiveElementBottom.hysteresis_dC));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(36.0)));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0)));
 
 
     //set everything in its places
@@ -1740,16 +1737,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     double compStart = dF_TO_dC(24.4);
     double lowTcutoff = F_TO_C(40.0);
     double standby = dF_TO_dC(29.1);
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("bottomThird", compStart));
-    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("standby", standby));
-    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair("lowT", lowTcutoff));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_bottomThird, compStart));
+    compressor.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_standby, standby));
+    compressor.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(HeatSource::OFFLOGIC_lowT, lowTcutoff));
     
-    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "bottomThird", compStart));
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+    resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(
+                  HeatSource::ONLOGIC_bottomThird, compStart));
+    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(
+                  HeatSource::OFFLOGIC_lowTreheat, lowTcutoff + resistiveElementBottom.hysteresis_dC));
 
-    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(30.0)));
+    resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(HeatSource::ONLOGIC_topThird, dF_TO_dC(30.0)));
 
 
     //set everything in its places
@@ -1769,7 +1766,35 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     return HPWH_ABORT;
   }
 
-  ss << "heat source 1 " << &setOfSources[0] << endl << "heat source 2 " << &setOfSources[1] << endl << "heat source 3 " << &setOfSources[2] << endl;
+
+
+  //now, calculate some of the derived values
+
+  double condentropy = 0;
+  double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
+  for (int i = 0; i < numHeatSources; i++) {
+    ss << "Heat Source " << i << endl;
+    sayMessage(ss.str(), VRB_emetic);
+    ss.str("");
+    
+    // Calculate condentropy and ==> shrinkage
+    condentropy = 0;
+    for(int j = 0; j < CONDENSITY_SIZE; j++) {
+      if(setOfSources[i].condensity[j] > 0) {
+        condentropy -= setOfSources[i].condensity[j] * log(setOfSources[i].condensity[j]);
+        ss << "condentropy " << condentropy << endl;
+        sayMessage(ss.str(), VRB_emetic);
+        ss.str("");
+      }
+    }
+    setOfSources[i].shrinkage = alpha + condentropy * beta;
+    ss << "shrinkage " << setOfSources[i].shrinkage << endl << endl;
+    sayMessage(ss.str(), VRB_emetic);
+    ss.str("");
+  }
+  
+
+  ss << "heat source 1 " << &setOfSources[0] << endl << "heat source 2 " << &setOfSources[1] << endl << "heat source 3 " << &setOfSources[2] << endl << endl << endl;
   sayMessage(ss.str(), VRB_emetic);
 
   return 0;  //successful init returns 0
