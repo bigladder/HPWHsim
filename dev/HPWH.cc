@@ -1710,8 +1710,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     
     resistiveElementBottom.turnOnLogicSet.push_back(HeatSource::heatingLogicPair(
                   "bottomThird", compStart));
-    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
-                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
+//    resistiveElementBottom.shutOffLogicSet.push_back(HeatSource::heatingLogicPair(
+//                  "lowTreheat", lowTcutoff + resistiveElementBottom.hysteresis_dC));
 
     resistiveElementTop.turnOnLogicSet.push_back(HeatSource::heatingLogicPair("topThird", dF_TO_dC(30.0)));
 
