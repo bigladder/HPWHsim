@@ -2,6 +2,7 @@
 #define HPWH_hh
 
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -14,6 +15,9 @@
 #define CPWATER_kJperkgC 4.181
 #define CONDENSITY_SIZE 12  //this must be an integer, and only the value 12
 //change at your own risk
+#define MAXOUTSTRING 200  //this is the maximum length for a debuging output string
+#define HEATDIST_MINVALUE 0.0001 //any amount of heat distribution less than this is reduced to 0
+//this saves on computations
 
 class HPWH {
  public:
@@ -46,9 +50,19 @@ class HPWH {
     MODELS_GEGeospring = 104      // Original GE
     };
 
+  //specifies the modes for writing output
+  //the specified values are used for >= comparisons, so the numerical order is relevant
+  enum VERBOSITY {
+    VRB_silent = 0,     //print no outputs
+    VRB_reluctant = 1,  //print only outputs for fatal errors
+    VRB_typical = 2,    //print some basic debugging info
+    VRB_emetic = 3     //print all the things
+    };
+    
+
   enum UNITS{
     UNITS_C,          //celsius
-    UNITS_F,           //fahrenheit
+    UNITS_F,          //fahrenheit
     UNITS_KWH,        //kilowatt hours
     UNITS_BTU,        //british thermal units
     UNITS_KJ          //kilojoules
@@ -98,6 +112,16 @@ class HPWH {
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
+
+  void setVerbosity(VERBOSITY hpwhVrb);
+  //sets the verbosity to the specified level
+  void setMessageCallback( int (*callbackFunc)(const std::string message) );
+  //sets the function to be used for message passing
+  void printHeatSourceInfo();
+  //this prints out the heat source info, nicely formatted
+  //specifically input/output energy/power, and runtime
+  //will print to cout if messageCallback pointer is unspecified
+  //does not use verbosity, as it is public and expected to be called only when needed
 
 
   int setSetpoint(double newSetpoint /*default units C*/);
@@ -179,12 +203,23 @@ class HPWH {
 	double bottomTwelthAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
 
+  void sayMessage(const std::string message) const;
+  //if the messagePriority is >= the hpwh verbosity,
+  //either pass your message out to the callback function or print it to cout
+  //otherwise do nothing
 
   bool simHasFailed;
   //did an internal error cause the simulation to fail?
  
 	bool isHeating;
 	//is the hpwh currently heating or not?
+
+  VERBOSITY hpwhVerbosity;
+  //an enum to let the sim know how much output to say
+
+  int (*messageCallback)(const std::string message);
+  //function pointer to indicate an external processing function
+ 
 	
 	int numHeatSources;
 	//how many heat sources this HPWH has
@@ -276,7 +311,24 @@ class HPWH::HeatSource {
     CONFIG_EXTERNAL
     };
 
-
+  //this is the set of logics available for shouldHeat
+  enum ONLOGIC{
+    ONLOGIC_topThird,   //is the difference between setpoint and the topThird of
+                        //the tank is greater than decision point, turn on
+    ONLOGIC_bottomThird,  //is the difference between setpoint and the bottomThird of
+                          //the tank is greater than decision point, turn on
+    ONLOGIC_standby   //if the difference between the top node and the setpoint is
+                      //greater than the decision point, turn on
+    };
+  //this is the set of logics available for shutsDown
+  enum OFFLOGIC{
+    OFFLOGIC_lowT,    //if temp is below decision point, shut off
+    OFFLOGIC_lowTreheat,    //if temp is above decision point, shut off
+    OFFLOGIC_bottomNodeMaxTemp,   //if the bottom node temp is above decision point, shut off
+    OFFLOGIC_bottomTwelthMaxTemp   //if the bottom twelth of the tank is above decision point, shut off
+    };
+      
+    
   //these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
@@ -306,7 +358,12 @@ class HPWH::HeatSource {
 	//It is conceptually linked to the way condenser coils are wrapped around 
 	//(or within) the tank, however a resistance heat source can also be simulated
 	//by specifying the entire condensity in one node.
-	
+  double shrinkage;
+  //the shrinkage is a derived value, using parameters alpha, beta,
+  //and the condentropy, which is derived from the condensity
+  //alpha and beta are not intended to be settable
+  //see the hpwh_init functions for calculation of shrinkage
+  
 	double T1_F, T2_F;
 	//the two temperatures where the input and COP curves are defined
 	double inputPower_T1_constant_W, inputPower_T2_constant_W;
@@ -324,17 +381,18 @@ class HPWH::HeatSource {
 	//the heating logic instructions come in pairs - a string to select
 	//which logic function to use, and a double to give the setpoint
 	//for that function
+  template <typename T>
 	struct heatingLogicPair{
-		std::string selector;
+		T selector;
 		double decisionPoint_C;
 		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(std::string x, double y) : selector(x), decisionPoint_C(y) {};
+		heatingLogicPair(T x, double y) : selector(x), decisionPoint_C(y) {};
 		};
 	
 	//a vector to hold the set of logical choices for turning this element on
-	std::vector<heatingLogicPair> turnOnLogicSet;
+	std::vector<heatingLogicPair<ONLOGIC> > turnOnLogicSet;
 	//a vector to hold the set of logical choices that can cause an element to turn off
-	std::vector<heatingLogicPair> shutOffLogicSet;
+	std::vector<heatingLogicPair<OFFLOGIC> > shutOffLogicSet;
 
 
 	double hysteresis_dC;
@@ -364,8 +422,8 @@ class HPWH::HeatSource {
   void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
   void calcHeatDist(std::vector<double> &heatDistribution);
 
-	int lowestNode();
-  //returns the number of the first non-zero condensity entry
+	int lowestNode;
+  //hold the number of the first non-zero condensity entry
 	double getCondenserTemp();
   //returns the temperature of the condensor - it's a weighted average of the
   //tank temperature, using the condensity as weights
