@@ -2,6 +2,7 @@
 library(foreign)
 library(EcotopePackage)
 
+
 cdx("hpwhlab")
 prepped <- dir("../data/prepped/")
 allTests <- data.frame("fullName" = prepped,
@@ -17,11 +18,17 @@ table(allTests$testName[COPtests], allTests$modelName[COPtests])
 
 testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50",
                 "DOE2014_24hr67", "DOE2014_24hr50")
-modelsToUse <- data.frame("labName" = c("ATI66rev2", "GE502014", "GE502014STDMode", "GEred",
-                                        "SandenGES", "AOSmith60"),
-                          "simName" = c("ATI66", "GE502014", "GE502014STDMode", "GEred",
-                                        "Sanden80", "Voltex60"),
+modelsToUse <- data.frame("labName" = c("ATI66rev2", "GE502014", "GE502014STDMode", "GEred", "GE",
+                                        "SandenGES", "AOSmith60", "AOSmith80"),
+                          "simName" = c("ATI66", "GE502014", "GE502014STDMode", "GEred", "GE", 
+                                        "Sanden80", "Voltex60", "Voltex80"),
                           stringsAsFactors = FALSE)
+
+# Read the attributes file...
+hpwhAttr <- read.dta("../data/attributes.dta")
+names(hpwhAttr)[1] <- "labName"
+hpwhAttr <- merge(hpwhAttr, modelsToUse)
+
 
 readOne <- function(model, test) {
   fileName <- allTests$fullName[allTests$modelName == model & allTests$testName == test]
@@ -75,9 +82,12 @@ allLabResults <- allLabResults[, c("minutes", "test", "model", "flow", "inputPow
 allLabResults$type <- "Measured"
 
 setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+setwd("Z:/Documents/HPWH/HPWHsim/testTool/")
 
 write.csv(file = "HpwhTestTool/allLabResults.csv", allLabResults, row.names = FALSE)
 
+
+write.csv(file = "HpwhTestTool/hpwhProperties.csv", hpwhAttr, row.names = FALSE)
 
 # 
 # 

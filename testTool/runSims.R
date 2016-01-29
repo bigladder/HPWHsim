@@ -1,8 +1,11 @@
 # Make all of the output...
-# setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+library(EcotopePackage)
+library(foreign)
+
 
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
-models <- c("Voltex60", "ATI66", "GEred", "Sanden80", "GE2014")
+models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
 
 # Simulate every combination of test and model
 allResults <- do.call('rbind', lapply(tests, function(test) {
@@ -67,7 +70,7 @@ write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
 # What about the field data???
 runOneField <- function(siteid = "11531", model = "Voltex60") {
   # Run the simulation
-  system(paste("./testTool.x ", "site", siteid, " Voltex60", sep = ""))
+  system(paste("./testTool.x ", "site", siteid, " ", model, sep = ""))
   
   # Read the Output
   simOutput <- read.csv(paste0("tests/site", siteid, "/", model, "TestToolOutput.csv"))
@@ -75,7 +78,7 @@ runOneField <- function(siteid = "11531", model = "Voltex60") {
   names(fieldOutput)[names(fieldOutput) == "minute"] <- "minutes"
   dset <- merge(simOutput, fieldOutput)
   
-  if(model == "Voltex60") {
+  if(model == "Voltex60" | model == "Voltex80" | model == "GEred") {
     dset$simCompWatts <- dset$input_kWh2 * 60000
     dset$simResWatts <- (dset$input_kWh1 + dset$input_kWh3) * 60000    
   }
@@ -95,6 +98,47 @@ runOneField <- function(siteid = "11531", model = "Voltex60") {
   sumResults$siteid <- siteid
   sumResults$model <- model
   sumResults
+
+}
+
+
+cdx("hpwh")
+dirTmp <- "/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/"
+
+sites <- read.dta("../data/site_info.dta")
+dontUse <- c(23860)
+setwd(dirTmp)
+
+fieldResults <- lapply(1:nrow(sites), function(i) {
+  siteid <- sites$siteid[i]
+  if(siteid %in% dontUse) {
+    return(NULL)
+  }
+  #Look up the make
+  make <- sites$make[i]
+  if(length(grep("Voltex 60", make))) {
+    model <- "Voltex60"
+  } else if(length(grep("Voltex 80", make))) {
+    model <- "Voltex80"
+  } else if(length(grep("GE", make))) {
+    model <- "GEred"
+  } else {
+    print(paste("No simulated model for", make))
+    return(NULL)
+  }
+  tmp <- try(runOneField(siteid, model))
+  if(inherits(tmp, "try-error")) {
+    NULL
+  } else {
+    tmp
+  }
+})
+fieldResults <- do.call('rbind', fieldResults)
+write.csv(file = "HpwhTestTool/fieldResults.csv", fieldResults)
+
+
+
+
 #   
 #   ggplot(dset) + theme_bw() + 
 #     geom_point(aes(measCompWatts, simCompWatts), alpha = .1)
@@ -151,16 +195,3 @@ runOneField <- function(siteid = "11531", model = "Voltex60") {
 #     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
 #     xlab("Measured Daily Compressor kWh") +
 #     ylab("Simulated Daily Compressor kWh")  
-}
-
-
-fieldResults <- lapply(voltex$siteid[!(voltex$siteid %in% dontUse)], function(x) {
-  tmp <- try(runOneField(x))
-  if(inherits(tmp, "try-error")) {
-    NULL
-  } else {
-    tmp
-  }
-})
-fieldResults <- do.call('rbind', fieldResults)
-write.csv(file = "HpwhTestTool/fieldResults.csv", fieldResults)

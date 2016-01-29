@@ -8,14 +8,28 @@ dirTmp <- "/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/"
 
 sites <- read.dta("../data/site_info.dta")
 
-voltex <- sites[grep("Voltex", sites$make), ]
+voltex60 <- sites[grep("Voltex 60", sites$make), ]
+voltex80 <- sites[grep("Voltex 80", sites$make), ]
+ge <- sites[grep("GE", sites$make), ]
 
-siteid <- "11531"
+# siteid <- "11531"
 readOne <- function(siteid) {
   print(siteid)
   cdx("hpwh")
-  dset <- read.dta(file = paste("../data", siteid, "reshaped.dta", sep = "/"))
+  if(as.numeric(siteid) > 99000) {
+    dirPrefix <- "../../data_from_others/BPA-EPRI_HPWH_Data/data"
+  } else {
+    dirPrefix <- "../data"
+  }
+  dset <- try(read.dta(file = paste(dirPrefix, siteid, "reshaped.dta", sep = "/")))
+  if(!is.null(dset$Flow_raw)) {
+    dset$Flow <- dset$Flow_raw 
+  }
   dset <- dset[!is.na(dset$Flow) & !is.na(dset$Tintake) & !is.na(dset$Tin), ]
+  if(!nrow(dset)) {
+    print("No Data found")
+    return(NULL)
+  }
   # dset <- dset[1:220000, ]
   # Need to write out schedules??? "ambient", "draw", "inlet", "evaporator"
   dset <- arrange(dset, readTime)
@@ -24,7 +38,7 @@ readOne <- function(siteid) {
   dset$Tin <- round(dset$Tin * 1.8 + 32, 1)
   dset$Tout <- dset$Tout * 1.8 + 32
   
-  hourlyFile <- paste("../data", siteid, "hourly.dta", sep = "/")
+  hourlyFile <- paste(dirPrefix, siteid, "hourly.dta", sep = "/")
   hourly <- read.dta(hourlyFile)
 
   setwd(dirTmp)
@@ -78,7 +92,10 @@ readOne <- function(siteid) {
 }
 
 
-voltex$siteid
-dontUse <- c(23860, 99094)
-lapply(voltex$siteid[!(voltex$siteid %in% dontUse)], readOne)
+# Simulate the Voltex60, Voltex80, and the GE
+voltex60$siteid
+dontUse <- c(23860)
+lapply(voltex60$siteid[!(voltex60$siteid %in% dontUse)], readOne)
+lapply(voltex80$siteid[!(voltex80$siteid %in% dontUse)], readOne)
+lapply(ge$siteid[!(ge$siteid %in% dontUse)], readOne)
 
