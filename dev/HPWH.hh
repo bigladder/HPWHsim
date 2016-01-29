@@ -122,8 +122,10 @@ class HPWH {
   //specifically input/output energy/power, and runtime
   //will print to cout if messageCallback pointer is unspecified
   //does not use verbosity, as it is public and expected to be called only when needed
-
-
+  void printTankTemps();
+  //this prints out all the node temps, kind of nicely formatted
+  //does not use verbosity, as it is public and expected to be called only when needed
+  
   int setSetpoint(double newSetpoint /*default units C*/);
   int setSetpoint(double newSetpoint, UNITS units);
   //a function to change the setpoint - useful for dynamically setting it
@@ -325,7 +327,8 @@ class HPWH::HeatSource {
     OFFLOGIC_lowT,    //if temp is below decision point, shut off
     OFFLOGIC_lowTreheat,    //if temp is above decision point, shut off
     OFFLOGIC_bottomNodeMaxTemp,   //if the bottom node temp is above decision point, shut off
-    OFFLOGIC_bottomTwelthMaxTemp   //if the bottom twelth of the tank is above decision point, shut off
+    OFFLOGIC_bottomTwelthMaxTemp,   //if the bottom twelth of the tank is above decision point, shut off
+    OFFLOGIC_largeDraw   //if the bottom third of the tank is below decision point, shut off
     };
       
     
@@ -384,9 +387,9 @@ class HPWH::HeatSource {
   template <typename T>
 	struct heatingLogicPair{
 		T selector;
-		double decisionPoint_C;
+		double decisionPoint;
 		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(T x, double y) : selector(x), decisionPoint_C(y) {};
+		heatingLogicPair(T x, double y) : selector(x), decisionPoint(y) {};
 		};
 	
 	//a vector to hold the set of logical choices for turning this element on
@@ -394,9 +397,14 @@ class HPWH::HeatSource {
 	//a vector to hold the set of logical choices that can cause an element to turn off
 	std::vector<heatingLogicPair<OFFLOGIC> > shutOffLogicSet;
 
+  void addTurnOnLogic(ONLOGIC selector, double decisionPoint);
+  void addShutOffLogic(OFFLOGIC selector, double decisionPoint);
+  //these are two small functions to remove some of the cruft in initiation functions
 
 	double hysteresis_dC;
 	//a hysteresis term that prevents short cycling due to heat pump self-interaction
+  //when the heat source is engaged, it is subtracted from lowT cutoffs and
+  //added to lowTreheat cutoffs
 
 	bool depressesTemperature;
 	// heat pumps can depress the temperature of their space in certain instances - 

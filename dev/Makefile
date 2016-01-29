@@ -1,7 +1,7 @@
 
 
-#options = -g -Wall -Wshadow
-options = -O3
+options = -g -Wall -Wshadow
+#options = -O3
 #options = -pg
 
 
