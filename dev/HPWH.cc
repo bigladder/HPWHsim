@@ -1363,6 +1363,62 @@ void HPWH::HeatSource::addShutOffLogic(OFFLOGIC selector, double decisionPoint){
   this->shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(selector, decisionPoint));
 }
 
+void HPWH::calcDerivedValues(){
+  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
+
+  //condentropy/shrinkage
+  double condentropy = 0;
+  double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
+  for (int i = 0; i < numHeatSources; i++) {
+    if (hpwhVerbosity >= VRB_emetic){
+      sprintf(outputString, "Heat Source %d \n", i);
+      sayMessage(string(outputString));
+    }    
+    // Calculate condentropy and ==> shrinkage
+    condentropy = 0;
+    for(int j = 0; j < CONDENSITY_SIZE; j++) {
+      if(setOfSources[i].condensity[j] > 0) {
+        condentropy -= setOfSources[i].condensity[j] * log(setOfSources[i].condensity[j]);
+        if (hpwhVerbosity >= VRB_emetic){
+          sprintf(outputString, "condentropy %.2lf \n", condentropy);
+          sayMessage(string(outputString));
+        }
+      }
+    }
+    setOfSources[i].shrinkage = alpha + condentropy * beta;
+    if (hpwhVerbosity >= VRB_emetic){
+      sprintf(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
+      sayMessage(string(outputString));
+    }
+  }
+
+
+    //lowest node
+  int lowest = 0;
+  for (int i = 0; i < numHeatSources; i++) {
+    lowest = 0;
+    if (hpwhVerbosity >= VRB_emetic){
+      sprintf(outputString, "Heat Source %d \n", i);
+      sayMessage(string(outputString));
+    } 
+    for(int j = 0; j < numNodes; j++) {
+      if (hpwhVerbosity >= VRB_emetic){
+        sprintf(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j/ (numNodes/CONDENSITY_SIZE));
+        sayMessage(string(outputString));
+      }
+      if(setOfSources[i].condensity[ (j/ (numNodes/CONDENSITY_SIZE) ) ] > 0) {
+        lowest = j;
+        break;
+      }
+    }
+    if (hpwhVerbosity >= VRB_emetic){
+      sprintf(outputString, " lowest : %d \n", lowest);
+      sayMessage(string(outputString));
+    }
+    setOfSources[i].lowestNode = lowest;
+  }
+}
+
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
   static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
@@ -1834,17 +1890,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //true for compressors, however tempDepression is turned off so it won't depress
 
     //top resistor values
-    resistiveElementTop.setupAsResistiveElement(8, 4250);
+    resistiveElementTop.setupAsResistiveElement(8, 4500);
     resistiveElementTop.isVIP = true;
 
     //bottom resistor values
-    resistiveElementBottom.setupAsResistiveElement(0, 2000);
+    resistiveElementBottom.setupAsResistiveElement(0, 4500);
     resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
 
    
     //logic conditions
     double compStart = dF_TO_dC(24.4);
-    double lowTcutoff = F_TO_C(40.0);
+    double lowTcutoff = F_TO_C(47.0);
     double standby = dF_TO_dC(29.1);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -1855,7 +1911,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
     //GE element never turns off?
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(30.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(10.0));
 
 
     //set everything in its places
@@ -1876,59 +1932,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 
 
-  //now, calculate some of the derived values
-
-  //condentropy/shrinkage
-  double condentropy = 0;
-  double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
-  for (int i = 0; i < numHeatSources; i++) {
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "Heat Source %d \n", i);
-      sayMessage(string(outputString));
-    }    
-    // Calculate condentropy and ==> shrinkage
-    condentropy = 0;
-    for(int j = 0; j < CONDENSITY_SIZE; j++) {
-      if(setOfSources[i].condensity[j] > 0) {
-        condentropy -= setOfSources[i].condensity[j] * log(setOfSources[i].condensity[j]);
-        if (hpwhVerbosity >= VRB_emetic){
-          sprintf(outputString, "condentropy %.2lf \n", condentropy);
-          sayMessage(string(outputString));
-        }
-      }
-    }
-    setOfSources[i].shrinkage = alpha + condentropy * beta;
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
-      sayMessage(string(outputString));
-    }
-  }
-
-
-    //lowest node
-  int lowest = 0;
-  for (int i = 0; i < numHeatSources; i++) {
-    lowest = 0;
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "Heat Source %d \n", i);
-      sayMessage(string(outputString));
-    } 
-    for(int j = 0; j < numNodes; j++) {
-      if (hpwhVerbosity >= VRB_emetic){
-        sprintf(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j/ (numNodes/CONDENSITY_SIZE));
-        sayMessage(string(outputString));
-      }
-      if(setOfSources[i].condensity[ (j/ (numNodes/CONDENSITY_SIZE) ) ] > 0) {
-        lowest = j;
-        break;
-      }
-    }
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, " lowest : %d \n", lowest);
-      sayMessage(string(outputString));
-    }
-    setOfSources[i].lowestNode = lowest;
-  }
+  //calculate ofot-used derived values
 
 
   

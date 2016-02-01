@@ -205,6 +205,11 @@ class HPWH {
 	double bottomTwelthAvg_C() const;
 	//functions to calculate what the temperature in a portion of the tank is
 
+  void calcDerivedValues();
+  //a helper function for the inits, calculating condentropy and the lowest node
+
+
+
   void sayMessage(const std::string message) const;
   //if the messagePriority is >= the hpwh verbosity,
   //either pass your message out to the callback function or print it to cout
