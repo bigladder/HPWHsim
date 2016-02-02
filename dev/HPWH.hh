@@ -209,6 +209,8 @@ class HPWH {
   //if the messagePriority is >= the hpwh verbosity,
   //either pass your message out to the callback function or print it to cout
   //otherwise do nothing
+  void msg( const char* fmt, ...) const;
+  void msgV( const char* fmt, va_list ap=NULL) const;
 
   bool simHasFailed;
   //did an internal error cause the simulation to fail?
