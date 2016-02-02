@@ -1,15 +1,16 @@
 #include "HPWH.hh"
+#include <stdarg.h>
 
 
 using std::endl;
 using std::string;
 
-
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-  simHasFailed(false), isHeating(false), hpwhVerbosity(VRB_silent), messageCallback(NULL) {
-  }
+  simHasFailed(false), isHeating(false), hpwhVerbosity(VRB_silent), messageCallback(NULL),
+  messageCallbackContextPtr( NULL)
+{  }
 
 HPWH::~HPWH() {
   delete[] tankTemps_C;
@@ -21,17 +22,15 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
                      double tankAmbientT_C, double heatSourceAmbientT_C,
                      DRMODES DRstatus, double minutesPerStep) {
 //returns 0 on successful completion, HPWH_ABORT on failure
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
   if(hpwhVerbosity >= VRB_typical) {
-    sayMessage("Beginning runOneStep.  \nTank Temps: ");
+    msg("Beginning runOneStep.  \nTank Temps: ");
     printTankTemps();
-    sprintf(outputString, "Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
+    msg("Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
                           inletT_C, drawVolume_L, tankAmbientT_C, heatSourceAmbientT_C, DRstatus, minutesPerStep);
-    sayMessage(string(outputString));
   }
   //is the failure flag is set, don't run
   if (simHasFailed) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("simHasFailed is set, aborting.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("simHasFailed is set, aborting.  \n");
     return HPWH_ABORT;
   }
   
@@ -64,8 +63,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   //do HeatSource choice
   for (int i = 0; i < numHeatSources; i++) {
     if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
-      sayMessage(string(outputString));
+      msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
     }
 
 
@@ -84,7 +82,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
       //if there's a priority HeatSource (e.g. upper resistor) and it needs to 
       //come on, then turn everything off and start it up
       if (setOfSources[i].isVIP) {
-        if (hpwhVerbosity >= VRB_emetic) sayMessage("\tVIP check");
+        if (hpwhVerbosity >= VRB_emetic) msg("\tVIP check");
         if (setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
           turnAllHeatSourcesOff();
           setOfSources[i].engageHeatSource(heatSourceAmbientT_C);
@@ -107,12 +105,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   }  //end loop over heat sources
 
   if (hpwhVerbosity >= VRB_emetic){
-    sayMessage("after heat source choosing:  ");
+    msg("after heat source choosing:  ");
     for (int i = 0; i < numHeatSources; i++) {
-      sprintf(outputString, "heat source %d: %d \t", i , setOfSources[i].isEngaged());
-      sayMessage(string(outputString));
+      msg("heat source %d: %d \t", i , setOfSources[i].isEngaged());
     }
-  sayMessage("\n");
+  msg("\n");
   }
 
   //change the things according to DR schedule
@@ -148,8 +145,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
       if (setOfSources[i].runtime_min < minutesToRun) {
         //debugging message handling
         if (hpwhVerbosity >= VRB_emetic){
-          sprintf(outputString, "done heating! runtime_min minutesToRun %.2lf %.2lf\n", setOfSources[i].runtime_min, minutesToRun);
-          sayMessage(string(outputString));
+          msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", setOfSources[i].runtime_min, minutesToRun);
         }
         
         //subtract time it ran and turn it off
@@ -207,12 +203,12 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
   if (simHasFailed) {
-    if (hpwhVerbosity >= VRB_reluctant) sayMessage("The simulation has encountered an error.  \n");
+    if (hpwhVerbosity >= VRB_reluctant) msg("The simulation has encountered an error.  \n");
     return HPWH_ABORT;
   }
 
 
-  if (hpwhVerbosity >= VRB_typical) sayMessage("Ending runOneStep.  \n\n\n\n");
+  if (hpwhVerbosity >= VRB_typical) msg("Ending runOneStep.  \n\n\n\n");
   return 0;  //successful completion of the step returns 0
 } //end runOneStep
 
@@ -231,9 +227,8 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
   std::vector<double> heatSources_runTimes_SUM(numHeatSources);
   std::vector<double> heatSources_energyInputs_SUM(numHeatSources);
   std::vector<double> heatSources_energyOutputs_SUM(numHeatSources);
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
-  if (hpwhVerbosity >= VRB_typical) sayMessage("Begin runNSteps.  \n");
+  if (hpwhVerbosity >= VRB_typical) msg("Begin runNSteps.  \n");
   //run the sim one step at a time, accumulating the outputs as you go
   for (int i = 0; i < N; i++) {
     runOneStep( inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i],
@@ -241,8 +236,7 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
 
     if (simHasFailed) {
       if (hpwhVerbosity >= VRB_reluctant) {
-        sprintf(outputString, "RunNSteps has encountered an error on step %d of N and has ceased running.  \n", i+1);
-        sayMessage(string(outputString));
+        msg("RunNSteps has encountered an error on step %d of N and has ceased running.  \n", i+1);
       }
       return HPWH_ABORT;
     }
@@ -274,7 +268,7 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
     setOfSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
   }
 
-  if (hpwhVerbosity >= VRB_typical) sayMessage("Ending runNSteps.  \n\n\n\n");
+  if (hpwhVerbosity >= VRB_typical) msg("Ending runNSteps.  \n\n\n\n");
   return 0;
 }
 
@@ -283,17 +277,37 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
 void HPWH::setVerbosity(VERBOSITY hpwhVrb){
   hpwhVerbosity = hpwhVrb;
 }
-void HPWH::setMessageCallback( int (*callbackFunc)(const string message) ){
+void HPWH::setMessageCallback( void (*callbackFunc)(const string message, void* contextPtr), void* contextPtr){
   messageCallback = callbackFunc;
+  messageCallbackContextPtr = contextPtr;
 }
 void HPWH::sayMessage(const string message) const{
   if (messageCallback != NULL) {
-    (*messageCallback)(message);
+    (*messageCallback)(message, messageCallbackContextPtr);
   }
   else {
     std::cout << message;
   } 
 }
+void HPWH::msg( const char* fmt, ...) const {
+  va_list ap; va_start( ap, fmt);
+	msgV( fmt, ap);
+}
+void HPWH::msgV( const char* fmt, va_list ap /*=NULL*/) const {
+  char outputString[ MAXOUTSTRING];
+
+	const char* p;
+	if (ap) {
+    //vsprintf_s< MAXOUTSTRING>( outputString, fmt, ap);
+    vsnprintf(outputString, MAXOUTSTRING, fmt, ap);
+		p = outputString;
+	}
+	else {
+		p = fmt;
+  }
+	sayMessage(p);
+}		// HPWH::msgV
+
 
 void HPWH::printHeatSourceInfo(){
   std::stringstream ss;
@@ -332,12 +346,7 @@ void HPWH::printHeatSourceInfo(){
   ss << endl << endl << endl;
 
   
-  if (messageCallback != NULL) {
-    (*messageCallback)(ss.str());
-  }
-  else {
-    std::cout << ss.str();
-  }
+  msg( ss.str().c_str());
 }
 
 
@@ -351,12 +360,7 @@ void HPWH::printTankTemps() {
   }
   ss << endl;
 
-  if (messageCallback != NULL) {
-    (*messageCallback)(ss.str());
-  }
-  else {
-    std::cout << ss.str();
-  }
+  msg( ss.str().c_str());
 }
 
 
@@ -374,7 +378,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units) {
     setpoint_C = F_TO_C(newSetpoint);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getNthSimTcouple.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
     return HPWH_ABORT;
   }
   return 0;
@@ -393,7 +397,7 @@ int HPWH::getNumNodes() const {
 
 double HPWH::getTankNodeTemp(int nodeNum) const {
   if (nodeNum > numNodes || nodeNum < 0) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access the temperature of a tank node that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
     return double(HPWH_ABORT);
   }
   return tankTemps_C[nodeNum];
@@ -412,7 +416,7 @@ double HPWH::getTankNodeTemp(int nodeNum,  UNITS units) const {
     return C_TO_F(result);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getTankNodeTemp.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getTankNodeTemp.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -420,7 +424,7 @@ double HPWH::getTankNodeTemp(int nodeNum,  UNITS units) const {
 
 double HPWH::getNthSimTcouple(int N) const {
   if (N > 6 || N < 1) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access a simulated thermocouple that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
     return double(HPWH_ABORT);
   }
   
@@ -446,7 +450,7 @@ double HPWH::getNthSimTcouple(int N, UNITS units) const {
     return C_TO_F(result);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getNthSimTcouple.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -460,7 +464,7 @@ int HPWH::getNumHeatSources() const {
 double HPWH::getNthHeatSourceEnergyInput(int N) const {
   //energy used by the heat source is positive - this should always be positive
   if (N > numHeatSources || N < 0) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access the energy input of a heat source that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
     return double(HPWH_ABORT);
   }
   return setOfSources[N].energyInput_kWh;
@@ -483,7 +487,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
     return KWH_TO_KJ(returnVal);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -492,7 +496,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
 double HPWH::getNthHeatSourceEnergyOutput(int N) const {
 //returns energy from the heat source into the water - this should always be positive
   if (N > numHeatSources || N < 0) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access the energy output of a heat source that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the energy output of a heat source that does not exist.  \n");
     return double(HPWH_ABORT);
   }
   return setOfSources[N].energyOutput_kWh;
@@ -515,7 +519,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
     return KWH_TO_KJ(returnVal);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -523,7 +527,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
 
 double HPWH::getNthHeatSourceRunTime(int N) const {
   if (N > numHeatSources || N < 0) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access the run time of a heat source that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the run time of a heat source that does not exist.  \n");
     return double(HPWH_ABORT);
   }
   return setOfSources[N].runtime_min;
@@ -532,7 +536,7 @@ double HPWH::getNthHeatSourceRunTime(int N) const {
 
 int HPWH::isNthHeatSourceRunning(int N) const{
   if (N > numHeatSources || N < 0) {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("You have attempted to access the status of a heat source that does not exist.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the status of a heat source that does not exist.  \n");
     return HPWH_ABORT;
   }
   if ( setOfSources[N].isEngaged() ){
@@ -561,7 +565,7 @@ double HPWH::getOutletTemp(UNITS units) const {
     return C_TO_F(returnVal);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getOutletTemp.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getOutletTemp.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -586,7 +590,7 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
     return KWH_TO_KJ(returnVal);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getEnergyRemovedFromEnvironment.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getEnergyRemovedFromEnvironment.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -611,7 +615,7 @@ double HPWH::getStandbyLosses(UNITS units) const {
     return KWH_TO_KJ(returnVal);
   }
   else {
-    if(hpwhVerbosity >= VRB_reluctant) sayMessage("Incorrect unit specification for getStandbyLosses.  \n");
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getStandbyLosses.  \n");
     return double(HPWH_ABORT);
   }
 }
@@ -809,12 +813,10 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
   //return true if the heat source logic tells it to come on, false if it doesn't,
   //or if an unsepcified selector was used
   bool shouldEngage = false;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
   for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "\tshouldHeat logic #%d ", turnOnLogicSet[i].selector);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("\tshouldHeat logic #%d ", turnOnLogicSet[i].selector);
     }
     switch (turnOnLogicSet[i].selector) {
       case ONLOGIC_topThird:
@@ -823,7 +825,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
           shouldEngage = true;
 
           //debugging message handling
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
         }
         break;
       
@@ -833,10 +835,9 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
           shouldEngage = true;
 
           //debugging message handling
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
           if (hpwh->hpwhVerbosity >= VRB_emetic){
-            sprintf(outputString, "bottom third: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->bottomThirdAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
-            hpwh->sayMessage(string(outputString));
+            hpwh->msg("bottom third: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->bottomThirdAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
           }
         }    
         break;
@@ -847,10 +848,9 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
           shouldEngage = true;
 
           //debugging message handling
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
           if (hpwh->hpwhVerbosity >= VRB_emetic){
-            sprintf(outputString, "tanktoptemp: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n ", hpwh->tankTemps_C[hpwh->numNodes - 1], hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
-            hpwh->sayMessage(string(outputString));
+            hpwh->msg("tanktoptemp: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n ", hpwh->tankTemps_C[hpwh->numNodes - 1], hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
           }
         }
         break;
@@ -860,8 +860,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
         
         //debugging message handling
         if (hpwh->hpwhVerbosity >= VRB_reluctant) {
-          sprintf(outputString, "You have input an incorrect turnOn logic choice specifier: %d \n", turnOnLogicSet[i].selector);
-          hpwh->sayMessage(string(outputString));
+          hpwh->msg("You have input an incorrect turnOn logic choice specifier: %d \n", turnOnLogicSet[i].selector);
         }
         break;
     }
@@ -870,8 +869,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
     if (shouldEngage) break; 
 
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "returns: %d \t", shouldEngage);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("returns: %d \t", shouldEngage);
     }
   }  //end loop over set of logic conditions
 
@@ -879,23 +877,20 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
   //if everything else wants it to come on, but if it would shut off anyways don't turn it on
   if (shouldEngage == true && shutsOff(heatSourceAmbientT_C) == true ) {
     shouldEngage = false;
-    if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("but is denied by shutsOff");
+    if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("but is denied by shutsOff");
   }
 
-  if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("\n");
+  if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
   return shouldEngage;
 }
 
 
 bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
   bool shutOff = false;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
-
 
   for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "\tshutsOff logic #%d: ", shutOffLogicSet[i].selector);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("\tshutsOff logic #%d: ", shutOffLogicSet[i].selector);
     }
     switch (shutOffLogicSet[i].selector) {
       case OFFLOGIC_lowT:
@@ -903,12 +898,12 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //when running, use hysteresis
         if (isEngaged() == true && heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint - hysteresis_dC) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down running lowT\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down running lowT\t");
         }
         //when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down lowT\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down lowT\t");
         }
         
         break;
@@ -917,7 +912,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //don't run if the temperature is too warm
         if (isEngaged() == true && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint + hysteresis_dC) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down lowTreheat\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down lowTreheat\t");
         }
         //there is no option for isEngaged() == false because this logic choice
         //is meant for shutting off the resistance element when it has heated
@@ -928,7 +923,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //don't run if the bottom node is too hot - typically for "external" configuration
         if (hpwh->tankTemps_C[0] > shutOffLogicSet[i].decisionPoint) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down bottom node temp\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom node temp\t");
         }
         break;
 
@@ -937,7 +932,7 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //typically for "external" configuration
         if (hpwh->bottomTwelthAvg_C() > shutOffLogicSet[i].decisionPoint) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down bottom twelth temp\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom twelth temp\t");
         }
         break;
 
@@ -946,20 +941,19 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //typically for GE overreliance on resistance element
         if (hpwh->bottomThirdAvg_C() < shutOffLogicSet[i].decisionPoint) {
           shutOff = true;
-          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->sayMessage("shut down bottom third temp large draw\t");
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom third temp large draw\t");
         }
         break;
       
       default:
         hpwh->simHasFailed = true;
-        if (hpwh->hpwhVerbosity >= VRB_reluctant) hpwh->sayMessage("You have input an incorrect shutOff logic choice specifier.  \n");
+        if (hpwh->hpwhVerbosity >= VRB_reluctant) hpwh->msg("You have input an incorrect shutOff logic choice specifier.  \n");
         break;
     }
   }
 
   if (hpwh->hpwhVerbosity >= VRB_emetic){
-    sprintf(outputString, "returns: %d \n", shutOff);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("returns: %d \n", shutOff);
   }
   return shutOff;
 }
@@ -967,7 +961,6 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
   // Reset the runtime of the Heat Source
   this->runtime_min = 0.0;
@@ -976,6 +969,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
   switch(configuration){
     case CONFIG_SUBMERGED:
     case CONFIG_WRAPPED:
+	{
       static std::vector<double> heatDistribution(hpwh->numNodes);
       //clear the heatDistribution vector, since it's static it is still holding the
       //distribution from the last go around
@@ -988,12 +982,10 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 
       //some outputs for debugging
       if (hpwh->hpwhVerbosity >= VRB_typical){
-        sprintf(outputString, "capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n", BTU_TO_KWH(cap_BTUperHr)*(minutesToRun)/60.0, cap_BTUperHr);
-        hpwh->sayMessage(string(outputString));
+        hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n", BTU_TO_KWH(cap_BTUperHr)*(minutesToRun)/60.0, cap_BTUperHr);
       }
       if (hpwh->hpwhVerbosity >= VRB_emetic){
-        sprintf(outputString, "heatDistribution: %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf \n", heatDistribution[0], heatDistribution[1], heatDistribution[2], heatDistribution[3], heatDistribution[4], heatDistribution[5], heatDistribution[6], heatDistribution[7], heatDistribution[8], heatDistribution[9], heatDistribution[10], heatDistribution[11]);
-        hpwh->sayMessage(string(outputString));
+        hpwh->msg("heatDistribution: %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf \n", heatDistribution[0], heatDistribution[1], heatDistribution[2], heatDistribution[3], heatDistribution[4], heatDistribution[5], heatDistribution[6], heatDistribution[7], heatDistribution[8], heatDistribution[9], heatDistribution[10], heatDistribution[11]);
       }
       //the loop over nodes here is intentional - essentially each node that has
       //some amount of heatDistribution acts as a separate resistive element
@@ -1009,6 +1001,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 
       //after you've done everything, any leftover capacity is time that didn't run
       this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
+	}
       break;
     
     case CONFIG_EXTERNAL:
@@ -1020,8 +1013,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
     default:
       hpwh->simHasFailed = true;
       if (hpwh->hpwhVerbosity >= VRB_reluctant) {
-        sprintf(outputString, "Invalid heat source configuration chosen: %d \n", configuration);
-        hpwh->sayMessage(string(outputString));
+        hpwh->msg("Invalid heat source configuration chosen: %d \n", configuration);
       }
       break;
   }
@@ -1057,7 +1049,6 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 
 double HPWH::HeatSource::getCondenserTemp() {
   double condenserTemp_C = 0.0;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
   int tempNodesPerCondensityNode = hpwh->numNodes / CONDENSITY_SIZE;
   int j = 0;
   
@@ -1068,14 +1059,12 @@ double HPWH::HeatSource::getCondenserTemp() {
       //the weights don't need to be added to divide out later because they should always sum to 1
 
       if (hpwh->hpwhVerbosity >= VRB_emetic){
-        sprintf(outputString, "condenserTemp_C:\t %.2lf \ti:\t %d \tj\t %d \tcondensity[j]:\t %.2lf \ttankTemps_C[i]:\t %.2lf\n", condenserTemp_C, i, j, condensity[j], hpwh->tankTemps_C[i]);
-        hpwh->sayMessage(string(outputString));
+        hpwh->msg("condenserTemp_C:\t %.2lf \ti:\t %d \tj\t %d \tcondensity[j]:\t %.2lf \ttankTemps_C[i]:\t %.2lf\n", condenserTemp_C, i, j, condensity[j], hpwh->tankTemps_C[i]);
       }
     }
   }
   if (hpwh->hpwhVerbosity >= VRB_typical){
-    sprintf(outputString, "condenser temp %.2lf \n", condenserTemp_C);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("condenser temp %.2lf \n", condenserTemp_C);
   }
   return condenserTemp_C;
 }
@@ -1085,7 +1074,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
   double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
   double externalT_F, condenserTemp_F;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
   // Convert Celsius to Fahrenheit for the curve fits
   condenserTemp_F = C_TO_F(condenserTemp_C);
@@ -1105,8 +1093,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   inputPower_T1_Watts += inputPower_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
 
   if (hpwh->hpwhVerbosity >= VRB_emetic){
-    sprintf(outputString, "inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T1_constant_W, inputPower_T1_linear_WperF, inputPower_T1_quadratic_WperF2);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T1_constant_W, inputPower_T1_linear_WperF, inputPower_T1_quadratic_WperF2);
   }
   
   inputPower_T2_Watts = inputPower_T2_constant_W;
@@ -1114,10 +1101,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   inputPower_T2_Watts += inputPower_T2_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
 
   if (hpwh->hpwhVerbosity >= VRB_emetic){
-    sprintf(outputString, "inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T2_constant_W, inputPower_T2_linear_WperF, inputPower_T2_quadratic_WperF2);
-    hpwh->sayMessage(string(outputString));
-    sprintf(outputString, "inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T2_constant_W, inputPower_T2_linear_WperF, inputPower_T2_quadratic_WperF2);
+    hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
   }
   // Interpolate to get COP and input power at the current ambient temperature
   cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
@@ -1128,8 +1113,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   cap_BTUperHr = cop * input_BTUperHr;
 
   if (hpwh->hpwhVerbosity >= VRB_typical){
-    sprintf(outputString, "cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n", cop, input_BTUperHr, cap_BTUperHr);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n", cop, input_BTUperHr, cap_BTUperHr);
   }
 /*
  *this is unimplemented as yet - possibly it may remain so
@@ -1177,13 +1161,11 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesToRun) {
   double Q_kJ, deltaT_C, targetTemp_C;
   int setPointNodeNum;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
-  
+ 
   double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
 
   if (hpwh->hpwhVerbosity >= VRB_emetic){
-    sprintf(outputString, "node %2d   cap_kwh %.4lf \n", node, KJ_TO_KWH(cap_kJ));
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("node %2d   cap_kwh %.4lf \n", node, KJ_TO_KWH(cap_kJ));
   }
   
   // find the first node (from the bottom) that does not have the same temperature as the one above it
@@ -1241,7 +1223,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
   double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
   double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
   double timeRemaining_min = minutesToRun;
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
   input_BTUperHr = 0;
   cap_BTUperHr   = 0;
@@ -1249,23 +1230,20 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
   do{
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "bottom tank temp: %.2lf", hpwh->tankTemps_C[0]);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("bottom tank temp: %.2lf", hpwh->tankTemps_C[0]);
     }
     
     //how much heat is available this timestep
     getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
     }
   
     //adjust capacity for how much time is left in this step
     heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
     }
     
     //calculate what percentage of the bottom node can be heated to setpoint
@@ -1274,8 +1252,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
     nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
     nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
-      hpwh->sayMessage(string(outputString));
+      hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
     }
     //if more than one, round down to 1 and subtract the amount of time it would
     //take to heat that node from the timeRemaining
@@ -1315,8 +1292,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
   cop             /= (minutesToRun - timeRemaining_min);
 
   if (hpwh->hpwhVerbosity >= VRB_emetic){  	
-    sprintf(outputString, "final remaining time: %.2lf \n", timeRemaining_min);
-    hpwh->sayMessage(string(outputString));
+    hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
   }  
   //return the time left
   return minutesToRun - timeRemaining_min;
@@ -1421,7 +1397,6 @@ void HPWH::calcDerivedValues(){
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
-  static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
   //resistive with no UA losses for testing
   if (presetNum == MODELS_restankNoUA) {
@@ -1926,22 +1901,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
   }
   else {
-    if (hpwhVerbosity >= VRB_reluctant) sayMessage("You have tried to select a preset model which does not exist.  \n");
+    if (hpwhVerbosity >= VRB_reluctant) msg("You have tried to select a preset model which does not exist.  \n");
     return HPWH_ABORT;
   }
 
 
-
-  //calculate ofot-used derived values
-
-
+  //calculate oft-used derived values
+  calcDerivedValues();
   
   if (hpwhVerbosity >= VRB_emetic){
      for (int i = 0; i < numHeatSources; i++) {
-      sprintf(outputString, "heat source %d: %p \n", i , &setOfSources[i]);
-      sayMessage(string(outputString));
+      msg("heat source %d: %p \n", i , &setOfSources[i]);
     }
-    sayMessage("\n\n");
+    msg("\n\n");
   }
   return 0;  //successful init returns 0
 }  //end HPWHinit_presets

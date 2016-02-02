@@ -115,7 +115,7 @@ class HPWH {
 
   void setVerbosity(VERBOSITY hpwhVrb);
   //sets the verbosity to the specified level
-  void setMessageCallback( int (*callbackFunc)(const std::string message) );
+  void setMessageCallback( void (*callbackFunc)(const std::string message, void* pContext), void* pContext);
   //sets the function to be used for message passing
   void printHeatSourceInfo();
   //this prints out the heat source info, nicely formatted
@@ -214,6 +214,8 @@ class HPWH {
   //if the messagePriority is >= the hpwh verbosity,
   //either pass your message out to the callback function or print it to cout
   //otherwise do nothing
+  void msg( const char* fmt, ...) const;
+  void msgV( const char* fmt, va_list ap=NULL) const;
 
   bool simHasFailed;
   //did an internal error cause the simulation to fail?
@@ -224,8 +226,10 @@ class HPWH {
   VERBOSITY hpwhVerbosity;
   //an enum to let the sim know how much output to say
 
-  int (*messageCallback)(const std::string message);
-  //function pointer to indicate an external processing function
+   void (*messageCallback)(const std::string message, void* contextPtr);
+  //function pointer to indicate an external message processing function
+  void* messageCallbackContextPtr;
+  // caller context pointer for external message processing
  
 	
 	int numHeatSources;
