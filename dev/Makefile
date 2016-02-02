@@ -2,7 +2,7 @@
 
 options = -g -Wall -Wshadow
 #options = -O3
-#options = -pg -O3
+#options = -pg
 
 
 #testTool.x : main.cc HPWH.o

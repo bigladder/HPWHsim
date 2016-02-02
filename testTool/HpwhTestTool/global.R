@@ -1,13 +1,13 @@
 # global.R for the hpwh Test Tool. Run simulations, blah blah blah
 library(ggplot2)
 
-
-# setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
-# setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
+# 
+# setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+# # setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
 # source("./runSims.R")
 # rm(list = ls())
 # setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/HpwhTestTool")
-
+# 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 # source("../collectLabResults.R")
 # rm(list = ls())
@@ -43,9 +43,14 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   totalMinutes <- max(dset$minutes)
   dset <- dset[dset$minutes >= tmin * 60 & dset$minutes <= tmax * 60, ]
   
+  inputPowerSim <- sum(dset$value[dset$variable == "inputPower" & dset$type == "Simulated"] / 60, na.rm = TRUE) / 1000
+  inputPowerMeas <- sum(dset$value[dset$variable == "inputPower" & dset$type == "Measured"] / 60, na.rm = TRUE) / 1000
+  inputPowerSim <- round(inputPowerSim, 2)
+  inputPowerMeas <- round(inputPowerMeas, 2)    
+
   dset <- merge(dset, varGuide[varGuide$category %in% vars, ])
   dset$variable <- factor(dset$variable, levels = unique(as.character(dset$variable)))
-
+  
 #   c("Thermocouples", "Average Tank Temp",
 #     "Draw", "Input Power", "Output Power")
   lineVars <- data.frame("vname" = c("aveTankTemp", "flow", "inputPower"),
@@ -78,14 +83,19 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   p <- p + facet_wrap(~units, scales = "free_y", ncol = 1) +
     xlab("Minutes Into Test") + ylab("Value") +
     scale_linetype_discrete(name = "Type")
+  
+  p <- p + ggtitle(paste("kWh Measured:", inputPowerMeas,
+                         " kWh Simulated:", inputPowerSim))
   p
 }
-
+onePlot("GEred", "DOE_24hr50", "Thermocouples")
 
 
 fieldPlot <- function(model) {
+  dontUse <- c(10441, 13438, 23666, 90023, 90051) # Flip Flop Sites
   fieldResults$X <- NULL
   fieldResults2 <- fieldResults[fieldResults$model == model, ]
+  fieldResults2 <- fieldResults2[!(fieldResults2$siteid %in% dontUse), ]
   if(!nrow(fieldResults2)) {
     stop(paste("Model", model, "not simulated yet."))
   }
@@ -102,7 +112,8 @@ fieldPlot <- function(model) {
     geom_point(aes(Measured, Sim, col = heatSource)) +
     geom_smooth(aes(Measured, Sim, col = heatSource), method = "lm") +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-    facet_wrap(~heatSource, nrow = 2, scales = "free_x")
+    facet_wrap(~heatSource, nrow = 2, scales = "free_x") +
+    xlab("Measured kWh / Day") + ylab("Simulated kWh / Day")
   
 #   means <- (fieldResults2$Sim.Total.kWh + fieldResults2$Measured.Total.kWh) / 2
 #   
@@ -141,4 +152,14 @@ fieldPlot <- function(model) {
 }
 
 
-
+# 
+# hpwhProperties <- read.csv("hpwhProperties.csv")
+# if(test == "DOE_24hr50") {
+#   vname <- "EF50"
+# } else if(test == "DOE2014_24hr50") {
+#   vname <- "EF50_DOE2014"
+# } else if(test == "DOE_24hr67") {
+#   vname <- "EF67"
+# } else if(test == "DOE2014_24hr67") {
+#   vname <- "EF67_DOE2014"
+# }

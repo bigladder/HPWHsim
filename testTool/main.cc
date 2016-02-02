@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   HPWH hpwh;
 
   HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
-  HPWH::MODELS model = HPWH::MODELS_Voltex60;
+  HPWH::MODELS model;
   HPWH::UNITS units = HPWH::UNITS_F;
 
   std::vector<double> simTCouples(6);
@@ -86,6 +86,17 @@ int main(int argc, char *argv[])
 
   //Only input file specified -- don't suffix with .csv
   testDirectory = "tests/" + input1;
+
+  // Parse the model
+  if(input2 == "Voltex60") {
+    model = HPWH::MODELS_Voltex60;
+  } else if(input2 == "Voltex80") {
+    model = HPWH::MODELS_Voltex80;
+  } else if(input2 == "GEred") {
+    model = HPWH::MODELS_GEGeospring;
+  } else {
+    model = HPWH::MODELS_basicIntegrated;
+  }
 
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
