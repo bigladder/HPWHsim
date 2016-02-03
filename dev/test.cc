@@ -24,8 +24,10 @@ int main(void)
 
 
 HPWH hpwh;
+int initReturn = 0;
 
-//hpwh.HPWHinit_presets(1);
+
+//initReturn = hpwh.HPWHinit_presets(1);
 
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
@@ -220,20 +222,32 @@ HPWH hpwh;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-//hpwh.setVerbosity(HPWH::VRB_reluctant);
+hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
-//hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
-//hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
-//hpwh.HPWHinit_presets(HPWH::MODELS_restankRealistic);
-//hpwh.HPWHinit_presets(HPWH::MODELS_externalTest);
-//hpwh.HPWHinit_presets(HPWH::MODELS_basicIntegrated);
-//hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
-//hpwh.HPWHinit_presets(HPWH::MODELS_Voltex80);
-hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankRealistic);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_externalTest);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_basicIntegrated);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex80);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
+
+
+//cout << "Type of heatsource 1: " << hpwh.getNthHeatSourceType(0) << endl;
+//cout << "Type of heatsource 2: " << hpwh.getNthHeatSourceType(1) << endl;
+//cout << "Type of heatsource 3: " << hpwh.getNthHeatSourceType(2) << endl;
+
+
+
+if (initReturn == HPWH::HPWH_ABORT) {
+  return 1;
+}
+
 int minutes = 1; 
 HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
 
@@ -395,7 +409,7 @@ hpwh.runOneStep(0, 0, 0, F_TO_C(45), drStatus, minutes);
 #else
 
 
-////hpwh.HPWHinit_presets(3);
+////initReturn = hpwh.HPWHinit_presets(3);
 //for (int i = 0; i < 1440*365*2; i++) {
 ////for (int i = 0; i < 120000000; i++) {
     //hpwh.runOneStep(0, 0.2, 0, 50, drStatus, minutes);

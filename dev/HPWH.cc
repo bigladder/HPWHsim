@@ -548,6 +548,12 @@ int HPWH::isNthHeatSourceRunning(int N) const{
 }
 
 
+HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const{
+  return setOfSources[N].typeOfHeatSource;
+}
+
+
+
 double HPWH::getOutletTemp() const {
     return outletTemp_C;
 }
@@ -766,7 +772,7 @@ double HPWH::bottomTwelthAvg_C() const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
   :hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL),
-                  hysteresis_dC(0) {}
+                  hysteresis_dC(0), typeOfHeatSource(TYPE_none) {}
 
 
 void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
@@ -1329,6 +1335,8 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     configuration = CONFIG_SUBMERGED; //immersed in tank
 
     depressesTemperature = false;  //no temp depression
+
+    typeOfHeatSource = TYPE_resistance;
 }
 
 
@@ -1346,54 +1354,59 @@ void HPWH::calcDerivedValues(){
   double condentropy = 0;
   double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
   for (int i = 0; i < numHeatSources; i++) {
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "Heat Source %d \n", i);
-      sayMessage(string(outputString));
-    }    
+    if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "Heat Source %d \n", i);
+    
     // Calculate condentropy and ==> shrinkage
     condentropy = 0;
     for(int j = 0; j < CONDENSITY_SIZE; j++) {
       if(setOfSources[i].condensity[j] > 0) {
         condentropy -= setOfSources[i].condensity[j] * log(setOfSources[i].condensity[j]);
-        if (hpwhVerbosity >= VRB_emetic){
-          sprintf(outputString, "condentropy %.2lf \n", condentropy);
-          sayMessage(string(outputString));
-        }
+        if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "condentropy %.2lf \n", condentropy);
       }
     }
     setOfSources[i].shrinkage = alpha + condentropy * beta;
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
-      sayMessage(string(outputString));
-    }
+    if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
   }
 
 
-    //lowest node
+  //lowest node
   int lowest = 0;
   for (int i = 0; i < numHeatSources; i++) {
     lowest = 0;
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, "Heat Source %d \n", i);
-      sayMessage(string(outputString));
-    } 
+    if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "Heat Source %d \n", i);
+
     for(int j = 0; j < numNodes; j++) {
-      if (hpwhVerbosity >= VRB_emetic){
-        sprintf(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j/ (numNodes/CONDENSITY_SIZE));
-        sayMessage(string(outputString));
-      }
+      if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j/ (numNodes/CONDENSITY_SIZE));
+
       if(setOfSources[i].condensity[ (j/ (numNodes/CONDENSITY_SIZE) ) ] > 0) {
         lowest = j;
         break;
       }
     }
-    if (hpwhVerbosity >= VRB_emetic){
-      sprintf(outputString, " lowest : %d \n", lowest);
-      sayMessage(string(outputString));
-    }
+    if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " lowest : %d \n", lowest);
+
     setOfSources[i].lowestNode = lowest;
   }
+
 }
+
+int HPWH::checkInputs(){
+  int returnVal = 0;
+  //use a returnVal so that all checks are processed and error messages written
+  
+  //check the heat source type to make sure it has been set
+  for (int i = 0; i < numHeatSources; i++) {
+    if (setOfSources[i].typeOfHeatSource == TYPE_none) {
+      if (hpwhVerbosity >= VRB_reluctant) msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
+      returnVal = HPWH_ABORT;
+    }
+  }
+
+  //if there's no failures, return 0
+  return returnVal;
+}
+
+
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
@@ -1551,7 +1564,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     compressor.isOn = false;
     compressor.isVIP = false;
-
+    compressor.typeOfHeatSource = TYPE_compressor;
+    
     double oneSixth = 1.0/6.0;
     compressor.setCondensity(oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, 0, 0, 0, 0, 0, 0);
 
@@ -1617,6 +1631,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     compressor.isOn = false;
     compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
 
     compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -1675,6 +1690,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //compressor values
     compressor.isOn = false;
     compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
 
     double split = 1.0/5.0;
     compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
@@ -1757,6 +1773,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //compressor values
     compressor.isOn = false;
     compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
 
     double split = 1.0/5.0;
     compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
@@ -1840,6 +1857,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //compressor values
     compressor.isOn = false;
     compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
 
     double split = 1.0/5.0;
     compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
@@ -1908,9 +1926,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
   //calculate oft-used derived values
   calcDerivedValues();
+
+  if(checkInputs() == HPWH_ABORT) return HPWH_ABORT;
   
   if (hpwhVerbosity >= VRB_emetic){
-     for (int i = 0; i < numHeatSources; i++) {
+    for (int i = 0; i < numHeatSources; i++) {
       msg("heat source %d: %p \n", i , &setOfSources[i]);
     }
     msg("\n\n");

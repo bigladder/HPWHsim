@@ -68,6 +68,14 @@ class HPWH {
     UNITS_KJ          //kilojoules
     };
 
+  //specifies the type of heat source
+  enum HEATSOURCE_TYPE {
+    TYPE_none,  //a default to check to make sure it's been set
+    TYPE_resistance,  //a resistance element
+    TYPE_compressor  //a vapor cycle compressor
+    };
+
+    
   //this is the value that the public functions will return in case of a simulation
   //destroying error
   static const int HPWH_ABORT = -274000;
@@ -171,6 +179,10 @@ class HPWH {
   int isNthHeatSourceRunning(int N) const;
   //returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
   //returns HPWH_ABORT for N out of bounds
+  HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
+  //returns the enum value for what type of heat source the Nth heat source is
+
+  
 
 	double getOutletTemp(/*default units C*/) const;
 	double getOutletTemp(UNITS units) const;
@@ -207,7 +219,8 @@ class HPWH {
 
   void calcDerivedValues();
   //a helper function for the inits, calculating condentropy and the lowest node
-
+  int checkInputs();
+  //a helper function to run a few checks on the HPWH input parameters
 
 
   void sayMessage(const std::string message) const;
@@ -340,7 +353,6 @@ class HPWH::HeatSource {
     OFFLOGIC_largeDraw   //if the bottom third of the tank is below decision point, shut off
     };
       
-    
   //these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
@@ -422,7 +434,7 @@ class HPWH::HeatSource {
   // NOTE: this only works for 1 minute steps
 
 	COIL_CONFIG configuration; // submerged, wrapped, external
-
+  HEATSOURCE_TYPE typeOfHeatSource;  //compressor, resistance
 
 
   //some private functions, mostly used for heating the water with the addHeat function
