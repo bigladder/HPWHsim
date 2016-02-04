@@ -89,7 +89,7 @@ class HPWH {
 	 * but not quite as versatile.
 	 * My impression is that this could be a useful input paradigm for CSE
 	 * 
-	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
+	 * The return value is 0 for successful initialization, HPWH_ABORT otherwise
 	 */
 
 	int HPWHinit_file(std::string configFile);

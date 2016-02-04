@@ -1018,9 +1018,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
       
     default:
       hpwh->simHasFailed = true;
-      if (hpwh->hpwhVerbosity >= VRB_reluctant) {
-        hpwh->msg("Invalid heat source configuration chosen: %d \n", configuration);
-      }
+	  input_BTUperHr = 0;  cap_BTUperHr = 0;  runtime_min = 0;
+	  if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("Invalid heat source configuration chosen: %d \n", configuration);
       break;
   }
   
