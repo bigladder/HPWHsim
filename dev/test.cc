@@ -222,8 +222,8 @@ int initReturn = 0;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-hpwh.setVerbosity(HPWH::VRB_reluctant);
-//hpwh.setVerbosity(HPWH::VRB_silent);
+//hpwh.setVerbosity(HPWH::VRB_reluctant);
+hpwh.setVerbosity(HPWH::VRB_silent);
 
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
@@ -251,7 +251,7 @@ if (initReturn == HPWH::HPWH_ABORT) {
 int minutes = 1; 
 HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
 
-#define SHORT 
+//#define SHORT 
 
 #ifdef SHORT
 int liters = 10;
@@ -405,18 +405,20 @@ hpwh.runOneStep(0, 0, 0, F_TO_C(43.0), drStatus, minutes);
 hpwh.runOneStep(0, 0, 0, F_TO_C(45), drStatus, minutes);
 //hpwh.printTankTemps();
 //hpwh.printHeatSourceInfo();
-
 #else
 
 
-////initReturn = hpwh.HPWHinit_presets(3);
-//for (int i = 0; i < 1440*365*2; i++) {
-////for (int i = 0; i < 120000000; i++) {
-    //hpwh.runOneStep(0, 0.2, 0, 50, drStatus, minutes);
-//}
+//initReturn = hpwh.HPWHinit_presets(3);
+hpwh.setInletT(0);
+hpwh.setMinutesPerStep(minutes);
+for (int i = 0; i < 1440*365*20; i++) {
+//for (int i = 0; i < 120000000; i++) {
+    //hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+    hpwh.runOneStep(0, 0, 50, drStatus);
+}
 
 
-cout << sizeof(HPWH);
+//cout << sizeof(HPWH);
 
 #endif
 

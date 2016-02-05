@@ -22,6 +22,7 @@
 class HPWH {
  public:
   HPWH();  //default constructor
+  HPWH(const HPWH &hpwh);  //copy constructor
 	~HPWH(); //destructor - will be defined
 
   //specifies the various modes for the Demand Response (DR) abilities
@@ -101,7 +102,8 @@ class HPWH {
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
 
-	int runOneStep(double inletT_C, double drawVolume_L, 
+
+  int runOneStep(double inletT_C, double drawVolume_L, 
                   double ambientT_C, double externalT_C,
                   DRMODES DRstatus, double minutesPerStep);
 	/* This function will progress the simulation forward in time by one step
@@ -202,6 +204,19 @@ class HPWH {
   //negative should occur seldom
   //returns HPWH_ABORT for incorrect units
 
+
+
+  //and an overloaded function that uses some member variables, instead of taking them as inputs
+  int runOneStep(double drawVolume_L, double ambientT_C,
+                  double externalT_C, DRMODES DRstatus) {
+        return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
+                        externalT_C, DRstatus, member_minutesPerStep);
+  };
+  //plus setters for those variables
+  void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
+  void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
+
+
  
  private:
   class HeatSource;
@@ -283,6 +298,11 @@ class HPWH {
 	// this is the special location temperature that stands in for the the 
 	// ambient temperature if you are doing temp. depression
 
+
+  //a couple variables to hold values which are typically inputs
+  double member_inletT_C;
+  double member_minutesPerStep;
+
 };  //end of HPWH class
 
 
@@ -292,11 +312,12 @@ class HPWH::HeatSource {
  public:
   friend class HPWH;
 
-	HeatSource() {};
-	//default constructor, does not create a useful HeatSource
-	
+	HeatSource() {}; //default constructor, does not create a useful HeatSource
 	HeatSource(HPWH *parentHPWH);
 	//constructor assigns a pointer to the hpwh creating this heat source 
+  HeatSource(const HeatSource &hSource);
+  //copy constructor
+
 
   void setupAsResistiveElement(int node, double Watts);
   //configure the heat source to be a resisive element, positioned at the
@@ -326,9 +347,7 @@ class HPWH::HeatSource {
 	
 	
  private:
-	HPWH *hpwh;
-	//the creator of the heat source, necessary to access HPWH variables
-	
+  //start with a few type definitions  
   enum COIL_CONFIG {
     CONFIG_SUBMERGED,
     CONFIG_WRAPPED,
@@ -352,7 +371,22 @@ class HPWH::HeatSource {
     OFFLOGIC_bottomTwelthMaxTemp,   //if the bottom twelth of the tank is above decision point, shut off
     OFFLOGIC_largeDraw   //if the bottom third of the tank is below decision point, shut off
     };
-      
+
+	//the heating logic instructions come in pairs - a string to select
+	//which logic function to use, and a double to give the setpoint
+	//for that function
+  template <typename T>
+	struct heatingLogicPair{
+		T selector;
+		double decisionPoint;
+		//and a constructor to allow creating anonymous structs for easy assignment
+		heatingLogicPair(T x, double y) : selector(x), decisionPoint(y) {};
+		};
+
+
+	//the creator of the heat source, necessary to access HPWH variables
+  HPWH *hpwh;
+	
   //these are the heat source state/output variables
 	bool isOn;
 	//is the heat source running or not	
@@ -402,17 +436,6 @@ class HPWH::HeatSource {
 	//defining the COP as a function of the condenser temperature
 
 
-	//the heating logic instructions come in pairs - a string to select
-	//which logic function to use, and a double to give the setpoint
-	//for that function
-  template <typename T>
-	struct heatingLogicPair{
-		T selector;
-		double decisionPoint;
-		//and a constructor to allow creating anonymous structs for easy assignment
-		heatingLogicPair(T x, double y) : selector(x), decisionPoint(y) {};
-		};
-	
 	//a vector to hold the set of logical choices for turning this element on
 	std::vector<heatingLogicPair<ONLOGIC> > turnOnLogicSet;
 	//a vector to hold the set of logical choices that can cause an element to turn off
@@ -436,6 +459,10 @@ class HPWH::HeatSource {
 	COIL_CONFIG configuration; // submerged, wrapped, external
   HEATSOURCE_TYPE typeOfHeatSource;  //compressor, resistance
 
+	int lowestNode;
+  //hold the number of the first non-zero condensity entry
+
+
 
   //some private functions, mostly used for heating the water with the addHeat function
 
@@ -446,13 +473,10 @@ class HPWH::HeatSource {
   // Add heat from a source outside of the tank. Assume the condensity is where
   // the water is drawn from and hot water is put at the top of the tank.
   
-
 	// I wrote some methods to help with the add heat interface - MJL
   void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
   void calcHeatDist(std::vector<double> &heatDistribution);
 
-	int lowestNode;
-  //hold the number of the first non-zero condensity entry
 	double getCondenserTemp();
   //returns the temperature of the condensor - it's a weighted average of the
   //tank temperature, using the condensity as weights

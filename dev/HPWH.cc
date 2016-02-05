@@ -12,6 +12,48 @@ HPWH::HPWH() :
   messageCallbackContextPtr( NULL)
 {  }
 
+HPWH::HPWH(const HPWH &hpwh){
+  simHasFailed = hpwh.simHasFailed;
+ 
+  hpwhVerbosity = hpwh.hpwhVerbosity;
+
+  //these should actually be the same pointers
+  messageCallback = hpwh.messageCallback;
+  messageCallbackContextPtr = hpwh.messageCallbackContextPtr;
+ 
+	isHeating = hpwh.isHeating;
+	
+	numHeatSources = hpwh.numHeatSources;
+	setOfSources = new HeatSource[numHeatSources];
+  for (int i = 0; i < numHeatSources; i++) {
+    setOfSources[i] = hpwh.setOfSources[i];
+    setOfSources[i].hpwh = this;
+  }
+  
+
+  
+	tankVolume_L = hpwh.tankVolume_L;
+	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
+	
+	setpoint_C = hpwh.setpoint_C;
+	numNodes = hpwh.numNodes;
+	tankTemps_C = new double[numNodes];
+  for (int i = 0; i < numNodes; i++) {
+    tankTemps_C[i] = hpwh.tankTemps_C[i];
+  }
+  
+
+	outletTemp_C = hpwh.outletTemp_C;
+	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
+	standbyLosses_kWh = hpwh.standbyLosses_kWh;
+
+	tankMixesOnDraw = hpwh.tankMixesOnDraw;
+	doTempDepression = hpwh.doTempDepression;
+
+  locationTemperature = hpwh.locationTemperature;
+
+  }
+
 HPWH::~HPWH() {
   delete[] tankTemps_C;
   delete[] setOfSources;  
@@ -298,8 +340,11 @@ void HPWH::msgV( const char* fmt, va_list ap /*=NULL*/) const {
 
 	const char* p;
 	if (ap) {
-    //vsprintf_s< MAXOUTSTRING>( outputString, fmt, ap);
-    vsnprintf(outputString, MAXOUTSTRING, fmt, ap);
+    #if defined( _MSC_VER)
+      vsprintf_s< MAXOUTSTRING>( outputString, fmt, ap);
+    #else
+      vsnprintf(outputString, MAXOUTSTRING, fmt, ap);
+    #endif
 		p = outputString;
 	}
 	else {
@@ -774,6 +819,58 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
   :hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL),
                   hysteresis_dC(0), typeOfHeatSource(TYPE_none) {}
 
+HPWH::HeatSource::HeatSource(const HeatSource &hSource){
+  hpwh = hSource.hpwh;
+	isOn = hSource.isOn;
+	
+	runtime_min = hSource.runtime_min;
+	energyInput_kWh = hSource.energyInput_kWh;
+	energyOutput_kWh = hSource.energyOutput_kWh;
+
+	isVIP = hSource.isVIP;
+
+	if ( backupHeatSource != NULL || companionHeatSource != NULL) {
+      hpwh->simHasFailed = true;
+      if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to backup or companion HeatSources\n");
+  }
+	
+  for (int i = 0; i < CONDENSITY_SIZE; i++) {
+    condensity[i] = hSource.condensity[i];
+  }
+  shrinkage = hSource.shrinkage;
+
+	T1_F = hSource.T1_F;
+  T2_F = hSource.T2_F;
+
+	inputPower_T1_constant_W = hSource.inputPower_T1_constant_W;
+  inputPower_T2_constant_W = hSource.inputPower_T2_constant_W;
+	inputPower_T1_linear_WperF = hSource.inputPower_T1_linear_WperF;
+  inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
+	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
+  inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
+
+	COP_T1_constant = hSource.COP_T1_constant;
+  COP_T2_constant = hSource.COP_T2_constant;
+	COP_T1_linear = hSource.COP_T1_linear;
+  COP_T2_linear = hSource.COP_T2_linear;
+	COP_T1_quadratic = hSource.COP_T1_quadratic;
+  COP_T2_quadratic = hSource.COP_T2_quadratic;
+
+	//i think vector assignment works correctly here
+	turnOnLogicSet = hSource.turnOnLogicSet;
+	shutOffLogicSet = hSource.shutOffLogicSet;
+
+	hysteresis_dC = hSource.hysteresis_dC;
+
+	depressesTemperature = hSource.depressesTemperature;
+
+	configuration = hSource.configuration;
+  typeOfHeatSource = hSource.typeOfHeatSource;
+
+	lowestNode = hSource.lowestNode;
+
+  
+}
 
 void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
                   double cnd5, double cnd6, double cnd7, double cnd8, 
@@ -821,9 +918,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
   bool shouldEngage = false;
 
   for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
-    if (hpwh->hpwhVerbosity >= VRB_emetic){
-      hpwh->msg("\tshouldHeat logic #%d ", turnOnLogicSet[i].selector);
-    }
+    if (hpwh->hpwhVerbosity >= VRB_emetic)  hpwh->msg("\tshouldHeat logic #%d ", turnOnLogicSet[i].selector);
     switch (turnOnLogicSet[i].selector) {
       case ONLOGIC_topThird:
         //when the top third is too cold - typically used for upper resistance/VIP heat sources
