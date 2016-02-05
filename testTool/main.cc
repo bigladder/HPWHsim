@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Voltex60;
   } else if(input2 == "Voltex80") {
     model = HPWH::MODELS_Voltex80;
-  } else if(input2 == "GEred") {
+  } else if(input2 == "GEred" || input2 == "GE") {
     model = HPWH::MODELS_GEGeospring;
   } else {
     model = HPWH::MODELS_basicIntegrated;

@@ -1959,16 +1959,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 47;
     compressor.T2_F = 67;
 
-    compressor.inputPower_T1_constant_W = 0.247*1000;
+//    compressor.inputPower_T1_constant_W = 0.247*1000;
+    compressor.inputPower_T1_constant_W = 0.3*1000;
     compressor.inputPower_T1_linear_WperF = 0.00159*1000;
     compressor.inputPower_T1_quadratic_WperF2 = 0.00000107*1000;
-    compressor.inputPower_T2_constant_W = 0.328*1000;
+//    compressor.inputPower_T2_constant_W = 0.328*1000;
+    compressor.inputPower_T2_constant_W = 0.378*1000;
     compressor.inputPower_T2_linear_WperF = 0.00121*1000;
     compressor.inputPower_T2_quadratic_WperF2 = 0.00000216*1000;
-    compressor.COP_T1_constant = 4.92;
+//    compressor.COP_T1_constant = 4.92;
+    compressor.COP_T1_constant = 4.7;
     compressor.COP_T1_linear = -0.0210;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 5.03;
+//    compressor.COP_T2_constant = 5.03;
+    compressor.COP_T2_constant = 4.8;
     compressor.COP_T2_linear = -0.0167;
     compressor.COP_T2_quadratic = 0.0;
     compressor.hysteresis_dC = dF_TO_dC(4);
@@ -1977,28 +1981,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //true for compressors, however tempDepression is turned off so it won't depress
 
     //top resistor values
-    resistiveElementTop.setupAsResistiveElement(8, 4500);
+    resistiveElementTop.setupAsResistiveElement(8, 4200);
     resistiveElementTop.isVIP = true;
 
     //bottom resistor values
-    resistiveElementBottom.setupAsResistiveElement(0, 4500);
+    resistiveElementBottom.setupAsResistiveElement(0, 4200);
     resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
 
    
     //logic conditions
-    double compStart = dF_TO_dC(24.4);
+//    double compStart = dF_TO_dC(24.4);
+    double compStart = dF_TO_dC(40.0);
     double lowTcutoff = F_TO_C(47.0);
-    double standby = dF_TO_dC(29.1);
+    double standby = dF_TO_dC(7.0);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(90));
+    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(60));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(66));
     
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     //resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
     //GE element never turns off?
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(10.0));
+    // resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(31.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(27.0));
 
 
     //set everything in its places
