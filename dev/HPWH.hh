@@ -23,7 +23,8 @@ class HPWH {
  public:
   HPWH();  //default constructor
   HPWH(const HPWH &hpwh);  //copy constructor
-	~HPWH(); //destructor - will be defined
+  HPWH & operator=(const HPWH &hpwh);  //assignment operator
+	~HPWH(); //destructor just a dynamic arrays to destroy - could be replaced by vectors eventually?
 
   //specifies the various modes for the Demand Response (DR) abilities
   //values may vary - names should be used
@@ -314,10 +315,11 @@ class HPWH::HeatSource {
 
 	HeatSource() {}; //default constructor, does not create a useful HeatSource
 	HeatSource(HPWH *parentHPWH);
-	//constructor assigns a pointer to the hpwh creating this heat source 
-  HeatSource(const HeatSource &hSource);
-  //copy constructor
-
+	//constructor assigns a pointer to the hpwh that owns this heat source 
+  HeatSource(const HeatSource &hSource);  //copy constructor
+  HeatSource& operator=(const HeatSource &hSource); //assignment operator
+  //the copy constructor and assignment operator basically just checks if there
+  //are backup/companion pointers - these can't be copied
 
   void setupAsResistiveElement(int node, double Watts);
   //configure the heat source to be a resisive element, positioned at the

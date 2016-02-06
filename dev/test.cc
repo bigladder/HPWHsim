@@ -222,10 +222,10 @@ int initReturn = 0;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-//hpwh.setVerbosity(HPWH::VRB_reluctant);
-hpwh.setVerbosity(HPWH::VRB_silent);
+hpwh.setVerbosity(HPWH::VRB_reluctant);
+//hpwh.setVerbosity(HPWH::VRB_silent);
 
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankRealistic);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_externalTest);
@@ -251,10 +251,10 @@ if (initReturn == HPWH::HPWH_ABORT) {
 int minutes = 1; 
 HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
 
-//#define SHORT 
+#define SHORT 
 
 #ifdef SHORT
-int liters = 10;
+int liters = 20;
         
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 //hpwh.printTankTemps();

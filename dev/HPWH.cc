@@ -8,8 +8,8 @@ using std::string;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-  simHasFailed(false), isHeating(false), hpwhVerbosity(VRB_silent), messageCallback(NULL),
-  messageCallbackContextPtr( NULL)
+  simHasFailed(false), isHeating(false), hpwhVerbosity(VRB_silent),
+  messageCallback(NULL), messageCallbackContextPtr(NULL), setOfSources(NULL), tankTemps_C(NULL)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -53,6 +53,63 @@ HPWH::HPWH(const HPWH &hpwh){
   locationTemperature = hpwh.locationTemperature;
 
   }
+
+HPWH & HPWH::operator=(const HPWH &hpwh){
+  if (this == &hpwh) {
+    return *this;
+  }
+  
+
+  simHasFailed = hpwh.simHasFailed;
+ 
+  hpwhVerbosity = hpwh.hpwhVerbosity;
+
+  //these should actually be the same pointers
+  messageCallback = hpwh.messageCallback;
+  messageCallbackContextPtr = hpwh.messageCallbackContextPtr;
+ 
+	isHeating = hpwh.isHeating;
+	
+	numHeatSources = hpwh.numHeatSources;
+
+  delete[] setOfSources;
+  setOfSources = new HeatSource[numHeatSources];
+  for (int i = 0; i < numHeatSources; i++) {
+    setOfSources[i] = hpwh.setOfSources[i];
+    setOfSources[i].hpwh = this;
+    //HeatSource assignment will fail (causing the simulation to fail) if a
+    //HeatSource has backups/companions.
+    //This could be dealt with in this function (tricky), but the HeatSource
+    //assignment can't know where its backup/companion pointer goes so it either
+    //fails or silently does something that's not at all useful.
+    //I prefer it to fail.  -NDK  1/2016
+  }
+  
+  
+	tankVolume_L = hpwh.tankVolume_L;
+	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
+	
+	setpoint_C = hpwh.setpoint_C;
+	numNodes = hpwh.numNodes;
+
+  delete[] tankTemps_C;
+	tankTemps_C = new double[numNodes];
+  for (int i = 0; i < numNodes; i++) {
+    tankTemps_C[i] = hpwh.tankTemps_C[i];
+  }
+  
+
+	outletTemp_C = hpwh.outletTemp_C;
+	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
+	standbyLosses_kWh = hpwh.standbyLosses_kWh;
+
+	tankMixesOnDraw = hpwh.tankMixesOnDraw;
+	doTempDepression = hpwh.doTempDepression;
+
+  locationTemperature = hpwh.locationTemperature;
+
+  return *this;
+}
 
 HPWH::~HPWH() {
   delete[] tankTemps_C;
@@ -683,6 +740,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
   //calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
   drawFraction = drawVolume_L/volPerNode_LperNode;
+  if (drawFraction > numNodes) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+    simHasFailed = true;
+    return;
+  }
+  
+
   wholeNodesToDraw = (int)std::floor(drawFraction);
   drawFraction -= wholeNodesToDraw;
 
@@ -829,7 +893,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
 	isVIP = hSource.isVIP;
 
-	if ( backupHeatSource != NULL || companionHeatSource != NULL) {
+	if ( hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL) {
       hpwh->simHasFailed = true;
       if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to backup or companion HeatSources\n");
   }
@@ -871,6 +935,69 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
   
 }
+
+HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
+  if (this == &hSource) {
+    return *this;
+  }
+  
+  hpwh = hSource.hpwh;
+	isOn = hSource.isOn;
+	
+	runtime_min = hSource.runtime_min;
+	energyInput_kWh = hSource.energyInput_kWh;
+	energyOutput_kWh = hSource.energyOutput_kWh;
+
+	isVIP = hSource.isVIP;
+
+	if ( hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL) {
+    hpwh->simHasFailed = true;
+    if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to backup or companion HeatSources\n");
+  }
+	else {
+    companionHeatSource = NULL;
+    backupHeatSource = NULL;
+  }
+  
+  for (int i = 0; i < CONDENSITY_SIZE; i++) {
+    condensity[i] = hSource.condensity[i];
+  }
+  shrinkage = hSource.shrinkage;
+
+	T1_F = hSource.T1_F;
+  T2_F = hSource.T2_F;
+
+	inputPower_T1_constant_W = hSource.inputPower_T1_constant_W;
+  inputPower_T2_constant_W = hSource.inputPower_T2_constant_W;
+	inputPower_T1_linear_WperF = hSource.inputPower_T1_linear_WperF;
+  inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
+	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
+  inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
+
+	COP_T1_constant = hSource.COP_T1_constant;
+  COP_T2_constant = hSource.COP_T2_constant;
+	COP_T1_linear = hSource.COP_T1_linear;
+  COP_T2_linear = hSource.COP_T2_linear;
+	COP_T1_quadratic = hSource.COP_T1_quadratic;
+  COP_T2_quadratic = hSource.COP_T2_quadratic;
+
+	//i think vector assignment works correctly here
+	turnOnLogicSet = hSource.turnOnLogicSet;
+	shutOffLogicSet = hSource.shutOffLogicSet;
+
+	hysteresis_dC = hSource.hysteresis_dC;
+
+	depressesTemperature = hSource.depressesTemperature;
+
+	configuration = hSource.configuration;
+  typeOfHeatSource = hSource.typeOfHeatSource;
+
+	lowestNode = hSource.lowestNode;
+
+  return *this;
+}
+
+
 
 void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, double cnd4, 
                   double cnd5, double cnd6, double cnd7, double cnd8, 
@@ -1505,6 +1632,11 @@ int HPWH::checkInputs(){
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
 
+  //clear out old stuff if you're re-initializing
+  if (tankTemps_C != NULL) delete[] tankTemps_C;
+  if (setOfSources != NULL) delete[] setOfSources;
+  
+  
   //resistive with no UA losses for testing
   if (presetNum == MODELS_restankNoUA) {
     numNodes = 12;
