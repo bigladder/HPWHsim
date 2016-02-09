@@ -1,14 +1,17 @@
 #include "HPWH.hh"
 #include <stdarg.h>
-
+#include <fstream>
+#include <iostream>
 
 using std::endl;
+using std::cout;
 using std::string;
+
 
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-  simHasFailed(false), isHeating(false), hpwhVerbosity(VRB_silent),
+  simHasFailed(true), isHeating(false), hpwhVerbosity(VRB_silent),
   messageCallback(NULL), messageCallbackContextPtr(NULL), setOfSources(NULL), tankTemps_C(NULL)
 {  }
 
@@ -161,10 +164,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
   //do HeatSource choice
   for (int i = 0; i < numHeatSources; i++) {
-    if (hpwhVerbosity >= VRB_emetic){
-      msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
-    }
-
+    if (hpwhVerbosity >= VRB_emetic)  msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
 
     if (isHeating == true) {
       //check if anything that is on needs to turn off (generally for lowT cutoffs)
@@ -1628,10 +1628,167 @@ int HPWH::checkInputs(){
 }
 
 
+int HPWH::HPWHinit_file(std::string configFile){
+  simHasFailed = true;  //this gets cleared on successful completion of init
+
+  //clear out old stuff if you're re-initializing
+  if (tankTemps_C != NULL) delete[] tankTemps_C;
+  if (setOfSources != NULL) delete[] setOfSources;
+  
+
+  //open file, check and report errors
+  std::ifstream inputFILE;
+  inputFILE.open(configFile.c_str());
+  if (!inputFILE.is_open() ) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("Input file failed to open.  \n");
+    return HPWH_ABORT;
+  }
+
+  //some variables that will be handy
+  int tempInt, heatsource;
+  string tempString, units;
+  double tempDouble;
+
+  //being file processing, line by line
+  string line_s;
+  std::stringstream line_ss;
+  string token;
+  while (std::getline(inputFILE, line_s) ){
+    //cout << line_s << endl;
+    line_ss.clear();
+    line_ss.str(line_s);
+    //cout << line_ss.str() << "endl\n";
+
+    //grab the first word, and start comparing
+    line_ss >> token;
+    if ( token.at(0) == '#' ) {
+      //if you hit a comment, skip to next line
+      continue;
+    }
+    else if (token == "numNodes") {
+      line_ss >> numNodes;
+    }
+    else if (token == "setpoint") {
+      line_ss >> tempDouble >> units;
+      if (units == "F")  tempDouble = F_TO_C(tempDouble);
+      else if (units == "C") ; //do nothing, lol 
+      else {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+        return HPWH_ABORT;
+      }
+      setpoint_C = tempDouble;
+    }
+    else if (token == "verbosity") {
+      line_ss >> token;
+      if (token == "silent") {
+        hpwhVerbosity = VRB_silent;
+      }
+      else if (token == "reluctant") {
+        hpwhVerbosity = VRB_reluctant;
+      }
+      else if (token == "typical") {
+        hpwhVerbosity = VRB_typical;
+      }
+      else if (token == "emetic") {
+        hpwhVerbosity = VRB_emetic;
+      }
+      else {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect verbosity on input.  \n");
+        return HPWH_ABORT;
+      }
+    }
+    else if (token == "numHeatSources") {
+      line_ss >> numHeatSources;
+      setOfSources = new HeatSource[numHeatSources];
+    }
+    else if (token == "heatsource") {
+      line_ss >> heatsource >> token;
+      if (token == "isVIP") {
+        line_ss >> tempString;
+        if (tempString == "true") {
+          setOfSources[heatsource].isVIP = true;
+        }
+        else if (tempString == "false") {
+          setOfSources[heatsource].isVIP = false;
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+      else if (token == "onlogic") {
+        line_ss >> tempString >> tempDouble >> units;
+        if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
+        else if (units == "C") ; //do nothing, lol 
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+        if (tempString == "topThird") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_topThird, tempDouble);
+        }
+        else if (tempString == "bottomThird") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, tempDouble);
+        }
+        else if (tempString == "standby") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_standby, tempDouble);
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+      else if (token == "offlogic") {
+        line_ss >> tempString >> tempDouble >> units;
+        if (units == "F")  tempDouble = F_TO_C(tempDouble);
+        else if (units == "C") ; //do nothing, lol 
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+        if (tempString == "lowT") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_lowT, tempDouble);
+        }
+        else if (tempString == "lowTreheat") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, tempDouble);
+        }
+        else if (tempString == "bottomNodeMaxTemp") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, tempDouble);
+        }
+        else if (tempString == "bottomTwelthMaxTemp") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, tempDouble);
+        }
+        else if (tempString == "largeDraw") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, tempDouble);
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+      else {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
+      }
+      
+    } //end heatsource options
+    
+
+    cout << "endline" << endl;
+
+      
+  } //end while over lines
+ 
+
+
+  simHasFailed = false;
+  return 0;
+}
+
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
-
+  simHasFailed = true;  //this gets cleared on successful completion of init
+  
   //clear out old stuff if you're re-initializing
   if (tankTemps_C != NULL) delete[] tankTemps_C;
   if (setOfSources != NULL) delete[] setOfSources;
@@ -2168,6 +2325,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     }
     msg("\n\n");
   }
+
+  simHasFailed = false;
   return 0;  //successful init returns 0
 }  //end HPWHinit_presets
 

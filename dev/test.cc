@@ -27,6 +27,14 @@ HPWH hpwh;
 int initReturn = 0;
 
 
+
+
+hpwh.HPWHinit_file("testInput.txt");
+
+
+return(0);
+
+
 //initReturn = hpwh.HPWHinit_presets(1);
 
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 

@@ -99,8 +99,10 @@ class HPWH {
 	 * The file name is the input - there should be at most one set of parameters per file
 	 * This is useful for testing new variations, and for the sort of variability
 	 * that we typically do when creating SEEM runs
-	 * 
-	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
+	 * Appropriate use of this function can be found in the documentation
+   *
+   * 
+	 * The return value is 0 for successful initialization, HPWH_ABORT otherwise
 	 */
 
 

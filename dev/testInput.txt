@@ -1,0 +1,9 @@
+numNodes 12 #number of nodes
+setpoint 128 F
+setpoint 50 C
+#a test comment
+verbosity emetic
+numHeatSources 3
+#heatsource 0 isVIP true
+heatsource 0 isVIP
+heatsource 0 onlogic topThird 27.2 F
