@@ -1952,7 +1952,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
    
     //logic conditions
     double compStart = dF_TO_dC(43.6);
-    double lowTcutoff = F_TO_C(40.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(23.8);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -1961,7 +1961,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(25.0));
 
 
     //set everything in its places
@@ -2036,7 +2036,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
    
     //logic conditions
     double compStart = dF_TO_dC(43.6);
-    double lowTcutoff = F_TO_C(40.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(23.8);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -2045,7 +2045,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(25.0));
 
 
     //set everything in its places
@@ -2124,20 +2124,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //logic conditions
 //    double compStart = dF_TO_dC(24.4);
     double compStart = dF_TO_dC(40.0);
-    double lowTcutoff = F_TO_C(47.0);
-    double standby = dF_TO_dC(7.0);
+    double lowTcutoff = F_TO_C(50.0);
+    double standby = dF_TO_dC(5.2);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
-    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(60));
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(66));
+    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(66));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(65));
     
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     //resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
     //GE element never turns off?
 
     // resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(31.0));
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(27.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(28.0));
 
 
     //set everything in its places
