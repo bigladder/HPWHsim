@@ -14,6 +14,9 @@ library(ggplot2)
 # 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 
+modelsToUse <- c("GEred", "Voltex60", "Voltex80")
+testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
+
 
 allSimResults <- read.csv("allResults.csv")
 allLabResults <- read.csv("allLabResults.csv")
@@ -33,6 +36,8 @@ allLabLong <- reshape2::melt(allLabResults, id.vars = c("minutes", "test", "mode
 
 allLong <- rbind(allSimLong, allLabLong)
 allLong <- merge(allLong, varGuide)
+allLong <- allLong[allLong$model %in% modelsToUse, ]
+allLong <- allLong[allLong$test %in% testsToUse, ]
 
 
 # model <- "Voltex60"
@@ -112,7 +117,7 @@ fieldPlot <- function(model) {
     geom_point(aes(Measured, Sim, col = heatSource)) +
     geom_smooth(aes(Measured, Sim, col = heatSource), method = "lm") +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-    facet_wrap(~heatSource, nrow = 2, scales = "free_x") +
+    facet_wrap(~heatSource, nrow = 2, scales = "free") +
     xlab("Measured kWh / Day") + ylab("Simulated kWh / Day")
   
 #   means <- (fieldResults2$Sim.Total.kWh + fieldResults2$Measured.Total.kWh) / 2

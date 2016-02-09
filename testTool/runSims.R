@@ -7,12 +7,20 @@ library(foreign)
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
 models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
 
+showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80"),
+                      "nShowers" = c(4, 3, 5))
+
 # Simulate every combination of test and model
 allResults <- do.call('rbind', lapply(tests, function(test) {
   do.call('rbind', lapply(models, function(model) {
     print(paste("Simulating model", model, "test", test))
-    system(paste("./testTool.x", test, model))
-    dset <- read.csv(paste("tests/", test, "/", model, "TestToolOutput.csv", sep = ""))
+    if(test == "DP_SHW50" & model %in% c("GEred", "Voltex60", "Voltex80")) {
+      test2 <- paste(test, showers$nShowers[showers$model == model], sep = "_")
+    } else {
+      test2 <- test
+    }
+    system(paste("./testTool.x", test2, model))
+    dset <- read.csv(paste("tests/", test2, "/", model, "TestToolOutput.csv", sep = ""))
     dset$test <- test
     dset$model <- model
     dset
@@ -106,8 +114,13 @@ cdx("hpwh")
 dirTmp <- "/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/"
 
 sites <- read.dta("../data/site_info.dta")
-dontUse <- c(23860)
+dontUse <- c(23860, 10441, 13438, 23666, 90023, 90051, 90134, 20814, 90069)
+# Reasons to exclude: 1 bad data
+# 2 through 7, flip flop sites w/ forced resistance heat
+# 8 anomalous high user
+# 9 probable airflow problem
 setwd(dirTmp)
+sites <- sites[!(sites$siteid %in% dontUse), ]
 
 fieldResults <- lapply(1:nrow(sites), function(i) {
   siteid <- sites$siteid[i]
