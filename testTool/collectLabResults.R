@@ -82,7 +82,7 @@ allLabResults <- allLabResults[, c("minutes", "test", "model", "flow", "inputPow
 allLabResults$type <- "Measured"
 
 setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
-setwd("Z:/Documents/HPWH/HPWHsim/testTool/")
+# setwd("Z:/Documents/HPWH/HPWHsim/testTool/")
 
 write.csv(file = "HpwhTestTool/allLabResults.csv", allLabResults, row.names = FALSE)
 

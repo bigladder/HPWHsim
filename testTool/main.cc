@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Voltex80;
   } else if(input2 == "GEred" || input2 == "GE") {
     model = HPWH::MODELS_GEGeospring;
+  } else if(input2 == "Sanden" || input2 == "Sanden80") {
+    model = HPWH::MODELS_SandenGAU;
   } else {
     model = HPWH::MODELS_basicIntegrated;
   }

@@ -5,16 +5,49 @@ library(foreign)
 
 
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
-models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
+# seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
+seemTests <- paste("Daily", 1:5, sep = "_")
+tests <- c(tests, seemTests)
+# models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
+models <- c("Voltex60", "Voltex80", "GEred", "Sanden80")
+
+showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80"),
+                      "nShowers" = c(4, 3, 5))
 
 # Simulate every combination of test and model
 allResults <- do.call('rbind', lapply(tests, function(test) {
   do.call('rbind', lapply(models, function(model) {
     print(paste("Simulating model", model, "test", test))
-    system(paste("./testTool.x", test, model))
-    dset <- read.csv(paste("tests/", test, "/", model, "TestToolOutput.csv", sep = ""))
+    if(test == "DP_SHW50" & model %in% c("GEred", "Voltex60", "Voltex80")) {
+      test2 <- paste(test, showers$nShowers[showers$model == model], sep = "_")
+    } else {
+      test2 <- test
+    }
+    # Run the Simulation
+    system(paste("./testTool.x", test2, model))
+    
+    # Read the results
+    dset <- read.csv(paste("tests/", test2, "/", model, "TestToolOutput.csv", sep = ""))
     dset$test <- test
     dset$model <- model
+    
+    # Parse the energy outputs
+    inputVars <- grep("input_kWh", names(dset))
+    if(length(inputVars) > 1) {
+      dset$inputTotal_W <- apply(dset[, inputVars], 1, sum) * 60000
+    } else {
+      dset$inputTotal_W <- dset[, inputVars] * 60000
+    }
+    dset <- dset[, -inputVars]
+    
+    outputVars <- grep("output_kWh", names(dset))
+    if(length(outputVars) > 1) {
+      dset$outputTotal_W <- apply(dset[, outputVars], 1, sum) * 60000
+    } else {
+      dset$outputTotal_W <- dset[, outputVars] * 60000
+    }
+    dset <- dset[, -outputVars]
+    # print(head(dset))
     dset
   }))
 }))
@@ -24,18 +57,18 @@ tempVars <- grep("Tcouple", names(allResults))
 allResults[, tempVars] <- allResults[, tempVars] * 1.8 + 32
 allResults$aveTankTemp <- apply(allResults[, tempVars], 1, mean)
 
-inputVars <- grep("input_kWh", names(allResults))
-if(length(inputVars) > 1) {
-  allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
-} else {
-  allResults$inputTotal_W <- allResults[, inputVars]
-}
-outputVars <- grep("output_kWh", names(allResults))
-if(length(outputVars) > 1) {
-  allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000  
-} else {
-  allResults$outputTotal_W <- allResults[, outputVars]
-}
+# inputVars <- grep("input_kWh", names(allResults))
+# if(length(inputVars) > 1) {
+#   allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
+# } else {
+#   allResults$inputTotal_W <- allResults[, inputVars]
+# }
+# outputVars <- grep("output_kWh", names(allResults))
+# if(length(outputVars) > 1) {
+#   allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000  
+# } else {
+#   allResults$outputTotal_W <- allResults[, outputVars]
+# }
 
 
 allResults[] <- lapply(names(allResults), function(v) {
@@ -60,7 +93,7 @@ allResults$outputPower <- allResults$outputTotal_W
 allResults <- allResults[, c("minutes", "test", "model", "flow", "inputPower", "outputPower",
                              "tcouples1", "tcouples2", "tcouples3",
                              "tcouples4", "tcouples5", "tcouples6",
-                             "aveTankTemp")]
+                             "aveTankTemp", "Ta")]
 allResults$type <- "Simulated"
 
 write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
@@ -106,8 +139,13 @@ cdx("hpwh")
 dirTmp <- "/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/"
 
 sites <- read.dta("../data/site_info.dta")
-dontUse <- c(23860)
+dontUse <- c(23860, 10441, 13438, 23666, 90023, 90051, 90134, 20814, 90069)
+# Reasons to exclude: 1 bad data
+# 2 through 7, flip flop sites w/ forced resistance heat
+# 8 anomalous high user
+# 9 probable airflow problem
 setwd(dirTmp)
+sites <- sites[!(sites$siteid %in% dontUse), ]
 
 fieldResults <- lapply(1:nrow(sites), function(i) {
   siteid <- sites$siteid[i]

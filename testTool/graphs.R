@@ -41,6 +41,6 @@ p <- onePlot("GEred", "DOE_24hr67", c("Thermocouples", "Average Tank Temp", "Inp
 p
 ggsave(file = "graphs/DOE_24hr67_GEred2.png", p, width = 7, height = 5)
 
-p <- onePlot("GEred", "DP_SHW50", c("Thermocouples", "Average Tank Temp", "Input Power"), tmin = 0, tmax = 24)
+p <- onePlot("GEred", "DP_SHW50", c("Thermocouples", "Average Tank Temp", "Input Power"), tmin = 0, tmax = 3)
 p
 ggsave(file = "graphs/DP_SHW50_GEred.png", p, width = 7, height = 5)

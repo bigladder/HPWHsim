@@ -2303,7 +2303,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
    
     //logic conditions
     double compStart = dF_TO_dC(43.6);
-    double lowTcutoff = F_TO_C(40.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(23.8);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -2312,7 +2312,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(25.0));
 
 
     //set everything in its places
@@ -2385,7 +2385,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
    
     //logic conditions
     double compStart = dF_TO_dC(43.6);
-    double lowTcutoff = F_TO_C(40.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(23.8);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -2394,7 +2394,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(36.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(25.0));
 
 
     //set everything in its places
@@ -2471,20 +2471,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //logic conditions
 //    double compStart = dF_TO_dC(24.4);
     double compStart = dF_TO_dC(40.0);
-    double lowTcutoff = F_TO_C(47.0);
-    double standby = dF_TO_dC(7.0);
+    double lowTcutoff = F_TO_C(50.0);
+    double standby = dF_TO_dC(5.2);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
-    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(60));
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(66));
+    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(66));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(65));
     
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     //resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, lowTcutoff);
     //GE element never turns off?
 
     // resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(31.0));
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(27.0));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(28.0));
 
 
     //set everything in its places
@@ -2497,8 +2497,61 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     setOfSources[2].backupHeatSource = &setOfSources[1];
     setOfSources[1].backupHeatSource = &setOfSources[2];
 
-  }
-  else {
+  } else if (presetNum == MODELS_SandenGAU) {
+    numNodes = 96;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = 50;
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = 315; 
+    //tankUA_kJperHrC = 10; //0 to turn off
+    tankUA_kJperHrC = 5.0 * 1.055 * 1.8;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = false;
+
+    numHeatSources = 1;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    compressor.T1_F = 35;
+    compressor.T2_F = 95;
+
+    compressor.inputPower_T1_constant_W = 1.17*1000;
+    compressor.inputPower_T1_linear_WperF = -0.00150*1000;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.0000207*1000;
+    compressor.inputPower_T2_constant_W = 0.81*1000;
+    compressor.inputPower_T2_linear_WperF = -0.00150*1000;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0000202*1000;
+    compressor.COP_T1_constant = 7.1;
+    compressor.COP_T1_linear = -0.0589;
+    compressor.COP_T1_quadratic = 0.000120;
+    compressor.COP_T2_constant = 13.0;
+    compressor.COP_T2_linear = -0.136;
+    compressor.COP_T2_quadratic = 0.000339;
+    compressor.hysteresis_dC = 4;  //no hysteresis
+    compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+    
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 20);
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, 15);
+
+    //lowT cutoff
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, 20);
+
+    compressor.depressesTemperature = false;  //no temp depression
+
+    //set everything in its places
+    setOfSources[0] = compressor;
+  } else {
     if (hpwhVerbosity >= VRB_reluctant) msg("You have tried to select a preset model which does not exist.  \n");
     return HPWH_ABORT;
   }

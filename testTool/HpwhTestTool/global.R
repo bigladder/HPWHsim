@@ -14,6 +14,12 @@ library(ggplot2)
 # 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 
+modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80")
+testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
+# seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
+seemTests <- paste("Daily", 1:5, sep = "_")
+testsToUse <- c(testsToUse, seemTests)
+
 
 allSimResults <- read.csv("allResults.csv")
 allLabResults <- read.csv("allLabResults.csv")
@@ -22,17 +28,20 @@ fieldResults <- read.csv("fieldResults.csv")
 varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
                                       "tcouples1", "tcouples2", "tcouples3",
                                       "tcouples4", "tcouples5", "tcouples6",
-                                      "aveTankTemp"),
+                                      "aveTankTemp", "Ta"),
                        "units" = c("Gallons", rep("Watts", 2), 
-                                   rep("Fahrenheit", 7)),
+                                   rep("Fahrenheit", 8)),
                        "category" = c("Draw", "Input Power", "Output Power",
-                                      rep("Thermocouples", 6), "Average Tank Temp"))
+                                      rep("Thermocouples", 6), "Average Tank Temp",
+                                      "Ambient Temp"))
 
 allSimLong <- reshape2::melt(allSimResults, id.vars = c("minutes", "test", "model", "type"))
 allLabLong <- reshape2::melt(allLabResults, id.vars = c("minutes", "test", "model", "type"))
 
 allLong <- rbind(allSimLong, allLabLong)
 allLong <- merge(allLong, varGuide)
+allLong <- allLong[allLong$model %in% modelsToUse, ]
+allLong <- allLong[allLong$test %in% testsToUse, ]
 
 
 # model <- "Voltex60"
@@ -53,8 +62,8 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   
 #   c("Thermocouples", "Average Tank Temp",
 #     "Draw", "Input Power", "Output Power")
-  lineVars <- data.frame("vname" = c("aveTankTemp", "flow", "inputPower"),
-                         "var" = c("Average Tank Temp", "Draw", "Input Power"))
+  lineVars <- data.frame("vname" = c("aveTankTemp", "flow", "inputPower", "Ta"),
+                         "var" = c("Average Tank Temp", "Draw", "Input Power", "Ambient Temp"))
   lineVars <- lineVars[lineVars$var %in% vars, ]
 
   dset$colourVar <- paste(dset$type, dset$category)
@@ -112,7 +121,7 @@ fieldPlot <- function(model) {
     geom_point(aes(Measured, Sim, col = heatSource)) +
     geom_smooth(aes(Measured, Sim, col = heatSource), method = "lm") +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-    facet_wrap(~heatSource, nrow = 2, scales = "free_x") +
+    facet_wrap(~heatSource, nrow = 2, scales = "free") +
     xlab("Measured kWh / Day") + ylab("Simulated kWh / Day")
   
 #   means <- (fieldResults2$Sim.Total.kWh + fieldResults2$Measured.Total.kWh) / 2
