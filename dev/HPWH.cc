@@ -11,8 +11,9 @@ using std::string;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-  simHasFailed(true), isHeating(false), hpwhVerbosity(VRB_silent),
-  messageCallback(NULL), messageCallbackContextPtr(NULL), setOfSources(NULL), tankTemps_C(NULL)
+  simHasFailed(true), isHeating(false), hpwhVerbosity(VRB_silent), 
+  messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
+  setOfSources(NULL), tankTemps_C(NULL)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -1555,8 +1556,6 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
     COP_T2_quadratic = 0;
     configuration = CONFIG_SUBMERGED; //immersed in tank
 
-    depressesTemperature = false;  //no temp depression
-
     typeOfHeatSource = TYPE_resistance;
 }
 
@@ -1609,6 +1608,19 @@ void HPWH::calcDerivedValues(){
     setOfSources[i].lowestNode = lowest;
   }
 
+
+  //heat source ability to depress temp
+  for (int i = 0; i < numHeatSources; i++) {
+    if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+      setOfSources[i].depressesTemperature = true;
+    }
+    else if (setOfSources[i].typeOfHeatSource == TYPE_resistance) {
+      setOfSources[i].depressesTemperature = false;
+    }
+  }
+  
+  
+
 }
 
 int HPWH::checkInputs(){
@@ -1645,9 +1657,9 @@ int HPWH::HPWHinit_file(std::string configFile){
   }
 
   //some variables that will be handy
-  int tempInt, heatsource;
+  int heatsource, sourceNum;
   string tempString, units;
-  double tempDouble;
+  double tempDouble, dblArray[12];
 
   //being file processing, line by line
   string line_s;
@@ -1661,13 +1673,57 @@ int HPWH::HPWHinit_file(std::string configFile){
 
     //grab the first word, and start comparing
     line_ss >> token;
-    if ( token.at(0) == '#' ) {
+    if ( token.at(0) == '#' || line_s.empty()) {
       //if you hit a comment, skip to next line
       continue;
     }
     else if (token == "numNodes") {
       line_ss >> numNodes;
     }
+    else if (token == "volume") {
+      line_ss >> tempDouble >> units;
+      if (units == "gal")  tempDouble = GAL_TO_L(tempDouble);
+      else if (units == "L") ; //do nothing, lol 
+      else {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+        return HPWH_ABORT;
+      }
+      tankVolume_L = tempDouble;
+    }
+    else if (token == "UA") {
+      line_ss >> tempDouble >> units;
+      if (units != "kJperHrC") {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+        return HPWH_ABORT;
+        }
+      tankUA_kJperHrC = tempDouble;
+    }
+    else if (token == "depressTemp") {
+        line_ss >> tempString;
+        if (tempString == "true") {
+          doTempDepression = true;
+        }
+        else if (tempString == "false") {
+          doTempDepression = false;
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+    else if (token == "mixOnDraw") {
+        line_ss >> tempString;
+        if (tempString == "true") {
+          tankMixesOnDraw = true;
+        }
+        else if (tempString == "false") {
+          tankMixesOnDraw = false;
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
     else if (token == "setpoint") {
       line_ss >> tempDouble >> units;
       if (units == "F")  tempDouble = F_TO_C(tempDouble);
@@ -1677,6 +1733,7 @@ int HPWH::HPWHinit_file(std::string configFile){
         return HPWH_ABORT;
       }
       setpoint_C = tempDouble;
+      //tank will be set to setpoint at end of function
     }
     else if (token == "verbosity") {
       line_ss >> token;
@@ -1700,17 +1757,30 @@ int HPWH::HPWHinit_file(std::string configFile){
     else if (token == "numHeatSources") {
       line_ss >> numHeatSources;
       setOfSources = new HeatSource[numHeatSources];
+      for (int i = 0; i < numHeatSources; i++) {
+        setOfSources[i] = HeatSource(this);
+      }
+      
     }
     else if (token == "heatsource") {
+      if (numHeatSources == 0) {
+        msg("You must specify the number of heatsources before setting their properties.  \n");
+        return HPWH_ABORT;
+      }
       line_ss >> heatsource >> token;
       if (token == "isVIP") {
         line_ss >> tempString;
-        if (tempString == "true") {
-          setOfSources[heatsource].isVIP = true;
+        if (tempString == "true")  setOfSources[heatsource].isVIP = true;
+        else if (tempString == "false")  setOfSources[heatsource].isVIP = false;
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
         }
-        else if (tempString == "false") {
-          setOfSources[heatsource].isVIP = false;
-        }
+      }
+      else if (token == "isOn") {
+        line_ss >> tempString;
+        if (tempString == "true")  setOfSources[heatsource].isOn = true;
+        else if (tempString == "false")  setOfSources[heatsource].isOn = false;
         else {
           if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
           return HPWH_ABORT;
@@ -1766,20 +1836,148 @@ int HPWH::HPWHinit_file(std::string configFile){
           return HPWH_ABORT;
         }
       }
+      else if (token == "type") {
+        line_ss >> tempString;
+        if (tempString == "resistor") {
+          setOfSources[heatsource].typeOfHeatSource = TYPE_resistance;
+        }
+        else if (tempString == "compressor") {
+          setOfSources[heatsource].typeOfHeatSource = TYPE_compressor;
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+      else if (token == "coilConfig") {
+        line_ss >> tempString;
+        if (tempString == "wrapped") {
+          setOfSources[heatsource].configuration = HeatSource::CONFIG_WRAPPED;
+        }
+        else if (tempString == "submerged") {
+          setOfSources[heatsource].configuration = HeatSource::CONFIG_SUBMERGED;
+        }
+        else if (tempString == "external") {
+          setOfSources[heatsource].configuration = HeatSource::CONFIG_EXTERNAL;
+        }
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+      }
+      else if (token == "condensity") {
+        line_ss >> dblArray[0] >> dblArray[1] >> dblArray[2] >> dblArray[3] >> dblArray[4] >> dblArray[5] >> dblArray[6] >> dblArray[7] >> dblArray[8] >> dblArray[9] >> dblArray[10] >> dblArray[11];
+        setOfSources[heatsource].setCondensity(dblArray[0], dblArray[1], dblArray[2], dblArray[3], dblArray[4], dblArray[5], dblArray[6], dblArray[7], dblArray[8], dblArray[9], dblArray[10], dblArray[11]);
+      }
+      else if (token == "T1"){
+        line_ss >> tempDouble >> units;
+        if (units == "F")  tempDouble = F_TO_C(tempDouble);
+        else if (units == "C") ; //do nothing, lol 
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+        setOfSources[heatsource].T1_F = tempDouble;
+      }
+      else if (token == "T2"){
+        line_ss >> tempDouble >> units;
+        if (units == "F")  tempDouble = F_TO_C(tempDouble);
+        else if (units == "C") ; //do nothing, lol 
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+        setOfSources[heatsource].T2_F = tempDouble;
+      }
+      else if (token == "inPowT1const"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T1_constant_W = tempDouble;
+      }
+      else if (token == "inPowT1lin"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T1_linear_WperF = tempDouble;
+      }
+      else if (token == "inPowT1quad"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T1_quadratic_WperF2 = tempDouble;
+      }
+      else if (token == "inPowT2const"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T2_constant_W = tempDouble;
+      }
+      else if (token == "inPowT2lin"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T2_linear_WperF = tempDouble;
+      }
+      else if (token == "inPowT2quad"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].inputPower_T2_quadratic_WperF2 = tempDouble;
+      }
+      else if (token == "copT1const"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T1_constant = tempDouble;
+      }
+      else if (token == "copT1lin"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T1_linear = tempDouble;
+      }
+      else if (token == "copT1quad"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T1_quadratic = tempDouble;
+      }
+      else if (token == "copT2const"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T2_constant = tempDouble;
+      }
+      else if (token == "copT2lin"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T2_linear = tempDouble;
+      }
+      else if (token == "copT2quad"){
+        line_ss >> tempDouble;
+        setOfSources[heatsource].COP_T2_quadratic = tempDouble;
+      }
+      else if (token == "hysteresis"){
+        line_ss >> tempDouble >> units;
+        if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
+        else if (units == "C") ; //do nothing, lol 
+        else {
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+          return HPWH_ABORT;
+        }
+        setOfSources[heatsource].hysteresis_dC = tempDouble;
+      }
+      else if (token == "backupSource"){
+        line_ss >> sourceNum;
+        setOfSources[heatsource].backupHeatSource = &setOfSources[sourceNum];
+      }
       else {
         if (hpwhVerbosity >= VRB_reluctant)  msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
       }
       
     } //end heatsource options
-    
+    else {
+      msg("Improper keyword: %s  \n", token.c_str());
+      return HPWH_ABORT;
+      }
 
-    cout << "endline" << endl;
+    //cout << "endline: " << token << endl;
 
-      
+
   } //end while over lines
  
 
 
+  //take care of the non-input processing
+  tankTemps_C = new double[numNodes];
+  resetTankToSetpoint();
+
+  isHeating = false;
+  for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+  
+  calcDerivedValues();
+
+  if(checkInputs() == HPWH_ABORT) return HPWH_ABORT;
   simHasFailed = false;
   return 0;
 }
@@ -1977,7 +2175,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //lowT cutoff
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, 0);
 
-    compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
     setOfSources[0] = resistiveElementTop;
@@ -2043,7 +2240,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //lowT cutoff
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, 20);
 
-    compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
     setOfSources[0] = compressor;
@@ -2096,8 +2292,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_quadratic = 0.0000407;
     compressor.hysteresis_dC = dF_TO_dC(4); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
-    compressor.depressesTemperature = true;
-    //true for compressors, however tempDepression is turned off so it won't depress
 
     //top resistor values
     resistiveElementTop.setupAsResistiveElement(8, 4250);
@@ -2179,8 +2373,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_quadratic = 0.0000407;
     compressor.hysteresis_dC = dF_TO_dC(4);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
-    compressor.depressesTemperature = true;
-    //true for compressors, however tempDepression is turned off so it won't depress
 
     //top resistor values
     resistiveElementTop.setupAsResistiveElement(8, 4250);
@@ -2266,8 +2458,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_quadratic = 0.0;
     compressor.hysteresis_dC = dF_TO_dC(4);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
-    compressor.depressesTemperature = true;
-    //true for compressors, however tempDepression is turned off so it won't depress
 
     //top resistor values
     resistiveElementTop.setupAsResistiveElement(8, 4200);

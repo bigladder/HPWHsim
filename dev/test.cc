@@ -27,12 +27,12 @@ HPWH hpwh;
 int initReturn = 0;
 
 
-
+//hpwh.setVerbosity(HPWH::VRB_emetic);
 
 hpwh.HPWHinit_file("testInput.txt");
 
 
-return(0);
+//return(0);
 
 
 //initReturn = hpwh.HPWHinit_presets(1);
@@ -230,17 +230,17 @@ return(0);
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-hpwh.setVerbosity(HPWH::VRB_reluctant);
+//hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankRealistic);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_externalTest);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_basicIntegrated);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex80);
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
