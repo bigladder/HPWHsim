@@ -5,7 +5,11 @@ library(foreign)
 
 
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
-models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
+# seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
+seemTests <- paste("Daily", 1:5, sep = "_")
+tests <- c(tests, seemTests)
+# models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
+models <- c("Voltex60", "Voltex80", "GEred", "Sanden80")
 
 showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80"),
                       "nShowers" = c(4, 3, 5))
@@ -19,10 +23,31 @@ allResults <- do.call('rbind', lapply(tests, function(test) {
     } else {
       test2 <- test
     }
+    # Run the Simulation
     system(paste("./testTool.x", test2, model))
+    
+    # Read the results
     dset <- read.csv(paste("tests/", test2, "/", model, "TestToolOutput.csv", sep = ""))
     dset$test <- test
     dset$model <- model
+    
+    # Parse the energy outputs
+    inputVars <- grep("input_kWh", names(dset))
+    if(length(inputVars) > 1) {
+      dset$inputTotal_W <- apply(dset[, inputVars], 1, sum) * 60000
+    } else {
+      dset$inputTotal_W <- dset[, inputVars] * 60000
+    }
+    dset <- dset[, -inputVars]
+    
+    outputVars <- grep("output_kWh", names(dset))
+    if(length(outputVars) > 1) {
+      dset$outputTotal_W <- apply(dset[, outputVars], 1, sum) * 60000
+    } else {
+      dset$outputTotal_W <- dset[, outputVars] * 60000
+    }
+    dset <- dset[, -outputVars]
+    # print(head(dset))
     dset
   }))
 }))
@@ -32,18 +57,18 @@ tempVars <- grep("Tcouple", names(allResults))
 allResults[, tempVars] <- allResults[, tempVars] * 1.8 + 32
 allResults$aveTankTemp <- apply(allResults[, tempVars], 1, mean)
 
-inputVars <- grep("input_kWh", names(allResults))
-if(length(inputVars) > 1) {
-  allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
-} else {
-  allResults$inputTotal_W <- allResults[, inputVars]
-}
-outputVars <- grep("output_kWh", names(allResults))
-if(length(outputVars) > 1) {
-  allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000  
-} else {
-  allResults$outputTotal_W <- allResults[, outputVars]
-}
+# inputVars <- grep("input_kWh", names(allResults))
+# if(length(inputVars) > 1) {
+#   allResults$inputTotal_W <- apply(allResults[, inputVars], 1, sum) * 60000
+# } else {
+#   allResults$inputTotal_W <- allResults[, inputVars]
+# }
+# outputVars <- grep("output_kWh", names(allResults))
+# if(length(outputVars) > 1) {
+#   allResults$outputTotal_W <- apply(allResults[, outputVars], 1, sum) * 60000  
+# } else {
+#   allResults$outputTotal_W <- allResults[, outputVars]
+# }
 
 
 allResults[] <- lapply(names(allResults), function(v) {
@@ -68,7 +93,7 @@ allResults$outputPower <- allResults$outputTotal_W
 allResults <- allResults[, c("minutes", "test", "model", "flow", "inputPower", "outputPower",
                              "tcouples1", "tcouples2", "tcouples3",
                              "tcouples4", "tcouples5", "tcouples6",
-                             "aveTankTemp")]
+                             "aveTankTemp", "Ta")]
 allResults$type <- "Simulated"
 
 write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
