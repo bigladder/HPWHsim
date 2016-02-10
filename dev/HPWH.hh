@@ -49,7 +49,10 @@ class HPWH {
     MODELS_Voltex60 = 102,         //this is the Ecotope model for the 60 gallon Voltex HPWH
     MODELS_Voltex80 = 103,         // Voltex 80 gallon tank
 
-    MODELS_GEGeospring = 104      // Original GE
+    MODELS_GEGeospring = 104,      // Original GE
+
+    MODELS_SandenGES = 110,        // Sanden 40 gallon CO2 external heat pump
+    MODELS_SandenGAU = 111         // Sanden 80 gallon CO2 external heat pump
     };
 
   //specifies the modes for writing output
