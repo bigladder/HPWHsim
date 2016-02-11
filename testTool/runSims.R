@@ -9,16 +9,16 @@ tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24
 seemTests <- paste("Daily", 1:5, sep = "_")
 tests <- c(tests, seemTests)
 # models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
-models <- c("Voltex60", "Voltex80", "GEred", "Sanden80")
+models <- c("Voltex60", "Voltex80", "GEred", "Sanden80", "Sanden40")
 
-showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80"),
-                      "nShowers" = c(4, 3, 5))
+showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40"),
+                      "nShowers" = c(4, 3, 55, 8, 5))
 
 # Simulate every combination of test and model
 allResults <- do.call('rbind', lapply(tests, function(test) {
   do.call('rbind', lapply(models, function(model) {
     print(paste("Simulating model", model, "test", test))
-    if(test == "DP_SHW50" & model %in% c("GEred", "Voltex60", "Voltex80")) {
+    if(test == "DP_SHW50" & model %in% c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40")) {
       test2 <- paste(test, showers$nShowers[showers$model == model], sep = "_")
     } else {
       test2 <- test

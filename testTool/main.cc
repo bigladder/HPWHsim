@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_GEGeospring;
   } else if(input2 == "Sanden" || input2 == "Sanden80") {
     model = HPWH::MODELS_SandenGAU;
+  } else if(input2 == "SandenGES" || input2 == "Sanden40") {
+    model = HPWH::MODELS_SandenGES;
   } else {
     model = HPWH::MODELS_basicIntegrated;
   }
@@ -142,6 +144,9 @@ int main(int argc, char *argv[])
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   hpwh.HPWHinit_presets(model);
+  if(model == HPWH::MODELS_SandenGAU || model == HPWH::MODELS_SandenGES) {
+    newSetpoint = 149;
+  }
   if(newSetpoint > 0) {
     hpwh.setSetpoint(newSetpoint, units);
     hpwh.resetTankToSetpoint();

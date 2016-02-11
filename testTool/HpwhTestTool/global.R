@@ -14,7 +14,7 @@ library(ggplot2)
 # 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 
-modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80")
+modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40")
 testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
 seemTests <- paste("Daily", 1:5, sep = "_")
