@@ -145,6 +145,8 @@ class HPWH {
   int WriteCSVRow(FILE* outFILE, const char* preamble = "") const;
   //a couple of function to write the outputs to a file
   //they both will return 0 for success
+  //the preamble should be supplied with a trailing comma, as these functions do
+  //not add one.  Additionally, a newline is written with each call.
 
 
 

@@ -479,8 +479,9 @@ void HPWH::printTankTemps() {
 // public members to write to CSV file
 int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble) const {
   fprintf( outFILE, "%s", preamble);
-  for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-    fprintf( outFILE, ",heatsource%dIn (Wh),heatsource%dOut (Wh)", iHS+1, iHS+1);
+  fprintf( outFILE, "h_src%dIn (Wh),h_src%dOut (Wh)", 1, 1);
+  for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
+    fprintf( outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS+1, iHS+1);
   }
   for (int iTC = 0; iTC < 6; iTC++)  fprintf( outFILE, ",tcouple%d (C)", iTC+1);
   fprintf( outFILE, "\n");
@@ -488,7 +489,9 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble) const {
 }
 int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
   fprintf( outFILE, "%s", preamble);
-  for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+  fprintf( outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput( 0)*1000.,
+                            getNthHeatSourceEnergyOutput( 0)*1000.);
+  for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
       fprintf( outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput( iHS)*1000.,
                             getNthHeatSourceEnergyOutput( iHS)*1000.);
   }
