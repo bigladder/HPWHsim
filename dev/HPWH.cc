@@ -125,6 +125,15 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
                      double tankAmbientT_C, double heatSourceAmbientT_C,
                      DRMODES DRstatus, double minutesPerStep) {
 //returns 0 on successful completion, HPWH_ABORT on failure
+
+  //check for errors
+  if (doTempDepression == true && minutesPerStep != 1) {
+    msg("minutesPerStep must equal one for temperature depression to work.  \n");
+    simHasFailed = true;
+    return HPWH_ABORT;
+  }
+  
+
   if(hpwhVerbosity >= VRB_typical) {
     msg("Beginning runOneStep.  \nTank Temps: ");
     printTankTemps();
@@ -464,6 +473,28 @@ void HPWH::printTankTemps() {
   ss << endl;
 
   msg( ss.str().c_str());
+}
+
+
+// public members to write to CSV file
+int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble) const {
+  fprintf( outFILE, "%s", preamble);
+  for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+    fprintf( outFILE, ",heatsource%dIn (Wh),heatsource%dOut (Wh)", iHS+1, iHS+1);
+  }
+  for (int iTC = 0; iTC < 6; iTC++)  fprintf( outFILE, ",tcouple%d (C)", iTC+1);
+  fprintf( outFILE, "\n");
+  return 0;
+}
+int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
+  fprintf( outFILE, "%s", preamble);
+  for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+      fprintf( outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput( iHS)*1000.,
+                            getNthHeatSourceEnergyOutput( iHS)*1000.);
+  }
+  for (int iTC = 0; iTC < 6; iTC++)  fprintf( outFILE, ",%0.2f", getNthSimTcouple(iTC+1) );
+  fprintf( outFILE, "\n");
+  return 0;
 }
 
 
@@ -1083,15 +1114,6 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
           }
         }
         break;
-        
-      default:
-        hpwh->simHasFailed = true;
-        
-        //debugging message handling
-        if (hpwh->hpwhVerbosity >= VRB_reluctant) {
-          hpwh->msg("You have input an incorrect turnOn logic choice specifier: %d \n", turnOnLogicSet[i].selector);
-        }
-        break;
     }
 
     //quit searching the logics if one of them turns it on
@@ -1173,11 +1195,6 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
           if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom third temp large draw\t");
         }
         break;
-      
-      default:
-        hpwh->simHasFailed = true;
-        if (hpwh->hpwhVerbosity >= VRB_reluctant) hpwh->msg("You have input an incorrect shutOff logic choice specifier.  \n");
-        break;
     }
   }
 
@@ -1237,12 +1254,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
       //Else the heat source is external. Sanden system is only current example
       //capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
       this->runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
-      break;
-      
-    default:
-      hpwh->simHasFailed = true;
-	  input_BTUperHr = 0;  cap_BTUperHr = 0;  runtime_min = 0;
-	  if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("Invalid heat source configuration chosen: %d \n", configuration);
       break;
   }
   
@@ -1626,14 +1637,43 @@ void HPWH::calcDerivedValues(){
 int HPWH::checkInputs(){
   int returnVal = 0;
   //use a returnVal so that all checks are processed and error messages written
+
+  if (numHeatSources <= 0) {
+    msg("You must have at least one HeatSource");
+    returnVal = HPWH_ABORT;
+   }
+  if ((numNodes % 12) != 0) {
+    msg("The number of nodes must be a multiple of 12");
+    returnVal = HPWH_ABORT;
+  }
   
-  //check the heat source type to make sure it has been set
+
+  double condensitySum;
+  //loop through all heat sources to check each for malconfigurations
   for (int i = 0; i < numHeatSources; i++) {
+    //check the heat source type to make sure it has been set
     if (setOfSources[i].typeOfHeatSource == TYPE_none) {
       if (hpwhVerbosity >= VRB_reluctant) msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
       returnVal = HPWH_ABORT;
     }
+    //check to make sure there is at least one onlogic
+    if (setOfSources[i].turnOnLogicSet.size() == 0) {
+      msg("You must specify at least one logic to turn on the element");
+      returnVal = HPWH_ABORT;
+    }
+    //check is condensity sums to 1
+    condensitySum =0;
+    for (int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += setOfSources[i].condensity[j];
+    if (condensitySum != 1) {
+      msg("The condensity for hearsource %d does not sum to 1.  \n", i);
+      returnVal = HPWH_ABORT;
+    }
+    
+  
+    
   }
+
+  
 
   //if there's no failures, return 0
   return returnVal;

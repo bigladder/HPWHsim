@@ -141,6 +141,13 @@ class HPWH {
   void printTankTemps();
   //this prints out all the node temps, kind of nicely formatted
   //does not use verbosity, as it is public and expected to be called only when needed
+  int WriteCSVHeading(FILE* outFILE, const char* preamble = "") const;
+  int WriteCSVRow(FILE* outFILE, const char* preamble = "") const;
+  //a couple of function to write the outputs to a file
+  //they both will return 0 for success
+
+
+
   
   int setSetpoint(double newSetpoint /*default units C*/);
   int setSetpoint(double newSetpoint, UNITS units);
