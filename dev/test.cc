@@ -47,7 +47,7 @@ hpwh.setVerbosity(HPWH::VRB_emetic);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_basicIntegrated);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex80);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
@@ -71,7 +71,7 @@ outFILE = fopen("testOutput.csv", "w");
 hpwh.WriteCSVHeading(outFILE);
 
 
-#define SHORT 
+//#define SHORT 
 
 #ifdef SHORT
 int liters = 20;
@@ -270,10 +270,12 @@ hpwh.WriteCSVRow(outFILE);
 //initReturn = hpwh.HPWHinit_presets(3);
 hpwh.setInletT(0);
 hpwh.setMinutesPerStep(minutes);
-for (int i = 0; i < 1440*365*20; i++) {
-//for (int i = 0; i < 120000000; i++) {
-    //hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
-    hpwh.runOneStep(0, 0, 50, drStatus);
+//for (int i = 0; i < 1440*365*20; i++) {
+for (int i = 0; i < 120000; i++) {
+    hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
+    //hpwh.runOneStep(0, 0, 50, drStatus);
+    hpwh.WriteCSVRow(outFILE);
+
 }
 
 
@@ -281,6 +283,8 @@ for (int i = 0; i < 1440*365*20; i++) {
 
 #endif
 
+
+fclose(outFILE);
 return 0;
 
 }

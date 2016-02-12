@@ -916,7 +916,7 @@ double HPWH::bottomTwelthAvg_C() const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
   :hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL),
-                  hysteresis_dC(0), typeOfHeatSource(TYPE_none) {}
+                  hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none) {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
   hpwh = hSource.hpwh;
@@ -962,6 +962,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;
+  airflowFreedom = hSource.airflowFreedom;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1023,6 +1024,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;
+  airflowFreedom = hSource.airflowFreedom;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1354,21 +1356,18 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
                                   ) / 1000.0);  //1000 converts w to kw
   cap_BTUperHr = cop * input_BTUperHr;
 
+  //here is where the scaling for flow restriction happens
+  //the input power doesn't change, we just scale the cop by a small percentage
+  //that is based on the flow rate.  The equation is a fit to three points,
+  //measured experimentally - 12 percent reduction at 150 cfm, 10 percent at
+  //200, and 0 at 375. Flow is expressed as fraction of full flow.
+  if(airflowFreedom != 1){
+    double airflow = 375*airflowFreedom;
+    cop *= 0.00056*airflow + 0.79;
+  }
   if (hpwh->hpwhVerbosity >= VRB_typical){
     hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n", cop, input_BTUperHr, cap_BTUperHr);
   }
-/*
- *this is unimplemented as yet - possibly it may remain so
- * 
-  //here is where the scaling for flow restriction goes
-  //the input power doesn't change, we just scale the cop by a small percentage
-  //that is based on the ducted flow rate the equation is a fit to three points,
-  //measured experimentally - 12 percent reduction at 150 cfm, 10 percent at
-  //200, and 0 at 375 it's slightly adjust to be equal to 1 at 375
-  if(hpwh->ductingType != 0){
-    cop_interpolated *= 0.00056*hpwh->fanFlow + 0.79;
-  }
-*/
 }
 
 
@@ -1649,6 +1648,7 @@ int HPWH::checkInputs(){
     msg("The number of nodes must be a multiple of 12");
     returnVal = HPWH_ABORT;
   }
+
   
 
   double condensitySum;
@@ -1671,7 +1671,11 @@ int HPWH::checkInputs(){
       msg("The condensity for hearsource %d does not sum to 1.  \n", i);
       returnVal = HPWH_ABORT;
     }
-    
+    //check that air flows are all set properly
+    if (setOfSources[i].airflowFreedom > 1.0 || setOfSources[i].airflowFreedom <= 0.0) {
+      msg("The airflowFreedom must be between 0 and 1 for heatsource %d.  \n", i);
+      returnVal = HPWH_ABORT;
+    }
   
     
   }
@@ -2455,7 +2459,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = F_TO_C(127.0);
-
+ 
     //start tank off at setpoint
     resetTankToSetpoint();
     
@@ -2501,7 +2505,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_quadratic = 0.0;
     compressor.hysteresis_dC = dF_TO_dC(4);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
-
+    
     //top resistor values
     resistiveElementTop.setupAsResistiveElement(8, 4200);
     resistiveElementTop.isVIP = true;

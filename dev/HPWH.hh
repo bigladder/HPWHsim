@@ -313,7 +313,6 @@ class HPWH {
 	// this is the special location temperature that stands in for the the 
 	// ambient temperature if you are doing temp. depression
 
-
   //a couple variables to hold values which are typically inputs
   double member_inletT_C;
   double member_minutesPerStep;
@@ -471,6 +470,12 @@ class HPWH::HeatSource {
 	// whether or not this occurs is a bool in HPWH, but a heat source must 
 	// know if it is capable of contributing to this effect or not
   // NOTE: this only works for 1 minute steps
+  // ALSO:  this is set according the the heat source type, not user-specified
+
+  double airflowFreedom;
+  //airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
+  //cop (not capacity) for cases where the air flow is restricted - typically ducting
+
 
 	COIL_CONFIG configuration; // submerged, wrapped, external
   HEATSOURCE_TYPE typeOfHeatSource;  //compressor, resistance
