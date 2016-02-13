@@ -1,0 +1,545 @@
+\hypertarget{class_h_p_w_h}{\section{H\-P\-W\-H Class Reference}
+\label{class_h_p_w_h}\index{H\-P\-W\-H@{H\-P\-W\-H}}
+}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{class_h_p_w_h_1_1_heat_source}{Heat\-Source}
+\end{DoxyCompactItemize}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} \{ \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107acb6ede5bfedbd26d1e1021c1dfeaaea8}{D\-R\-\_\-\-B\-L\-O\-C\-K} = 0, 
+\hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107a3ad0a53f7db054449c523c96107a820a}{D\-R\-\_\-\-A\-L\-L\-O\-W} = 1, 
+\hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107ac7a7e433da8920f98289ecd6b3246a6a}{D\-R\-\_\-\-E\-N\-G\-A\-G\-E} = 2
+ \}
+\item 
+enum \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{M\-O\-D\-E\-L\-S} \{ \\*
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea62c7e326af23defb19fbf487a2c9d1f6}{M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A} = 1, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea123ddb8a029374e30a61fda34289f851}{M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A} = 2, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae274d4cc32d2834dedd0705018e41c41}{M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic} = 3, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eade72adc9496641aeb59b201b71cbb41c}{M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated} = 4, 
+\\*
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea0f6ca73826370b770293feb6b39b0035}{M\-O\-D\-E\-L\-S\-\_\-external\-Test} = 5, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae13103789d0bd6c0aaea887bcadc3e3c}{M\-O\-D\-E\-L\-S\-\_\-\-Voltex60} = 102, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea43a81e504a36439014268afec64a899d}{M\-O\-D\-E\-L\-S\-\_\-\-Voltex80} = 103, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea6db9981f52f9360905b8bbc8cd13e2bd}{M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring} = 104, 
+\\*
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa4e8a7fab0f9aaec663b88b84f81db22}{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S} = 110, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1}{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U} = 111
+ \}
+\item 
+enum \hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}{V\-E\-R\-B\-O\-S\-I\-T\-Y} \{ \hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca2883a012f3515137cba205b5de85f951}{V\-R\-B\-\_\-silent} = 0, 
+\hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca36d834ce58908601e3b19c2b924c7c3f}{V\-R\-B\-\_\-reluctant} = 1, 
+\hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caaeea8191e4dd9f042e65043dd33be0a6}{V\-R\-B\-\_\-typical} = 2, 
+\hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caf7321f6f365930516c2c642464b030e1}{V\-R\-B\-\_\-emetic} = 3
+ \}
+\item 
+enum \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} \{ \\*
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b}{U\-N\-I\-T\-S\-\_\-\-C}, 
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ae29857fe31daf556397a00d442905a47}{U\-N\-I\-T\-S\-\_\-\-F}, 
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a696f5270fcb832c3786feda6dcc119c4}{U\-N\-I\-T\-S\-\_\-\-K\-W\-H}, 
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb}{U\-N\-I\-T\-S\-\_\-\-B\-T\-U}, 
+\\*
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05}{U\-N\-I\-T\-S\-\_\-\-K\-J}
+ \}
+\item 
+enum \hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E} \{ \hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7}{T\-Y\-P\-E\-\_\-none}, 
+\hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac6415dff065bc877b56329b809a7bb47}{T\-Y\-P\-E\-\_\-resistance}, 
+\hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac55f8b54a5a405acec2cb355c8137c3e}{T\-Y\-P\-E\-\_\-compressor}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_h_p_w_h_a07cd672278715ee61604ae26137d16f7}{H\-P\-W\-H} ()
+\item 
+\hyperlink{class_h_p_w_h_aa28907ae69a5f53e53bb14554c9af73f}{H\-P\-W\-H} (const \hyperlink{class_h_p_w_h}{H\-P\-W\-H} \&hpwh)
+\item 
+\hyperlink{class_h_p_w_h}{H\-P\-W\-H} \& \hyperlink{class_h_p_w_h_a6e231a8737d540f89aeeb028663f65a9}{operator=} (const \hyperlink{class_h_p_w_h}{H\-P\-W\-H} \&hpwh)
+\item 
+\hyperlink{class_h_p_w_h_ad92e11f51e981157e85ac8855269d50a}{$\sim$\-H\-P\-W\-H} ()
+\item 
+int \hyperlink{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}{H\-P\-W\-Hinit\-\_\-presets} (\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{M\-O\-D\-E\-L\-S} preset\-Num)
+\item 
+int \hyperlink{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}{H\-P\-W\-Hinit\-\_\-file} (std\-::string config\-File)
+\item 
+int \hyperlink{class_h_p_w_h_aef8f08c0115787826a64b34897468b45}{run\-One\-Step} (double inlet\-T\-\_\-\-C, double draw\-Volume\-\_\-\-L, double ambient\-T\-\_\-\-C, double external\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} D\-Rstatus, double minutes\-Per\-Step)
+\item 
+int \hyperlink{class_h_p_w_h_a904e3a0f6bdd7eaaeed43839bac779fc}{run\-N\-Steps} (int N, double $\ast$inlet\-T\-\_\-\-C, double $\ast$draw\-Volume\-\_\-\-L, double $\ast$tank\-Ambient\-T\-\_\-\-C, double $\ast$heat\-Source\-Ambient\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} $\ast$D\-Rstatus, double minutes\-Per\-Step)
+\item 
+void \hyperlink{class_h_p_w_h_a7c81dfc13de82ce9ca01300bde0d4b22}{set\-Verbosity} (\hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}{V\-E\-R\-B\-O\-S\-I\-T\-Y} hpwh\-Vrb)
+\item 
+void \hyperlink{class_h_p_w_h_af20440c49f36a44b66b82d16b0b6a74b}{set\-Message\-Callback} (void($\ast$callback\-Func)(const std\-::string message, void $\ast$p\-Context), void $\ast$p\-Context)
+\item 
+void \hyperlink{class_h_p_w_h_a49d923bea7be1ad1ee60c02163bbf6cc}{print\-Heat\-Source\-Info} ()
+\item 
+void \hyperlink{class_h_p_w_h_a59d5b765bf4490be7bd5954a5ab7324e}{print\-Tank\-Temps} ()
+\item 
+\hypertarget{class_h_p_w_h_ac8bced7dc05598df491f907cd895ccaa}{int {\bfseries Write\-C\-S\-V\-Heading} (F\-I\-L\-E $\ast$out\-F\-I\-L\-E, const char $\ast$preamble=\char`\"{}\char`\"{}) const }\label{class_h_p_w_h_ac8bced7dc05598df491f907cd895ccaa}
+
+\item 
+int \hyperlink{class_h_p_w_h_a5652291d663296decd912fe92fb9d4e7}{Write\-C\-S\-V\-Row} (F\-I\-L\-E $\ast$out\-F\-I\-L\-E, const char $\ast$preamble=\char`\"{}\char`\"{}) const 
+\item 
+int \hyperlink{class_h_p_w_h_adb49b5846f9056602de57cb289e0a321}{set\-Setpoint} (double new\-Setpoint)
+\item 
+int \hyperlink{class_h_p_w_h_ab7d91fead271ef907cf13450055cdb06}{set\-Setpoint} (double new\-Setpoint, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units)
+\item 
+int \hyperlink{class_h_p_w_h_aac5af7347053c06dcbc446b44fa3686d}{reset\-Tank\-To\-Setpoint} ()
+\item 
+int \hyperlink{class_h_p_w_h_a38e4f7eb3da82c2281657702fc472b1d}{get\-Num\-Nodes} () const 
+\item 
+double \hyperlink{class_h_p_w_h_a440f55f294a28f9024ce4731f515b802}{get\-Tank\-Node\-Temp} (int node\-Num) const 
+\item 
+double \hyperlink{class_h_p_w_h_afac039cdb5bb3643eb46fdef08a88948}{get\-Tank\-Node\-Temp} (int node\-Num, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+double \hyperlink{class_h_p_w_h_a3fc011d8bc8302e62d45e8fc92d1ce3e}{get\-Nth\-Sim\-Tcouple} (int N) const 
+\item 
+double \hyperlink{class_h_p_w_h_a87a26a59001216562f01eed1a0b877fe}{get\-Nth\-Sim\-Tcouple} (int N, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+int \hyperlink{class_h_p_w_h_a3d41868f9f79e940f59eec10432a1aec}{get\-Num\-Heat\-Sources} () const 
+\item 
+double \hyperlink{class_h_p_w_h_a2c2d3a5cf77dcb66137d9f89d63b46df}{get\-Nth\-Heat\-Source\-Energy\-Input} (int N) const 
+\item 
+double \hyperlink{class_h_p_w_h_a81113be21e2d6704d3a9178393a40cbe}{get\-Nth\-Heat\-Source\-Energy\-Input} (int N, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+double \hyperlink{class_h_p_w_h_ae321e3dc14aab36ae225d49496624153}{get\-Nth\-Heat\-Source\-Energy\-Output} (int N) const 
+\item 
+double \hyperlink{class_h_p_w_h_a2eb42a19d26901e89f33dea5c4b3d6c9}{get\-Nth\-Heat\-Source\-Energy\-Output} (int N, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+double \hyperlink{class_h_p_w_h_add3696333342add793a2aeb5f3433dbd}{get\-Nth\-Heat\-Source\-Run\-Time} (int N) const 
+\item 
+int \hyperlink{class_h_p_w_h_a587a39a680823886348b489e85f243e9}{is\-Nth\-Heat\-Source\-Running} (int N) const 
+\item 
+\hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E} \hyperlink{class_h_p_w_h_a0b5bc1354d20431d5e1f15e2c56ddefa}{get\-Nth\-Heat\-Source\-Type} (int N) const 
+\item 
+\hypertarget{class_h_p_w_h_af16099ea18a8c1c9f6025b7e2fc00e7e}{double {\bfseries get\-Outlet\-Temp} () const }\label{class_h_p_w_h_af16099ea18a8c1c9f6025b7e2fc00e7e}
+
+\item 
+double \hyperlink{class_h_p_w_h_a0b75a215e395f52d60997f9b07d37de7}{get\-Outlet\-Temp} (\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+\hypertarget{class_h_p_w_h_a4ee36fec9eb6e1294ad200aeca2da87f}{double {\bfseries get\-Energy\-Removed\-From\-Environment} () const }\label{class_h_p_w_h_a4ee36fec9eb6e1294ad200aeca2da87f}
+
+\item 
+double \hyperlink{class_h_p_w_h_af58e48e9103fbb5525a251744816cc77}{get\-Energy\-Removed\-From\-Environment} (\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+\hypertarget{class_h_p_w_h_ae615d088a390d0e1db95a196406ba2b4}{double {\bfseries get\-Standby\-Losses} () const }\label{class_h_p_w_h_ae615d088a390d0e1db95a196406ba2b4}
+
+\item 
+double \hyperlink{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}{get\-Standby\-Losses} (\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
+\item 
+int \hyperlink{class_h_p_w_h_a68a687d987105c10a17bac1a94be5224}{run\-One\-Step} (double draw\-Volume\-\_\-\-L, double ambient\-T\-\_\-\-C, double external\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} D\-Rstatus)
+\item 
+void \hyperlink{class_h_p_w_h_a5df4fd4422ba54080f519aaf6375be32}{set\-Inlet\-T} (double new\-Inlet\-T\-\_\-\-C)
+\item 
+\hypertarget{class_h_p_w_h_a5752aa0b3488189c7321c174887f1c31}{void {\bfseries set\-Minutes\-Per\-Step} (double new\-Minutes\-Per\-Step)}\label{class_h_p_w_h_a5752aa0b3488189c7321c174887f1c31}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const int \hyperlink{class_h_p_w_h_a727a9e272cf7ac3564ebd67bfb8ed063}{H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T} = -\/274000
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Enumeration Documentation}
+\hypertarget{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{\index{H\-P\-W\-H@{H\-P\-W\-H}!D\-R\-M\-O\-D\-E\-S@{D\-R\-M\-O\-D\-E\-S}}
+\index{D\-R\-M\-O\-D\-E\-S@{D\-R\-M\-O\-D\-E\-S}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{D\-R\-M\-O\-D\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf H\-P\-W\-H\-::\-D\-R\-M\-O\-D\-E\-S}}}\label{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}
+specifies the various modes for the Demand Response (D\-R) abilities values may vary -\/ names should be used \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{D\-R\-\_\-\-B\-L\-O\-C\-K@{D\-R\-\_\-\-B\-L\-O\-C\-K}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!D\-R\-\_\-\-B\-L\-O\-C\-K@{D\-R\-\_\-\-B\-L\-O\-C\-K}}\item[{\em 
+\hypertarget{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107acb6ede5bfedbd26d1e1021c1dfeaaea8}{D\-R\-\_\-\-B\-L\-O\-C\-K}\label{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107acb6ede5bfedbd26d1e1021c1dfeaaea8}
+}]this mode prohibits the elements from engaging and turns off any currently running \index{D\-R\-\_\-\-A\-L\-L\-O\-W@{D\-R\-\_\-\-A\-L\-L\-O\-W}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!D\-R\-\_\-\-A\-L\-L\-O\-W@{D\-R\-\_\-\-A\-L\-L\-O\-W}}\item[{\em 
+\hypertarget{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107a3ad0a53f7db054449c523c96107a820a}{D\-R\-\_\-\-A\-L\-L\-O\-W}\label{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107a3ad0a53f7db054449c523c96107a820a}
+}]this mode allows the water heater to run normally \index{D\-R\-\_\-\-E\-N\-G\-A\-G\-E@{D\-R\-\_\-\-E\-N\-G\-A\-G\-E}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!D\-R\-\_\-\-E\-N\-G\-A\-G\-E@{D\-R\-\_\-\-E\-N\-G\-A\-G\-E}}\item[{\em 
+\hypertarget{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107ac7a7e433da8920f98289ecd6b3246a6a}{D\-R\-\_\-\-E\-N\-G\-A\-G\-E}\label{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107ac7a7e433da8920f98289ecd6b3246a6a}
+}]this mode forces an element to turn on \end{description}
+\end{Desc}
+\hypertarget{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E@{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E}}
+\index{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E@{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf H\-P\-W\-H\-::\-H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E}}}\label{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}
+specifies the type of heat source \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{T\-Y\-P\-E\-\_\-none@{T\-Y\-P\-E\-\_\-none}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!T\-Y\-P\-E\-\_\-none@{T\-Y\-P\-E\-\_\-none}}\item[{\em 
+\hypertarget{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7}{T\-Y\-P\-E\-\_\-none}\label{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7}
+}]a default to check to make sure it's been set \index{T\-Y\-P\-E\-\_\-resistance@{T\-Y\-P\-E\-\_\-resistance}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!T\-Y\-P\-E\-\_\-resistance@{T\-Y\-P\-E\-\_\-resistance}}\item[{\em 
+\hypertarget{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac6415dff065bc877b56329b809a7bb47}{T\-Y\-P\-E\-\_\-resistance}\label{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac6415dff065bc877b56329b809a7bb47}
+}]a resistance element \index{T\-Y\-P\-E\-\_\-compressor@{T\-Y\-P\-E\-\_\-compressor}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!T\-Y\-P\-E\-\_\-compressor@{T\-Y\-P\-E\-\_\-compressor}}\item[{\em 
+\hypertarget{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac55f8b54a5a405acec2cb355c8137c3e}{T\-Y\-P\-E\-\_\-compressor}\label{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bcac55f8b54a5a405acec2cb355c8137c3e}
+}]a vapor cycle compressor \end{description}
+\end{Desc}
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S@{M\-O\-D\-E\-L\-S}}
+\index{M\-O\-D\-E\-L\-S@{M\-O\-D\-E\-L\-S}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{M\-O\-D\-E\-L\-S}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf H\-P\-W\-H\-::\-M\-O\-D\-E\-L\-S}}}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}
+specifies the allowable preset \hyperlink{class_h_p_w_h}{H\-P\-W\-H} models values may vary -\/ names should be used \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A@{M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A@{M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea62c7e326af23defb19fbf487a2c9d1f6}{M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea62c7e326af23defb19fbf487a2c9d1f6}
+}]a simple resistance tank, but with no tank losses \index{M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A@{M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A@{M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea123ddb8a029374e30a61fda34289f851}{M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea123ddb8a029374e30a61fda34289f851}
+}]a simple resistance tank, but with very large tank losses \index{M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic@{M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic@{M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae274d4cc32d2834dedd0705018e41c41}{M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae274d4cc32d2834dedd0705018e41c41}
+}]a more-\/or-\/less realistic resistance tank \index{M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated@{M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated@{M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eade72adc9496641aeb59b201b71cbb41c}{M\-O\-D\-E\-L\-S\-\_\-basic\-Integrated}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eade72adc9496641aeb59b201b71cbb41c}
+}]a standard integrated \hyperlink{class_h_p_w_h}{H\-P\-W\-H} \index{M\-O\-D\-E\-L\-S\-\_\-external\-Test@{M\-O\-D\-E\-L\-S\-\_\-external\-Test}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-external\-Test@{M\-O\-D\-E\-L\-S\-\_\-external\-Test}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea0f6ca73826370b770293feb6b39b0035}{M\-O\-D\-E\-L\-S\-\_\-external\-Test}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea0f6ca73826370b770293feb6b39b0035}
+}]a single compressor tank, using \char`\"{}external\char`\"{} topology \index{M\-O\-D\-E\-L\-S\-\_\-\-Voltex60@{M\-O\-D\-E\-L\-S\-\_\-\-Voltex60}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Voltex60@{M\-O\-D\-E\-L\-S\-\_\-\-Voltex60}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae13103789d0bd6c0aaea887bcadc3e3c}{M\-O\-D\-E\-L\-S\-\_\-\-Voltex60}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eae13103789d0bd6c0aaea887bcadc3e3c}
+}]this is the Ecotope model for the 60 gallon Voltex \hyperlink{class_h_p_w_h}{H\-P\-W\-H} \index{M\-O\-D\-E\-L\-S\-\_\-\-Voltex80@{M\-O\-D\-E\-L\-S\-\_\-\-Voltex80}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Voltex80@{M\-O\-D\-E\-L\-S\-\_\-\-Voltex80}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea43a81e504a36439014268afec64a899d}{M\-O\-D\-E\-L\-S\-\_\-\-Voltex80}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea43a81e504a36439014268afec64a899d}
+}]Voltex 80 gallon tank \index{M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring@{M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring@{M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea6db9981f52f9360905b8bbc8cd13e2bd}{M\-O\-D\-E\-L\-S\-\_\-\-G\-E\-Geospring}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea6db9981f52f9360905b8bbc8cd13e2bd}
+}]Original G\-E \index{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S@{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S@{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa4e8a7fab0f9aaec663b88b84f81db22}{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-E\-S}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa4e8a7fab0f9aaec663b88b84f81db22}
+}]Sanden 40 gallon C\-O2 external heat pump \index{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U@{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U@{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1}{M\-O\-D\-E\-L\-S\-\_\-\-Sanden\-G\-A\-U}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1}
+}]Sanden 80 gallon C\-O2 external heat pump \end{description}
+\end{Desc}
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S@{U\-N\-I\-T\-S}}
+\index{U\-N\-I\-T\-S@{U\-N\-I\-T\-S}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{U\-N\-I\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf H\-P\-W\-H\-::\-U\-N\-I\-T\-S}}}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{U\-N\-I\-T\-S\-\_\-\-C@{U\-N\-I\-T\-S\-\_\-\-C}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-C@{U\-N\-I\-T\-S\-\_\-\-C}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b}{U\-N\-I\-T\-S\-\_\-\-C}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b}
+}]celsius \index{U\-N\-I\-T\-S\-\_\-\-F@{U\-N\-I\-T\-S\-\_\-\-F}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-F@{U\-N\-I\-T\-S\-\_\-\-F}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ae29857fe31daf556397a00d442905a47}{U\-N\-I\-T\-S\-\_\-\-F}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ae29857fe31daf556397a00d442905a47}
+}]fahrenheit \index{U\-N\-I\-T\-S\-\_\-\-K\-W\-H@{U\-N\-I\-T\-S\-\_\-\-K\-W\-H}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-K\-W\-H@{U\-N\-I\-T\-S\-\_\-\-K\-W\-H}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a696f5270fcb832c3786feda6dcc119c4}{U\-N\-I\-T\-S\-\_\-\-K\-W\-H}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a696f5270fcb832c3786feda6dcc119c4}
+}]kilowatt hours \index{U\-N\-I\-T\-S\-\_\-\-B\-T\-U@{U\-N\-I\-T\-S\-\_\-\-B\-T\-U}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-B\-T\-U@{U\-N\-I\-T\-S\-\_\-\-B\-T\-U}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb}{U\-N\-I\-T\-S\-\_\-\-B\-T\-U}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb}
+}]british thermal units \index{U\-N\-I\-T\-S\-\_\-\-K\-J@{U\-N\-I\-T\-S\-\_\-\-K\-J}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-K\-J@{U\-N\-I\-T\-S\-\_\-\-K\-J}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05}{U\-N\-I\-T\-S\-\_\-\-K\-J}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05}
+}]kilojoules \end{description}
+\end{Desc}
+\hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}{\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-E\-R\-B\-O\-S\-I\-T\-Y@{V\-E\-R\-B\-O\-S\-I\-T\-Y}}
+\index{V\-E\-R\-B\-O\-S\-I\-T\-Y@{V\-E\-R\-B\-O\-S\-I\-T\-Y}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{V\-E\-R\-B\-O\-S\-I\-T\-Y}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf H\-P\-W\-H\-::\-V\-E\-R\-B\-O\-S\-I\-T\-Y}}}\label{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}
+specifies the modes for writing output the specified values are used for $>$= comparisons, so the numerical order is relevant \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{V\-R\-B\-\_\-silent@{V\-R\-B\-\_\-silent}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-R\-B\-\_\-silent@{V\-R\-B\-\_\-silent}}\item[{\em 
+\hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca2883a012f3515137cba205b5de85f951}{V\-R\-B\-\_\-silent}\label{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca2883a012f3515137cba205b5de85f951}
+}]print no outputs \index{V\-R\-B\-\_\-reluctant@{V\-R\-B\-\_\-reluctant}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-R\-B\-\_\-reluctant@{V\-R\-B\-\_\-reluctant}}\item[{\em 
+\hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca36d834ce58908601e3b19c2b924c7c3f}{V\-R\-B\-\_\-reluctant}\label{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673ca36d834ce58908601e3b19c2b924c7c3f}
+}]print only outputs for fatal errors \index{V\-R\-B\-\_\-typical@{V\-R\-B\-\_\-typical}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-R\-B\-\_\-typical@{V\-R\-B\-\_\-typical}}\item[{\em 
+\hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caaeea8191e4dd9f042e65043dd33be0a6}{V\-R\-B\-\_\-typical}\label{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caaeea8191e4dd9f042e65043dd33be0a6}
+}]print some basic debugging info \index{V\-R\-B\-\_\-emetic@{V\-R\-B\-\_\-emetic}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-R\-B\-\_\-emetic@{V\-R\-B\-\_\-emetic}}\item[{\em 
+\hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caf7321f6f365930516c2c642464b030e1}{V\-R\-B\-\_\-emetic}\label{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673caf7321f6f365930516c2c642464b030e1}
+}]print all the things \end{description}
+\end{Desc}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_h_p_w_h_a07cd672278715ee61604ae26137d16f7}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-H@{H\-P\-W\-H}}
+\index{H\-P\-W\-H@{H\-P\-W\-H}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-H}]{\setlength{\rightskip}{0pt plus 5cm}H\-P\-W\-H\-::\-H\-P\-W\-H (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a07cd672278715ee61604ae26137d16f7}
+default constructor \hypertarget{class_h_p_w_h_aa28907ae69a5f53e53bb14554c9af73f}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-H@{H\-P\-W\-H}}
+\index{H\-P\-W\-H@{H\-P\-W\-H}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-H}]{\setlength{\rightskip}{0pt plus 5cm}H\-P\-W\-H\-::\-H\-P\-W\-H (
+\begin{DoxyParamCaption}
+\item[{const {\bf H\-P\-W\-H} \&}]{hpwh}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_aa28907ae69a5f53e53bb14554c9af73f}
+copy constructor \hypertarget{class_h_p_w_h_ad92e11f51e981157e85ac8855269d50a}{\index{H\-P\-W\-H@{H\-P\-W\-H}!$\sim$\-H\-P\-W\-H@{$\sim$\-H\-P\-W\-H}}
+\index{$\sim$\-H\-P\-W\-H@{$\sim$\-H\-P\-W\-H}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{$\sim$\-H\-P\-W\-H}]{\setlength{\rightskip}{0pt plus 5cm}H\-P\-W\-H\-::$\sim$\-H\-P\-W\-H (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_ad92e11f51e981157e85ac8855269d50a}
+destructor just a couple dynamic arrays to destroy -\/ could be replaced by vectors eventually? 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_h_p_w_h_af58e48e9103fbb5525a251744816cc77}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Energy\-Removed\-From\-Environment@{get\-Energy\-Removed\-From\-Environment}}
+\index{get\-Energy\-Removed\-From\-Environment@{get\-Energy\-Removed\-From\-Environment}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Energy\-Removed\-From\-Environment}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Energy\-Removed\-From\-Environment (
+\begin{DoxyParamCaption}
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_af58e48e9103fbb5525a251744816cc77}
+get the total energy removed from the environment by all heat sources in specified units (not net energy -\/ does not include standby) moving heat from the space to the water is the positive direction returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect units \hypertarget{class_h_p_w_h_a2c2d3a5cf77dcb66137d9f89d63b46df}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Energy\-Input@{get\-Nth\-Heat\-Source\-Energy\-Input}}
+\index{get\-Nth\-Heat\-Source\-Energy\-Input@{get\-Nth\-Heat\-Source\-Energy\-Input}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Energy\-Input}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Energy\-Input (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a2c2d3a5cf77dcb66137d9f89d63b46df}
+
+\begin{DoxyParams}{Parameters}
+{\em N} & default units k\-Wh \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_h_p_w_h_a81113be21e2d6704d3a9178393a40cbe}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Energy\-Input@{get\-Nth\-Heat\-Source\-Energy\-Input}}
+\index{get\-Nth\-Heat\-Source\-Energy\-Input@{get\-Nth\-Heat\-Source\-Energy\-Input}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Energy\-Input}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Energy\-Input (
+\begin{DoxyParamCaption}
+\item[{int}]{N, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a81113be21e2d6704d3a9178393a40cbe}
+returns the energy input to the Nth heat source, with the specified units energy used by the heat source is positive -\/ should always be positive returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds or incorrect units \hypertarget{class_h_p_w_h_ae321e3dc14aab36ae225d49496624153}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Energy\-Output@{get\-Nth\-Heat\-Source\-Energy\-Output}}
+\index{get\-Nth\-Heat\-Source\-Energy\-Output@{get\-Nth\-Heat\-Source\-Energy\-Output}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Energy\-Output}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Energy\-Output (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_ae321e3dc14aab36ae225d49496624153}
+
+\begin{DoxyParams}{Parameters}
+{\em N} & default units k\-Wh \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_h_p_w_h_a2eb42a19d26901e89f33dea5c4b3d6c9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Energy\-Output@{get\-Nth\-Heat\-Source\-Energy\-Output}}
+\index{get\-Nth\-Heat\-Source\-Energy\-Output@{get\-Nth\-Heat\-Source\-Energy\-Output}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Energy\-Output}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Energy\-Output (
+\begin{DoxyParamCaption}
+\item[{int}]{N, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a2eb42a19d26901e89f33dea5c4b3d6c9}
+returns the energy output from the Nth heat source, with the specified units energy put into the water is positive -\/ should always be positive returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds or incorrect units \hypertarget{class_h_p_w_h_add3696333342add793a2aeb5f3433dbd}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Run\-Time@{get\-Nth\-Heat\-Source\-Run\-Time}}
+\index{get\-Nth\-Heat\-Source\-Run\-Time@{get\-Nth\-Heat\-Source\-Run\-Time}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Run\-Time}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Run\-Time (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_add3696333342add793a2aeb5f3433dbd}
+returns the run time for the Nth heat source, in minutes note\-: they may sum to more than 1 time step for concurrently running heat sources returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds \hypertarget{class_h_p_w_h_a0b5bc1354d20431d5e1f15e2c56ddefa}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Heat\-Source\-Type@{get\-Nth\-Heat\-Source\-Type}}
+\index{get\-Nth\-Heat\-Source\-Type@{get\-Nth\-Heat\-Source\-Type}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Heat\-Source\-Type}]{\setlength{\rightskip}{0pt plus 5cm}{\bf H\-P\-W\-H\-::\-H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E} H\-P\-W\-H\-::get\-Nth\-Heat\-Source\-Type (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a0b5bc1354d20431d5e1f15e2c56ddefa}
+returns the enum value for what type of heat source the Nth heat source is \hypertarget{class_h_p_w_h_a3fc011d8bc8302e62d45e8fc92d1ce3e}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Sim\-Tcouple@{get\-Nth\-Sim\-Tcouple}}
+\index{get\-Nth\-Sim\-Tcouple@{get\-Nth\-Sim\-Tcouple}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Sim\-Tcouple}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Sim\-Tcouple (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a3fc011d8bc8302e62d45e8fc92d1ce3e}
+
+\begin{DoxyParams}{Parameters}
+{\em N} & default units C \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_h_p_w_h_a87a26a59001216562f01eed1a0b877fe}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Nth\-Sim\-Tcouple@{get\-Nth\-Sim\-Tcouple}}
+\index{get\-Nth\-Sim\-Tcouple@{get\-Nth\-Sim\-Tcouple}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Nth\-Sim\-Tcouple}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Nth\-Sim\-Tcouple (
+\begin{DoxyParamCaption}
+\item[{int}]{N, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a87a26a59001216562f01eed1a0b877fe}
+returns the temperature from a set of 6 virtual \char`\"{}thermocouples\char`\"{}, which are constructed from the node temperature array. Specify t-\/couple from 1-\/6, 1 at the bottom using specified units returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N $<$ 0, $>$ 6, or incorrect units \hypertarget{class_h_p_w_h_a3d41868f9f79e940f59eec10432a1aec}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Num\-Heat\-Sources@{get\-Num\-Heat\-Sources}}
+\index{get\-Num\-Heat\-Sources@{get\-Num\-Heat\-Sources}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Num\-Heat\-Sources}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::get\-Num\-Heat\-Sources (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a3d41868f9f79e940f59eec10432a1aec}
+returns the number of heat sources \hypertarget{class_h_p_w_h_a38e4f7eb3da82c2281657702fc472b1d}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Num\-Nodes@{get\-Num\-Nodes}}
+\index{get\-Num\-Nodes@{get\-Num\-Nodes}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Num\-Nodes}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::get\-Num\-Nodes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a38e4f7eb3da82c2281657702fc472b1d}
+returns the number of nodes \hypertarget{class_h_p_w_h_a0b75a215e395f52d60997f9b07d37de7}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Outlet\-Temp@{get\-Outlet\-Temp}}
+\index{get\-Outlet\-Temp@{get\-Outlet\-Temp}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Outlet\-Temp}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Outlet\-Temp (
+\begin{DoxyParamCaption}
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a0b75a215e395f52d60997f9b07d37de7}
+returns the outlet temperature in the specified units returns 0 when no draw occurs, or H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect unit specifier \hypertarget{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Standby\-Losses@{get\-Standby\-Losses}}
+\index{get\-Standby\-Losses@{get\-Standby\-Losses}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Standby\-Losses}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Standby\-Losses (
+\begin{DoxyParamCaption}
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}
+get the amount of heat lost through the tank in specified units moving heat from the water to the space is the positive direction negative should occur seldom returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect units \hypertarget{class_h_p_w_h_a440f55f294a28f9024ce4731f515b802}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}}
+\index{get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Tank\-Node\-Temp}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Tank\-Node\-Temp (
+\begin{DoxyParamCaption}
+\item[{int}]{node\-Num}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a440f55f294a28f9024ce4731f515b802}
+
+\begin{DoxyParams}{Parameters}
+{\em node\-Num} & default units C \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_h_p_w_h_afac039cdb5bb3643eb46fdef08a88948}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}}
+\index{get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Tank\-Node\-Temp}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Tank\-Node\-Temp (
+\begin{DoxyParamCaption}
+\item[{int}]{node\-Num, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_afac039cdb5bb3643eb46fdef08a88948}
+returns the temperature of the water at the specified node -\/ with specified units or H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect node number or unit failure \hypertarget{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-file@{H\-P\-W\-Hinit\-\_\-file}}
+\index{H\-P\-W\-Hinit\-\_\-file@{H\-P\-W\-Hinit\-\_\-file}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-Hinit\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{std\-::string}]{config\-File}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}
+This function will load in a set of parameters from a file The file name is the input -\/ there should be at most one set of parameters per file This is useful for testing new variations, and for the sort of variability that we typically do when creating S\-E\-E\-M runs Appropriate use of this function can be found in the documentation
+
+The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-presets@{H\-P\-W\-Hinit\-\_\-presets}}
+\index{H\-P\-W\-Hinit\-\_\-presets@{H\-P\-W\-Hinit\-\_\-presets}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-Hinit\-\_\-presets}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-presets (
+\begin{DoxyParamCaption}
+\item[{{\bf M\-O\-D\-E\-L\-S}}]{preset\-Num}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}
+This function will load in a set of parameters that are hardcoded in this function -\/ which particular set of parameters is selected by preset\-Num. This is similar to the way the H\-P\-W\-Hsim currently operates, as used in S\-E\-E\-M, but not quite as versatile. My impression is that this could be a useful input paradigm for C\-S\-E
+
+The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_a587a39a680823886348b489e85f243e9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!is\-Nth\-Heat\-Source\-Running@{is\-Nth\-Heat\-Source\-Running}}
+\index{is\-Nth\-Heat\-Source\-Running@{is\-Nth\-Heat\-Source\-Running}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{is\-Nth\-Heat\-Source\-Running}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::is\-Nth\-Heat\-Source\-Running (
+\begin{DoxyParamCaption}
+\item[{int}]{N}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a587a39a680823886348b489e85f243e9}
+returns 1 if the Nth heat source is currently engaged, 0 if it is not, and returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds \hypertarget{class_h_p_w_h_a6e231a8737d540f89aeeb028663f65a9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!operator=@{operator=}}
+\index{operator=@{operator=}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{operator=}]{\setlength{\rightskip}{0pt plus 5cm}{\bf H\-P\-W\-H} \& H\-P\-W\-H\-::operator= (
+\begin{DoxyParamCaption}
+\item[{const {\bf H\-P\-W\-H} \&}]{hpwh}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a6e231a8737d540f89aeeb028663f65a9}
+assignment operator \hypertarget{class_h_p_w_h_a49d923bea7be1ad1ee60c02163bbf6cc}{\index{H\-P\-W\-H@{H\-P\-W\-H}!print\-Heat\-Source\-Info@{print\-Heat\-Source\-Info}}
+\index{print\-Heat\-Source\-Info@{print\-Heat\-Source\-Info}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{print\-Heat\-Source\-Info}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::print\-Heat\-Source\-Info (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a49d923bea7be1ad1ee60c02163bbf6cc}
+this prints out the heat source info, nicely formatted specifically input/output energy/power, and runtime will print to cout if message\-Callback pointer is unspecified does not use verbosity, as it is public and expected to be called only when needed \hypertarget{class_h_p_w_h_a59d5b765bf4490be7bd5954a5ab7324e}{\index{H\-P\-W\-H@{H\-P\-W\-H}!print\-Tank\-Temps@{print\-Tank\-Temps}}
+\index{print\-Tank\-Temps@{print\-Tank\-Temps}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{print\-Tank\-Temps}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::print\-Tank\-Temps (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a59d5b765bf4490be7bd5954a5ab7324e}
+this prints out all the node temps, kind of nicely formatted does not use verbosity, as it is public and expected to be called only when needed \hypertarget{class_h_p_w_h_aac5af7347053c06dcbc446b44fa3686d}{\index{H\-P\-W\-H@{H\-P\-W\-H}!reset\-Tank\-To\-Setpoint@{reset\-Tank\-To\-Setpoint}}
+\index{reset\-Tank\-To\-Setpoint@{reset\-Tank\-To\-Setpoint}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{reset\-Tank\-To\-Setpoint}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::reset\-Tank\-To\-Setpoint (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_aac5af7347053c06dcbc446b44fa3686d}
+this function resets the tank temperature profile to be completely at setpoint The return value is 0 for successful completion \hypertarget{class_h_p_w_h_a904e3a0f6bdd7eaaeed43839bac779fc}{\index{H\-P\-W\-H@{H\-P\-W\-H}!run\-N\-Steps@{run\-N\-Steps}}
+\index{run\-N\-Steps@{run\-N\-Steps}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{run\-N\-Steps}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::run\-N\-Steps (
+\begin{DoxyParamCaption}
+\item[{int}]{N, }
+\item[{double $\ast$}]{inlet\-T\-\_\-\-C, }
+\item[{double $\ast$}]{draw\-Volume\-\_\-\-L, }
+\item[{double $\ast$}]{tank\-Ambient\-T\-\_\-\-C, }
+\item[{double $\ast$}]{heat\-Source\-Ambient\-T\-\_\-\-C, }
+\item[{{\bf D\-R\-M\-O\-D\-E\-S} $\ast$}]{D\-Rstatus, }
+\item[{double}]{minutes\-Per\-Step}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a904e3a0f6bdd7eaaeed43839bac779fc}
+This function will progress the simulation forward in time by N (equal) steps The calculated values will be summed or averaged, as appropriate, and then stored in the usual variables to be accessed through functions
+
+The return value is 0 for successful simulation run, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_aef8f08c0115787826a64b34897468b45}{\index{H\-P\-W\-H@{H\-P\-W\-H}!run\-One\-Step@{run\-One\-Step}}
+\index{run\-One\-Step@{run\-One\-Step}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{run\-One\-Step}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::run\-One\-Step (
+\begin{DoxyParamCaption}
+\item[{double}]{inlet\-T\-\_\-\-C, }
+\item[{double}]{draw\-Volume\-\_\-\-L, }
+\item[{double}]{ambient\-T\-\_\-\-C, }
+\item[{double}]{external\-T\-\_\-\-C, }
+\item[{{\bf D\-R\-M\-O\-D\-E\-S}}]{D\-Rstatus, }
+\item[{double}]{minutes\-Per\-Step}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_aef8f08c0115787826a64b34897468b45}
+This function will progress the simulation forward in time by one step all calculated outputs are stored in private variables and accessed through functions
+
+The return value is 0 for successful simulation run, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_a68a687d987105c10a17bac1a94be5224}{\index{H\-P\-W\-H@{H\-P\-W\-H}!run\-One\-Step@{run\-One\-Step}}
+\index{run\-One\-Step@{run\-One\-Step}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{run\-One\-Step}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::run\-One\-Step (
+\begin{DoxyParamCaption}
+\item[{double}]{draw\-Volume\-\_\-\-L, }
+\item[{double}]{ambient\-T\-\_\-\-C, }
+\item[{double}]{external\-T\-\_\-\-C, }
+\item[{{\bf D\-R\-M\-O\-D\-E\-S}}]{D\-Rstatus}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_h_p_w_h_a68a687d987105c10a17bac1a94be5224}
+An overloaded function that uses some member variables, instead of taking them as inputs \hypertarget{class_h_p_w_h_a5df4fd4422ba54080f519aaf6375be32}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Inlet\-T@{set\-Inlet\-T}}
+\index{set\-Inlet\-T@{set\-Inlet\-T}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-Inlet\-T}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::set\-Inlet\-T (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-Inlet\-T\-\_\-\-C}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{class_h_p_w_h_a5df4fd4422ba54080f519aaf6375be32}
+Setters for the what are typically input variables \hypertarget{class_h_p_w_h_af20440c49f36a44b66b82d16b0b6a74b}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Message\-Callback@{set\-Message\-Callback}}
+\index{set\-Message\-Callback@{set\-Message\-Callback}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-Message\-Callback}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::set\-Message\-Callback (
+\begin{DoxyParamCaption}
+\item[{void($\ast$)(const std\-::string message, void $\ast$p\-Context)}]{callback\-Func, }
+\item[{void $\ast$}]{p\-Context}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_af20440c49f36a44b66b82d16b0b6a74b}
+sets the function to be used for message passing \hypertarget{class_h_p_w_h_adb49b5846f9056602de57cb289e0a321}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Setpoint@{set\-Setpoint}}
+\index{set\-Setpoint@{set\-Setpoint}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-Setpoint}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::set\-Setpoint (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-Setpoint}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_adb49b5846f9056602de57cb289e0a321}
+
+\begin{DoxyParams}{Parameters}
+{\em new\-Setpoint} & default units C \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_h_p_w_h_ab7d91fead271ef907cf13450055cdb06}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Setpoint@{set\-Setpoint}}
+\index{set\-Setpoint@{set\-Setpoint}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-Setpoint}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::set\-Setpoint (
+\begin{DoxyParamCaption}
+\item[{double}]{new\-Setpoint, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_ab7d91fead271ef907cf13450055cdb06}
+a function to change the setpoint -\/ useful for dynamically setting it The return value is 0 for successful setting, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for units failure \hypertarget{class_h_p_w_h_a7c81dfc13de82ce9ca01300bde0d4b22}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Verbosity@{set\-Verbosity}}
+\index{set\-Verbosity@{set\-Verbosity}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-Verbosity}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::set\-Verbosity (
+\begin{DoxyParamCaption}
+\item[{{\bf V\-E\-R\-B\-O\-S\-I\-T\-Y}}]{hpwh\-Vrb}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a7c81dfc13de82ce9ca01300bde0d4b22}
+sets the verbosity to the specified level \hypertarget{class_h_p_w_h_a5652291d663296decd912fe92fb9d4e7}{\index{H\-P\-W\-H@{H\-P\-W\-H}!Write\-C\-S\-V\-Row@{Write\-C\-S\-V\-Row}}
+\index{Write\-C\-S\-V\-Row@{Write\-C\-S\-V\-Row}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{Write\-C\-S\-V\-Row}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-Write\-C\-S\-V\-Row (
+\begin{DoxyParamCaption}
+\item[{F\-I\-L\-E $\ast$}]{out\-F\-I\-L\-E, }
+\item[{const char $\ast$}]{preamble = {\ttfamily \char`\"{}\char`\"{}}}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a5652291d663296decd912fe92fb9d4e7}
+a couple of function to write the outputs to a file they both will return 0 for success the preamble should be supplied with a trailing comma, as these functions do not add one. Additionally, a newline is written with each call. 
+
+\subsection{Member Data Documentation}
+\hypertarget{class_h_p_w_h_a727a9e272cf7ac3564ebd67bfb8ed063}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T@{H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T}}
+\index{H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T@{H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T}]{\setlength{\rightskip}{0pt plus 5cm}const int H\-P\-W\-H\-::\-H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T = -\/274000\hspace{0.3cm}{\ttfamily [static]}}}\label{class_h_p_w_h_a727a9e272cf7ac3564ebd67bfb8ed063}
+this is the value that the public functions will return in case of a simulation destroying error 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+/home/nkvaltine/nkvaltine/\-Projects/\-H\-P\-W\-Hsim/dev/H\-P\-W\-H.\-hh\item 
+/home/nkvaltine/nkvaltine/\-Projects/\-H\-P\-W\-Hsim/dev/H\-P\-W\-H.\-cc\end{DoxyCompactItemize}

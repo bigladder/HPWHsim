@@ -1,0 +1,131 @@
+\hypertarget{class_h_p_w_h_1_1_heat_source}{\section{H\-P\-W\-H\-:\-:Heat\-Source Class Reference}
+\label{class_h_p_w_h_1_1_heat_source}\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}}
+}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_h_p_w_h_1_1_heat_source_a6b2b891c698174c8ed85f10f7b935cd4}{Heat\-Source} (\hyperlink{class_h_p_w_h}{H\-P\-W\-H} $\ast$parent\-H\-P\-W\-H)
+\item 
+\hypertarget{class_h_p_w_h_1_1_heat_source_a49a0d217365e1fbbf4865a9c8dc1f658}{{\bfseries Heat\-Source} (const \hyperlink{class_h_p_w_h_1_1_heat_source}{Heat\-Source} \&h\-Source)}\label{class_h_p_w_h_1_1_heat_source_a49a0d217365e1fbbf4865a9c8dc1f658}
+
+\item 
+\hypertarget{class_h_p_w_h_1_1_heat_source_a4882ea32f0fca3b0b3f2f739f0ad4f9e}{\hyperlink{class_h_p_w_h_1_1_heat_source}{Heat\-Source} \& \hyperlink{class_h_p_w_h_1_1_heat_source_a4882ea32f0fca3b0b3f2f739f0ad4f9e}{operator=} (const \hyperlink{class_h_p_w_h_1_1_heat_source}{Heat\-Source} \&h\-Source)}\label{class_h_p_w_h_1_1_heat_source_a4882ea32f0fca3b0b3f2f739f0ad4f9e}
+
+\begin{DoxyCompactList}\small\item\em copy constructor \end{DoxyCompactList}\item 
+void \hyperlink{class_h_p_w_h_1_1_heat_source_abc4bca8cd776b2d3fe82e5ed4ee679a5}{setup\-As\-Resistive\-Element} (int node, double Watts)
+\begin{DoxyCompactList}\small\item\em assignment operator \end{DoxyCompactList}\item 
+bool \hyperlink{class_h_p_w_h_1_1_heat_source_a0c06eacf6cb6812126674dd3f646be61}{is\-Engaged} () const 
+\item 
+void \hyperlink{class_h_p_w_h_1_1_heat_source_a39cfd8ab58d7bdf0aa6d40d4fa9c2f03}{engage\-Heat\-Source} (double heat\-Source\-Ambient\-T\-\_\-\-C)
+\item 
+void \hyperlink{class_h_p_w_h_1_1_heat_source_af04d8398bdc78e0eea8e06496b2cd174}{disengage\-Heat\-Source} ()
+\item 
+bool \hyperlink{class_h_p_w_h_1_1_heat_source_ac60987b0b6c963c08d5a5fe34e8232e9}{should\-Heat} (double heat\-Source\-Ambient\-T\-\_\-\-C) const 
+\item 
+bool \hyperlink{class_h_p_w_h_1_1_heat_source_a1e2ca52b1de7c4bc660a9222bec44163}{shuts\-Off} (double heat\-Source\-Ambient\-T\-\_\-\-C) const 
+\item 
+\hypertarget{class_h_p_w_h_1_1_heat_source_ae17b2ad3d73e7dd833f6575936dfabd8}{void {\bfseries add\-Heat\-\_\-temp} (double external\-T\-\_\-\-C, double minutes\-Per\-Step)}\label{class_h_p_w_h_1_1_heat_source_ae17b2ad3d73e7dd833f6575936dfabd8}
+
+\item 
+void \hyperlink{class_h_p_w_h_1_1_heat_source_a75908e3dfbce9d6836719733225418f3}{add\-Heat} (double external\-T\-\_\-\-C, double minutes\-To\-Run)
+\item 
+void \hyperlink{class_h_p_w_h_1_1_heat_source_a9953690abd78b326db6a03b2d028bb1b}{set\-Condensity} (double cnd1, double cnd2, double cnd3, double cnd4, double cnd5, double cnd6, double cnd7, double cnd8, double cnd9, double cnd10, double cnd11, double cnd12)
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_h_p_w_h_1_1_heat_source_a47b61ec8aa0058a6a95d9f87212cec07}{class {\bfseries H\-P\-W\-H}}\label{class_h_p_w_h_1_1_heat_source_a47b61ec8aa0058a6a95d9f87212cec07}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_h_p_w_h_1_1_heat_source_a6b2b891c698174c8ed85f10f7b935cd4}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!Heat\-Source@{Heat\-Source}}
+\index{Heat\-Source@{Heat\-Source}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{Heat\-Source}]{\setlength{\rightskip}{0pt plus 5cm}H\-P\-W\-H\-::\-Heat\-Source\-::\-Heat\-Source (
+\begin{DoxyParamCaption}
+\item[{{\bf H\-P\-W\-H} $\ast$}]{parent\-H\-P\-W\-H}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_a6b2b891c698174c8ed85f10f7b935cd4}
+default constructor, does not create a useful \hyperlink{class_h_p_w_h_1_1_heat_source}{Heat\-Source} constructor assigns a pointer to the hpwh that owns this heat source 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_h_p_w_h_1_1_heat_source_a75908e3dfbce9d6836719733225418f3}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!add\-Heat@{add\-Heat}}
+\index{add\-Heat@{add\-Heat}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{add\-Heat}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::\-Heat\-Source\-::add\-Heat (
+\begin{DoxyParamCaption}
+\item[{double}]{external\-T\-\_\-\-C, }
+\item[{double}]{minutes\-To\-Run}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_a75908e3dfbce9d6836719733225418f3}
+adds heat to the hpwh -\/ this is the function that interprets the various configurations (internal/external, resistance/heat pump) to add heat \hypertarget{class_h_p_w_h_1_1_heat_source_af04d8398bdc78e0eea8e06496b2cd174}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!disengage\-Heat\-Source@{disengage\-Heat\-Source}}
+\index{disengage\-Heat\-Source@{disengage\-Heat\-Source}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{disengage\-Heat\-Source}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::\-Heat\-Source\-::disengage\-Heat\-Source (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_af04d8398bdc78e0eea8e06496b2cd174}
+turn heat source off, i.\-e. set is\-Engaged to F\-A\-L\-S\-E \hypertarget{class_h_p_w_h_1_1_heat_source_a39cfd8ab58d7bdf0aa6d40d4fa9c2f03}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!engage\-Heat\-Source@{engage\-Heat\-Source}}
+\index{engage\-Heat\-Source@{engage\-Heat\-Source}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{engage\-Heat\-Source}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::\-Heat\-Source\-::engage\-Heat\-Source (
+\begin{DoxyParamCaption}
+\item[{double}]{heat\-Source\-Ambient\-T\-\_\-\-C}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_a39cfd8ab58d7bdf0aa6d40d4fa9c2f03}
+turn heat source on, i.\-e. set is\-Engaged to T\-R\-U\-E \hypertarget{class_h_p_w_h_1_1_heat_source_a0c06eacf6cb6812126674dd3f646be61}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!is\-Engaged@{is\-Engaged}}
+\index{is\-Engaged@{is\-Engaged}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{is\-Engaged}]{\setlength{\rightskip}{0pt plus 5cm}bool H\-P\-W\-H\-::\-Heat\-Source\-::is\-Engaged (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_1_1_heat_source_a0c06eacf6cb6812126674dd3f646be61}
+return whether or not the heat source is engaged \hypertarget{class_h_p_w_h_1_1_heat_source_a9953690abd78b326db6a03b2d028bb1b}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!set\-Condensity@{set\-Condensity}}
+\index{set\-Condensity@{set\-Condensity}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{set\-Condensity}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::\-Heat\-Source\-::set\-Condensity (
+\begin{DoxyParamCaption}
+\item[{double}]{cnd1, }
+\item[{double}]{cnd2, }
+\item[{double}]{cnd3, }
+\item[{double}]{cnd4, }
+\item[{double}]{cnd5, }
+\item[{double}]{cnd6, }
+\item[{double}]{cnd7, }
+\item[{double}]{cnd8, }
+\item[{double}]{cnd9, }
+\item[{double}]{cnd10, }
+\item[{double}]{cnd11, }
+\item[{double}]{cnd12}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_a9953690abd78b326db6a03b2d028bb1b}
+a function to set the condensity values, it pretties up the init funcs. \hypertarget{class_h_p_w_h_1_1_heat_source_abc4bca8cd776b2d3fe82e5ed4ee679a5}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!setup\-As\-Resistive\-Element@{setup\-As\-Resistive\-Element}}
+\index{setup\-As\-Resistive\-Element@{setup\-As\-Resistive\-Element}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{setup\-As\-Resistive\-Element}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::\-Heat\-Source\-::setup\-As\-Resistive\-Element (
+\begin{DoxyParamCaption}
+\item[{int}]{node, }
+\item[{double}]{Watts}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_1_1_heat_source_abc4bca8cd776b2d3fe82e5ed4ee679a5}
+
+
+assignment operator 
+
+$<$ the copy constructor and assignment operator basically just checks if there are backup/companion pointers -\/ these can't be copied configure the heat source to be a resisive element, positioned at the specified node, with the specified power in watts \hypertarget{class_h_p_w_h_1_1_heat_source_ac60987b0b6c963c08d5a5fe34e8232e9}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!should\-Heat@{should\-Heat}}
+\index{should\-Heat@{should\-Heat}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{should\-Heat}]{\setlength{\rightskip}{0pt plus 5cm}bool H\-P\-W\-H\-::\-Heat\-Source\-::should\-Heat (
+\begin{DoxyParamCaption}
+\item[{double}]{heat\-Source\-Ambient\-T\-\_\-\-C}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_1_1_heat_source_ac60987b0b6c963c08d5a5fe34e8232e9}
+queries the heat source as to whether or not it should turn on \hypertarget{class_h_p_w_h_1_1_heat_source_a1e2ca52b1de7c4bc660a9222bec44163}{\index{H\-P\-W\-H\-::\-Heat\-Source@{H\-P\-W\-H\-::\-Heat\-Source}!shuts\-Off@{shuts\-Off}}
+\index{shuts\-Off@{shuts\-Off}!HPWH::HeatSource@{H\-P\-W\-H\-::\-Heat\-Source}}
+\subsubsection[{shuts\-Off}]{\setlength{\rightskip}{0pt plus 5cm}bool H\-P\-W\-H\-::\-Heat\-Source\-::shuts\-Off (
+\begin{DoxyParamCaption}
+\item[{double}]{heat\-Source\-Ambient\-T\-\_\-\-C}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_1_1_heat_source_a1e2ca52b1de7c4bc660a9222bec44163}
+queries the heat source whether should shut off (typically low\-T shutoff) 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+/home/nkvaltine/nkvaltine/\-Projects/\-H\-P\-W\-Hsim/dev/H\-P\-W\-H.\-hh\item 
+/home/nkvaltine/nkvaltine/\-Projects/\-H\-P\-W\-Hsim/dev/H\-P\-W\-H.\-cc\end{DoxyCompactItemize}

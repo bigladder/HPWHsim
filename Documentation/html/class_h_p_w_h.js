@@ -1,0 +1,78 @@
+var class_h_p_w_h =
+[
+    [ "HeatSource", "class_h_p_w_h_1_1_heat_source.html", "class_h_p_w_h_1_1_heat_source" ],
+    [ "DRMODES", "class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107", [
+      [ "DR_BLOCK", "class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107acb6ede5bfedbd26d1e1021c1dfeaaea8", null ],
+      [ "DR_ALLOW", "class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107a3ad0a53f7db054449c523c96107a820a", null ],
+      [ "DR_ENGAGE", "class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107ac7a7e433da8920f98289ecd6b3246a6a", null ]
+    ] ],
+    [ "HEATSOURCE_TYPE", "class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bc", [
+      [ "TYPE_none", "class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7", null ],
+      [ "TYPE_resistance", "class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bcac6415dff065bc877b56329b809a7bb47", null ],
+      [ "TYPE_compressor", "class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bcac55f8b54a5a405acec2cb355c8137c3e", null ]
+    ] ],
+    [ "MODELS", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338e", [
+      [ "MODELS_restankNoUA", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea62c7e326af23defb19fbf487a2c9d1f6", null ],
+      [ "MODELS_restankHugeUA", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea123ddb8a029374e30a61fda34289f851", null ],
+      [ "MODELS_restankRealistic", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eae274d4cc32d2834dedd0705018e41c41", null ],
+      [ "MODELS_basicIntegrated", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eade72adc9496641aeb59b201b71cbb41c", null ],
+      [ "MODELS_externalTest", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea0f6ca73826370b770293feb6b39b0035", null ],
+      [ "MODELS_Voltex60", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eae13103789d0bd6c0aaea887bcadc3e3c", null ],
+      [ "MODELS_Voltex80", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea43a81e504a36439014268afec64a899d", null ],
+      [ "MODELS_GEGeospring", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea6db9981f52f9360905b8bbc8cd13e2bd", null ],
+      [ "MODELS_SandenGES", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eaa4e8a7fab0f9aaec663b88b84f81db22", null ],
+      [ "MODELS_SandenGAU", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1", null ]
+    ] ],
+    [ "UNITS", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294", [
+      [ "UNITS_C", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b", null ],
+      [ "UNITS_F", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ae29857fe31daf556397a00d442905a47", null ],
+      [ "UNITS_KWH", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a696f5270fcb832c3786feda6dcc119c4", null ],
+      [ "UNITS_BTU", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb", null ],
+      [ "UNITS_KJ", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05", null ]
+    ] ],
+    [ "VERBOSITY", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673c", [
+      [ "VRB_silent", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673ca2883a012f3515137cba205b5de85f951", null ],
+      [ "VRB_reluctant", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673ca36d834ce58908601e3b19c2b924c7c3f", null ],
+      [ "VRB_typical", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673caaeea8191e4dd9f042e65043dd33be0a6", null ],
+      [ "VRB_emetic", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673caf7321f6f365930516c2c642464b030e1", null ]
+    ] ],
+    [ "HPWH", "class_h_p_w_h.html#a07cd672278715ee61604ae26137d16f7", null ],
+    [ "HPWH", "class_h_p_w_h.html#aa28907ae69a5f53e53bb14554c9af73f", null ],
+    [ "~HPWH", "class_h_p_w_h.html#ad92e11f51e981157e85ac8855269d50a", null ],
+    [ "getEnergyRemovedFromEnvironment", "class_h_p_w_h.html#a4ee36fec9eb6e1294ad200aeca2da87f", null ],
+    [ "getEnergyRemovedFromEnvironment", "class_h_p_w_h.html#af58e48e9103fbb5525a251744816cc77", null ],
+    [ "getNthHeatSourceEnergyInput", "class_h_p_w_h.html#a2c2d3a5cf77dcb66137d9f89d63b46df", null ],
+    [ "getNthHeatSourceEnergyInput", "class_h_p_w_h.html#a81113be21e2d6704d3a9178393a40cbe", null ],
+    [ "getNthHeatSourceEnergyOutput", "class_h_p_w_h.html#ae321e3dc14aab36ae225d49496624153", null ],
+    [ "getNthHeatSourceEnergyOutput", "class_h_p_w_h.html#a2eb42a19d26901e89f33dea5c4b3d6c9", null ],
+    [ "getNthHeatSourceRunTime", "class_h_p_w_h.html#add3696333342add793a2aeb5f3433dbd", null ],
+    [ "getNthHeatSourceType", "class_h_p_w_h.html#a0b5bc1354d20431d5e1f15e2c56ddefa", null ],
+    [ "getNthSimTcouple", "class_h_p_w_h.html#a3fc011d8bc8302e62d45e8fc92d1ce3e", null ],
+    [ "getNthSimTcouple", "class_h_p_w_h.html#a87a26a59001216562f01eed1a0b877fe", null ],
+    [ "getNumHeatSources", "class_h_p_w_h.html#a3d41868f9f79e940f59eec10432a1aec", null ],
+    [ "getNumNodes", "class_h_p_w_h.html#a38e4f7eb3da82c2281657702fc472b1d", null ],
+    [ "getOutletTemp", "class_h_p_w_h.html#af16099ea18a8c1c9f6025b7e2fc00e7e", null ],
+    [ "getOutletTemp", "class_h_p_w_h.html#a0b75a215e395f52d60997f9b07d37de7", null ],
+    [ "getStandbyLosses", "class_h_p_w_h.html#ae615d088a390d0e1db95a196406ba2b4", null ],
+    [ "getStandbyLosses", "class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880", null ],
+    [ "getTankNodeTemp", "class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802", null ],
+    [ "getTankNodeTemp", "class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948", null ],
+    [ "HPWHinit_file", "class_h_p_w_h.html#a348c1c4a90ec1ee5e91c84ab8d3bc5b1", null ],
+    [ "HPWHinit_presets", "class_h_p_w_h.html#a74b3a6c1352adb5d38e7c00ad5952f30", null ],
+    [ "isNthHeatSourceRunning", "class_h_p_w_h.html#a587a39a680823886348b489e85f243e9", null ],
+    [ "operator=", "class_h_p_w_h.html#a6e231a8737d540f89aeeb028663f65a9", null ],
+    [ "printHeatSourceInfo", "class_h_p_w_h.html#a49d923bea7be1ad1ee60c02163bbf6cc", null ],
+    [ "printTankTemps", "class_h_p_w_h.html#a59d5b765bf4490be7bd5954a5ab7324e", null ],
+    [ "resetTankToSetpoint", "class_h_p_w_h.html#aac5af7347053c06dcbc446b44fa3686d", null ],
+    [ "runNSteps", "class_h_p_w_h.html#a904e3a0f6bdd7eaaeed43839bac779fc", null ],
+    [ "runOneStep", "class_h_p_w_h.html#aef8f08c0115787826a64b34897468b45", null ],
+    [ "runOneStep", "class_h_p_w_h.html#a68a687d987105c10a17bac1a94be5224", null ],
+    [ "setInletT", "class_h_p_w_h.html#a5df4fd4422ba54080f519aaf6375be32", null ],
+    [ "setMessageCallback", "class_h_p_w_h.html#af20440c49f36a44b66b82d16b0b6a74b", null ],
+    [ "setMinutesPerStep", "class_h_p_w_h.html#a5752aa0b3488189c7321c174887f1c31", null ],
+    [ "setSetpoint", "class_h_p_w_h.html#adb49b5846f9056602de57cb289e0a321", null ],
+    [ "setSetpoint", "class_h_p_w_h.html#ab7d91fead271ef907cf13450055cdb06", null ],
+    [ "setVerbosity", "class_h_p_w_h.html#a7c81dfc13de82ce9ca01300bde0d4b22", null ],
+    [ "WriteCSVHeading", "class_h_p_w_h.html#ac8bced7dc05598df491f907cd895ccaa", null ],
+    [ "WriteCSVRow", "class_h_p_w_h.html#a5652291d663296decd912fe92fb9d4e7", null ]
+];
