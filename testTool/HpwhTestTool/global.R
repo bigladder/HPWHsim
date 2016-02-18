@@ -23,6 +23,7 @@ testsToUse <- c(testsToUse, seemTests)
 
 allSimResults <- read.csv("allResults.csv")
 allLabResults <- read.csv("allLabResults.csv")
+allChipResults <- read.csv("allChipResults.csv")
 fieldResults <- read.csv("fieldResults.csv")
 
 varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
@@ -37,8 +38,10 @@ varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
 
 allSimLong <- reshape2::melt(allSimResults, id.vars = c("minutes", "test", "model", "type"))
 allLabLong <- reshape2::melt(allLabResults, id.vars = c("minutes", "test", "model", "type"))
+allChipLong <- reshape2::melt(allChipResults, id.vars = c("minutes", "test", "model", "type"))
 
-allLong <- rbind(allSimLong, allLabLong)
+allLong <- rbind(allSimLong, allLabLong, allChipLong)
+rm(allSimLong, allLabLong, allChipLong)
 allLong <- merge(allLong, varGuide)
 allLong <- allLong[allLong$model %in% modelsToUse, ]
 allLong <- allLong[allLong$test %in% testsToUse, ]
@@ -98,6 +101,60 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   p
 }
 onePlot("GEred", "DOE_24hr50", "Thermocouples")
+
+# model <- "Voltex60"; test = "Daily_1"; vars = c("Thermocouples", "Input Power", "Output Power"); tmin = 0; tmax = 24;
+oneChipPlot <- function(model, test, vars, tmin = 0, tmax = 1) {
+    dset <- allLong[allLong$model == model & allLong$test == test, ]
+    
+    totalMinutes <- max(dset$minutes)
+    dset <- dset[dset$minutes >= tmin * 60 & dset$minutes <= tmax * 60, ]
+    
+    inputPowerSim <- sum(dset$value[dset$variable == "inputPower" & dset$type == "Simulated"] / 60, na.rm = TRUE) / 1000
+    inputPowerChip <- sum(dset$value[dset$variable == "inputPower" & dset$type == "CSE"] / 60, na.rm = TRUE) / 1000
+    inputPowerSim <- round(inputPowerSim, 2)
+    inputPowerChip <- round(inputPowerChip, 2)    
+    
+    dset <- merge(dset, varGuide[varGuide$category %in% vars, ])
+    dset$variable <- factor(dset$variable, levels = unique(as.character(dset$variable)))
+    
+    #   c("Thermocouples", "Average Tank Temp",
+    #     "Draw", "Input Power", "Output Power")
+    lineVars <- data.frame("vname" = c("aveTankTemp", "flow", "inputPower", "Ta"),
+                           "var" = c("Average Tank Temp", "Draw", "Input Power", "Ambient Temp"))
+    lineVars <- lineVars[lineVars$var %in% vars, ]
+    
+    dset$colourVar <- paste(dset$type, dset$category)
+    
+    colourScale <- 0
+    p <- ggplot(dset) + theme_bw()
+    if("Thermocouples" %in% vars) {
+      p <- p + geom_line(data = dset[grep("tcouples", dset$variable), ],
+                         aes(minutes, value, group = interaction(variable, type), linetype = type),
+                         colour = "grey")
+    } 
+    if("Output Power" %in% vars) {
+      p <- p + geom_point(data = dset[grep("output", dset$variable), ], 
+                          aes(minutes, value, col = colourVar, shape = type))
+      colourScale <- 1
+      p <- p + scale_shape_discrete(name = "Type")
+    } 
+    if(nrow(lineVars)) {
+      p <- p + geom_line(data = dset[dset$variable %in% lineVars$vname, ],
+                         aes(minutes, value, col = colourVar, linetype = type))
+      colourScale <- 1
+    }
+    if(colourScale) {
+      p <- p + scale_colour_discrete(name = "Variable")
+    }
+    
+    p <- p + facet_wrap(~units, scales = "free_y", ncol = 1) +
+      xlab("Minutes Into Test") + ylab("Value") +
+      scale_linetype_discrete(name = "Type")
+    
+    p <- p + ggtitle(paste("kWh CSE:", inputPowerChip,
+                           " kWh Simulated:", inputPowerSim))
+    p
+}
 
 
 fieldPlot <- function(model) {
