@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
                       drStatus, 1.0);    // DDR Status (now an enum. Fixed for now as allow)
 
     // Grab the current status
-    getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
     getSimTcouples(hpwh, simTCouples);
+    getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
     /*for(int k = 0; k < 6; k++) simTCouples[k] = 25;
     for(int k = 0; k < nSources; k++) {
       heatSourcesEnergyInput[k] = 0;
