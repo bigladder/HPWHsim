@@ -208,9 +208,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
       }
     }
 
-
-
-
   }  //end loop over heat sources
 
   if (hpwhVerbosity >= VRB_emetic){
@@ -220,6 +217,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
     }
   msg("\n");
   }
+
+
+
 
   //change the things according to DR schedule
   if (DRstatus == DR_BLOCK) {
@@ -237,7 +237,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
       setOfSources[0].engageHeatSource(heatSourceAmbientT_C);
     }
   }
-
 
 
 
@@ -1211,10 +1210,10 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
 
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
-  double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ;
+  double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ = 0.0;
 
-  // Reset the runtime of the Heat Source
-  this->runtime_min = 0.0;
+  // set the leftover capacity of the Heat Source to 0, so the first round of
+  // passing it on works
   leftoverCap_kJ = 0.0;
 
   switch(configuration){
