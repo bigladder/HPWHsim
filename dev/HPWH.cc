@@ -1917,8 +1917,10 @@ int HPWH::HPWHinit_file(std::string configFile){
       }
       else if (token == "T1"){
         line_ss >> tempDouble >> units;
-        if (units == "F")  tempDouble = F_TO_C(tempDouble);
-        else if (units == "C") ; //do nothing, lol 
+//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
+        if (units == "F") ;
+//        else if (units == "C") ; //do nothing, lol 
+        else if (units == "C") tempDouble = C_TO_F(tempDouble);
         else {
           if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
           return HPWH_ABORT;
@@ -1927,8 +1929,10 @@ int HPWH::HPWHinit_file(std::string configFile){
       }
       else if (token == "T2"){
         line_ss >> tempDouble >> units;
-        if (units == "F")  tempDouble = F_TO_C(tempDouble);
-        else if (units == "C") ; //do nothing, lol 
+//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
+        if (units == "F") ;
+//        else if (units == "C") ; //do nothing, lol 
+        else if (units == "C") tempDouble = C_TO_F(tempDouble);
         else {
           if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
           return HPWH_ABORT;
