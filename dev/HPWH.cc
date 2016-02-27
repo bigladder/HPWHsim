@@ -2738,17 +2738,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
    
     //logic conditions
-    double compStart = dF_TO_dC(40.954);
+    double compStart = dF_TO_dC(40.9076);
     double lowTcutoff = F_TO_C(47.0);
-    double standby = dF_TO_dC(8.8165);
+    double standby = dF_TO_dC(8.8354);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
     
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 100000); 
-    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(92.2372));
+    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(92.1254));
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(27.2216));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(26.9753));
 
 
     //set everything in its places
