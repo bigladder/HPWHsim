@@ -52,7 +52,11 @@ class HPWH {
     MODELS_GEGeospring = 104,      /**<  Original GE  */
 
     MODELS_SandenGES = 110,        /**<  Sanden 40 gallon CO2 external heat pump  */
-    MODELS_SandenGAU = 111         /**<  Sanden 80 gallon CO2 external heat pump  */
+    MODELS_SandenGAU = 111,         /**<  Sanden 80 gallon CO2 external heat pump  */
+
+    MODELS_AOSmithHPTU50 = 120,
+    MODELS_AOSmithHPTU66 = 121,
+    MODELS_AOSmithHPTU80 = 122
     };
 
   ///specifies the modes for writing output

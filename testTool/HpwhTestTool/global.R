@@ -14,11 +14,11 @@ library(ggplot2)
 # 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 
-modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40")
-testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50")
+modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80", "AOSmithHPTU66")
+testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr50", "DOE2014_24hr67")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
-seemTests <- paste("Daily", 1:5, sep = "_")
-testsToUse <- c(testsToUse, seemTests)
+# seemTests <- paste("Daily", 1:5, sep = "_")
+# testsToUse <- c(testsToUse, seemTests)
 
 
 allSimResults <- read.csv("allResults.csv")

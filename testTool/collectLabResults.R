@@ -19,9 +19,9 @@ table(allTests$testName[COPtests], allTests$modelName[COPtests])
 testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50",
                 "DOE2014_24hr67", "DOE2014_24hr50")
 modelsToUse <- data.frame("labName" = c("ATI66rev2", "GE502014", "GE502014STDMode", "GEred", "GE",
-                                        "SandenGAU", "SandenGES", "AOSmith60", "AOSmith80"),
+                                        "SandenGAU", "SandenGES", "AOSmith60", "AOSmith80", "AOSmithHPTU66"),
                           "simName" = c("ATI66", "GE502014", "GE502014STDMode", "GEred", "GE", 
-                                        "Sanden80", "Sanden40", "Voltex60", "Voltex80"),
+                                        "Sanden80", "Sanden40", "Voltex60", "Voltex80", "AOSmithHPTU66"),
                           stringsAsFactors = FALSE)
 
 # Read the attributes file...

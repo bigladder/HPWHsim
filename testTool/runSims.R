@@ -6,10 +6,10 @@ library(foreign)
 
 tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
-seemTests <- paste("Daily", 1:5, sep = "_")
-tests <- c(tests, seemTests)
+# seemTests <- paste("Daily", 1:5, sep = "_")
+# tests <- c(tests, seemTests)
 # models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
-models <- c("Voltex60", "Voltex80", "GEred", "Sanden80", "Sanden40")
+models <- c("Voltex60", "Voltex80", "GEred", "Sanden80", "AOSmithHPTU66")
 
 showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40"),
                       "nShowers" = c(4, 3, 55, 8, 5))
