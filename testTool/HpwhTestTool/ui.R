@@ -17,8 +17,8 @@ shinyUI(fluidPage(
     sidebarPanel(
       actionButton("go", "Plot"),
       # selectInput("model", "HPWH Model", choices = sort(unique(as.character(allLong$model)))),
-      selectInput("model", "HPWH Model", choices = modelsToUse),
-      selectInput("test", "Lab Test", choices = testsToUse),
+      selectInput("model", "HPWH Model", choices = sort(unique(as.character(allLong$model))), selected = "AOSmith60"),
+      selectInput("test", "Lab Test", choices = c("DOE_24hr67", "DOE_24hr50")),
       selectInput("vars", "Variables", choices = c("Thermocouples", "Average Tank Temp",
                                                    "Draw", "Input Power", "Output Power",
                                                    "Ambient Temp"),

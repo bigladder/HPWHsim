@@ -9,25 +9,27 @@ tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24
 # seemTests <- paste("Daily", 1:5, sep = "_")
 # tests <- c(tests, seemTests)
 # models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
-models <- c("Voltex60", "Voltex80", "GEred", "Sanden80", "AOSmithHPTU66")
+models <- c("AOSmith50", "AOSmith60", "AOSmith80",
+            "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
+            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
+            "SandenGAU", "Stiebel220e")
 
-showers <- data.frame("model" = c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40"),
-                      "nShowers" = c(4, 3, 55, 8, 5))
 
 # Simulate every combination of test and model
-allResults <- do.call('rbind', lapply(tests, function(test) {
-  do.call('rbind', lapply(models, function(model) {
+allResults <- do.call('rbind', lapply(models, function(model) {
+  # Loop over tests...
+  tests <- dir(paste("models", model, sep = "/"), pattern = "^[^_]+_[^_]+$")
+  do.call('rbind', lapply(tests, function(test) {
     print(paste("Simulating model", model, "test", test))
-    if(test == "DP_SHW50" & model %in% c("GEred", "Voltex60", "Voltex80", "Sanden80", "Sanden40")) {
-      test2 <- paste(test, showers$nShowers[showers$model == model], sep = "_")
-    } else {
-      test2 <- test
-    }
     # Run the Simulation
-    system(paste("./testTool.x", test2, model))
+    system(paste("./testTool.x", test, model))
     
     # Read the results
-    dset <- read.csv(paste("tests/", test2, "/", model, "TestToolOutput.csv", sep = ""))
+    dset <- try(read.csv(paste("models/", model, "/", test, "/", "TestToolOutput.csv", sep = "")))
+    if(inherits(dset, "try-error")) {
+      print(paste("No Output for", model, test)) 
+      return(NULL)
+    }
     dset$test <- test
     dset$model <- model
     

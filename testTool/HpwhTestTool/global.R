@@ -14,15 +14,17 @@ library(ggplot2)
 # 
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/HpwhTestTool")
 
-modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80", "AOSmithHPTU66")
-testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr50", "DOE2014_24hr67")
+# modelsToUse <- c("GEred", "Voltex60", "Voltex80", "Sanden80", "AOSmithHPTU66")
+# testsToUse <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr50", "DOE2014_24hr67")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
 # seemTests <- paste("Daily", 1:5, sep = "_")
 # testsToUse <- c(testsToUse, seemTests)
 
 
-allSimResults <- read.csv("allResults.csv")
-allLabResults <- read.csv("allLabResults.csv")
+# allSimResults <- read.csv("allResults.csv")
+# allLabResults <- read.csv("allLabResults.csv")
+allSimResults <- read.csv("simResults.csv")
+allLabResults <- read.csv("labResults.csv")
 allChipResults <- read.csv("allChipResults.csv")
 fieldResults <- read.csv("fieldResults.csv")
 
@@ -38,13 +40,15 @@ varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
 
 allSimLong <- reshape2::melt(allSimResults, id.vars = c("minutes", "test", "model", "type"))
 allLabLong <- reshape2::melt(allLabResults, id.vars = c("minutes", "test", "model", "type"))
-allChipLong <- reshape2::melt(allChipResults, id.vars = c("minutes", "test", "model", "type"))
+# allChipLong <- reshape2::melt(allChipResults, id.vars = c("minutes", "test", "model", "type"))
 
-allLong <- rbind(allSimLong, allLabLong, allChipLong)
-rm(allSimLong, allLabLong, allChipLong)
+# allLong <- rbind(allSimLong, allLabLong, allChipLong)
+allLong <- rbind(allSimLong, allLabLong)
+# rm(allSimLong, allLabLong, allChipLong)
+rm(allSimLong, allLabLong)
 allLong <- merge(allLong, varGuide)
-allLong <- allLong[allLong$model %in% modelsToUse, ]
-allLong <- allLong[allLong$test %in% testsToUse, ]
+# allLong <- allLong[allLong$model %in% modelsToUse, ]
+# allLong <- allLong[allLong$test %in% testsToUse, ]
 
 
 # model <- "Voltex60"
@@ -100,7 +104,7 @@ onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
                          " kWh Simulated:", inputPowerSim))
   p
 }
-onePlot("GEred", "DOE_24hr50", "Thermocouples")
+# onePlot("GEred", "DOE_24hr50", "Thermocouples")
 
 # model <- "Voltex60"; test = "Daily_1"; vars = c("Thermocouples", "Input Power", "Output Power"); tmin = 0; tmax = 24;
 oneChipPlot <- function(model, test, vars, tmin = 0, tmax = 1) {
@@ -160,6 +164,11 @@ oneChipPlot <- function(model, test, vars, tmin = 0, tmax = 1) {
 fieldPlot <- function(model) {
   dontUse <- c(10441, 13438, 23666, 90023, 90051) # Flip Flop Sites
   fieldResults$X <- NULL
+  if(model == "AOSmith60") {
+    model <- "Voltex60"
+  } else if(model == "AOSmith80") {
+    model <- "Voltex80"
+  }
   fieldResults2 <- fieldResults[fieldResults$model == model, ]
   fieldResults2 <- fieldResults2[!(fieldResults2$siteid %in% dontUse), ]
   if(!nrow(fieldResults2)) {
@@ -216,6 +225,9 @@ fieldPlot <- function(model) {
 #   
 #   
 }
+
+
+
 
 
 # 

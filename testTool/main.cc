@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
   //process command line arguments
   //.......................................  
 
-
   //Obvious wrong number of command line arguments
   if ((argc > 3)) {
     // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
@@ -85,16 +84,16 @@ int main(int argc, char *argv[])
   }
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = "tests/" + input1;
+  testDirectory = "models/" + input2 + "/" + input1;
 
   // Parse the model
-  if(input2 == "Voltex60") {
+  if(input2 == "Voltex60" || input2 == "AOSmith60") {
     model = HPWH::MODELS_Voltex60;
-  } else if(input2 == "Voltex80") {
+  } else if(input2 == "Voltex80" || input2 == "AOSmith80") {
     model = HPWH::MODELS_Voltex80;
   } else if(input2 == "GEred" || input2 == "GE") {
     model = HPWH::MODELS_GEGeospring;
-  } else if(input2 == "Sanden" || input2 == "Sanden80") {
+  } else if(input2 == "SandenGAU" || input2 == "Sanden80") {
     model = HPWH::MODELS_SandenGAU;
   } else if(input2 == "SandenGES" || input2 == "Sanden40") {
     model = HPWH::MODELS_SandenGES;
@@ -103,6 +102,8 @@ int main(int argc, char *argv[])
   }
   else {
     model = HPWH::MODELS_basicIntegrated;
+    cout << "Couldn't find model " << input2 << "\n";
+    exit(1);
   }
 
   // Read the test control file
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  
+
   // ------------------------------------- Read Schedules--------------------------------------- //
   scheduleNames.push_back("inletT");
   scheduleNames.push_back("draw");
@@ -151,9 +152,10 @@ int main(int argc, char *argv[])
     newSetpoint = 149;
   }
   if(newSetpoint > 0) {
-    hpwh.setSetpoint(newSetpoint, units);
+    hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
+
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
@@ -162,7 +164,7 @@ int main(int argc, char *argv[])
 
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
-  fileToOpen = testDirectory + "/" + input2 + "TestToolOutput.csv";
+  fileToOpen = testDirectory + "/" + "TestToolOutput.csv";
   outputFile.open(fileToOpen.c_str());
   if(!outputFile.is_open()) {
     cout << "Could not open output file " << fileToOpen << "\n";
@@ -181,10 +183,10 @@ int main(int argc, char *argv[])
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
   for(i = 0; i < minutesToRun; i++) {
     // Run the step
-    hpwh.runOneStep(F_TO_C(allSchedules[0][i]),    // Inlet water temperature (C)
+    hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
-                      F_TO_C(allSchedules[2][i]),  // Ambient Temp (C)
-                      F_TO_C(allSchedules[3][i]),  // External Temp (C)
+                      allSchedules[2][i],  // Ambient Temp (C)
+                      allSchedules[3][i],  // External Temp (C)
                       drStatus, 1.0);    // DDR Status (now an enum. Fixed for now as allow)
 
     // Grab the current status
@@ -207,7 +209,6 @@ int main(int argc, char *argv[])
 
   controlFile.close();
   outputFile.close();
-
 
   return 0;
 

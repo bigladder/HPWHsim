@@ -10,11 +10,18 @@ library(shiny)
 shinyServer(function(input, output, session) {
 
   # Update test minutes based on test selected
+  # Also update test choice based on the model selected
   observe({
-    x <- input$test
-    y <- input$model
-    testMinutes <- max(allLong$minutes[allLong$model == y & allLong$test == x])
-    updateSliderInput(session, "testlength", min = 0, max = ceiling(testMinutes / 60))
+    abc <- input$test
+    def <- input$model
+    testMinutes <- max(allLong$minutes[allLong$model == def & allLong$test == abc])
+    maxMinutes <- ceiling(testMinutes / 60)
+    updateSliderInput(session, "testlength", min = 0, max = maxMinutes, value = c(0, maxMinutes))
+  })
+  
+  observe({
+    x <- input$model
+    updateSelectInput(session, "test", choices = sort(unique(as.character(allLong$test[allLong$model == input$model]))))
   })
   
   p <- eventReactive(input$go, {
