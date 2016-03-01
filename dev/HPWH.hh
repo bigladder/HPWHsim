@@ -13,11 +13,16 @@
 
 #define DENSITYWATER_kgperL 0.998
 #define CPWATER_kJperkgC 4.181
-#define CONDENSITY_SIZE 12  /** this must be an integer, and only the value 12 
+#define CONDENSITY_SIZE 12  /**< this must be an integer, and only the value 12 
 //change at your own risk */
-#define MAXOUTSTRING 200  /** this is the maximum length for a debuging output string */
-#define HEATDIST_MINVALUE 0.0001 /** any amount of heat distribution less than this is reduced to 0
+#define MAXOUTSTRING 200  /**< this is the maximum length for a debuging output string */
+#define HEATDIST_MINVALUE 0.0001 /**< any amount of heat distribution less than this is reduced to 0
 //this saves on computations */
+
+//#define HPWH_ABRIDGED
+/**<  If HPWH_ABRIDGED is defined, then some function definitions will be
+ *  excluded from compiling.  This is done in order to reduce the size of the
+ * final compiled code.  */
 
 class HPWH {
  public:

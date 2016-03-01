@@ -1685,7 +1685,7 @@ int HPWH::checkInputs(){
   return returnVal;
 }
 
-
+#ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(std::string configFile){
   simHasFailed = true;  //this gets cleared on successful completion of init
 
@@ -2031,7 +2031,7 @@ int HPWH::HPWHinit_file(std::string configFile){
   simHasFailed = false;
   return 0;
 }
-
+#endif
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
