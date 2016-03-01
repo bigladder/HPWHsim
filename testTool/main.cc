@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
   HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
   HPWH::MODELS model;
-  HPWH::UNITS units = HPWH::UNITS_F;
+  // HPWH::UNITS units = HPWH::UNITS_F;
 
   std::vector<double> simTCouples(6);
   std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
@@ -97,8 +97,12 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_SandenGAU;
   } else if(input2 == "SandenGES" || input2 == "Sanden40") {
     model = HPWH::MODELS_SandenGES;
+  } else if(input2 == "AOSmithHPTU50") {
+    model = HPWH::MODELS_AOSmithHPTU50;
   } else if(input2 == "AOSmithHPTU66") {
     model = HPWH::MODELS_AOSmithHPTU66;
+  } else if(input2 == "AOSmithHPTU80") {
+    model = HPWH::MODELS_AOSmithHPTU80;
   }
   else {
     model = HPWH::MODELS_basicIntegrated;
