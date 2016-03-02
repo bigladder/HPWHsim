@@ -49,14 +49,17 @@ class HPWH {
     MODELS_Voltex60 = 102,         /**< this is the Ecotope model for the 60 gallon Voltex HPWH  */
     MODELS_Voltex80 = 103,         /**<  Voltex 80 gallon tank  */
 
-    MODELS_GEGeospring = 104,      /**<  Original GE  */
+    MODELS_GEGeospring = 104,      /**<  Original GE GeoSpring, same as the so-called GE "red"  */
 
     MODELS_SandenGES = 110,        /**<  Sanden 40 gallon CO2 external heat pump  */
     MODELS_SandenGAU = 111,         /**<  Sanden 80 gallon CO2 external heat pump  */
 
-    MODELS_AOSmithHPTU50 = 120,
-    MODELS_AOSmithHPTU66 = 121,
-    MODELS_AOSmithHPTU80 = 122
+    MODELS_AOSmithHPTU50 = 120,    /**< 50 gallon AOSmith HPTU */ 
+    MODELS_AOSmithHPTU66 = 121,    /**< 66 gallon AOSmith HPTU */ 
+    MODELS_AOSmithHPTU80 = 122,    /**< 80 gallon AOSmith HPTU */ 
+
+    MODELS_GE2014STDMode = 130,   /**< 2014 GE model run in standard mode */ 
+    MODELS_GE2014 = 131           /**< 2014 GE model run in the efficiency mode */
     };
 
   ///specifies the modes for writing output

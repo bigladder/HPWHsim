@@ -2852,7 +2852,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resetTankToSetpoint();
     
     tankVolume_L = 283.9; 
-    tankUA_kJperHrC = 10;
+    tankUA_kJperHrC = 9;
     
     doTempDepression = false;
     tankMixesOnDraw = true;
@@ -2869,24 +2869,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.isVIP = false;
     compressor.typeOfHeatSource = TYPE_compressor;
 
-    double split = 1.0/5.0;
-    compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+    double split = 1.0/4.0;
+    compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
     //voltex60 tier 1 values
     compressor.T1_F = 47;
     compressor.T2_F = 67;
 
-    compressor.inputPower_T1_constant_W = 114.6;
-    compressor.inputPower_T1_linear_WperF = 2.376;
+    compressor.inputPower_T1_constant_W = 142.6;
+    compressor.inputPower_T1_linear_WperF = 2.152;
     compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-    compressor.inputPower_T2_constant_W = 80.616;
-    compressor.inputPower_T2_linear_WperF = 2.81;
+    compressor.inputPower_T2_constant_W = 120.14;
+    compressor.inputPower_T2_linear_WperF = 2.513;
     compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-    compressor.COP_T1_constant = 7.45;
-    compressor.COP_T1_linear = -0.042;
+    compressor.COP_T1_constant = 6.989258;
+    compressor.COP_T1_linear = -0.038320;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 8.97;
-    compressor.COP_T2_linear = -0.0493;
+    compressor.COP_T2_constant = 8.188;
+    compressor.COP_T2_linear = -0.0432;
     compressor.COP_T2_quadratic = 0.0;
     compressor.hysteresis_dC = dF_TO_dC(4); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
@@ -2900,17 +2900,98 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
    
     //logic conditions
-    double compStart = dF_TO_dC(33.6111);
+    double compStart = dF_TO_dC(34.1636);
     double lowTcutoff = F_TO_C(47.0);
-    double standby = dF_TO_dC(7.7546);
+    double standby = dF_TO_dC(7.1528);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
     
     resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 100000); 
-    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(79.9537));
+    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(80.108));
 
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(40.0926));
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(39.9691));
+
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = resistiveElementBottom;
+    setOfSources[2] = compressor;
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
+
+  }
+  else if (presetNum == MODELS_GE2014STDMode) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(127.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = GAL_TO_L(45); 
+    tankUA_kJperHrC = 6;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    double split = 1.0/4.0;
+    compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    //voltex60 tier 1 values
+    compressor.T1_F = 50;
+    compressor.T2_F = 70;
+
+    compressor.inputPower_T1_constant_W = 172.58616;
+    compressor.inputPower_T1_linear_WperF = 2.09340;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.0;
+    compressor.inputPower_T2_constant_W = 139.5615;
+    compressor.inputPower_T2_linear_WperF = 2.62997;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+    compressor.COP_T1_constant = 5.018576;
+    compressor.COP_T1_linear = -0.021420;
+    compressor.COP_T1_quadratic = 0.0;
+    compressor.COP_T2_constant = 6.959918;
+    compressor.COP_T2_linear = -0.034144;
+    compressor.COP_T2_quadratic = 0.0;
+    compressor.hysteresis_dC = dF_TO_dC(1); 
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(6, 4500);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 4000);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+   
+    //logic conditions
+    double compStart = dF_TO_dC(32.1451);
+    double lowTcutoff = F_TO_C(37.0);
+    double standby = dF_TO_dC(11.0957);
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, lowTcutoff);
+    
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 100000); 
+    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(123.2716));
+
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(22.2654));
 
 
     //set everything in its places
