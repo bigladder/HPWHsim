@@ -1174,6 +1174,14 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //enough - not for preventing it from coming on at other times
         break;
       
+      case OFFLOGIC_topNodeMaxTemp:
+        //don't run if the top node is too hot - for "special" HPWH's
+        if (hpwh->tankTemps_C[hpwh->numNodes - 1] > shutOffLogicSet[i].decisionPoint) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down top node temp\t");
+        }
+        break;
+      
       case OFFLOGIC_bottomNodeMaxTemp:
         //don't run if the bottom node is too hot - typically for "external" configuration
         if (hpwh->tankTemps_C[0] > shutOffLogicSet[i].decisionPoint) {
@@ -1685,7 +1693,7 @@ int HPWH::checkInputs(){
   return returnVal;
 }
 
-
+#ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(std::string configFile){
   simHasFailed = true;  //this gets cleared on successful completion of init
 
@@ -1868,6 +1876,9 @@ int HPWH::HPWHinit_file(std::string configFile){
         else if (tempString == "lowTreheat") {
           setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, tempDouble);
         }
+        else if (tempString == "topNodeMaxTemp") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_topNodeMaxTemp, tempDouble);
+        }
         else if (tempString == "bottomNodeMaxTemp") {
           setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, tempDouble);
         }
@@ -2031,7 +2042,7 @@ int HPWH::HPWHinit_file(std::string configFile){
   simHasFailed = false;
   return 0;
 }
-
+#endif
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure

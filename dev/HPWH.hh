@@ -11,13 +11,18 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-#define DENSITYWATER_kgperL 0.998
-#define CPWATER_kJperkgC 4.181
-#define CONDENSITY_SIZE 12  /** this must be an integer, and only the value 12 
+const float DENSITYWATER_kgperL = 0.998;
+const float CPWATER_kJperkgC = 4.181;
+const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
 //change at your own risk */
-#define MAXOUTSTRING 200  /** this is the maximum length for a debuging output string */
-#define HEATDIST_MINVALUE 0.0001 /** any amount of heat distribution less than this is reduced to 0
+const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
+const float HEATDIST_MINVALUE = 0.0001; /**< any amount of heat distribution less than this is reduced to 0
 //this saves on computations */
+
+//#define HPWH_ABRIDGED
+/**<  If HPWH_ABRIDGED is defined, then some function definitions will be
+ *  excluded from compiling.  This is done in order to reduce the size of the
+ * final compiled code.  */
 
 class HPWH {
  public:
@@ -389,6 +394,7 @@ class HPWH::HeatSource {
   enum OFFLOGIC{
     OFFLOGIC_lowT,                /**< if temp is below decision point, shut off */
     OFFLOGIC_lowTreheat,          /**< if temp is above decision point, shut off */
+    OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
     OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
     OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */
     OFFLOGIC_largeDraw            /**< if the bottom third of the tank is below decision point, shut off */
