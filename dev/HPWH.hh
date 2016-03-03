@@ -253,7 +253,15 @@ class HPWH {
 	
 	double topThirdAvg_C() const;
 	double bottomThirdAvg_C() const;
+	double bottomHalfAvg_C() const;
 	double bottomTwelthAvg_C() const;
+	double bottomSixthAvg_C() const;
+	double secondSixthAvg_C() const;
+	double thirdSixthAvg_C() const;
+	double fourthSixthAvg_C() const;
+	double fifthSixthAvg_C() const;
+	double topSixthAvg_C() const;
+  
 	/**< functions to calculate what the temperature in a portion of the tank is  */
 
   void calcDerivedValues();
@@ -384,8 +392,20 @@ class HPWH::HeatSource {
                             the tank is greater than decision point, turn on */
     ONLOGIC_bottomThird,  /**< is the difference between setpoint and the bottomThird of
                             the tank is greater than decision point, turn on */
-    ONLOGIC_standby       /**< if the difference between the top node and the setpoint is
+    ONLOGIC_standby,       /**< if the difference between the top node and the setpoint is
                             greater than the decision point, turn on */
+    ONLOGIC_bottomSixth,    /**< if the difference between the first (bottom) sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
+    ONLOGIC_secondSixth,    /**< if the difference between the second sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
+    ONLOGIC_thirdSixth,    /**< if the difference between the third sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
+    ONLOGIC_fourthSixth,    /**< if the difference between the fourth sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
+    ONLOGIC_fifthSixth,    /**< if the difference between the fifth sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
+    ONLOGIC_topSixth    /**< if the difference between the sixth (top) sixth of
+                            the tank and the setpoint is greater than the decision point, turn on */
     };
   /** this is the set of logics available for shutsDown  */
   enum OFFLOGIC{
@@ -394,7 +414,8 @@ class HPWH::HeatSource {
     OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
     OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
     OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */
-    OFFLOGIC_largeDraw            /**< if the bottom third of the tank is below decision point, shut off */
+    OFFLOGIC_largeDraw,           /**< if the bottom third of the tank is below decision point, shut off */
+    OFFLOGIC_largerDraw           /**< if the bottom half of the tank is below decision point, shut off */
     };
 
 	/** the heating logic instructions come in pairs - a string to select
