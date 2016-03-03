@@ -894,6 +894,86 @@ double HPWH::bottomThirdAvg_C() const {
 }
 
 
+double HPWH::bottomSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 0; i < numNodes/6; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+double HPWH::secondSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 1*numNodes/6; i < 2*numNodes/6; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+double HPWH::thirdSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 2*numNodes/6; i < 3*numNodes/6; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+double HPWH::fourthSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 3*numNodes/6; i < 4*numNodes/6; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+double HPWH::fifthSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 4*numNodes/6; i < 5*numNodes/6; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+double HPWH::topSixthAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 5*numNodes/6; i < numNodes; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  return sum/num;
+}
+
+
+double HPWH::bottomHalfAvg_C() const {
+  double sum = 0;
+  int num = 0;
+  
+  for (int i = 0; i < numNodes/2; i++) {
+    sum += tankTemps_C[i];
+    num++;
+  }
+  
+  return sum/num;
+}
+
+
 double HPWH::bottomTwelthAvg_C() const {
   double sum = 0;
   int num = 0;
@@ -1118,6 +1198,85 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
           }
         }
         break;
+
+      case ONLOGIC_bottomSixth:
+        //when the bottom sixth is too cold
+        if (hpwh->bottomSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("bottom sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->bottomSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
+      case ONLOGIC_secondSixth:
+        //when the second sixth is too cold
+        if (hpwh->secondSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("second sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->secondSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
+      case ONLOGIC_thirdSixth:
+        //when the third sixth is too cold
+        if (hpwh->thirdSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("third sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->thirdSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
+      case ONLOGIC_fourthSixth:
+        //when the fourth sixth is too cold
+        if (hpwh->fourthSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("fourth sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->fourthSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
+      case ONLOGIC_fifthSixth:
+        //when the fifth sixth is too cold
+        if (hpwh->fifthSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("fifth sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->fifthSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
+      case ONLOGIC_topSixth          :
+        //when the top sixth is too cold
+        if (hpwh->topSixthAvg_C() < hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint) {
+          shouldEngage = true;
+
+          //debugging message handling
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+          if (hpwh->hpwhVerbosity >= VRB_emetic){
+            hpwh->msg("top sixth: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", hpwh->topSixthAvg_C(), hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+          }
+        }
+        break;
+
     }
 
     //quit searching the logics if one of them turns it on
@@ -1203,6 +1362,15 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         //don't run if the bottom third of the tank is too cold
         //typically for GE overreliance on resistance element
         if (hpwh->bottomThirdAvg_C() < shutOffLogicSet[i].decisionPoint) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom third temp large draw\t");
+        }
+        break;
+        
+      case OFFLOGIC_largerDraw:
+        //don't run if the bottom half of the tank is too cold
+        //also for GE overreliance on resistance element
+        if (hpwh->bottomHalfAvg_C() < shutOffLogicSet[i].decisionPoint) {
           shutOff = true;
           if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down bottom third temp large draw\t");
         }
@@ -1857,6 +2025,24 @@ int HPWH::HPWHinit_file(std::string configFile){
         else if (tempString == "standby") {
           setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_standby, tempDouble);
         }
+        else if (tempString == "bottomSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_bottomSixth, tempDouble);
+        }
+        else if (tempString == "secondSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_secondSixth, tempDouble);
+        }
+        else if (tempString == "thirdSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, tempDouble);
+        }
+        else if (tempString == "fourthSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, tempDouble);
+        }
+        else if (tempString == "fifthSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_fifthSixth, tempDouble);
+        }
+        else if (tempString == "topSixth") {
+          setOfSources[heatsource].addTurnOnLogic(HeatSource::ONLOGIC_topSixth, tempDouble);
+        }
         else {
           if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
           return HPWH_ABORT;
@@ -1887,6 +2073,9 @@ int HPWH::HPWHinit_file(std::string configFile){
         }
         else if (tempString == "largeDraw") {
           setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, tempDouble);
+        }
+        else if (tempString == "largerDraw") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_largerDraw, tempDouble);
         }
         else {
           if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
