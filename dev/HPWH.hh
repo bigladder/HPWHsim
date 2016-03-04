@@ -63,8 +63,12 @@ class HPWH {
     MODELS_AOSmithHPTU66 = 121,    /**< 66 gallon AOSmith HPTU */ 
     MODELS_AOSmithHPTU80 = 122,    /**< 80 gallon AOSmith HPTU */ 
 
-    MODELS_GE2014STDMode = 130,   /**< 2014 GE model run in standard mode */ 
-    MODELS_GE2014 = 131           /**< 2014 GE model run in the efficiency mode */
+    MODELS_GE2014STDMode = 130,    /**< 2014 GE model run in standard mode */ 
+    MODELS_GE2014 = 131,           /**< 2014 GE model run in the efficiency mode */
+
+    MODELS_RheemHB50 = 140,         /**< Rheem 2014 (?) Model */
+
+    MODELS_Stiebel220E             /**< Stiebel Eltron (2014 model?) */
     };
 
   ///specifies the modes for writing output
