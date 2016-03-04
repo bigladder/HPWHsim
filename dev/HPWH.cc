@@ -2757,7 +2757,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     
     tankVolume_L = 315; 
     //tankUA_kJperHrC = 10; //0 to turn off
-    tankUA_kJperHrC = 5.0 * 1.055 * 1.8;
+    tankUA_kJperHrC = 7;
     
     doTempDepression = false;
     tankMixesOnDraw = false;
@@ -2790,31 +2790,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_quadratic = 0.000339;
 */
     //compressor.COP_T1_constant = -.8788602;
-    compressor.COP_T1_constant = -.8788602 + .8;
-    compressor.COP_T1_linear = .0970281;
-    compressor.COP_T1_quadratic = -.0005882;
+    compressor.COP_T1_constant = 4.01;
+    compressor.COP_T1_linear = -0.024021;
+    compressor.COP_T1_quadratic = 0.0;
     //compressor.COP_T2_constant = 1.483883;
-    compressor.COP_T2_constant = 1.483883 + .8;
-    compressor.COP_T2_linear = .1187597;
-    compressor.COP_T2_quadratic = -.0008289;
+    compressor.COP_T2_constant = -1.029499;
+    compressor.COP_T2_linear = 0.187955;
+    compressor.COP_T2_quadratic = -0.001246;
     // compressor.inputPower_T1_constant_W = 1.415561 * 1000;
-    compressor.inputPower_T1_constant_W = 1.415561 * 1000 - 100;
-    compressor.inputPower_T1_linear_WperF = -.0048181 * 1000;
-    compressor.inputPower_T1_quadratic_WperF2 = .0000422 * 1000;
+    compressor.inputPower_T1_constant_W = 1876.6599;
+    compressor.inputPower_T1_linear_WperF = -15.6681;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.1007;
     // compressor.inputPower_T2_constant_W = 1.078097 * 1000;
-    compressor.inputPower_T2_constant_W = 1.078097 * 1000 - 100;
-    compressor.inputPower_T2_linear_WperF = -.0031851  * 1000;
-    compressor.inputPower_T2_quadratic_WperF2 = .0000233 * 1000;
+    compressor.inputPower_T2_constant_W = 926.61869;
+    compressor.inputPower_T2_linear_WperF = 0.06431;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0;
 
     compressor.hysteresis_dC = 4;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
     
 //    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 55);
-    compressor.addTurnOnLogic(HeatSource::ONLOGIC_topThird, 5);
-    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, 15);
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(74.9228));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(9.0972));
 
     //lowT cutoff
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, 55);
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(135));
 
     compressor.depressesTemperature = false;  //no temp depression
 
