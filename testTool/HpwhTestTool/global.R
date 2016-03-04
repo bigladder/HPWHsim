@@ -50,29 +50,7 @@ allLong <- merge(allLong, varGuide)
 # allLong <- allLong[allLong$model %in% modelsToUse, ]
 # allLong <- allLong[allLong$test %in% testsToUse, ]
 
-# Exceptions...
-exceptions <- list()
-exceptions[[1]] <- list("model" = "GE502014STDMode",
-                        "dontuse" = c("COP_24hr50", "COP_24hr67", "COP_new24hr50", "COP_new24hr50b", "DOE_24hr50noCurtain"))
-exceptions[[2]] <- list("model" = "GE502014",
-                        "dontuse" = c("CMP_T", "COP_24hr50", "COP_new24hr67", "COP_old24hr50", "COP_old24hr67"))
-exceptions[[3]] <- list("model" = "AOSmith60",
-                        "dontuse" = c("COP_67"))
-exceptions[[4]] <- list("model" = "AOSmith80",
-                        "dontuse" = c("COP_30", "COP_40Auto", "DP_4T40", "DP_4T67", "DP_4T67Duct"))
-exceptions[[5]] <- list("model" = "AOSmithHPTU50",
-                        "dontuse" = c("COMP_T"))
-exceptions[[6]] <- list("model" = "SandenGAU",
-                        "dontuse" = c("COP_50", "COP_67"))
-for(i in seq_along(exceptions)) {
-  model <- exceptions[[i]]$model
-  for(test in exceptions[[i]]$dontuse) {
-    noRows <- which(allLong$model == model & allLong$test == test)
-    if(length(noRows)) {
-      allLong <- allLong[-noRows, ]
-    }
-  }
-}
+
 
 # Overriding model names...
 modelNames <- list()
@@ -82,6 +60,8 @@ modelNames[[3]] <- list("oldname" = "GE502014STDMode", "newname" = "GE2014STDMod
 modelNames[[4]] <- list("oldname" = "AOSmith60", "newname" = "AOSmithPHPT60")
 modelNames[[5]] <- list("oldname" = "AOSmith80", "newname" = "AOSmithPHPT80")
 modelNames[[6]] <- list("oldname" = "SandenGAU", "newname" = "Sanden80")
+modelNames[[7]] <- list("oldname" = "SandenGES", "newname" = "Sanden40")
+modelNames[[8]] <- list("oldname" = "Stiebel220e", "newname" = "Stiebel220E")
 allLong$model <- as.character(allLong$model)
 fieldResults$model <- as.character(fieldResults$model)
 for(i in seq_along(modelNames)) {

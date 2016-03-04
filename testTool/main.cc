@@ -107,6 +107,10 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_GE2014STDMode;
   } else if(input2 == "GE502014" || input2 == "GE2014") {
     model = HPWH::MODELS_GE2014;
+  } else if(input2 == "RheemHB50") {
+    model = HPWH::MODELS_RheemHB50;
+  } else if(input2 == "Stiebel220e" || input2 == "Stiebel220E") {
+    model = HPWH::MODELS_Stiebel220E;
   }
   else {
     model = HPWH::MODELS_basicIntegrated;

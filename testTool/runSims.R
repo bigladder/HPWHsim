@@ -12,7 +12,7 @@ tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24
 models <- c("AOSmith60", "AOSmith80",
             "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
             "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
-            "SandenGAU", "Stiebel220e")
+            "SandenGAU", "SandenGES", "Stiebel220e")
 
 
 # Simulate every combination of test and model

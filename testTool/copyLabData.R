@@ -31,6 +31,9 @@ copyLabData <- function(make) {
     Ta <- mean(dset$T_Plenum_In, na.rm = TRUE)
     
     test_minutes <- sum(!is.na(dset$flow_out_gal))
+    if(make == "SandenGES") {
+      dset$flow_out_gal <- dset$flow_out_gal * 1.5 / 1.2 # Think there was a problem w/ lab flow measurement
+    }
     flowDset <- dset[ , c("minutes", "flow_out_gal")]
     flowDset <- flowDset[!is.na(flowDset[, 2]), ]
     flowDset <- flowDset[flowDset[, 2] > 0, ]
@@ -113,5 +116,5 @@ copyLabData <- function(make) {
 makes <- c("AOSmith60", "AOSmith80",
            "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
-           "SandenGAU", "Stiebel220e")
+           "SandenGAU", "SandenGES", "Stiebel220e")
 lapply(makes, copyLabData)
