@@ -100,8 +100,10 @@ collectSimData <- function(make) {
   simResults
 }
 
-makes <- dir("models")
-makes <- makes[makes != "old"]
+makes <- c("AOSmith60", "AOSmith80",
+           "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
+           "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
+           "SandenGAU", "Stiebel220e")
 
 labData <- do.call('rbind', lapply(makes, collectLabData))
 simData <- do.call('rbind', lapply(makes, collectSimData))

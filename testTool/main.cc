@@ -103,6 +103,10 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_AOSmithHPTU66;
   } else if(input2 == "AOSmithHPTU80") {
     model = HPWH::MODELS_AOSmithHPTU80;
+  } else if(input2 == "GE502014STDMode" || input2 == "GE2014STDMode") {
+    model = HPWH::MODELS_GE2014STDMode;
+  } else if(input2 == "GE502014" || input2 == "GE2014") {
+    model = HPWH::MODELS_GE2014;
   }
   else {
     model = HPWH::MODELS_basicIntegrated;
@@ -152,9 +156,10 @@ int main(int argc, char *argv[])
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   hpwh.HPWHinit_presets(model);
-  if(model == HPWH::MODELS_SandenGAU || model == HPWH::MODELS_SandenGES) {
-    newSetpoint = 149;
+/*  if(model == HPWH::MODELS_SandenGAU || model == HPWH::MODELS_SandenGES) {
+    newSetpoint = (149 - 32) / 1.8;
   }
+*/
   if(newSetpoint > 0) {
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
@@ -186,6 +191,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
   for(i = 0; i < minutesToRun; i++) {
+    if(DEBUG) {
+      cout << "Now on minute " << i << "\n";
+    }
     // Run the step
     hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
@@ -268,7 +276,7 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
     std::istringstream(s) >> valTmp;
 
     // Update the value
-    scheduleArray[minuteTmp - 1] = valTmp;
+    scheduleArray[minuteTmp] = valTmp;
   }
 
   //print out the whole schedule
