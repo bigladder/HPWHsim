@@ -11,12 +11,12 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-const float DENSITYWATER_kgperL = 0.998;
-const float CPWATER_kJperkgC = 4.181;
+const float DENSITYWATER_kgperL = 0.998f;
+const float CPWATER_kJperkgC = 4.181f;
 const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
 //change at your own risk */
 const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-const float HEATDIST_MINVALUE = 0.0001; /**< any amount of heat distribution less than this is reduced to 0
+const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
 //this saves on computations */
 
 //#define HPWH_ABRIDGED
