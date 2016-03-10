@@ -1,5 +1,0 @@
-HPWH_tier 3
-HPWH_type 1
-HPWH_size 45
-HPWH_setpoint 126.5
-length_of_test 1440
