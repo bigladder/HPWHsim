@@ -7,6 +7,7 @@ collectLabData <- function(make) {
   print(paste("Collecting lab data for", make))
   # Read all of the actual results...
   files <- dir(paste("models", make, sep = "/"), pattern = "Full.csv", full.names = TRUE)
+  if(!length(files)) return(NULL)
   labResults <- do.call('rbind', lapply(files, function(f) {
     tmp <- read.csv(f)
     test <- gsub("^.+/(.+)_(.+)_Full.csv$", "\\1_\\2", f)
@@ -48,6 +49,8 @@ collectSimData <- function(make) {
   files <- dir(paste("models", make, sep = "/"), pattern = "TestToolOutput.csv",
                recursive = TRUE, full.names = TRUE)
   if(!length(files)) return(NULL)
+  weeklyFiles <- grep("Weekly", files)
+  if(length(weeklyFiles)) files <- files[-weeklyFiles]
   simResults <- do.call('rbind', lapply(files, function(f) {
     tmp <- read.csv(f)
     test <- gsub("^.+/(.+)_(.+)/TestToolOutput.csv$", "\\1_\\2", f)
@@ -103,7 +106,8 @@ collectSimData <- function(make) {
 makes <- c("AOSmith60", "AOSmith80",
            "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
-           "SandenGAU", "SandenGES", "Stiebel220e")
+           "SandenGAU", "SandenGES", "Stiebel220e",
+           "Generic1", "Generic2", "Generic3")
 
 labData <- do.call('rbind', lapply(makes, collectLabData))
 simData <- do.call('rbind', lapply(makes, collectSimData))
