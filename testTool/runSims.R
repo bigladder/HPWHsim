@@ -4,7 +4,7 @@ library(EcotopePackage)
 library(foreign)
 
 
-tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
+# tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
 # seemTests <- paste("Daily", 1:5, sep = "_")
 # tests <- c(tests, seemTests)
@@ -12,13 +12,16 @@ tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24
 models <- c("AOSmith60", "AOSmith80",
             "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
             "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
-            "SandenGAU", "SandenGES", "Stiebel220e")
+            "SandenGAU", "SandenGES", "Stiebel220e",
+            "Generic1", "Generic2", "Generic3")
 
 
 # Simulate every combination of test and model
 allResults <- do.call('rbind', lapply(models, function(model) {
   # Loop over tests...
   tests <- dir(paste("models", model, sep = "/"), pattern = "^[^_]+_[^_]+$")
+  weeklyTests <- grep("Weekly", tests)
+  if(length(weeklyTests)) tests <- tests[-weeklyTests]
   do.call('rbind', lapply(tests, function(test) {
     print(paste("Simulating model", model, "test", test))
     # Run the Simulation
@@ -99,6 +102,97 @@ allResults <- allResults[, c("minutes", "test", "model", "flow", "inputPower", "
 allResults$type <- "Simulated"
 
 write.csv(file = "HpwhTestTool/allResults.csv", allResults, row.names = FALSE)
+
+
+
+
+# Run the weekly stuff...
+# Assuming that the Weekly draw profiles have been copied... see generics.R
+
+tests <- c("Weekly_1", "Weekly_2", "Weekly_3", "Weekly_4", "Weekly_5")
+models <- makes <- c("AOSmith60", "AOSmith80",
+                     "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
+                     "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
+                     "SandenGAU", "SandenGES", "Stiebel220e",
+                     "Generic1", "Generic2", "Generic3")
+
+# Simulate every combination of test and model
+allResults <- do.call('rbind', lapply(models, function(model) {
+  # Loop over tests...
+  do.call('rbind', lapply(tests, function(test) {
+    print(paste("Simulating model", model, "test", test))
+    # Run the Simulation
+    system(paste("./testTool.x", test, model))
+    
+    # Read the results
+    dset <- try(read.csv(paste("models/", model, "/", test, "/", "TestToolOutput.csv", sep = "")))
+    if(inherits(dset, "try-error")) {
+      print(paste("No Output for", model, test)) 
+      return(NULL)
+    }
+    dset$test <- test
+    dset$model <- model
+    
+    # Parse the energy outputs
+    inputVars <- grep("input_kWh", names(dset))
+    if(length(inputVars) > 1) {
+      dset$inputTotal_W <- apply(dset[, inputVars], 1, sum) * 60000
+    } else {
+      dset$inputTotal_W <- dset[, inputVars] * 60000
+    }
+    dset <- dset[, -inputVars]
+    
+    outputVars <- grep("output_kWh", names(dset))
+    if(length(outputVars) > 1) {
+      dset$outputTotal_W <- apply(dset[, outputVars], 1, sum) * 60000
+    } else {
+      dset$outputTotal_W <- dset[, outputVars] * 60000
+    }
+    dset <- dset[, -outputVars]
+    # print(head(dset))
+    dset
+  }))
+}))
+
+# Convert all temperature variables from C to F
+tempVars <- grep("Tcouple", names(allResults))
+allResults[, tempVars] <- allResults[, tempVars] * 1.8 + 32
+allResults$aveTankTemp <- apply(allResults[, tempVars], 1, mean)
+
+
+allResults[] <- lapply(names(allResults), function(v) {
+  if(length(grep("input_kWh", v)) | length(grep("output_kWh", v))) {
+    NULL
+  } else {
+    allResults[, v]
+  }
+})
+
+
+names(allResults)[names(allResults) == "draw"] <- "flow"
+names(allResults)[names(allResults) == "simTcouples1"] <- "tcouples1"
+names(allResults)[names(allResults) == "simTcouples2"] <- "tcouples2"
+names(allResults)[names(allResults) == "simTcouples3"] <- "tcouples3"
+names(allResults)[names(allResults) == "simTcouples4"] <- "tcouples4"
+names(allResults)[names(allResults) == "simTcouples5"] <- "tcouples5"
+names(allResults)[names(allResults) == "simTcouples6"] <- "tcouples6"
+allResults$inputPower <- allResults$inputTotal_W
+allResults$outputPower <- allResults$outputTotal_W
+
+allResults <- allResults[, c("minutes", "test", "model", "flow", "inputPower", "outputPower",
+                             "tcouples1", "tcouples2", "tcouples3",
+                             "tcouples4", "tcouples5", "tcouples6",
+                             "aveTankTemp", "Ta")]
+allResults$type <- "Simulated"
+
+write.csv(file = "allWeeklyResults.csv", allResults, row.names = FALSE)
+
+
+
+
+
+
+
 
 
 

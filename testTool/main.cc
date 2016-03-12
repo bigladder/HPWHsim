@@ -88,15 +88,15 @@ int main(int argc, char *argv[])
 
   // Parse the model
   if(input2 == "Voltex60" || input2 == "AOSmith60") {
-    model = HPWH::MODELS_Voltex60;
+    model = HPWH::MODELS_AOSmithPHPT60;
   } else if(input2 == "Voltex80" || input2 == "AOSmith80") {
-    model = HPWH::MODELS_Voltex80;
+    model = HPWH::MODELS_AOSmithPHPT80;
   } else if(input2 == "GEred" || input2 == "GE") {
-    model = HPWH::MODELS_GEGeospring;
+    model = HPWH::MODELS_GE2012;
   } else if(input2 == "SandenGAU" || input2 == "Sanden80") {
-    model = HPWH::MODELS_SandenGAU;
+    model = HPWH::MODELS_Sanden80;
   } else if(input2 == "SandenGES" || input2 == "Sanden40") {
-    model = HPWH::MODELS_SandenGES;
+    model = HPWH::MODELS_Sanden40;
   } else if(input2 == "AOSmithHPTU50") {
     model = HPWH::MODELS_AOSmithHPTU50;
   } else if(input2 == "AOSmithHPTU66") {
@@ -111,8 +111,13 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_RheemHB50;
   } else if(input2 == "Stiebel220e" || input2 == "Stiebel220E") {
     model = HPWH::MODELS_Stiebel220E;
-  }
-  else {
+  } else if(input2 == "Generic1") {
+    model = HPWH::MODELS_Generic1;
+  } else if(input2 == "Generic2") {
+    model = HPWH::MODELS_Generic2;
+  } else if(input2 == "Generic3") {
+    model = HPWH::MODELS_Generic3;
+  } else {
     model = HPWH::MODELS_basicIntegrated;
     cout << "Couldn't find model " << input2 << "\n";
     exit(1);
@@ -160,10 +165,10 @@ int main(int argc, char *argv[])
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   hpwh.HPWHinit_presets(model);
-/*  if(model == HPWH::MODELS_SandenGAU || model == HPWH::MODELS_SandenGES) {
+  if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }
-*/
+
   if(newSetpoint > 0) {
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();

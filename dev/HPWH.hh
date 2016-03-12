@@ -51,24 +51,32 @@ class HPWH {
     MODELS_externalTest = 5,      /**< a single compressor tank, using "external" topology  */
 
     // these models are based on real tanks and measured lab data 
-    MODELS_Voltex60 = 102,         /**< this is the Ecotope model for the 60 gallon Voltex HPWH  */
-    MODELS_Voltex80 = 103,         /**<  Voltex 80 gallon tank  */
+    // AO Smith models
+    MODELS_AOSmithPHPT60 = 102,         /**< this is the Ecotope model for the 60 gallon Voltex HPWH  */
+    MODELS_AOSmithPHPT80 = 103,         /**<  Voltex 80 gallon tank  */
+    MODELS_AOSmithHPTU50 = 104,    /**< 50 gallon AOSmith HPTU */ 
+    MODELS_AOSmithHPTU66 = 105,    /**< 66 gallon AOSmith HPTU */ 
+    MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */ 
 
-    MODELS_GEGeospring = 104,      /**<  Original GE GeoSpring, same as the so-called GE "red"  */
+    // GE Models
+    MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
+    MODELS_GE2014STDMode = 111,    /**< 2014 GE model run in standard mode */ 
+    MODELS_GE2014 = 112,           /**< 2014 GE model run in the efficiency mode */
 
-    MODELS_SandenGES = 110,        /**<  Sanden 40 gallon CO2 external heat pump  */
-    MODELS_SandenGAU = 111,         /**<  Sanden 80 gallon CO2 external heat pump  */
+    // Sanden CO2 transcritical heat pump water heaters
+    MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
+    MODELS_Sanden80 = 121,        /**<  Sanden 80 gallon CO2 external heat pump  */
 
-    MODELS_AOSmithHPTU50 = 120,    /**< 50 gallon AOSmith HPTU */ 
-    MODELS_AOSmithHPTU66 = 121,    /**< 66 gallon AOSmith HPTU */ 
-    MODELS_AOSmithHPTU80 = 122,    /**< 80 gallon AOSmith HPTU */ 
+    // The new-ish Rheem
+    MODELS_RheemHB50 = 140,        /**< Rheem 2014 (?) Model */
 
-    MODELS_GE2014STDMode = 130,    /**< 2014 GE model run in standard mode */ 
-    MODELS_GE2014 = 131,           /**< 2014 GE model run in the efficiency mode */
+    // The new-ish Stiebel
+    MODELS_Stiebel220E = 150,      /**< Stiebel Eltron (2014 model?) */
 
-    MODELS_RheemHB50 = 140,         /**< Rheem 2014 (?) Model */
-
-    MODELS_Stiebel220E             /**< Stiebel Eltron (2014 model?) */
+    // Generic water heaters, corresponding to the tiers 1, 2, and 3
+    MODELS_Generic1 = 160,         /**< Generic Tier 1 */
+    MODELS_Generic2 = 161,         /**< Generic Tier 2 */
+    MODELS_Generic3 = 162          /**< Generic Tier 3 */
     };
 
   ///specifies the modes for writing output

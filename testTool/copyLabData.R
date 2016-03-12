@@ -118,3 +118,72 @@ makes <- c("AOSmith60", "AOSmith80",
            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
            "SandenGAU", "SandenGES", "Stiebel220e")
 lapply(makes, copyLabData)
+
+
+
+# Copy lab data for generic water heaters... 
+# I'll use the GE502014 Standard Mode as a basis
+generics <- c("Generic1", "Generic2", "Generic3")
+tests <- c("DOE2014_1hr", "DOE2014_24hr50", "DOE2014_24hr67",
+           "DOE_1hr")
+lapply(generics, function(generic) {
+  dir.create(paste("models", generic, sep = "/"))
+  lapply(tests, function(test) {
+    toCreate <- paste("models", generic, test, sep = "/")
+    toRef <- paste("models", "GE502014STDMode", test, sep = "/")
+    system(paste("cp", "-r", toRef, toCreate))
+  })
+})
+
+# For the DOE 24hr50 and 24hr67 tests, use the standard definition...
+tests <- c("DOE_24hr50", "DOE_24hr67")
+lapply(generics, function(generic) {
+  dir.create(paste("models", generic, sep = "/"))
+  lapply(tests, function(test) {
+    toCreate <- paste("models", generic, test, sep = "/")
+    toRef <- paste("tests", test, sep = "/")
+    system(paste("cp", "-r", toRef, toCreate))
+  })
+})
+
+
+# Copy the weekly draw profiles???
+tests <- c("Weekly_1", "Weekly_2", "Weekly_3", "Weekly_4", "Weekly_5")
+models <- makes <- c("AOSmith60", "AOSmith80",
+                     "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
+                     "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
+                     "SandenGAU", "SandenGES", "Stiebel220e",
+                     "Generic1", "Generic2", "Generic3")
+lapply(models, function(model) {
+  lapply(tests, function(test) {
+    dirToRef <- paste("tests", test, sep = "/")
+    dirToWork <- paste("models", model, test, sep = "/")
+    dir.create(dirToWork)
+    file.copy(paste(dirToRef, "drawschedule.csv", sep = "/"), 
+              paste(dirToWork, "drawschedule.csv", sep = "/"))
+
+    # Write out the ambient schedule. Do I want to add
+    ambientScheduleFile <- paste(dirToWork, "ambientTschedule.csv", sep = "/")
+    writeLines(text = paste("default", 20), con = ambientScheduleFile)
+    
+    # Write out the evaporator schedule
+    evaporatorScheduleFile <- paste(dirToWork, "evaporatorTschedule.csv", sep = "/")
+    writeLines(text = paste("default", 20), con = evaporatorScheduleFile)
+    
+    # Write out the inlet schedule
+    inletScheduleFile <- paste(dirToWork, "inletTschedule.csv", sep = "/")
+    writeLines(text = paste("default", 10), con = inletScheduleFile)
+    
+    # Write out the DR schedule
+    DRScheduleFile <- paste(dirToWork, "DRschedule.csv", sep = "/")
+    writeLines(text = "default 1\nminutes,OnOff", con = DRScheduleFile)
+    
+    # What was the setpoint???
+    testInfoFile <- paste(dirToWork, "testInfo.txt", sep = "/")
+    writeLines(text = paste0("length_of_test ", 1440*7,
+                             "\nsetpoint ", (124 - 32) / 1.8),
+               con = testInfoFile)    
+  })
+})
+
+
