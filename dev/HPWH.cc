@@ -361,6 +361,23 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
       heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
     }
 
+  //print minutely output
+    if (hpwhVerbosity == VRB_minuteOut) {
+      msg("%f,%f,%f,", tankAmbientT_C[i], drawVolume_L[i], inletT_C[i]);
+      for (int j = 0; j < numHeatSources; j++) {
+        msg("%f,%f,", getNthHeatSourceEnergyInput(j), getNthHeatSourceEnergyOutput(j));
+      }
+      msg("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+          tankTemps_C[0*numNodes/12], tankTemps_C[1*numNodes/12],
+          tankTemps_C[2*numNodes/12], tankTemps_C[3*numNodes/12],
+          tankTemps_C[4*numNodes/12], tankTemps_C[5*numNodes/12],
+          tankTemps_C[6*numNodes/12], tankTemps_C[7*numNodes/12],
+          tankTemps_C[8*numNodes/12], tankTemps_C[9*numNodes/12],
+          tankTemps_C[10*numNodes/12], tankTemps_C[11*numNodes/12],  
+                getNthSimTcouple(1), getNthSimTcouple(2), getNthSimTcouple(3),
+                getNthSimTcouple(4), getNthSimTcouple(5), getNthSimTcouple(6));
+    }
+
   }
   //finish weighted avg. of outlet temp by dividing by the total drawn volume
   outletTemp_C_AVG /= totalDrawVolume_L;
