@@ -75,9 +75,10 @@ class HPWH {
   ///the specified values are used for >= comparisons, so the numerical order is relevant
   enum VERBOSITY {
     VRB_silent = 0,     /**< print no outputs  */
-    VRB_reluctant = 1,  /**< print only outputs for fatal errors  */
-    VRB_typical = 2,    /**< print some basic debugging info  */
-    VRB_emetic = 3      /**< print all the things  */
+    VRB_reluctant = 10,  /**< print only outputs for fatal errors  */
+    VRB_minuteOut = 15,    /**< print minutely output  */
+    VRB_typical = 20,    /**< print some basic debugging info  */
+    VRB_emetic = 30      /**< print all the things  */
     };
     
 
