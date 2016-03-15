@@ -1338,6 +1338,20 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
         }
         
         break;
+        
+      case OFFLOGIC_highT:
+        //when the "external" temperature is too warm - typically used for resistance lockout
+        //when running, use hysteresis
+        if (isEngaged() == true && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint - hysteresis_dC) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down running highT\t");
+        }
+        //when not running, don't use hysteresis
+        else if (isEngaged() == false && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down highT\t");
+        }
+        break;
 
       case OFFLOGIC_lowTreheat:
         //don't run if the temperature is too warm
