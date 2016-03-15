@@ -2808,7 +2808,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //logic conditions
 //    double compStart = dF_TO_dC(24.4);
     double compStart = dF_TO_dC(40.0);
-    double lowTcutoff = F_TO_C(50.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(5.2);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -2863,11 +2863,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 35;
     compressor.T2_F = 67;
 
-    compressor.COP_T1_constant = 4.01;
-    compressor.COP_T1_linear = -0.024021;
+    compressor.COP_T1_constant = 3.7;
+    compressor.COP_T1_linear = -0.0176;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 8;
-    compressor.COP_T2_linear = -0.0573;
+    compressor.COP_T2_constant = 6.8;
+    compressor.COP_T2_linear = -0.0384;
     compressor.COP_T2_quadratic = 0.0;
     compressor.inputPower_T1_constant_W = 956.25;
     compressor.inputPower_T1_linear_WperF = 5.3125;
@@ -2876,14 +2876,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.inputPower_T2_linear_WperF = 4.375;
     compressor.inputPower_T2_quadratic_WperF2 = 0.0;
 
-    compressor.hysteresis_dC = 4;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
     
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(74.9228));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(9.0972));
 
     //lowT cutoff
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(135));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(125));
     compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
@@ -2917,11 +2917,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 50;
     compressor.T2_F = 67;
 
-    compressor.COP_T1_constant = 5.28;
-    compressor.COP_T1_linear = -0.0306;
+    compressor.COP_T1_constant = 5.09;
+    compressor.COP_T1_linear = -0.0271;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 7.125;
-    compressor.COP_T2_linear = -0.04375;
+    compressor.COP_T2_constant = 6.11;
+    compressor.COP_T2_linear = -0.0329;
     compressor.COP_T2_quadratic = 0.0;
     compressor.inputPower_T1_constant_W = 1305;
     compressor.inputPower_T1_linear_WperF = 3.68;
@@ -2930,14 +2930,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.inputPower_T2_linear_WperF = 4.21;
     compressor.inputPower_T2_quadratic_WperF2 = 0.0;
 
-    compressor.hysteresis_dC = 4;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
     
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(13.7546));
 
     //lowT cutoff
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(135));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(125));
 
     compressor.depressesTemperature = false;  //no temp depression
 
@@ -2989,7 +2989,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 7.69;
     compressor.COP_T2_linear = -0.0413;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(4); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -2998,7 +2998,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     double compStart = dF_TO_dC(30.8333);
@@ -3070,7 +3070,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 7.34;
     compressor.COP_T2_linear = -0.0326;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(4); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3079,7 +3079,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4350);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     double compStart = dF_TO_dC(40.9076);
@@ -3151,7 +3151,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 8.188;
     compressor.COP_T2_linear = -0.0432;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(4); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3160,7 +3160,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     double compStart = dF_TO_dC(34.1636);
@@ -3231,7 +3231,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 7.207307;
     compressor.COP_T2_linear = -0.0335265;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(1); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3241,7 +3241,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4000);
     resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(19.6605));
@@ -3310,7 +3310,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 7.207307;
     compressor.COP_T2_linear = -0.0335265;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(1); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3320,7 +3320,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4000);
     resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(20));
@@ -3391,7 +3391,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 6.3;
     compressor.COP_T2_linear = -0.03;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(4); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3400,7 +3400,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 2250);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     double compStart = dF_TO_dC(38);
@@ -3441,14 +3441,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     doTempDepression = false;
     tankMixesOnDraw = false;
 
-    numHeatSources = 1;
+    numHeatSources = 2;
     setOfSources = new HeatSource[numHeatSources];
 
     HeatSource compressor(this);
+    HeatSource resistiveElement(this);
 
     compressor.isOn = false;
     compressor.isVIP = false;
     compressor.typeOfHeatSource = TYPE_compressor;
+
+    resistiveElement.setupAsResistiveElement(0, 1500);
+    resistiveElement.hysteresis_dC = dF_TO_dC(0);
 
     compressor.setCondensity(0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0);
 
@@ -3468,17 +3472,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.inputPower_T2_linear_WperF = 2.82001;
     compressor.inputPower_T2_quadratic_WperF2 = 0.0;
 
-    compressor.hysteresis_dC = 4;  //no hysteresis
+    compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
     
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(6.5509));
-
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(32));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(100));
+
+    resistiveElement.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(7));
+    resistiveElement.addShutOffLogic(HeatSource::OFFLOGIC_highT, F_TO_C(32));
 
     compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
     setOfSources[0] = compressor;
+    setOfSources[1] = resistiveElement;
   } else if (presetNum == MODELS_Generic1) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
@@ -3520,7 +3528,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 3.95076;
     compressor.COP_T2_linear = -0.01638033;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(4);
+    compressor.hysteresis_dC = dF_TO_dC(2);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
     
     //top resistor values
@@ -3529,7 +3537,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(40.0));
@@ -3593,7 +3601,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 5.25076;
     compressor.COP_T2_linear = -0.02638033;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(1); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3602,7 +3610,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(40));
@@ -3671,7 +3679,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.COP_T2_constant = 6.75076;
     compressor.COP_T2_linear = -0.03638033;
     compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(1); 
+    compressor.hysteresis_dC = dF_TO_dC(2); 
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
     //top resistor values
@@ -3681,7 +3689,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
     resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
    
     //logic conditions
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(40));
