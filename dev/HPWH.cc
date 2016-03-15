@@ -2721,7 +2721,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //logic conditions
 //    double compStart = dF_TO_dC(24.4);
     double compStart = dF_TO_dC(40.0);
-    double lowTcutoff = F_TO_C(50.0);
+    double lowTcutoff = F_TO_C(45.0);
     double standby = dF_TO_dC(5.2);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, compStart);
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, standby);
@@ -2776,11 +2776,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 35;
     compressor.T2_F = 67;
 
-    compressor.COP_T1_constant = 4.01;
-    compressor.COP_T1_linear = -0.024021;
+    compressor.COP_T1_constant = 3.7;
+    compressor.COP_T1_linear = -0.0176;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 8;
-    compressor.COP_T2_linear = -0.0573;
+    compressor.COP_T2_constant = 6.8;
+    compressor.COP_T2_linear = -0.0384;
     compressor.COP_T2_quadratic = 0.0;
     compressor.inputPower_T1_constant_W = 956.25;
     compressor.inputPower_T1_linear_WperF = 5.3125;
@@ -2796,7 +2796,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(9.0972));
 
     //lowT cutoff
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(135));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(125));
     compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
@@ -2830,11 +2830,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 50;
     compressor.T2_F = 67;
 
-    compressor.COP_T1_constant = 5.28;
-    compressor.COP_T1_linear = -0.0306;
+    compressor.COP_T1_constant = 5.09;
+    compressor.COP_T1_linear = -0.0271;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 7.125;
-    compressor.COP_T2_linear = -0.04375;
+    compressor.COP_T2_constant = 6.11;
+    compressor.COP_T2_linear = -0.0329;
     compressor.COP_T2_quadratic = 0.0;
     compressor.inputPower_T1_constant_W = 1305;
     compressor.inputPower_T1_linear_WperF = 3.68;
@@ -2850,7 +2850,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(13.7546));
 
     //lowT cutoff
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(135));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(125));
 
     compressor.depressesTemperature = false;  //no temp depression
 
