@@ -2144,6 +2144,9 @@ int HPWH::HPWHinit_file(std::string configFile){
         if (tempString == "lowT") {
           setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_lowT, tempDouble);
         }
+        else if (tempString == "highT") {
+          setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_highT, tempDouble);
+        }
         else if (tempString == "lowTreheat") {
           setOfSources[heatsource].addShutOffLogic(HeatSource::OFFLOGIC_lowTreheat, tempDouble);
         }
