@@ -361,6 +361,23 @@ int HPWH::runNSteps(int N,  double *inletT_C, double *drawVolume_L,
       heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
     }
 
+  //print minutely output
+    if (hpwhVerbosity == VRB_minuteOut) {
+      msg("%f,%f,%f,", tankAmbientT_C[i], drawVolume_L[i], inletT_C[i]);
+      for (int j = 0; j < numHeatSources; j++) {
+        msg("%f,%f,", getNthHeatSourceEnergyInput(j), getNthHeatSourceEnergyOutput(j));
+      }
+      msg("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+          tankTemps_C[0*numNodes/12], tankTemps_C[1*numNodes/12],
+          tankTemps_C[2*numNodes/12], tankTemps_C[3*numNodes/12],
+          tankTemps_C[4*numNodes/12], tankTemps_C[5*numNodes/12],
+          tankTemps_C[6*numNodes/12], tankTemps_C[7*numNodes/12],
+          tankTemps_C[8*numNodes/12], tankTemps_C[9*numNodes/12],
+          tankTemps_C[10*numNodes/12], tankTemps_C[11*numNodes/12],  
+                getNthSimTcouple(1), getNthSimTcouple(2), getNthSimTcouple(3),
+                getNthSimTcouple(4), getNthSimTcouple(5), getNthSimTcouple(6));
+    }
+
   }
   //finish weighted avg. of outlet temp by dividing by the total drawn volume
   outletTemp_C_AVG /= totalDrawVolume_L;
@@ -1320,6 +1337,20 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
           if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down lowT\t");
         }
         
+        break;
+        
+      case OFFLOGIC_highT:
+        //when the "external" temperature is too warm - typically used for resistance lockout
+        //when running, use hysteresis
+        if (isEngaged() == true && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint - hysteresis_dC) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down running highT\t");
+        }
+        //when not running, don't use hysteresis
+        else if (isEngaged() == false && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint) {
+          shutOff = true;
+          if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down highT\t");
+        }
         break;
 
       case OFFLOGIC_lowTreheat:

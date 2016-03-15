@@ -11,12 +11,12 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-const float DENSITYWATER_kgperL = 0.998;
-const float CPWATER_kJperkgC = 4.181;
+const float DENSITYWATER_kgperL = 0.998f;
+const float CPWATER_kJperkgC = 4.181f;
 const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
 //change at your own risk */
 const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-const float HEATDIST_MINVALUE = 0.0001; /**< any amount of heat distribution less than this is reduced to 0
+const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
 //this saves on computations */
 
 //#define HPWH_ABRIDGED
@@ -83,9 +83,10 @@ class HPWH {
   ///the specified values are used for >= comparisons, so the numerical order is relevant
   enum VERBOSITY {
     VRB_silent = 0,     /**< print no outputs  */
-    VRB_reluctant = 1,  /**< print only outputs for fatal errors  */
-    VRB_typical = 2,    /**< print some basic debugging info  */
-    VRB_emetic = 3      /**< print all the things  */
+    VRB_reluctant = 10,  /**< print only outputs for fatal errors  */
+    VRB_minuteOut = 15,    /**< print minutely output  */
+    VRB_typical = 20,    /**< print some basic debugging info  */
+    VRB_emetic = 30      /**< print all the things  */
     };
     
 
@@ -425,7 +426,8 @@ class HPWH::HeatSource {
   /** this is the set of logics available for shutsDown  */
   enum OFFLOGIC{
     OFFLOGIC_lowT,                /**< if temp is below decision point, shut off */
-    OFFLOGIC_lowTreheat,          /**< if temp is above decision point, shut off */
+    OFFLOGIC_highT,                /**< if temp is abovr decision point, shut off */
+    OFFLOGIC_lowTreheat,          /**< if temp is above decision point, just while running, shut off */
     OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
     OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
     OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */

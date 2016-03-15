@@ -21,7 +21,10 @@ var class_h_p_w_h =
       [ "MODELS_Voltex80", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea43a81e504a36439014268afec64a899d", null ],
       [ "MODELS_GEGeospring", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea6db9981f52f9360905b8bbc8cd13e2bd", null ],
       [ "MODELS_SandenGES", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eaa4e8a7fab0f9aaec663b88b84f81db22", null ],
-      [ "MODELS_SandenGAU", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1", null ]
+      [ "MODELS_SandenGAU", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac87d8fbe2c7a407b3e1306e0342dd8a1", null ],
+      [ "MODELS_AOSmithHPTU50", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea2c4724ca1989b5699e1f6177c0b33c90", null ],
+      [ "MODELS_AOSmithHPTU66", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea8c7f0974cb95be46702b53602296fde0", null ],
+      [ "MODELS_AOSmithHPTU80", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea11e65f5513b69bf1c754fd4bf19240dc", null ]
     ] ],
     [ "UNITS", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294", [
       [ "UNITS_C", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b", null ],
