@@ -426,7 +426,8 @@ class HPWH::HeatSource {
   /** this is the set of logics available for shutsDown  */
   enum OFFLOGIC{
     OFFLOGIC_lowT,                /**< if temp is below decision point, shut off */
-    OFFLOGIC_lowTreheat,          /**< if temp is above decision point, shut off */
+    OFFLOGIC_highT,                /**< if temp is abovr decision point, shut off */
+    OFFLOGIC_lowTreheat,          /**< if temp is above decision point, just while running, shut off */
     OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
     OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
     OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */
