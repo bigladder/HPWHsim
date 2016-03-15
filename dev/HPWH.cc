@@ -543,6 +543,59 @@ int HPWH::resetTankToSetpoint(){
   return 0;
 }
 
+
+int HPWH::setAirFlowFreedom(double fanFraction) {
+  if (fanFraction < 0 || fanFraction > 1) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the fan fraction outside of bounds.  \n");
+    simHasFailed = true;
+    return HPWH_ABORT;
+  }
+  else {
+    for (int i = 0; i < numHeatSources; i++) {
+      if (setOfSources[i].typeOfHeatSource == TYPE_compressor) setOfSources[i].airflowFreedom = fanFraction;
+    }
+  }
+  return 0;
+}
+
+int HPWH::setDoTempDepression(bool doTempDepress) {
+  this->doTempDepression = doTempDepress;
+  return 0;
+}
+
+int HPWH::setTankSize(double HPWH_size_L) {
+  if (HPWH_size_L < 0) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
+    simHasFailed = true;
+    return HPWH_ABORT;
+  }
+  else {
+    this->tankVolume_L = HPWH_size_L;
+  }
+  return 0;
+}
+int HPWH::setTankSize(double HPWH_size, UNITS units) {
+  if (HPWH_size < 0) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
+    simHasFailed = true;
+    return HPWH_ABORT;
+  }
+  else {
+    if (units == UNITS_L) {
+      this->tankVolume_L = HPWH_size;
+    }
+    else if (units == UNITS_GAL) {
+      this->tankVolume_L = GAL_TO_L(HPWH_size);
+    }
+    else {
+      if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setTankSize.  \n");
+      return HPWH_ABORT;
+    }
+    return 0;
+  }
+}
+
+
   
 int HPWH::getNumNodes() const {
   return numNodes;

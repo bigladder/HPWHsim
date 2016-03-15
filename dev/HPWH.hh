@@ -95,7 +95,9 @@ class HPWH {
     UNITS_F,          /**< fahrenheit  */
     UNITS_KWH,        /**< kilowatt hours  */
     UNITS_BTU,        /**< british thermal units  */
-    UNITS_KJ          /**< kilojoules  */
+    UNITS_KJ,         /**< kilojoules  */
+    UNITS_GAL,        /**< kilojoules  */
+    UNITS_L           /**< kilojoules  */
     };
 
   /** specifies the type of heat source  */
@@ -184,6 +186,17 @@ class HPWH {
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
+
+  int setAirFlowFreedom(double fanFraction);
+  /**< This is a simple setter for the AirFlowFreedom */
+
+  int setDoTempDepression(bool doTempDepress);
+  /**< This is a simple setter for the temperature depression option */
+
+  int setTankSize(double HPWH_size_L);
+  int setTankSize(double HPWH_size, UNITS units);
+  /**< This is a simple setter for the tank volume in L or GAL */
+
 
   
 	int getNumNodes() const;

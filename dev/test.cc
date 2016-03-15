@@ -40,14 +40,8 @@ hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankNoUA);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankHugeUA);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_restankRealistic);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_externalTest);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_basicIntegrated);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex60);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Voltex80);
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GEGeospring);
+
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
