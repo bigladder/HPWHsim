@@ -3441,14 +3441,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     doTempDepression = false;
     tankMixesOnDraw = false;
 
-    numHeatSources = 1;
+    numHeatSources = 2;
     setOfSources = new HeatSource[numHeatSources];
 
     HeatSource compressor(this);
+    HeatSource resistiveElement(this);
 
     compressor.isOn = false;
     compressor.isVIP = false;
     compressor.typeOfHeatSource = TYPE_compressor;
+
+    resistiveElement.setupAsResistiveElement(0, 1500);
+    resistiveElement.hysteresis_dC = dF_TO_dC(0);
 
     compressor.setCondensity(0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0);
 
@@ -3472,13 +3476,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
     
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(6.5509));
-
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(32));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(100));
+
+    resistiveElement.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(7));
+    resistiveElement.addShutOffLogic(HeatSource::OFFLOGIC_highT, F_TO_C(32));
 
     compressor.depressesTemperature = false;  //no temp depression
 
     //set everything in its places
     setOfSources[0] = compressor;
+    setOfSources[1] = resistiveElement;
   } else if (presetNum == MODELS_Generic1) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
