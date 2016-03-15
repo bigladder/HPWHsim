@@ -11,7 +11,7 @@ models <- makes <- c("AOSmith60", "AOSmith80",
                      "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
                      "SandenGAU", "SandenGES", "Stiebel220e",
                      "Generic1", "Generic2", "Generic3")
-# models <- c("SandenGAU", "SandenGES")
+# models <- c("Stiebel220e")
 
 copyWeeklyData <- function(Ta, inletT, setpoint = 127, models) {
   lapply(models, function(model) {
@@ -434,3 +434,8 @@ ggplot(results2[results2$Ta >= 50 & results2$Ta <= 80, ]) + theme_bw() +
 
 
 
+# Junk....
+# rsum <- aggregate(SEF ~ Ta + inletT + setpoint, data = results, FUN = mean)
+# ggplot(rsum) + theme_bw() + 
+#   geom_point(aes(Ta, SEF, col = factor(inletT))) +
+#   facet_wrap(~setpoint)
