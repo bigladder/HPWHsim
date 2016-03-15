@@ -18,6 +18,8 @@ const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the valu
 const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
 const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
 //this saves on computations */
+const float UNINITIALIZED_LOCATIONTEMP = -500;  /**< this is used to tell the
+simulation when the location temperature has not been initialized */
 
 //#define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be

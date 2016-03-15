@@ -35,13 +35,14 @@ hpwh.HPWHinit_file("testInput.txt");
 //return(0);
 
 
-hpwh.setVerbosity(HPWH::VRB_emetic);
+//hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
 //hpwh.setVerbosity(HPWH::VRB_reluctant);
-//hpwh.setVerbosity(HPWH::VRB_silent);
+hpwh.setVerbosity(HPWH::VRB_silent);
 
 
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)

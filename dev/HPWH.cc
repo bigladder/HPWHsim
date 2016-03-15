@@ -13,7 +13,7 @@ using std::string;
 HPWH::HPWH() :
   simHasFailed(true), isHeating(false), hpwhVerbosity(VRB_silent), 
   messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-  setOfSources(NULL), tankTemps_C(NULL)
+  setOfSources(NULL), tankTemps_C(NULL),  doTempDepression(false), locationTemperature(UNINITIALIZED_LOCATIONTEMP)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -163,6 +163,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   // to the tracked locationTemperature
   double temperatureGoal = tankAmbientT_C;
   if (doTempDepression) {
+    if (locationTemperature == UNINITIALIZED_LOCATIONTEMP) locationTemperature = tankAmbientT_C;
     tankAmbientT_C = locationTemperature;
     heatSourceAmbientT_C = locationTemperature;
   }
@@ -1973,10 +1974,8 @@ int HPWH::HPWHinit_file(std::string configFile){
   std::stringstream line_ss;
   string token;
   while (std::getline(inputFILE, line_s) ){
-    //cout << line_s << endl;
     line_ss.clear();
     line_ss.str(line_s);
-    //cout << line_ss.str() << "endl\n";
 
     //grab the first word, and start comparing
     line_ss >> token;
@@ -2298,9 +2297,6 @@ int HPWH::HPWHinit_file(std::string configFile){
       msg("Improper keyword: %s  \n", token.c_str());
       return HPWH_ABORT;
       }
-
-    //cout << "endline: " << token << endl;
-
 
   } //end while over lines
  
