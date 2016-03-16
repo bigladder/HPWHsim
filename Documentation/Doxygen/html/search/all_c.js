@@ -1,9 +1,6 @@
 var searchData=
 [
-  ['units',['UNITS',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294',1,'HPWH']]],
-  ['units_5fbtu',['UNITS_BTU',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb',1,'HPWH']]],
-  ['units_5fc',['UNITS_C',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b',1,'HPWH']]],
-  ['units_5ff',['UNITS_F',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ae29857fe31daf556397a00d442905a47',1,'HPWH']]],
-  ['units_5fkj',['UNITS_KJ',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05',1,'HPWH']]],
-  ['units_5fkwh',['UNITS_KWH',['../class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a696f5270fcb832c3786feda6dcc119c4',1,'HPWH']]]
+  ['type_5fcompressor',['TYPE_compressor',['../class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bcac55f8b54a5a405acec2cb355c8137c3e',1,'HPWH']]],
+  ['type_5fnone',['TYPE_none',['../class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7',1,'HPWH']]],
+  ['type_5fresistance',['TYPE_resistance',['../class_h_p_w_h.html#af01f392e3fff4013310d3fe992bb00bcac6415dff065bc877b56329b809a7bb47',1,'HPWH']]]
 ];
