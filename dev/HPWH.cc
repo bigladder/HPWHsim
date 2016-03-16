@@ -3697,7 +3697,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(35.0));
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(55));
 
-    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(80)); 
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(60)); 
 
     resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(40));
 
