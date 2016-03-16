@@ -134,6 +134,12 @@ exceptions[[8]] <- list("model" = "RheemHB50",
                         "dontuse" = c("CMP_T", "CMP_T37", "CMP_T37r2", "CMP_T38", "CMP_T39", "CMP_T39r2", "CMP_T40", "CMP_T42"))
 exceptions[[9]] <- list("model" = "Stiebel220e",
                         "dontuse" = c("CMP_T", "DOE2014_1hrhres", "DOE2014_24hr50hres", "DOE2014_24hr67hres", "DOE_1hr", "DOE_1hrhres", "DOE_24hr50hres", "DOE_24hr67hres", "DP_SHW50hres"))
+exceptions[[10]] <- list("model" = "Generic3",
+                         "dontuse" = c("DOE_1hr", "DOE2014_1hr"))
+exceptions[[11]] <- list("model" = "Generic2",
+                         "dontuse" = c("DOE_1hr", "DOE2014_1hr"))
+exceptions[[12]] <- list("model" = "Generic1",
+                         "dontuse" = c("DOE_1hr", "DOE2014_1hr"))
 for(i in seq_along(exceptions)) {
   model <- exceptions[[i]]$model
   for(test in exceptions[[i]]$dontuse) {
