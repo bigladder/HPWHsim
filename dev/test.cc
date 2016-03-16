@@ -8,8 +8,8 @@
 #include "HPWH.hh"
 #include <sstream>
 
-#define F_TO_C(T) ((T-32.0)*5.0/9.0)
-#define GAL_TO_L(GAL) (GAL*3.78541)
+//#define F_TO_C(T) ((T-32.0)*5.0/9.0)
+//#define GAL_TO_L(GAL) (GAL*3.78541)
 
 using std::cout;
 using std::endl;
@@ -21,7 +21,6 @@ void printTankTemps(HPWH& hpwh);
 
 int main(void)
 {
-
 
 HPWH hpwh;
 int initReturn = 0;

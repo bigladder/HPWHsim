@@ -11,16 +11,6 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-const float DENSITYWATER_kgperL = 0.998f;
-const float CPWATER_kJperkgC = 4.181f;
-const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
-//change at your own risk */
-const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
-//this saves on computations */
-const float UNINITIALIZED_LOCATIONTEMP = -500;  /**< this is used to tell the
-simulation when the location temperature has not been initialized */
-
 //#define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
  *  excluded from compiling.  This is done in order to reduce the size of the
@@ -28,6 +18,22 @@ simulation when the location temperature has not been initialized */
 
 class HPWH {
  public:
+  static const int version_major = 1;
+  static const int version_minor = 0;
+  static const int version_maint = 0;
+
+
+  static const float DENSITYWATER_kgperL = 0.998f;
+  static const float CPWATER_kJperkgC = 4.181f;
+  static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
+  //change at your own risk */
+  static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
+  static const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
+  //this saves on computations */
+  static const float UNINITIALIZED_LOCATIONTEMP = -500;  /**< this is used to tell the
+  simulation when the location temperature has not been initialized */
+
+
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
   HPWH & operator=(const HPWH &hpwh);  /**< assignment operator  */
@@ -114,7 +120,8 @@ class HPWH {
   ///destroying error
   static const int HPWH_ABORT = -274000;
 
-
+  std::string getVersion();
+  /**< This function returns a string with the current version number */
     
 	int HPWHinit_presets(MODELS presetNum);
 	/**< This function will load in a set of parameters that are hardcoded in this function - 
