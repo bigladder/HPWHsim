@@ -120,6 +120,14 @@ HPWH::~HPWH() {
   delete[] setOfSources;  
 }
 
+string HPWH::getVersion(){
+  std::stringstream version;
+
+  version << version_major << '.' <<version_minor << '.' <<version_maint;
+
+  return version.str();
+  }
+
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
                      double tankAmbientT_C, double heatSourceAmbientT_C,
@@ -1948,7 +1956,7 @@ int HPWH::checkInputs(){
 }
 
 #ifndef HPWH_ABRIDGED
-int HPWH::HPWHinit_file(std::string configFile){
+int HPWH::HPWHinit_file(string configFile){
   simHasFailed = true;  //this gets cleared on successful completion of init
 
   //clear out old stuff if you're re-initializing
