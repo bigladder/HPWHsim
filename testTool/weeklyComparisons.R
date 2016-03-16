@@ -11,7 +11,7 @@ models <- makes <- c("AOSmith60", "AOSmith80",
                      "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
                      "SandenGAU", "SandenGES", "Stiebel220e",
                      "Generic1", "Generic2", "Generic3")
-# models <- c("Stiebel220e")
+# models <- c("SandenGES")
 
 copyWeeklyData <- function(Ta, inletT, setpoint = 127, models) {
   lapply(models, function(model) {
@@ -187,6 +187,31 @@ save(file = "results.rda", results)
 
 load("results.rda")
 
+byTemp <- aggregate(SEF ~ Ta + model, data = results, FUN = mean)
+
+# Curated 
+modelsToUse <- c("AOSmith60", "AOSmithHPTU50", "GE502014", "GE502014STDMode",
+                 "SandenGAU", "GEred")
+hpwhLabels <- c("AOSmithPHPT60", "AOSmithHPTU50",
+                "GE2014", "GE2014STDMode", "GE2012",
+                "Sanden")
+weeklySEFs <- ggplot(byTemp[byTemp$model %in% modelsToUse, ]) + theme_bw() + 
+  geom_point(aes(Ta, SEF, col = model, shape = model)) +
+  scale_shape_manual(values = 1:6, name = "Model", labels = hpwhLabels) +
+  xlab("Ambient Temp (F)") + ylab("Simple Energy Factor") +
+  ggtitle("Simple Energy Factor from SEEM Weekly Draw Profiles") +
+  scale_colour_discrete(name = "Model", labels = hpwhLabels)
+weeklySEFs
+ggsave(file = "graphs/weeklySEFs.png", weeklySEFs, width = 7, height = 5)
+
+allWeeklySEFs <- ggplot(byTemp) + theme_bw() + 
+  geom_line(aes(Ta, SEF, col = model)) +
+  xlab("Ambient Temp (F)") + ylab("Simple Energy Factor") +
+  ggtitle("Simple Energy Factor from SEEM Weekly Draw Profiles") +
+  scale_colour_discrete(name = "Model")
+allWeeklySEFs
+ggsave(file = "graphs/allWeeklySEFs.png", allWeeklySEFs, width = 7, height = 5)
+
 lapply(c(120, 130, 140), function(setpoint) {
   load("results.rda")
   results <- results[results$setpoint == setpoint, ]
@@ -228,7 +253,6 @@ lapply(c(120, 130, 140), function(setpoint) {
   
   
   # 
-  m <- "GEred"
   lapply(unique(results$model), function(m) {
     fname <- paste("graphs/allSEFsRaw", "_", m, "_", setpoint, ".png", sep = "")
     allSEFs <- ggplot(results[results$model == m & results$SEF < 10000, ]) + theme_bw() + 
@@ -360,6 +384,118 @@ sandenOddity2 <- ggplot(sandenLong[sandenLong$test == "Weekly_1" & sandenLong$mo
 sandenOddity2
 ggsave(file = "graphs/sandenOddity2.png", sandenOddity2, width = 7, height = 5)
 
+
+
+
+
+
+
+# SandenGES oddity... Why does the 70F inlet leapfrog the 60F inlet???
+
+sanden <- do.call('rbind', lapply(c(50, 60, 70), function(i) {
+  copyWeeklyData(80, i, 149, c("SandenGES"))  
+  sanden <- runSimsWeekly(c("SandenGES"))
+  sanden <- sanden[sanden$test == "Weekly_4", ]
+  sanden$inletT <- i
+  sanden
+}))
+sanden$Ta <- round(sanden$Ta * 1.8 + 32, 0)
+sanden$day <- rep(1:7, each = 1440)
+aggregate(tcouples1 ~ inletT, 
+          data = sanden[sanden$inputPower > 200, ], 
+          FUN = mean)
+aggregate(tcouples6 ~ inletT,
+          data = sanden[sanden$flow > 0, ],
+          FUN = mean)
+
+# When it's on, what's the temp at the bottom
+sandenGesOddity2 <- ggplot(sanden[sanden$flow > 0, ]) + theme_bw() + 
+  geom_histogram(aes(tcouples6, fill = factor(inletT)), alpha = .5, position = "dodge") +
+  ggtitle("Sanden GES Oddity - Upper Tank Temp During Flow") +
+  xlab("Temperature of Top Sixth Thermocouples (F)") +
+  ylab("Number of Minutes") +
+  scale_fill_discrete(name = "Inlet Temp")
+sandenGesOddity2
+ggsave(file = "graphs/sandenGesOddity2.png", sandenGesOddity2, width = 7, height = 5)
+
+
+sanden$compOn <- sanden$inputPower > 200
+sandenLong <- reshape2::melt(sanden, id.vars = c("minutes", "test", "model", "type", "inletT", "compOn", "day"))
+
+sandenLong$hours <- sandenLong$minutes / 60
+sanden$hours <- sanden$minutes / 60
+
+varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
+                                      "tcouples1", "tcouples2", "tcouples3",
+                                      "tcouples4", "tcouples5", "tcouples6",
+                                      "aveTankTemp", "Ta"),
+                       "units" = c("Gallons", rep("Watts", 2),
+                                   rep("Fahrenheit", 8)),
+                       "category" = c("Draw", "Input Power", "Output Power",
+                                      rep("Thermocouples", 6), "Average Tank Temp",
+                                      "Ambient Temp"))
+
+sandenLong <- merge(sandenLong, varGuide)
+range <- c(0 * 1440, 8 * 1440)
+sandenOddity <- ggplot(sandenLong[sandenLong$variable %in% c("inputPower"), ]) + 
+  theme_bw() + 
+  geom_line(aes(hours, value, col = factor(inletT), linetype = factor(inletT))) +
+  ggtitle("Sanden GES Simulation Oddity") +
+  facet_wrap(~day, scales = "free_x") +
+  xlab("Hours into Week") +
+  scale_colour_discrete(name = "Inlet Temp") +
+  scale_linetype_discrete(name = "Inlet Temp")
+sandenOddity
+ggsave(file = "graphs/sandenGesOddity.png", sandenOddity, width = 7, height = 5)
+
+
+tcouples <- c("tcouples1", "tcouples2", "tcouples3", "tcouples4", "tcouples5", "tcouples6")
+sandenOddity2 <- ggplot(sandenLong[sandenLong$test == "Weekly_1" & sandenLong$model == "SandenGAU" & sandenLong$hours > 75 & sandenLong$hours < 85 & sandenLong$variable %in% c("inputPower", "aveTankTemp"), ]) + 
+  theme_bw() + 
+  geom_line(aes(hours, value, col = variable, linetype = model)) +
+  geom_line(data = sandenLong[sandenLong$test == "Weekly_1" & sandenLong$model == "SandenGAU" &sandenLong$var %in% tcouples & sandenLong$hours > 75 & sandenLong$hours < 85, ],
+            aes(hours, value, group = variable, linetype = variable), alpha = .5) +
+  ggtitle("Sanden GAU Simulation Oddity") +
+  facet_wrap(~units, scales = "free_y", ncol = 1) +
+  xlab("Hours into Week") +
+  scale_colour_discrete(name = "Test Type")
+sandenOddity2
+ggsave(file = "graphs/sandenOddity2.png", sandenOddity2, width = 7, height = 5)
+
+
+
+
+
+
+
+# What's going on with the Generic3???
+
+ge <- do.call('rbind', lapply(c(50, 85, 90), function(Ta) {
+  copyWeeklyData(Ta, 50, 130, "Generic3")  
+  ge <- runSimsWeekly("Generic3")
+  ge <- ge[ge$test == "Weekly_5", ]
+  ge
+}))
+ge$Ta <- round(ge$Ta * 1.8 + 32, 0)
+
+ggplot(ge[ge$inputPower > 100, ]) + theme_bw() + 
+  geom_histogram(aes(inputPower, fill = factor(Ta)), alpha = 0.5, position = "dodge")
+
+geLong <- reshape2::melt(ge, id.vars = c("minutes", "test", "model", "type", "Ta"))
+range <- c(20 * 60, 80*60)
+geLong$hours <- geLong$minutes / 60
+geOddity <- ggplot(geLong[geLong$minutes > range[1] & geLong$minutes < range[2] & geLong$variable %in% c("inputPower", "tcouples2", "flow"), ]) + 
+  theme_bw() + 
+  geom_line(aes(hours, value, col = factor(Ta))) +
+  facet_wrap(~variable, ncol = 1, scales = "free_y")+
+  ggtitle("Generic3 simulation oddity?") +
+  xlab("Hours into Week") +
+  scale_colour_discrete(name = "Ambient Temp")
+geOddity
+ggsave(file = "graphs/genericOddity.png", geOddity, width = 7, height = 5)
+
+
+#
 
 
 
