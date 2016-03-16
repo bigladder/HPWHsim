@@ -10,5 +10,6 @@ var searchData=
   ['getnumnodes',['getNumNodes',['../class_h_p_w_h.html#a38e4f7eb3da82c2281657702fc472b1d',1,'HPWH']]],
   ['getoutlettemp',['getOutletTemp',['../class_h_p_w_h.html#a0b75a215e395f52d60997f9b07d37de7',1,'HPWH']]],
   ['getstandbylosses',['getStandbyLosses',['../class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880',1,'HPWH']]],
-  ['gettanknodetemp',['getTankNodeTemp',['../class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802',1,'HPWH::getTankNodeTemp(int nodeNum) const '],['../class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948',1,'HPWH::getTankNodeTemp(int nodeNum, UNITS units) const ']]]
+  ['gettanknodetemp',['getTankNodeTemp',['../class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802',1,'HPWH::getTankNodeTemp(int nodeNum) const '],['../class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948',1,'HPWH::getTankNodeTemp(int nodeNum, UNITS units) const ']]],
+  ['getversion',['getVersion',['../class_h_p_w_h.html#a001c10815863cb3efdb721d364111275',1,'HPWH']]]
 ];
