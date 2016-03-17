@@ -20,17 +20,17 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 0;
-  static const int version_maint = 0;
+  static const int version_maint = 1;
 
 
-  static const float DENSITYWATER_kgperL = 0.998f;
-  static const float CPWATER_kJperkgC = 4.181f;
+  static const float DENSITYWATER_kgperL;
+  static const float CPWATER_kJperkgC;
   static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 
   //change at your own risk */
   static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-  static const float HEATDIST_MINVALUE = 0.0001f; /**< any amount of heat distribution less than this is reduced to 0
+  static const float HEATDIST_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
   //this saves on computations */
-  static const float UNINITIALIZED_LOCATIONTEMP = -500;  /**< this is used to tell the
+  static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
 
 
