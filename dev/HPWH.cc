@@ -7,6 +7,10 @@ using std::endl;
 using std::cout;
 using std::string;
 
+const float HPWH::DENSITYWATER_kgperL = 0.998f;
+const float HPWH::CPWATER_kJperkgC = 4.181f;
+const float HPWH::HEATDIST_MINVALUE = 0.0001f; 
+const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 
 //the HPWH functions
 //the publics
