@@ -6,4 +6,5 @@
 *.png
 .Rproj.user
 *TestToolOutput.csv
+!Documentation/**
 
