@@ -20,7 +20,7 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 0;
-  static const int version_maint = 1;
+  static const int version_maint = 2;
 
 
   static const float DENSITYWATER_kgperL;
@@ -104,8 +104,8 @@ class HPWH {
     UNITS_KWH,        /**< kilowatt hours  */
     UNITS_BTU,        /**< british thermal units  */
     UNITS_KJ,         /**< kilojoules  */
-    UNITS_GAL,        /**< kilojoules  */
-    UNITS_L           /**< kilojoules  */
+    UNITS_GAL,        /**< gallons  */
+    UNITS_L           /**< liters  */
     };
 
   /** specifies the type of heat source  */
