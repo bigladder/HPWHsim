@@ -452,6 +452,7 @@ void HPWH::msgV( const char* fmt, va_list ap /*=NULL*/) const {
 
 void HPWH::printHeatSourceInfo(){
   std::stringstream ss;
+  double runtime = 0, outputVar = 0;
   
   ss << std::left;
   ss << std::fixed;
@@ -467,7 +468,10 @@ void HPWH::printHeatSourceInfo(){
   ss << endl;
 
   for (int i = 0; i < getNumHeatSources(); i++) {
-    ss << "input power kw: " << std::setw(7) << getNthHeatSourceEnergyInput(i) / (getNthHeatSourceRunTime(i)/60.0) << "\t\t";   
+    runtime = getNthHeatSourceRunTime(i);
+    if (runtime != 0) { outputVar = getNthHeatSourceEnergyInput(i) / (runtime/60.0); }
+    else { outputVar = 0; }
+    ss << "input power kw: " << std::setw(7) << outputVar << "\t\t";   
   }
   ss << endl;
 
@@ -477,7 +481,10 @@ void HPWH::printHeatSourceInfo(){
   ss << endl;
   
   for (int i = 0; i < getNumHeatSources(); i++) {
-    ss << "output power kw: " << std::setw(7) << getNthHeatSourceEnergyOutput(i) / (getNthHeatSourceRunTime(i)/60.0) << "\t";   
+    runtime = getNthHeatSourceRunTime(i);
+    if (runtime != 0) { outputVar = getNthHeatSourceEnergyOutput(i) / (runtime/60.0); }
+    else { outputVar = 0; }
+    ss << "output power kw: " << std::setw(7) << outputVar << "\t";   
   }
   ss << endl;
   
@@ -1779,7 +1786,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
     //with amount of heat available this timestep
     deltaT_C = hpwh->setpoint_C - hpwh->tankTemps_C[0];
     nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
-    nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
+    //protect against dividing by zero - if bottom node is at (or above) setpoint,
+    //add no heat
+    if (nodeHeat_kJperNode <= 0) { nodeFrac = 0; }
+    else { nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode; }
+    
     if (hpwh->hpwhVerbosity >= VRB_emetic){
       hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
     }
@@ -2350,6 +2361,16 @@ int HPWH::HPWHinit_resTank(){
   return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
   }
 int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W){
+  //low power element will cause divide by zero/negative UA in EF -> UA conversion
+  if (lowerPower_W < 550) {
+    if (hpwhVerbosity >= VRB_reluctant)  msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+    return HPWH_ABORT;
+  }
+  if (energyFactor <= 0) {
+    if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
+    return HPWH_ABORT;
+  }
+
   numNodes = 12;
   tankTemps_C = new double[numNodes];
   setpoint_C = F_TO_C(127.0);
