@@ -608,7 +608,23 @@ int HPWH::setTankSize(double HPWH_size, UNITS units) {
   }
 }
 
-
+int HPWH::setUA(double UA_kJperHrC) {
+  tankUA_kJperHrC = UA_kJperHrC;
+  return 0;
+}
+int HPWH::setUA(double UA, UNITS units) {
+  if (units == UNITS_kJperHrC) {
+    this->tankUA_kJperHrC = UA;
+  }
+  else if (units == UNITS_BTUperHrF) {
+    this->tankUA_kJperHrC = UAf_TO_UAc(UA);
+  }
+  else {
+    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setUA.  \n");
+    return HPWH_ABORT;
+  }
+  return 0;
+}
   
 int HPWH::getNumNodes() const {
   return numNodes;
@@ -2329,6 +2345,72 @@ int HPWH::HPWHinit_file(string configFile){
 }
 #endif
 
+int HPWH::HPWHinit_resTank(){
+  //a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
+  return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
+  }
+int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W){
+  numNodes = 12;
+  tankTemps_C = new double[numNodes];
+  setpoint_C = F_TO_C(127.0);
+
+  //start tank off at setpoint
+  resetTankToSetpoint();
+  
+  tankVolume_L = tankVol_L; 
+  
+  doTempDepression = false;
+  tankMixesOnDraw = true;
+
+  numHeatSources = 2;
+  setOfSources = new HeatSource[numHeatSources];
+
+  HeatSource resistiveElementBottom(this);
+  HeatSource resistiveElementTop(this);
+  resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
+  resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
+
+  //standard logic conditions
+  resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(40));
+  resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(10));
+
+  resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(20));
+  resistiveElementTop.isVIP = true;
+ 
+  setOfSources[0] = resistiveElementTop;
+  setOfSources[1] = resistiveElementBottom;
+
+
+  // (1/EnFac + 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr)))
+  double recoveryEfficiency = 0.98;
+  double numerator = (1.0 / energyFactor) + (1.0 / recoveryEfficiency);
+  double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
+  double denominator = 67.5 * ((24.0/41094.0) - temp);
+  double UA_btuPerHrF = numerator/denominator;
+  tankUA_kJperHrC = UA_btuPerHrF * (1.8 / 0.9478); 
+
+
+  //calculate oft-used derived values
+  calcDerivedValues();
+
+  if(checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+  
+  isHeating = false;
+  for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+
+
+  if (hpwhVerbosity >= VRB_emetic){
+    for (int i = 0; i < numHeatSources; i++) {
+      msg("heat source %d: %p \n", i , &setOfSources[i]);
+    }
+    msg("\n\n");
+  }
+
+  simHasFailed = false;
+  return 0;  //successful init returns 0
+}
+
+
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
   simHasFailed = true;  //this gets cleared on successful completion of init
@@ -3730,7 +3812,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
   calcDerivedValues();
 
   if(checkInputs() == HPWH_ABORT) return HPWH_ABORT;
-  
+
+  isHeating = false;
+  for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+ 
   if (hpwhVerbosity >= VRB_emetic){
     for (int i = 0; i < numHeatSources; i++) {
       msg("heat source %d: %p \n", i , &setOfSources[i]);

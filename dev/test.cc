@@ -22,26 +22,30 @@ void printTankTemps(HPWH& hpwh);
 int main(void)
 {
 
+cout << "HPWH Version: " << HPWH::getVersion() << endl;
+
 HPWH hpwh;
 int initReturn = 0;
 
 
 //hpwh.setVerbosity(HPWH::VRB_emetic);
 
-hpwh.HPWHinit_file("testInput.txt");
+//hpwh.HPWHinit_file("testInput.txt");
 
 
 //return(0);
 
 
-//hpwh.setVerbosity(HPWH::VRB_emetic);
+hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
 //hpwh.setVerbosity(HPWH::VRB_reluctant);
-hpwh.setVerbosity(HPWH::VRB_silent);
+//hpwh.setVerbosity(HPWH::VRB_silent);
 
 
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
+//initReturn = hpwh.HPWHinit_resTank(GAL_TO_L(50), 0.8, 4500, 4500);
+initReturn = hpwh.HPWHinit_resTank();
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
@@ -65,10 +69,10 @@ outFILE = fopen("testOutput.csv", "w");
 hpwh.WriteCSVHeading(outFILE);
 
 
-//#define SHORT 
+#define SHORT 
 
 #ifdef SHORT
-int liters = 20;
+int liters = 60;
         
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 //hpwh.printTankTemps();
