@@ -19,8 +19,8 @@
 class HPWH {
  public:
   static const int version_major = 1;
-  static const int version_minor = 0;
-  static const int version_maint = 2;
+  static const int version_minor = 1;
+  static const int version_maint = 0;
 
 
   static const float DENSITYWATER_kgperL;
@@ -105,7 +105,9 @@ class HPWH {
     UNITS_BTU,        /**< british thermal units  */
     UNITS_KJ,         /**< kilojoules  */
     UNITS_GAL,        /**< gallons  */
-    UNITS_L           /**< liters  */
+    UNITS_L,          /**< liters  */
+    UNITS_kJperHrC,   /**< UA, metric units  */
+    UNITS_BTUperHrF   /**< UA, imperial units  */
     };
 
   /** specifies the type of heat source  */
@@ -120,7 +122,7 @@ class HPWH {
   ///destroying error
   static const int HPWH_ABORT = -274000;
 
-  std::string getVersion();
+  static std::string getVersion();
   /**< This function returns a string with the current version number */
     
 	int HPWHinit_presets(MODELS presetNum);
@@ -144,6 +146,18 @@ class HPWH {
 	 * The return value is 0 for successful initialization, HPWH_ABORT otherwise
 	 */
 
+  int HPWHinit_resTank();  /**< Default resistance tank, EF 0.95, volume 47.5 */
+  int HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W);
+  /**< This function will initialize a HPWH object to be a resistance tank.  Since
+   * resistance tanks are so simple, they can be specified with only four variables:
+   * tank volume, energy factor, and the power of the upper and lower elements.  Energy
+   * factor is converted into UA internally, although an external setter for UA is
+   * also provided in case the energy factor is unknown.
+   *
+   * Several assumptions regarding the tank configuration are assumed: the lower element
+   * is at the bottom, the upper element is at the top third.  The logics are also set
+   * to standard setting, with upper as VIP activating when the top third is too cold.
+   */
 
   int runOneStep(double inletT_C, double drawVolume_L, 
                   double ambientT_C, double externalT_C,
@@ -206,7 +220,9 @@ class HPWH {
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
 
-
+  int setUA(double UA_kJperHrC);
+  int setUA(double UA, UNITS units);
+  /**< This is a setter for the UA, with or without units specified - default is metric */
   
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
@@ -589,6 +605,6 @@ inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
-
+inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 #endif

@@ -62,7 +62,10 @@ enum \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} 
 \\*
 \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05}{U\-N\-I\-T\-S\-\_\-\-K\-J}, 
 \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ab7d3d2a802bc44b70db1ca4781954a77}{U\-N\-I\-T\-S\-\_\-\-G\-A\-L}, 
-\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf}{U\-N\-I\-T\-S\-\_\-\-L}
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf}{U\-N\-I\-T\-S\-\_\-\-L}, 
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f}{U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}, 
+\\*
+\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c}{U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}
  \}
 \item 
 enum \hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}{H\-E\-A\-T\-S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E} \{ \hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bca8a5a7642e319ca87b7850fa17fc1d1e7}{T\-Y\-P\-E\-\_\-none}, 
@@ -81,11 +84,13 @@ enum \hyperlink{class_h_p_w_h_af01f392e3fff4013310d3fe992bb00bc}{H\-E\-A\-T\-S\-
 \item 
 \hyperlink{class_h_p_w_h_ad92e11f51e981157e85ac8855269d50a}{$\sim$\-H\-P\-W\-H} ()
 \item 
-std\-::string \hyperlink{class_h_p_w_h_a001c10815863cb3efdb721d364111275}{get\-Version} ()
-\item 
 int \hyperlink{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}{H\-P\-W\-Hinit\-\_\-presets} (\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{M\-O\-D\-E\-L\-S} preset\-Num)
 \item 
 int \hyperlink{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}{H\-P\-W\-Hinit\-\_\-file} (std\-::string config\-File)
+\item 
+int \hyperlink{class_h_p_w_h_ac092212830c4e023b1314845d79d5461}{H\-P\-W\-Hinit\-\_\-res\-Tank} ()
+\item 
+int \hyperlink{class_h_p_w_h_a0b8ee9f3e4773ca140b50997ad1091cf}{H\-P\-W\-Hinit\-\_\-res\-Tank} (double tank\-Vol\-\_\-\-L, double energy\-Factor, double upper\-Power\-\_\-\-W, double lower\-Power\-\_\-\-W)
 \item 
 int \hyperlink{class_h_p_w_h_aef8f08c0115787826a64b34897468b45}{run\-One\-Step} (double inlet\-T\-\_\-\-C, double draw\-Volume\-\_\-\-L, double ambient\-T\-\_\-\-C, double external\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} D\-Rstatus, double minutes\-Per\-Step)
 \item 
@@ -118,6 +123,11 @@ int \hyperlink{class_h_p_w_h_a4fcbecc80f393cabf73609ef97c3e56b}{set\-Do\-Temp\-D
 
 \item 
 int \hyperlink{class_h_p_w_h_a48eb98ee5cef78dc29fbeaba57c37b2d}{set\-Tank\-Size} (double H\-P\-W\-H\-\_\-size, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units)
+\item 
+\hypertarget{class_h_p_w_h_a1c26c0b3879d5378cb3ec372adabb9a3}{int {\bfseries set\-U\-A} (double U\-A\-\_\-k\-Jper\-Hr\-C)}\label{class_h_p_w_h_a1c26c0b3879d5378cb3ec372adabb9a3}
+
+\item 
+int \hyperlink{class_h_p_w_h_a303ac307093da4ef292dc88f946d677f}{set\-U\-A} (double U\-A, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units)
 \item 
 int \hyperlink{class_h_p_w_h_a38e4f7eb3da82c2281657702fc472b1d}{get\-Num\-Nodes} () const 
 \item 
@@ -167,16 +177,21 @@ void \hyperlink{class_h_p_w_h_a5df4fd4422ba54080f519aaf6375be32}{set\-Inlet\-T} 
 \hypertarget{class_h_p_w_h_a5752aa0b3488189c7321c174887f1c31}{void {\bfseries set\-Minutes\-Per\-Step} (double new\-Minutes\-Per\-Step)}\label{class_h_p_w_h_a5752aa0b3488189c7321c174887f1c31}
 
 \end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static std\-::string \hyperlink{class_h_p_w_h_a001c10815863cb3efdb721d364111275}{get\-Version} ()
+\end{DoxyCompactItemize}
 \subsection*{Static Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \hypertarget{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}{static const int {\bfseries version\-\_\-major} = 1}\label{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}
 
 \item 
-\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 0}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
+\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 1}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
 
 \item 
-\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 2}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
+\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 0}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
 
 \item 
 \hypertarget{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}{static const float {\bfseries D\-E\-N\-S\-I\-T\-Y\-W\-A\-T\-E\-R\-\_\-kgper\-L} = 0.\-998f}\label{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}
@@ -297,7 +312,11 @@ specifies the allowable preset \hyperlink{class_h_p_w_h}{H\-P\-W\-H} models valu
 \hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ab7d3d2a802bc44b70db1ca4781954a77}{U\-N\-I\-T\-S\-\_\-\-G\-A\-L}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ab7d3d2a802bc44b70db1ca4781954a77}
 }]gallons \index{U\-N\-I\-T\-S\-\_\-\-L@{U\-N\-I\-T\-S\-\_\-\-L}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-L@{U\-N\-I\-T\-S\-\_\-\-L}}\item[{\em 
 \hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf}{U\-N\-I\-T\-S\-\_\-\-L}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf}
-}]liters \end{description}
+}]liters \index{U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C@{U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C@{U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f}{U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f}
+}]U\-A, metric units \index{U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F@{U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F@{U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}}\item[{\em 
+\hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c}{U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}\label{class_h_p_w_h_a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c}
+}]U\-A, imperial units \end{description}
 \end{Desc}
 \hypertarget{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}{\index{H\-P\-W\-H@{H\-P\-W\-H}!V\-E\-R\-B\-O\-S\-I\-T\-Y@{V\-E\-R\-B\-O\-S\-I\-T\-Y}}
 \index{V\-E\-R\-B\-O\-S\-I\-T\-Y@{V\-E\-R\-B\-O\-S\-I\-T\-Y}!HPWH@{H\-P\-W\-H}}
@@ -479,7 +498,7 @@ returns the temperature of the water at the specified node -\/ with specified un
 \begin{DoxyParamCaption}
 {}
 \end{DoxyParamCaption}
-)}}\label{class_h_p_w_h_a001c10815863cb3efdb721d364111275}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{class_h_p_w_h_a001c10815863cb3efdb721d364111275}
 This function returns a string with the current version number \hypertarget{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-file@{H\-P\-W\-Hinit\-\_\-file}}
 \index{H\-P\-W\-Hinit\-\_\-file@{H\-P\-W\-Hinit\-\_\-file}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{H\-P\-W\-Hinit\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-file (
@@ -498,7 +517,26 @@ The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-
 )}}\label{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}
 This function will load in a set of parameters that are hardcoded in this function -\/ which particular set of parameters is selected by preset\-Num. This is similar to the way the H\-P\-W\-Hsim currently operates, as used in S\-E\-E\-M, but not quite as versatile. My impression is that this could be a useful input paradigm for C\-S\-E
 
-The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_a587a39a680823886348b489e85f243e9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!is\-Nth\-Heat\-Source\-Running@{is\-Nth\-Heat\-Source\-Running}}
+The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_ac092212830c4e023b1314845d79d5461}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-res\-Tank@{H\-P\-W\-Hinit\-\_\-res\-Tank}}
+\index{H\-P\-W\-Hinit\-\_\-res\-Tank@{H\-P\-W\-Hinit\-\_\-res\-Tank}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-Hinit\-\_\-res\-Tank}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-res\-Tank (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_ac092212830c4e023b1314845d79d5461}
+Default resistance tank, E\-F 0.\-95, volume 47.\-5 \hypertarget{class_h_p_w_h_a0b8ee9f3e4773ca140b50997ad1091cf}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-res\-Tank@{H\-P\-W\-Hinit\-\_\-res\-Tank}}
+\index{H\-P\-W\-Hinit\-\_\-res\-Tank@{H\-P\-W\-Hinit\-\_\-res\-Tank}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-Hinit\-\_\-res\-Tank}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-res\-Tank (
+\begin{DoxyParamCaption}
+\item[{double}]{tank\-Vol\-\_\-\-L, }
+\item[{double}]{energy\-Factor, }
+\item[{double}]{upper\-Power\-\_\-\-W, }
+\item[{double}]{lower\-Power\-\_\-\-W}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a0b8ee9f3e4773ca140b50997ad1091cf}
+This function will initialize a \hyperlink{class_h_p_w_h}{H\-P\-W\-H} object to be a resistance tank. Since resistance tanks are so simple, they can be specified with only four variables\-: tank volume, energy factor, and the power of the upper and lower elements. Energy factor is converted into U\-A internally, although an external setter for U\-A is also provided in case the energy factor is unknown.
+
+Several assumptions regarding the tank configuration are assumed\-: the lower element is at the bottom, the upper element is at the top third. The logics are also set to standard setting, with upper as V\-I\-P activating when the top third is too cold. \hypertarget{class_h_p_w_h_a587a39a680823886348b489e85f243e9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!is\-Nth\-Heat\-Source\-Running@{is\-Nth\-Heat\-Source\-Running}}
 \index{is\-Nth\-Heat\-Source\-Running@{is\-Nth\-Heat\-Source\-Running}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{is\-Nth\-Heat\-Source\-Running}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::is\-Nth\-Heat\-Source\-Running (
 \begin{DoxyParamCaption}
@@ -629,7 +667,15 @@ a function to change the setpoint -\/ useful for dynamically setting it The retu
 \item[{{\bf U\-N\-I\-T\-S}}]{units}
 \end{DoxyParamCaption}
 )}}\label{class_h_p_w_h_a48eb98ee5cef78dc29fbeaba57c37b2d}
-This is a simple setter for the tank volume in L or G\-A\-L \hypertarget{class_h_p_w_h_a7c81dfc13de82ce9ca01300bde0d4b22}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Verbosity@{set\-Verbosity}}
+This is a simple setter for the tank volume in L or G\-A\-L \hypertarget{class_h_p_w_h_a303ac307093da4ef292dc88f946d677f}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-U\-A@{set\-U\-A}}
+\index{set\-U\-A@{set\-U\-A}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{set\-U\-A}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::set\-U\-A (
+\begin{DoxyParamCaption}
+\item[{double}]{U\-A, }
+\item[{{\bf U\-N\-I\-T\-S}}]{units}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_a303ac307093da4ef292dc88f946d677f}
+This is a setter for the U\-A, with or without units specified -\/ default is metric \hypertarget{class_h_p_w_h_a7c81dfc13de82ce9ca01300bde0d4b22}{\index{H\-P\-W\-H@{H\-P\-W\-H}!set\-Verbosity@{set\-Verbosity}}
 \index{set\-Verbosity@{set\-Verbosity}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{set\-Verbosity}]{\setlength{\rightskip}{0pt plus 5cm}void H\-P\-W\-H\-::set\-Verbosity (
 \begin{DoxyParamCaption}

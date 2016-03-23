@@ -108,6 +108,7 @@ $(document).ready(function(){initNavTree('class_h_p_w_h.html','');});
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="class_h_p_w_h-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -175,7 +176,10 @@ Public Types</h2></td></tr>
 <br/>
 &#160;&#160;<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05">UNITS_KJ</a>, 
 <a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ab7d3d2a802bc44b70db1ca4781954a77">UNITS_GAL</a>, 
-<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf">UNITS_L</a>
+<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf">UNITS_L</a>, 
+<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f">UNITS_kJperHrC</a>, 
+<br/>
+&#160;&#160;<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c">UNITS_BTUperHrF</a>
 <br/>
  }</td></tr>
 <tr class="separator:a145320dbf116b9245ac4421026cff294"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -195,12 +199,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a6e231a8737d540f89aeeb028663f65a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad92e11f51e981157e85ac8855269d50a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#ad92e11f51e981157e85ac8855269d50a">~HPWH</a> ()</td></tr>
 <tr class="separator:ad92e11f51e981157e85ac8855269d50a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a001c10815863cb3efdb721d364111275"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a001c10815863cb3efdb721d364111275">getVersion</a> ()</td></tr>
-<tr class="separator:a001c10815863cb3efdb721d364111275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74b3a6c1352adb5d38e7c00ad5952f30"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a74b3a6c1352adb5d38e7c00ad5952f30">HPWHinit_presets</a> (<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338e">MODELS</a> presetNum)</td></tr>
 <tr class="separator:a74b3a6c1352adb5d38e7c00ad5952f30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a348c1c4a90ec1ee5e91c84ab8d3bc5b1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a348c1c4a90ec1ee5e91c84ab8d3bc5b1">HPWHinit_file</a> (std::string configFile)</td></tr>
 <tr class="separator:a348c1c4a90ec1ee5e91c84ab8d3bc5b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac092212830c4e023b1314845d79d5461"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#ac092212830c4e023b1314845d79d5461">HPWHinit_resTank</a> ()</td></tr>
+<tr class="separator:ac092212830c4e023b1314845d79d5461"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b8ee9f3e4773ca140b50997ad1091cf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a0b8ee9f3e4773ca140b50997ad1091cf">HPWHinit_resTank</a> (double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W)</td></tr>
+<tr class="separator:a0b8ee9f3e4773ca140b50997ad1091cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef8f08c0115787826a64b34897468b45"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#aef8f08c0115787826a64b34897468b45">runOneStep</a> (double inletT_C, double drawVolume_L, double ambientT_C, double externalT_C, <a class="el" href="class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107">DRMODES</a> DRstatus, double minutesPerStep)</td></tr>
 <tr class="separator:aef8f08c0115787826a64b34897468b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a904e3a0f6bdd7eaaeed43839bac779fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a904e3a0f6bdd7eaaeed43839bac779fc">runNSteps</a> (int N, double *inletT_C, double *drawVolume_L, double *tankAmbientT_C, double *heatSourceAmbientT_C, <a class="el" href="class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107">DRMODES</a> *DRstatus, double minutesPerStep)</td></tr>
@@ -233,6 +239,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>setTankSize</b> (doubl
 <tr class="separator:acc2635e0073fee9bdf050eaec8e73d9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48eb98ee5cef78dc29fbeaba57c37b2d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a48eb98ee5cef78dc29fbeaba57c37b2d">setTankSize</a> (double HPWH_size, <a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294">UNITS</a> units)</td></tr>
 <tr class="separator:a48eb98ee5cef78dc29fbeaba57c37b2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c26c0b3879d5378cb3ec372adabb9a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c26c0b3879d5378cb3ec372adabb9a3"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>setUA</b> (double UA_kJperHrC)</td></tr>
+<tr class="separator:a1c26c0b3879d5378cb3ec372adabb9a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a303ac307093da4ef292dc88f946d677f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a303ac307093da4ef292dc88f946d677f">setUA</a> (double UA, <a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294">UNITS</a> units)</td></tr>
+<tr class="separator:a303ac307093da4ef292dc88f946d677f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38e4f7eb3da82c2281657702fc472b1d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a38e4f7eb3da82c2281657702fc472b1d">getNumNodes</a> () const </td></tr>
 <tr class="separator:a38e4f7eb3da82c2281657702fc472b1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a440f55f294a28f9024ce4731f515b802"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802">getTankNodeTemp</a> (int nodeNum) const </td></tr>
@@ -282,16 +293,21 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getStandbyLosses</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setMinutesPerStep</b> (double newMinutesPerStep)</td></tr>
 <tr class="separator:a5752aa0b3488189c7321c174887f1c31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a001c10815863cb3efdb721d364111275"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a001c10815863cb3efdb721d364111275">getVersion</a> ()</td></tr>
+<tr class="separator:a001c10815863cb3efdb721d364111275"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a404694da361f91cab76c434bc2e8aba7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a404694da361f91cab76c434bc2e8aba7"></a>
 static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_major</b> = 1</td></tr>
 <tr class="separator:a404694da361f91cab76c434bc2e8aba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d21de98801ba96190a10fce9f7e0007"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d21de98801ba96190a10fce9f7e0007"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_minor</b> = 0</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_minor</b> = 1</td></tr>
 <tr class="separator:a4d21de98801ba96190a10fce9f7e0007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af02ab978efb608dbcb3010f51fec5bee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af02ab978efb608dbcb3010f51fec5bee"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 2</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 0</td></tr>
 <tr class="separator:af02ab978efb608dbcb3010f51fec5bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad731cfda8428fb584d308f98c2eb329a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad731cfda8428fb584d308f98c2eb329a"></a>
 static const float&#160;</td><td class="memItemRight" valign="bottom"><b>DENSITYWATER_kgperL</b> = 0.998f</td></tr>
@@ -466,6 +482,12 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf"></a>UNITS_L</em>&#160;</td><td class="fielddoc">
 <p>liters </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f"></a>UNITS_kJperHrC</em>&#160;</td><td class="fielddoc">
+<p>UA, metric units </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c"></a>UNITS_BTUperHrF</em>&#160;</td><td class="fielddoc">
+<p>UA, imperial units </p>
 </td></tr>
 </table>
 
@@ -868,6 +890,9 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 <a class="anchor" id="a001c10815863cb3efdb721d364111275"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">string HPWH::getVersion </td>
@@ -876,6 +901,11 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>This function returns a string with the current version number </p>
 
@@ -914,6 +944,62 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 </div><div class="memdoc">
 <p>This function will load in a set of parameters that are hardcoded in this function - which particular set of parameters is selected by presetNum. This is similar to the way the HPWHsim currently operates, as used in SEEM, but not quite as versatile. My impression is that this could be a useful input paradigm for CSE</p>
 <p>The return value is 0 for successful initialization, HPWH_ABORT otherwise </p>
+
+</div>
+</div>
+<a class="anchor" id="ac092212830c4e023b1314845d79d5461"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int HPWH::HPWHinit_resTank </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Default resistance tank, EF 0.95, volume 47.5 </p>
+
+</div>
+</div>
+<a class="anchor" id="a0b8ee9f3e4773ca140b50997ad1091cf"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int HPWH::HPWHinit_resTank </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tankVol_L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>energyFactor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>upperPower_W</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>lowerPower_W</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This function will initialize a <a class="el" href="class_h_p_w_h.html">HPWH</a> object to be a resistance tank. Since resistance tanks are so simple, they can be specified with only four variables: tank volume, energy factor, and the power of the upper and lower elements. Energy factor is converted into UA internally, although an external setter for UA is also provided in case the energy factor is unknown.</p>
+<p>Several assumptions regarding the tank configuration are assumed: the lower element is at the bottom, the upper element is at the top third. The logics are also set to standard setting, with upper as VIP activating when the top third is too cold. </p>
 
 </div>
 </div>
@@ -1318,6 +1404,33 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 
 </div>
 </div>
+<a class="anchor" id="a303ac307093da4ef292dc88f946d677f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int HPWH::setUA </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>UA</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294">UNITS</a>&#160;</td>
+          <td class="paramname"><em>units</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This is a setter for the UA, with or without units specified - default is metric </p>
+
+</div>
+</div>
 <a class="anchor" id="a7c81dfc13de82ce9ca01300bde0d4b22"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1478,7 +1591,7 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_h_p_w_h.html">HPWH</a></li>
-    <li class="footer">Generated on Tue Mar 22 2016 11:33:19 for HPWHsim by
+    <li class="footer">Generated on Tue Mar 22 2016 17:51:02 for HPWHsim by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

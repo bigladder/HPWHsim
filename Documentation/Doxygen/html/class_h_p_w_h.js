@@ -40,7 +40,9 @@ var class_h_p_w_h =
       [ "UNITS_BTU", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a42b43d9195134492627dc4f446b04dbb", null ],
       [ "UNITS_KJ", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294abe0f8875282bea961f8fc392ea8fea05", null ],
       [ "UNITS_GAL", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ab7d3d2a802bc44b70db1ca4781954a77", null ],
-      [ "UNITS_L", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf", null ]
+      [ "UNITS_L", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a8c56f6a83ebe81d6cb01448af3721ddf", null ],
+      [ "UNITS_kJperHrC", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294ac16d1ece69b4a85c94681c21b6fd853f", null ],
+      [ "UNITS_BTUperHrF", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294afc3ffd44094611d6f744036f99e1062c", null ]
     ] ],
     [ "VERBOSITY", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673c", [
       [ "VRB_silent", "class_h_p_w_h.html#aa493e3f78affa7dafde7e297cc68673ca2883a012f3515137cba205b5de85f951", null ],
@@ -70,9 +72,10 @@ var class_h_p_w_h =
     [ "getStandbyLosses", "class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948", null ],
-    [ "getVersion", "class_h_p_w_h.html#a001c10815863cb3efdb721d364111275", null ],
     [ "HPWHinit_file", "class_h_p_w_h.html#a348c1c4a90ec1ee5e91c84ab8d3bc5b1", null ],
     [ "HPWHinit_presets", "class_h_p_w_h.html#a74b3a6c1352adb5d38e7c00ad5952f30", null ],
+    [ "HPWHinit_resTank", "class_h_p_w_h.html#ac092212830c4e023b1314845d79d5461", null ],
+    [ "HPWHinit_resTank", "class_h_p_w_h.html#a0b8ee9f3e4773ca140b50997ad1091cf", null ],
     [ "isNthHeatSourceRunning", "class_h_p_w_h.html#a587a39a680823886348b489e85f243e9", null ],
     [ "operator=", "class_h_p_w_h.html#a6e231a8737d540f89aeeb028663f65a9", null ],
     [ "printHeatSourceInfo", "class_h_p_w_h.html#a49d923bea7be1ad1ee60c02163bbf6cc", null ],
@@ -90,6 +93,8 @@ var class_h_p_w_h =
     [ "setSetpoint", "class_h_p_w_h.html#ab7d91fead271ef907cf13450055cdb06", null ],
     [ "setTankSize", "class_h_p_w_h.html#acc2635e0073fee9bdf050eaec8e73d9c", null ],
     [ "setTankSize", "class_h_p_w_h.html#a48eb98ee5cef78dc29fbeaba57c37b2d", null ],
+    [ "setUA", "class_h_p_w_h.html#a1c26c0b3879d5378cb3ec372adabb9a3", null ],
+    [ "setUA", "class_h_p_w_h.html#a303ac307093da4ef292dc88f946d677f", null ],
     [ "setVerbosity", "class_h_p_w_h.html#a7c81dfc13de82ce9ca01300bde0d4b22", null ],
     [ "WriteCSVHeading", "class_h_p_w_h.html#ac8bced7dc05598df491f907cd895ccaa", null ],
     [ "WriteCSVRow", "class_h_p_w_h.html#a5652291d663296decd912fe92fb9d4e7", null ]

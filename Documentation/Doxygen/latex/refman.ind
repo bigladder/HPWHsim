@@ -47,13 +47,13 @@
 		\hyperpage{8}
   \item {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Energy\discretionary {-}{}{}Output}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{8}
+		\hyperpage{8, 9}
   \item {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Run\discretionary {-}{}{}Time}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{8}
+		\hyperpage{9}
   \item {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Type}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{8}
+		\hyperpage{9}
   \item {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Sim\discretionary {-}{}{}Tcouple}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{9}
@@ -71,10 +71,10 @@
 		\hyperpage{9}
   \item {get\discretionary {-}{}{}Tank\discretionary {-}{}{}Node\discretionary {-}{}{}Temp}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{9}
+		\hyperpage{9, 10}
   \item {get\discretionary {-}{}{}Version}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{9}
+		\hyperpage{10}
 
   \indexspace
 
@@ -108,21 +108,23 @@
     \subitem {M\-O\-D\-E\-L\-S\-\_\-restank\-Huge\-U\-A}, \hyperpage{7}
     \subitem {M\-O\-D\-E\-L\-S\-\_\-restank\-No\-U\-A}, \hyperpage{7}
     \subitem {M\-O\-D\-E\-L\-S\-\_\-restank\-Realistic}, \hyperpage{7}
-    \subitem {T\-Y\-P\-E\-\_\-compressor}, \hyperpage{6}
-    \subitem {T\-Y\-P\-E\-\_\-none}, \hyperpage{6}
-    \subitem {T\-Y\-P\-E\-\_\-resistance}, \hyperpage{6}
+    \subitem {T\-Y\-P\-E\-\_\-compressor}, \hyperpage{7}
+    \subitem {T\-Y\-P\-E\-\_\-none}, \hyperpage{7}
+    \subitem {T\-Y\-P\-E\-\_\-resistance}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-B\-T\-U}, \hyperpage{7}
+    \subitem {U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-C}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-F}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-G\-A\-L}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-K\-J}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-K\-W\-H}, \hyperpage{7}
     \subitem {U\-N\-I\-T\-S\-\_\-\-L}, \hyperpage{7}
-    \subitem {V\-R\-B\-\_\-emetic}, \hyperpage{7}
-    \subitem {V\-R\-B\-\_\-minute\-Out}, \hyperpage{7}
-    \subitem {V\-R\-B\-\_\-reluctant}, \hyperpage{7}
-    \subitem {V\-R\-B\-\_\-silent}, \hyperpage{7}
-    \subitem {V\-R\-B\-\_\-typical}, \hyperpage{7}
+    \subitem {U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}, \hyperpage{7}
+    \subitem {V\-R\-B\-\_\-emetic}, \hyperpage{8}
+    \subitem {V\-R\-B\-\_\-minute\-Out}, \hyperpage{8}
+    \subitem {V\-R\-B\-\_\-reluctant}, \hyperpage{8}
+    \subitem {V\-R\-B\-\_\-silent}, \hyperpage{8}
+    \subitem {V\-R\-B\-\_\-typical}, \hyperpage{8}
   \item {H\discretionary {-}{}{}E\discretionary {-}{}{}A\discretionary {-}{}{}T\discretionary {-}{}{}D\discretionary {-}{}{}I\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}M\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}V\discretionary {-}{}{}A\discretionary {-}{}{}L\discretionary {-}{}{}U\discretionary {-}{}{}E}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{12}
@@ -142,11 +144,11 @@
     \subitem {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Energy\discretionary {-}{}{}Input}, 
 		\hyperpage{8}
     \subitem {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Energy\discretionary {-}{}{}Output}, 
-		\hyperpage{8}
+		\hyperpage{8, 9}
     \subitem {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Run\discretionary {-}{}{}Time}, 
-		\hyperpage{8}
+		\hyperpage{9}
     \subitem {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Type}, 
-		\hyperpage{8}
+		\hyperpage{9}
     \subitem {get\discretionary {-}{}{}Nth\discretionary {-}{}{}Sim\discretionary {-}{}{}Tcouple}, 
 		\hyperpage{9}
     \subitem {get\discretionary {-}{}{}Num\discretionary {-}{}{}Heat\discretionary {-}{}{}Sources}, 
@@ -158,8 +160,8 @@
     \subitem {get\discretionary {-}{}{}Standby\discretionary {-}{}{}Losses}, 
 		\hyperpage{9}
     \subitem {get\discretionary {-}{}{}Tank\discretionary {-}{}{}Node\discretionary {-}{}{}Temp}, 
-		\hyperpage{9}
-    \subitem {get\discretionary {-}{}{}Version}, \hyperpage{9}
+		\hyperpage{9, 10}
+    \subitem {get\discretionary {-}{}{}Version}, \hyperpage{10}
     \subitem {H\discretionary {-}{}{}E\discretionary {-}{}{}A\discretionary {-}{}{}T\discretionary {-}{}{}D\discretionary {-}{}{}I\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}M\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}V\discretionary {-}{}{}A\discretionary {-}{}{}L\discretionary {-}{}{}U\discretionary {-}{}{}E}, 
 		\hyperpage{12}
     \subitem {H\discretionary {-}{}{}E\discretionary {-}{}{}A\discretionary {-}{}{}T\discretionary {-}{}{}S\discretionary {-}{}{}O\discretionary {-}{}{}U\discretionary {-}{}{}R\discretionary {-}{}{}C\discretionary {-}{}{}E\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}T\discretionary {-}{}{}Y\discretionary {-}{}{}P\discretionary {-}{}{}E}, 
@@ -169,8 +171,10 @@
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}A\discretionary {-}{}{}B\discretionary {-}{}{}O\discretionary {-}{}{}R\discretionary {-}{}{}T}, 
 		\hyperpage{12}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}file}, 
-		\hyperpage{9}
+		\hyperpage{10}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}presets}, 
+		\hyperpage{10}
+    \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}res\discretionary {-}{}{}Tank}, 
 		\hyperpage{10}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{8}
@@ -179,18 +183,18 @@
     \subitem {M\discretionary {-}{}{}A\discretionary {-}{}{}X\discretionary {-}{}{}O\discretionary {-}{}{}U\discretionary {-}{}{}T\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}R\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}G}, 
 		\hyperpage{12}
     \subitem {M\discretionary {-}{}{}O\discretionary {-}{}{}D\discretionary {-}{}{}E\discretionary {-}{}{}L\discretionary {-}{}{}S}, 
-		\hyperpage{6}
+		\hyperpage{7}
     \subitem {operator=}, \hyperpage{10}
     \subitem {print\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Info}, 
 		\hyperpage{10}
     \subitem {print\discretionary {-}{}{}Tank\discretionary {-}{}{}Temps}, 
-		\hyperpage{10}
+		\hyperpage{11}
     \subitem {reset\discretionary {-}{}{}Tank\discretionary {-}{}{}To\discretionary {-}{}{}Setpoint}, 
-		\hyperpage{10}
+		\hyperpage{11}
     \subitem {run\discretionary {-}{}{}N\discretionary {-}{}{}Steps}, 
-		\hyperpage{10}
+		\hyperpage{11}
     \subitem {run\discretionary {-}{}{}One\discretionary {-}{}{}Step}, 
-		\hyperpage{10, 11}
+		\hyperpage{11}
     \subitem {set\discretionary {-}{}{}Air\discretionary {-}{}{}Flow\discretionary {-}{}{}Freedom}, 
 		\hyperpage{11}
     \subitem {set\discretionary {-}{}{}Do\discretionary {-}{}{}Temp\discretionary {-}{}{}Depression}, 
@@ -199,16 +203,18 @@
 		\hyperpage{11}
     \subitem {set\discretionary {-}{}{}Message\discretionary {-}{}{}Callback}, 
 		\hyperpage{11}
-    \subitem {set\discretionary {-}{}{}Setpoint}, \hyperpage{11}
+    \subitem {set\discretionary {-}{}{}Setpoint}, \hyperpage{11, 12}
     \subitem {set\discretionary {-}{}{}Tank\discretionary {-}{}{}Size}, 
-		\hyperpage{11}
-    \subitem {set\discretionary {-}{}{}Verbosity}, \hyperpage{11}
+		\hyperpage{12}
+    \subitem {set\discretionary {-}{}{}U\discretionary {-}{}{}A}, 
+		\hyperpage{12}
+    \subitem {set\discretionary {-}{}{}Verbosity}, \hyperpage{12}
     \subitem {U\discretionary {-}{}{}N\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}S}, 
 		\hyperpage{7}
     \subitem {V\discretionary {-}{}{}E\discretionary {-}{}{}R\discretionary {-}{}{}B\discretionary {-}{}{}O\discretionary {-}{}{}S\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}Y}, 
 		\hyperpage{7}
     \subitem {Write\discretionary {-}{}{}C\discretionary {-}{}{}S\discretionary {-}{}{}V\discretionary {-}{}{}Row}, 
-		\hyperpage{11}
+		\hyperpage{12}
   \item {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H\discretionary {-}{}{}::\discretionary {-}{}{}Heat\discretionary {-}{}{}Source}, 
 		\hyperpage{3}
     \subitem {add\discretionary {-}{}{}Heat}, \hyperpage{3}
@@ -228,8 +234,11 @@
 		\hyperpage{12}
   \item {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}file}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{9}
+		\hyperpage{10}
   \item {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}presets}
+    \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
+		\hyperpage{10}
+  \item {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}res\discretionary {-}{}{}Tank}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{10}
   \item {Heat\discretionary {-}{}{}Source}
@@ -292,7 +301,7 @@
 		\hyperpage{12}
   \item {M\discretionary {-}{}{}O\discretionary {-}{}{}D\discretionary {-}{}{}E\discretionary {-}{}{}L\discretionary {-}{}{}S}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{6}
+		\hyperpage{7}
 
   \indexspace
 
@@ -307,19 +316,19 @@
 		\hyperpage{10}
   \item {print\discretionary {-}{}{}Tank\discretionary {-}{}{}Temps}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{10}
+		\hyperpage{11}
 
   \indexspace
 
   \item {reset\discretionary {-}{}{}Tank\discretionary {-}{}{}To\discretionary {-}{}{}Setpoint}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{10}
+		\hyperpage{11}
   \item {run\discretionary {-}{}{}N\discretionary {-}{}{}Steps}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{10}
+		\hyperpage{11}
   \item {run\discretionary {-}{}{}One\discretionary {-}{}{}Step}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{10, 11}
+		\hyperpage{11}
 
   \indexspace
 
@@ -340,13 +349,16 @@
 		\hyperpage{11}
   \item {set\discretionary {-}{}{}Setpoint}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{11}
+		\hyperpage{11, 12}
   \item {set\discretionary {-}{}{}Tank\discretionary {-}{}{}Size}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{11}
+		\hyperpage{12}
+  \item {set\discretionary {-}{}{}U\discretionary {-}{}{}A}
+    \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
+		\hyperpage{12}
   \item {set\discretionary {-}{}{}Verbosity}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{11}
+		\hyperpage{12}
   \item {setup\discretionary {-}{}{}As\discretionary {-}{}{}Resistive\discretionary {-}{}{}Element}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H\discretionary {-}{}{}::\discretionary {-}{}{}Heat\discretionary {-}{}{}Source}, 
 		\hyperpage{4}
@@ -360,15 +372,17 @@
   \indexspace
 
   \item {T\-Y\-P\-E\-\_\-compressor}
-    \subitem {H\-P\-W\-H}, \hyperpage{6}
+    \subitem {H\-P\-W\-H}, \hyperpage{7}
   \item {T\-Y\-P\-E\-\_\-none}
-    \subitem {H\-P\-W\-H}, \hyperpage{6}
+    \subitem {H\-P\-W\-H}, \hyperpage{7}
   \item {T\-Y\-P\-E\-\_\-resistance}
-    \subitem {H\-P\-W\-H}, \hyperpage{6}
+    \subitem {H\-P\-W\-H}, \hyperpage{7}
 
   \indexspace
 
   \item {U\-N\-I\-T\-S\-\_\-\-B\-T\-U}
+    \subitem {H\-P\-W\-H}, \hyperpage{7}
+  \item {U\-N\-I\-T\-S\-\_\-\-B\-T\-Uper\-Hr\-F}
     \subitem {H\-P\-W\-H}, \hyperpage{7}
   \item {U\-N\-I\-T\-S\-\_\-\-C}
     \subitem {H\-P\-W\-H}, \hyperpage{7}
@@ -382,6 +396,8 @@
     \subitem {H\-P\-W\-H}, \hyperpage{7}
   \item {U\-N\-I\-T\-S\-\_\-\-L}
     \subitem {H\-P\-W\-H}, \hyperpage{7}
+  \item {U\-N\-I\-T\-S\-\_\-k\-Jper\-Hr\-C}
+    \subitem {H\-P\-W\-H}, \hyperpage{7}
   \item {U\discretionary {-}{}{}N\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}S}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{7}
@@ -389,15 +405,15 @@
   \indexspace
 
   \item {V\-R\-B\-\_\-emetic}
-    \subitem {H\-P\-W\-H}, \hyperpage{7}
+    \subitem {H\-P\-W\-H}, \hyperpage{8}
   \item {V\-R\-B\-\_\-minute\-Out}
-    \subitem {H\-P\-W\-H}, \hyperpage{7}
+    \subitem {H\-P\-W\-H}, \hyperpage{8}
   \item {V\-R\-B\-\_\-reluctant}
-    \subitem {H\-P\-W\-H}, \hyperpage{7}
+    \subitem {H\-P\-W\-H}, \hyperpage{8}
   \item {V\-R\-B\-\_\-silent}
-    \subitem {H\-P\-W\-H}, \hyperpage{7}
+    \subitem {H\-P\-W\-H}, \hyperpage{8}
   \item {V\-R\-B\-\_\-typical}
-    \subitem {H\-P\-W\-H}, \hyperpage{7}
+    \subitem {H\-P\-W\-H}, \hyperpage{8}
   \item {V\discretionary {-}{}{}E\discretionary {-}{}{}R\discretionary {-}{}{}B\discretionary {-}{}{}O\discretionary {-}{}{}S\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}Y}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
 		\hyperpage{7}
@@ -406,6 +422,6 @@
 
   \item {Write\discretionary {-}{}{}C\discretionary {-}{}{}S\discretionary {-}{}{}V\discretionary {-}{}{}Row}
     \subitem {H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H}, 
-		\hyperpage{11}
+		\hyperpage{12}
 
 \end{theindex}
