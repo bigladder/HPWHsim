@@ -540,22 +540,36 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
 
 
 int HPWH::setSetpoint(double newSetpoint){
-  setpoint_C = newSetpoint;
+  if (hpwhModel == MODELS_Sanden40 || hpwhModel == MODELS_Sanden80) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for Sanden models.  \n");
+    return HPWH_ABORT;
+  }
+  else{
+    setpoint_C = newSetpoint;
+  }
   return 0;
 }
 int HPWH::setSetpoint(double newSetpoint, UNITS units) {
-  if (units == UNITS_C) {
-    setpoint_C = newSetpoint;
-  }
-  else if (units == UNITS_F) {
-    setpoint_C = F_TO_C(newSetpoint);
-  }
-  else {
-    if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
+  if (hpwhModel == MODELS_Sanden40 || hpwhModel == MODELS_Sanden80) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for Sanden models.  \n");
     return HPWH_ABORT;
+  }
+  else{
+    if (units == UNITS_C) {
+      setpoint_C = newSetpoint;
+    }
+    else if (units == UNITS_F) {
+      setpoint_C = F_TO_C(newSetpoint);
+    }
+    else {
+      if(hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
+      return HPWH_ABORT;
+    }
   }
   return 0;
 }
+
+
 int HPWH::resetTankToSetpoint(){
   for (int i = 0; i < numNodes; i++) {
     tankTemps_C[i] = setpoint_C;
@@ -1766,7 +1780,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
   do{
     if (hpwh->hpwhVerbosity >= VRB_emetic){
-      hpwh->msg("bottom tank temp: %.2lf", hpwh->tankTemps_C[0]);
+      hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
     }
     
     //how much heat is available this timestep
@@ -2340,8 +2354,9 @@ int HPWH::HPWHinit_file(string configFile){
   } //end while over lines
  
 
-
   //take care of the non-input processing
+  hpwhModel = MODELS_CustomFile;
+
   tankTemps_C = new double[numNodes];
   resetTankToSetpoint();
 
@@ -2410,6 +2425,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
   double UA_btuPerHrF = numerator/denominator;
   tankUA_kJperHrC = UA_btuPerHrF * (1.8 / 0.9478); 
 
+
+  hpwhModel = MODELS_CustomResTank;
 
   //calculate oft-used derived values
   calcDerivedValues();
@@ -3828,6 +3845,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     return HPWH_ABORT;
   }
 
+  hpwhModel = presetNum;
 
   //calculate oft-used derived values
   calcDerivedValues();

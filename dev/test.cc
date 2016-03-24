@@ -22,7 +22,7 @@ void printTankTemps(HPWH& hpwh);
 int main(void)
 {
 
-cout << "HPWH Version: " << HPWH::getVersion() << endl;
+cout << "cout << HPWH Version: " << HPWH::getVersion() << endl;
 
 HPWH hpwh;
 int initReturn = 0;
@@ -38,17 +38,15 @@ int initReturn = 0;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-//hpwh.setVerbosity(HPWH::VRB_reluctant);
+hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
 
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Sanden40);
 //initReturn = hpwh.HPWHinit_resTank(GAL_TO_L(50), 0.8, 4500, 4500);
-initReturn = hpwh.HPWHinit_resTank();
-//int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
-					//double ambientT_C, double externalT_C,
-					//double DRstatus, double minutesPerStep)
+//initReturn = hpwh.HPWHinit_resTank();
 
 
 //cout << "Type of heatsource 1: " << hpwh.getNthHeatSourceType(0) << endl;
@@ -73,7 +71,14 @@ hpwh.WriteCSVHeading(outFILE);
 
 #ifdef SHORT
 int liters = 60;
-        
+
+
+//int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
+					//double ambientT_C, double externalT_C,
+					//double DRstatus, double minutesPerStep)
+
+hpwh.setSetpoint(F_TO_C(124));
+
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 //hpwh.printTankTemps();
 //hpwh.printHeatSourceInfo();
