@@ -84,7 +84,11 @@ class HPWH {
     // Generic water heaters, corresponding to the tiers 1, 2, and 3
     MODELS_Generic1 = 160,         /**< Generic Tier 1 */
     MODELS_Generic2 = 161,         /**< Generic Tier 2 */
-    MODELS_Generic3 = 162          /**< Generic Tier 3 */
+    MODELS_Generic3 = 162,          /**< Generic Tier 3 */
+
+    // Non-preset models
+    MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
+    MODELS_CustomResTank = 201      /**< HPWH parameters were input via HPWHinit_resTank */
     };
 
   ///specifies the modes for writing output
@@ -340,12 +344,15 @@ class HPWH {
   VERBOSITY hpwhVerbosity;
 	/**< an enum to let the sim know how much output to say  */
 
-   void (*messageCallback)(const std::string message, void* contextPtr);
+  void (*messageCallback)(const std::string message, void* contextPtr);
 	/**< function pointer to indicate an external message processing function  */
   void* messageCallbackContextPtr;
 	/**< caller context pointer for external message processing  */
  
-	
+
+  MODELS hpwhModel;
+  /**< The hpwh should know which preset initialized it, or if it was from a file */
+  
 	int numHeatSources;
 	/**< how many heat sources this HPWH has  */
 	HeatSource *setOfSources;
