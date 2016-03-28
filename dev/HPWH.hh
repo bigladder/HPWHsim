@@ -209,6 +209,8 @@ class HPWH {
   int setSetpoint(double newSetpoint, UNITS units);
   /**< a function to change the setpoint - useful for dynamically setting it
       The return value is 0 for successful setting, HPWH_ABORT for units failure  */
+  double getSetpoint();
+  /**< a function to check the setpoint - returns setpoint in celcius  */
 
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint

@@ -568,6 +568,9 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units) {
   }
   return 0;
 }
+double HPWH::getSetpoint(){
+  return setpoint_C;
+  }
 
 
 int HPWH::resetTankToSetpoint(){
