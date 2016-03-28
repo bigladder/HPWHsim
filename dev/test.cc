@@ -76,8 +76,9 @@ int liters = 60;
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
-
+cout << "setpoint 1:\t" << hpwh.getSetpoint() << endl;
 hpwh.setSetpoint(F_TO_C(124));
+cout << "setpoint 2:\t" << hpwh.getSetpoint() << endl;
 
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 //hpwh.printTankTemps();
