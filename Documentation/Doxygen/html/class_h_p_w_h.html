@@ -31,7 +31,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo_ecotope.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">HPWHsim
-   &#160;<span id="projectnumber">1.0.0</span>
+   &#160;<span id="projectnumber">1.2.1</span>
    </div>
    <div id="projectbrief">Water Heater Simulation</div>
   </td>
@@ -154,7 +154,10 @@ Public Types</h2></td></tr>
 &#160;&#160;<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac2c67a3f6113fac00ed344031538f2da">MODELS_Stiebel220E</a> = 150, 
 <a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d6be9245ab15f491dda7c7883fdac1">MODELS_Generic1</a> = 160, 
 <a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b">MODELS_Generic2</a> = 161, 
-<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798">MODELS_Generic3</a> = 162
+<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798">MODELS_Generic3</a> = 162, 
+<br/>
+&#160;&#160;<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93">MODELS_CustomFile</a> = 200, 
+<a class="el" href="class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda">MODELS_CustomResTank</a> = 201
 <br/>
  }</td></tr>
 <tr class="separator:acf117eb928a21b7b757b653455a2338e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -224,10 +227,14 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>WriteCSVHeading</b> (F
 <tr class="separator:ac8bced7dc05598df491f907cd895ccaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5652291d663296decd912fe92fb9d4e7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a5652291d663296decd912fe92fb9d4e7">WriteCSVRow</a> (FILE *outFILE, const char *preamble=&quot;&quot;) const </td></tr>
 <tr class="separator:a5652291d663296decd912fe92fb9d4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adeb9b796845880f192dbaf44ad1b9ffb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#adeb9b796845880f192dbaf44ad1b9ffb">isSetpointFixed</a> ()</td></tr>
+<tr class="separator:adeb9b796845880f192dbaf44ad1b9ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb49b5846f9056602de57cb289e0a321"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#adb49b5846f9056602de57cb289e0a321">setSetpoint</a> (double newSetpoint)</td></tr>
 <tr class="separator:adb49b5846f9056602de57cb289e0a321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7d91fead271ef907cf13450055cdb06"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#ab7d91fead271ef907cf13450055cdb06">setSetpoint</a> (double newSetpoint, <a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294">UNITS</a> units)</td></tr>
 <tr class="separator:ab7d91fead271ef907cf13450055cdb06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb569bea8e36482acd73be63c4eabd77"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#abb569bea8e36482acd73be63c4eabd77">getSetpoint</a> ()</td></tr>
+<tr class="separator:abb569bea8e36482acd73be63c4eabd77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac5af7347053c06dcbc446b44fa3686d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#aac5af7347053c06dcbc446b44fa3686d">resetTankToSetpoint</a> ()</td></tr>
 <tr class="separator:aac5af7347053c06dcbc446b44fa3686d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9c7561968c17d6b0bb28d17cc7b700f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#ae9c7561968c17d6b0bb28d17cc7b700f">setAirFlowFreedom</a> (double fanFraction)</td></tr>
@@ -304,10 +311,10 @@ Static Public Attributes</h2></td></tr>
 static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_major</b> = 1</td></tr>
 <tr class="separator:a404694da361f91cab76c434bc2e8aba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d21de98801ba96190a10fce9f7e0007"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d21de98801ba96190a10fce9f7e0007"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_minor</b> = 1</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_minor</b> = 2</td></tr>
 <tr class="separator:a4d21de98801ba96190a10fce9f7e0007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af02ab978efb608dbcb3010f51fec5bee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af02ab978efb608dbcb3010f51fec5bee"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 0</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 1</td></tr>
 <tr class="separator:af02ab978efb608dbcb3010f51fec5bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad731cfda8428fb584d308f98c2eb329a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad731cfda8428fb584d308f98c2eb329a"></a>
 static const float&#160;</td><td class="memItemRight" valign="bottom"><b>DENSITYWATER_kgperL</b> = 0.998f</td></tr>
@@ -447,6 +454,12 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798"></a>MODELS_Generic3</em>&#160;</td><td class="fielddoc">
 <p>Generic Tier 3 </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93"></a>MODELS_CustomFile</em>&#160;</td><td class="fielddoc">
+<p><a class="el" href="class_h_p_w_h.html">HPWH</a> parameters were input via file </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda"></a>MODELS_CustomResTank</em>&#160;</td><td class="fielddoc">
+<p><a class="el" href="class_h_p_w_h.html">HPWH</a> parameters were input via HPWHinit_resTank </p>
 </td></tr>
 </table>
 
@@ -821,6 +834,22 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 
 </div>
 </div>
+<a class="anchor" id="abb569bea8e36482acd73be63c4eabd77"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double HPWH::getSetpoint </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>a function to check the setpoint - returns setpoint in celcius </p>
+
+</div>
+</div>
 <a class="anchor" id="a5cccd4667bf976b0a6c1d33ce5fec880"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1017,6 +1046,22 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
       </table>
 </div><div class="memdoc">
 <p>returns 1 if the Nth heat source is currently engaged, 0 if it is not, and returns HPWH_ABORT for N out of bounds </p>
+
+</div>
+</div>
+<a class="anchor" id="adeb9b796845880f192dbaf44ad1b9ffb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool HPWH::isSetpointFixed </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>is the setpoint allowed to be changed </p>
 
 </div>
 </div>
@@ -1591,7 +1636,7 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_h_p_w_h.html">HPWH</a></li>
-    <li class="footer">Generated on Tue Mar 22 2016 17:51:02 for HPWHsim by
+    <li class="footer">Generated on Wed Mar 30 2016 14:43:50 for HPWHsim by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

@@ -8,6 +8,8 @@ var searchData=
   ['models_5faosmithphpt60',['MODELS_AOSmithPHPT60',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea11344f4d7a69a2856264eee852a570a8',1,'HPWH']]],
   ['models_5faosmithphpt80',['MODELS_AOSmithPHPT80',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea0dfd5dc15a65de9d57e316305846b65d',1,'HPWH']]],
   ['models_5fbasicintegrated',['MODELS_basicIntegrated',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eade72adc9496641aeb59b201b71cbb41c',1,'HPWH']]],
+  ['models_5fcustomfile',['MODELS_CustomFile',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93',1,'HPWH']]],
+  ['models_5fcustomrestank',['MODELS_CustomResTank',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda',1,'HPWH']]],
   ['models_5fexternaltest',['MODELS_externalTest',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea0f6ca73826370b770293feb6b39b0035',1,'HPWH']]],
   ['models_5fge2012',['MODELS_GE2012',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea675f73f6769b4c42c7826b1a64dbe850',1,'HPWH']]],
   ['models_5fge2014',['MODELS_GE2014',['../class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea96053ae26eb5a7881516e6ca9895c8fe',1,'HPWH']]],

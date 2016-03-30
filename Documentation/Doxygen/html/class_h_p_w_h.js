@@ -31,7 +31,9 @@ var class_h_p_w_h =
       [ "MODELS_Stiebel220E", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac2c67a3f6113fac00ed344031538f2da", null ],
       [ "MODELS_Generic1", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d6be9245ab15f491dda7c7883fdac1", null ],
       [ "MODELS_Generic2", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b", null ],
-      [ "MODELS_Generic3", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798", null ]
+      [ "MODELS_Generic3", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798", null ],
+      [ "MODELS_CustomFile", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93", null ],
+      [ "MODELS_CustomResTank", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda", null ]
     ] ],
     [ "UNITS", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294", [
       [ "UNITS_C", "class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294a9acbc83e5ccf401979254f688c20426b", null ],
@@ -68,6 +70,7 @@ var class_h_p_w_h =
     [ "getNumNodes", "class_h_p_w_h.html#a38e4f7eb3da82c2281657702fc472b1d", null ],
     [ "getOutletTemp", "class_h_p_w_h.html#af16099ea18a8c1c9f6025b7e2fc00e7e", null ],
     [ "getOutletTemp", "class_h_p_w_h.html#a0b75a215e395f52d60997f9b07d37de7", null ],
+    [ "getSetpoint", "class_h_p_w_h.html#abb569bea8e36482acd73be63c4eabd77", null ],
     [ "getStandbyLosses", "class_h_p_w_h.html#ae615d088a390d0e1db95a196406ba2b4", null ],
     [ "getStandbyLosses", "class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802", null ],
@@ -77,6 +80,7 @@ var class_h_p_w_h =
     [ "HPWHinit_resTank", "class_h_p_w_h.html#ac092212830c4e023b1314845d79d5461", null ],
     [ "HPWHinit_resTank", "class_h_p_w_h.html#a0b8ee9f3e4773ca140b50997ad1091cf", null ],
     [ "isNthHeatSourceRunning", "class_h_p_w_h.html#a587a39a680823886348b489e85f243e9", null ],
+    [ "isSetpointFixed", "class_h_p_w_h.html#adeb9b796845880f192dbaf44ad1b9ffb", null ],
     [ "operator=", "class_h_p_w_h.html#a6e231a8737d540f89aeeb028663f65a9", null ],
     [ "printHeatSourceInfo", "class_h_p_w_h.html#a49d923bea7be1ad1ee60c02163bbf6cc", null ],
     [ "printTankTemps", "class_h_p_w_h.html#a59d5b765bf4490be7bd5954a5ab7324e", null ],

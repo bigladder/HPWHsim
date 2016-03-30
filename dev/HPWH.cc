@@ -2075,7 +2075,7 @@ int HPWH::HPWHinit_file(string configFile){
           doTempDepression = false;
         }
         else {
-          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
           return HPWH_ABORT;
         }
       }
@@ -2088,7 +2088,7 @@ int HPWH::HPWHinit_file(string configFile){
           tankMixesOnDraw = false;
         }
         else {
-          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+          if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
           return HPWH_ABORT;
         }
       }
@@ -2102,6 +2102,15 @@ int HPWH::HPWHinit_file(string configFile){
       }
       setpoint_C = tempDouble;
       //tank will be set to setpoint at end of function
+    }
+    else if (token == "setpointFixed") {
+      line_ss >> tempString;
+      if (tempString == "true")  setpointFixed = true;
+      else if (tempString == "false")  setpointFixed = false;
+      else {
+        if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
+        return HPWH_ABORT;
+      }
     }
     else if (token == "verbosity") {
       line_ss >> token;
