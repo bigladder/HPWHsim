@@ -19,8 +19,8 @@
 class HPWH {
  public:
   static const int version_major = 1;
-  static const int version_minor = 1;
-  static const int version_maint = 2;
+  static const int version_minor = 2;
+  static const int version_maint = 0;
 
 
   static const float DENSITYWATER_kgperL;
