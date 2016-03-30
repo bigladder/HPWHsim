@@ -42,7 +42,10 @@ enum \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{M\-O\-D\-E\-L\-
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac2c67a3f6113fac00ed344031538f2da}{M\-O\-D\-E\-L\-S\-\_\-\-Stiebel220\-E} = 150, 
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d6be9245ab15f491dda7c7883fdac1}{M\-O\-D\-E\-L\-S\-\_\-\-Generic1} = 160, 
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}{M\-O\-D\-E\-L\-S\-\_\-\-Generic2} = 161, 
-\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}{M\-O\-D\-E\-L\-S\-\_\-\-Generic3} = 162
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}{M\-O\-D\-E\-L\-S\-\_\-\-Generic3} = 162, 
+\\*
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File} = 200, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank} = 201
  \}
 \item 
 enum \hyperlink{class_h_p_w_h_aa493e3f78affa7dafde7e297cc68673c}{V\-E\-R\-B\-O\-S\-I\-T\-Y} \{ \\*
@@ -109,9 +112,13 @@ void \hyperlink{class_h_p_w_h_a59d5b765bf4490be7bd5954a5ab7324e}{print\-Tank\-Te
 \item 
 int \hyperlink{class_h_p_w_h_a5652291d663296decd912fe92fb9d4e7}{Write\-C\-S\-V\-Row} (F\-I\-L\-E $\ast$out\-F\-I\-L\-E, const char $\ast$preamble=\char`\"{}\char`\"{}) const 
 \item 
+bool \hyperlink{class_h_p_w_h_adeb9b796845880f192dbaf44ad1b9ffb}{is\-Setpoint\-Fixed} ()
+\item 
 int \hyperlink{class_h_p_w_h_adb49b5846f9056602de57cb289e0a321}{set\-Setpoint} (double new\-Setpoint)
 \item 
 int \hyperlink{class_h_p_w_h_ab7d91fead271ef907cf13450055cdb06}{set\-Setpoint} (double new\-Setpoint, \hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units)
+\item 
+double \hyperlink{class_h_p_w_h_abb569bea8e36482acd73be63c4eabd77}{get\-Setpoint} ()
 \item 
 int \hyperlink{class_h_p_w_h_aac5af7347053c06dcbc446b44fa3686d}{reset\-Tank\-To\-Setpoint} ()
 \item 
@@ -188,10 +195,10 @@ static std\-::string \hyperlink{class_h_p_w_h_a001c10815863cb3efdb721d364111275}
 \hypertarget{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}{static const int {\bfseries version\-\_\-major} = 1}\label{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}
 
 \item 
-\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 1}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
+\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 2}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
 
 \item 
-\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 0}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
+\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 1}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
 
 \item 
 \hypertarget{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}{static const float {\bfseries D\-E\-N\-S\-I\-T\-Y\-W\-A\-T\-E\-R\-\_\-kgper\-L} = 0.\-998f}\label{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}
@@ -290,7 +297,11 @@ specifies the allowable preset \hyperlink{class_h_p_w_h}{H\-P\-W\-H} models valu
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}{M\-O\-D\-E\-L\-S\-\_\-\-Generic2}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}
 }]Generic Tier 2 \index{M\-O\-D\-E\-L\-S\-\_\-\-Generic3@{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Generic3@{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}}\item[{\em 
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}
-}]Generic Tier 3 \end{description}
+}]Generic Tier 3 \index{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}
+}]\hyperlink{class_h_p_w_h}{H\-P\-W\-H} parameters were input via file \index{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}
+}]\hyperlink{class_h_p_w_h}{H\-P\-W\-H} parameters were input via H\-P\-W\-Hinit\-\_\-res\-Tank \end{description}
 \end{Desc}
 \hypertarget{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{\index{H\-P\-W\-H@{H\-P\-W\-H}!U\-N\-I\-T\-S@{U\-N\-I\-T\-S}}
 \index{U\-N\-I\-T\-S@{U\-N\-I\-T\-S}!HPWH@{H\-P\-W\-H}}
@@ -465,7 +476,14 @@ returns the number of nodes \hypertarget{class_h_p_w_h_a0b75a215e395f52d60997f9b
 \item[{{\bf U\-N\-I\-T\-S}}]{units}
 \end{DoxyParamCaption}
 ) const}}\label{class_h_p_w_h_a0b75a215e395f52d60997f9b07d37de7}
-returns the outlet temperature in the specified units returns 0 when no draw occurs, or H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect unit specifier \hypertarget{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Standby\-Losses@{get\-Standby\-Losses}}
+returns the outlet temperature in the specified units returns 0 when no draw occurs, or H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect unit specifier \hypertarget{class_h_p_w_h_abb569bea8e36482acd73be63c4eabd77}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Setpoint@{get\-Setpoint}}
+\index{get\-Setpoint@{get\-Setpoint}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Setpoint}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Setpoint (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_abb569bea8e36482acd73be63c4eabd77}
+a function to check the setpoint -\/ returns setpoint in celcius \hypertarget{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Standby\-Losses@{get\-Standby\-Losses}}
 \index{get\-Standby\-Losses@{get\-Standby\-Losses}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{get\-Standby\-Losses}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Standby\-Losses (
 \begin{DoxyParamCaption}
@@ -543,7 +561,14 @@ Several assumptions regarding the tank configuration are assumed\-: the lower el
 \item[{int}]{N}
 \end{DoxyParamCaption}
 ) const}}\label{class_h_p_w_h_a587a39a680823886348b489e85f243e9}
-returns 1 if the Nth heat source is currently engaged, 0 if it is not, and returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds \hypertarget{class_h_p_w_h_a6e231a8737d540f89aeeb028663f65a9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!operator=@{operator=}}
+returns 1 if the Nth heat source is currently engaged, 0 if it is not, and returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for N out of bounds \hypertarget{class_h_p_w_h_adeb9b796845880f192dbaf44ad1b9ffb}{\index{H\-P\-W\-H@{H\-P\-W\-H}!is\-Setpoint\-Fixed@{is\-Setpoint\-Fixed}}
+\index{is\-Setpoint\-Fixed@{is\-Setpoint\-Fixed}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{is\-Setpoint\-Fixed}]{\setlength{\rightskip}{0pt plus 5cm}bool H\-P\-W\-H\-::is\-Setpoint\-Fixed (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_adeb9b796845880f192dbaf44ad1b9ffb}
+is the setpoint allowed to be changed \hypertarget{class_h_p_w_h_a6e231a8737d540f89aeeb028663f65a9}{\index{H\-P\-W\-H@{H\-P\-W\-H}!operator=@{operator=}}
 \index{operator=@{operator=}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{operator=}]{\setlength{\rightskip}{0pt plus 5cm}{\bf H\-P\-W\-H} \& H\-P\-W\-H\-::operator= (
 \begin{DoxyParamCaption}

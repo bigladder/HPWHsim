@@ -38,36 +38,38 @@
 \contentsline {subsubsection}{\numberline {2.2.4.10}get\discretionary {-}{}{}Num\discretionary {-}{}{}Heat\discretionary {-}{}{}Sources}{9}{subsubsection.2.2.4.10}
 \contentsline {subsubsection}{\numberline {2.2.4.11}get\discretionary {-}{}{}Num\discretionary {-}{}{}Nodes}{9}{subsubsection.2.2.4.11}
 \contentsline {subsubsection}{\numberline {2.2.4.12}get\discretionary {-}{}{}Outlet\discretionary {-}{}{}Temp}{9}{subsubsection.2.2.4.12}
-\contentsline {subsubsection}{\numberline {2.2.4.13}get\discretionary {-}{}{}Standby\discretionary {-}{}{}Losses}{9}{subsubsection.2.2.4.13}
-\contentsline {subsubsection}{\numberline {2.2.4.14}get\discretionary {-}{}{}Tank\discretionary {-}{}{}Node\discretionary {-}{}{}Temp}{9}{subsubsection.2.2.4.14}
+\contentsline {subsubsection}{\numberline {2.2.4.13}get\discretionary {-}{}{}Setpoint}{9}{subsubsection.2.2.4.13}
+\contentsline {subsubsection}{\numberline {2.2.4.14}get\discretionary {-}{}{}Standby\discretionary {-}{}{}Losses}{10}{subsubsection.2.2.4.14}
 \contentsline {subsubsection}{\numberline {2.2.4.15}get\discretionary {-}{}{}Tank\discretionary {-}{}{}Node\discretionary {-}{}{}Temp}{10}{subsubsection.2.2.4.15}
-\contentsline {subsubsection}{\numberline {2.2.4.16}get\discretionary {-}{}{}Version}{10}{subsubsection.2.2.4.16}
-\contentsline {subsubsection}{\numberline {2.2.4.17}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}file}{10}{subsubsection.2.2.4.17}
-\contentsline {subsubsection}{\numberline {2.2.4.18}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}presets}{10}{subsubsection.2.2.4.18}
-\contentsline {subsubsection}{\numberline {2.2.4.19}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}res\discretionary {-}{}{}Tank}{10}{subsubsection.2.2.4.19}
+\contentsline {subsubsection}{\numberline {2.2.4.16}get\discretionary {-}{}{}Tank\discretionary {-}{}{}Node\discretionary {-}{}{}Temp}{10}{subsubsection.2.2.4.16}
+\contentsline {subsubsection}{\numberline {2.2.4.17}get\discretionary {-}{}{}Version}{10}{subsubsection.2.2.4.17}
+\contentsline {subsubsection}{\numberline {2.2.4.18}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}file}{10}{subsubsection.2.2.4.18}
+\contentsline {subsubsection}{\numberline {2.2.4.19}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}presets}{10}{subsubsection.2.2.4.19}
 \contentsline {subsubsection}{\numberline {2.2.4.20}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}res\discretionary {-}{}{}Tank}{10}{subsubsection.2.2.4.20}
-\contentsline {subsubsection}{\numberline {2.2.4.21}is\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Running}{10}{subsubsection.2.2.4.21}
-\contentsline {subsubsection}{\numberline {2.2.4.22}operator=}{10}{subsubsection.2.2.4.22}
-\contentsline {subsubsection}{\numberline {2.2.4.23}print\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Info}{11}{subsubsection.2.2.4.23}
-\contentsline {subsubsection}{\numberline {2.2.4.24}print\discretionary {-}{}{}Tank\discretionary {-}{}{}Temps}{11}{subsubsection.2.2.4.24}
-\contentsline {subsubsection}{\numberline {2.2.4.25}reset\discretionary {-}{}{}Tank\discretionary {-}{}{}To\discretionary {-}{}{}Setpoint}{11}{subsubsection.2.2.4.25}
-\contentsline {subsubsection}{\numberline {2.2.4.26}run\discretionary {-}{}{}N\discretionary {-}{}{}Steps}{11}{subsubsection.2.2.4.26}
-\contentsline {subsubsection}{\numberline {2.2.4.27}run\discretionary {-}{}{}One\discretionary {-}{}{}Step}{11}{subsubsection.2.2.4.27}
-\contentsline {subsubsection}{\numberline {2.2.4.28}run\discretionary {-}{}{}One\discretionary {-}{}{}Step}{11}{subsubsection.2.2.4.28}
-\contentsline {subsubsection}{\numberline {2.2.4.29}set\discretionary {-}{}{}Air\discretionary {-}{}{}Flow\discretionary {-}{}{}Freedom}{11}{subsubsection.2.2.4.29}
-\contentsline {subsubsection}{\numberline {2.2.4.30}set\discretionary {-}{}{}Do\discretionary {-}{}{}Temp\discretionary {-}{}{}Depression}{11}{subsubsection.2.2.4.30}
-\contentsline {subsubsection}{\numberline {2.2.4.31}set\discretionary {-}{}{}Inlet\discretionary {-}{}{}T}{11}{subsubsection.2.2.4.31}
-\contentsline {subsubsection}{\numberline {2.2.4.32}set\discretionary {-}{}{}Message\discretionary {-}{}{}Callback}{11}{subsubsection.2.2.4.32}
-\contentsline {subsubsection}{\numberline {2.2.4.33}set\discretionary {-}{}{}Setpoint}{12}{subsubsection.2.2.4.33}
-\contentsline {subsubsection}{\numberline {2.2.4.34}set\discretionary {-}{}{}Setpoint}{12}{subsubsection.2.2.4.34}
-\contentsline {subsubsection}{\numberline {2.2.4.35}set\discretionary {-}{}{}Tank\discretionary {-}{}{}Size}{12}{subsubsection.2.2.4.35}
-\contentsline {subsubsection}{\numberline {2.2.4.36}set\discretionary {-}{}{}U\discretionary {-}{}{}A}{12}{subsubsection.2.2.4.36}
-\contentsline {subsubsection}{\numberline {2.2.4.37}set\discretionary {-}{}{}Verbosity}{12}{subsubsection.2.2.4.37}
-\contentsline {subsubsection}{\numberline {2.2.4.38}Write\discretionary {-}{}{}C\discretionary {-}{}{}S\discretionary {-}{}{}V\discretionary {-}{}{}Row}{12}{subsubsection.2.2.4.38}
+\contentsline {subsubsection}{\numberline {2.2.4.21}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}Hinit\discretionary {-}{}{}\_\discretionary {-}{}{}res\discretionary {-}{}{}Tank}{10}{subsubsection.2.2.4.21}
+\contentsline {subsubsection}{\numberline {2.2.4.22}is\discretionary {-}{}{}Nth\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Running}{11}{subsubsection.2.2.4.22}
+\contentsline {subsubsection}{\numberline {2.2.4.23}is\discretionary {-}{}{}Setpoint\discretionary {-}{}{}Fixed}{11}{subsubsection.2.2.4.23}
+\contentsline {subsubsection}{\numberline {2.2.4.24}operator=}{11}{subsubsection.2.2.4.24}
+\contentsline {subsubsection}{\numberline {2.2.4.25}print\discretionary {-}{}{}Heat\discretionary {-}{}{}Source\discretionary {-}{}{}Info}{11}{subsubsection.2.2.4.25}
+\contentsline {subsubsection}{\numberline {2.2.4.26}print\discretionary {-}{}{}Tank\discretionary {-}{}{}Temps}{11}{subsubsection.2.2.4.26}
+\contentsline {subsubsection}{\numberline {2.2.4.27}reset\discretionary {-}{}{}Tank\discretionary {-}{}{}To\discretionary {-}{}{}Setpoint}{11}{subsubsection.2.2.4.27}
+\contentsline {subsubsection}{\numberline {2.2.4.28}run\discretionary {-}{}{}N\discretionary {-}{}{}Steps}{11}{subsubsection.2.2.4.28}
+\contentsline {subsubsection}{\numberline {2.2.4.29}run\discretionary {-}{}{}One\discretionary {-}{}{}Step}{11}{subsubsection.2.2.4.29}
+\contentsline {subsubsection}{\numberline {2.2.4.30}run\discretionary {-}{}{}One\discretionary {-}{}{}Step}{11}{subsubsection.2.2.4.30}
+\contentsline {subsubsection}{\numberline {2.2.4.31}set\discretionary {-}{}{}Air\discretionary {-}{}{}Flow\discretionary {-}{}{}Freedom}{11}{subsubsection.2.2.4.31}
+\contentsline {subsubsection}{\numberline {2.2.4.32}set\discretionary {-}{}{}Do\discretionary {-}{}{}Temp\discretionary {-}{}{}Depression}{12}{subsubsection.2.2.4.32}
+\contentsline {subsubsection}{\numberline {2.2.4.33}set\discretionary {-}{}{}Inlet\discretionary {-}{}{}T}{12}{subsubsection.2.2.4.33}
+\contentsline {subsubsection}{\numberline {2.2.4.34}set\discretionary {-}{}{}Message\discretionary {-}{}{}Callback}{12}{subsubsection.2.2.4.34}
+\contentsline {subsubsection}{\numberline {2.2.4.35}set\discretionary {-}{}{}Setpoint}{12}{subsubsection.2.2.4.35}
+\contentsline {subsubsection}{\numberline {2.2.4.36}set\discretionary {-}{}{}Setpoint}{12}{subsubsection.2.2.4.36}
+\contentsline {subsubsection}{\numberline {2.2.4.37}set\discretionary {-}{}{}Tank\discretionary {-}{}{}Size}{12}{subsubsection.2.2.4.37}
+\contentsline {subsubsection}{\numberline {2.2.4.38}set\discretionary {-}{}{}U\discretionary {-}{}{}A}{12}{subsubsection.2.2.4.38}
+\contentsline {subsubsection}{\numberline {2.2.4.39}set\discretionary {-}{}{}Verbosity}{12}{subsubsection.2.2.4.39}
+\contentsline {subsubsection}{\numberline {2.2.4.40}Write\discretionary {-}{}{}C\discretionary {-}{}{}S\discretionary {-}{}{}V\discretionary {-}{}{}Row}{12}{subsubsection.2.2.4.40}
 \contentsline {subsection}{\numberline {2.2.5}Member Data Documentation}{12}{subsection.2.2.5}
 \contentsline {subsubsection}{\numberline {2.2.5.1}C\discretionary {-}{}{}O\discretionary {-}{}{}N\discretionary {-}{}{}D\discretionary {-}{}{}E\discretionary {-}{}{}N\discretionary {-}{}{}S\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}Y\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}S\discretionary {-}{}{}I\discretionary {-}{}{}Z\discretionary {-}{}{}E}{12}{subsubsection.2.2.5.1}
 \contentsline {subsubsection}{\numberline {2.2.5.2}H\discretionary {-}{}{}E\discretionary {-}{}{}A\discretionary {-}{}{}T\discretionary {-}{}{}D\discretionary {-}{}{}I\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}M\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}V\discretionary {-}{}{}A\discretionary {-}{}{}L\discretionary {-}{}{}U\discretionary {-}{}{}E}{12}{subsubsection.2.2.5.2}
-\contentsline {subsubsection}{\numberline {2.2.5.3}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}A\discretionary {-}{}{}B\discretionary {-}{}{}O\discretionary {-}{}{}R\discretionary {-}{}{}T}{12}{subsubsection.2.2.5.3}
-\contentsline {subsubsection}{\numberline {2.2.5.4}M\discretionary {-}{}{}A\discretionary {-}{}{}X\discretionary {-}{}{}O\discretionary {-}{}{}U\discretionary {-}{}{}T\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}R\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}G}{12}{subsubsection.2.2.5.4}
+\contentsline {subsubsection}{\numberline {2.2.5.3}H\discretionary {-}{}{}P\discretionary {-}{}{}W\discretionary {-}{}{}H\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}A\discretionary {-}{}{}B\discretionary {-}{}{}O\discretionary {-}{}{}R\discretionary {-}{}{}T}{13}{subsubsection.2.2.5.3}
+\contentsline {subsubsection}{\numberline {2.2.5.4}M\discretionary {-}{}{}A\discretionary {-}{}{}X\discretionary {-}{}{}O\discretionary {-}{}{}U\discretionary {-}{}{}T\discretionary {-}{}{}S\discretionary {-}{}{}T\discretionary {-}{}{}R\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}G}{13}{subsubsection.2.2.5.4}
 \contentsline {subsubsection}{\numberline {2.2.5.5}U\discretionary {-}{}{}N\discretionary {-}{}{}I\discretionary {-}{}{}N\discretionary {-}{}{}I\discretionary {-}{}{}T\discretionary {-}{}{}I\discretionary {-}{}{}A\discretionary {-}{}{}L\discretionary {-}{}{}I\discretionary {-}{}{}Z\discretionary {-}{}{}E\discretionary {-}{}{}D\discretionary {-}{}{}\_\discretionary {-}{}{}\discretionary {-}{}{}L\discretionary {-}{}{}O\discretionary {-}{}{}C\discretionary {-}{}{}A\discretionary {-}{}{}T\discretionary {-}{}{}I\discretionary {-}{}{}O\discretionary {-}{}{}N\discretionary {-}{}{}T\discretionary {-}{}{}E\discretionary {-}{}{}M\discretionary {-}{}{}P}{13}{subsubsection.2.2.5.5}
 \contentsline {chapter}{Index}{14}{section*.9}
