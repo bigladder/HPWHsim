@@ -38,13 +38,13 @@ int initReturn = 0;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-hpwh.setVerbosity(HPWH::VRB_reluctant);
+//hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
 
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
-initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Sanden40);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
+//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Sanden40);
 //initReturn = hpwh.HPWHinit_resTank(GAL_TO_L(50), 0.8, 4500, 4500);
 //initReturn = hpwh.HPWHinit_resTank();
 
@@ -76,6 +76,7 @@ int liters = 60;
 //int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
+cout << "isSetpointFixed: " << hpwh.isSetpointFixed() << endl;
 cout << "setpoint 1:\t" << hpwh.getSetpoint() << endl;
 hpwh.setSetpoint(F_TO_C(124));
 cout << "setpoint 2:\t" << hpwh.getSetpoint() << endl;

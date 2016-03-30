@@ -897,67 +897,71 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
   int wholeNodesToDraw;
   this->outletTemp_C = 0;
 
-  //calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
-  drawFraction = drawVolume_L/volPerNode_LperNode;
-  if (drawFraction > numNodes) {
-    if (hpwhVerbosity >= VRB_reluctant) msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
-    simHasFailed = true;
-    return;
-  }
+  if(drawVolume_L > 0){
+    //calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
+    drawFraction = drawVolume_L/volPerNode_LperNode;
+    if (drawFraction > numNodes) {
+      if (hpwhVerbosity >= VRB_reluctant) msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+      simHasFailed = true;
+      return;
+    }
+    
+
+    wholeNodesToDraw = (int)std::floor(drawFraction);
+    drawFraction -= wholeNodesToDraw;
+
+    //move whole nodes
+    if (wholeNodesToDraw > 0) {        
+      for (int i = 0; i < wholeNodesToDraw; i++) {
+        //add temperature of drawn nodes for outletT average
+        outletTemp_C += tankTemps_C[numNodes-1 - i];  
+      }
+
+      for (int i = numNodes-1; i >= 0; i--) {
+        if (i > wholeNodesToDraw-1) {
+          //move nodes up
+          tankTemps_C[i] = tankTemps_C[i - wholeNodesToDraw];
+        }
+        else {
+          //fill in bottom nodes with inlet water
+          tankTemps_C[i] = inletT_C;  
+        }
+      }
+    }
+    //move fractional node
+    if (drawFraction > 0) {
+      //add temperature for outletT average
+      outletTemp_C += drawFraction*tankTemps_C[numNodes - 1];
+      //move partial nodes up
+      for (int i = numNodes-1; i > 0; i--) {
+        tankTemps_C[i] = tankTemps_C[i] *(1.0 - drawFraction) + tankTemps_C[i-1] * drawFraction;
+      }
+      //fill in bottom partial node with inletT
+      tankTemps_C[0] = tankTemps_C[0] * (1.0 - drawFraction) + inletT_C*drawFraction;
+    }
+
+    //fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
+    this->outletTemp_C /= (wholeNodesToDraw + drawFraction);
+
+
+    //Account for mixing at the bottom of the tank
+    if (tankMixesOnDraw == true && drawVolume_L > 0) {
+      int mixedBelowNode = numNodes / 3;
+      double ave = 0;
+      
+      for (int i = 0; i < mixedBelowNode; i++) {
+        ave += tankTemps_C[i];
+      }
+      ave /= mixedBelowNode;
+      
+      for (int i = 0; i < mixedBelowNode; i++) {
+        tankTemps_C[i] += ((ave - tankTemps_C[i]) / 3.0);
+      }
+    }
+    
+  } //end if(draw_volume_L > 0)
+
   
-
-  wholeNodesToDraw = (int)std::floor(drawFraction);
-  drawFraction -= wholeNodesToDraw;
-
-  //move whole nodes
-  if (wholeNodesToDraw > 0) {        
-    for (int i = 0; i < wholeNodesToDraw; i++) {
-      //add temperature of drawn nodes for outletT average
-      outletTemp_C += tankTemps_C[numNodes-1 - i];  
-    }
-
-    for (int i = numNodes-1; i >= 0; i--) {
-      if (i > wholeNodesToDraw-1) {
-        //move nodes up
-        tankTemps_C[i] = tankTemps_C[i - wholeNodesToDraw];
-      }
-      else {
-        //fill in bottom nodes with inlet water
-        tankTemps_C[i] = inletT_C;  
-      }
-    }
-  }
-  //move fractional node
-  if (drawFraction > 0) {
-    //add temperature for outletT average
-    outletTemp_C += drawFraction*tankTemps_C[numNodes - 1];
-    //move partial nodes up
-    for (int i = numNodes-1; i > 0; i--) {
-      tankTemps_C[i] = tankTemps_C[i] *(1.0 - drawFraction) + tankTemps_C[i-1] * drawFraction;
-    }
-    //fill in bottom partial node with inletT
-    tankTemps_C[0] = tankTemps_C[0] * (1.0 - drawFraction) + inletT_C*drawFraction;
-  }
-
-  //fill in average outlet T
-  this->outletTemp_C /= (wholeNodesToDraw + drawFraction);
-
-
-  //Account for mixing at the bottom of the tank
-  if (tankMixesOnDraw == true && drawVolume_L > 0) {
-    int mixedBelowNode = numNodes / 3;
-    double ave = 0;
-    
-    for (int i = 0; i < mixedBelowNode; i++) {
-      ave += tankTemps_C[i];
-    }
-    ave /= mixedBelowNode;
-    
-    for (int i = 0; i < mixedBelowNode; i++) {
-      tankTemps_C[i] += ((ave - tankTemps_C[i]) / 3.0);
-    }
-  }
-
   //calculate standby losses
   //get average tank temperature
   double avgTemp = 0;
