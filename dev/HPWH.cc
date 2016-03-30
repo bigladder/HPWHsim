@@ -15,7 +15,7 @@ const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-  simHasFailed(true), isHeating(false), hpwhVerbosity(VRB_silent), 
+  simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent), 
   messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
   setOfSources(NULL), tankTemps_C(NULL),  doTempDepression(false), locationTemperature(UNINITIALIZED_LOCATIONTEMP)
 {  }
@@ -537,11 +537,13 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
 }
 
 
-
+bool HPWH::isSetpointFixed(){
+  return setpointFixed;
+  }
 
 int HPWH::setSetpoint(double newSetpoint){
-  if (hpwhModel == MODELS_Sanden40 || hpwhModel == MODELS_Sanden80) {
-    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for Sanden models.  \n");
+  if (setpointFixed == true) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for your currently selected model.  \n");
     return HPWH_ABORT;
   }
   else{
@@ -550,8 +552,8 @@ int HPWH::setSetpoint(double newSetpoint){
   return 0;
 }
 int HPWH::setSetpoint(double newSetpoint, UNITS units) {
-  if (hpwhModel == MODELS_Sanden40 || hpwhModel == MODELS_Sanden80) {
-    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for Sanden models.  \n");
+  if (setpointFixed == true) {
+    if(hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for your currently selected model.  \n");
     return HPWH_ABORT;
   }
   else{
@@ -2969,6 +2971,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     numNodes = 96;
     tankTemps_C = new double[numNodes];
     setpoint_C = 65;
+    setpointFixed = true;
 
     //start tank off at setpoint
     resetTankToSetpoint();
@@ -3023,7 +3026,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     numNodes = 96;
     tankTemps_C = new double[numNodes];
     setpoint_C = 65;
-
+    setpointFixed = true;
+    
     //start tank off at setpoint
     resetTankToSetpoint();
     

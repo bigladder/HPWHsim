@@ -204,8 +204,8 @@ class HPWH {
 
 
 
-  
-  int setSetpoint(double newSetpoint /**default units C*/);
+  bool isSetpointFixed();  /**< is the setpoint allowed to be changed */
+  int setSetpoint(double newSetpoint /**<default units C*/);
   int setSetpoint(double newSetpoint, UNITS units);
   /**< a function to change the setpoint - useful for dynamically setting it
       The return value is 0 for successful setting, HPWH_ABORT for units failure  */
@@ -342,6 +342,9 @@ class HPWH {
  
 	bool isHeating;
 	/**< is the hpwh currently heating or not?  */
+
+	bool setpointFixed;
+	/**< does the HPWH allow the setpoint to vary  */
 
   VERBOSITY hpwhVerbosity;
 	/**< an enum to let the sim know how much output to say  */
