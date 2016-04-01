@@ -177,6 +177,8 @@ double \hyperlink{class_h_p_w_h_af58e48e9103fbb5525a251744816cc77}{get\-Energy\-
 \item 
 double \hyperlink{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}{get\-Standby\-Losses} (\hyperlink{class_h_p_w_h_a145320dbf116b9245ac4421026cff294}{U\-N\-I\-T\-S} units) const 
 \item 
+double \hyperlink{class_h_p_w_h_a38039325e4eb5b4537ccafd0a4e3c1ad}{get\-Tank\-Heat\-Content\-\_\-k\-J} () const 
+\item 
 int \hyperlink{class_h_p_w_h_a68a687d987105c10a17bac1a94be5224}{run\-One\-Step} (double draw\-Volume\-\_\-\-L, double ambient\-T\-\_\-\-C, double external\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} D\-Rstatus)
 \item 
 void \hyperlink{class_h_p_w_h_a5df4fd4422ba54080f519aaf6375be32}{set\-Inlet\-T} (double new\-Inlet\-T\-\_\-\-C)
@@ -198,7 +200,7 @@ static std\-::string \hyperlink{class_h_p_w_h_a001c10815863cb3efdb721d364111275}
 \hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 2}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
 
 \item 
-\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 1}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
+\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 2}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
 
 \item 
 \hypertarget{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}{static const float {\bfseries D\-E\-N\-S\-I\-T\-Y\-W\-A\-T\-E\-R\-\_\-kgper\-L} = 0.\-998f}\label{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}
@@ -490,7 +492,14 @@ a function to check the setpoint -\/ returns setpoint in celcius \hypertarget{cl
 \item[{{\bf U\-N\-I\-T\-S}}]{units}
 \end{DoxyParamCaption}
 ) const}}\label{class_h_p_w_h_a5cccd4667bf976b0a6c1d33ce5fec880}
-get the amount of heat lost through the tank in specified units moving heat from the water to the space is the positive direction negative should occur seldom returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect units \hypertarget{class_h_p_w_h_a440f55f294a28f9024ce4731f515b802}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}}
+get the amount of heat lost through the tank in specified units moving heat from the water to the space is the positive direction negative should occur seldom returns H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T for incorrect units \hypertarget{class_h_p_w_h_a38039325e4eb5b4537ccafd0a4e3c1ad}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Tank\-Heat\-Content\-\_\-k\-J@{get\-Tank\-Heat\-Content\-\_\-k\-J}}
+\index{get\-Tank\-Heat\-Content\-\_\-k\-J@{get\-Tank\-Heat\-Content\-\_\-k\-J}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{get\-Tank\-Heat\-Content\-\_\-k\-J}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Tank\-Heat\-Content\-\_\-k\-J (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{class_h_p_w_h_a38039325e4eb5b4537ccafd0a4e3c1ad}
+get the heat content of the tank, relative to zero celsius returns using kilojoules \hypertarget{class_h_p_w_h_a440f55f294a28f9024ce4731f515b802}{\index{H\-P\-W\-H@{H\-P\-W\-H}!get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}}
 \index{get\-Tank\-Node\-Temp@{get\-Tank\-Node\-Temp}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{get\-Tank\-Node\-Temp}]{\setlength{\rightskip}{0pt plus 5cm}double H\-P\-W\-H\-::get\-Tank\-Node\-Temp (
 \begin{DoxyParamCaption}
