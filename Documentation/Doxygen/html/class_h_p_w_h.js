@@ -73,6 +73,7 @@ var class_h_p_w_h =
     [ "getSetpoint", "class_h_p_w_h.html#abb569bea8e36482acd73be63c4eabd77", null ],
     [ "getStandbyLosses", "class_h_p_w_h.html#ae615d088a390d0e1db95a196406ba2b4", null ],
     [ "getStandbyLosses", "class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880", null ],
+    [ "getTankHeatContent_kJ", "class_h_p_w_h.html#a38039325e4eb5b4537ccafd0a4e3c1ad", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948", null ],
     [ "HPWHinit_file", "class_h_p_w_h.html#a348c1c4a90ec1ee5e91c84ab8d3bc5b1", null ],

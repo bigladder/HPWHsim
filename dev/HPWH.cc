@@ -887,6 +887,18 @@ double HPWH::getStandbyLosses(UNITS units) const {
   }
 }
 
+double HPWH::getTankHeatContent_kJ() const {
+// returns tank heat content relative to 0 C using kJ
+
+  //get average tank temperature
+  double avgTemp = 0;
+  for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
+  avgTemp /= numNodes;
+
+  double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
+  return totalHeat;
+}
+
 
 
 //the privates

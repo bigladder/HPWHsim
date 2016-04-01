@@ -31,7 +31,7 @@
   <td id="projectlogo"><img alt="Logo" src="logo_ecotope.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">HPWHsim
-   &#160;<span id="projectnumber">1.2.1</span>
+   &#160;<span id="projectnumber">1.2.2</span>
    </div>
    <div id="projectbrief">Water Heater Simulation</div>
   </td>
@@ -292,6 +292,8 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getStandbyLosses</b
 <tr class="separator:ae615d088a390d0e1db95a196406ba2b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cccd4667bf976b0a6c1d33ce5fec880"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a5cccd4667bf976b0a6c1d33ce5fec880">getStandbyLosses</a> (<a class="el" href="class_h_p_w_h.html#a145320dbf116b9245ac4421026cff294">UNITS</a> units) const </td></tr>
 <tr class="separator:a5cccd4667bf976b0a6c1d33ce5fec880"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38039325e4eb5b4537ccafd0a4e3c1ad"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a38039325e4eb5b4537ccafd0a4e3c1ad">getTankHeatContent_kJ</a> () const </td></tr>
+<tr class="separator:a38039325e4eb5b4537ccafd0a4e3c1ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68a687d987105c10a17bac1a94be5224"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a68a687d987105c10a17bac1a94be5224">runOneStep</a> (double drawVolume_L, double ambientT_C, double externalT_C, <a class="el" href="class_h_p_w_h.html#a6a74814715ed6a33a75fd0d9dc3e7107">DRMODES</a> DRstatus)</td></tr>
 <tr class="separator:a68a687d987105c10a17bac1a94be5224"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5df4fd4422ba54080f519aaf6375be32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_h_p_w_h.html#a5df4fd4422ba54080f519aaf6375be32">setInletT</a> (double newInletT_C)</td></tr>
@@ -314,7 +316,7 @@ static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_m
 static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_minor</b> = 2</td></tr>
 <tr class="separator:a4d21de98801ba96190a10fce9f7e0007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af02ab978efb608dbcb3010f51fec5bee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af02ab978efb608dbcb3010f51fec5bee"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 1</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>version_maint</b> = 2</td></tr>
 <tr class="separator:af02ab978efb608dbcb3010f51fec5bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad731cfda8428fb584d308f98c2eb329a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad731cfda8428fb584d308f98c2eb329a"></a>
 static const float&#160;</td><td class="memItemRight" valign="bottom"><b>DENSITYWATER_kgperL</b> = 0.998f</td></tr>
@@ -864,6 +866,22 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
       </table>
 </div><div class="memdoc">
 <p>get the amount of heat lost through the tank in specified units moving heat from the water to the space is the positive direction negative should occur seldom returns HPWH_ABORT for incorrect units </p>
+
+</div>
+</div>
+<a class="anchor" id="a38039325e4eb5b4537ccafd0a4e3c1ad"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double HPWH::getTankHeatContent_kJ </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>get the heat content of the tank, relative to zero celsius returns using kilojoules </p>
 
 </div>
 </div>
@@ -1636,7 +1654,7 @@ static const float&#160;</td><td class="memItemRight" valign="bottom"><b>CPWATER
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_h_p_w_h.html">HPWH</a></li>
-    <li class="footer">Generated on Wed Mar 30 2016 14:43:50 for HPWHsim by
+    <li class="footer">Generated on Fri Apr 1 2016 13:07:19 for HPWHsim by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

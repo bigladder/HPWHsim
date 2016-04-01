@@ -38,7 +38,7 @@ int initReturn = 0;
 
 hpwh.setVerbosity(HPWH::VRB_emetic);
 //hpwh.setVerbosity(HPWH::VRB_typical);
-//hpwh.setVerbosity(HPWH::VRB_reluctant);
+hpwh.setVerbosity(HPWH::VRB_reluctant);
 //hpwh.setVerbosity(HPWH::VRB_silent);
 
 
@@ -80,6 +80,7 @@ cout << "isSetpointFixed: " << hpwh.isSetpointFixed() << endl;
 cout << "setpoint 1:\t" << hpwh.getSetpoint() << endl;
 hpwh.setSetpoint(F_TO_C(124));
 cout << "setpoint 2:\t" << hpwh.getSetpoint() << endl;
+cout << "tank heat content: " << hpwh.getTankHeatContent_kJ() << endl;
 
 hpwh.runOneStep(0, 0, 0, 50, drStatus, minutes);
 //hpwh.printTankTemps();

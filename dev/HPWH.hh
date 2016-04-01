@@ -20,7 +20,7 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 2;
-  static const int version_maint = 1;
+  static const int version_maint = 2;
 
 
   static const float DENSITYWATER_kgperL;
@@ -288,7 +288,9 @@ class HPWH {
       negative should occur seldom
       returns HPWH_ABORT for incorrect units  */
 
-
+  double getTankHeatContent_kJ() const;
+  /**< get the heat content of the tank, relative to zero celsius
+   * returns using kilojoules */
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
   int runOneStep(double drawVolume_L, double ambientT_C,
