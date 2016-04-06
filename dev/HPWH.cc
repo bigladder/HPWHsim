@@ -2449,7 +2449,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 
   // (1/EnFac + 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr)))
   double recoveryEfficiency = 0.98;
-  double numerator = (1.0 / energyFactor) + (1.0 / recoveryEfficiency);
+  double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
   double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
   double denominator = 67.5 * ((24.0/41094.0) - temp);
   double UA_btuPerHrF = numerator/denominator;
