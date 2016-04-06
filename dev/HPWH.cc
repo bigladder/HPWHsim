@@ -2492,33 +2492,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
   if (presetNum == MODELS_restankNoUA) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
-    setpoint_C = 50;
-
+    setpoint_C = F_TO_C(127.0);
+    
     //start tank off at setpoint
     resetTankToSetpoint();
     
-    tankVolume_L = 12; 
+    tankVolume_L = GAL_TO_L(50);
     tankUA_kJperHrC = 0; //0 to turn off
+
     
     doTempDepression = false;
-    tankMixesOnDraw = false;
-
+    tankMixesOnDraw = true;
+    
     numHeatSources = 2;
     setOfSources = new HeatSource[numHeatSources];
 
-    //set up a resistive element at the bottom, 4500 kW
     HeatSource resistiveElementBottom(this);
     HeatSource resistiveElementTop(this);
-    
     resistiveElementBottom.setupAsResistiveElement(0, 4500);
-    resistiveElementTop.setupAsResistiveElement(9, 4500);
-
+    resistiveElementTop.setupAsResistiveElement(8, 4500);
+    
     //standard logic conditions
-    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 20);
-    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_standby, 15);
-    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_lowT, 3);
-
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, 20);
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(40));
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(10));
+    
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(20));
     resistiveElementTop.isVIP = true;
     
     //assign heat sources into array in order of priority
