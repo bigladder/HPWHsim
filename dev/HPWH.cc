@@ -3423,6 +3423,84 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     setOfSources[1].backupHeatSource = &setOfSources[2];
 
   }
+  else if (presetNum == MODELS_GE2014STDMode_80) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(127.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = GAL_TO_L(75.4); 
+    tankUA_kJperHrC = 10.;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    double split = 1.0/4.0;
+    compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    compressor.T1_F = 50;
+    compressor.T2_F = 70;
+
+    compressor.inputPower_T1_constant_W = 187.064124;
+    compressor.inputPower_T1_linear_WperF = 1.939747;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.0;
+    compressor.inputPower_T2_constant_W = 148.0418;
+    compressor.inputPower_T2_linear_WperF = 2.553291;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+    compressor.COP_T1_constant = 5.4977772;
+    compressor.COP_T1_linear = -0.0243008;
+    compressor.COP_T1_quadratic = 0.0;
+    compressor.COP_T2_constant = 7.207307;
+    compressor.COP_T2_linear = -0.0335265;
+    compressor.COP_T2_quadratic = 0.0;
+    compressor.hysteresis_dC = dF_TO_dC(2); 
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(6, 4500);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 4000);
+    resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+   
+    //logic conditions
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(19.6605));
+
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 1000);  
+    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(86.1111));
+
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(33.6883));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(12.392));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(37));
+//    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(65));
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = resistiveElementBottom;
+    setOfSources[2] = compressor;
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
+
+  }
   else if (presetNum == MODELS_GE2014) {
     numNodes = 12;
     tankTemps_C = new double[numNodes];
@@ -3433,6 +3511,87 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     
     tankVolume_L = GAL_TO_L(45); 
     tankUA_kJperHrC = 6.5;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    double split = 1.0/4.0;
+    compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    //voltex60 tier 1 values
+    compressor.T1_F = 50;
+    compressor.T2_F = 70;
+
+    compressor.inputPower_T1_constant_W = 187.064124;
+    compressor.inputPower_T1_linear_WperF = 1.939747;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.0;
+    compressor.inputPower_T2_constant_W = 148.0418;
+    compressor.inputPower_T2_linear_WperF = 2.553291;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+    compressor.COP_T1_constant = 5.4977772;
+    compressor.COP_T1_linear = -0.0243008;
+    compressor.COP_T1_quadratic = 0.0;
+    compressor.COP_T2_constant = 7.207307;
+    compressor.COP_T2_linear = -0.0335265;
+    compressor.COP_T2_quadratic = 0.0;
+    compressor.hysteresis_dC = dF_TO_dC(2); 
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(6, 4500);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 4000);
+    resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+   
+    //logic conditions
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(20));
+    resistiveElementTop.addShutOffLogic(HeatSource::OFFLOGIC_topNodeMaxTemp, F_TO_C(116.6358));
+
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(33.6883));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(11.0648));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(37));
+    // compressor.addShutOffLogic(HeatSource::OFFLOGIC_largerDraw, F_TO_C(62.4074));
+
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(60));  
+    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(80));
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = resistiveElementBottom;
+    setOfSources[2] = compressor;
+
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
+
+  }
+  else if (presetNum == MODELS_GE2014_80) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(127.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = GAL_TO_L(75.4); 
+    tankUA_kJperHrC = 10.;
     
     doTempDepression = false;
     tankMixesOnDraw = true;
