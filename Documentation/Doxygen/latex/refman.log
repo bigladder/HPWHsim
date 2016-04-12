@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.12.2)  1 APR 2016 13:07
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.12.2)  12 APR 2016 12:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1107,61 +1107,62 @@ LaTeX Font Info:    Try loading font information for T1+pcr on input line 6.
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
 [4] [5]
-Underfull \hbox (badness 10000) detected at line 232
+Underfull \hbox (badness 10000) detected at line 234
 [][][]
  []
 
 LaTeX Font Info:    Font shape `T1/phv/bx/it' in size <10> not available
-(Font)              Font shape `T1/phv/b/it' tried instead on input line 236.
+(Font)              Font shape `T1/phv/b/it' tried instead on input line 238.
 LaTeX Font Info:    Font shape `T1/phv/b/it' in size <10> not available
-(Font)              Font shape `T1/phv/b/sl' tried instead on input line 236.
+(Font)              Font shape `T1/phv/b/sl' tried instead on input line 238.
 LaTeX Font Info:    Font shape `T1/phv/b/sl' will be
-(Font)              scaled to size 8.99994pt on input line 236.
+(Font)              scaled to size 8.99994pt on input line 238.
 [6]
-Underfull \hbox (badness 10000) detected at line 246
+Underfull \hbox (badness 10000) detected at line 248
 [][][]
  []
 
 
-Underfull \hbox (badness 10000) detected at line 260
+Underfull \hbox (badness 10000) detected at line 262
 [][][]
  []
 
 
-Underfull \hbox (badness 10000) detected at line 312
+Underfull \hbox (badness 10000) detected at line 318
 [][][]
  []
 
 [7]
-Underfull \hbox (badness 10000) detected at line 338
+Underfull \hbox (badness 10000) detected at line 344
 [][][]
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 375.
+(hyperref)                removing `math shift' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\sim' on input line 375.
+(hyperref)                removing `\sim' on input line 381.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 375.
+(hyperref)                removing `math shift' on input line 381.
 
+[8]
 LaTeX Font Info:    Font shape `T1/phv/m/it' in size <10> not available
-(Font)              Font shape `T1/phv/m/sl' tried instead on input line 395.
+(Font)              Font shape `T1/phv/m/sl' tried instead on input line 401.
 LaTeX Font Info:    Font shape `T1/phv/m/sl' will be
-(Font)              scaled to size 8.99994pt on input line 395.
-[8] [9]
+(Font)              scaled to size 8.99994pt on input line 401.
+ [9]
 
 LaTeX Font Warning: Font shape `T1/pcr/bc/n' undefined
-(Font)              using `T1/pcr/m/n' instead on input line 528.
+(Font)              using `T1/pcr/m/n' instead on input line 534.
 
 [10] [11]
 
 LaTeX Font Warning: Font shape `T1/pcr/bc/it' undefined
-(Font)              using `T1/pcr/bc/n' instead on input line 726.
+(Font)              using `T1/pcr/bc/n' instead on input line 732.
 
 [12]) [13] (./refman.ind [14
 
@@ -1180,13 +1181,13 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 146.
  ) 
 Here is how much of TeX's memory you used:
- 12543 strings out of 495028
- 185242 string characters out of 6181497
- 271767 words of memory out of 5000000
- 15326 multiletter control sequences out of 15000+600000
+ 12547 strings out of 495028
+ 185566 string characters out of 6181497
+ 273560 words of memory out of 5000000
+ 15328 multiletter control sequences out of 15000+600000
  70193 words of font info for 83 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 48i,13n,43p,727b,424s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 48i,12n,43p,727b,477s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist
@@ -1196,10 +1197,10 @@ urw/helvetic/uhvb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic
 b></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvbo8ac.pfb></usr/sh
 are/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></usr/share/texlive/
 texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on refman.pdf (22 pages, 146899 bytes).
+Output written on refman.pdf (22 pages, 147606 bytes).
 PDF statistics:
- 1041 PDF objects out of 1200 (max. 8388607)
- 998 compressed objects within 10 object streams
- 224 named destinations out of 1000 (max. 500000)
+ 1055 PDF objects out of 1200 (max. 8388607)
+ 1011 compressed objects within 11 object streams
+ 226 named destinations out of 1000 (max. 500000)
  609 words of extra memory for PDF output out of 10000 (max. 10000000)
 

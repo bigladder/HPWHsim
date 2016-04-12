@@ -20,7 +20,7 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 2;
-  static const int version_maint = 3;
+  static const int version_maint = 4;
 
 
   static const float DENSITYWATER_kgperL;
@@ -69,7 +69,9 @@ class HPWH {
     // GE Models
     MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
     MODELS_GE2014STDMode = 111,    /**< 2014 GE model run in standard mode */ 
+    MODELS_GE2014STDMode_80 = 113,    /**< 2014 GE model run in standard mode, 80 gallon unit */ 
     MODELS_GE2014 = 112,           /**< 2014 GE model run in the efficiency mode */
+    MODELS_GE2014_80 = 114,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
 
     // Sanden CO2 transcritical heat pump water heaters
     MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
