@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
-
+  cout << "setpoint: " << hpwh.getSetpoint() << endl;
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
