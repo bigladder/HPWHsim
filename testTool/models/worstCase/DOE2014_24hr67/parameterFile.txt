@@ -1,4 +1,4 @@
-verbosity reluctant
+verbosity emetic
 numNodes 12 #number of nodes
 setpoint 126 F
 volume 50 gal
@@ -76,13 +76,13 @@ heatsource 2 hysteresis 4 F
 heatsource 2 coilConfig wrapped
 
 
-heatsource 0 onlogic topThird 28 F
+heatsource 0 onlogic topThird 5 F
 
-heatsource 1 onlogic bottomThird 40 F
+heatsource 1 onlogic bottomThird 65 F
 
-heatsource 2 onlogic bottomThird 40 F
-heatsource 2 onlogic standby 5.2 F
-heatsource 2 offlogic lowT 45 F
+heatsource 2 onlogic bottomThird 60 F
+heatsource 2 onlogic standby 10 F
+heatsource 2 offlogic lowT 47 F
 heatsource 2 offlogic largeDraw 65 F
 
 
