@@ -323,7 +323,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
   //cursory check for inverted temperature profile
-  if (tankTemps_C[numNodes] < tankTemps_C[0]) {
+  if (tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
     if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
   }
   
