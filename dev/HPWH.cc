@@ -322,6 +322,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   }
 
 
+  //cursory check for inverted temperature profile
+  if (tankTemps_C[numNodes] < tankTemps_C[0]) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
+  }
+  
 
   if (simHasFailed) {
     if (hpwhVerbosity >= VRB_reluctant) msg("The simulation has encountered an error.  \n");
@@ -1442,6 +1447,15 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
 
 bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
   bool shutOff = false;
+
+  if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C) {
+    shutOff = true;
+    if (hpwh->hpwhVerbosity >= VRB_emetic){
+      hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
+    }
+    return shutOff;
+  }
+  
 
   for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
     if (hpwh->hpwhVerbosity >= VRB_emetic){
