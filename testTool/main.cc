@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
   } else {
     model = HPWH::MODELS_basicIntegrated;
     cout << "Couldn't find model " << input2 << "\n";
-    exit(1);
+    //exit(1);
   }
 
   // Read the test control file
@@ -164,7 +164,8 @@ int main(int argc, char *argv[])
   }
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
-  hpwh.HPWHinit_presets(model);
+  //hpwh.HPWHinit_presets(model);
+  hpwh.HPWHinit_file(testDirectory + "/parameterFile.txt");
   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }
