@@ -3,7 +3,7 @@ library(ggplot2)
 
 #
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
-# # setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
 # source("./runSims.R")
 # rm(list = ls())
 # setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/HpwhTestTool")

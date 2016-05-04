@@ -5,6 +5,7 @@ library(foreign)
 
 
 # tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
+tests <- c("DrawProfileTest_4p1_24hr67")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
 # seemTests <- paste("Daily", 1:5, sep = "_")
 # tests <- c(tests, seemTests)
