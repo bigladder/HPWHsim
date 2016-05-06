@@ -43,8 +43,8 @@ attr(simData_1.0, "source")  <- "Slow Flow Test 1.0 gpm"
 
 
 
-# testlist <- list(simData4_1, simData4_2, simData4_3, simData4_4, simData4_5, simData4_6, simData4_7, simData5_1, simData5_2, simData5_3, simData5_4, simData5_5, simData5_6, simData5_7)
-testlist <- list(simData_0.25, simData_0.5, simData_0.75, simData_1.0)
+testlist <- list(simData4_1, simData4_2, simData4_3, simData4_4, simData4_5, simData4_6, simData4_7, simData5_1, simData5_2, simData5_3, simData5_4, simData5_5, simData5_6, simData5_7)
+# testlist <- list(simData_0.25, simData_0.5, simData_0.75, simData_1.0)
 
 lapply(testlist, function(simData){
   simData$inputPower <- (simData$input_kWh1 + simData$input_kWh2 + simData$input_kWh3) * 60000
