@@ -88,6 +88,9 @@ class HPWH {
     MODELS_Generic2 = 161,         /**< Generic Tier 2 */
     MODELS_Generic3 = 162,          /**< Generic Tier 3 */
 
+
+    MODELS_worstCaseMedium = 170,   /**< UEF 2.0, medium test, worst case */
+
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
     MODELS_CustomResTank = 201      /**< HPWH parameters were input via HPWHinit_resTank */

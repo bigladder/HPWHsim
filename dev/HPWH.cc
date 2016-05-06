@@ -4041,8 +4041,88 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     //you don't get the right pointers
     setOfSources[2].backupHeatSource = &setOfSources[1];
     setOfSources[1].backupHeatSource = &setOfSources[2];
+   
+  } else if (presetNum == MODELS_worstCaseMedium) {
+    numNodes = 12;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = F_TO_C(126.0);
+
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    tankVolume_L = GAL_TO_L(50); 
+    tankUA_kJperHrC = 6.8;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = true;
+
+    numHeatSources = 3;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementTop(this);
+
+    //compressor values
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    double split = 1.0/5.0;
+    compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+
+    //voltex60 tier 1 values
+    compressor.T1_F = 47;
+    compressor.T2_F = 67;
+
+    compressor.inputPower_T1_constant_W = 300;
+    compressor.inputPower_T1_linear_WperF = 1.59;
+    compressor.inputPower_T1_quadratic_WperF2 = 0.00107;
+    compressor.inputPower_T2_constant_W = 378;
+    compressor.inputPower_T2_linear_WperF = 1.21;
+    compressor.inputPower_T2_quadratic_WperF2 = 0.00216;
+
+    compressor.COP_T1_constant = 3.72;
+    compressor.COP_T1_linear = -0.021;
+    compressor.COP_T1_quadratic = 0.0;
+    compressor.COP_T2_constant = 3.74;
+    compressor.COP_T2_linear = -0.0167;
+    compressor.COP_T2_quadratic = 0.0;
+    compressor.hysteresis_dC = dF_TO_dC(4); 
+    compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+    //top resistor values
+    resistiveElementTop.setupAsResistiveElement(9, 4500);
+    resistiveElementTop.isVIP = true;
+
+    //bottom resistor values
+    resistiveElementBottom.setupAsResistiveElement(0, 4500);
+    resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+   
+    //logic conditions
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(50));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(10));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(47.0));
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(68));
+
+    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(52)); 
+
+    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(9));
+
+    //set everything in its places
+    setOfSources[0] = resistiveElementTop;
+    setOfSources[1] = resistiveElementBottom;
+    setOfSources[2] = compressor;
+
+    //and you have to do this after putting them into setOfSources, otherwise
+    //you don't get the right pointers
+    setOfSources[2].backupHeatSource = &setOfSources[1];
+    setOfSources[1].backupHeatSource = &setOfSources[2];
 
   }
+
+  
   else {
     if (hpwhVerbosity >= VRB_reluctant) msg("You have tried to select a preset model which does not exist.  \n");
     return HPWH_ABORT;
