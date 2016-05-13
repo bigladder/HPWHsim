@@ -89,7 +89,7 @@ class HPWH {
     MODELS_Generic3 = 162,          /**< Generic Tier 3 */
 
 
-    MODELS_worstCaseMedium = 170,   /**< UEF 2.0, medium test, worst case */
+    MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
 
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */

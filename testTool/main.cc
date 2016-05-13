@@ -164,8 +164,13 @@ int main(int argc, char *argv[])
   }
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
-  //hpwh.HPWHinit_presets(model);
-  hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
+  //int result = hpwh.HPWHinit_presets(model);
+  int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
+  if (result == HPWH::HPWH_ABORT) {
+    return 1;
+  }
+  
+
   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }
