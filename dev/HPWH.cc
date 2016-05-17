@@ -2492,6 +2492,38 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
   return 0;  //successful init returns 0
 }
 
+int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor){
+  int initTest = this->HPWHinit_presets(MODELS_GE2014STDMode);
+  if (initTest != 0) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("HPWHinit_generic HPWH fails");
+    return HPWH_ABORT;
+  }
+
+  initTest = this->setTankSize(tankVol_L, UNITS_L);
+  if (initTest != 0) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("HPWHinit_generic HPWH fails to set tank size");
+    return HPWH_ABORT;
+  }
+
+  //do a linear interpolation to scale COP curve constant
+  //GE2014STDMode UEF is 3.4
+  double uefSpan = 3.4-2.0;
+  double copT1Span = 5.4977772 - 4.29;
+  double copT2Span = 7.207307 -  5.61;
+  //setOfSources 2 is the compressor for this model, but no necessarily all models - change at your own risk
+  this->setOfSources[2].COP_T1_constant = 4.29 + ((energyFactor - 2.0)/uefSpan)*copT1Span;
+  this->setOfSources[2].COP_T2_constant = 5.61 + ((energyFactor - 2.0)/uefSpan)*copT2Span;
+
+  ////values scaled to give cop 2.0
+  //compressor.COP_T1_constant = 4.29;
+  //compressor.COP_T2_constant = 5.61;
+
+  ////GE2014STDMode values
+  //compressor.COP_T1_constant = 5.4977772;
+  //compressor.COP_T2_constant = 7.207307;
+  
+  return initTest;
+  }
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure

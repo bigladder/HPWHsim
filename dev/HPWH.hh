@@ -167,6 +167,13 @@ class HPWH {
    * is at the bottom, the upper element is at the top third.  The logics are also set
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
+   
+  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor);
+  /**< This function will initialize a HPWH object to be a non-specific HPWH model
+   * with an energy factor as specified.  Since energy
+   * factor is not strongly correlated with energy use, most settings
+   * are taken from the GE2015_STDMode model.
+   */
 
   int runOneStep(double inletT_C, double drawVolume_L, 
                   double ambientT_C, double externalT_C,
