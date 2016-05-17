@@ -165,8 +165,8 @@ int main(int argc, char *argv[])
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   //int result = hpwh.HPWHinit_presets(model);
-  //int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
-  int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8);
+  int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
+  //int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8);
   if (result == HPWH::HPWH_ABORT) {
     return 1;
   }

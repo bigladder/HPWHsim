@@ -90,6 +90,6 @@ heatsource 2 offlogic lowT 37 F
 
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
-heatsource 2 copT1const 4.29
-heatsource 2 copT2const 5.621
-heatsource 0 onlogic topThird 15.66 F
+heatsource 2 copT1const 5.50
+heatsource 2 copT2const 7.207
+heatsource 0 onlogic topThird 11.66 F

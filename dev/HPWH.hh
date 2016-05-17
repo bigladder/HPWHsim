@@ -20,7 +20,7 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 2;
-  static const int version_maint = 5;
+  static const int version_maint = 6;
 
 
   static const float DENSITYWATER_kgperL;
@@ -90,6 +90,8 @@ class HPWH {
 
 
     MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
+    MODELS_genericInitFunctionPreset = 171,   /**< unmodified GE2014STDMode case
+                              constant in time, used for generic function init*/
 
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
@@ -168,7 +170,7 @@ class HPWH {
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
    
-  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor);
+  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse);
   /**< This function will initialize a HPWH object to be a non-specific HPWH model
    * with an energy factor as specified.  Since energy
    * factor is not strongly correlated with energy use, most settings
