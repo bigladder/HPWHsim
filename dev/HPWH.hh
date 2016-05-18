@@ -170,7 +170,7 @@ class HPWH {
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
    
-  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse);
+  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
   /**< This function will initialize a HPWH object to be a non-specific HPWH model
    * with an energy factor as specified.  Since energy
    * factor is not strongly correlated with energy use, most settings

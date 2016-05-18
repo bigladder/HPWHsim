@@ -2492,8 +2492,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
   return 0;  //successful init returns 0
 }
 
-int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse){
-  int initTest = this->HPWHinit_presets(MODELS_GE2014STDMode);
+int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C){
+  int initTest = this->HPWHinit_presets(MODELS_genericInitFunctionPreset);
   if (initTest != 0) {
     if (hpwhVerbosity >= VRB_reluctant) msg("HPWHinit_generic HPWH fails");
     return HPWH_ABORT;
@@ -2523,8 +2523,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
   //compressor.COP_T2_constant = 7.207307;
 
   //this is not officially sanctioned behavior
-  //this->setOfSources[0].turnOnLogicSet[0].decisionPoint = 13.0;
-  this->setOfSources[0].turnOnLogicSet[0].decisionPoint = resUse;
+  //this->setOfSources[0].turnOnLogicSet[0].decisionPoint = 13.0*(5.0/9.0);
+  this->setOfSources[0].turnOnLogicSet[0].decisionPoint = resUse_C;
 
   
   return initTest;
