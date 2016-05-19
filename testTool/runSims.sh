@@ -11,6 +11,9 @@ done
 
 
 ./testTool.x slowFlowTest_0.25 $model
+./testTool.x slowFlowTest_0.3 $model
+./testTool.x slowFlowTest_0.4 $model
 ./testTool.x slowFlowTest_0.5 $model
+./testTool.x slowFlowTest_0.6 $model
 ./testTool.x slowFlowTest_0.75 $model
 ./testTool.x slowFlowTest_1.0 $model

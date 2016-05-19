@@ -33,8 +33,14 @@ attr(simData5_7, "source")  <- "5 person - Day 7"
 
 simData_0.25 <- read.csv("./slowFlowTest_0.25/TestToolOutput.csv")
 attr(simData_0.25, "source")  <- "Slow Flow Test 0.25 gpm"
+simData_0.3 <- read.csv("./slowFlowTest_0.3/TestToolOutput.csv")
+attr(simData_0.3, "source")  <- "Slow Flow Test 0.3 gpm"
+simData_0.4 <- read.csv("./slowFlowTest_0.4/TestToolOutput.csv")
+attr(simData_0.4, "source")  <- "Slow Flow Test 0.4 gpm"
 simData_0.5 <- read.csv("./slowFlowTest_0.5/TestToolOutput.csv")
 attr(simData_0.5, "source")  <- "Slow Flow Test 0.5 gpm"
+simData_0.6 <- read.csv("./slowFlowTest_0.6/TestToolOutput.csv")
+attr(simData_0.6, "source")  <- "Slow Flow Test 0.6 gpm"
 simData_0.75 <- read.csv("./slowFlowTest_0.75/TestToolOutput.csv")
 attr(simData_0.75, "source")  <- "Slow Flow Test 0.75 gpm"
 simData_1.0 <- read.csv("./slowFlowTest_1.0/TestToolOutput.csv")
@@ -44,7 +50,7 @@ attr(simData_1.0, "source")  <- "Slow Flow Test 1.0 gpm"
 
 
 # testlist <- list(simData4_1, simData4_2, simData4_3, simData4_4, simData4_5, simData4_6, simData4_7, simData5_1, simData5_2, simData5_3, simData5_4, simData5_5, simData5_6, simData5_7)
-testlist <- list(simData_0.25, simData_0.5, simData_0.75, simData_1.0)
+testlist <- list(simData_0.25, simData_0.3, simData_0.4, simData_0.5, simData_0.6, simData_0.75, simData_1.0)
 
 lapply(testlist, function(simData){
   simData$inputPower <- (simData$input_kWh1 + simData$input_kWh2 + simData$input_kWh3) * 60000
