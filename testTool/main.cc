@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
   }
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = "models/" + input2 + "/" + input1;
+  testDirectory = "tests/" + input1;
 
   // Parse the model
   if(input2 == "Voltex60" || input2 == "AOSmith60") {
