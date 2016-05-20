@@ -322,6 +322,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
   }
 
 
+  //cursory check for inverted temperature profile
+  if (tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
+  }
+  
 
   if (simHasFailed) {
     if (hpwhVerbosity >= VRB_reluctant) msg("The simulation has encountered an error.  \n");
@@ -603,7 +608,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 }
 
 int HPWH::setTankSize(double HPWH_size_L) {
-  if (HPWH_size_L < 0) {
+  if (HPWH_size_L <= 0) {
     if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
     simHasFailed = true;
     return HPWH_ABORT;
@@ -1442,6 +1447,15 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
 
 bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
   bool shutOff = false;
+
+  if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C) {
+    shutOff = true;
+    if (hpwh->hpwhVerbosity >= VRB_emetic){
+      hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
+    }
+    return shutOff;
+  }
+  
 
   for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
     if (hpwh->hpwhVerbosity >= VRB_emetic){
@@ -2416,6 +2430,13 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
     return HPWH_ABORT;
   }
 
+  //use tank size setting function since it has bounds checking
+  int failure = this->setTankSize(tankVol_L); 
+  if (failure == HPWH_ABORT) {
+    return failure;
+  }
+  
+
   numNodes = 12;
   tankTemps_C = new double[numNodes];
   setpoint_C = F_TO_C(127.0);
@@ -2423,7 +2444,6 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
   //start tank off at setpoint
   resetTankToSetpoint();
   
-  tankVolume_L = tankVol_L; 
   
   doTempDepression = false;
   tankMixesOnDraw = true;
