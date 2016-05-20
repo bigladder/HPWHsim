@@ -1,6 +1,8 @@
 library(reshape2)
 library(ggplot2)
 
+setwd("./tests")
+
 simData4_1 <- read.csv("./DrawProfileTest_4p1_24hr67/TestToolOutput.csv")
 attr(simData4_1, "source")  <- "4 person - Day 1"
 simData4_2 <- read.csv("./DrawProfileTest_4p2_24hr67/TestToolOutput.csv")

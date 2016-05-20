@@ -6,6 +6,7 @@ model=GE2014
 for i in `seq 1 7`; do
   for j in `seq 1 5`; do
     ./testTool.x DrawProfileTest_${j}p${i}_24hr67 $model
+    echo ""
   done
 done
 
