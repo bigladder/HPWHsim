@@ -608,7 +608,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 }
 
 int HPWH::setTankSize(double HPWH_size_L) {
-  if (HPWH_size_L < 0) {
+  if (HPWH_size_L <= 0) {
     if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
     simHasFailed = true;
     return HPWH_ABORT;
@@ -2430,6 +2430,13 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
     return HPWH_ABORT;
   }
 
+  //use tank size setting function since it has bounds checking
+  int failure = this->setTankSize(tankVol_L); 
+  if (failure == HPWH_ABORT) {
+    return failure;
+  }
+  
+
   numNodes = 12;
   tankTemps_C = new double[numNodes];
   setpoint_C = F_TO_C(127.0);
@@ -2437,7 +2444,6 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
   //start tank off at setpoint
   resetTankToSetpoint();
   
-  tankVolume_L = tankVol_L; 
   
   doTempDepression = false;
   tankMixesOnDraw = true;
