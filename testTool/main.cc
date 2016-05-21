@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
   }
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = "models/" + input2 + "/" + input1;
+  testDirectory = "tests/" + input1;
 
   // Parse the model
   if(input2 == "Voltex60" || input2 == "AOSmith60") {
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
-  cout << "setpoint: " << hpwh.getSetpoint() << endl;
+
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
