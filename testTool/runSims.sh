@@ -1,6 +1,6 @@
 #!/bin/bash
 
-model=worstCase
+model=custom
 model=GE2014
 
 for i in `seq 1 7`; do
@@ -12,9 +12,15 @@ done
 
 
 ./testTool.x slowFlowTest_0.25 $model
+echo ""
 ./testTool.x slowFlowTest_0.3 $model
+echo ""
 ./testTool.x slowFlowTest_0.4 $model
+echo ""
 ./testTool.x slowFlowTest_0.5 $model
+echo ""
 ./testTool.x slowFlowTest_0.6 $model
+echo ""
 ./testTool.x slowFlowTest_0.75 $model
+echo ""
 ./testTool.x slowFlowTest_1.0 $model

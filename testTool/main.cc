@@ -117,10 +117,13 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Generic2;
   } else if(input2 == "Generic3") {
     model = HPWH::MODELS_Generic3;
+  } else if(input2 == "custom") {
+    model = HPWH::MODELS_CustomFile;
+    //do nothin, use custom-compiled input specified later
   } else {
     model = HPWH::MODELS_basicIntegrated;
-    cout << "Couldn't find model " << input2 << "\n";
-    //exit(1);
+    cout << "Couldn't find model " << input2 << ".  Exiting...\n";
+    exit(1);
   }
 
   // Read the test control file
