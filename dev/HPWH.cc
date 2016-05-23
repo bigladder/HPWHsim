@@ -12,6 +12,10 @@ const float HPWH::CPWATER_kJperkgC = 4.181f;
 const float HPWH::HEATDIST_MINVALUE = 0.0001f; 
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 
+//ugh, this should be in the header
+const std::string HPWH::version_maint = "8rev2";
+
+
 //the HPWH functions
 //the publics
 HPWH::HPWH() :

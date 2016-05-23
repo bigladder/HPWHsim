@@ -20,7 +20,8 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 2;
-  static const int version_maint = 8;
+  //oh man, why can't i initialize this here?
+  static const std::string version_maint;
 
 
   static const float DENSITYWATER_kgperL;
