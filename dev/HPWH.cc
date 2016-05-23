@@ -2511,24 +2511,40 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     return HPWH_ABORT;
   }
 
-  //do a linear interpolation to scale COP curve constant
-  //GE2014STDMode UEF is 3.4
-  double uefSpan = 3.4-2.0;
-  double copT1Span = 5.4977772 - 4.29;
-  double copT2Span = 7.207307 -  5.61;
-  //setOfSources 2 is the compressor for this model, but no necessarily all models - change at your own risk
-  this->setOfSources[2].COP_T1_constant = 4.29 + ((energyFactor - 2.0)/uefSpan)*copT1Span;
-  this->setOfSources[2].COP_T2_constant = 5.61 + ((energyFactor - 2.0)/uefSpan)*copT2Span;
-
-  ////values scaled to give cop 2.0
-  //compressor.COP_T1_constant = 4.29;
-  //compressor.COP_T2_constant = 5.61;
-
-  ////GE2014STDMode values
+  //do a linear interpolation to scale COP curve constant, using measured values
+  //from GE2014STDMode and simulated values for the same model with UEF 2.0
+  
+  ////GE2014STDMode COP coeff's
   //compressor.COP_T1_constant = 5.4977772;
   //compressor.COP_T2_constant = 7.207307;
 
-  //this is not officially sanctioned behavior
+  //COP coeff's were adjusted until UEF test came out as 2.0; the values for that are 4.29 and 5.61
+  //compressor.COP_T1_constant = 4.29;
+  //compressor.COP_T2_constant = 5.61;
+
+  double uefSpan = 3.4-2.0;
+  double copT1Span = 5.4977772 - 4.29;
+  double copT2Span = 7.207307 -  5.61;
+  //setOfSources 2 is the compressor for this model, but not necessarily all models - change at your own risk
+  this->setOfSources[2].COP_T1_constant = 4.29 + ((energyFactor - 2.0)/uefSpan)*copT1Span;
+  this->setOfSources[2].COP_T2_constant = 5.61 + ((energyFactor - 2.0)/uefSpan)*copT2Span;
+
+  //this is sort of like a multiplier which scales the COP
+  double fraction1 = this->setOfSources[2].COP_T1_constant / 5.498;
+  double fraction2 = this->setOfSources[2].COP_T2_constant / 7.207;
+  //cout << "fraction 1 : " << fraction1 << "    fraction 2: " << fraction2 << endl;
+
+  //double capORIG = 5.498 * this->setOfSources[2].inputPower_T1_constant_W;
+  //cout << "COP_orig: " << "5.498"  << "COP_new: " << 5.498*fraction1 << " input orig: " << this->setOfSources[2].inputPower_T1_constant_W  << " input new: " << this->setOfSources[2].inputPower_T1_constant_W / fraction1 << endl;
+
+  //so, use it to inversely scale the input power, to keep the capacity the same
+  this->setOfSources[2].inputPower_T1_constant_W /= fraction1;
+  this->setOfSources[2].inputPower_T2_constant_W /= fraction2;
+
+  //double capNEW = this->setOfSources[2].COP_T1_constant * this->setOfSources[2].inputPower_T1_constant_W;
+  //cout << "capacity orig : " << capORIG << "    capacity new: " << capNEW << endl;
+  
+  //this is not officially sanctioned behavior - decision points are not meant to be changed post at runtime
   //this->setOfSources[0].turnOnLogicSet[0].decisionPoint = 13.0*(5.0/9.0);
   this->setOfSources[0].turnOnLogicSet[0].decisionPoint = resUse_C;
 
