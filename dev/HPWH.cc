@@ -1141,7 +1141,21 @@ double HPWH::bottomTwelthAvg_C() const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
   :hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL),
-                  hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none) {}
+
+                  inputPower_T1_constant_W(0), inputPower_T2_constant_W(0),
+                  inputPower_T1_linear_WperF(0), inputPower_T2_linear_WperF(0),
+                  inputPower_T1_quadratic_WperF2(0), inputPower_T2_quadratic_WperF2(0),
+                  
+                  COP_T1_constant(0), COP_T2_constant(0),
+                  COP_T1_linear(0), COP_T2_linear(0),
+                  COP_T1_quadratic(0), COP_T2_quadratic(0),
+                
+                  capacity_T1_constant_W(0), capacity_T2_constant_W(0),
+                  capacity_T1_linear_WperF(0), capacity_T2_linear_WperF(0),
+                  capacity_T1_quadratic_WperF2(0), capacity_T2_quadratic_WperF2(0),
+
+                  hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none)
+                  {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
   hpwh = hSource.hpwh;
@@ -1172,6 +1186,13 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
   inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
 	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
   inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
+
+	capacity_T1_constant_W = hSource.capacity_T1_constant_W;
+  capacity_T2_constant_W = hSource.capacity_T2_constant_W;
+	capacity_T1_linear_WperF = hSource.capacity_T1_linear_WperF;
+  capacity_T2_linear_WperF = hSource.capacity_T2_linear_WperF;
+	capacity_T1_quadratic_WperF2 = hSource.capacity_T1_quadratic_WperF2;
+  capacity_T2_quadratic_WperF2 = hSource.capacity_T2_quadratic_WperF2;
 
 	COP_T1_constant = hSource.COP_T1_constant;
   COP_T2_constant = hSource.COP_T2_constant;
@@ -1234,6 +1255,13 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
   inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
 	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
   inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
+
+	capacity_T1_constant_W = hSource.capacity_T1_constant_W;
+  capacity_T2_constant_W = hSource.capacity_T2_constant_W;
+	capacity_T1_linear_WperF = hSource.capacity_T1_linear_WperF;
+  capacity_T2_linear_WperF = hSource.capacity_T2_linear_WperF;
+	capacity_T1_quadratic_WperF2 = hSource.capacity_T1_quadratic_WperF2;
+  capacity_T2_quadratic_WperF2 = hSource.capacity_T2_quadratic_WperF2;
 
 	COP_T1_constant = hSource.COP_T1_constant;
   COP_T2_constant = hSource.COP_T2_constant;
@@ -1661,13 +1689,17 @@ double HPWH::HeatSource::getCondenserTemp() {
 void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
   double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
   double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
+  double capacity_T1_Watts, capacity_T2_Watts; //input power at ambient temperatures T1 and T2	
   double externalT_F, condenserTemp_F;
 
+  double input_watts = 0, capacity_watts = 0;
+  cop = 0;
+  
   // Convert Celsius to Fahrenheit for the curve fits
   condenserTemp_F = C_TO_F(condenserTemp_C);
   externalT_F = C_TO_F(externalT_C);
 
-  // Calculate COP and Input Power at each of the two reference temepratures
+  // Calculate COP, Input Power, and Output Capacity at each of the two reference temepratures
   COP_T1 = COP_T1_constant;
   COP_T1 += COP_T1_linear * condenserTemp_F ;
   COP_T1 += COP_T1_quadratic * condenserTemp_F * condenserTemp_F;
@@ -1692,13 +1724,47 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
     hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T2_constant_W, inputPower_T2_linear_WperF, inputPower_T2_quadratic_WperF2);
     hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
   }
-  // Interpolate to get COP and input power at the current ambient temperature
+
+  //Calculate capacity
+  capacity_T1_Watts = capacity_T1_constant_W;
+  capacity_T1_Watts += capacity_T1_linear_WperF * condenserTemp_F ;
+  capacity_T1_Watts += capacity_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
+
+  capacity_T2_Watts = capacity_T2_constant_W;
+  capacity_T2_Watts += capacity_T2_linear_WperF * condenserTemp_F;
+  capacity_T2_Watts += capacity_T2_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
+
+
+  
+  // Interpolate to get COP, input power, and output power at the current ambient temperature
   cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
-  input_BTUperHr = KWH_TO_BTU(  (inputPower_T1_Watts + (externalT_F - T1_F) *
-                                  ( (inputPower_T2_Watts - inputPower_T1_Watts)
-                                            / (T2_F - T1_F) )
-                                  ) / 1000.0);  //1000 converts w to kw
-  cap_BTUperHr = cop * input_BTUperHr;
+  input_watts = inputPower_T1_Watts
+                    + (externalT_F - T1_F) * ((inputPower_T2_Watts - inputPower_T1_Watts)
+                  / (T2_F - T1_F));
+  capacity_watts = capacity_T1_Watts
+                      + (externalT_F - T1_F) * ((capacity_T2_Watts - capacity_T1_Watts)
+                    / (T2_F - T1_F));
+
+
+  input_BTUperHr = KWH_TO_BTU( input_watts / 1000.0);  //1000 converts w to kw
+  cap_BTUperHr = KWH_TO_BTU( capacity_watts / 1000.0 );
+
+  if (capacity_watts == 0) {
+    cap_BTUperHr = cop * input_BTUperHr;
+  }
+  else if (cop == 0 && input_BTUperHr != 0) {
+    cop = cap_BTUperHr / input_BTUperHr;
+  }
+  else if (input_BTUperHr == 0 && cop != 0) {
+    input_BTUperHr = cap_BTUperHr / cop;
+  }
+  else{
+    if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("Error, specify two of input power, cop, or output capacity.");
+    hpwh->simHasFailed = true;
+    }
+  
+
+
 
   //here is where the scaling for flow restriction happens
   //the input power doesn't change, we just scale the cop by a small percentage

@@ -43,10 +43,10 @@ hpwh.setVerbosity(HPWH::VRB_reluctant);
 
 
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_GE2012);
-//initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
+initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_AOSmithHPTU50);
 //initReturn = hpwh.HPWHinit_presets(HPWH::MODELS_Sanden40);
 //initReturn = hpwh.HPWHinit_resTank(GAL_TO_L(50), 0.98, 4500, 4500);
-initReturn = hpwh.HPWHinit_resTank(0, 0.98, 4500, 4500);
+//initReturn = hpwh.HPWHinit_resTank(0, 0.98, 4500, 4500);
 //initReturn = hpwh.HPWHinit_resTank();
 
 

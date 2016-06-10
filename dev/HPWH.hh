@@ -551,6 +551,11 @@ class HPWH::HeatSource {
 	double COP_T1_quadratic, COP_T2_quadratic;
 	/**< these are the coefficients for the quadratic function 
       defining the COP as a function of the condenser temperature */
+	double capacity_T1_constant_W, capacity_T2_constant_W;
+	double capacity_T1_linear_WperF, capacity_T2_linear_WperF;
+	double capacity_T1_quadratic_WperF2, capacity_T2_quadratic_WperF2;
+	/**< these are the coefficients for the quadratic function 
+      defining the COP as a function of the condenser temperature */
 
 
 	/** a vector to hold the set of logical choices for turning this element on */
