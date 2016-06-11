@@ -97,6 +97,8 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Sanden80;
   } else if(input2 == "SandenGES" || input2 == "Sanden40") {
     model = HPWH::MODELS_Sanden40;
+  } else if(input2 == "Sanden40b") {
+    model = HPWH::MODELS_Sanden40b;
   } else if(input2 == "AOSmithHPTU50") {
     model = HPWH::MODELS_AOSmithHPTU50;
   } else if(input2 == "AOSmithHPTU66") {
