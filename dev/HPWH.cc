@@ -3189,7 +3189,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     setOfSources[0] = compressor;
   }
   else if (presetNum == MODELS_Sanden40b) {
-    numNodes = 96;
+    numNodes = 72;
     tankTemps_C = new double[numNodes];
     setpoint_C = 65;
     setpointFixed = true;
@@ -3217,27 +3217,99 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 50;
     compressor.T2_F = 67;
 
-    compressor.COP_T1_constant = 5.09;
-    compressor.COP_T1_linear = -0.0271;
+    //compressor.COP_T1_constant = 5.09;
+    compressor.COP_T1_constant = 6.4;
+    //compressor.COP_T1_linear = -0.0271;
+    compressor.COP_T1_linear = -0.0465;
     compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 6.11;
-    compressor.COP_T2_linear = -0.0329;
+    //compressor.COP_T2_constant = 6.11;
+    compressor.COP_T2_constant = 7.0;
+    //compressor.COP_T2_linear = -0.0329;
+    compressor.COP_T2_linear = -0.048;
     compressor.COP_T2_quadratic = 0.0;
     
-    compressor.capacity_T1_constant_W = 5600;
-    compressor.capacity_T1_linear_WperF = 0.0;
+    //compressor.capacity_T1_constant_W = 4400;
+    compressor.capacity_T1_constant_W = 7100;
+    compressor.capacity_T1_linear_WperF = -50.0;
     compressor.capacity_T1_quadratic_WperF2 = 0.0;
-    compressor.capacity_T2_constant_W = 4800;
-    compressor.capacity_T2_linear_WperF = 0.0;
+    //compressor.capacity_T2_constant_W = 4600;
+    compressor.capacity_T2_constant_W = 7600;
+    compressor.capacity_T2_linear_WperF = -50.0;
     compressor.capacity_T2_quadratic_WperF2 = 0.0;
 
     compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
     
-    compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
+    //compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(25));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(13.7546));
 
-    //lowT cutoff
+    //finish heating condition
+    compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(125));
+
+    compressor.depressesTemperature = false;  //no temp depression
+
+    //set everything in its places
+    setOfSources[0] = compressor;
+  } 
+  else if (presetNum == MODELS_Sanden80b) {
+    numNodes = 72;
+    tankTemps_C = new double[numNodes];
+    setpoint_C = 65;
+    setpointFixed = true;
+    
+    //start tank off at setpoint
+    resetTankToSetpoint();
+    
+    //tankVolume_L = 150; 
+    tankVolume_L = GAL_TO_L(83.2); 
+    tankUA_kJperHrC = 5;
+    
+    doTempDepression = false;
+    tankMixesOnDraw = false;
+
+    numHeatSources = 1;
+    setOfSources = new HeatSource[numHeatSources];
+
+    HeatSource compressor(this);
+
+    compressor.isOn = false;
+    compressor.isVIP = false;
+    compressor.typeOfHeatSource = TYPE_compressor;
+
+    compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    compressor.T1_F = 50;
+    compressor.T2_F = 67;
+
+    //compressor.COP_T1_constant = 5.09;
+    compressor.COP_T1_constant = 6.4;
+    //compressor.COP_T1_linear = -0.0271;
+    compressor.COP_T1_linear = -0.0465;
+    compressor.COP_T1_quadratic = 0.0;
+    //compressor.COP_T2_constant = 6.11;
+    compressor.COP_T2_constant = 7.0;
+    //compressor.COP_T2_linear = -0.0329;
+    compressor.COP_T2_linear = -0.048;
+    compressor.COP_T2_quadratic = 0.0;
+    
+    //compressor.capacity_T1_constant_W = 4400;
+    compressor.capacity_T1_constant_W = 7100;
+    compressor.capacity_T1_linear_WperF = -50.0;
+    compressor.capacity_T1_quadratic_WperF2 = 0.0;
+    //compressor.capacity_T2_constant_W = 4600;
+    compressor.capacity_T2_constant_W = 7600;
+    compressor.capacity_T2_linear_WperF = -50.0;
+    compressor.capacity_T2_quadratic_WperF2 = 0.0;
+
+    compressor.hysteresis_dC = 0;  //no hysteresis
+    compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+    
+    //compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(25));
+    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(13.7546));
+
+    //finish heating condition
     compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomNodeMaxTemp, F_TO_C(125));
 
     compressor.depressesTemperature = false;  //no temp depression
