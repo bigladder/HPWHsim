@@ -482,13 +482,13 @@ class HPWH::HeatSource {
   /** this is the set of logics available for shutsDown  */
   enum OFFLOGIC{
     OFFLOGIC_lowT,                /**< if temp is below decision point, shut off */
-    OFFLOGIC_highT,                /**< if temp is abovr decision point, shut off */
+    OFFLOGIC_highT,               /**< if temp is abovr decision point, shut off */
     OFFLOGIC_lowTreheat,          /**< if temp is above decision point, just while running, shut off */
-    OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
+    OFFLOGIC_topNodeMaxTemp,      /**< if the top node temp is above decision point, shut off */
     OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
     OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */
     OFFLOGIC_largeDraw,           /**< if the bottom third of the tank is below decision point, shut off */
-    OFFLOGIC_largerDraw           /**< if the bottom half of the tank is below decision point, shut off */
+    OFFLOGIC_largerDraw,          /**< if the bottom half of the tank is below decision point, shut off */
     };
 
 	/** the heating logic instructions come in pairs - a string to select
@@ -518,7 +518,7 @@ class HPWH::HeatSource {
 	double energyOutput_kWh;
 	/**< the energy put into the water by the heat source */
 
-// these are the heat source property variables
+  //these are the heat source property variables
 	bool isVIP;
 	/**< is this heat source a high priority heat source? (e.g. upper resisitor) */
 	HeatSource* backupHeatSource;
@@ -592,6 +592,9 @@ class HPWH::HeatSource {
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
 
+  double maxPower_kW;
+  /**<This is the maximum power a heat source can use - it will be constant at this level afterwards */
+   
 
 
   // some private functions, mostly used for heating the water with the addHeat function

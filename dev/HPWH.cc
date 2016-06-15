@@ -1154,7 +1154,9 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
                   capacity_T1_linear_WperF(0), capacity_T2_linear_WperF(0),
                   capacity_T1_quadratic_WperF2(0), capacity_T2_quadratic_WperF2(0),
 
-                  hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none)
+                  hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none),
+                  
+                  maxPower_kW(1000)
                   {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
@@ -1209,6 +1211,8 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
 	depressesTemperature = hSource.depressesTemperature;
   airflowFreedom = hSource.airflowFreedom;
+
+  maxPower_kW = hSource.maxPower_kW;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1278,6 +1282,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 
 	depressesTemperature = hSource.depressesTemperature;
   airflowFreedom = hSource.airflowFreedom;
+
+  maxPower_kW = hSource.maxPower_kW;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1612,7 +1618,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
       }
       //the loop over nodes here is intentional - essentially each node that has
       //some amount of heatDistribution acts as a separate resistive element
-  //maybe start from the top and go down?  test this with graphs
       for(int i = hpwh->numNodes -1; i >= 0; i--){
       //for(int i = 0; i < hpwh->numNodes; i++){
         captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
@@ -1762,8 +1767,14 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
     if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("Error, specify two of input power, cop, or output capacity.");
     hpwh->simHasFailed = true;
     }
-  
 
+  //check if input is over the max, then recalculate if it is
+  //I know the units are wrong on the conversion function, but it works the same
+  if (input_BTUperHr >= KWH_TO_BTU(maxPower_kW) ){
+    input_BTUperHr = KWH_TO_BTU(maxPower_kW);
+    //but which to change?  seems like capacity is the one that would change
+    cap_BTUperHr = cop * input_BTUperHr;
+  }
 
 
   //here is where the scaling for flow restriction happens
@@ -1778,6 +1789,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   if (hpwh->hpwhVerbosity >= VRB_typical){
     hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n", cop, input_BTUperHr, cap_BTUperHr);
   }
+
 }
 
 
@@ -3189,7 +3201,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     setOfSources[0] = compressor;
   }
   else if (presetNum == MODELS_Sanden40b) {
-    numNodes = 72;
+     numNodes = 72;
     tankTemps_C = new double[numNodes];
     setpoint_C = 65;
     setpointFixed = true;
@@ -3198,6 +3210,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     resetTankToSetpoint();
     
     tankVolume_L = 150; 
+    //tankVolume_L = GAL_TO_L(83.2); 
     tankUA_kJperHrC = 5;
     
     doTempDepression = false;
@@ -3217,28 +3230,30 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 50;
     compressor.T2_F = 67;
 
-    //compressor.COP_T1_constant = 5.09;
-    compressor.COP_T1_constant = 6.4;
-    //compressor.COP_T1_linear = -0.0271;
-    compressor.COP_T1_linear = -0.0465;
+    //compressor.COP_T1_constant = 5.09;  //old one
+    compressor.COP_T1_constant = 6.5;
+    //compressor.COP_T1_linear = -0.0271; //old one
+    compressor.COP_T1_linear = -0.045;
     compressor.COP_T1_quadratic = 0.0;
-    //compressor.COP_T2_constant = 6.11;
-    compressor.COP_T2_constant = 7.0;
-    //compressor.COP_T2_linear = -0.0329;
-    compressor.COP_T2_linear = -0.048;
+    //compressor.COP_T2_constant = 6.11;   //old one
+    compressor.COP_T2_constant = 7.5;
+    //compressor.COP_T2_linear = -0.0329;   //old one
+    compressor.COP_T2_linear = -0.050;
     compressor.COP_T2_quadratic = 0.0;
     
-    //compressor.capacity_T1_constant_W = 4400;
+    //compressor.capacity_T1_constant_W = 4400;   //no slope
     compressor.capacity_T1_constant_W = 7100;
-    compressor.capacity_T1_linear_WperF = -50.0;
+    compressor.capacity_T1_linear_WperF = -48.0;
     compressor.capacity_T1_quadratic_WperF2 = 0.0;
-    //compressor.capacity_T2_constant_W = 4600;
-    compressor.capacity_T2_constant_W = 7600;
-    compressor.capacity_T2_linear_WperF = -50.0;
+    //compressor.capacity_T2_constant_W = 4600;   //no slope
+    compressor.capacity_T2_constant_W = 7500;
+    compressor.capacity_T2_linear_WperF = -48.0;
     compressor.capacity_T2_quadratic_WperF2 = 0.0;
 
     compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+    compressor.maxPower_kW = 2.5;
     
     //compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(25));
@@ -3282,28 +3297,30 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.T1_F = 50;
     compressor.T2_F = 67;
 
-    //compressor.COP_T1_constant = 5.09;
-    compressor.COP_T1_constant = 6.4;
-    //compressor.COP_T1_linear = -0.0271;
-    compressor.COP_T1_linear = -0.0465;
+    //compressor.COP_T1_constant = 5.09;  //old one
+    compressor.COP_T1_constant = 6.5;
+    //compressor.COP_T1_linear = -0.0271; //old one
+    compressor.COP_T1_linear = -0.045;
     compressor.COP_T1_quadratic = 0.0;
-    //compressor.COP_T2_constant = 6.11;
-    compressor.COP_T2_constant = 7.0;
-    //compressor.COP_T2_linear = -0.0329;
-    compressor.COP_T2_linear = -0.048;
+    //compressor.COP_T2_constant = 6.11;   //old one
+    compressor.COP_T2_constant = 7.5;
+    //compressor.COP_T2_linear = -0.0329;   //old one
+    compressor.COP_T2_linear = -0.050;
     compressor.COP_T2_quadratic = 0.0;
     
-    //compressor.capacity_T1_constant_W = 4400;
+    //compressor.capacity_T1_constant_W = 4400;   //no slope
     compressor.capacity_T1_constant_W = 7100;
-    compressor.capacity_T1_linear_WperF = -50.0;
+    compressor.capacity_T1_linear_WperF = -48.0;
     compressor.capacity_T1_quadratic_WperF2 = 0.0;
-    //compressor.capacity_T2_constant_W = 4600;
-    compressor.capacity_T2_constant_W = 7600;
-    compressor.capacity_T2_linear_WperF = -50.0;
+    //compressor.capacity_T2_constant_W = 4600;   //no slope
+    compressor.capacity_T2_constant_W = 7500;
+    compressor.capacity_T2_linear_WperF = -48.0;
     compressor.capacity_T2_quadratic_WperF2 = 0.0;
 
     compressor.hysteresis_dC = 0;  //no hysteresis
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+    compressor.maxPower_kW = 2.5;
     
     //compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(25));
