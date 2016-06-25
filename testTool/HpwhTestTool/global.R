@@ -3,7 +3,7 @@ library(ggplot2)
 
 #
 # setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
-setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/HpwhTestTool")
 # source("./runSims.R")
 # rm(list = ls())
 # setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/HpwhTestTool")
@@ -22,10 +22,10 @@ setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
 
 
 # allSimResults <- read.csv("allResults.csv")
-# allLabResults <- read.csv("allLabResults.csv")
+allLabResults <- read.csv("allLabResults.csv")
 allSimResults <- read.csv("simResults.csv")
-allLabResults <- read.csv("labResults.csv")
-allChipResults <- read.csv("allChipResults.csv")
+# allLabResults <- read.csv("labResults.csv")
+# allChipResults <- read.csv("allChipResults.csv")
 fieldResults <- read.csv("fieldResults.csv")
 
 varGuide <- data.frame("variable" = c("flow", "inputPower", "outputPower",
