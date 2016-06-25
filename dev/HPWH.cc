@@ -1156,7 +1156,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 
                   hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none),
                   
-                  maxPower_kW(1000)
+                  maxPower_kW(1000), minCOP(0)
                   {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
@@ -1213,6 +1213,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
   airflowFreedom = hSource.airflowFreedom;
 
   maxPower_kW = hSource.maxPower_kW;
+  minCOP = hSource.minCOP;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1284,6 +1285,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
   airflowFreedom = hSource.airflowFreedom;
 
   maxPower_kW = hSource.maxPower_kW;
+  minCOP = hSource.minCOP;
 
 	configuration = hSource.configuration;
   typeOfHeatSource = hSource.typeOfHeatSource;
@@ -1704,7 +1706,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   condenserTemp_F = C_TO_F(condenserTemp_C);
   externalT_F = C_TO_F(externalT_C);
 
-  // Calculate COP, Input Power, and Output Capacity at each of the two reference temepratures
+  // Calculate COP at each of the two reference temepratures
   COP_T1 = COP_T1_constant;
   COP_T1 += COP_T1_linear * condenserTemp_F ;
   COP_T1 += COP_T1_quadratic * condenserTemp_F * condenserTemp_F;
@@ -1713,6 +1715,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
   COP_T2 += COP_T2_linear * condenserTemp_F;
   COP_T2 += COP_T2_quadratic * condenserTemp_F * condenserTemp_F;
 
+  // Calculate Input Power at each of the two reference temepratures
   inputPower_T1_Watts = inputPower_T1_constant_W;
   inputPower_T1_Watts += inputPower_T1_linear_WperF * condenserTemp_F;
   inputPower_T1_Watts += inputPower_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
@@ -1730,7 +1733,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
     hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
   }
 
-  //Calculate capacity
+  // Calculate Capacity at each of the two reference temepratures
   capacity_T1_Watts = capacity_T1_constant_W;
   capacity_T1_Watts += capacity_T1_linear_WperF * condenserTemp_F ;
   capacity_T1_Watts += capacity_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
@@ -1751,9 +1754,28 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
                     / (T2_F - T1_F));
 
 
+  //convert to btus and junk
   input_BTUperHr = KWH_TO_BTU( input_watts / 1000.0);  //1000 converts w to kw
   cap_BTUperHr = KWH_TO_BTU( capacity_watts / 1000.0 );
 
+
+  //check if input is over the max, then recalculate if it is
+  //I know the units are wrong on the conversion function, but it works the same
+  if (input_BTUperHr >= KWH_TO_BTU(maxPower_kW) ){
+    input_BTUperHr = KWH_TO_BTU(maxPower_kW);
+    //change cop or cap?  probably cap makes more sense
+    //cap_BTUperHr = cop * input_BTUperHr;
+  }
+
+  //if the COP is below the minimum (probably somewhere near 1), set it to that
+  if (cop < minCOP) {
+    cop = minCOP;
+    //change inputpower or cap?  probably cap makes more sense
+    cap_BTUperHr = KWH_TO_BTU(maxPower_kW);
+    //cap_BTUperHr = cop * input_BTUperHr;
+  }
+
+  //calculate the missing one from the other two
   if (capacity_watts == 0) {
     cap_BTUperHr = cop * input_BTUperHr;
   }
@@ -1768,13 +1790,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
     hpwh->simHasFailed = true;
     }
 
-  //check if input is over the max, then recalculate if it is
-  //I know the units are wrong on the conversion function, but it works the same
-  if (input_BTUperHr >= KWH_TO_BTU(maxPower_kW) ){
-    input_BTUperHr = KWH_TO_BTU(maxPower_kW);
-    //but which to change?  seems like capacity is the one that would change
-    cap_BTUperHr = cop * input_BTUperHr;
-  }
+
 
 
   //here is where the scaling for flow restriction happens
@@ -3321,6 +3337,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
     compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
     compressor.maxPower_kW = 2.5;
+    compressor.minCOP = 1.0;
     
     //compressor.addTurnOnLogic(HeatSource::ONLOGIC_thirdSixth, dF_TO_dC(83.8889));
     compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(25));

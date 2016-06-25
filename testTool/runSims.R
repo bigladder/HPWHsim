@@ -1,20 +1,23 @@
 # Make all of the output...
-setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+# setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool/")
 library(EcotopePackage)
 library(foreign)
 
 
 # tests <- c("DOE_24hr50", "DOE_24hr67", "DP_SHW50", "DOE2014_24hr67", "DOE2014_24hr50")
-tests <- c("DrawProfileTest_4p1_24hr67")
+tests <- c("DOE_24hr50", "DOE_24hr67")
+# tests <- c("DrawProfileTest_4p1_24hr67")
 # seemTests <- c(paste("Daily", 1:5, sep = "_"), paste("Weekly", 1:5, sep = "_"))
 # seemTests <- paste("Daily", 1:5, sep = "_")
 # tests <- c(tests, seemTests)
 # models <- c("Voltex60", "Voltex80", "ATI66", "GEred", "Sanden80", "GE2014", "GE")
-models <- c("AOSmith60", "AOSmith80",
-            "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
-            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
-            "SandenGAU", "SandenGES", "Stiebel220e",
-            "Generic1", "Generic2", "Generic3")
+models <- c("Sanden40b")
+# models <- c("AOSmith60", "AOSmith80",
+#             "AOSmithHPTU50", "AOSmithHPTU66", "AOSmithHPTU80",
+#             "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
+#             "SandenGAU", "SandenGES", "Stiebel220e",
+#             "Generic1", "Generic2", "Generic3")
 
 
 # Simulate every combination of test and model

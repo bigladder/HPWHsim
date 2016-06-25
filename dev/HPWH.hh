@@ -594,7 +594,8 @@ class HPWH::HeatSource {
 
   double maxPower_kW;
   /**<This is the maximum power a heat source can use - it will be constant at this level afterwards */
-   
+  double minCOP;
+  /**<This is the minimum value of COP that a heat source can have - it will be constant at this level afterwards */
 
 
   // some private functions, mostly used for heating the water with the addHeat function
