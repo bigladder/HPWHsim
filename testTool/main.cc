@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #define MAX_DIR_LENGTH 255
 #define DEBUG 0
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
   }
 
   //Only input file specified -- don't suffix with .csv
-  testDirectory = "tests/" + input1;
+  testDirectory = "tests/" + input2.string::substr(0, 8) + "/" + input1;
 
   // Parse the model
   if(input2 == "Voltex60" || input2 == "AOSmith60") {
@@ -99,6 +100,8 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Sanden40;
   } else if(input2 == "Sanden40b") {
     model = HPWH::MODELS_Sanden40b;
+  } else if(input2 == "Sanden80b") {
+    model = HPWH::MODELS_Sanden80b;
   } else if(input2 == "AOSmithHPTU50") {
     model = HPWH::MODELS_AOSmithHPTU50;
   } else if(input2 == "AOSmithHPTU66") {
@@ -167,6 +170,7 @@ int main(int argc, char *argv[])
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   hpwh.HPWHinit_presets(model);
+  //hpwh.setVerbosity(HPWH::VRB_emetic);
   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }

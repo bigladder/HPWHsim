@@ -12,8 +12,8 @@ attr(simData50, "source")  <- "24 hour 50 Sanden 40b"
 testlist <- list(simData67, simData50)
 
 lapply(testlist, function(simData){
-  simData$inputPower <- (simData$input_kWh1 + simData$input_kWh2 + simData$input_kWh3) * 60000
-  simData$outputPower <- (simData$output_kWh1 + simData$output_kWh2 + simData$output_kWh3) * 60000
+  simData$inputPower <- (simData$input_kWh1 ) * 60000
+  simData$outputPower <- (simData$output_kWh1 ) * 60000
   simData$aveTankTemp <- (simData$simTcouples1 + simData$simTcouples2 + simData$simTcouples3 + simData$simTcouples4 + simData$simTcouples5 + simData$simTcouples6)/6
   simData_m <- melt(simData, id = "minutes")
   

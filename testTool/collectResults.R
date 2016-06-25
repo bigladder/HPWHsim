@@ -1,12 +1,13 @@
 
 
 setwd("/storage/homes/michael/Documents/HPWH/HPWHsim/testTool/")
+setwd("/storage/server/nkvaltine/Projects/HPWHsim/testTool")
 
 
 collectLabData <- function(make) {
   print(paste("Collecting lab data for", make))
   # Read all of the actual results...
-  files <- dir(paste("models", make, sep = "/"), pattern = "Full.csv", full.names = TRUE)
+  files <- dir(paste("tests", make, sep = "/"), pattern = "Full.csv", full.names = TRUE)
   if(!length(files)) return(NULL)
   labResults <- do.call('rbind', lapply(files, function(f) {
     tmp <- read.csv(f)
@@ -46,7 +47,7 @@ collectLabData <- function(make) {
 collectSimData <- function(make) {
   print(paste("Collecting simulated data for", make))
   # Read all of the simulated results...
-  files <- dir(paste("models", make, sep = "/"), pattern = "TestToolOutput.csv",
+  files <- dir(paste("tests", make, sep = "/"), pattern = "^TestToolOutput.csv",
                recursive = TRUE, full.names = TRUE)
   if(!length(files)) return(NULL)
   weeklyFiles <- grep("Weekly", files)
@@ -108,7 +109,7 @@ makes <- c("AOSmith60", "AOSmith80",
            "GEred", "GE502014", "GE502014STDMode", "RheemHB50", 
            "SandenGAU", "SandenGES", "Stiebel220e",
            "Generic1", "Generic2", "Generic3")
-
+makes <- c("Sanden80")
 labData <- do.call('rbind', lapply(makes, collectLabData))
 simData <- do.call('rbind', lapply(makes, collectSimData))
 

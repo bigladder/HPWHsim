@@ -1,4 +1,5 @@
 library(plyr)
+library(ggplot2)
 
 onePlot <- function(model, test, vars, tmin = 0, tmax = 1) {
   dset <- allLong[allLong$model == model & allLong$test == test, ]
@@ -114,7 +115,8 @@ collectSimData <- function(make) {
   simResults
 }
 
-makes <- c("Sanden40", "Sanden80")
+# makes <- c("Sanden40", "Sanden80")
+makes <- c("Sanden80")
 simData <- do.call('rbind', lapply(makes, collectSimData))
 write.csv(file = "simResults.csv", simData, row.names = FALSE)
 
@@ -152,15 +154,21 @@ allLong <- merge(allLong, varGuide)
 
 vars <- c("Thermocouples", "Average Tank Temp", "Input Power", "Draw", "Output Power", "Ambient Temp")
 
-model <- "Sanden40"
+# model <- "Sanden40"
 model <- "Sanden80"
+test <- "DOE_24hr0"
+onePlot(model, test, vars, tmin = 0, tmax = 20) 
 test <- "DOE_24hr17"
-test <- "DOE_24hr35"
-test <- "DOE_24hr50"
-test <- "DOE_24hr67"
-test <- "DOE_24hr95"
-
 onePlot(model, test, vars, tmin = 0, tmax = 10) 
+test <- "DOE_24hr35"
+onePlot(model, test, vars, tmin = 0, tmax = 10) 
+test <- "DOE_24hr50"
+onePlot(model, test, vars, tmin = 0, tmax = 10) 
+test <- "DOE_24hr67"
+onePlot(model, test, vars, tmin = 0, tmax = 10) 
+test <- "DOE_24hr95"
+onePlot(model, test, vars, tmin = 0, tmax = 10) 
+
 
 
 
