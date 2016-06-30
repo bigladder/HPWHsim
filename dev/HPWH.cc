@@ -623,7 +623,7 @@ int HPWH::setTankSize(double HPWH_size_L) {
   return 0;
 }
 int HPWH::setTankSize(double HPWH_size, UNITS units) {
-  if (HPWH_size < 0) {
+  if (HPWH_size <= 0) {
     if(hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
     simHasFailed = true;
     return HPWH_ABORT;
@@ -2624,8 +2624,6 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     return failure;
   }
 
-
-  tankVolume_L = tankVol_L;
 
 	// derive conservative (high) UA from tank volume
 	//   curve fit by Jim Lutz, 5-25-2016
