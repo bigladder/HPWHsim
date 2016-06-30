@@ -2617,6 +2617,14 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 
   //set tank volume from input
+  //use tank size setting function since it has bounds checking
+  int failure = this->setTankSize(tankVol_L); 
+  if (failure == HPWH_ABORT) {
+    if (hpwhVerbosity >= VRB_reluctant) msg("Failure to set tank size in generic hpwh init.");
+    return failure;
+  }
+
+
   tankVolume_L = tankVol_L;
 
 	// derive conservative (high) UA from tank volume
