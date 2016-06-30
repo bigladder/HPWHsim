@@ -1,0 +1,2 @@
+length_of_test 1080
+setpoint 51.7
