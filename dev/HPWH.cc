@@ -1246,6 +1246,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 	COP_T1_quadratic = hSource.COP_T1_quadratic;
   COP_T2_quadratic = hSource.COP_T2_quadratic;
 
+
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
@@ -1696,6 +1697,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
     hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T2_constant_W, inputPower_T2_linear_WperF, inputPower_T2_quadratic_WperF2);
     hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
   }
+
+
   // Interpolate to get COP and input power at the current ambient temperature
   cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
   input_BTUperHr = KWH_TO_BTU(  (inputPower_T1_Watts + (externalT_F - T1_F) *
@@ -1926,10 +1929,32 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 
 
 void HPWH::HeatSource::addTurnOnLogic(ONLOGIC selector, double decisionPoint){
-  this->turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(selector, decisionPoint));
+	bool found = false;
+	std::vector<heatingLogicPair<ONLOGIC> >::iterator pos;
+	for (pos = turnOnLogicSet.begin(); !found && pos != turnOnLogicSet.end(); ++pos) {
+    if (pos->selector == selector) {
+      if (hpwh->hpwhVerbosity >= VRB_reluctant)
+        hpwh->msg("Attempted overwrite of turn on logic.  Failing.....now.\n");
+      hpwh->simHasFailed = true;
+			found=true;
+		}
+	}
+	if (!found)
+	  this->turnOnLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::ONLOGIC>(selector, decisionPoint));
 }
-void HPWH::HeatSource::addShutOffLogic(OFFLOGIC selector, double decisionPoint){
-  this->shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(selector, decisionPoint));
+void HPWH::HeatSource::addShutOffLogic(OFFLOGIC selector, double decisionPoint) {
+	bool found = false;
+	std::vector<heatingLogicPair<OFFLOGIC> >::iterator pos;
+	for (pos = shutOffLogicSet.begin(); !found && pos != shutOffLogicSet.end(); ++pos) {
+    if (pos->selector == selector) {
+      if (hpwh->hpwhVerbosity >= VRB_reluctant)
+        hpwh->msg("Attempted overwrite of shut off logic.  Failing.....now.\n");
+      hpwh->simHasFailed = true;
+      found=true;
+		}
+	}
+	if (!found)
+		this->shutOffLogicSet.push_back(HeatSource::heatingLogicPair<HeatSource::OFFLOGIC>(selector, decisionPoint));
 }
 
 void HPWH::calcDerivedValues(){
@@ -2503,58 +2528,174 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 }
 
 int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C){
-  int initTest = this->HPWHinit_presets(MODELS_genericInitFunctionPreset);
-  if (initTest != 0) {
-    if (hpwhVerbosity >= VRB_reluctant) msg("HPWHinit_generic HPWH fails");
-    return HPWH_ABORT;
-  }
+  //return 0 on success, HPWH_ABORT for failure
+  simHasFailed = true;  //this gets cleared on successful completion of init
+  
+  //clear out old stuff if you're re-initializing
+  if (tankTemps_C != NULL) delete[] tankTemps_C;
+  if (setOfSources != NULL) delete[] setOfSources;
 
-  initTest = this->setTankSize(tankVol_L, UNITS_L);
-  if (initTest != 0) {
-    if (hpwhVerbosity >= VRB_reluctant) msg("HPWHinit_generic HPWH fails to set tank size");
-    return HPWH_ABORT;
-  }
+
+
+  
+  //except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
+  numNodes = 12;
+  tankTemps_C = new double[numNodes];
+  setpoint_C = F_TO_C(127.0);
+
+  //start tank off at setpoint
+  resetTankToSetpoint();
+
+  //custom settings - these are set later
+  //tankVolume_L = GAL_TO_L(45); 
+  //tankUA_kJperHrC = 6.5;
+  
+  doTempDepression = false;
+  tankMixesOnDraw = true;
+
+  numHeatSources = 3;
+  setOfSources = new HeatSource[numHeatSources];
+
+  HeatSource compressor(this);
+  HeatSource resistiveElementBottom(this);
+  HeatSource resistiveElementTop(this);
+
+  //compressor values
+  compressor.isOn = false;
+  compressor.isVIP = false;
+  compressor.typeOfHeatSource = TYPE_compressor;
+
+  double split = 1.0/4.0;
+  compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+  compressor.T1_F = 50;
+  compressor.T2_F = 70;
+
+  compressor.inputPower_T1_constant_W = 187.064124;
+  compressor.inputPower_T1_linear_WperF = 1.939747;
+  compressor.inputPower_T1_quadratic_WperF2 = 0.0;
+  compressor.inputPower_T2_constant_W = 148.0418;
+  compressor.inputPower_T2_linear_WperF = 2.553291;
+  compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+  compressor.COP_T1_constant = 5.4977772;
+  compressor.COP_T1_linear = -0.0243008;
+  compressor.COP_T1_quadratic = 0.0;
+  compressor.COP_T2_constant = 7.207307;
+  compressor.COP_T2_linear = -0.0335265;
+  compressor.COP_T2_quadratic = 0.0;
+  compressor.hysteresis_dC = dF_TO_dC(2); 
+  compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+  //top resistor values
+  resistiveElementTop.setupAsResistiveElement(6, 4500);
+  resistiveElementTop.isVIP = true;
+
+  //bottom resistor values
+  resistiveElementBottom.setupAsResistiveElement(0, 4000);
+  resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+ 
+  //logic conditions
+  //this is set customly, from input
+  //resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(19.6605));
+	resistiveElementTop.addTurnOnLogic( HeatSource::ONLOGIC_topThird, resUse_C);
+
+  resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 1000);  
+  resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(86.1111));
+
+  compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(33.6883));
+  compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(12.392));
+
+  //custom adjustment for poorer performance
+  //compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(37));
+  compressor.addShutOffLogic( HeatSource::OFFLOGIC_lowT, F_TO_C( 50.));
+
+
+  //end section of parameters from GE model
+
+
+
+
+  //set tank volume from input
+  tankVolume_L = tankVol_L;
+
+	// derive conservative (high) UA from tank volume
+	//   curve fit by Jim Lutz, 5-25-2016
+	double tankVol_gal = tankVol_L/ GAL_TO_L( 1.);
+	double v1 = 7.5156316175 * pow( tankVol_gal, 0.33) + 5.9995357658;
+	tankUA_kJperHrC = 0.0076183819 * v1 * v1;
+
+
+
 
   //do a linear interpolation to scale COP curve constant, using measured values
-  //from GE2014STDMode and simulated values for the same model with UEF 2.0
-  
-  ////GE2014STDMode COP coeff's
-  //compressor.COP_T1_constant = 5.4977772;
-  //compressor.COP_T2_constant = 7.207307;
-
-  //COP coeff's were adjusted until UEF test came out as 2.0; the values for that are 4.29 and 5.61
-  //compressor.COP_T1_constant = 4.29;
-  //compressor.COP_T2_constant = 5.61;
-
+  // Chip's attempt 24-May-2014
   double uefSpan = 3.4-2.0;
-  double copT1Span = 5.4977772 - 4.29;
-  double copT2Span = 7.207307 -  5.61;
-  //setOfSources 2 is the compressor for this model, but not necessarily all models - change at your own risk
-  this->setOfSources[2].COP_T1_constant = 4.29 + ((energyFactor - 2.0)/uefSpan)*copT1Span;
-  this->setOfSources[2].COP_T2_constant = 5.61 + ((energyFactor - 2.0)/uefSpan)*copT2Span;
 
-  //this is sort of like a multiplier which scales the COP
-  double fraction1 = this->setOfSources[2].COP_T1_constant / 5.498;
-  double fraction2 = this->setOfSources[2].COP_T2_constant / 7.207;
-  //cout << "fraction 1 : " << fraction1 << "    fraction 2: " << fraction2 << endl;
+  //force COP to be 60% of GE at UEF 2 and 85% at UEF 3.4
+  //use a fudge factor to scale cop and input power in tandem to maintain constant capacity
+	double fUEF = (energyFactor - 2.0)/uefSpan;
+	double genericFudge = (1.-fUEF)*.6 + fUEF*.85;
 
-  //double capORIG = 5.498 * this->setOfSources[2].inputPower_T1_constant_W;
-  //cout << "COP_orig: " << "5.498"  << "COP_new: " << 5.498*fraction1 << " input orig: " << this->setOfSources[2].inputPower_T1_constant_W  << " input new: " << this->setOfSources[2].inputPower_T1_constant_W / fraction1 << endl;
+  compressor.COP_T1_constant *= genericFudge;
+  compressor.COP_T1_linear *= genericFudge;
+  compressor.COP_T1_quadratic *= genericFudge;
 
-  //so, use it to inversely scale the input power, to keep the capacity the same
-  this->setOfSources[2].inputPower_T1_constant_W /= fraction1;
-  this->setOfSources[2].inputPower_T2_constant_W /= fraction2;
+  compressor.COP_T2_constant *= genericFudge;
+  compressor.COP_T2_linear *= genericFudge;
+  compressor.COP_T2_quadratic *= genericFudge;
 
-  //double capNEW = this->setOfSources[2].COP_T1_constant * this->setOfSources[2].inputPower_T1_constant_W;
-  //cout << "capacity orig : " << capORIG << "    capacity new: " << capNEW << endl;
-  
-  //this is not officially sanctioned behavior - decision points are not meant to be changed post at runtime
-  //this->setOfSources[0].turnOnLogicSet[0].decisionPoint = 13.0*(5.0/9.0);
-  this->setOfSources[0].turnOnLogicSet[0].decisionPoint = resUse_C;
+  compressor.inputPower_T1_constant_W /= genericFudge;
+  compressor.inputPower_T1_linear_WperF /= genericFudge;
+  compressor.inputPower_T1_quadratic_WperF2 /= genericFudge;
 
-  
-  return initTest;
+  compressor.inputPower_T2_constant_W /= genericFudge;
+  compressor.inputPower_T2_linear_WperF /= genericFudge;
+  compressor.inputPower_T2_quadratic_WperF2 /= genericFudge;
+
+
+
+
+
+  //set everything in its places
+  setOfSources[0] = resistiveElementTop;
+  setOfSources[1] = resistiveElementBottom;
+  setOfSources[2] = compressor;
+
+  //and you have to do this after putting them into setOfSources, otherwise
+  //you don't get the right pointers
+  setOfSources[2].backupHeatSource = &setOfSources[1];
+  setOfSources[1].backupHeatSource = &setOfSources[2];
+
+
+
+
+  //standard finishing up init, borrowed from init function
+
+  hpwhModel = MODELS_genericCustomUEF;
+
+  //calculate oft-used derived values
+  calcDerivedValues();
+
+  if(checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+
+  isHeating = false;
+  for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+ 
+  if (hpwhVerbosity >= VRB_emetic){
+    for (int i = 0; i < numHeatSources; i++) {
+      msg("heat source %d: %p \n", i , &setOfSources[i]);
+    }
+    msg("\n\n");
   }
+
+  simHasFailed = false;
+  
+  return 0;
+  }
+
+
+
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
   //return 0 on success, HPWH_ABORT for failure
@@ -3423,86 +3564,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
   }
   else if (presetNum == MODELS_GE2014STDMode) {
-    numNodes = 12;
-    tankTemps_C = new double[numNodes];
-    setpoint_C = F_TO_C(127.0);
-
-    //start tank off at setpoint
-    resetTankToSetpoint();
-    
-    tankVolume_L = GAL_TO_L(45); 
-    tankUA_kJperHrC = 6.5;
-    
-    doTempDepression = false;
-    tankMixesOnDraw = true;
-
-    numHeatSources = 3;
-    setOfSources = new HeatSource[numHeatSources];
-
-    HeatSource compressor(this);
-    HeatSource resistiveElementBottom(this);
-    HeatSource resistiveElementTop(this);
-
-    //compressor values
-    compressor.isOn = false;
-    compressor.isVIP = false;
-    compressor.typeOfHeatSource = TYPE_compressor;
-
-    double split = 1.0/4.0;
-    compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
-
-    compressor.T1_F = 50;
-    compressor.T2_F = 70;
-
-    compressor.inputPower_T1_constant_W = 187.064124;
-    compressor.inputPower_T1_linear_WperF = 1.939747;
-    compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-    compressor.inputPower_T2_constant_W = 148.0418;
-    compressor.inputPower_T2_linear_WperF = 2.553291;
-    compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-    compressor.COP_T1_constant = 5.4977772;
-    compressor.COP_T1_linear = -0.0243008;
-    compressor.COP_T1_quadratic = 0.0;
-    compressor.COP_T2_constant = 7.207307;
-    compressor.COP_T2_linear = -0.0335265;
-    compressor.COP_T2_quadratic = 0.0;
-    compressor.hysteresis_dC = dF_TO_dC(2); 
-    compressor.configuration = HeatSource::CONFIG_WRAPPED;
-
-    //top resistor values
-    resistiveElementTop.setupAsResistiveElement(6, 4500);
-    resistiveElementTop.isVIP = true;
-
-    //bottom resistor values
-    resistiveElementBottom.setupAsResistiveElement(0, 4000);
-    resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
-   
-    //logic conditions
-    resistiveElementTop.addTurnOnLogic(HeatSource::ONLOGIC_topThird, dF_TO_dC(19.6605));
-
-    resistiveElementBottom.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, 1000);  
-    resistiveElementBottom.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(86.1111));
-
-    compressor.addTurnOnLogic(HeatSource::ONLOGIC_bottomThird, dF_TO_dC(33.6883));
-    compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(12.392));
-    compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(37));
-//    compressor.addShutOffLogic(HeatSource::OFFLOGIC_largeDraw, F_TO_C(65));
-
-    //set everything in its places
-    setOfSources[0] = resistiveElementTop;
-    setOfSources[1] = resistiveElementBottom;
-    setOfSources[2] = compressor;
-
-    //and you have to do this after putting them into setOfSources, otherwise
-    //you don't get the right pointers
-    setOfSources[2].backupHeatSource = &setOfSources[1];
-    setOfSources[1].backupHeatSource = &setOfSources[2];
-
-  }
-  else if (presetNum == MODELS_genericInitFunctionPreset) {
-    //this is the same as MODELS_GE2014STDMode on 5/17/16
-    //it should not be changed, ever
     numNodes = 12;
     tankTemps_C = new double[numNodes];
     setpoint_C = F_TO_C(127.0);

@@ -91,8 +91,7 @@ class HPWH {
 
 
     MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
-    MODELS_genericInitFunctionPreset = 171,   /**< unmodified GE2014STDMode case
-                              constant in time, used for generic function init*/
+    MODELS_genericCustomUEF = 171,   /**< used for creating "generic" model with custom uef*/
 
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
@@ -426,7 +425,7 @@ class HPWH::HeatSource {
  public:
   friend class HPWH;
 
-	HeatSource() {};  /**< default constructor, does not create a useful HeatSource */
+	HeatSource(){}  /**< default constructor, does not create a useful HeatSource */
 	HeatSource(HPWH *parentHPWH);
   /**< constructor assigns a pointer to the hpwh that owns this heat source  */
   HeatSource(const HeatSource &hSource);  ///copy constructor
@@ -597,6 +596,7 @@ class HPWH::HeatSource {
 
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
+
 
 
 
