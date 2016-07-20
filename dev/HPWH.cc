@@ -13,7 +13,7 @@ const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 
 //ugh, this should be in the header
-const std::string HPWH::version_maint = "8rev2";
+const std::string HPWH::version_maint = "9";
 
 
 //the HPWH functions
@@ -2608,7 +2608,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
   //custom adjustment for poorer performance
   //compressor.addShutOffLogic(HeatSource::OFFLOGIC_lowT, F_TO_C(37));
-  compressor.addShutOffLogic( HeatSource::OFFLOGIC_lowT, F_TO_C( 50.));
+  compressor.addShutOffLogic( HeatSource::OFFLOGIC_lowT, F_TO_C( 45.));
 
 
   //end section of parameters from GE model
@@ -2638,10 +2638,10 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
   // Chip's attempt 24-May-2014
   double uefSpan = 3.4-2.0;
 
-  //force COP to be 60% of GE at UEF 2 and 85% at UEF 3.4
+  //force COP to be 70% of GE at UEF 2 and 95% at UEF 3.4
   //use a fudge factor to scale cop and input power in tandem to maintain constant capacity
 	double fUEF = (energyFactor - 2.0)/uefSpan;
-	double genericFudge = (1.-fUEF)*.6 + fUEF*.85;
+	double genericFudge = (1.-fUEF)*.7 + fUEF*.95;
 
   compressor.COP_T1_constant *= genericFudge;
   compressor.COP_T1_linear *= genericFudge;
