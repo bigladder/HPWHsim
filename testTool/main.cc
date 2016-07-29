@@ -117,9 +117,12 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_Generic2;
   } else if(input2 == "Generic3") {
     model = HPWH::MODELS_Generic3;
+  } else if(input2 == "custom") {
+    model = HPWH::MODELS_CustomFile;
+    //do nothin, use custom-compiled input specified later
   } else {
     model = HPWH::MODELS_basicIntegrated;
-    cout << "Couldn't find model " << input2 << "\n";
+    cout << "Couldn't find model " << input2 << ".  Exiting...\n";
     exit(1);
   }
 
@@ -164,7 +167,14 @@ int main(int argc, char *argv[])
   }
 
   // Set the hpwh properties. I'll need to update this to select the appropriate model
-  hpwh.HPWHinit_presets(model);
+  //int result = hpwh.HPWHinit_presets(model);
+  //int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
+  int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8, dF_TO_dC(13));
+  if (result == HPWH::HPWH_ABORT) {
+    return 1;
+  }
+  
+
   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }
