@@ -34,6 +34,8 @@ var class_h_p_w_h =
       [ "MODELS_Generic1", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d6be9245ab15f491dda7c7883fdac1", null ],
       [ "MODELS_Generic2", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b", null ],
       [ "MODELS_Generic3", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798", null ],
+      [ "MODELS_UEF2generic", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eaa305bb77d528fa5387fb9cf228cfb7fb", null ],
+      [ "MODELS_genericCustomUEF", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eac0063827497a4d0bead401d86ad6465a", null ],
       [ "MODELS_CustomFile", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93", null ],
       [ "MODELS_CustomResTank", "class_h_p_w_h.html#acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda", null ]
     ] ],
@@ -79,6 +81,7 @@ var class_h_p_w_h =
     [ "getTankNodeTemp", "class_h_p_w_h.html#a440f55f294a28f9024ce4731f515b802", null ],
     [ "getTankNodeTemp", "class_h_p_w_h.html#afac039cdb5bb3643eb46fdef08a88948", null ],
     [ "HPWHinit_file", "class_h_p_w_h.html#a348c1c4a90ec1ee5e91c84ab8d3bc5b1", null ],
+    [ "HPWHinit_genericHPWH", "class_h_p_w_h.html#ab464a84e384a2583cdabe1bb6b6b23fe", null ],
     [ "HPWHinit_presets", "class_h_p_w_h.html#a74b3a6c1352adb5d38e7c00ad5952f30", null ],
     [ "HPWHinit_resTank", "class_h_p_w_h.html#ac092212830c4e023b1314845d79d5461", null ],
     [ "HPWHinit_resTank", "class_h_p_w_h.html#a0b8ee9f3e4773ca140b50997ad1091cf", null ],

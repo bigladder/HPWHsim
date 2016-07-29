@@ -46,6 +46,9 @@ enum \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338e}{M\-O\-D\-E\-L\-
 \\*
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}{M\-O\-D\-E\-L\-S\-\_\-\-Generic2} = 161, 
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}{M\-O\-D\-E\-L\-S\-\_\-\-Generic3} = 162, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa305bb77d528fa5387fb9cf228cfb7fb}{M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic} = 170, 
+\hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac0063827497a4d0bead401d86ad6465a}{M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F} = 171, 
+\\*
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File} = 200, 
 \hyperlink{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank} = 201
  \}
@@ -96,6 +99,8 @@ int \hyperlink{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}{H\-P\-W\-Hinit\-
 int \hyperlink{class_h_p_w_h_ac092212830c4e023b1314845d79d5461}{H\-P\-W\-Hinit\-\_\-res\-Tank} ()
 \item 
 int \hyperlink{class_h_p_w_h_a0b8ee9f3e4773ca140b50997ad1091cf}{H\-P\-W\-Hinit\-\_\-res\-Tank} (double tank\-Vol\-\_\-\-L, double energy\-Factor, double upper\-Power\-\_\-\-W, double lower\-Power\-\_\-\-W)
+\item 
+int \hyperlink{class_h_p_w_h_ab464a84e384a2583cdabe1bb6b6b23fe}{H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H} (double tank\-Vol\-\_\-\-L, double energy\-Factor, double res\-Use\-\_\-\-C)
 \item 
 int \hyperlink{class_h_p_w_h_aef8f08c0115787826a64b34897468b45}{run\-One\-Step} (double inlet\-T\-\_\-\-C, double draw\-Volume\-\_\-\-L, double ambient\-T\-\_\-\-C, double external\-T\-\_\-\-C, \hyperlink{class_h_p_w_h_a6a74814715ed6a33a75fd0d9dc3e7107}{D\-R\-M\-O\-D\-E\-S} D\-Rstatus, double minutes\-Per\-Step)
 \item 
@@ -199,10 +204,10 @@ static std\-::string \hyperlink{class_h_p_w_h_a001c10815863cb3efdb721d364111275}
 \hypertarget{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}{static const int {\bfseries version\-\_\-major} = 1}\label{class_h_p_w_h_a404694da361f91cab76c434bc2e8aba7}
 
 \item 
-\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 2}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
+\hypertarget{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}{static const int {\bfseries version\-\_\-minor} = 3}\label{class_h_p_w_h_a4d21de98801ba96190a10fce9f7e0007}
 
 \item 
-\hypertarget{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}{static const int {\bfseries version\-\_\-maint} = 4}\label{class_h_p_w_h_af02ab978efb608dbcb3010f51fec5bee}
+\hypertarget{class_h_p_w_h_a72fde5a7d2d241a1352b8de4da71e80d}{static const std\-::string {\bfseries version\-\_\-maint} = \char`\"{}0\char`\"{}}\label{class_h_p_w_h_a72fde5a7d2d241a1352b8de4da71e80d}
 
 \item 
 \hypertarget{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}{static const float {\bfseries D\-E\-N\-S\-I\-T\-Y\-W\-A\-T\-E\-R\-\_\-kgper\-L} = 0.\-998f}\label{class_h_p_w_h_ad731cfda8428fb584d308f98c2eb329a}
@@ -305,7 +310,11 @@ specifies the allowable preset \hyperlink{class_h_p_w_h}{H\-P\-W\-H} models valu
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}{M\-O\-D\-E\-L\-S\-\_\-\-Generic2}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea46a66cab956c1c8093e2bbf97193bd5b}
 }]Generic Tier 2 \index{M\-O\-D\-E\-L\-S\-\_\-\-Generic3@{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Generic3@{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}}\item[{\em 
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}{M\-O\-D\-E\-L\-S\-\_\-\-Generic3}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea84df992c74aa90062776ff63b1bf7798}
-}]Generic Tier 3 \index{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}}\item[{\em 
+}]Generic Tier 3 \index{M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic@{M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic@{M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa305bb77d528fa5387fb9cf228cfb7fb}{M\-O\-D\-E\-L\-S\-\_\-\-U\-E\-F2generic}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eaa305bb77d528fa5387fb9cf228cfb7fb}
+}]U\-E\-F 2.\-0, modified G\-E2014\-S\-T\-D\-Mode case \index{M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F@{M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F@{M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F}}\item[{\em 
+\hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac0063827497a4d0bead401d86ad6465a}{M\-O\-D\-E\-L\-S\-\_\-generic\-Custom\-U\-E\-F}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eac0063827497a4d0bead401d86ad6465a}
+}]used for creating \char`\"{}generic\char`\"{} model with custom uef \index{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}}\item[{\em 
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-File}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338eabc81b43c524352b876dcfe84631ffe93}
 }]\hyperlink{class_h_p_w_h}{H\-P\-W\-H} parameters were input via file \index{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}!H\-P\-W\-H@{H\-P\-W\-H}}\index{H\-P\-W\-H@{H\-P\-W\-H}!M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank@{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}}\item[{\em 
 \hypertarget{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}{M\-O\-D\-E\-L\-S\-\_\-\-Custom\-Res\-Tank}\label{class_h_p_w_h_acf117eb928a21b7b757b653455a2338ea81d2151cfd33bfcf84f3b76320484cda}
@@ -541,7 +550,16 @@ This function returns a string with the current version number \hypertarget{clas
 )}}\label{class_h_p_w_h_a348c1c4a90ec1ee5e91c84ab8d3bc5b1}
 This function will load in a set of parameters from a file The file name is the input -\/ there should be at most one set of parameters per file This is useful for testing new variations, and for the sort of variability that we typically do when creating S\-E\-E\-M runs Appropriate use of this function can be found in the documentation
 
-The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-presets@{H\-P\-W\-Hinit\-\_\-presets}}
+The return value is 0 for successful initialization, H\-P\-W\-H\-\_\-\-A\-B\-O\-R\-T otherwise \hypertarget{class_h_p_w_h_ab464a84e384a2583cdabe1bb6b6b23fe}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H@{H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H}}
+\index{H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H@{H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H}!HPWH@{H\-P\-W\-H}}
+\subsubsection[{H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-generic\-H\-P\-W\-H (
+\begin{DoxyParamCaption}
+\item[{double}]{tank\-Vol\-\_\-\-L, }
+\item[{double}]{energy\-Factor, }
+\item[{double}]{res\-Use\-\_\-\-C}
+\end{DoxyParamCaption}
+)}}\label{class_h_p_w_h_ab464a84e384a2583cdabe1bb6b6b23fe}
+This function will initialize a \hyperlink{class_h_p_w_h}{H\-P\-W\-H} object to be a non-\/specific \hyperlink{class_h_p_w_h}{H\-P\-W\-H} model with an energy factor as specified. Since energy factor is not strongly correlated with energy use, most settings are taken from the G\-E2015\-\_\-\-S\-T\-D\-Mode model. \hypertarget{class_h_p_w_h_a74b3a6c1352adb5d38e7c00ad5952f30}{\index{H\-P\-W\-H@{H\-P\-W\-H}!H\-P\-W\-Hinit\-\_\-presets@{H\-P\-W\-Hinit\-\_\-presets}}
 \index{H\-P\-W\-Hinit\-\_\-presets@{H\-P\-W\-Hinit\-\_\-presets}!HPWH@{H\-P\-W\-H}}
 \subsubsection[{H\-P\-W\-Hinit\-\_\-presets}]{\setlength{\rightskip}{0pt plus 5cm}int H\-P\-W\-H\-::\-H\-P\-W\-Hinit\-\_\-presets (
 \begin{DoxyParamCaption}
