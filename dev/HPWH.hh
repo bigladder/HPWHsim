@@ -20,7 +20,8 @@ class HPWH {
  public:
   static const int version_major = 1;
   static const int version_minor = 2;
-  static const int version_maint = 8;
+  //oh man, why can't i initialize this here?
+  static const std::string version_maint;
 
 
   static const float DENSITYWATER_kgperL;
@@ -87,6 +88,10 @@ class HPWH {
     MODELS_Generic1 = 160,         /**< Generic Tier 1 */
     MODELS_Generic2 = 161,         /**< Generic Tier 2 */
     MODELS_Generic3 = 162,          /**< Generic Tier 3 */
+
+
+    MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
+    MODELS_genericCustomUEF = 171,   /**< used for creating "generic" model with custom uef*/
 
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
@@ -163,6 +168,13 @@ class HPWH {
    * Several assumptions regarding the tank configuration are assumed: the lower element
    * is at the bottom, the upper element is at the top third.  The logics are also set
    * to standard setting, with upper as VIP activating when the top third is too cold.
+   */
+   
+  int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
+  /**< This function will initialize a HPWH object to be a non-specific HPWH model
+   * with an energy factor as specified.  Since energy
+   * factor is not strongly correlated with energy use, most settings
+   * are taken from the GE2015_STDMode model.
    */
 
   int runOneStep(double inletT_C, double drawVolume_L, 
@@ -413,7 +425,7 @@ class HPWH::HeatSource {
  public:
   friend class HPWH;
 
-	HeatSource() {};  /**< default constructor, does not create a useful HeatSource */
+	HeatSource(){}  /**< default constructor, does not create a useful HeatSource */
 	HeatSource(HPWH *parentHPWH);
   /**< constructor assigns a pointer to the hpwh that owns this heat source  */
   HeatSource(const HeatSource &hSource);  ///copy constructor
@@ -584,6 +596,7 @@ class HPWH::HeatSource {
 
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
+
 
 
 
