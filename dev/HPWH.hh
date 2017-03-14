@@ -65,7 +65,8 @@ class HPWH {
     MODELS_AOSmithPHPT80 = 103,         /**<  Voltex 80 gallon tank  */
     MODELS_AOSmithHPTU50 = 104,    /**< 50 gallon AOSmith HPTU */ 
     MODELS_AOSmithHPTU66 = 105,    /**< 66 gallon AOSmith HPTU */ 
-    MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */ 
+    MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */
+    MODELS_AOSmithHPTU80_DR = 107,    /**< 80 gallon AOSmith HPTU */  
 
     // GE Models
     MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
@@ -472,6 +473,8 @@ class HPWH::HeatSource {
   enum ONLOGIC{
     ONLOGIC_topThird,     /**< is the difference between setpoint and the topThird of
                             the tank is greater than decision point, turn on */
+    ONLOGIC_topThird_absolute,     /**< if the average temp of the topThird of
+                            the tank greater than decision point, turn on */
     ONLOGIC_bottomThird,  /**< is the difference between setpoint and the bottomThird of
                             the tank is greater than decision point, turn on */
     ONLOGIC_standby,       /**< if the difference between the top node and the setpoint is
