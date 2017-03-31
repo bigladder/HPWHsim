@@ -103,10 +103,14 @@ int main(int argc, char *argv[])
     model = HPWH::MODELS_AOSmithHPTU66;
   } else if(input2 == "AOSmithHPTU80") {
     model = HPWH::MODELS_AOSmithHPTU80;
+  } else if(input2 == "AOSmithHPTU80DR") {
+    model = HPWH::MODELS_AOSmithHPTU80_DR;
   } else if(input2 == "GE502014STDMode" || input2 == "GE2014STDMode") {
     model = HPWH::MODELS_GE2014STDMode;
   } else if(input2 == "GE502014" || input2 == "GE2014") {
     model = HPWH::MODELS_GE2014;
+  } else if(input2 == "GE802014") {
+    model = HPWH::MODELS_GE2014_80DR;
   } else if(input2 == "RheemHB50") {
     model = HPWH::MODELS_RheemHB50;
   } else if(input2 == "Stiebel220e" || input2 == "Stiebel220E") {
@@ -169,15 +173,22 @@ int main(int argc, char *argv[])
   // Set the hpwh properties. I'll need to update this to select the appropriate model
   //int result = hpwh.HPWHinit_presets(model);
   //int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
-  int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8, dF_TO_dC(13));
+  /*int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8, dF_TO_dC(13));
   if (result == HPWH::HPWH_ABORT) {
     return 1;
-  }
+  }*/
+  hpwh.HPWHinit_presets(model);
   
 
   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
     newSetpoint = (149 - 32) / 1.8;
   }
+
+/*
+  if(model == HPWH::MODELS_AOSmithHPTU80_DR) {
+    newSetpoint = (140 - 32) / 1.8;
+  }
+*/
 
   if(newSetpoint > 0) {
     hpwh.setSetpoint(newSetpoint);
