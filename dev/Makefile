@@ -1,6 +1,6 @@
 
 
-options = -g -Wall -Wshadow
+options = -g -Wall -Wshadow -std=c++11
 #options = -O3
 #options = -pg
 
@@ -10,7 +10,7 @@ options = -g -Wall -Wshadow
 
 test.x	: test.cc HPWH.o Makefile
 	g++ test.cc -o test.x HPWH.o $(options) -I$(CURDIR)
-	
+
 HPWH.o	: HPWH.cc HPWH.hh Makefile
 	g++ -c HPWH.cc $(options)
 

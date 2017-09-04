@@ -59,7 +59,7 @@ const std::string HPWH::version_maint = "3";
 #define SETPOINT_FIX	// #define to include fixes for
 						// setpoint-below-water-temp issues
 						//   1-22-2017
-	
+
 
 
 //the HPWH functions
@@ -246,12 +246,12 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 				setOfSources[i].disengageHeatSource();
 				//check if the backup heat source would have to shut off too
 				if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
-					//and if not, go ahead and turn it on 
+					//and if not, go ahead and turn it on
 					setOfSources[i].backupHeatSource->engageHeatSource(heatSourceAmbientT_C);
 				}
 			}
 
-			//if there's a priority HeatSource (e.g. upper resistor) and it needs to 
+			//if there's a priority HeatSource (e.g. upper resistor) and it needs to
 			//come on, then turn everything off and start it up
 			if (setOfSources[i].isVIP) {
 				if (hpwhVerbosity >= VRB_emetic) msg("\tVIP check");
@@ -311,6 +311,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		//going through in order, check if the heat source is on
 		if (setOfSources[i].isEngaged()) {
 			//and add heat if it is
+
 			setOfSources[i].addHeat(heatSourceAmbientT_C, minutesToRun);
 			//if it finished early
 			if (setOfSources[i].runtime_min < minutesToRun) {
@@ -1213,22 +1214,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 	}
 	shrinkage = hSource.shrinkage;
 
-	T1_F = hSource.T1_F;
-	T2_F = hSource.T2_F;
-
-	inputPower_T1_constant_W = hSource.inputPower_T1_constant_W;
-	inputPower_T2_constant_W = hSource.inputPower_T2_constant_W;
-	inputPower_T1_linear_WperF = hSource.inputPower_T1_linear_WperF;
-	inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
-	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
-	inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
-
-	COP_T1_constant = hSource.COP_T1_constant;
-	COP_T2_constant = hSource.COP_T2_constant;
-	COP_T1_linear = hSource.COP_T1_linear;
-	COP_T2_linear = hSource.COP_T2_linear;
-	COP_T1_quadratic = hSource.COP_T1_quadratic;
-	COP_T2_quadratic = hSource.COP_T2_quadratic;
+	perfMap = hSource.perfMap;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -1275,23 +1261,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 	}
 	shrinkage = hSource.shrinkage;
 
-	T1_F = hSource.T1_F;
-	T2_F = hSource.T2_F;
-
-	inputPower_T1_constant_W = hSource.inputPower_T1_constant_W;
-	inputPower_T2_constant_W = hSource.inputPower_T2_constant_W;
-	inputPower_T1_linear_WperF = hSource.inputPower_T1_linear_WperF;
-	inputPower_T2_linear_WperF = hSource.inputPower_T2_linear_WperF;
-	inputPower_T1_quadratic_WperF2 = hSource.inputPower_T1_quadratic_WperF2;
-	inputPower_T2_quadratic_WperF2 = hSource.inputPower_T2_quadratic_WperF2;
-
-	COP_T1_constant = hSource.COP_T1_constant;
-	COP_T2_constant = hSource.COP_T2_constant;
-	COP_T1_linear = hSource.COP_T1_linear;
-	COP_T2_linear = hSource.COP_T2_linear;
-	COP_T1_quadratic = hSource.COP_T1_quadratic;
-	COP_T2_quadratic = hSource.COP_T2_quadratic;
-
+	perfMap = hSource.perfMap;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -1680,6 +1650,14 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 
 
 //the private functions
+void HPWH::HeatSource::sortPerformanceMap() {
+	std::sort(perfMap.begin(), perfMap.end(),
+	[](const HPWH::HeatSource::perfPoint & a, const HPWH::HeatSource::perfPoint & b) -> bool {
+		return a.T_F < b.T_F;
+	});
+}
+
+
 double HPWH::HeatSource::expitFunc(double x, double offset) {
 	double val;
 	val = 1 / (1 + exp(x - offset));
@@ -1726,45 +1704,72 @@ double HPWH::HeatSource::getCondenserTemp() {
 
 void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
-	double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2	
+	double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
 	double externalT_F, condenserTemp_F;
 
 	// Convert Celsius to Fahrenheit for the curve fits
 	condenserTemp_F = C_TO_F(condenserTemp_C);
 	externalT_F = C_TO_F(externalT_C);
 
+	// Get bounding performance map points for interpolation/extrapolation
+	bool extrapolate = false;
+	size_t i_prev = 0;
+	size_t i_next = 1;
+	for (size_t i = 0; i < perfMap.size(); ++i) {
+		if (externalT_F < perfMap[i].T_F){
+			if (i == 0) {
+				extrapolate = true;
+				i_prev = 0;
+				i_next = 1;
+			} else {
+				i_prev = i - 1;
+				i_next = i;
+			}
+			break;
+		} else {
+			if (i == perfMap.size() - 1) {
+				extrapolate = true;
+				i_prev = i - 1;
+				i_next = i;
+				break;
+			}
+		}
+	}
+
+
 	// Calculate COP and Input Power at each of the two reference temepratures
-	COP_T1 = COP_T1_constant;
-	COP_T1 += COP_T1_linear * condenserTemp_F;
-	COP_T1 += COP_T1_quadratic * condenserTemp_F * condenserTemp_F;
+	COP_T1 = perfMap[i_prev].COP_coeffs[0];
+	COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
+	COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-	COP_T2 = COP_T2_constant;
-	COP_T2 += COP_T2_linear * condenserTemp_F;
-	COP_T2 += COP_T2_quadratic * condenserTemp_F * condenserTemp_F;
+	COP_T2 = perfMap[i_next].COP_coeffs[0];
+	COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
+	COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-	inputPower_T1_Watts = inputPower_T1_constant_W;
-	inputPower_T1_Watts += inputPower_T1_linear_WperF * condenserTemp_F;
-	inputPower_T1_Watts += inputPower_T1_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
+	inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
+	inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
+	inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-	if (hpwh->hpwhVerbosity >= VRB_emetic){
-		hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T1_constant_W, inputPower_T1_linear_WperF, inputPower_T1_quadratic_WperF2);
-	}
-
-	inputPower_T2_Watts = inputPower_T2_constant_W;
-	inputPower_T2_Watts += inputPower_T2_linear_WperF * condenserTemp_F;
-	inputPower_T2_Watts += inputPower_T2_quadratic_WperF2 * condenserTemp_F * condenserTemp_F;
+	inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
+	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
+	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic){
-		hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", inputPower_T2_constant_W, inputPower_T2_linear_WperF, inputPower_T2_quadratic_WperF2);
+		hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
+		hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
 		hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
-	}
 
+		if (extrapolate) {
+			hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: %.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n", externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F);
+		}
+
+	}
 
 	// Interpolate to get COP and input power at the current ambient temperature
-	cop = COP_T1 + (externalT_F - T1_F) * ((COP_T2 - COP_T1) / (T2_F - T1_F));
-	input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - T1_F) *
+	cop = COP_T1 + (externalT_F - perfMap[i_prev].T_F) * ((COP_T2 - COP_T1) / (perfMap[i_next].T_F - perfMap[i_prev].T_F));
+	input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - perfMap[i_prev].T_F) *
 		((inputPower_T2_Watts - inputPower_T1_Watts)
-		/ (T2_F - T1_F))
+		/ (perfMap[i_next].T_F - perfMap[i_prev].T_F))
 		) / 1000.0);  //1000 converts w to kw
 	cap_BTUperHr = cop * input_BTUperHr;
 
@@ -1932,7 +1937,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
-		//otherwise just the fraction available 
+		//otherwise just the fraction available
 		//this should make heatingCapacity == 0  if nodeFrac < 1
 		else{
 			timeUsed_min = timeRemaining_min;
@@ -1983,20 +1988,21 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 		condensity[i] = 0;
 	}
 	condensity[node] = 1;
-	T1_F = 50;
-	T2_F = 67;
-	inputPower_T1_constant_W = Watts;
-	inputPower_T1_linear_WperF = 0;
-	inputPower_T1_quadratic_WperF2 = 0;
-	inputPower_T2_constant_W = Watts;
-	inputPower_T2_linear_WperF = 0;
-	inputPower_T2_quadratic_WperF2 = 0;
-	COP_T1_constant = 1;
-	COP_T1_linear = 0;
-	COP_T1_quadratic = 0;
-	COP_T2_constant = 1;
-	COP_T2_linear = 0;
-	COP_T2_quadratic = 0;
+
+	perfMap.reserve(2);
+
+	perfMap.push_back({
+		50, // Temperature (T_F)
+		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
+	});
+
+	perfMap.push_back({
+		67, // Temperature (T_F)
+		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
+	});
+
 	configuration = CONFIG_SUBMERGED; //immersed in tank
 
 	typeOfHeatSource = TYPE_resistance;
@@ -2181,7 +2187,7 @@ int HPWH::HPWHinit_file(string configFile){
 		else if (token == "volume") {
 			line_ss >> tempDouble >> units;
 			if (units == "gal")  tempDouble = GAL_TO_L(tempDouble);
-			else if (units == "L"); //do nothing, lol 
+			else if (units == "L"); //do nothing, lol
 			else {
 				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
 				return HPWH_ABORT;
@@ -2225,7 +2231,7 @@ int HPWH::HPWHinit_file(string configFile){
 		else if (token == "setpoint") {
 			line_ss >> tempDouble >> units;
 			if (units == "F")  tempDouble = F_TO_C(tempDouble);
-			else if (units == "C"); //do nothing, lol 
+			else if (units == "C"); //do nothing, lol
 			else {
 				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
 				return HPWH_ABORT;
@@ -2266,6 +2272,7 @@ int HPWH::HPWHinit_file(string configFile){
 			setOfSources = new HeatSource[numHeatSources];
 			for (int i = 0; i < numHeatSources; i++) {
 				setOfSources[i] = HeatSource(this);
+				setOfSources[i].perfMap.reserve(2);
 			}
 
 		}
@@ -2296,7 +2303,7 @@ int HPWH::HPWHinit_file(string configFile){
 			else if (token == "onlogic") {
 				line_ss >> tempString >> tempDouble >> units;
 				if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
-				else if (units == "C"); //do nothing, lol 
+				else if (units == "C"); //do nothing, lol
 				else {
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
@@ -2336,7 +2343,7 @@ int HPWH::HPWHinit_file(string configFile){
 			else if (token == "offlogic") {
 				line_ss >> tempString >> tempDouble >> units;
 				if (units == "F")  tempDouble = F_TO_C(tempDouble);
-				else if (units == "C"); //do nothing, lol 
+				else if (units == "C"); //do nothing, lol
 				else {
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
@@ -2407,78 +2414,78 @@ int HPWH::HPWHinit_file(string configFile){
 				line_ss >> tempDouble >> units;
 				//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
 				if (units == "F");
-				//        else if (units == "C") ; //do nothing, lol 
+				//        else if (units == "C") ; //do nothing, lol
 				else if (units == "C") tempDouble = C_TO_F(tempDouble);
 				else {
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
 				}
-				setOfSources[heatsource].T1_F = tempDouble;
+				setOfSources[heatsource].perfMap[0].T_F = tempDouble;
 			}
 			else if (token == "T2"){
 				line_ss >> tempDouble >> units;
 				//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
 				if (units == "F");
-				//        else if (units == "C") ; //do nothing, lol 
+				//        else if (units == "C") ; //do nothing, lol
 				else if (units == "C") tempDouble = C_TO_F(tempDouble);
 				else {
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
 				}
-				setOfSources[heatsource].T2_F = tempDouble;
+				setOfSources[heatsource].perfMap[1].T_F = tempDouble;
 			}
 			else if (token == "inPowT1const"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T1_constant_W = tempDouble;
+				setOfSources[heatsource].perfMap[0].inputPower_coeffs[0] = tempDouble;
 			}
 			else if (token == "inPowT1lin"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T1_linear_WperF = tempDouble;
+				setOfSources[heatsource].perfMap[0].inputPower_coeffs[1] = tempDouble;
 			}
 			else if (token == "inPowT1quad"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T1_quadratic_WperF2 = tempDouble;
+				setOfSources[heatsource].perfMap[0].inputPower_coeffs[2] = tempDouble;
 			}
 			else if (token == "inPowT2const"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T2_constant_W = tempDouble;
+				setOfSources[heatsource].perfMap[1].inputPower_coeffs[0] = tempDouble;
 			}
 			else if (token == "inPowT2lin"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T2_linear_WperF = tempDouble;
+				setOfSources[heatsource].perfMap[1].inputPower_coeffs[1] = tempDouble;
 			}
 			else if (token == "inPowT2quad"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].inputPower_T2_quadratic_WperF2 = tempDouble;
+				setOfSources[heatsource].perfMap[1].inputPower_coeffs[2] = tempDouble;
 			}
 			else if (token == "copT1const"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T1_constant = tempDouble;
+				setOfSources[heatsource].perfMap[0].COP_coeffs[0] = tempDouble;
 			}
 			else if (token == "copT1lin"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T1_linear = tempDouble;
+				setOfSources[heatsource].perfMap[0].COP_coeffs[1] = tempDouble;
 			}
 			else if (token == "copT1quad"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T1_quadratic = tempDouble;
+				setOfSources[heatsource].perfMap[0].COP_coeffs[2] = tempDouble;
 			}
 			else if (token == "copT2const"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T2_constant = tempDouble;
+				setOfSources[heatsource].perfMap[1].COP_coeffs[0] = tempDouble;
 			}
 			else if (token == "copT2lin"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T2_linear = tempDouble;
+				setOfSources[heatsource].perfMap[1].COP_coeffs[1] = tempDouble;
 			}
 			else if (token == "copT2quad"){
 				line_ss >> tempDouble;
-				setOfSources[heatsource].COP_T2_quadratic = tempDouble;
+				setOfSources[heatsource].perfMap[1].COP_coeffs[2] = tempDouble;
 			}
 			else if (token == "hysteresis"){
 				line_ss >> tempDouble >> units;
 				if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
-				else if (units == "C"); //do nothing, lol 
+				else if (units == "C"); //do nothing, lol
 				else {
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
@@ -2588,7 +2595,12 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].isOn) {
+			isHeating = true;
+		}
+		setOfSources[i].sortPerformanceMap();
+	}
 
 
 	if (hpwhVerbosity >= VRB_emetic){
@@ -2622,7 +2634,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	resetTankToSetpoint();
 
 	//custom settings - these are set later
-	//tankVolume_L = GAL_TO_L(45); 
+	//tankVolume_L = GAL_TO_L(45);
 	//tankUA_kJperHrC = 6.5;
 
 	doTempDepression = false;
@@ -2643,21 +2655,20 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	double split = 1.0 / 4.0;
 	compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-	compressor.T1_F = 50;
-	compressor.T2_F = 70;
+	compressor.perfMap.reserve(2);
 
-	compressor.inputPower_T1_constant_W = 187.064124;
-	compressor.inputPower_T1_linear_WperF = 1.939747;
-	compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-	compressor.inputPower_T2_constant_W = 148.0418;
-	compressor.inputPower_T2_linear_WperF = 2.553291;
-	compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-	compressor.COP_T1_constant = 5.4977772;
-	compressor.COP_T1_linear = -0.0243008;
-	compressor.COP_T1_quadratic = 0.0;
-	compressor.COP_T2_constant = 7.207307;
-	compressor.COP_T2_linear = -0.0335265;
-	compressor.COP_T2_quadratic = 0.0;
+	compressor.perfMap.push_back({
+		50, // Temperature (T_F)
+		{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+	});
+
+	compressor.perfMap.push_back({
+		70, // Temperature (T_F)
+		{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+	});
+
 	compressor.hysteresis_dC = dF_TO_dC(2);
 	compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -2718,22 +2729,21 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	double fUEF = (energyFactor - 2.0) / uefSpan;
 	double genericFudge = (1. - fUEF)*.7 + fUEF*.95;
 
-	compressor.COP_T1_constant *= genericFudge;
-	compressor.COP_T1_linear *= genericFudge;
-	compressor.COP_T1_quadratic *= genericFudge;
+	compressor.perfMap[0].COP_coeffs[0] *= genericFudge;
+	compressor.perfMap[0].COP_coeffs[1] *= genericFudge;
+	compressor.perfMap[0].COP_coeffs[2] *= genericFudge;
 
-	compressor.COP_T2_constant *= genericFudge;
-	compressor.COP_T2_linear *= genericFudge;
-	compressor.COP_T2_quadratic *= genericFudge;
+	compressor.perfMap[1].COP_coeffs[0] *= genericFudge;
+	compressor.perfMap[1].COP_coeffs[1] *= genericFudge;
+	compressor.perfMap[1].COP_coeffs[2] *= genericFudge;
 
-	compressor.inputPower_T1_constant_W /= genericFudge;
-	compressor.inputPower_T1_linear_WperF /= genericFudge;
-	compressor.inputPower_T1_quadratic_WperF2 /= genericFudge;
+	compressor.perfMap[0].inputPower_coeffs[0] /= genericFudge;
+	compressor.perfMap[0].inputPower_coeffs[1] /= genericFudge;
+	compressor.perfMap[0].inputPower_coeffs[2] /= genericFudge;
 
-	compressor.inputPower_T2_constant_W /= genericFudge;
-	compressor.inputPower_T2_linear_WperF /= genericFudge;
-	compressor.inputPower_T2_quadratic_WperF2 /= genericFudge;
-
+	compressor.perfMap[1].inputPower_coeffs[0] /= genericFudge;
+	compressor.perfMap[1].inputPower_coeffs[1] /= genericFudge;
+	compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
 
 
 
@@ -2761,7 +2771,12 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].isOn) {
+			isHeating = true;
+		}
+		setOfSources[i].sortPerformanceMap();
+	}
 
 	if (hpwhVerbosity >= VRB_emetic){
 		for (int i = 0; i < numHeatSources; i++) {
@@ -2944,21 +2959,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, 0, 0, 0, 0, 0, 0);
 
 		//GE tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 0.290 * 1000;
-		compressor.inputPower_T1_linear_WperF = 0.00159 * 1000;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.00000107 * 1000;
-		compressor.inputPower_T2_constant_W = 0.375 * 1000;
-		compressor.inputPower_T2_linear_WperF = 0.00121 * 1000;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.00000216 * 1000;
-		compressor.COP_T1_constant = 4.49;
-		compressor.COP_T1_linear = -0.0187;
-		compressor.COP_T1_quadratic = -0.0000133;
-		compressor.COP_T2_constant = 5.60;
-		compressor.COP_T2_linear = -0.0252;
-		compressor.COP_T2_quadratic = 0.00000254;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{0.290 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{0.375 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED; //wrapped around tank
 
@@ -3009,21 +3023,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//GE tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 0.290 * 1000;
-		compressor.inputPower_T1_linear_WperF = 0.00159 * 1000;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.00000107 * 1000;
-		compressor.inputPower_T2_constant_W = 0.375 * 1000;
-		compressor.inputPower_T2_linear_WperF = 0.00121 * 1000;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.00000216 * 1000;
-		compressor.COP_T1_constant = 4.49;
-		compressor.COP_T1_linear = -0.0187;
-		compressor.COP_T1_quadratic = -0.0000133;
-		compressor.COP_T2_constant = 5.60;
-		compressor.COP_T2_linear = -0.0252;
-		compressor.COP_T2_quadratic = 0.00000254;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{0.290 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{0.375 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = 0;  //no hysteresis
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
@@ -3068,21 +3081,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 0.467 * 1000;
-		compressor.inputPower_T1_linear_WperF = 0.00281 * 1000;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0000072 * 1000;
-		compressor.inputPower_T2_constant_W = 0.541 * 1000;
-		compressor.inputPower_T2_linear_WperF = 0.00147 * 1000;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0000176 * 1000;
-		compressor.COP_T1_constant = 4.86;
-		compressor.COP_T1_linear = -0.0222;
-		compressor.COP_T1_quadratic = -0.00001;
-		compressor.COP_T2_constant = 6.58;
-		compressor.COP_T2_linear = -0.0392;
-		compressor.COP_T2_quadratic = 0.0000407;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3149,21 +3161,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 0.467 * 1000;
-		compressor.inputPower_T1_linear_WperF = 0.00281 * 1000;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0000072 * 1000;
-		compressor.inputPower_T2_constant_W = 0.541 * 1000;
-		compressor.inputPower_T2_linear_WperF = 0.00147 * 1000;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0000176 * 1000;
-		compressor.COP_T1_constant = 4.86;
-		compressor.COP_T1_linear = -0.0222;
-		compressor.COP_T1_quadratic = -0.00001;
-		compressor.COP_T2_constant = 6.58;
-		compressor.COP_T2_linear = -0.0392;
-		compressor.COP_T2_quadratic = 0.0000407;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3230,25 +3241,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 5.0;
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		//    compressor.inputPower_T1_constant_W = 0.247*1000;
-		compressor.inputPower_T1_constant_W = 0.3 * 1000;
-		compressor.inputPower_T1_linear_WperF = 0.00159 * 1000;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.00000107 * 1000;
-		//    compressor.inputPower_T2_constant_W = 0.328*1000;
-		compressor.inputPower_T2_constant_W = 0.378 * 1000;
-		compressor.inputPower_T2_linear_WperF = 0.00121 * 1000;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.00000216 * 1000;
-		//    compressor.COP_T1_constant = 4.92;
-		compressor.COP_T1_constant = 4.7;
-		compressor.COP_T1_linear = -0.0210;
-		compressor.COP_T1_quadratic = 0.0;
-		//    compressor.COP_T2_constant = 5.03;
-		compressor.COP_T2_constant = 4.8;
-		compressor.COP_T2_linear = -0.0167;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{0.3 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.7, -0.0210, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{0.378 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
+			{4.8, -0.0167, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3318,21 +3324,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 35;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.COP_T1_constant = 3.7;
-		compressor.COP_T1_linear = -0.0176;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 6.8;
-		compressor.COP_T2_linear = -0.0384;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.inputPower_T1_constant_W = 956.25;
-		compressor.inputPower_T1_linear_WperF = 5.3125;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 687.5;
-		compressor.inputPower_T2_linear_WperF = 4.375;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			35, // Temperature (T_F)
+			{956.25, 5.3125, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{3.7, -0.0176, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{687.5, 4.375, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.8, -0.0384, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		compressor.hysteresis_dC = 0;  //no hysteresis
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -3374,21 +3378,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.COP_T1_constant = 5.09;
-		compressor.COP_T1_linear = -0.0271;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 6.11;
-		compressor.COP_T2_linear = -0.0329;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.inputPower_T1_constant_W = 1305;
-		compressor.inputPower_T1_linear_WperF = 3.68;
-		compressor.inputPower_T1_quadratic_WperF2 = 0;
-		compressor.inputPower_T2_constant_W = 889.5;
-		compressor.inputPower_T2_linear_WperF = 4.21;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{1305, 3.68, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.09, -0.0271, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{889.5, 4.21, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.11, -0.0329, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		compressor.hysteresis_dC = 0;  //no hysteresis
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -3434,21 +3436,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 142.66;
-		compressor.inputPower_T1_linear_WperF = 2.16;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 124.45;
-		compressor.inputPower_T2_linear_WperF = 2.51;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 7.25;
-		compressor.COP_T1_linear = -0.0424;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.69;
-		compressor.COP_T2_linear = -0.0413;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{142.66, 2.16, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.25, -0.0424, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{124.45, 124.45, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.69, -0.0413, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3515,21 +3516,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 156.6;
-		compressor.inputPower_T1_linear_WperF = 2.1;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 119.5;
-		compressor.inputPower_T2_linear_WperF = 2.63;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.83;
-		compressor.COP_T1_linear = -0.025;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.34;
-		compressor.COP_T2_linear = -0.0326;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{156.6, 2.1, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.83, -0.025, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{119.5, 2.63, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.34, -0.0326, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3596,23 +3596,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 142.6;
-		compressor.inputPower_T1_linear_WperF = 2.152;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 120.14;
-		compressor.inputPower_T2_linear_WperF = 2.513;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 6.989258;
-		compressor.COP_T1_linear = -0.038320;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 8.188;
-		compressor.COP_T2_linear = -0.0432;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.hysteresis_dC = dF_TO_dC(2);
-		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{142.6, 2.152, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		//top resistor values
 		resistiveElementTop.setupAsResistiveElement(8, 4500);
@@ -3677,21 +3673,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 142.6;
-		compressor.inputPower_T1_linear_WperF = 2.152;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 120.14;
-		compressor.inputPower_T2_linear_WperF = 2.513;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 6.989258;
-		compressor.COP_T1_linear = -0.038320;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 8.188;
-		compressor.COP_T2_linear = -0.0432;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{142.6, 2.152, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3758,21 +3753,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 4.0;
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.4977772;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.207307;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3836,23 +3830,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 4.0;
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.4977772;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.207307;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.hysteresis_dC = dF_TO_dC(2);
-		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		//top resistor values
 		resistiveElementTop.setupAsResistiveElement(6, 4500);
@@ -3915,21 +3905,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.4977772;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.207307;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3996,21 +3985,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.4977772;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.207307;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4077,21 +4065,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.4977772;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 7.207307;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4159,23 +4146,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 47;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 280;
-		compressor.inputPower_T1_linear_WperF = 4.97342;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 280;
-		compressor.inputPower_T2_linear_WperF = 5.35992;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 5.634009;
-		compressor.COP_T1_linear = -0.029485;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 6.3;
-		compressor.COP_T2_linear = -0.03;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.hysteresis_dC = dF_TO_dC(2);
-		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		//top resistor values
 		resistiveElementTop.setupAsResistiveElement(8, 4200);
@@ -4240,21 +4223,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.setCondensity(0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.COP_T1_constant = 5.744118;
-		compressor.COP_T1_linear = -0.025946;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 8.012112;
-		compressor.COP_T2_linear = -0.039394;
-		compressor.COP_T2_quadratic = 0.0;
-		compressor.inputPower_T1_constant_W = 295.55337;
-		compressor.inputPower_T1_linear_WperF = 2.28518;
-		compressor.inputPower_T1_quadratic_WperF2 = 0;
-		compressor.inputPower_T2_constant_W = 282.2126;
-		compressor.inputPower_T2_linear_WperF = 2.82001;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{295.55337, 2.28518, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.744118, -0.025946, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{282.2126, 2.82001, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{8.012112, -0.039394, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
 		compressor.hysteresis_dC = 0;  //no hysteresis
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
@@ -4297,22 +4278,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 4.0;
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 472.58616;
-		compressor.inputPower_T1_linear_WperF = 2.09340;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 439.5615;
-		compressor.inputPower_T2_linear_WperF = 2.62997;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{472.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{2.942642, -0.0125954, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
-		compressor.COP_T1_constant = 2.942642;
-		compressor.COP_T1_linear = -0.0125954;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 3.95076;
-		compressor.COP_T2_linear = -0.01638033;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{439.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{3.95076, -0.01638033, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4371,22 +4350,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 50;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 272.58616;
-		compressor.inputPower_T1_linear_WperF = 2.09340;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 239.5615;
-		compressor.inputPower_T2_linear_WperF = 2.62997;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{272.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{4.042642, -0.0205954, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
-		compressor.COP_T1_constant = 4.042642;
-		compressor.COP_T1_linear = -0.0205954;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 5.25076;
-		compressor.COP_T2_linear = -0.02638033;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{239.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.25076, -0.02638033, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4450,22 +4427,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
-		compressor.T1_F = 50;
-		compressor.T2_F = 67;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 172.58616;
-		compressor.inputPower_T1_linear_WperF = 2.09340;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 139.5615;
-		compressor.inputPower_T2_linear_WperF = 2.62997;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{172.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.242642, -0.0285954, 0.0} // COP Coefficients (COP_coeffs)
+		});
 
-		compressor.COP_T1_constant = 5.242642;
-		compressor.COP_T1_linear = -0.0285954;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 6.75076;
-		compressor.COP_T2_linear = -0.03638033;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{139.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.75076, -0.03638033, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4528,21 +4503,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 4.0;
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		compressor.T1_F = 50;
-		compressor.T2_F = 70;
+		compressor.perfMap.reserve(2);
 
-		compressor.inputPower_T1_constant_W = 187.064124;
-		compressor.inputPower_T1_linear_WperF = 1.939747;
-		compressor.inputPower_T1_quadratic_WperF2 = 0.0;
-		compressor.inputPower_T2_constant_W = 148.0418;
-		compressor.inputPower_T2_linear_WperF = 2.553291;
-		compressor.inputPower_T2_quadratic_WperF2 = 0.0;
-		compressor.COP_T1_constant = 4.29;
-		compressor.COP_T1_linear = -0.0243008;
-		compressor.COP_T1_quadratic = 0.0;
-		compressor.COP_T2_constant = 5.61;
-		compressor.COP_T2_linear = -0.0335265;
-		compressor.COP_T2_quadratic = 0.0;
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{4.29, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.61, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
 		compressor.hysteresis_dC = dF_TO_dC(2);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -4590,7 +4564,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].isOn) {
+			isHeating = true;
+		}
+		setOfSources[i].sortPerformanceMap();
+	}
 
 	if (hpwhVerbosity >= VRB_emetic){
 		for (int i = 0; i < numHeatSources; i++) {

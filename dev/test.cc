@@ -1,9 +1,9 @@
 /*This is not a substitute for a proper HPWH Test Tool, it is merely a short program
  * to aid in the testing of the new HPWH.cc as it is being written.
- * 
+ *
  * -NDK
- * 
- * 
+ *
+ *
  */
 #include "HPWH.hh"
 #include <sstream>
@@ -63,7 +63,7 @@ if (initReturn == HPWH::HPWH_ABORT) {
   return 1;
 }
 
-int minutes = 1; 
+int minutes = 1;
 HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
 
 FILE* outFILE;
@@ -71,13 +71,13 @@ outFILE = fopen("testOutput.csv", "w");
 hpwh.WriteCSVHeading(outFILE);
 
 
-#define SHORT 
+#define SHORT
 
 #ifdef SHORT
 int liters = 60;
 
 
-//int HPWH::runOneStep(double inletT_C, double drawVolume_L, 
+//int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 					//double ambientT_C, double externalT_C,
 					//double DRstatus, double minutesPerStep)
 cout << "isSetpointFixed: " << hpwh.isSetpointFixed() << endl;
