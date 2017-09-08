@@ -1,0 +1,92 @@
+verbosity silent
+numNodes 12 #number of nodes
+setpoint 127 F
+volume 215.8 L
+UA 7.31 kJperHrC
+depressTemp false
+mixOnDraw true
+
+#a test comment
+numHeatSources 3
+
+
+heatsource 1 isVIP false
+heatsource 1 isOn false
+heatsource 1 type compressor
+heatsource 1 condensity 0.2 0.2 0.2 0.2 0.2 0 0 0 0 0 0 0
+heatsource 1 T1 47 F
+heatsource 1 T2 67 F
+heatsource 1 inPowT1const 467
+heatsource 1 inPowT1lin 2.81
+heatsource 1 inPowT1quad 0.0072
+heatsource 1 inPowT2const 541
+heatsource 1 inPowT2lin 1.47
+heatsource 1 inPowT2quad 0.0176
+heatsource 1 copT1const 4.86
+heatsource 1 copT1lin -0.0222
+heatsource 1 copT1quad -0.00001
+heatsource 1 copT2const 6.58
+heatsource 1 copT2lin -0.0392
+heatsource 1 copT2quad 0.0000407
+heatsource 1 hysteresis 1 F
+heatsource 1 coilConfig wrapped
+
+
+heatsource 0 isVIP true
+heatsource 0 isOn false
+heatsource 0 type resistor
+heatsource 0 condensity 0 0 0 0 0 0 0 0 1 0 0 0
+heatsource 0 T1 50 C
+heatsource 0 T1 50 F
+heatsource 0 T2 67 C
+heatsource 0 T2 67 F
+heatsource 0 inPowT1const 4250
+heatsource 0 inPowT1lin 0.0
+heatsource 0 inPowT1quad 0.0
+heatsource 0 inPowT2const 4250
+heatsource 0 inPowT2lin 0.0
+heatsource 0 inPowT2quad 0.0
+heatsource 0 copT1const 1.0
+heatsource 0 copT1lin 0.0
+heatsource 0 copT1quad 0.0
+heatsource 0 copT2const 1.0
+heatsource 0 copT2lin 0.0
+heatsource 0 copT2quad 0.0
+heatsource 0 hysteresis 0 F
+heatsource 0 coilConfig submerged
+
+
+heatsource 2 isVIP false
+heatsource 2 isOn false
+heatsource 2 type resistor
+heatsource 2 condensity 1 0 0 0 0 0 0 0 0 0 0 0
+heatsource 2 T1 50 C
+heatsource 2 T1 50 F
+heatsource 2 T2 67 C
+heatsource 2 T2 67 F
+heatsource 2 inPowT1const 2000
+heatsource 2 inPowT1lin 0.0
+heatsource 2 inPowT1quad 0.0
+heatsource 2 inPowT2const 2000
+heatsource 2 inPowT2lin 0.0
+heatsource 2 inPowT2quad 0.0
+heatsource 2 copT1const 1.0
+heatsource 2 copT1lin 0.0
+heatsource 2 copT1quad 0.0
+heatsource 2 copT2const 1.0
+heatsource 2 copT2lin 0.0
+heatsource 2 copT2quad 0.0
+heatsource 2 hysteresis 4 F
+heatsource 2 coilConfig submerged
+
+
+heatsource 0 onlogic topThird 25 F
+heatsource 2 onlogic bottomThird 43.6 F
+heatsource 1 onlogic bottomThird 43.6 F
+heatsource 2 onlogic standby 23.8 F
+
+heatsource 1 offlogic lowT 45.0 F
+
+heatsource 0 backupSource 1
+heatsource 1 backupSource 2
+heatsource 2 backupSource 1

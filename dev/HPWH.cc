@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdarg.h>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 using std::endl;
 using std::cout;
