@@ -3352,6 +3352,78 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
+	else if (presetNum == MODELS_Sanden80_variableSpeed) {
+		numNodes = 96;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = 65;
+		setpointFixed = true;
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = 315;
+		//tankUA_kJperHrC = 10; //0 to turn off
+		tankUA_kJperHrC = 7;
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+		compressor.perfMap.reserve(5);
+
+		compressor.perfMap.push_back({
+			17, // Temperature (T_F)
+			{1650, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{3, -0.015, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			35, // Temperature (T_F)
+			{1030, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{3.5, -0.015, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{850, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.05, -0.025, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{740, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{790, 2, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.hysteresis_dC = 0;  //no hysteresis
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+		compressor.addTurnOnLogic(HeatSource::ONLOGIC_fourthSixth, dF_TO_dC(74.9228));
+		compressor.addTurnOnLogic(HeatSource::ONLOGIC_standby, dF_TO_dC(9.0972));
+
+		//lowT cutoff
+		compressor.addShutOffLogic(HeatSource::OFFLOGIC_bottomTwelthMaxTemp, F_TO_C(125));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+	}
 	else if (presetNum == MODELS_Sanden40) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
