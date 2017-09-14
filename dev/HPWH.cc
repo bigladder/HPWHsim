@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <regex>
 
 using std::endl;
 using std::cout;
@@ -2164,7 +2165,7 @@ int HPWH::HPWHinit_file(string configFile){
 	}
 
 	//some variables that will be handy
-	int heatsource, sourceNum;
+	int heatsource, sourceNum, nTemps;
 	string tempString, units;
 	double tempDouble, dblArray[12];
 
@@ -2273,9 +2274,7 @@ int HPWH::HPWHinit_file(string configFile){
 			setOfSources = new HeatSource[numHeatSources];
 			for (int i = 0; i < numHeatSources; i++) {
 				setOfSources[i] = HeatSource(this);
-				setOfSources[i].perfMap.reserve(2);
 			}
-
 		}
 		else if (token == "heatsource") {
 			if (numHeatSources == 0) {
@@ -2411,7 +2410,30 @@ int HPWH::HPWHinit_file(string configFile){
 				line_ss >> dblArray[0] >> dblArray[1] >> dblArray[2] >> dblArray[3] >> dblArray[4] >> dblArray[5] >> dblArray[6] >> dblArray[7] >> dblArray[8] >> dblArray[9] >> dblArray[10] >> dblArray[11];
 				setOfSources[heatsource].setCondensity(dblArray[0], dblArray[1], dblArray[2], dblArray[3], dblArray[4], dblArray[5], dblArray[6], dblArray[7], dblArray[8], dblArray[9], dblArray[10], dblArray[11]);
 			}
-			else if (token == "T1"){
+			else if (token == "nTemps") {
+				line_ss >> nTemps;
+				setOfSources[heatsource].perfMap.resize(nTemps);
+			}
+			else if (std::regex_match(token, std::regex("T\\d+"))){
+				std::smatch match;
+				std::regex_match(token, match, std::regex("T(\\d+)"));
+				nTemps = std::stoi(match[1].str());
+				int maxTemps = setOfSources[heatsource].perfMap.size();
+
+				if (maxTemps < nTemps) {
+					if (maxTemps == 0) {
+						if (true || hpwhVerbosity >= VRB_reluctant){
+							msg("%s specified for heatsource %d before definition of nTemps.  \n", token.c_str(), heatsource);
+						}
+						return HPWH_ABORT;
+					}
+					else {
+						if (true || hpwhVerbosity >= VRB_reluctant){
+							msg("Incorrect specification for %s from heatsource %d. nTemps, %d, is less than %d.  \n", token.c_str(), heatsource, maxTemps, nTemps);
+						}
+						return HPWH_ABORT;
+					}
+				}
 				line_ss >> tempDouble >> units;
 				//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
 				if (units == "F");
@@ -2421,67 +2443,49 @@ int HPWH::HPWHinit_file(string configFile){
 					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 					return HPWH_ABORT;
 				}
-				setOfSources[heatsource].perfMap[0].T_F = tempDouble;
+				setOfSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
 			}
-			else if (token == "T2"){
-				line_ss >> tempDouble >> units;
-				//        if (units == "F")  tempDouble = F_TO_C(tempDouble);
-				if (units == "F");
-				//        else if (units == "C") ; //do nothing, lol
-				else if (units == "C") tempDouble = C_TO_F(tempDouble);
-				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
-					return HPWH_ABORT;
+			else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)"))){
+				std::smatch match;
+				std::regex_match(token, match, std::regex("(inPow|cop)T(\\d+)(const|lin|quad)"));
+				string var = match[1].str();
+				nTemps = std::stoi(match[2].str());
+				string coeff = match[3].str();
+				int coeff_num;
+				if (coeff == "const"){
+					coeff_num = 0;
 				}
-				setOfSources[heatsource].perfMap[1].T_F = tempDouble;
-			}
-			else if (token == "inPowT1const"){
+				else if (coeff == "lin"){
+					coeff_num = 1;
+				}
+				else if (coeff == "quad"){
+					coeff_num = 2;
+				}
+
+				int maxTemps = setOfSources[heatsource].perfMap.size();
+
+				if (maxTemps < nTemps) {
+					if (maxTemps == 0) {
+						if (hpwhVerbosity >= VRB_reluctant){
+							msg("%s specified for heatsource %d before definition of nTemps.  \n", token.c_str(), heatsource);
+						}
+						return HPWH_ABORT;
+					}
+					else {
+						if (hpwhVerbosity >= VRB_reluctant){
+							msg("Incorrect specification for %s from heatsource %d. nTemps, %d, is less than %d.  \n", token.c_str(), heatsource, maxTemps, nTemps);
+						}
+						return HPWH_ABORT;
+					}
+				}
 				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].inputPower_coeffs[0] = tempDouble;
-			}
-			else if (token == "inPowT1lin"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].inputPower_coeffs[1] = tempDouble;
-			}
-			else if (token == "inPowT1quad"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].inputPower_coeffs[2] = tempDouble;
-			}
-			else if (token == "inPowT2const"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].inputPower_coeffs[0] = tempDouble;
-			}
-			else if (token == "inPowT2lin"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].inputPower_coeffs[1] = tempDouble;
-			}
-			else if (token == "inPowT2quad"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].inputPower_coeffs[2] = tempDouble;
-			}
-			else if (token == "copT1const"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].COP_coeffs[0] = tempDouble;
-			}
-			else if (token == "copT1lin"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].COP_coeffs[1] = tempDouble;
-			}
-			else if (token == "copT1quad"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[0].COP_coeffs[2] = tempDouble;
-			}
-			else if (token == "copT2const"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].COP_coeffs[0] = tempDouble;
-			}
-			else if (token == "copT2lin"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].COP_coeffs[1] = tempDouble;
-			}
-			else if (token == "copT2quad"){
-				line_ss >> tempDouble;
-				setOfSources[heatsource].perfMap[1].COP_coeffs[2] = tempDouble;
+
+				if (var == "inPow") {
+					setOfSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs[coeff_num] = tempDouble;
+				}
+				else if (var == "cop") {
+					setOfSources[heatsource].perfMap[nTemps - 1].COP_coeffs[coeff_num] = tempDouble;
+				}
 			}
 			else if (token == "hysteresis"){
 				line_ss >> tempDouble >> units;
@@ -2517,7 +2521,12 @@ int HPWH::HPWHinit_file(string configFile){
 	resetTankToSetpoint();
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++)  if (setOfSources[i].isOn)  isHeating = true;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].isOn) {
+			isHeating = true;
+		}
+		setOfSources[i].sortPerformanceMap();
+	}
 
 	calcDerivedValues();
 

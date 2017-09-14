@@ -14,6 +14,7 @@ heatsource 0 isVIP true
 heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 0 0.12 0.22 0.22 0.22 0.22 0 0 0 0 0 0
+heatsource 0 nTemps 2
 heatsource 0 T1 50 F
 heatsource 0 T2 67 F
 heatsource 0 inPowT1const 295.55337
@@ -36,6 +37,7 @@ heatsource 1 isVIP false
 heatsource 1 isOn false
 heatsource 1 type resistor
 heatsource 1 condensity 1 0 0 0 0 0 0 0 0 0 0 0
+heatsource 1 nTemps 2
 heatsource 1 T1 50 F
 heatsource 1 T2 67 F
 heatsource 1 inPowT1const 1500
@@ -63,4 +65,3 @@ heatsource 0 offlogic lowT 32 F
 heatsource 1 offlogic highT 32 F
 
 # heatsource 0 backupSource 1
-

@@ -14,6 +14,7 @@ heatsource 0 isVIP true
 heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 1 0 0 0 0 0 0 0 0 0 0 0
+heatsource 0 nTemps 2
 heatsource 0 T1 35 F
 heatsource 0 T2 67 F
 heatsource 0 inPowT1const 956.25
@@ -37,4 +38,3 @@ heatsource 0 onlogic fourthSixth 74.9228 F
 heatsource 0 onlogic standby 9.0972 F
 
 heatsource 0 offlogic bottomTwelthMaxTemp 125 F
-
