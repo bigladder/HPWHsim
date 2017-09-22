@@ -131,6 +131,45 @@ class HPWH {
     TYPE_compressor   /**< a vapor cycle compressor  */
     };
 
+  struct NodeWeight {
+    int nodeNum;
+    double weight;
+    NodeWeight(int n, double w) : nodeNum(n), weight(w) {};
+
+    NodeWeight(int n) : nodeNum(n), weight(1.0) {};
+  };
+
+  struct HeatingLogic {
+    std::string description;  // for debug purposes
+    std::vector<NodeWeight> nodeWeights;
+    double decisionPoint;
+    bool isAbsolute;
+    std::function<bool(double,double)> compare;
+    HeatingLogic(std::string desc, std::vector<NodeWeight> n, double d, bool a=false, std::function<bool(double,double)> c=std::less<double>()) :
+      description(desc), nodeWeights(n), decisionPoint(d), isAbsolute(a), compare(c) {};
+  };
+
+  HeatingLogic topThird(double d) const;
+  HeatingLogic topThird_absolute(double d) const;
+	HeatingLogic bottomThird(double d) const;
+	HeatingLogic bottomHalf(double d) const;
+	HeatingLogic bottomTwelth(double d) const;
+	HeatingLogic bottomSixth(double d) const;
+	HeatingLogic secondSixth(double d) const;
+	HeatingLogic thirdSixth(double d) const;
+	HeatingLogic fourthSixth(double d) const;
+	HeatingLogic fifthSixth(double d) const;
+	HeatingLogic topSixth(double d) const;
+  HeatingLogic standby(double d) const;
+  HeatingLogic lowT(double d) const;
+  HeatingLogic highT(double d) const;
+  HeatingLogic lowTreheat(double d) const;
+  HeatingLogic topNodeMaxTemp(double d) const;
+  HeatingLogic bottomNodeMaxTemp(double d) const;
+  HeatingLogic bottomTwelthMaxTemp(double d) const;
+  HeatingLogic largeDraw(double d) const;
+  HeatingLogic largerDraw(double d) const;
+
 
   ///this is the value that the public functions will return in case of a simulation
   ///destroying error
@@ -330,16 +369,7 @@ class HPWH {
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
 
-	double topThirdAvg_C() const;
-	double bottomThirdAvg_C() const;
-	double bottomHalfAvg_C() const;
-	double bottomTwelthAvg_C() const;
-	double bottomSixthAvg_C() const;
-	double secondSixthAvg_C() const;
-	double thirdSixthAvg_C() const;
-	double fourthSixthAvg_C() const;
-	double fifthSixthAvg_C() const;
-	double topSixthAvg_C() const;
+  double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 
 	/**< functions to calculate what the temperature in a portion of the tank is  */
 
@@ -471,53 +501,6 @@ class HPWH::HeatSource {
     CONFIG_EXTERNAL
     };
 
-  /**this is the set of logics available for shouldHeat */
-  enum ONLOGIC{
-    ONLOGIC_topThird,     /**< is the difference between setpoint and the topThird of
-                            the tank is greater than decision point, turn on */
-    ONLOGIC_topThird_absolute,     /**< if the average temp of the topThird of
-                            the tank greater than decision point, turn on */
-    ONLOGIC_bottomThird,  /**< is the difference between setpoint and the bottomThird of
-                            the tank is greater than decision point, turn on */
-    ONLOGIC_standby,       /**< if the difference between the top node and the setpoint is
-                            greater than the decision point, turn on */
-    ONLOGIC_bottomSixth,    /**< if the difference between the first (bottom) sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    ONLOGIC_secondSixth,    /**< if the difference between the second sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    ONLOGIC_thirdSixth,    /**< if the difference between the third sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    ONLOGIC_fourthSixth,    /**< if the difference between the fourth sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    ONLOGIC_fifthSixth,    /**< if the difference between the fifth sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    ONLOGIC_topSixth    /**< if the difference between the sixth (top) sixth of
-                            the tank and the setpoint is greater than the decision point, turn on */
-    };
-  /** this is the set of logics available for shutsDown  */
-  enum OFFLOGIC{
-    OFFLOGIC_lowT,                /**< if temp is below decision point, shut off */
-    OFFLOGIC_highT,                /**< if temp is abovr decision point, shut off */
-    OFFLOGIC_lowTreheat,          /**< if temp is above decision point, just while running, shut off */
-    OFFLOGIC_topNodeMaxTemp,   /**< if the top node temp is above decision point, shut off */
-    OFFLOGIC_bottomNodeMaxTemp,   /**< if the bottom node temp is above decision point, shut off */
-    OFFLOGIC_bottomTwelthMaxTemp, /**< if the bottom twelth of the tank is above decision point, shut off */
-    OFFLOGIC_largeDraw,           /**< if the bottom third of the tank is below decision point, shut off */
-    OFFLOGIC_largerDraw           /**< if the bottom half of the tank is below decision point, shut off */
-    };
-
-	/** the heating logic instructions come in pairs - a string to select
-    which logic function to use, and a double to give the setpoint
-    for that function */
-  template <typename T>
-	struct heatingLogicPair{
-		T selector;
-		double decisionPoint;
-		/**< and a constructor to allow creating anonymous structs for easy assignment */
-		heatingLogicPair(T x, double y) : selector(x), decisionPoint(y) {};
-		};
-
-
 	/** the creator of the heat source, necessary to access HPWH variables */
   HPWH *hpwh;
 
@@ -566,12 +549,12 @@ class HPWH::HeatSource {
   /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
 	/** a vector to hold the set of logical choices for turning this element on */
-	std::vector<heatingLogicPair<ONLOGIC> > turnOnLogicSet;
+	std::vector<HeatingLogic> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
-	std::vector<heatingLogicPair<OFFLOGIC> > shutOffLogicSet;
+	std::vector<HeatingLogic> shutOffLogicSet;
 
-  void addTurnOnLogic(ONLOGIC selector, double decisionPoint);
-  void addShutOffLogic(OFFLOGIC selector, double decisionPoint);
+  void addTurnOnLogic(HeatingLogic logic);
+  void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
 
 	double hysteresis_dC;
