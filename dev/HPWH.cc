@@ -2988,9 +2988,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(43.6);
 		double lowTcutoff = F_TO_C(45.0);
-		double standby = dF_TO_dC(23.8);
+		double standbyT = dF_TO_dC(23.8);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
@@ -3069,9 +3069,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(43.6);
 		double lowTcutoff = F_TO_C(45.0);
-		double standby = dF_TO_dC(23.8);
+		double standbyT = dF_TO_dC(23.8);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
@@ -3150,9 +3150,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//    double compStart = dF_TO_dC(24.4);
 		double compStart = dF_TO_dC(40.0);
 		double lowTcutoff = F_TO_C(45.0);
-		double standby = dF_TO_dC(5.2);
+		double standbyT = dF_TO_dC(5.2);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 		// compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(66)));
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
@@ -3415,9 +3415,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(30.8333);
 		double lowTcutoff = F_TO_C(42.0);
-		double standby = dF_TO_dC(10.0694);
+		double standbyT = dF_TO_dC(10.0694);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
@@ -3495,9 +3495,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(40.9076);
 		double lowTcutoff = F_TO_C(42.0);
-		double standby = dF_TO_dC(8.8354);
+		double standbyT = dF_TO_dC(8.8354);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
@@ -3572,9 +3572,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(34.1636);
 		double lowTcutoff = F_TO_C(42.0);
-		double standby = dF_TO_dC(7.1528);
+		double standbyT = dF_TO_dC(7.1528);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
@@ -3652,9 +3652,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(34.1636);
 		double lowTcutoff = F_TO_C(42.0);
-		double standby = dF_TO_dC(7.1528);
+		double standbyT = dF_TO_dC(7.1528);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
@@ -4122,9 +4122,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		double compStart = dF_TO_dC(38);
 		double lowTcutoff = F_TO_C(40.0);
-		double standby = dF_TO_dC(13.2639);
+		double standbyT = dF_TO_dC(13.2639);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standby));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
