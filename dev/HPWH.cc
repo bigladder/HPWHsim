@@ -2169,81 +2169,145 @@ int HPWH::HPWHinit_file(string configFile){
 					return HPWH_ABORT;
 				}
 			}
-			else if (token == "onlogic") {
-				line_ss >> tempString >> tempDouble >> units;
-				if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
-				else if (units == "C"); //do nothing, lol
-				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
-					return HPWH_ABORT;
+			else if (token == "onlogic" || token == "offlogic") {
+				line_ss >> tempString;
+				if (tempString == "nodes") {
+					std::vector<int> nodeNums;
+					std::vector<double> weights;
+					std::string nextToken;
+					line_ss >> nextToken;
+					while (std::regex_match(nextToken, std::regex("\\d+"))) {
+						int nodeNum = std::stoi(nextToken);
+						if (nodeNum > numNodes || nodeNum < 1) {
+							if (hpwhVerbosity >= VRB_reluctant)  msg("Node number for heatsource %d %s must be between 1 and %d.  \n", heatsource, token.c_str(), numNodes);
+							return HPWH_ABORT;
+						}
+						nodeNums.push_back(nodeNum);
+						line_ss >> nextToken;
+					}
+					if (nextToken == "weights") {
+						line_ss >> nextToken;
+						while (std::regex_match(nextToken, std::regex("-?\\d*\\.\\d+(?:e-?\\d+)?"))) {
+							weights.push_back(std::stod(nextToken));
+							line_ss >> nextToken;
+						}
+					} else {
+						for (auto n : nodeNums) {
+							n += 0; // used to get rid of unused variable compiler warning
+							weights.push_back(1.0);
+						}
+					}
+					if (nodeNums.size() != weights.size()) {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n", heatsource, token.c_str(), weights.size(), token.c_str(), nodeNums.size());
+						return HPWH_ABORT;
+					}
+					if (nextToken != "absolute" && nextToken != "relative") {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper definition, \"%s\", for heat source %d %s. Should be \"relative\" or \"absoute\".\n", nextToken.c_str(), heatsource, token.c_str());
+						return HPWH_ABORT;
+					}
+					bool absolute = (nextToken == "absolute");
+					std::string compareStr;
+					line_ss >> compareStr >> tempDouble >> units;
+					std::function<bool(double,double)> compare;
+					if (compareStr == "<") compare = std::less<double>();
+					else if (compareStr == ">") compare = std::greater<double>();
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n", compareStr.c_str(), heatsource, token.c_str());
+						return HPWH_ABORT;
+					}
+					if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
+					else if (units == "C"); //do nothing, lol
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						return HPWH_ABORT;
+					}
+					std::vector<NodeWeight> nodeWeights;
+					for (int i = 0; i < nodeNums.size(); i++ ) {
+							nodeWeights.emplace_back(nodeNums[i]-1,weights[i]);
+					}
+					HPWH::HeatingLogic logic("custom", nodeWeights, tempDouble, absolute, compare);
+					if (token == "onlogic") {
+						setOfSources[heatsource].addTurnOnLogic(logic);
+					} else { // "offlogic"
+						setOfSources[heatsource].addShutOffLogic(logic);
+					}
 				}
-				if (tempString == "topThird") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+				else if (token == "onlogic") {
+					line_ss >> tempDouble >> units;
+					if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
+					else if (units == "C"); //do nothing, lol
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						return HPWH_ABORT;
+					}
+					if (tempString == "topThird") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+					}
+					else if (tempString == "bottomThird") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
+					}
+					else if (tempString == "standby") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
+					}
+					else if (tempString == "bottomSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
+					}
+					else if (tempString == "secondSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
+					}
+					else if (tempString == "thirdSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
+					}
+					else if (tempString == "fourthSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
+					}
+					else if (tempString == "fifthSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
+					}
+					else if (tempString == "topSixth") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
+					}
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						return HPWH_ABORT;
+					}
 				}
-				else if (tempString == "bottomThird") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
-				}
-				else if (tempString == "standby") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
-				}
-				else if (tempString == "bottomSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
-				}
-				else if (tempString == "secondSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
-				}
-				else if (tempString == "thirdSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
-				}
-				else if (tempString == "fourthSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
-				}
-				else if (tempString == "fifthSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
-				}
-				else if (tempString == "topSixth") {
-					setOfSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
-				}
-				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
-					return HPWH_ABORT;
-				}
-			}
-			else if (token == "offlogic") {
-				line_ss >> tempString >> tempDouble >> units;
-				if (units == "F")  tempDouble = F_TO_C(tempDouble);
-				else if (units == "C"); //do nothing, lol
-				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
-					return HPWH_ABORT;
-				}
-				if (tempString == "lowT") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::lowT(tempDouble));
-				}
-				else if (tempString == "highT") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::highT(tempDouble));
-				}
-				else if (tempString == "lowTreheat") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::lowTreheat(tempDouble));
-				}
-				else if (tempString == "topNodeMaxTemp") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
-				}
-				else if (tempString == "bottomNodeMaxTemp") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::bottomNodeMaxTemp(tempDouble));
-				}
-				else if (tempString == "bottomTwelthMaxTemp") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::bottomTwelthMaxTemp(tempDouble));
-				}
-				else if (tempString == "largeDraw") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
-				}
-				else if (tempString == "largerDraw") {
-					setOfSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
-				}
-				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
-					return HPWH_ABORT;
+				else if (token == "offlogic") {
+					line_ss >> tempDouble >> units;
+					if (units == "F")  tempDouble = F_TO_C(tempDouble);
+					else if (units == "C"); //do nothing, lol
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						return HPWH_ABORT;
+					}
+					if (tempString == "lowT") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::lowT(tempDouble));
+					}
+					else if (tempString == "highT") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::highT(tempDouble));
+					}
+					else if (tempString == "lowTreheat") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::lowTreheat(tempDouble));
+					}
+					else if (tempString == "topNodeMaxTemp") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
+					}
+					else if (tempString == "bottomNodeMaxTemp") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::bottomNodeMaxTemp(tempDouble));
+					}
+					else if (tempString == "bottomTwelthMaxTemp") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::bottomTwelthMaxTemp(tempDouble));
+					}
+					else if (tempString == "largeDraw") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
+					}
+					else if (tempString == "largerDraw") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
+					}
+					else {
+						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						return HPWH_ABORT;
+					}
 				}
 			}
 			else if (token == "type") {
