@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+#include <functional>
 
 #include <cstdio>
 #include <cstdlib>   //for exit
