@@ -1,12 +1,12 @@
 /*This is not a substitute for a proper HPWH Test Tool, it is merely a short program
  * to aid in the testing of the new HPWH.cc as it is being written.
- * 
+ *
  * -NDK
  *
  * Bring on the HPWH Test Tool!!! -MJL
  *
- * 
- * 
+ *
+ *
  */
 #include "HPWH.hh"
 #include <iostream>
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   std::vector<double> simTCouples(6);
   std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
 
-  // Schedule stuff  
+  // Schedule stuff
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
   //.......................................
   //process command line arguments
-  //.......................................  
+  //.......................................
 
   //Obvious wrong number of command line arguments
   if ((argc > 4)) {
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
   }
   if ((argc != 4) || (input1 == "?") || (input1 == "help")) {
     cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName]\"\n";
-    cout << "All input files should be located in the test directory, with these names:\n"; 
-    cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n"; 
+    cout << "All input files should be located in the test directory, with these names:\n";
+    cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
     cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
     exit(1);
   }
@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
   }
   minutesToRun = 0;
   newSetpoint = 0.0;
+  cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
   while(controlFile >> var1 >> testVal) {
     if(var1 == "setpoint") { // If a setpoint was specified then override the default
       newSetpoint = testVal;
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
     heatSourcesEnergyOutput.push_back(0.0);
-  } 
+  }
 
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
     for(j = 0; j < hpwh.getNumHeatSources(); j++) {
       outputFile << "," << heatSourcesEnergyInput[j] << "," << heatSourcesEnergyOutput[j];
     }
-    outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] << 
+    outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] <<
       "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
   }
 
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
 
 
 
-  
+
 
 
 // this function reads the named schedule into the provided array
@@ -269,14 +270,14 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   long i, minuteTmp;
   string line, snippet, s;
   double valTmp;
-  ifstream inputFile(scheduleFileName.c_str());  
+  ifstream inputFile(scheduleFileName.c_str());
   //open the schedule file provided
   cout << "Opening " << scheduleFileName << '\n';
 
   if(!inputFile.is_open()) {
     cout << "Unable to open file" << '\n';
     return 1;
-  } 
+  }
 
   inputFile >> snippet >> valTmp;
   if(snippet != "default") {
@@ -321,7 +322,7 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   inputFile.close();
 
   return 0;
-  
+
 }
 
 
@@ -330,7 +331,7 @@ int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples) {
 
   tcouples.clear();
   for(i = 0; i < 6; i++) {
-    tcouples[i] = hpwh.getNthSimTcouple(i + 1); 
+    tcouples[i] = hpwh.getNthSimTcouple(i + 1);
   }
   return 0;
 }
@@ -345,5 +346,3 @@ int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> 
   }
   return 0;
 }
-
-

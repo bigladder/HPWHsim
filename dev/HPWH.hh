@@ -162,9 +162,6 @@ class HPWH {
 	HeatingLogic fifthSixth(double d) const;
 	HeatingLogic topSixth(double d) const;
   HeatingLogic standby(double d) const;
-  HeatingLogic lowT(double d) const;
-  HeatingLogic highT(double d) const;
-  HeatingLogic lowTreheat(double d) const;
   HeatingLogic topNodeMaxTemp(double d) const;
   HeatingLogic bottomNodeMaxTemp(double d) const;
   HeatingLogic bottomTwelthMaxTemp(double d) const;
@@ -473,15 +470,30 @@ class HPWH::HeatSource {
 
 	bool isEngaged() const;
   /**< return whether or not the heat source is engaged */
-	void engageHeatSource(double heatSourceAmbientT_C);
+	void engageHeatSource();
   /**< turn heat source on, i.e. set isEngaged to TRUE */
 	void disengageHeatSource();
   /**< turn heat source off, i.e. set isEngaged to FALSE */
 
-	bool shouldHeat(double heatSourceAmbientT_C) const;
+  bool isLockedOut() const;
+  /**< return whether or not the heat source is locked out */
+  void lockOutHeatSource();
+  /**< lockout heat source, i.e. set isLockedOut to TRUE */
+  void unlockHeatSource();
+  /**< unlock heat source, i.e. set isLockedOut to FALSE */
+
+  bool shouldLockOut(double heatSourceAmbientT_C) const;
+  /**< queries the heat source as to whether it should lock out */
+  bool shouldUnlock(double heatSourceAmbientT_C) const;
+  /**< queries the heat source as to whether it should unlock */
+	bool shouldHeat() const;
   /**< queries the heat source as to whether or not it should turn on */
-	bool shutsOff(double heatSourceAmbientT_C) const;
-  /**< queries the heat source whether should shut off (typically lowT shutoff) */
+	bool shutsOff() const;
+  /**< queries the heat source whether should shut off */
+
+  int findParent() const;
+  /**< returns the index of the heat source where this heat source is a backup.
+      returns -1 if none found. */
 
 	void addHeat_temp(double externalT_C, double minutesPerStep);
 	void addHeat(double externalT_C, double minutesToRun);
@@ -508,6 +520,9 @@ class HPWH::HeatSource {
   // these are the heat source state/output variables
 	bool isOn;
 	/**< is the heat source running or not	 */
+
+  bool lockedOut;
+  /**< is the heat source locked out	 */
 
   // some outputs
 	double runtime_min;
@@ -557,6 +572,12 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
+
+  double minT;
+  /**<  minimum operating temperature of HPWH environment */
+
+  double maxT;
+  /**<  maximum operating temperature of HPWH environment */
 
 	double hysteresis_dC;
 	/**< a hysteresis term that prevents short cycling due to heat pump self-interaction

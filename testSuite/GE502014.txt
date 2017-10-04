@@ -88,7 +88,7 @@ heatsource 0 offlogic topNodeMaxTemp 116.6358 F
 
 heatsource 2 onlogic bottomThird 33.6883 F
 heatsource 2 onlogic standby 11.0648 F
-heatsource 2 offlogic lowT 37 F
+heatsource 2 minT 37 F
 # heatsource 2 offlogic largerDraw 60 F
 
 heatsource 1 onlogic thirdSixth 60 F

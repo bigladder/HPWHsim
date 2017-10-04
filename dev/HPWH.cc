@@ -242,22 +242,17 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		if (isHeating == true) {
 			//check if anything that is on needs to turn off (generally for lowT cutoffs)
 			//things that just turn on later this step are checked for this in shouldHeat
-			if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff(heatSourceAmbientT_C)) {
+			if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff()) {
 				setOfSources[i].disengageHeatSource();
-				//check if the backup heat source would have to shut off too
-				if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff(heatSourceAmbientT_C) != true) {
-					//and if not, go ahead and turn it on
-					setOfSources[i].backupHeatSource->engageHeatSource(heatSourceAmbientT_C);
-				}
 			}
 
 			//if there's a priority HeatSource (e.g. upper resistor) and it needs to
 			//come on, then turn everything off and start it up
 			if (setOfSources[i].isVIP) {
 				if (hpwhVerbosity >= VRB_emetic) msg("\tVIP check");
-				if (setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
+				if (setOfSources[i].shouldHeat()) {
 					turnAllHeatSourcesOff();
-					setOfSources[i].engageHeatSource(heatSourceAmbientT_C);
+					setOfSources[i].engageHeatSource();
 					//stop looking if the VIP needs to run
 					break;
 				}
@@ -265,8 +260,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 		//if nothing is currently on, then check if something should come on
 		else /* (isHeating == false) */ {
-			if (setOfSources[i].shouldHeat(heatSourceAmbientT_C)) {
-				setOfSources[i].engageHeatSource(heatSourceAmbientT_C);
+			if (setOfSources[i].shouldHeat()) {
+				setOfSources[i].engageHeatSource();
 				//engaging a heat source sets isHeating to true, so this will only trigger once
 			}
 		}
@@ -297,7 +292,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		//if nothing else is on, force the first heat source on
 		//this may or may not be desired behavior, pending more research (and funding)
 		if (areAllHeatSourcesOff() == true) {
-			setOfSources[0].engageHeatSource(heatSourceAmbientT_C);
+			setOfSources[0].engageHeatSource();
 		}
 	}
 
@@ -308,25 +303,41 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double minutesToRun = minutesPerStep;
 
 	for (int i = 0; i < numHeatSources; i++) {
+		// check/apply lock-outs
+		if (hpwhVerbosity >= VRB_emetic)  msg("Checking lock-out logic for heat source %d:\n", i);
+		if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
+			setOfSources[i].lockOutHeatSource();
+		}
+		if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
+			setOfSources[i].unlockHeatSource();
+		}
+
 		//going through in order, check if the heat source is on
 		if (setOfSources[i].isEngaged()) {
-			//and add heat if it is
 
-			setOfSources[i].addHeat(heatSourceAmbientT_C, minutesToRun);
+			HeatSource* heatSourcePtr;
+			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
+				heatSourcePtr = setOfSources[i].backupHeatSource;
+			} else {
+				heatSourcePtr = &setOfSources[i];
+			}
+
+			//and add heat if it is
+			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
 			//if it finished early
-			if (setOfSources[i].runtime_min < minutesToRun) {
+			if (heatSourcePtr->runtime_min < minutesToRun) {
 				//debugging message handling
 				if (hpwhVerbosity >= VRB_emetic){
-					msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", setOfSources[i].runtime_min, minutesToRun);
+					msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", heatSourcePtr->runtime_min, minutesToRun);
 				}
 
 				//subtract time it ran and turn it off
-				minutesToRun -= setOfSources[i].runtime_min;
+				minutesToRun -= heatSourcePtr->runtime_min;
 				setOfSources[i].disengageHeatSource();
-				//and if there's another heat source in the list, that's able to come on,
-				if (numHeatSources > i + 1 && setOfSources[i + 1].shutsOff(heatSourceAmbientT_C) == false) {
+				//and if there's another heat source in the list, that's able to come on, TODO: check all other heat sources instead of just the next
+				if (numHeatSources > i + 1 && setOfSources[i + 1].shutsOff() == false) {
 					//turn it on
-					setOfSources[i + 1].engageHeatSource(heatSourceAmbientT_C);
+					setOfSources[i + 1].engageHeatSource();
 				}
 			}
 		}
@@ -803,21 +814,6 @@ HPWH::HeatingLogic HPWH::standby(double d) const {
 	return HPWH::HeatingLogic("standby", nodeWeights, d);
 }
 
-HPWH::HeatingLogic HPWH::lowT(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	return HPWH::HeatingLogic("lowT", nodeWeights, d, true);
-}
-
-HPWH::HeatingLogic HPWH::highT(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	return HPWH::HeatingLogic("highT", nodeWeights, d, true, std::greater<double>());
-}
-
-HPWH::HeatingLogic HPWH::lowTreheat(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	return HPWH::HeatingLogic("lowTreheat", nodeWeights, d, true, std::greater<double>());
-}
-
 HPWH::HeatingLogic HPWH::topNodeMaxTemp(double d) const {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(numNodes - 1);
@@ -1224,12 +1220,13 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 //these are the HeatSource functions
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
-	:hpwh(parentInput), isOn(false), backupHeatSource(NULL), companionHeatSource(NULL),
-	hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none) {}
+	:hpwh(parentInput), isOn(false), lockedOut(false), backupHeatSource(NULL), companionHeatSource(NULL),
+	minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none) {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 	hpwh = hSource.hpwh;
 	isOn = hSource.isOn;
+	lockedOut = hSource.lockedOut;
 
 	runtime_min = hSource.runtime_min;
 	energyInput_kWh = hSource.energyInput_kWh;
@@ -1253,6 +1250,8 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
 
+	minT = hSource.minT;
+	maxT = hSource.maxT;
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;
@@ -1273,6 +1272,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 
 	hpwh = hSource.hpwh;
 	isOn = hSource.isOn;
+	lockedOut = hSource.lockedOut;
 
 	runtime_min = hSource.runtime_min;
 	energyInput_kWh = hSource.energyInput_kWh;
@@ -1300,6 +1300,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
 
+	minT = hSource.minT;
+	maxT = hSource.maxT;
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;
@@ -1332,21 +1334,105 @@ void HPWH::HeatSource::setCondensity(double cnd1, double cnd2, double cnd3, doub
 	condensity[11] = cnd12;
 }
 
+int HPWH::HeatSource::findParent() const {
+	for (int i = 0; i < hpwh->numHeatSources; ++i) {
+		if (this == hpwh->setOfSources[i].backupHeatSource) {
+			return i;
+		}
+	}
+	return -1;
+}
 
 bool HPWH::HeatSource::isEngaged() const {
 	return isOn;
 }
 
+bool HPWH::HeatSource::isLockedOut() const {
+	return lockedOut;
+}
 
-void HPWH::HeatSource::engageHeatSource(double heatSourceAmbientT_C) {
+void HPWH::HeatSource::lockOutHeatSource() {
+	lockedOut = true;
+}
+
+void HPWH::HeatSource::unlockHeatSource() {
+	lockedOut = false;
+}
+
+bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const {
+
+	// if it's already locked out, keep it locked out
+	if (isLockedOut() == true) {
+		return true;
+	}
+	else {
+		//when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
+		//when running, use hysteresis
+		bool lock = false;
+		if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+		}
+		//when not running, don't use hysteresis
+		else if (isEngaged() == false && heatSourceAmbientT_C < minT) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+		}
+
+		//when the "external" temperature is too warm - typically used for resistance lockout
+		//when running, use hysteresis
+		if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+		}
+		//when not running, don't use hysteresis
+		else if (isEngaged() == false && heatSourceAmbientT_C > maxT) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+		}
+		if (lock == true && backupHeatSource == NULL) {
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
+			lock = false;
+		}
+		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
+		return lock;
+	}
+}
+
+bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
+
+	// if it's already unlocked, keep it unlocked
+	if (isLockedOut() == false) {
+		return true;
+	}
+	else {
+		//when the "external" temperature is no longer too cold or too warm
+		//when running, use hysteresis
+		bool unlock = false;
+		if (isEngaged() == true && heatSourceAmbientT_C > minT + hysteresis_dC && heatSourceAmbientT_C < maxT - hysteresis_dC) {
+			unlock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT + hysteresis_dC) hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT - hysteresis_dC) hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+		}
+		//when not running, don't use hysteresis
+		else if (isEngaged() == false && heatSourceAmbientT_C > minT && heatSourceAmbientT_C < maxT) {
+			unlock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT) hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT) hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+		}
+		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
+		return unlock;
+	}
+}
+
+void HPWH::HeatSource::engageHeatSource() {
 	isOn = true;
 	hpwh->isHeating = true;
 	if (companionHeatSource != NULL &&
-		companionHeatSource->shutsOff(heatSourceAmbientT_C) != true &&
+		companionHeatSource->shutsOff() != true &&
 		companionHeatSource->isEngaged() == false) {
-		companionHeatSource->engageHeatSource(heatSourceAmbientT_C);
+		companionHeatSource->engageHeatSource();
 	}
-
 }
 
 
@@ -1354,13 +1440,13 @@ void HPWH::HeatSource::disengageHeatSource() {
 	isOn = false;
 }
 
-bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
+bool HPWH::HeatSource::shouldHeat() const {
 	//return true if the heat source logic tells it to come on, false if it doesn't,
 	//or if an unsepcified selector was used
 	bool shouldEngage = false;
 
 	for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
-		if (hpwh->hpwhVerbosity >= VRB_emetic)  hpwh->msg("\tshouldHeat logic: %s", shutOffLogicSet[i].description.c_str());
+		if (hpwh->hpwhVerbosity >= VRB_emetic)  hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i].description.c_str());
 
 		double average = hpwh->tankAvg_C(turnOnLogicSet[i].nodeWeights);
 		double comparison;
@@ -1390,7 +1476,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
 	}  //end loop over set of logic conditions
 
 	//if everything else wants it to come on, but if it would shut off anyways don't turn it on
-	if (shouldEngage == true && shutsOff(heatSourceAmbientT_C) == true) {
+	if (shouldEngage == true && shutsOff() == true) {
 		shouldEngage = false;
 		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("but is denied by shutsOff");
 	}
@@ -1400,7 +1486,7 @@ bool HPWH::HeatSource::shouldHeat(double heatSourceAmbientT_C) const {
 }
 
 
-bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
+bool HPWH::HeatSource::shutsOff() const {
 	bool shutOff = false;
 
 	if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C) {
@@ -1411,10 +1497,9 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
 		return shutOff;
 	}
 
-
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic){
-			hpwh->msg("\tshutsOff logic: %s", shutOffLogicSet[i].description.c_str());
+			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
 		}
 
 		double average = hpwh->tankAvg_C(shutOffLogicSet[i].nodeWeights);
@@ -1426,49 +1511,12 @@ bool HPWH::HeatSource::shutsOff(double heatSourceAmbientT_C) const {
 			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
 		}
 
-		// TODO: Temporary fix for lowT, highT, and lowTreheat
-		if (shutOffLogicSet[i].description == "lowT") {
-			//when the "external" temperature is too cold - typically used for compressor low temp. cutoffs
-			//when running, use hysteresis
-			if (isEngaged() == true && heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint - hysteresis_dC) {
-				shutOff = true;
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down running lowT\t");
-			}
-			//when not running, don't use hysteresis
-			else if (isEngaged() == false && heatSourceAmbientT_C < shutOffLogicSet[i].decisionPoint) {
-				shutOff = true;
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down lowT\t");
-			}
-		} else if (shutOffLogicSet[i].description == "highT") {
-			//when the "external" temperature is too warm - typically used for resistance lockout
-			//when running, use hysteresis
-			if (isEngaged() == true && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint - hysteresis_dC) {
-				shutOff = true;
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down running highT\t");
-			}
-			//when not running, don't use hysteresis
-			else if (isEngaged() == false && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint) {
-				shutOff = true;
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down highT\t");
-			}
-		} else if (shutOffLogicSet[i].description == "lowTreheat") {
-			//don't run if the temperature is too warm
-			if (isEngaged() == true && heatSourceAmbientT_C > shutOffLogicSet[i].decisionPoint + hysteresis_dC) {
-				shutOff = true;
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shut down lowTreheat\t");
-			}
-			//there is no option for isEngaged() == false because this logic choice
-			//is meant for shutting off the resistance element when it has heated
-			//enough - not for preventing it from coming on at other times
-		} else {
-			if (shutOffLogicSet[i].compare(average, comparison)) {
-				shutOff = true;
+		if (shutOffLogicSet[i].compare(average, comparison)) {
+			shutOff = true;
 
-				//debugging message handling
-				if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shuts down %s\n", shutOffLogicSet[i].description.c_str());
-			}
+			//debugging message handling
+			if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shuts down %s\n", shutOffLogicSet[i].description.c_str());
 		}
-
 	}
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic){
@@ -1682,9 +1730,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
-	double offset = 5.0 / 1.8;
-	double temp = 0;  //temp for temporary not temperature
-	int k;
 
 	// Populate the vector of heat distribution
 	for (int i = 0; i < hpwh->numNodes; i++) {
@@ -1692,12 +1737,15 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 			heatDistribution.push_back(0);
 		}
 		else {
+			int k;
 			if (configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
 				//intentional integer division
 				k = i / int(hpwh->numNodes / CONDENSITY_SIZE);
 				heatDistribution.push_back(condensity[k]);
 			}
 			else if (configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
+				double temp = 0;  //temp for temporary not temperature
+				double offset = 5.0 / 1.8;
 				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / this->shrinkage, offset);
 				temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
 #if defined( SETPOINT_FIX)
@@ -1853,7 +1901,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating
-	} while (timeRemaining_min > 0 && shutsOff(externalT_C) != true);
+	} while (timeRemaining_min > 0 && shutsOff() != true);
 
 	//divide outputs by sum of weight - the total time ran
 	input_BTUperHr /= (minutesToRun - timeRemaining_min);
@@ -1988,9 +2036,10 @@ int HPWH::checkInputs(){
 			if (hpwhVerbosity >= VRB_reluctant) msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
 			returnVal = HPWH_ABORT;
 		}
-		//check to make sure there is at least one onlogic
-		if (setOfSources[i].turnOnLogicSet.size() == 0) {
-			msg("You must specify at least one logic to turn on the element");
+		//check to make sure there is at least one onlogic or parent with onlogic
+		int parent = setOfSources[i].findParent();
+		if (setOfSources[i].turnOnLogicSet.size() == 0 && (parent == -1 || setOfSources[parent].turnOnLogicSet.size() == 0)) {
+			msg("You must specify at least one logic to turn on the element or the element must be set as a backup for another heat source with at least one logic.");
 			returnVal = HPWH_ABORT;
 		}
 		//check is condensity sums to 1
@@ -2169,6 +2218,26 @@ int HPWH::HPWHinit_file(string configFile){
 					return HPWH_ABORT;
 				}
 			}
+			else if (token == "minT") {
+				line_ss >> tempDouble >> units;
+				if (units == "F")  tempDouble = F_TO_C(tempDouble);
+				else if (units == "C"); //do nothing, lol
+				else {
+					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+					return HPWH_ABORT;
+				}
+				setOfSources[heatsource].minT = tempDouble;
+			}
+			else if (token == "maxT") {
+				line_ss >> tempDouble >> units;
+				if (units == "F")  tempDouble = F_TO_C(tempDouble);
+				else if (units == "C"); //do nothing, lol
+				else {
+					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+					return HPWH_ABORT;
+				}
+				setOfSources[heatsource].maxT = tempDouble;
+			}
 			else if (token == "onlogic" || token == "offlogic") {
 				line_ss >> tempString;
 				if (tempString == "nodes") {
@@ -2280,16 +2349,7 @@ int HPWH::HPWHinit_file(string configFile){
 						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
 						return HPWH_ABORT;
 					}
-					if (tempString == "lowT") {
-						setOfSources[heatsource].addShutOffLogic(HPWH::lowT(tempDouble));
-					}
-					else if (tempString == "highT") {
-						setOfSources[heatsource].addShutOffLogic(HPWH::highT(tempDouble));
-					}
-					else if (tempString == "lowTreheat") {
-						setOfSources[heatsource].addShutOffLogic(HPWH::lowTreheat(tempDouble));
-					}
-					else if (tempString == "topNodeMaxTemp") {
+					if (tempString == "topNodeMaxTemp") {
 						setOfSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
 					}
 					else if (tempString == "bottomNodeMaxTemp") {
@@ -2629,7 +2689,6 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	//resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 	resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUse_C));
 
-	resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(1000));
 	resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
 
 	compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
@@ -2637,7 +2696,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//custom adjustment for poorer performance
 	//compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
-	compressor.addShutOffLogic(HPWH::lowT(F_TO_C(45.)));
+	compressor.minT = F_TO_C(45.);
 
 
 	//end section of parameters from GE model
@@ -2888,7 +2947,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//standard logic conditions
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
 		resistiveElementBottom.addTurnOnLogic(HPWH::standby(15));
-		resistiveElementBottom.addShutOffLogic(HPWH::lowTreheat(0));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
 		resistiveElementTop.isVIP = true;
@@ -2923,7 +2981,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(15));
 
 		//lowT cutoff
-		compressor.addShutOffLogic(HPWH::lowT(0));
+		compressor.minT = 0;
 
 
 		//set everything in its places
@@ -3055,10 +3113,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(23.8);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
-		resistiveElementBottom.addShutOffLogic(HPWH::lowTreheat(lowTcutoff));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
@@ -3136,10 +3193,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(23.8);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
-		resistiveElementBottom.addShutOffLogic(HPWH::lowTreheat(lowTcutoff));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
@@ -3217,7 +3273,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(5.2);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 		// compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(66)));
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
@@ -3482,9 +3538,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(10.0694);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(90.4475)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(33.4491)));
@@ -3562,9 +3617,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(8.8354);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(92.1254)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(26.9753)));
@@ -3639,9 +3693,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(7.1528);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80.108)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
@@ -3719,9 +3772,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(7.1528);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80.108)));
 
 		// resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
@@ -3797,12 +3849,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(1000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);
 		//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 		//set everything in its places
@@ -3871,12 +3922,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(1000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);
 		//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 		//set everything in its places
@@ -3952,7 +4002,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
@@ -4032,7 +4082,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
@@ -4113,7 +4163,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
@@ -4189,9 +4239,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(13.2639);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-		compressor.addShutOffLogic(HPWH::lowT(lowTcutoff));
+		compressor.minT = lowTcutoff;
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(100000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
@@ -4256,17 +4305,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 		compressor.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(6.5509)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(32)));
+		compressor.minT = F_TO_C(32);
 		compressor.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
-
-		resistiveElement.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(7)));
-		resistiveElement.addShutOffLogic(HPWH::highT(F_TO_C(32)));
 
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places
 		setOfSources[0] = compressor;
 		setOfSources[1] = resistiveElement;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[0].backupHeatSource = &setOfSources[1];
+
 	}
 	else if (presetNum == MODELS_Generic1) {
 		numNodes = 12;
@@ -4321,7 +4372,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.0)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(45.0)));
+		compressor.minT = F_TO_C(45.);
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
@@ -4393,7 +4444,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(40.0)));
+		compressor.minT = F_TO_C(40.0);;
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(60)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
@@ -4471,7 +4522,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(35.0)));
+		compressor.minT = F_TO_C(35.0);;
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(55)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(60)));
@@ -4547,12 +4598,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(18.6605)));
 
-		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(1000));
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-		compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+		compressor.minT = F_TO_C(37);;
 
 		//set everything in its places
 		setOfSources[0] = resistiveElementTop;

@@ -82,12 +82,11 @@ heatsource 1 coilConfig submerged
 
 
 heatsource 0 onlogic topThird 39.9691 F
-heatsource 1 onlogic bottomThird 40000 F
 heatsource 2 onlogic bottomThird 34.1636 F
 heatsource 2 onlogic standby 7.1528 F
 
 heatsource 1 offlogic bottomTwelthMaxTemp 80.108 F
-heatsource 2 offlogic lowT 42 F
+heatsource 2 minT 42 F
 
 heatsource 0 backupSource 1
 heatsource 1 backupSource 2
