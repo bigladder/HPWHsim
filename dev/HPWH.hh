@@ -356,6 +356,9 @@ class HPWH {
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
   void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
 
+  double getLocationTemp_C() const;
+  int setMaxTempDepression(double maxDepression);
+  int setMaxTempDepression(double maxDepression, UNITS units);
 
 
  private:
@@ -439,10 +442,10 @@ class HPWH {
 	/**<  whether the HPWH should use the alternate ambient temperature that
         gets depressed when a compressor is running
         NOTE: this only works for 1 minute steps  */
-  double locationTemperature;
+  double locationTemperature_C;
 	/**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
-
+  double maxDepression_C = 2.5;
   /** a couple variables to hold values which are typically inputs  */
   double member_inletT_C;
   double member_minutesPerStep;

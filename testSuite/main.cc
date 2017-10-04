@@ -50,9 +50,11 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile;
   string inputVariableName;
-  double testVal, newSetpoint;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh;
   int i, j, outputCode, nSources;
   long minutesToRun;
+
+  bool HPWH_doTempDepress;
 
   ofstream outputFile;
   ifstream controlFile;
@@ -62,7 +64,7 @@ int main(int argc, char *argv[])
   //.......................................
 
   //Obvious wrong number of command line arguments
-  if ((argc > 4)) {
+  if ((argc > 5)) {
     // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
     cout << "Invalid input. This program takes three arguments: model specification type, model specification, and test name\n";
     exit(1);
@@ -77,12 +79,20 @@ int main(int argc, char *argv[])
     input2 = "def";
     input3 = "ghi";
   }
-  if ((argc != 4) || (input1 == "?") || (input1 == "help")) {
-    cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName]\"\n";
+  if (argc < 4 || (argc > 5) || (input1 == "?") || (input1 == "help")) {
+    cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
     cout << "All input files should be located in the test directory, with these names:\n";
     cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
     cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
     exit(1);
+  }
+
+  if(argc == 5) {
+    airTemp = std::stoi(argv[4]);
+    HPWH_doTempDepress = true;
+  } else {
+    airTemp = 0;
+    HPWH_doTempDepress = false;
   }
 
   //Only input file specified -- don't suffix with .csv
@@ -142,6 +152,12 @@ int main(int argc, char *argv[])
     inputFile = input2 + ".txt";
     hpwh.HPWHinit_file(inputFile);
   }
+
+  // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
+  // try and trigger the lockout and hysteresis conditions
+  tempDepressThresh = 4;
+  hpwh.setMaxTempDepression(tempDepressThresh);
+  hpwh.setDoTempDepression(HPWH_doTempDepress);
 
 
   // Read the test control file
@@ -227,10 +243,17 @@ int main(int argc, char *argv[])
     if(DEBUG) {
       cout << "Now on minute " << i << "\n";
     }
+
+    if(HPWH_doTempDepress) {
+      airTemp2 = F_TO_C(airTemp);
+    } else {
+      airTemp2 = allSchedules[2][i];
+    }
+
     // Run the step
     hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
-                      allSchedules[2][i],  // Ambient Temp (C)
+                      airTemp2,  // Ambient Temp (C)
                       allSchedules[3][i],  // External Temp (C)
                       drStatus, 1.0);    // DDR Status (now an enum. Fixed for now as allow)
 
@@ -244,7 +267,11 @@ int main(int argc, char *argv[])
     }*/
 
     // Copy current status into the output file
-    outputFile << i << "," << allSchedules[2][i] << "," << allSchedules[0][i] << "," << allSchedules[1][i];
+    if(HPWH_doTempDepress) {
+      airTemp2 = hpwh.getLocationTemp_C();
+    }
+//    outputFile << i << "," << allSchedules[2][i] << "," << allSchedules[0][i] << "," << allSchedules[1][i];
+    outputFile << i << "," << airTemp2 << "," << allSchedules[0][i] << "," << allSchedules[1][i];
     for(j = 0; j < hpwh.getNumHeatSources(); j++) {
       outputFile << "," << heatSourcesEnergyInput[j] << "," << heatSourcesEnergyOutput[j];
     }

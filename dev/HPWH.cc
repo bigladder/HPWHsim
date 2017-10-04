@@ -67,7 +67,7 @@ const std::string HPWH::version_maint = "3";
 HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature(UNINITIALIZED_LOCATIONTEMP)
+setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -108,7 +108,7 @@ HPWH::HPWH(const HPWH &hpwh){
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
 
-	locationTemperature = hpwh.locationTemperature;
+	locationTemperature_C = hpwh.locationTemperature_C;
 
 }
 
@@ -164,7 +164,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
 
-	locationTemperature = hpwh.locationTemperature;
+	locationTemperature_C = hpwh.locationTemperature_C;
 
 	return *this;
 }
@@ -225,9 +225,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	// to the tracked locationTemperature
 	double temperatureGoal = tankAmbientT_C;
 	if (doTempDepression) {
-		if (locationTemperature == UNINITIALIZED_LOCATIONTEMP) locationTemperature = tankAmbientT_C;
-		tankAmbientT_C = locationTemperature;
-		heatSourceAmbientT_C = locationTemperature;
+		if (locationTemperature_C == UNINITIALIZED_LOCATIONTEMP) locationTemperature_C = tankAmbientT_C;
+		tankAmbientT_C = locationTemperature_C;
+		heatSourceAmbientT_C = locationTemperature_C;
 	}
 
 
@@ -358,7 +358,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 
 		if (compressorRan){
-			temperatureGoal -= 4.5;		//hardcoded 4.5 degree total drop - from experimental data
+			temperatureGoal -= maxDepression_C;		//hardcoded 4.5 degree total drop - from experimental data. Changed to an input
 		}
 		else{
 			//otherwise, do nothing, we're going back to ambient
@@ -369,7 +369,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		// experimental data - 9.4 minute half life and 4.5 degree total drop
 		//minus-equals is important, and fits with the order of locationTemperature
 		//and temperatureGoal, so as to not use fabs() and conditional tests
-		locationTemperature -= (locationTemperature - temperatureGoal)*(1 - 0.9289);
+		locationTemperature_C -= (locationTemperature_C - temperatureGoal)*(1 - 0.9289);
 	}
 
 
@@ -717,6 +717,26 @@ int HPWH::setUA(double UA, UNITS units) {
 		return HPWH_ABORT;
 	}
 	return 0;
+}
+
+
+int HPWH::setMaxTempDepression(double maxDepression) {
+  this->maxDepression_C = maxDepression;
+  return 0;
+}
+int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
+  if(units == UNITS_C) {
+    this->maxDepression_C = maxDepression;
+  }
+  else if(units == UNITS_F) {
+    this->maxDepression_C = F_TO_C(maxDepression);
+  }
+  else {
+    if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for max Temp Depression.  \n");
+    return HPWH_ABORT;
+  }
+  
+return 0;
 }
 
 HPWH::HeatingLogic HPWH::topThird(double d) const {
@@ -1096,6 +1116,11 @@ double HPWH::getTankHeatContent_kJ() const {
 	double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
 	return totalHeat;
 }
+
+double HPWH::getLocationTemp_C() const {
+  return locationTemperature_C;
+}
+
 
 
 
