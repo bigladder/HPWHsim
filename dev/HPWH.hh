@@ -448,7 +448,7 @@ class HPWH {
   double locationTemperature_C;
 	/**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
-  double maxDepression_C = F_TO_C(4.5);
+  double maxDepression_C = 2.5;
   /** a couple variables to hold values which are typically inputs  */
   double member_inletT_C;
   double member_minutesPerStep;
