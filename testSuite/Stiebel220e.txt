@@ -10,7 +10,7 @@ mixOnDraw false
 numHeatSources 2
 
 
-heatsource 0 isVIP true
+heatsource 0 isVIP false
 heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 0 0.12 0.22 0.22 0.22 0.22 0 0 0 0 0 0
@@ -29,7 +29,7 @@ heatsource 0 copT1quad 0.0
 heatsource 0 copT2const 8.012112
 heatsource 0 copT2lin -0.039394
 heatsource 0 copT2quad 0
-heatsource 0 hysteresis 4 F
+heatsource 0 hysteresis 0 F
 heatsource 0 coilConfig wrapped
 
 # Need to add a resistance element...
@@ -52,16 +52,13 @@ heatsource 1 copT1quad 0.0
 heatsource 1 copT2const 1.0
 heatsource 1 copT2lin 0.0
 heatsource 1 copT2quad 0.0
-heatsource 1 hysteresis 4 F
+heatsource 1 hysteresis 0 F
 heatsource 1 coilConfig submerged
 
 
 heatsource 0 onlogic thirdSixth 6.5509 F
-heatsource 1 onlogic thirdSixth 7 F
-# heatsource 0 onlogic standby 6.5509 F
 
 heatsource 0 offlogic bottomTwelthMaxTemp 100 F
-heatsource 0 offlogic lowT 32 F
-heatsource 1 offlogic highT 32 F
+heatsource 0 minT 32 F
 
-# heatsource 0 backupSource 1
+heatsource 0 backupSource 1
