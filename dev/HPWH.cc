@@ -352,7 +352,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	if (doTempDepression) {
 		bool compressorRan = false;
 		for (int i = 0; i < numHeatSources; i++) {
-			if (setOfSources[i].isEngaged() && setOfSources[i].depressesTemperature) {
+			if (setOfSources[i].isEngaged() && !setOfSources[i].isLockedOut() && setOfSources[i].depressesTemperature) {
 				compressorRan = true;
 			}
 		}
@@ -735,7 +735,7 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
     if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for max Temp Depression.  \n");
     return HPWH_ABORT;
   }
-  
+
 return 0;
 }
 
