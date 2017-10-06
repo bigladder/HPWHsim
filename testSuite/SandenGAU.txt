@@ -1,6 +1,7 @@
 verbosity silent
 numNodes 96 #number of nodes
 setpoint 65 C
+setpointFixed true
 volume 315 L
 UA 7 kJperHrC
 depressTemp false
@@ -10,7 +11,7 @@ mixOnDraw false
 numHeatSources 1
 
 
-heatsource 0 isVIP true
+heatsource 0 isVIP false
 heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 1 0 0 0 0 0 0 0 0 0 0 0
@@ -29,7 +30,7 @@ heatsource 0 copT1quad 0.0
 heatsource 0 copT2const 6.8
 heatsource 0 copT2lin -0.0384
 heatsource 0 copT2quad 0.0
-heatsource 0 hysteresis 4 F
+heatsource 0 hysteresis 0 F
 heatsource 0 coilConfig external
 
 

@@ -29,6 +29,8 @@ heatsource 0 copT1quad 0.0
 heatsource 0 copT2const 8.012112
 heatsource 0 copT2lin -0.039394
 heatsource 0 copT2quad 0
+heatsource 0 minT 32 F
+heatsource 0 maxT 120 F
 heatsource 0 hysteresis 0 F
 heatsource 0 coilConfig wrapped
 
@@ -59,6 +61,5 @@ heatsource 1 coilConfig submerged
 heatsource 0 onlogic thirdSixth 6.5509 F
 
 heatsource 0 offlogic bottomTwelthMaxTemp 100 F
-heatsource 0 minT 32 F
 
 heatsource 0 backupSource 1

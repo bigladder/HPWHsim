@@ -29,6 +29,8 @@ heatsource 2 copT1quad 0.0
 heatsource 2 copT2const 6.3
 heatsource 2 copT2lin -0.03
 heatsource 2 copT2quad 0.0
+heatsource 2 minT 40 F
+heatsource 2 maxT 120 F
 heatsource 2 hysteresis 1 F
 heatsource 2 coilConfig wrapped
 
@@ -86,7 +88,6 @@ heatsource 2 onlogic bottomThird 38 F
 heatsource 2 onlogic standby 13.2639 F
 
 heatsource 1 offlogic bottomTwelthMaxTemp 76.7747 F
-heatsource 2 minT 40 F
 
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1

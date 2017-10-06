@@ -29,7 +29,9 @@ heatsource 2 copT1quad 0.0
 heatsource 2 copT2const 7.207307
 heatsource 2 copT2lin -0.0335265
 heatsource 2 copT2quad 0.0
-heatsource 2 hysteresis 1 F
+heatsource 2 minT 37 F
+heatsource 2 maxT 120 F
+heatsource 2 hysteresis 2 F
 heatsource 2 coilConfig wrapped
 
 
@@ -79,7 +81,7 @@ heatsource 1 copT1quad 0.0
 heatsource 1 copT2const 1.0
 heatsource 1 copT2lin 0.0
 heatsource 1 copT2quad 0.0
-heatsource 1 hysteresis 4 F
+heatsource 1 hysteresis 2 F
 heatsource 1 coilConfig submerged
 
 
@@ -88,13 +90,11 @@ heatsource 0 offlogic topNodeMaxTemp 116.6358 F
 
 heatsource 2 onlogic bottomThird 33.6883 F
 heatsource 2 onlogic standby 11.0648 F
-heatsource 2 minT 37 F
-# heatsource 2 offlogic largerDraw 60 F
+# heatsource 2 offlogic largerDraw 62.4074 F
 
 heatsource 1 onlogic thirdSixth 60 F
 heatsource 1 offlogic bottomTwelthMaxTemp 80 F
 
 
-# heatsource 0 backupSource 1
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
