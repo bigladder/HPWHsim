@@ -1638,7 +1638,12 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 		sum_tmp += distribution[i];
 	}
 	for (unsigned int i = 0; i < distribution.size(); i++) {
-		distribution[i] /= sum_tmp;
+		if (sum_tmp > 0.0) {
+			distribution[i] /= sum_tmp;
+		}
+		else {
+			distribution[i] = 0.0;
+		}
 		//this gives a very slight speed improvement (milliseconds per simulated year)
 		if (distribution[i] < HEATDIST_MINVALUE) distribution[i] = 0;
 	}
