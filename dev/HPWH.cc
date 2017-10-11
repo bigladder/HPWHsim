@@ -246,6 +246,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			//things that just turn on later this step are checked for this in shouldHeat
 			if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff()) {
 				setOfSources[i].disengageHeatSource();
+				//check if the backup heat source would have to shut off too
+				if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true) {
+					//and if not, go ahead and turn it on
+					setOfSources[i].backupHeatSource->engageHeatSource();
+				}
 			}
 
 			//if there's a priority HeatSource (e.g. upper resistor) and it needs to
