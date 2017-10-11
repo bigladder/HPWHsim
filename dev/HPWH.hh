@@ -415,6 +415,11 @@ class HPWH {
 
 	int numNodes;
 	/**< the number of nodes in the tank - must be >= 12, in multiples of 12  */
+
+  int nodeDensity;
+  /**< the number of calculation nodes in a logical node  */
+
+
 	double tankVolume_L;
 	/**< the volume in liters of the tank  */
 	double tankUA_kJperHrC;
