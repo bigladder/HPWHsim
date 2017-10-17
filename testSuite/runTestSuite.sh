@@ -12,7 +12,7 @@ rm -f $1
 mkdir $1
 
 testNames="test30 test50 test70 test95"
-modelNames="AOSmithPHPT60 AOSmithHPTU80 SandenGAU RheemHB50 Stiebel220e GE502014"
+modelNames="AOSmithPHPT60 AOSmithHPTU80 SandenGAU SandenGen3 RheemHB50 Stiebel220e GE502014"
 
 for testName in $testNames; do
   for modelName in $modelNames; do

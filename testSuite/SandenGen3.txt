@@ -1,0 +1,77 @@
+verbosity silent
+numNodes 96 #number of nodes
+setpoint 65 C
+setpointFixed true
+volume 315 L
+UA 7 kJperHrC
+depressTemp false
+mixOnDraw false
+
+#a test comment
+numHeatSources 1
+
+
+heatsource 0 isVIP true
+heatsource 0 isOn false
+heatsource 0 type compressor
+heatsource 0 condensity 1 0 0 0 0 0 0 0 0 0 0 0
+heatsource 0 nTemps 5
+heatsource 0 T1 17 F
+heatsource 0 T2 35 F
+heatsource 0 T3 50 F
+heatsource 0 T4 67 F
+heatsource 0 T5 95 F
+
+# 17F coefficients
+heatsource 0 inPowT1const 1650
+heatsource 0 inPowT1lin 5.5
+heatsource 0 inPowT1quad 0.0
+heatsource 0 copT1const 3.2
+heatsource 0 copT1lin -0.015
+heatsource 0 copT1quad 0.0
+
+# 35F coefficients
+heatsource 0 inPowT2const 1100
+heatsource 0 inPowT2lin 4.0
+heatsource 0 inPowT2quad 0.0
+heatsource 0 copT2const 3.7
+heatsource 0 copT2lin -0.015
+heatsource 0 copT2quad 0.0
+
+# 50F coefficients
+heatsource 0 inPowT3const 880
+heatsource 0 inPowT3lin 3.1
+heatsource 0 inPowT3quad 0.0
+heatsource 0 copT3const 5.25
+heatsource 0 copT3lin -0.025
+heatsource 0 copT3quad 0.0
+
+# 67F coefficients
+heatsource 0 inPowT4const 740
+heatsource 0 inPowT4lin 4.0
+heatsource 0 inPowT4quad 0.0
+heatsource 0 copT4const 6.2
+heatsource 0 copT4lin -0.03
+heatsource 0 copT4quad 0.0
+
+# 95F coefficients
+heatsource 0 inPowT5const 810
+heatsource 0 inPowT5lin 1.6
+heatsource 0 inPowT5quad 0.0
+heatsource 0 copT5const 7.5
+heatsource 0 copT5lin -0.04
+heatsource 0 copT5quad 0.0
+heatsource 0 hysteresis 4 F
+heatsource 0 coilConfig external
+
+
+heatsource 0 onlogic nodes 8 absolute < 113 F
+# heatsource 0 onlogic nodes 8 < 113 F
+# heatsource 0 onlogic fourthSixth 74.9228 F
+heatsource 0 onlogic standby 8.2639 F
+
+# heatsource 0 offlogic bottomTwelthMaxTemp 135 F
+heatsource 0 offlogic nodes 1 absolute > 135 F
+
+
+
