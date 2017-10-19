@@ -144,13 +144,13 @@ int main(int argc, char *argv[])
       cout << "Couldn't find model " << input2 << ".  Exiting...\n";
       exit(1);
     }
-    hpwh.HPWHinit_presets(model);
+    if (hpwh.HPWHinit_presets(model) != 0) exit(1);
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
       newSetpoint = (149 - 32) / 1.8;
     }
   } else {
     inputFile = input2 + ".txt";
-    hpwh.HPWHinit_file(inputFile);
+    if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
   }
 
   // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
