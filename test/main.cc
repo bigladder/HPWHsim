@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
 
-  string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile;
+  string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName;
   double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh;
   int i, j, outputCode, nSources;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   //.......................................
 
   //Obvious wrong number of command line arguments
-  if ((argc > 5)) {
+  if ((argc > 6)) {
     // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
     cout << "Invalid input. This program takes three arguments: model specification type, model specification, and test name\n";
     exit(1);
@@ -74,12 +74,14 @@ int main(int argc, char *argv[])
     input1 = argv[1];
     input2 = argv[2];
     input3 = argv[3];
+    outputDirectory = argv[4];
   } else {
     input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
     input2 = "def";
     input3 = "ghi";
+    outputDirectory = ".";
   }
-  if (argc < 4 || (argc > 5) || (input1 == "?") || (input1 == "help")) {
+  if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
     cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
     cout << "All input files should be located in the test directory, with these names:\n";
     cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
@@ -87,8 +89,8 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if(argc == 5) {
-    airTemp = std::stoi(argv[4]);
+  if(argc == 6) {
+    airTemp = std::stoi(argv[5]);
     HPWH_doTempDepress = true;
   } else {
     airTemp = 0;
@@ -222,7 +224,7 @@ int main(int argc, char *argv[])
 
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
-  fileToOpen = testDirectory + "/" + input1 + "_" + input2 + ".csv";
+  fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
   outputFile.open(fileToOpen.c_str());
   if(!outputFile.is_open()) {
     cout << "Could not open output file " << fileToOpen << "\n";
