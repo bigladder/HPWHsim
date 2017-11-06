@@ -2337,7 +2337,14 @@ int HPWH::HPWHinit_file(string configFile){
 						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n", compareStr.c_str(), heatsource, token.c_str());
 						return HPWH_ABORT;
 					}
-					if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
+					if (units == "F") {
+						if (absolute) {
+							tempDouble = F_TO_C(tempDouble);
+						}
+						else {
+							tempDouble = dF_TO_dC(tempDouble);
+						}
+					}
 					else if (units == "C"); //do nothing, lol
 					else {
 						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
@@ -3403,7 +3410,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_Sanden80_variableSpeed) {
+	else if (presetNum == MODELS_SandenGen3) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = 65;
@@ -3425,7 +3432,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		HeatSource compressor(this);
 
 		compressor.isOn = false;
-		compressor.isVIP = false;
+		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -3435,19 +3442,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.push_back({
 			17, // Temperature (T_F)
 			{1650, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{3, -0.015, 0.0} // COP Coefficients (COP_coeffs)
+			{3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
 			35, // Temperature (T_F)
-			{1030, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{3.5, -0.015, 0.0} // COP Coefficients (COP_coeffs)
+			{1100, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
-			{850, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{5.05, -0.025, 0.0} // COP Coefficients (COP_coeffs)
+			{880, 3.1, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
@@ -3462,14 +3469,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			{7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
-		compressor.hysteresis_dC = 0;  //no hysteresis
+		compressor.hysteresis_dC = 4;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
-		compressor.addTurnOnLogic(HPWH::fourthSixth(dF_TO_dC(74.9228)));
-		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(9.0972)));
+
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(8);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
+		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
 
 		//lowT cutoff
-		compressor.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(125)));
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(1);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places

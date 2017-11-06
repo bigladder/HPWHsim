@@ -55,23 +55,18 @@ heatsource 0 copT4lin -0.03
 heatsource 0 copT4quad 0.0
 
 # 95F coefficients
-heatsource 0 inPowT5const 810
-heatsource 0 inPowT5lin 1.6
+heatsource 0 inPowT5const 790
+heatsource 0 inPowT5lin 2
 heatsource 0 inPowT5quad 0.0
-heatsource 0 copT5const 7.5
+heatsource 0 copT5const 7.15
 heatsource 0 copT5lin -0.04
 heatsource 0 copT5quad 0.0
+
 heatsource 0 hysteresis 4 F
 heatsource 0 coilConfig external
 
 
 heatsource 0 onlogic nodes 8 absolute < 113 F
-# heatsource 0 onlogic nodes 8 < 113 F
-# heatsource 0 onlogic fourthSixth 74.9228 F
 heatsource 0 onlogic standby 8.2639 F
 
-# heatsource 0 offlogic bottomTwelthMaxTemp 135 F
 heatsource 0 offlogic nodes 1 absolute > 135 F
-
-
-

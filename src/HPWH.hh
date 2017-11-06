@@ -80,7 +80,7 @@ class HPWH {
     // Sanden CO2 transcritical heat pump water heaters
     MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
     MODELS_Sanden80 = 121,        /**<  Sanden 80 gallon CO2 external heat pump  */
-    MODELS_Sanden80_variableSpeed = 122, /**<  Sanden 80 gallon CO2 external heat pump, using expanded performance map  */
+    MODELS_SandenGen3 = 122, /**<  Sanden 80 gallon CO2 external heat pump, using expanded performance map  */
 
     // The new-ish Rheem
     MODELS_RheemHB50 = 140,        /**< Rheem 2014 (?) Model */
