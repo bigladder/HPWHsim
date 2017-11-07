@@ -283,6 +283,7 @@ class HPWH {
   int setUA(double UA_kJperHrC);
   int setUA(double UA, UNITS units);
   /**< This is a setter for the UA, with or without units specified - default is metric */
+  int getUA( double& UA, UNITS units=UNITS_kJperHrC) const;
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
