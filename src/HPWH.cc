@@ -2572,6 +2572,10 @@ int HPWH::HPWHinit_file(string configFile){
 				line_ss >> sourceNum;
 				setOfSources[heatsource].backupHeatSource = &setOfSources[sourceNum];
 			}
+			else if (token == "companionSource"){
+				line_ss >> sourceNum;
+				setOfSources[heatsource].companionHeatSource = &setOfSources[sourceNum];
+			}
 			else {
 				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
 			}
