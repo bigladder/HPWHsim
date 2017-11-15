@@ -414,12 +414,17 @@ class HPWH {
 	HeatSource *setOfSources;
 	/**< an array containing the HeatSources, in order of priority  */
 
+  int compressorIndex;
+  /**< The index of the compressor heat source (set to -1 if no compressor)*/
+
+  int lowestElementIndex;
+  /**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
+
 	int numNodes;
 	/**< the number of nodes in the tank - must be >= 12, in multiples of 12  */
 
   int nodeDensity;
   /**< the number of calculation nodes in a logical node  */
-
 
 	double tankVolume_L;
 	/**< the volume in liters of the tank  */

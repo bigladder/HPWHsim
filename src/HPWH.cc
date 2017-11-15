@@ -299,12 +299,13 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		//if nothing else is on, force the first heat source on
 		//this may or may not be desired behavior, pending more research (and funding)
 		if (areAllHeatSourcesOff() == true) {
-			setOfSources[0].engageHeatSource();
+			if (compressorIndex > -1) {
+				setOfSources[compressorIndex].engageHeatSource();
+			} else if (lowestElementIndex > -1) {
+				setOfSources[lowestElementIndex].engageHeatSource();
+			}
 		}
 	}
-
-
-
 
 	//do heating logic
 	double minutesToRun = minutesPerStep;
@@ -2069,6 +2070,26 @@ void HPWH::calcDerivedValues(){
 		setOfSources[i].lowestNode = lowest;
 	}
 
+	// define condenser index and lowest resistance element index
+	compressorIndex = -1; // Default = No compressor
+	lowestElementIndex = -1; // Default = No resistance elements
+	int lowestElementPos = CONDENSITY_SIZE;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
+			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
+		} else {
+			for (int j = 0; j < CONDENSITY_SIZE; j++) {
+				if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
+					lowestElementIndex = i;
+					lowestElementPos = j;
+					break;
+				}
+			}
+		}
+	}
+
+	if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " compressorIndex : %d \n", compressorIndex);
+	if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
