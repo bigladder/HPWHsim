@@ -254,6 +254,15 @@ int main(int argc, char *argv[])
       airTemp2 = allSchedules[2][i];
     }
 
+    // Process the dr status
+    if(allSchedules[4][i] == 0) {
+      drStatus = HPWH::DR_BLOCK;
+    } else if(allSchedules[4][i] == 1) {
+      drStatus = HPWH::DR_ALLOW;
+    } else if(allSchedules[4][i] == 2) {
+      drStatus = HPWH::DR_ENGAGE;
+    }
+
     // Run the step
     hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
