@@ -91,3 +91,6 @@ heatsource 1 offlogic bottomTwelthMaxTemp 76.7747 F
 
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
+
+heatsource 0 followedBySource 1
+heatsource 1 followedBySource 2

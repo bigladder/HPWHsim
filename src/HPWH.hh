@@ -556,6 +556,9 @@ class HPWH::HeatSource {
 	/**< a pointer to the heat source which will run concurrently with this one
       it still will only turn on if shutsOff is false */
 
+  HeatSource* followedByHeatSource;
+	/**< a pointer to the heat source which will attempt to run after this one */
+
 	double condensity[CONDENSITY_SIZE];
 	/**< The condensity function is always composed of 12 nodes.
       It represents the location within the tank where heat will be distributed,

@@ -342,10 +342,10 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 				//subtract time it ran and turn it off
 				minutesToRun -= heatSourcePtr->runtime_min;
 				setOfSources[i].disengageHeatSource();
-				//and if there's another heat source in the list, that's able to come on, TODO: check all other heat sources instead of just the next
-				if (numHeatSources > i + 1 && setOfSources[i + 1].shutsOff() == false) {
+				//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
+				if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
 					//turn it on
-					setOfSources[i + 1].engageHeatSource();
+					setOfSources[i].followedByHeatSource->engageHeatSource();
 				}
 			}
 		}
@@ -1285,7 +1285,8 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), backupHeatSource(NULL), companionHeatSource(NULL),
-	minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), typeOfHeatSource(TYPE_none) {}
+	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
+	typeOfHeatSource(TYPE_none) {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 	hpwh = hSource.hpwh;
@@ -1298,9 +1299,9 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
 	isVIP = hSource.isVIP;
 
-	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL) {
+	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL || hSource.followedByHeatSource != NULL) {
 		hpwh->simHasFailed = true;
-		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to backup or companion HeatSources\n");
+		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
 	}
 
 	for (int i = 0; i < CONDENSITY_SIZE; i++) {
@@ -1344,13 +1345,14 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 
 	isVIP = hSource.isVIP;
 
-	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL) {
+	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL || hSource.followedByHeatSource != NULL) {
 		hpwh->simHasFailed = true;
-		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to backup or companion HeatSources\n");
+		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
 	}
 	else {
 		companionHeatSource = NULL;
 		backupHeatSource = NULL;
+		followedByHeatSource = NULL;
 	}
 
 	for (int i = 0; i < CONDENSITY_SIZE; i++) {
@@ -2597,6 +2599,10 @@ int HPWH::HPWHinit_file(string configFile){
 				line_ss >> sourceNum;
 				setOfSources[heatsource].companionHeatSource = &setOfSources[sourceNum];
 			}
+			else if (token == "followedBySource"){
+				line_ss >> sourceNum;
+				setOfSources[heatsource].followedByHeatSource = &setOfSources[sourceNum];
+			}
 			else {
 				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
 			}
@@ -2683,6 +2689,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	setOfSources[0] = resistiveElementTop;
 	setOfSources[1] = resistiveElementBottom;
 
+	setOfSources[0].followedByHeatSource = &setOfSources[1];
 
 	// (1/EnFac + 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr)))
 	double recoveryEfficiency = 0.98;
@@ -2864,6 +2871,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	setOfSources[2].backupHeatSource = &setOfSources[1];
 	setOfSources[1].backupHeatSource = &setOfSources[2];
 
+	setOfSources[0].followedByHeatSource = &setOfSources[1];
+	setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 
 
@@ -2942,6 +2951,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//assign heat sources into array in order of priority
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
 	}
 
 	//resistive tank with massive UA loss for testing
@@ -2982,6 +2993,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
 
 	}
 
@@ -3018,6 +3030,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
 	}
 
 	//basic compressor tank for testing
@@ -3095,6 +3109,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 
@@ -3233,6 +3250,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_AOSmithPHPT80) {
 		numNodes = 12;
@@ -3312,6 +3332,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2012) {
@@ -3397,6 +3420,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_Sanden80) {
@@ -3663,6 +3689,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_AOSmithHPTU66) {
 		numNodes = 12;
@@ -3742,6 +3771,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80) {
 		numNodes = 12;
@@ -3820,6 +3852,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
@@ -3901,6 +3936,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_GE2014STDMode) {
 		numNodes = 12;
@@ -3978,6 +4016,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_GE2014STDMode_80) {
 		numNodes = 12;
@@ -4050,6 +4091,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014) {
@@ -4132,6 +4176,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_GE2014_80) {
 		numNodes = 12;
@@ -4212,6 +4259,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014_80DR) {
@@ -4295,6 +4345,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_RheemHB50) {
 		numNodes = 12;
@@ -4374,6 +4427,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_Stiebel220E) {
@@ -4509,6 +4565,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_Generic2) {
 		numNodes = 12;
@@ -4583,6 +4642,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_Generic3) {
@@ -4662,6 +4724,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_UEF2generic) {
 		numNodes = 12;
@@ -4737,6 +4802,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//you don't get the right pointers
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 

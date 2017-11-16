@@ -93,3 +93,6 @@ heatsource 2 onlogic standby 23.8 F
 heatsource 0 backupSource 1
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
+
+heatsource 0 followedBySource 1
+heatsource 1 followedBySource 2
