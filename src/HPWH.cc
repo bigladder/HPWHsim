@@ -627,23 +627,16 @@ int HPWH::setSetpoint(double newSetpoint){
 	return 0;
 }
 int HPWH::setSetpoint(double newSetpoint, UNITS units) {
-	if (setpointFixed == true) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for your currently selected model.  \n");
+	if (units == UNITS_C) {
+		return setSetpoint(newSetpoint);
+	}
+	else if (units == UNITS_F) {
+		return setSetpoint(F_TO_C(newSetpoint));
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
 		return HPWH_ABORT;
 	}
-	else{
-		if (units == UNITS_C) {
-			setpoint_C = newSetpoint;
-		}
-		else if (units == UNITS_F) {
-			setpoint_C = F_TO_C(newSetpoint);
-		}
-		else {
-			if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
-			return HPWH_ABORT;
-		}
-	}
-	return 0;
 }
 double HPWH::getSetpoint(){
 	return setpoint_C;
@@ -689,23 +682,15 @@ int HPWH::setTankSize(double HPWH_size_L) {
 	return 0;
 }
 int HPWH::setTankSize(double HPWH_size, UNITS units) {
-	if (HPWH_size <= 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
-		simHasFailed = true;
-		return HPWH_ABORT;
+	if (units == UNITS_L) {
+		return setTankSize(HPWH_size);
+	}
+	else if (units == UNITS_GAL) {
+		return setTankSize(GAL_TO_L(HPWH_size));
 	}
 	else {
-		if (units == UNITS_L) {
-			this->tankVolume_L = HPWH_size;
-		}
-		else if (units == UNITS_GAL) {
-			this->tankVolume_L = GAL_TO_L(HPWH_size);
-		}
-		else {
-			if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setTankSize.  \n");
-			return HPWH_ABORT;
-		}
-		return 0;
+		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setTankSize.  \n");
+		return HPWH_ABORT;
 	}
 }
 
@@ -715,26 +700,29 @@ int HPWH::setUA(double UA_kJperHrC) {
 }
 int HPWH::setUA(double UA, UNITS units) {
 	if (units == UNITS_kJperHrC) {
-		this->tankUA_kJperHrC = UA;
+		return setUA(UA);
 	}
 	else if (units == UNITS_BTUperHrF) {
-		this->tankUA_kJperHrC = UAf_TO_UAc(UA);
+		return setUA(UAf_TO_UAc(UA));
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setUA.  \n");
 		return HPWH_ABORT;
 	}
-	return 0;
 }
 
-int HPWH::getUA(double& UA, UNITS units/*=UNITS_kJperHrC*/) const
+int HPWH::getUA(double& UA_kJperHrC) const {
+	UA_kJperHrC = tankUA_kJperHrC;
+	return 0;
+}
+int HPWH::getUA(double& UA, UNITS units) const
 {
-	int ret = 0;
+	int ret = getUA(UA);
 	if (units == UNITS_kJperHrC) {
-		UA = tankUA_kJperHrC;
+		// UA is already in correct units
 	}
 	else if (units == UNITS_BTUperHrF) {
-		UA = tankUA_kJperHrC / UAf_TO_UAc( 1.);
+		UA = UA / UAf_TO_UAc( 1.);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -752,17 +740,15 @@ int HPWH::setMaxTempDepression(double maxDepression) {
 }
 int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
   if(units == UNITS_C) {
-    this->maxDepression_C = maxDepression;
+    return setMaxTempDepression(maxDepression);
   }
   else if(units == UNITS_F) {
-    this->maxDepression_C = F_TO_C(maxDepression);
+    return setMaxTempDepression(F_TO_C(maxDepression));
   }
   else {
     if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for max Temp Depression.  \n");
     return HPWH_ABORT;
   }
-
-return 0;
 }
 
 HPWH::HeatingLogic HPWH::topThird(double d) const {
