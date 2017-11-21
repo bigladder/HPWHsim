@@ -3598,14 +3598,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_AOSmithHPTU50) {
-		numNodes = 12;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(127.0);
 
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 159;
+		tankVolume_L = 171;
 		tankUA_kJperHrC = 6;
 
 		doTempDepression = false;
@@ -3626,19 +3626,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 5.0;
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
-		//voltex60 tier 1 values
-		compressor.perfMap.reserve(2);
+                // performance map
+		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{142.66, 2.16, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{7.25, -0.0424, 0.0} // COP Coefficients (COP_coeffs)
+			50, // Temperature (T_F)
+			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
-			67, // Temperature (T_F)
-			{124.45, 2.51, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{7.69, -0.0413, 0.0} // COP Coefficients (COP_coeffs)
+			70, // Temperature (T_F)
+			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.minT = F_TO_C(42.0);
@@ -3655,14 +3661,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
-		double compStart = dF_TO_dC(30.8333);
-		double standbyT = dF_TO_dC(10.0694);
+		double compStart = dF_TO_dC(35);
+		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(90.4475)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 
-		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(33.4491)));
+                
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
+		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
 
 		//set everything in its places
@@ -3678,16 +3688,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
+                setOfSources[0].companionHeatSource = &setOfSources[2];
+
+
 	}
 	else if (presetNum == MODELS_AOSmithHPTU66) {
-		numNodes = 12;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(127.0);
 
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 242.3;
+		tankVolume_L = 244.6;
 		tankUA_kJperHrC = 8;
 
 		doTempDepression = false;
@@ -3705,22 +3718,28 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		//voltex60 tier 1 values
-		compressor.perfMap.reserve(2);
+                // performance map
+		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{156.6, 2.1, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{5.83, -0.025, 0.0} // COP Coefficients (COP_coeffs)
+			50, // Temperature (T_F)
+			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
-			67, // Temperature (T_F)
-			{119.5, 2.63, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{7.34, -0.0326, 0.0} // COP Coefficients (COP_coeffs)
+			70, // Temperature (T_F)
+			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.minT = F_TO_C(42.0);
@@ -3729,22 +3748,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 		//top resistor values
-		resistiveElementTop.setupAsResistiveElement(8, 4400);
+		resistiveElementTop.setupAsResistiveElement(8, 4500);
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		resistiveElementBottom.setupAsResistiveElement(0, 4350);
+		resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
-		double compStart = dF_TO_dC(40.9076);
-		double standbyT = dF_TO_dC(8.8354);
+		double compStart = dF_TO_dC(35);
+		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(92.1254)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 
-		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(26.9753)));
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
+		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
 
 
 		//set everything in its places
@@ -3760,16 +3782,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
+                setOfSources[0].companionHeatSource = &setOfSources[2];
+
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80) {
-		numNodes = 12;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(127.0);
 
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 283.9;
+		tankVolume_L = 299.5;
 		tankUA_kJperHrC = 9;
 
 		doTempDepression = false;
@@ -3788,22 +3812,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		double split = 1.0 / 3.0;
+		compressor.setCondensity(split, split, split, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-		//voltex60 tier 1 values
-		compressor.perfMap.reserve(2);
+		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{142.6, 2.152, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
+			50, // Temperature (T_F)
+			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.perfMap.push_back({
-			67, // Temperature (T_F)
-			{120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
+			70, // Temperature (T_F)
+			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 		compressor.minT = F_TO_C(42.0);
@@ -3819,14 +3848,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
-		double compStart = dF_TO_dC(34.1636);
-		double standbyT = dF_TO_dC(7.1528);
+		double compStart = dF_TO_dC(35);
+		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80.108)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 
-		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
+		std::vector<NodeWeight> nodeWeights;
+//		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
+		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
+		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 
 		//set everything in its places
@@ -3841,6 +3874,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+                setOfSources[0].companionHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
