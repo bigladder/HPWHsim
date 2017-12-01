@@ -21,8 +21,7 @@ set(testNames
 set(modelNames
   AOSmithPHPT60
   AOSmithHPTU80
-  SandenGAU
-  SandenGen3
+  Sanden80
   RheemHB50
   Stiebel220e
   GE502014

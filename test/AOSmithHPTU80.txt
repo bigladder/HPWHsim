@@ -1,4 +1,4 @@
-verbosity reluctant
+verbosity silent
 numNodes 24 #number of nodes
 setpoint 127 F
 volume 299.5 L

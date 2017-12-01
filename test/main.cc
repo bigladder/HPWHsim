@@ -110,12 +110,10 @@ int main(int argc, char *argv[])
       model = HPWH::MODELS_AOSmithPHPT80;
     } else if(input2 == "GEred" || input2 == "GE") {
       model = HPWH::MODELS_GE2012;
-    } else if(input2 == "SandenGAU" || input2 == "Sanden80") {
+    } else if(input2 == "SandenGAU" || input2 == "Sanden80" || input2 == "SandenGen3") {
       model = HPWH::MODELS_Sanden80;
     } else if(input2 == "SandenGES" || input2 == "Sanden40") {
       model = HPWH::MODELS_Sanden40;
-    } else if(input2 == "SandenGen3") {
-      model = HPWH::MODELS_SandenGen3;
     } else if(input2 == "AOSmithHPTU50") {
       model = HPWH::MODELS_AOSmithHPTU50;
     } else if(input2 == "AOSmithHPTU66") {
