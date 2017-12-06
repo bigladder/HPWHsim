@@ -2378,7 +2378,7 @@ int HPWH::HPWHinit_file(string configFile){
 						return HPWH_ABORT;
 					}
 					std::vector<NodeWeight> nodeWeights;
-					for (int i = 0; i < nodeNums.size(); i++ ) {
+					for (size_t i = 0; i < nodeNums.size(); i++ ) {
 							nodeWeights.emplace_back(nodeNums[i],weights[i]);
 					}
 					HPWH::HeatingLogic logic("custom", nodeWeights, tempDouble, absolute, compare);
