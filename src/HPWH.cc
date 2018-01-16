@@ -56,7 +56,7 @@ const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 
 //ugh, this should be in the header
-const std::string HPWH::version_maint = "0";
+const std::string HPWH::version_maint = "1";
 
 #define SETPOINT_FIX	// #define to include fixes for
 						// setpoint-below-water-temp issues
