@@ -8,3 +8,6 @@
 *TestToolOutput.csv
 !Documentation/**
 nightly_pull.sh
+
+build/
+builds/
