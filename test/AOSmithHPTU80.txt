@@ -1,0 +1,105 @@
+verbosity silent
+numNodes 24 #number of nodes
+setpoint 127 F
+volume 299.5 L
+UA 9 kJperHrC
+depressTemp false
+mixOnDraw true
+
+#a test comment
+numHeatSources 3
+
+
+heatsource 2 isVIP false
+heatsource 2 isOn false
+heatsource 2 type compressor
+heatsource 2 condensity 0.333333333333 0.333333333333 0.333333333333 0 0 0 0 0 0 0 0 0
+heatsource 2 nTemps 3
+heatsource 2 T1 50 F
+heatsource 2 T2 70 F
+heatsource 2 T3 95 F
+heatsource 2 inPowT1const 170
+heatsource 2 inPowT1lin 2.02
+heatsource 2 inPowT1quad 0
+heatsource 2 inPowT2const 144.5
+heatsource 2 inPowT2lin 2.42
+heatsource 2 inPowT2quad 0
+heatsource 2 inPowT3const 94.1
+heatsource 2 inPowT3lin 3.15
+heatsource 2 inPowT3quad 0
+heatsource 2 copT1const 5.93
+heatsource 2 copT1lin -0.027
+heatsource 2 copT1quad 0.0
+heatsource 2 copT2const 7.67
+heatsource 2 copT2lin -0.037
+heatsource 2 copT2quad 0.0
+heatsource 2 copT3const 11.1
+heatsource 2 copT3lin -0.056
+heatsource 2 copT3quad 0.0
+heatsource 2 minT 42 F
+heatsource 2 maxT 120 F
+heatsource 2 hysteresis 1 F
+heatsource 2 coilConfig wrapped
+
+
+heatsource 0 isVIP true
+heatsource 0 isOn false
+heatsource 0 type resistor
+heatsource 0 condensity 0 0 0 0 0 0 0 0 1 0 0 0
+heatsource 0 nTemps 2
+heatsource 0 T1 50 C
+heatsource 0 T1 50 F
+heatsource 0 T2 67 C
+heatsource 0 T2 67 F
+heatsource 0 inPowT1const 4500
+heatsource 0 inPowT1lin 0.0
+heatsource 0 inPowT1quad 0.0
+heatsource 0 inPowT2const 4500
+heatsource 0 inPowT2lin 0.0
+heatsource 0 inPowT2quad 0.0
+heatsource 0 copT1const 1.0
+heatsource 0 copT1lin 0.0
+heatsource 0 copT1quad 0.0
+heatsource 0 copT2const 1.0
+heatsource 0 copT2lin 0.0
+heatsource 0 copT2quad 0.0
+heatsource 0 hysteresis 0 F
+heatsource 0 coilConfig submerged
+
+
+heatsource 1 isVIP false
+heatsource 1 isOn false
+heatsource 1 type resistor
+heatsource 1 condensity 1 0 0 0 0 0 0 0 0 0 0 0
+heatsource 1 nTemps 2
+heatsource 1 T1 47 F
+heatsource 1 T2 67 F
+heatsource 1 inPowT1const 4500
+heatsource 1 inPowT1lin 0.0
+heatsource 1 inPowT1quad 0.0
+heatsource 1 inPowT2const 4500
+heatsource 1 inPowT2lin 0.0
+heatsource 1 inPowT2quad 0.0
+heatsource 1 copT1const 1.0
+heatsource 1 copT1lin 0.0
+heatsource 1 copT1quad 0.0
+heatsource 1 copT2const 1.0
+heatsource 1 copT2lin 0.0
+heatsource 1 copT2quad 0.0
+heatsource 1 hysteresis 2 F
+heatsource 1 coilConfig submerged
+
+
+heatsource 0 onlogic nodes 11 12 absolute < 105 F
+heatsource 2 onlogic bottomThird 35 F
+heatsource 2 onlogic standby 9 F
+
+heatsource 1 offlogic bottomTwelthMaxTemp 100 F
+
+heatsource 1 backupSource 2
+heatsource 2 backupSource 1
+
+heatsource 0 followedBySource 1
+heatsource 1 followedBySource 2
+
+heatsource 0 companionSource 2
