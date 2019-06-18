@@ -367,7 +367,6 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples) {
   int i;
 
-  tcouples.clear();
   for(i = 0; i < 6; i++) {
     tcouples[i] = hpwh.getNthSimTcouple(i + 1);
   }
@@ -376,8 +375,6 @@ int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples) {
 
 int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs) {
   int i;
-  inputs.clear();
-  outputs.clear();
   for(i = 0; i < hpwh.getNumHeatSources(); i++) {
     inputs[i] = hpwh.getNthHeatSourceEnergyInput(i);
     outputs[i] = hpwh.getNthHeatSourceEnergyOutput(i);
