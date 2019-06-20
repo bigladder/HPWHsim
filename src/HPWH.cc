@@ -1208,18 +1208,15 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 
 	//calculate standby losses
-	//get average tank temperature
-	double avgTemp = 0;
-	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
-	avgTemp /= numNodes;
+	for (int i = 0; i < numNodes; i++) {
+		//kJ's lost as standby in the current time step for each node.
+		double standbyLosses_kJ = (tankUA_kJperHrC/ numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
-	//kJ's lost as standby in the current time step
-	double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
-	standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
+		//The effect of standby loss on temperature in each node
+		tankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+	}
 
-	//The effect of standby loss on temperature in each segment
-	double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-	for (int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
 }  //end updateTankTemps
 
 
