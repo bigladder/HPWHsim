@@ -375,6 +375,8 @@ class HPWH {
   class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
+	void mixTankInversions();
+	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	bool areAllHeatSourcesOff() const;
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
