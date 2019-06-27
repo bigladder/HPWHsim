@@ -380,8 +380,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		locationTemperature_C -= (locationTemperature_C - temperatureGoal)*(1 - 0.9289);
 	}
 
-
-
 	//settle outputs
 
 	//outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
@@ -391,12 +389,14 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
+	// check for inverted temperature profile
+	mixTankInversions();
 
 	//cursory check for inverted temperature profile
-	if (tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
+	for (int i = 0; i<numNodes-2; i++)
+	if (tankTemps_C[i+1] < tankTemps_C[i]) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
 	}
-
 
 	if (simHasFailed) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("The simulation has encountered an error.  \n");
@@ -1207,17 +1207,74 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	} //end if(draw_volume_L > 0)
 
 
-	//calculate standby losses
+///calculate standby losses
 	for (int i = 0; i < numNodes; i++) {
 		//kJ's lost as standby in the current time step for each node.
 		double standbyLosses_kJ = (tankUA_kJperHrC/ numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
+	
 		//The effect of standby loss on temperature in each node
 		tankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 	}
 
+//	//calculate standby losses
+//	//get average tank temperature
+//	double avgTemp = 0;
+//	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
+//	avgTemp /= numNodes;
+//
+//	//kJ's lost as standby in the current time step
+//	double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
+//	standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
+//
+//	//The effect of standby loss on temperature in each segment
+//	double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+//	for (int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
+
+
+
 }  //end updateTankTemps
+
+
+// Inversion mixing modeled after bigladder EnergyPlus code PK
+void HPWH::mixTankInversions() {
+	bool hasInversion;
+	double volumePerNode_L = tankVolume_L / numNodes;
+	//int numdos = 0;
+
+	do {
+		hasInversion = false;
+		//Start from the top and check downwards
+		for (int i = numNodes-1; i >= 0; i--) {
+			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
+				// Temperature inversion!
+				hasInversion = true;
+
+				//numdos += 1;
+				//printf("hasInversion, Num dos: %d \n", numdos);
+				//for (int ii = numNodes - 1; ii >= 0; ii--) { printf("node: %d, T: %.2f ", ii, tankTemps_C[ii]); }
+				//printf("\n");
+				
+				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
+				double Tmixed = 0.0;
+				double massMixed = 0.0;
+				int m;
+				for (m = i; m >= 0; m--) {
+					Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
+					massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
+					if ( (m==0) || (Tmixed / massMixed > tankTemps_C[m - 1]) ) break;
+				}
+				Tmixed /= massMixed;
+
+				// Assign the tank temps from i to k
+				for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+			}
+			
+		}
+				
+	} while ( hasInversion );
+}
+///////////////////////////////////////////////////////////////////////////////////
 
 
 void HPWH::turnAllHeatSourcesOff() {
