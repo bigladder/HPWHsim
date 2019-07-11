@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
   long minutesToRun;
 
   bool HPWH_doTempDepress;
+  int doInvMix, doCondu;
 
   ofstream outputFile;
   ifstream controlFile;
@@ -171,15 +172,22 @@ int main(int argc, char *argv[])
   }
   minutesToRun = 0;
   newSetpoint = 0.0;
+  doCondu = 1;
+  doInvMix = 1;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
   while(controlFile >> var1 >> testVal) {
-    if(var1 == "setpoint") { // If a setpoint was specified then override the default
-      newSetpoint = testVal;
-      cout << "New setpoint: " << testVal << "\n";
+	if(var1 == "setpoint") { // If a setpoint was specified then override the default
+		newSetpoint = testVal;
     }
     if(var1 == "length_of_test") {
-      minutesToRun = (int) testVal;
+		minutesToRun = (int) testVal;
     }
+	if (var1 == "doInversionMixing") {
+		doInvMix = testVal;
+	}
+	if (var1 == "doConduction") {
+		doCondu = testVal;
+	}
   }
 
   if(minutesToRun == 0) {
@@ -210,6 +218,9 @@ int main(int argc, char *argv[])
   if (result == HPWH::HPWH_ABORT) {
     return 1;
   }*/
+
+  if (doInvMix == 0) hpwh.setDoInversionMixing(false);
+  if (doCondu == 0) hpwh.setDoConduction(false);
 
   if(newSetpoint > 0) {
     hpwh.setSetpoint(newSetpoint);
@@ -261,12 +272,26 @@ int main(int argc, char *argv[])
       drStatus = HPWH::DR_ENGAGE;
     }
 
+	//// Let's create a feedback so the inlet temperature is the outlet temperature - 5 minutes
+	//if (allSchedules[0][i] == 0) {
+	//	if (i == 0) {
+	//		allSchedules[0][i] = hpwh.getSetpoint();
+	//	}
+	//	else if (i > 0 && i <= 5) {
+	//		allSchedules[0][i] = outletTemps.back()-3;
+	//	}
+	//	else {
+	//		allSchedules[0][i] = outletTemps[outletTemps.size() - 5]-3;
+	//	}
+	//}
+
     // Run the step
     hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
                       GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
                       airTemp2,  // Ambient Temp (C)
                       allSchedules[3][i],  // External Temp (C)
-                      drStatus, 1.0);    // DDR Status (now an enum. Fixed for now as allow)
+                      drStatus, // DDR Status (now an enum. Fixed for now as allow)
+					  1.0);    // Minutes per step
 
     // Grab the current status
     getSimTcouples(hpwh, simTCouples);

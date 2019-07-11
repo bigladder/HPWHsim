@@ -26,6 +26,7 @@ class HPWH {
 
 
   static const float DENSITYWATER_kgperL;
+  static const float KWATER_WpermC;
   static const float CPWATER_kJperkgC;
   static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12
   //change at your own risk */
@@ -286,6 +287,12 @@ class HPWH {
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
 
+  int setDoInversionMixing(bool doInvMix);
+  /**< This is a simple setter for the logical for running the inversion mixing method, default is true */
+
+  int setDoConduction(bool doCondu);
+  /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
+
   int setUA(double UA_kJperHrC);
   int setUA(double UA, UNITS units);
   /**< This is a setter for the UA, with or without units specified - default is metric */
@@ -471,6 +478,12 @@ class HPWH {
   /** a couple variables to hold values which are typically inputs  */
   double member_inletT_C;
   double member_minutesPerStep;
+
+  bool doInversionMixing;
+  /**<  whether or not to model will mix temperature inversions in the tank  */
+
+  bool doConduction;
+  /**<  whether or not to model conduction between the internal nodes of the tank  */
 
 };  //end of HPWH class
 
