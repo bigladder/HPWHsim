@@ -51,6 +51,7 @@ using std::cout;
 using std::string;
 
 const float HPWH::DENSITYWATER_kgperL = 0.998f;
+const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.181f;
 const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
@@ -67,7 +68,8 @@ const std::string HPWH::version_maint = "1";
 HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP)
+setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+doInversionMixing(true), doConduction(true)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -108,6 +110,9 @@ HPWH::HPWH(const HPWH &hpwh){
 
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
+
+	doInversionMixing = hpwh.doInversionMixing; 
+	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
@@ -165,6 +170,9 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
+
+	doInversionMixing = hpwh.doInversionMixing;
+	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
@@ -390,7 +398,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 
 	// check for inverted temperature profile
-	mixTankInversions();
+	if (doInversionMixing) 	mixTankInversions();
 
 	//cursory check for inverted temperature profile
 	for (int i = 0; i<numNodes-2; i++)
@@ -692,6 +700,14 @@ int HPWH::setTankSize(double HPWH_size, UNITS units) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setTankSize.  \n");
 		return HPWH_ABORT;
 	}
+}
+int HPWH::setDoInversionMixing(bool doInvMix) {
+	this->doInversionMixing = doInvMix;
+	return 0;
+}
+int HPWH::setDoConduction(bool doCondu) {
+	this->doConduction = doCondu;
+	return 0;
 }
 
 int HPWH::setUA(double UA_kJperHrC) {
@@ -1137,6 +1153,7 @@ double HPWH::getLocationTemp_C() const {
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep) {
 	//set up some useful variables for calculations
+	double *tempTemps = new double[numNodes];
 	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	int wholeNodesToDraw;
@@ -1150,7 +1167,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			simHasFailed = true;
 			return;
 		}
-
 
 		wholeNodesToDraw = (int)std::floor(drawFraction);
 		drawFraction -= wholeNodesToDraw;
@@ -1207,31 +1223,68 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	} //end if(draw_volume_L > 0)
 
 
-///calculate standby losses
-	for (int i = 0; i < numNodes; i++) {
-		//kJ's lost as standby in the current time step for each node.
-		double standbyLosses_kJ = (tankUA_kJperHrC/ numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-	
-		//The effect of standby loss on temperature in each node
-		tankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	if (doConduction) {
+		// height estimate from Rheem along with the volume is used to get the radius and node_height
+		double height = 1.2; //meters
+		double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+		double node_height = height/numNodes;
+
+		// Get the "constant" tau for the stability condition and the conduction calculation
+		double tau = KWATER_WpermC / ( CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height) ) * minutesPerStep * 60.0;
+		if (tau > 0.5) msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
+
+		// The fraction of UA that is on the top and bottom of the tank
+		double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
+		double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
+
+		// Boundary nodes for finite difference
+		tempTemps[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+		tempTemps[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+
+		// Internal nodes for the finite difference
+		for (int i = 1; i < numNodes - 1; i++) {
+			tempTemps[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
+		}
+		// tempTemps gets assigns to tankTemps_C at the bottom of the function after q_UA.
+		
+		// Ar is the faction of the area of the cylinder that's not the top or bottom.
+		double Ar = height / (height + rad);
+
+		//calculate standby losses
+		for (int i = 0; i < numNodes; i++) {
+			//faction of tank area on the sides
+			//kJ's lost as standby in the current time step for each node.
+			double standbyLosses_kJ = (tankUA_kJperHrC * Ar / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+			//The effect of standby loss on temperature in each node
+			tempTemps[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		}
+	}
+	else { // Ignore tank conduction and calculate UA losses in the old way.
+		
+		for (int i = 0; i < numNodes; i++) 	tempTemps[i] = tankTemps_C[i];
+
+		//calculate standby losses
+		//get average tank temperature
+		double avgTemp = 0;
+		for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
+		avgTemp /= numNodes;
+
+		//kJ's lost as standby in the current time step
+		double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
+
+		//The effect of standby loss on temperature in each segment
+		double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		for (int i = 0; i < numNodes; i++) tempTemps[i] -= lossPerNode_C;
 	}
 
-//	//calculate standby losses
-//	//get average tank temperature
-//	double avgTemp = 0;
-//	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
-//	avgTemp /= numNodes;
-//
-//	//kJ's lost as standby in the current time step
-//	double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
-//	standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
-//
-//	//The effect of standby loss on temperature in each segment
-//	double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-//	for (int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
-
-
+	// Assign the new temporary tank temps to the real tank temps.
+	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = tempTemps[i];
 
 }  //end updateTankTemps
 
@@ -1249,11 +1302,6 @@ void HPWH::mixTankInversions() {
 			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
 				// Temperature inversion!
 				hasInversion = true;
-
-				//numdos += 1;
-				//printf("hasInversion, Num dos: %d \n", numdos);
-				//for (int ii = numNodes - 1; ii >= 0; ii--) { printf("node: %d, T: %.2f ", ii, tankTemps_C[ii]); }
-				//printf("\n");
 				
 				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
 				double Tmixed = 0.0;
@@ -2321,6 +2369,7 @@ int HPWH::HPWHinit_file(string configFile){
 				return HPWH_ABORT;
 			}
 		}
+
 		else if (token == "numHeatSources") {
 			line_ss >> numHeatSources;
 			setOfSources = new HeatSource[numHeatSources];

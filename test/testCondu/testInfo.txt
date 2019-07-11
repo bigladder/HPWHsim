@@ -1,0 +1,4 @@
+length_of_test 2880
+setpoint 53 
+doConduction 1
+
