@@ -10,14 +10,16 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 
 # Run tests
 set(testNames
-  test30
-  test50
-  test70
-  test95
-  testLockout
-  testDr
-  testRec
-  testCondu
+ # test30
+ # test50
+ # test70
+ # test95
+ # testLockout
+ # testDr
+  #testRec1
+  testRec2
+  testSandenCombi
+ # testCondu
 )
 
 set(modelNames

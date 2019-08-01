@@ -401,8 +401,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	if (doInversionMixing) 	mixTankInversions();
 
 	//cursory check for inverted temperature profile
-	for (int i = 0; i<numNodes-2; i++)
-	if (tankTemps_C[i+1] < tankTemps_C[i]) {
+	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
 	}
 
