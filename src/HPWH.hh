@@ -20,7 +20,7 @@
 class HPWH {
  public:
   static const int version_major = 1;
-  static const int version_minor = 4;
+  static const int version_minor = 5;
   //oh man, why can't i initialize this here?
   static const std::string version_maint;
 
