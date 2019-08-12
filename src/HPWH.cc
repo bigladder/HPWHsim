@@ -68,7 +68,7 @@ const std::string HPWH::version_maint = "1";
 HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+setOfSources(NULL), tankTemps_C(NULL), tempTemps(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
 doInversionMixing(true), doConduction(true)
 {  }
 
@@ -99,8 +99,10 @@ HPWH::HPWH(const HPWH &hpwh){
 	numNodes = hpwh.numNodes;
 	nodeDensity = hpwh.nodeDensity;
 	tankTemps_C = new double[numNodes];
+	tempTemps = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
+		tempTemps[i] = hpwh.tempTemps[i];
 	}
 
 
@@ -158,9 +160,12 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	nodeDensity = hpwh.nodeDensity;
 
 	delete[] tankTemps_C;
+	delete[] tempTemps;
 	tankTemps_C = new double[numNodes];
+	tempTemps = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
+		tempTemps[i] = hpwh.tempTemps[i];
 	}
 
 
@@ -181,6 +186,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 HPWH::~HPWH() {
 	delete[] tankTemps_C;
+	delete[] tempTemps;
 	delete[] setOfSources;
 }
 
@@ -1152,7 +1158,6 @@ double HPWH::getLocationTemp_C() const {
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep) {
 	//set up some useful variables for calculations
-	double *tempTemps = new double[numNodes];
 	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	int wholeNodesToDraw;
@@ -2252,6 +2257,7 @@ int HPWH::HPWHinit_file(string configFile){
 
 	//clear out old stuff if you're re-initializing
 	if (tankTemps_C != NULL) delete[] tankTemps_C;
+	if (tempTemps != NULL) delete[] tempTemps;
 	if (setOfSources != NULL) delete[] setOfSources;
 
 
@@ -2710,6 +2716,8 @@ int HPWH::HPWHinit_file(string configFile){
 	tankTemps_C = new double[numNodes];
 	resetTankToSetpoint();
 
+	tempTemps = new double[numNodes];
+
 	isHeating = false;
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].isOn) {
@@ -2754,6 +2762,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
+
+	tempTemps = new double[numNodes];
 
 
 	doTempDepression = false;
@@ -2830,6 +2840,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	numNodes = 12;
 	tankTemps_C = new double[numNodes];
 	setpoint_C = F_TO_C(127.0);
+
+	tempTemps = new double[numNodes];
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
@@ -4931,6 +4943,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("You have tried to select a preset model which does not exist.  \n");
 		return HPWH_ABORT;
 	}
+
+	// initialize tempTemps 
+	tempTemps = new double[numNodes];
 
 	hpwhModel = presetNum;
 
