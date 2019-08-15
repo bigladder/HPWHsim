@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
   //process command line arguments
   //.......................................
 
+  cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
+
   //Obvious wrong number of command line arguments
   if ((argc > 6)) {
     // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
