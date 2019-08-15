@@ -2247,8 +2247,8 @@ int HPWH::checkInputs(){
 	}
 
 	//Check if the UA is out of bounds
-	if (tankUA_kJperHrC < 0.0 || tankUA_kJperHrC > 500.0) {
-		msg("The tankUA_kJperHrC must be between 0 and 500 for a HPWH, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+	if (tankUA_kJperHrC < 0.0) {
+		msg("The tankUA_kJperHrC must be above 0 for a HPWH, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
 		returnVal = HPWH_ABORT;
 	}
 
@@ -2748,15 +2748,21 @@ int HPWH::HPWHinit_resTank(){
 int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W){
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
-		if (hpwhVerbosity >= VRB_reluctant)  msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+		}
 		return HPWH_ABORT;
 	}
 	if (energyFactor <= 0) {
-		if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
+		}
 		return HPWH_ABORT;
 	}
 	if (energyFactor > 0.98) {
-		if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor greater than 0.98.  DOES NOT COMPUTE\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Energy Factor greater than 0.98.  DOES NOT COMPUTE\n");
+		}
 		return HPWH_ABORT;
 	}
 
