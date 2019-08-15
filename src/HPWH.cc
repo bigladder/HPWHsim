@@ -56,7 +56,7 @@ const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 
 //ugh, this should be in the header
-const std::string HPWH::version_maint = "1";
+const std::string HPWH::version_maint = HPWHVRSN_META;
 
 #define SETPOINT_FIX	// #define to include fixes for
 						// setpoint-below-water-temp issues
@@ -179,7 +179,7 @@ HPWH::~HPWH() {
 string HPWH::getVersion(){
 	std::stringstream version;
 
-	version << version_major << '.' << version_minor << '.' << version_maint;
+	version << version_major << '.' << version_minor << '.' << version_patch << version_maint;
 
 	return version.str();
 }
