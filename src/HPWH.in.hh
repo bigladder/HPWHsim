@@ -27,8 +27,7 @@ class HPWH {
   static const int version_major = HPWHVRSN_MAJOR;
   static const int version_minor = HPWHVRSN_MINOR;
   static const int version_patch = HPWHVRSN_PATCH;
-  //oh man, why can't i initialize this here?
-  static const std::string version_maint;
+  static const std::string version_maint;  // Initialized in source file (HPWH.cc)
 
 
   static const float DENSITYWATER_kgperL;
