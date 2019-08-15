@@ -2755,6 +2755,10 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
 		return HPWH_ABORT;
 	}
+	if (energyFactor > 0.98) {
+		if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor greater than 0.98.  DOES NOT COMPUTE\n");
+		return HPWH_ABORT;
+	}
 
 	//use tank size setting function since it has bounds checking
 	int failure = this->setTankSize(tankVol_L);
