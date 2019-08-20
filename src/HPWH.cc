@@ -68,7 +68,7 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), tempTemps(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
 doInversionMixing(true), doConduction(true)
 {  }
 
@@ -99,10 +99,10 @@ HPWH::HPWH(const HPWH &hpwh){
 	numNodes = hpwh.numNodes;
 	nodeDensity = hpwh.nodeDensity;
 	tankTemps_C = new double[numNodes];
-	tempTemps = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
-		tempTemps[i] = hpwh.tempTemps[i];
+		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
 
 
@@ -160,12 +160,12 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	nodeDensity = hpwh.nodeDensity;
 
 	delete[] tankTemps_C;
-	delete[] tempTemps;
+	delete[] nextTankTemps_C;
 	tankTemps_C = new double[numNodes];
-	tempTemps = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
-		tempTemps[i] = hpwh.tempTemps[i];
+		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
 
 
@@ -186,7 +186,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 HPWH::~HPWH() {
 	delete[] tankTemps_C;
-	delete[] tempTemps;
+	delete[] nextTankTemps_C;
 	delete[] setOfSources;
 }
 
@@ -404,8 +404,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 
 	// check for inverted temperature profile
-	if (doInversionMixing) 	mixTankInversions();
-
+	if (doInversionMixing) {
+		mixTankInversions();
+	}
 	//cursory check for inverted temperature profile
 	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
@@ -417,7 +418,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 
 
-	if (hpwhVerbosity >= VRB_typical) msg("Ending runOneStep.  \n\n\n\n");
+	if (hpwhVerbosity >= VRB_typical) {
+		msg("Ending runOneStep.  \n\n\n\n");
+	}
 	return 0;  //successful completion of the step returns 0
 } //end runOneStep
 
@@ -1232,27 +1235,28 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	if (doConduction) {
 		// height estimate from Rheem along with the volume is used to get the radius and node_height
-		double height = 1.2; //meters
-		double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
-		double node_height = height/numNodes;
+		static const double height = 1.2; //meters
+		const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+		const double node_height = height/numNodes;
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
 		double tau = KWATER_WpermC / ( CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height) ) * minutesPerStep * 60.0;
-		if (tau > 0.5) msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
-
+		if (tau > 0.5) {
+			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
+		}
 		// The fraction of UA that is on the top and bottom of the tank
 		double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
 		double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
-		tempTemps[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-		tempTemps[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+		nextTankTemps_C[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+		nextTankTemps_C[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
 
 		// Internal nodes for the finite difference
 		for (int i = 1; i < numNodes - 1; i++) {
-			tempTemps[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
+			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
-		// tempTemps gets assigns to tankTemps_C at the bottom of the function after q_UA.
+		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		
 		// Ar is the faction of the area of the cylinder that's not the top or bottom.
 		double Ar = height / (height + rad);
@@ -1265,12 +1269,12 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 			//The effect of standby loss on temperature in each node
-			tempTemps[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+			nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 		}
 	}
 	else { // Ignore tank conduction and calculate UA losses in the old way.
 		
-		for (int i = 0; i < numNodes; i++) 	tempTemps[i] = tankTemps_C[i];
+		for (int i = 0; i < numNodes; i++) 	nextTankTemps_C[i] = tankTemps_C[i];
 
 		//calculate standby losses
 		//get average tank temperature
@@ -1284,11 +1288,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		//The effect of standby loss on temperature in each segment
 		double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-		for (int i = 0; i < numNodes; i++) tempTemps[i] -= lossPerNode_C;
+		for (int i = 0; i < numNodes; i++) nextTankTemps_C[i] -= lossPerNode_C;
 	}
 
 	// Assign the new temporary tank temps to the real tank temps.
-	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = tempTemps[i];
+	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
 
 }  //end updateTankTemps
 
@@ -1296,7 +1300,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 // Inversion mixing modeled after bigladder EnergyPlus code PK
 void HPWH::mixTankInversions() {
 	bool hasInversion;
-	double volumePerNode_L = tankVolume_L / numNodes;
+	const double volumePerNode_L = tankVolume_L / numNodes;
 	//int numdos = 0;
 
 	do {
@@ -2248,7 +2252,7 @@ int HPWH::checkInputs(){
 
 	//Check if the UA is out of bounds
 	if (tankUA_kJperHrC < 0.0) {
-		msg("The tankUA_kJperHrC must be above 0 for a HPWH, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
 		returnVal = HPWH_ABORT;
 	}
 
@@ -2263,9 +2267,9 @@ int HPWH::HPWHinit_file(string configFile){
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (tempTemps != NULL) delete[] tempTemps;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] nextTankTemps_C;
+	delete[] setOfSources;
 
 
 	//open file, check and report errors
@@ -2723,7 +2727,7 @@ int HPWH::HPWHinit_file(string configFile){
 	tankTemps_C = new double[numNodes];
 	resetTankToSetpoint();
 
-	tempTemps = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 
 	isHeating = false;
 	for (int i = 0; i < numHeatSources; i++) {
@@ -2774,7 +2778,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	//start tank off at setpoint
 	resetTankToSetpoint();
 
-	tempTemps = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 
 
 	doTempDepression = false;
@@ -2811,7 +2815,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
 			msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
 		}
-		tankUA_kJperHrC = 0;
+		tankUA_kJperHrC = 0.0;
 	}
 
 	hpwhModel = MODELS_CustomResTank;
@@ -2846,8 +2850,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] setOfSources;
 
 
 
@@ -2857,7 +2861,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	tankTemps_C = new double[numNodes];
 	setpoint_C = F_TO_C(127.0);
 
-	tempTemps = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
@@ -3029,8 +3033,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] setOfSources;
 
 
 	//resistive with no UA losses for testing
@@ -4960,8 +4964,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		return HPWH_ABORT;
 	}
 
-	// initialize tempTemps 
-	tempTemps = new double[numNodes];
+	// initialize nextTankTemps_C 
+	nextTankTemps_C = new double[numNodes];
 
 	hpwhModel = presetNum;
 

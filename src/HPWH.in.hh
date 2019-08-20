@@ -458,7 +458,7 @@ class HPWH {
 	/**< the setpoint of the tank  */
 	double *tankTemps_C;
 	/**< an array holding the temperature of each node - 0 is the bottom node, numNodes is the top  */
-	double *tempTemps;
+	double *nextTankTemps_C;
 	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
 
 
@@ -487,10 +487,10 @@ class HPWH {
   double member_minutesPerStep;
 
   bool doInversionMixing;
-  /**<  whether or not to model will mix temperature inversions in the tank  */
+  /**<  If and only if true will model temperature inversion mixing in the tank  */
 
   bool doConduction;
-  /**<  whether or not to model conduction between the internal nodes of the tank  */
+  /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
 };  //end of HPWH class
 
