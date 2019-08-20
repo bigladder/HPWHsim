@@ -2759,12 +2759,6 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		}
 		return HPWH_ABORT;
 	}
-	if (energyFactor > 0.98) {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Energy Factor greater than 0.98.  DOES NOT COMPUTE\n");
-		}
-		return HPWH_ABORT;
-	}
 
 	//use tank size setting function since it has bounds checking
 	int failure = this->setTankSize(tankVol_L);
@@ -2811,9 +2805,14 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
 	double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
 	double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-	double UA_btuPerHrF = numerator / denominator;
-	tankUA_kJperHrC = UA_btuPerHrF * (1.8 / 0.9478);
+	tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator); 
 
+	if (tankUA_kJperHrC < 0.) {
+		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
+			msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+		}
+		tankUA_kJperHrC = 0;
+	}
 
 	hpwhModel = MODELS_CustomResTank;
 
