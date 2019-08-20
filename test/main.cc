@@ -274,26 +274,13 @@ int main(int argc, char *argv[])
       drStatus = HPWH::DR_ENGAGE;
     }
 
-	//// Let's create a feedback so the inlet temperature is the outlet temperature - 5 minutes
-	//if (allSchedules[0][i] == 0) {
-	//	if (i == 0) {
-	//		allSchedules[0][i] = hpwh.getSetpoint();
-	//	}
-	//	else if (i > 0 && i <= 5) {
-	//		allSchedules[0][i] = outletTemps.back()-3;
-	//	}
-	//	else {
-	//		allSchedules[0][i] = outletTemps[outletTemps.size() - 5]-3;
-	//	}
-	//}
-
     // Run the step
-    hpwh.runOneStep(allSchedules[0][i],    // Inlet water temperature (C)
-                      GAL_TO_L(allSchedules[1][i]),          // Flow in gallons
-                      airTemp2,  // Ambient Temp (C)
-                      allSchedules[3][i],  // External Temp (C)
-                      drStatus, // DDR Status (now an enum. Fixed for now as allow)
-					  1.0);    // Minutes per step
+    hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
+					GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+					airTemp2,  // Ambient Temp (C)
+					allSchedules[3][i],  // External Temp (C)
+					drStatus, // DDR Status (now an enum. Fixed for now as allow)
+					1.0);    // Minutes per step
 
     // Grab the current status
     getSimTcouples(hpwh, simTCouples);
