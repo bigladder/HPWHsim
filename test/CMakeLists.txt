@@ -16,10 +16,7 @@ set(testNames
   test95
   testLockout
   testDr
-  testRec1
-  testRec2
   testSandenCombi
-  testCondu
 )
 
 set(modelNames
