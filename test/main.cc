@@ -185,10 +185,10 @@ int main(int argc, char *argv[])
 		minutesToRun = (int) testVal;
     }
 	if (var1 == "doInversionMixing") {
-		doInvMix = testVal;
+		doInvMix = (testVal > 0.0) ? 1 : 0;
 	}
 	if (var1 == "doConduction") {
-		doCondu = testVal;
+		doCondu = (testVal > 0.0) ? 1 : 0;
 	}
   }
 
