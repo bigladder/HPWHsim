@@ -1302,20 +1302,27 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	static const double height = 1.2; //meters
+	const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+	const double node_height = height / numNodes;
+	
+	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
+	const double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
+
+	// UA_r is the faction of the area of the cylinder that's not the top or bottom.
+	const double UA_r = height / (height + rad);
+
 	if (doConduction) {
-		// height estimate from Rheem along with the volume is used to get the radius and node_height
-		static const double height = 1.2; //meters
-		const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
-		const double node_height = height/numNodes;
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
-		double tau = KWATER_WpermC / ( CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height) ) * minutesPerStep * 60.0;
+		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height)) * minutesPerStep * 60.0;
 		if (tau > 0.5) {
 			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
 		}
-		// The fraction of UA that is on the top and bottom of the tank
-		double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
-		double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
+
+		// Boundary condition for the finite difference. 
+		const double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
 		nextTankTemps_C[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
@@ -1326,39 +1333,42 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
-		
-		// Ar is the faction of the area of the cylinder that's not the top or bottom.
-		double Ar = height / (height + rad);
+		// UA loss from the sides are found at the bottom of the function.
+	}
 
-		//calculate standby losses
+	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
+		
 		for (int i = 0; i < numNodes; i++) {
+			nextTankTemps_C[i] = tankTemps_C[i];
+		}
+
+		//kJ's lost as standby in the current time step for the top node.
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+
+		//kJ's lost as standby in the current time step for the bottom node.
+		standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		// UA loss from the sides are found at the bottom of the function.
+
+	}
+
+
+	//calculate standby losses from the sides of the tank
+	for (int i = 0; i < numNodes; i++) {
 			//faction of tank area on the sides
 			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = (tankUA_kJperHrC * Ar / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			double standbyLosses_kJ = (tankUA_kJperHrC * UA_r / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
 			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 			//The effect of standby loss on temperature in each node
 			nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-		}
 	}
-	else { // Ignore tank conduction and calculate UA losses in the old way.
-		
-		for (int i = 0; i < numNodes; i++) 	nextTankTemps_C[i] = tankTemps_C[i];
-
-		//calculate standby losses
-		//get average tank temperature
-		double avgTemp = 0;
-		for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
-		avgTemp /= numNodes;
-
-		//kJ's lost as standby in the current time step
-		double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
-		standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
-
-		//The effect of standby loss on temperature in each segment
-		double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-		for (int i = 0; i < numNodes; i++) nextTankTemps_C[i] -= lossPerNode_C;
-	}
+	
 
 	// Assign the new temporary tank temps to the real tank temps.
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
