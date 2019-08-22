@@ -51,6 +51,7 @@ using std::cout;
 using std::string;
 
 const float HPWH::DENSITYWATER_kgperL = 0.998f;
+const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.181f;
 const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
@@ -67,7 +68,8 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP)
+setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+doInversionMixing(true), doConduction(true)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -97,8 +99,10 @@ HPWH::HPWH(const HPWH &hpwh){
 	numNodes = hpwh.numNodes;
 	nodeDensity = hpwh.nodeDensity;
 	tankTemps_C = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
+		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
 
 
@@ -108,6 +112,9 @@ HPWH::HPWH(const HPWH &hpwh){
 
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
+
+	doInversionMixing = hpwh.doInversionMixing; 
+	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
@@ -153,9 +160,12 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	nodeDensity = hpwh.nodeDensity;
 
 	delete[] tankTemps_C;
+	delete[] nextTankTemps_C;
 	tankTemps_C = new double[numNodes];
+	nextTankTemps_C = new double[numNodes];
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
+		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
 
 
@@ -166,6 +176,9 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
 
+	doInversionMixing = hpwh.doInversionMixing;
+	doConduction = hpwh.doConduction;
+
 	locationTemperature_C = hpwh.locationTemperature_C;
 
 	return *this;
@@ -173,6 +186,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 HPWH::~HPWH() {
 	delete[] tankTemps_C;
+	delete[] nextTankTemps_C;
 	delete[] setOfSources;
 }
 
@@ -206,7 +220,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 	//is the failure flag is set, don't run
 	if (simHasFailed) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("simHasFailed is set, aborting.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("simHasFailed is set, aborting.  \n");
+		}
 		return HPWH_ABORT;
 	}
 
@@ -227,7 +243,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	// to the tracked locationTemperature
 	double temperatureGoal = tankAmbientT_C;
 	if (doTempDepression) {
-		if (locationTemperature_C == UNINITIALIZED_LOCATIONTEMP) locationTemperature_C = tankAmbientT_C;
+		if (locationTemperature_C == UNINITIALIZED_LOCATIONTEMP) {
+			locationTemperature_C = tankAmbientT_C;
+		}
 		tankAmbientT_C = locationTemperature_C;
 		heatSourceAmbientT_C = locationTemperature_C;
 	}
@@ -239,8 +257,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	//do HeatSource choice
 	for (int i = 0; i < numHeatSources; i++) {
-		if (hpwhVerbosity >= VRB_emetic)  msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
-
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
+		}
 		if (isHeating == true) {
 			//check if anything that is on needs to turn off (generally for lowT cutoffs)
 			//things that just turn on later this step are checked for this in shouldHeat
@@ -256,7 +275,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			//if there's a priority HeatSource (e.g. upper resistor) and it needs to
 			//come on, then turn everything off and start it up
 			if (setOfSources[i].isVIP) {
-				if (hpwhVerbosity >= VRB_emetic) msg("\tVIP check");
+				if (hpwhVerbosity >= VRB_emetic) {
+					msg("\tVIP check");
+				}
 				if (setOfSources[i].shouldHeat()) {
 					turnAllHeatSourcesOff();
 					setOfSources[i].engageHeatSource();
@@ -312,7 +333,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	for (int i = 0; i < numHeatSources; i++) {
 		// check/apply lock-outs
-		if (hpwhVerbosity >= VRB_emetic)  msg("Checking lock-out logic for heat source %d:\n", i);
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg("Checking lock-out logic for heat source %d:\n", i);
+		}
 		if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
 			setOfSources[i].lockOutHeatSource();
 		}
@@ -380,8 +403,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		locationTemperature_C -= (locationTemperature_C - temperatureGoal)*(1 - 0.9289);
 	}
 
-
-
 	//settle outputs
 
 	//outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
@@ -391,20 +412,28 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
-
+	// check for inverted temperature profile
+	if (doInversionMixing) {
+		mixTankInversions();
+	}
 	//cursory check for inverted temperature profile
-	if (tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("The top of the tank is cooler than the bottom.  \n");
+	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The top of the tank is cooler than the bottom.  \n");
+		}
 	}
 
-
 	if (simHasFailed) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("The simulation has encountered an error.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The simulation has encountered an error.  \n");
+		}
 		return HPWH_ABORT;
 	}
 
 
-	if (hpwhVerbosity >= VRB_typical) msg("Ending runOneStep.  \n\n\n\n");
+	if (hpwhVerbosity >= VRB_typical) {
+		msg("Ending runOneStep.  \n\n\n\n");
+	}
 	return 0;  //successful completion of the step returns 0
 } //end runOneStep
 
@@ -424,7 +453,9 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 	std::vector<double> heatSources_energyInputs_SUM(numHeatSources);
 	std::vector<double> heatSources_energyOutputs_SUM(numHeatSources);
 
-	if (hpwhVerbosity >= VRB_typical) msg("Begin runNSteps.  \n");
+	if (hpwhVerbosity >= VRB_typical) {
+		msg("Begin runNSteps.  \n");
+	}
 	//run the sim one step at a time, accumulating the outputs as you go
 	for (int i = 0; i < N; i++) {
 		runOneStep(inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i],
@@ -481,7 +512,9 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 		setOfSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
 	}
 
-	if (hpwhVerbosity >= VRB_typical) msg("Ending runNSteps.  \n\n\n\n");
+	if (hpwhVerbosity >= VRB_typical) {
+		msg("Ending runNSteps.  \n\n\n\n");
+	}
 	return 0;
 }
 
@@ -544,8 +577,12 @@ void HPWH::printHeatSourceInfo(){
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
-		if (runtime != 0) { outputVar = getNthHeatSourceEnergyInput(i) / (runtime / 60.0); }
-		else { outputVar = 0; }
+		if (runtime != 0) { 
+			outputVar = getNthHeatSourceEnergyInput(i) / (runtime / 60.0);
+		}
+		else { 
+			outputVar = 0; 
+		}
 		ss << "input power kw: " << std::setw(7) << outputVar << "\t\t";
 	}
 	ss << endl;
@@ -557,8 +594,12 @@ void HPWH::printHeatSourceInfo(){
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
-		if (runtime != 0) { outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0); }
-		else { outputVar = 0; }
+		if (runtime != 0) { 
+			outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0); 
+		}
+		else { 
+			outputVar = 0; 
+		}
 		ss << "output power kw: " << std::setw(7) << outputVar << "\t";
 	}
 	ss << endl;
@@ -618,7 +659,9 @@ bool HPWH::isSetpointFixed(){
 
 int HPWH::setSetpoint(double newSetpoint){
 	if (setpointFixed == true) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Unwilling to set setpoint for your currently selected model.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Unwilling to set setpoint for your currently selected model.  \n");
+		}
 		return HPWH_ABORT;
 	}
 	else{
@@ -634,7 +677,9 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units) {
 		return setSetpoint(F_TO_C(newSetpoint));
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		}
 		return HPWH_ABORT;
 	}
 }
@@ -653,13 +698,17 @@ int HPWH::resetTankToSetpoint(){
 
 int HPWH::setAirFlowFreedom(double fanFraction) {
 	if (fanFraction < 0 || fanFraction > 1) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the fan fraction outside of bounds.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to set the fan fraction outside of bounds.  \n");
+		}
 		simHasFailed = true;
 		return HPWH_ABORT;
 	}
 	else {
 		for (int i = 0; i < numHeatSources; i++) {
-			if (setOfSources[i].typeOfHeatSource == TYPE_compressor) setOfSources[i].airflowFreedom = fanFraction;
+			if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+				setOfSources[i].airflowFreedom = fanFraction;
+			}
 		}
 	}
 	return 0;
@@ -672,7 +721,9 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 
 int HPWH::setTankSize(double HPWH_size_L) {
 	if (HPWH_size_L <= 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to set the tank volume outside of bounds.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to set the tank volume outside of bounds.  \n");
+		}
 		simHasFailed = true;
 		return HPWH_ABORT;
 	}
@@ -689,9 +740,19 @@ int HPWH::setTankSize(double HPWH_size, UNITS units) {
 		return setTankSize(GAL_TO_L(HPWH_size));
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setTankSize.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setTankSize.  \n");
+		}
 		return HPWH_ABORT;
 	}
+}
+int HPWH::setDoInversionMixing(bool doInvMix) {
+	this->doInversionMixing = doInvMix;
+	return 0;
+}
+int HPWH::setDoConduction(bool doCondu) {
+	this->doConduction = doCondu;
+	return 0;
 }
 
 int HPWH::setUA(double UA_kJperHrC) {
@@ -706,7 +767,9 @@ int HPWH::setUA(double UA, UNITS units) {
 		return setUA(UAf_TO_UAc(UA));
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for setUA.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setUA.  \n");
+		}
 		return HPWH_ABORT;
 	}
 }
@@ -746,7 +809,9 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
     return setMaxTempDepression(F_TO_C(maxDepression));
   }
   else {
-    if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for max Temp Depression.  \n");
+	  if (hpwhVerbosity >= VRB_reluctant) {
+		  msg("Incorrect unit specification for max Temp Depression.  \n");
+	  }
     return HPWH_ABORT;
   }
 }
@@ -886,7 +951,9 @@ int HPWH::getNumNodes() const {
 
 double HPWH::getTankNodeTemp(int nodeNum) const {
 	if (nodeNum > numNodes || nodeNum < 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 	return tankTemps_C[nodeNum];
@@ -905,7 +972,9 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 		return C_TO_F(result);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getTankNodeTemp.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankNodeTemp.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -913,7 +982,9 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 
 double HPWH::getNthSimTcouple(int N) const {
 	if (N > 6 || N < 1) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 
@@ -939,7 +1010,9 @@ double HPWH::getNthSimTcouple(int N, UNITS units) const {
 		return C_TO_F(result);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -953,7 +1026,9 @@ int HPWH::getNumHeatSources() const {
 double HPWH::getNthHeatSourceEnergyInput(int N) const {
 	//energy used by the heat source is positive - this should always be positive
 	if (N > numHeatSources || N < 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 	return setOfSources[N].energyInput_kWh;
@@ -976,7 +1051,9 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
 		return KWH_TO_KJ(returnVal);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -985,7 +1062,9 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
 double HPWH::getNthHeatSourceEnergyOutput(int N) const {
 	//returns energy from the heat source into the water - this should always be positive
 	if (N > numHeatSources || N < 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the energy output of a heat source that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the energy output of a heat source that does not exist.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 	return setOfSources[N].energyOutput_kWh;
@@ -1008,7 +1087,9 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
 		return KWH_TO_KJ(returnVal);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -1016,7 +1097,9 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
 
 double HPWH::getNthHeatSourceRunTime(int N) const {
 	if (N > numHeatSources || N < 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the run time of a heat source that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the run time of a heat source that does not exist.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 	return setOfSources[N].runtime_min;
@@ -1025,7 +1108,9 @@ double HPWH::getNthHeatSourceRunTime(int N) const {
 
 int HPWH::isNthHeatSourceRunning(int N) const{
 	if (N > numHeatSources || N < 0) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have attempted to access the status of a heat source that does not exist.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the status of a heat source that does not exist.  \n");
+		}
 		return HPWH_ABORT;
 	}
 	if (setOfSources[N].isEngaged()){
@@ -1060,7 +1145,9 @@ double HPWH::getOutletTemp(UNITS units) const {
 		return C_TO_F(returnVal);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getOutletTemp.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getOutletTemp.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -1085,7 +1172,9 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
 		return KWH_TO_KJ(returnVal);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getEnergyRemovedFromEnvironment.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getEnergyRemovedFromEnvironment.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -1110,7 +1199,9 @@ double HPWH::getStandbyLosses(UNITS units) const {
 		return KWH_TO_KJ(returnVal);
 	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Incorrect unit specification for getStandbyLosses.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getStandbyLosses.  \n");
+		}
 		return double(HPWH_ABORT);
 	}
 }
@@ -1146,11 +1237,12 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
 		drawFraction = drawVolume_L / volPerNode_LperNode;
 		if (drawFraction > numNodes) {
-			if (hpwhVerbosity >= VRB_reluctant) msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+			}
 			simHasFailed = true;
 			return;
 		}
-
 
 		wholeNodesToDraw = (int)std::floor(drawFraction);
 		drawFraction -= wholeNodesToDraw;
@@ -1207,20 +1299,119 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	} //end if(draw_volume_L > 0)
 
 
-	//calculate standby losses
-	//get average tank temperature
-	double avgTemp = 0;
-	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
-	avgTemp /= numNodes;
+	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	static const double height = 1.2; //meters
+	const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+	const double node_height = height / numNodes;
+	
+	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
+	const double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
 
-	//kJ's lost as standby in the current time step
-	double standbyLosses_kJ = (tankUA_kJperHrC * (avgTemp - tankAmbientT_C) * (minutesPerStep / 60.0));
-	standbyLosses_kWh = KJ_TO_KWH(standbyLosses_kJ);
+	// UA_r is the faction of the area of the cylinder that's not the top or bottom.
+	const double UA_r = height / (height + rad);
 
-	//The effect of standby loss on temperature in each segment
-	double lossPerNode_C = (standbyLosses_kJ / numNodes) / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
-	for (int i = 0; i < numNodes; i++) tankTemps_C[i] -= lossPerNode_C;
+	if (doConduction) {
+
+		// Get the "constant" tau for the stability condition and the conduction calculation
+		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height)) * minutesPerStep * 60.0;
+		if (tau > 0.5) {
+			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
+		}
+
+		// Boundary condition for the finite difference. 
+		const double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
+
+		// Boundary nodes for finite difference
+		nextTankTemps_C[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+		nextTankTemps_C[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+
+		// Internal nodes for the finite difference
+		for (int i = 1; i < numNodes - 1; i++) {
+			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
+		}
+		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
+		// UA loss from the sides are found at the bottom of the function.
+	}
+
+	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
+		
+		for (int i = 0; i < numNodes; i++) {
+			nextTankTemps_C[i] = tankTemps_C[i];
+		}
+
+		//kJ's lost as standby in the current time step for the top node.
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+
+		//kJ's lost as standby in the current time step for the bottom node.
+		standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		// UA loss from the sides are found at the bottom of the function.
+
+	}
+
+
+	//calculate standby losses from the sides of the tank
+	for (int i = 0; i < numNodes; i++) {
+			//faction of tank area on the sides
+			//kJ's lost as standby in the current time step for each node.
+			double standbyLosses_kJ = (tankUA_kJperHrC * UA_r / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+
+			//The effect of standby loss on temperature in each node
+			nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+	}
+	
+
+	// Assign the new temporary tank temps to the real tank temps.
+	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
+
 }  //end updateTankTemps
+
+
+// Inversion mixing modeled after bigladder EnergyPlus code PK
+void HPWH::mixTankInversions() {
+	bool hasInversion;
+	const double volumePerNode_L = tankVolume_L / numNodes;
+	//int numdos = 0;
+
+	do {
+		hasInversion = false;
+		//Start from the top and check downwards
+		for (int i = numNodes-1; i >= 0; i--) {
+			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
+				// Temperature inversion!
+				hasInversion = true;
+				
+				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
+				double Tmixed = 0.0;
+				double massMixed = 0.0;
+				int m;
+				for (m = i; m >= 0; m--) {
+					Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
+					massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
+					if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1])) {
+						break;
+					}
+				}
+				Tmixed /= massMixed;
+
+				// Assign the tank temps from i to k
+				for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+			}
+			
+		}
+				
+	} while ( hasInversion );
+}
+///////////////////////////////////////////////////////////////////////////////////
 
 
 void HPWH::turnAllHeatSourcesOff() {
@@ -1287,7 +1478,9 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
 	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL || hSource.followedByHeatSource != NULL) {
 		hpwh->simHasFailed = true;
-		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
+		if (hpwh->hpwhVerbosity >= VRB_reluctant) {
+			hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
+		}
 	}
 
 	for (int i = 0; i < CONDENSITY_SIZE; i++) {
@@ -1333,7 +1526,9 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
 
 	if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL || hSource.followedByHeatSource != NULL) {
 		hpwh->simHasFailed = true;
-		if (hpwh->hpwhVerbosity >= VRB_reluctant)  hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
+		if (hpwh->hpwhVerbosity >= VRB_reluctant) {
+			hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
+		}
 	}
 	else {
 		companionHeatSource = NULL;
@@ -1423,30 +1618,42 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const {
 		bool lock = false;
 		if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC) {
 			lock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f", heatSourceAmbientT_C, minT);
+			}
 		}
 		//when not running, don't use hysteresis
 		else if (isEngaged() == false && heatSourceAmbientT_C < minT) {
 			lock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f", heatSourceAmbientT_C, minT);
+			}
 		}
 
 		//when the "external" temperature is too warm - typically used for resistance lockout
 		//when running, use hysteresis
 		if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC) {
 			lock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
+			}
 		}
 		//when not running, don't use hysteresis
 		else if (isEngaged() == false && heatSourceAmbientT_C > maxT) {
 			lock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
+			}
 		}
 		if (lock == true && backupHeatSource == NULL) {
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
+			}
 			lock = false;
 		}
-		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
+		if (hpwh->hpwhVerbosity >= VRB_typical) {
+			hpwh->msg("\n");
+		}
 		return lock;
 	}
 }
@@ -1463,16 +1670,26 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
 		bool unlock = false;
 		if (isEngaged() == true && heatSourceAmbientT_C > minT + hysteresis_dC && heatSourceAmbientT_C < maxT - hysteresis_dC) {
 			unlock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT + hysteresis_dC) hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT - hysteresis_dC) hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT + hysteresis_dC) {
+				hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f", heatSourceAmbientT_C, minT);
+			}
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT - hysteresis_dC) {
+				hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
+			}
 		}
 		//when not running, don't use hysteresis
 		else if (isEngaged() == false && heatSourceAmbientT_C > minT && heatSourceAmbientT_C < maxT) {
 			unlock = true;
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT) hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f",heatSourceAmbientT_C,minT);
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT) hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f",heatSourceAmbientT_C,maxT);
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT) {
+				hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f", heatSourceAmbientT_C, minT);
+			}
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT) {
+				hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
+			}
 		}
-		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
+		if (hpwh->hpwhVerbosity >= VRB_typical) {
+			hpwh->msg("\n");
+		}
 		return unlock;
 	}
 }
@@ -1498,7 +1715,9 @@ bool HPWH::HeatSource::shouldHeat() const {
 	bool shouldEngage = false;
 
 	for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
-		if (hpwh->hpwhVerbosity >= VRB_emetic)  hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i].description.c_str());
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
+			hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i].description.c_str());
+		}
 
 		double average = hpwh->tankAvg_C(turnOnLogicSet[i].nodeWeights);
 		double comparison;
@@ -1513,7 +1732,9 @@ bool HPWH::HeatSource::shouldHeat() const {
 			shouldEngage = true;
 
 			//debugging message handling
-			if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("engages!\n");
+			if (hpwh->hpwhVerbosity >= VRB_typical) {
+				hpwh->msg("engages!\n");
+			}
 			if (hpwh->hpwhVerbosity >= VRB_emetic){
 				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
 			}
@@ -1530,10 +1751,14 @@ bool HPWH::HeatSource::shouldHeat() const {
 	//if everything else wants it to come on, but if it would shut off anyways don't turn it on
 	if (shouldEngage == true && shutsOff() == true) {
 		shouldEngage = false;
-		if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("but is denied by shutsOff");
+		if (hpwh->hpwhVerbosity >= VRB_typical) {
+			hpwh->msg("but is denied by shutsOff");
+		}
 	}
 
-	if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("\n");
+	if (hpwh->hpwhVerbosity >= VRB_typical) {
+		hpwh->msg("\n");
+	}
 	return shouldEngage;
 }
 
@@ -1567,7 +1792,9 @@ bool HPWH::HeatSource::shutsOff() const {
 			shutOff = true;
 
 			//debugging message handling
-			if (hpwh->hpwhVerbosity >= VRB_typical) hpwh->msg("shuts down %s\n", shutOffLogicSet[i].description.c_str());
+			if (hpwh->hpwhVerbosity >= VRB_typical) {
+				hpwh->msg("shuts down %s\n", shutOffLogicSet[i].description.c_str());
+			}
 		}
 	}
 
@@ -1672,7 +1899,9 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 			distribution[i] = 0.0;
 		}
 		//this gives a very slight speed improvement (milliseconds per simulated year)
-		if (distribution[i] < HEATDIST_MINVALUE) distribution[i] = 0;
+		if (distribution[i] < HEATDIST_MINVALUE) {
+			distribution[i] = 0;
+		}
 	}
 }
 
@@ -1922,8 +2151,12 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		//protect against dividing by zero - if bottom node is at (or above) setpoint,
 		//add no heat
-		if (nodeHeat_kJperNode <= 0) { nodeFrac = 0; }
-		else { nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode; }
+		if (nodeHeat_kJperNode <= 0) { 
+			nodeFrac = 0; 
+		}
+		else { 
+			nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode; 
+		}
 
 		if (hpwh->hpwhVerbosity >= VRB_emetic){
 			hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
@@ -2024,7 +2257,9 @@ void HPWH::calcDerivedValues(){
 	double condentropy = 0;
 	double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
 	for (int i = 0; i < numHeatSources; i++) {
-		if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "Heat Source %d \n", i);
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg(outputString, "Heat Source %d \n", i);
+		}
 
 		// Calculate condentropy and ==> shrinkage
 		condentropy = 0;
@@ -2035,7 +2270,9 @@ void HPWH::calcDerivedValues(){
 			}
 		}
 		setOfSources[i].shrinkage = alpha + condentropy * beta;
-		if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg(outputString, "shrinkage %.2lf \n\n", setOfSources[i].shrinkage);
+		}
 	}
 
 
@@ -2043,17 +2280,23 @@ void HPWH::calcDerivedValues(){
 	int lowest = 0;
 	for (int i = 0; i < numHeatSources; i++) {
 		lowest = 0;
-		if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "Heat Source %d \n", i);
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg(outputString, "Heat Source %d \n", i);
+		}
 
 		for (int j = 0; j < numNodes; j++) {
-			if (hpwhVerbosity >= VRB_emetic)  msg(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j / (numNodes / CONDENSITY_SIZE));
+			if (hpwhVerbosity >= VRB_emetic) {
+				msg(outputString, "j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n", j, j / (numNodes / CONDENSITY_SIZE));
+			}
 
 			if (setOfSources[i].condensity[(j / (numNodes / CONDENSITY_SIZE))] > 0) {
 				lowest = j;
 				break;
 			}
 		}
-		if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " lowest : %d \n", lowest);
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg(outputString, " lowest : %d \n", lowest);
+		}
 
 		setOfSources[i].lowestNode = lowest;
 	}
@@ -2076,8 +2319,12 @@ void HPWH::calcDerivedValues(){
 		}
 	}
 
-	if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " compressorIndex : %d \n", compressorIndex);
-	if (hpwhVerbosity >= VRB_emetic)  msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
+	if (hpwhVerbosity >= VRB_emetic) {
+		msg(outputString, " compressorIndex : %d \n", compressorIndex);
+	}
+	if (hpwhVerbosity >= VRB_emetic) {
+		msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
+	}
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
@@ -2093,6 +2340,7 @@ void HPWH::calcDerivedValues(){
 
 }
 
+// Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs(){
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
@@ -2113,7 +2361,9 @@ int HPWH::checkInputs(){
 	for (int i = 0; i < numHeatSources; i++) {
 		//check the heat source type to make sure it has been set
 		if (setOfSources[i].typeOfHeatSource == TYPE_none) {
-			if (hpwhVerbosity >= VRB_reluctant) msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
+			}
 			returnVal = HPWH_ABORT;
 		}
 		//check to make sure there is at least one onlogic or parent with onlogic
@@ -2139,6 +2389,12 @@ int HPWH::checkInputs(){
 
 	}
 
+	//Check if the UA is out of bounds
+	if (tankUA_kJperHrC < 0.0) {
+		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+		returnVal = HPWH_ABORT;
+	}
+
 
 
 	//if there's no failures, return 0
@@ -2150,15 +2406,18 @@ int HPWH::HPWHinit_file(string configFile){
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] nextTankTemps_C;
+	delete[] setOfSources;
 
 
 	//open file, check and report errors
 	std::ifstream inputFILE;
 	inputFILE.open(configFile.c_str());
 	if (!inputFILE.is_open()) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Input file failed to open.  \n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Input file failed to open.  \n");
+		}
 		return HPWH_ABORT;
 	}
 
@@ -2189,7 +2448,9 @@ int HPWH::HPWHinit_file(string configFile){
 			if (units == "gal")  tempDouble = GAL_TO_L(tempDouble);
 			else if (units == "L"); //do nothing, lol
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect units specification for %s.  \n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 			tankVolume_L = tempDouble;
@@ -2197,7 +2458,9 @@ int HPWH::HPWHinit_file(string configFile){
 		else if (token == "UA") {
 			line_ss >> tempDouble >> units;
 			if (units != "kJperHrC") {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect units specification for %s.  \n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 			tankUA_kJperHrC = tempDouble;
@@ -2211,7 +2474,9 @@ int HPWH::HPWHinit_file(string configFile){
 				doTempDepression = false;
 			}
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper value for %s\n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 		}
@@ -2224,7 +2489,9 @@ int HPWH::HPWHinit_file(string configFile){
 				tankMixesOnDraw = false;
 			}
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper value for %s\n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 		}
@@ -2233,7 +2500,9 @@ int HPWH::HPWHinit_file(string configFile){
 			if (units == "F")  tempDouble = F_TO_C(tempDouble);
 			else if (units == "C"); //do nothing, lol
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect units specification for %s.  \n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 			setpoint_C = tempDouble;
@@ -2244,7 +2513,9 @@ int HPWH::HPWHinit_file(string configFile){
 			if (tempString == "true")  setpointFixed = true;
 			else if (tempString == "false")  setpointFixed = false;
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s\n", token.c_str());
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper value for %s\n", token.c_str());
+				}
 				return HPWH_ABORT;
 			}
 		}
@@ -2263,10 +2534,13 @@ int HPWH::HPWHinit_file(string configFile){
 				hpwhVerbosity = VRB_emetic;
 			}
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect verbosity on input.  \n");
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect verbosity on input.  \n");
+				}
 				return HPWH_ABORT;
 			}
 		}
+
 		else if (token == "numHeatSources") {
 			line_ss >> numHeatSources;
 			setOfSources = new HeatSource[numHeatSources];
@@ -2285,7 +2559,9 @@ int HPWH::HPWHinit_file(string configFile){
 				if (tempString == "true")  setOfSources[heatsource].isVIP = true;
 				else if (tempString == "false")  setOfSources[heatsource].isVIP = false;
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 			}
@@ -2294,7 +2570,9 @@ int HPWH::HPWHinit_file(string configFile){
 				if (tempString == "true")  setOfSources[heatsource].isOn = true;
 				else if (tempString == "false")  setOfSources[heatsource].isOn = false;
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper value for %s for heat source %d\n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 			}
@@ -2303,7 +2581,9 @@ int HPWH::HPWHinit_file(string configFile){
 				if (units == "F")  tempDouble = F_TO_C(tempDouble);
 				else if (units == "C"); //do nothing, lol
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Incorrect units specification for %s.  \n", token.c_str());
+					}
 					return HPWH_ABORT;
 				}
 				setOfSources[heatsource].minT = tempDouble;
@@ -2313,7 +2593,9 @@ int HPWH::HPWHinit_file(string configFile){
 				if (units == "F")  tempDouble = F_TO_C(tempDouble);
 				else if (units == "C"); //do nothing, lol
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s.  \n", token.c_str());
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Incorrect units specification for %s.  \n", token.c_str());
+					}
 					return HPWH_ABORT;
 				}
 				setOfSources[heatsource].maxT = tempDouble;
@@ -2328,7 +2610,9 @@ int HPWH::HPWHinit_file(string configFile){
 					while (std::regex_match(nextToken, std::regex("\\d+"))) {
 						int nodeNum = std::stoi(nextToken);
 						if (nodeNum > 13 || nodeNum < 0) {
-							if (hpwhVerbosity >= VRB_reluctant)  msg("Node number for heatsource %d %s must be between 0 and 13.  \n", heatsource, token.c_str());
+							if (hpwhVerbosity >= VRB_reluctant) {
+								msg("Node number for heatsource %d %s must be between 0 and 13.  \n", heatsource, token.c_str());
+							}
 							return HPWH_ABORT;
 						}
 						nodeNums.push_back(nodeNum);
@@ -2347,11 +2631,15 @@ int HPWH::HPWHinit_file(string configFile){
 						}
 					}
 					if (nodeNums.size() != weights.size()) {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n", heatsource, token.c_str(), weights.size(), token.c_str(), nodeNums.size());
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n", heatsource, token.c_str(), weights.size(), token.c_str(), nodeNums.size());
+						}
 						return HPWH_ABORT;
 					}
 					if (nextToken != "absolute" && nextToken != "relative") {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper definition, \"%s\", for heat source %d %s. Should be \"relative\" or \"absoute\".\n", nextToken.c_str(), heatsource, token.c_str());
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Improper definition, \"%s\", for heat source %d %s. Should be \"relative\" or \"absoute\".\n", nextToken.c_str(), heatsource, token.c_str());
+						}
 						return HPWH_ABORT;
 					}
 					bool absolute = (nextToken == "absolute");
@@ -2361,7 +2649,9 @@ int HPWH::HPWHinit_file(string configFile){
 					if (compareStr == "<") compare = std::less<double>();
 					else if (compareStr == ">") compare = std::greater<double>();
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n", compareStr.c_str(), heatsource, token.c_str());
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n", compareStr.c_str(), heatsource, token.c_str());
+						}
 						return HPWH_ABORT;
 					}
 					if (units == "F") {
@@ -2374,7 +2664,9 @@ int HPWH::HPWHinit_file(string configFile){
 					}
 					else if (units == "C"); //do nothing, lol
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						}
 						return HPWH_ABORT;
 					}
 					std::vector<NodeWeight> nodeWeights;
@@ -2393,7 +2685,9 @@ int HPWH::HPWHinit_file(string configFile){
 					if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
 					else if (units == "C"); //do nothing, lol
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						}
 						return HPWH_ABORT;
 					}
 					if (tempString == "topThird") {
@@ -2424,7 +2718,9 @@ int HPWH::HPWHinit_file(string configFile){
 						setOfSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
 					}
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						}
 						return HPWH_ABORT;
 					}
 				}
@@ -2433,7 +2729,9 @@ int HPWH::HPWHinit_file(string configFile){
 					if (units == "F")  tempDouble = F_TO_C(tempDouble);
 					else if (units == "C"); //do nothing, lol
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+						}
 						return HPWH_ABORT;
 					}
 					if (tempString == "topNodeMaxTemp") {
@@ -2452,7 +2750,9 @@ int HPWH::HPWHinit_file(string configFile){
 						setOfSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
 					}
 					else {
-						if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						if (hpwhVerbosity >= VRB_reluctant) {
+							msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+						}
 						return HPWH_ABORT;
 					}
 				}
@@ -2466,7 +2766,9 @@ int HPWH::HPWHinit_file(string configFile){
 					setOfSources[heatsource].typeOfHeatSource = TYPE_compressor;
 				}
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 			}
@@ -2482,7 +2784,9 @@ int HPWH::HPWHinit_file(string configFile){
 					setOfSources[heatsource].configuration = HeatSource::CONFIG_EXTERNAL;
 				}
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 			}
@@ -2520,7 +2824,9 @@ int HPWH::HPWHinit_file(string configFile){
 				//        else if (units == "C") ; //do nothing, lol
 				else if (units == "C") tempDouble = C_TO_F(tempDouble);
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 				setOfSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
@@ -2572,7 +2878,9 @@ int HPWH::HPWHinit_file(string configFile){
 				if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
 				else if (units == "C"); //do nothing, lol
 				else {
-					if (hpwhVerbosity >= VRB_reluctant)  msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Incorrect units specification for %s from heatsource %d.  \n", token.c_str(), heatsource);
+					}
 					return HPWH_ABORT;
 				}
 				setOfSources[heatsource].hysteresis_dC = tempDouble;
@@ -2590,7 +2898,9 @@ int HPWH::HPWHinit_file(string configFile){
 				setOfSources[heatsource].followedByHeatSource = &setOfSources[sourceNum];
 			}
 			else {
-				if (hpwhVerbosity >= VRB_reluctant)  msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource);
+				}
 			}
 
 		} //end heatsource options
@@ -2608,6 +2918,8 @@ int HPWH::HPWHinit_file(string configFile){
 	tankTemps_C = new double[numNodes];
 	resetTankToSetpoint();
 
+	nextTankTemps_C = new double[numNodes];
+
 	isHeating = false;
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].isOn) {
@@ -2618,7 +2930,9 @@ int HPWH::HPWHinit_file(string configFile){
 
 	calcDerivedValues();
 
-	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+	if (checkInputs() == HPWH_ABORT) {
+		return HPWH_ABORT;
+	}
 	simHasFailed = false;
 	return 0;
 }
@@ -2631,11 +2945,15 @@ int HPWH::HPWHinit_resTank(){
 int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W){
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
-		if (hpwhVerbosity >= VRB_reluctant)  msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+		}
 		return HPWH_ABORT;
 	}
 	if (energyFactor <= 0) {
-		if (hpwhVerbosity >= VRB_reluctant)  msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
+		}
 		return HPWH_ABORT;
 	}
 
@@ -2652,6 +2970,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
+
+	nextTankTemps_C = new double[numNodes];
 
 
 	doTempDepression = false;
@@ -2682,9 +3002,14 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
 	double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
 	double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-	double UA_btuPerHrF = numerator / denominator;
-	tankUA_kJperHrC = UA_btuPerHrF * (1.8 / 0.9478);
+	tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator); 
 
+	if (tankUA_kJperHrC < 0.) {
+		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
+			msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+		}
+		tankUA_kJperHrC = 0.0;
+	}
 
 	hpwhModel = MODELS_CustomResTank;
 
@@ -2718,8 +3043,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] setOfSources;
 
 
 
@@ -2728,6 +3053,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	numNodes = 12;
 	tankTemps_C = new double[numNodes];
 	setpoint_C = F_TO_C(127.0);
+
+	nextTankTemps_C = new double[numNodes];
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
@@ -2805,7 +3132,9 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	//use tank size setting function since it has bounds checking
 	int failure = this->setTankSize(tankVol_L);
 	if (failure == HPWH_ABORT) {
-		if (hpwhVerbosity >= VRB_reluctant) msg("Failure to set tank size in generic hpwh init.");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Failure to set tank size in generic hpwh init.");
+		}
 		return failure;
 	}
 
@@ -2869,7 +3198,9 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	//calculate oft-used derived values
 	calcDerivedValues();
 
-	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+	if (checkInputs() == HPWH_ABORT) {
+		return HPWH_ABORT;
+	}
 
 	isHeating = false;
 	for (int i = 0; i < numHeatSources; i++) {
@@ -2899,8 +3230,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
-	if (tankTemps_C != NULL) delete[] tankTemps_C;
-	if (setOfSources != NULL) delete[] setOfSources;
+	delete[] tankTemps_C;
+	delete[] setOfSources;
 
 
 	//resistive with no UA losses for testing
@@ -4826,16 +5157,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) msg("You have tried to select a preset model which does not exist.  \n");
+	if (hpwhVerbosity >= VRB_reluctant) {
+		msg("You have tried to select a preset model which does not exist.  \n");
+	}
 		return HPWH_ABORT;
 	}
+
+	// initialize nextTankTemps_C 
+	nextTankTemps_C = new double[numNodes];
 
 	hpwhModel = presetNum;
 
 	//calculate oft-used derived values
 	calcDerivedValues();
 
-	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+	if (checkInputs() == HPWH_ABORT) {
+		return HPWH_ABORT;
+	}
 
 	isHeating = false;
 	for (int i = 0; i < numHeatSources; i++) {
