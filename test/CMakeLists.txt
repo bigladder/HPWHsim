@@ -16,6 +16,7 @@ set(testNames
   test95
   testLockout
   testDr
+  testSandenCombi
 )
 
 set(modelNames

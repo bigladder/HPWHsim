@@ -31,6 +31,7 @@ class HPWH {
 
 
   static const float DENSITYWATER_kgperL;
+  static const float KWATER_WpermC;
   static const float CPWATER_kJperkgC;
   static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12
   //change at your own risk */
@@ -291,6 +292,12 @@ class HPWH {
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
 
+  int setDoInversionMixing(bool doInvMix);
+  /**< This is a simple setter for the logical for running the inversion mixing method, default is true */
+
+  int setDoConduction(bool doCondu);
+  /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
+
   int setUA(double UA_kJperHrC);
   int setUA(double UA, UNITS units);
   /**< This is a setter for the UA, with or without units specified - default is metric */
@@ -380,6 +387,8 @@ class HPWH {
   class HeatSource;
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
+	void mixTankInversions();
+	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	bool areAllHeatSourcesOff() const;
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
@@ -449,6 +458,8 @@ class HPWH {
 	/**< the setpoint of the tank  */
 	double *tankTemps_C;
 	/**< an array holding the temperature of each node - 0 is the bottom node, numNodes is the top  */
+	double *nextTankTemps_C;
+	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
 
 
   // Some outputs
@@ -474,6 +485,12 @@ class HPWH {
   /** a couple variables to hold values which are typically inputs  */
   double member_inletT_C;
   double member_minutesPerStep;
+
+  bool doInversionMixing;
+  /**<  If and only if true will model temperature inversion mixing in the tank  */
+
+  bool doConduction;
+  /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
 };  //end of HPWH class
 
