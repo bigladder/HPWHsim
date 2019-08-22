@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   HPWH::MODELS model;
   // HPWH::UNITS units = HPWH::UNITS_F;
 
-  std::vector<double> simTCouples(6);
+  std::vector<double> simTCouples(12);
   std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
 
   // Schedule stuff
@@ -247,8 +247,7 @@ int main(int argc, char *argv[])
   for(i = 0; i < hpwh.getNumHeatSources(); i++) {
     outputFile << ",input_kWh" << i + 1 << ",output_kWh" << i + 1;
   }
-  outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6\n";
-
+  outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6,simTcouples7,simTcouples8,simTcouples9,simTcouples10,simTcouples11,simTcouples12\n";
 
   // ------------------------------------- Simulate --------------------------------------- //
 
@@ -301,7 +300,10 @@ int main(int argc, char *argv[])
       outputFile << "," << heatSourcesEnergyInput[j] << "," << heatSourcesEnergyOutput[j];
     }
     outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] <<
-      "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
+      "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "," <<
+		simTCouples[6] << "," << simTCouples[7] << "," << simTCouples[8] << "," << 
+		simTCouples[9] << "," << simTCouples[10] << "," << simTCouples[11] << "\n";
+
   }
 
   controlFile.close();
@@ -381,7 +383,7 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples) {
   int i;
 
-  for(i = 0; i < 6; i++) {
+  for(i = 0; i < 12; i++) {
     tcouples[i] = hpwh.getNthSimTcouple(i + 1);
   }
   return 0;

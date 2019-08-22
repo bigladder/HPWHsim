@@ -144,6 +144,12 @@ class HPWH {
     TYPE_compressor   /**< a vapor cycle compressor  */
     };
 
+  /** specifies the unit type for outputs in the CSV file-s  */
+  enum CSVOPTIONS {
+	  CSVOPT_NONE,
+	  CSVOPT_IPUNITS
+  };
+
   struct NodeWeight {
     int nodeNum;
     double weight;
@@ -261,8 +267,8 @@ class HPWH {
   void printTankTemps();
   /**< this prints out all the node temps, kind of nicely formatted
       does not use verbosity, as it is public and expected to be called only when needed  */
-  int WriteCSVHeading(FILE* outFILE, const char* preamble = "") const;
-  int WriteCSVRow(FILE* outFILE, const char* preamble = "") const;
+  int WriteCSVHeading(FILE* outFILE, const char* preamble = "", int options = CSVOPT_NONE) const;
+  int WriteCSVRow(FILE* outFILE, const char* preamble = "", int options = CSVOPT_NONE) const;
   /**< a couple of function to write the outputs to a file
       they both will return 0 for success
       the preamble should be supplied with a trailing comma, as these functions do

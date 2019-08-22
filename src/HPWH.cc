@@ -629,26 +629,64 @@ void HPWH::printTankTemps() {
 
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble) const {
+int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int options) const {
+
+	bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
 	fprintf(outFILE, "%s", preamble);
-	fprintf(outFILE, "h_src%dIn (Wh),h_src%dOut (Wh)", 1, 1);
-	for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
+
+	if (doIP) { // Write out imperial units
+		fprintf(outFILE, "h_src%dIn (Btu),h_src%dOut (Btu)", 1, 1);
+		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
+			fprintf(outFILE, ",h_src%dIn (Btu),h_src%dOut (Btu)", iHS + 1, iHS + 1);
+		}
+		for (int iTC = 0; iTC < 6; iTC++) {
+			fprintf(outFILE, ",tcouple%d (F)", iTC + 1);
+		}
 	}
-	for (int iTC = 0; iTC < 6; iTC++)  fprintf(outFILE, ",tcouple%d (C)", iTC + 1);
+	else {
+		fprintf(outFILE, "h_src%dIn (Wh),h_src%dOut (Wh)", 1, 1);
+		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
+			fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
+		}
+		for (int iTC = 0; iTC < 12; iTC++) {
+			fprintf(outFILE, ",tcouple%d (C)", iTC + 1);
+		}
+	}
 	fprintf(outFILE, "\n");
+
 	return 0;
 }
-int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
+int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int options) const {
+
+	bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
 	fprintf(outFILE, "%s", preamble);
-	fprintf(outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput(0)*1000.,
-		getNthHeatSourceEnergyOutput(0)*1000.);
-	for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS)*1000.,
-			getNthHeatSourceEnergyOutput(iHS)*1000.);
+
+	if (doIP) { // Write out imperial units
+		fprintf(outFILE, "%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(0)*1000.),
+			KWH_TO_BTU(getNthHeatSourceEnergyOutput(0)*1000.));
+		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
+			fprintf(outFILE, ",%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(iHS)*1000.),
+				KWH_TO_BTU(getNthHeatSourceEnergyOutput(iHS)*1000.));
+		}
+		for (int iTC = 0; iTC < 12; iTC++) {
+			fprintf(outFILE, ",%0.2f", C_TO_F(getNthSimTcouple(iTC + 1)));
+		}
 	}
-	for (int iTC = 0; iTC < 6; iTC++)  fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1));
+	else {
+		fprintf(outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput(0)*1000.,
+			getNthHeatSourceEnergyOutput(0)*1000.);
+		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
+			fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS)*1000.,
+				getNthHeatSourceEnergyOutput(iHS)*1000.);
+		}
+		for (int iTC = 0; iTC < 12; iTC++) {
+			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1));
+		}
+	}
 	fprintf(outFILE, "\n");
+
 	return 0;
 }
 
@@ -981,7 +1019,7 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 
 
 double HPWH::getNthSimTcouple(int N) const {
-	if (N > 6 || N < 1) {
+	if (N > 12 || N < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
@@ -990,10 +1028,10 @@ double HPWH::getNthSimTcouple(int N) const {
 
 	double averageTemp_C = 0;
 	//specify N from 1-6, so use N-1 for node number
-	for (int i = (N - 1)*(numNodes / 6); i < N*(numNodes / 6); i++) {
+	for (int i = (N - 1)*(numNodes / 12); i < N*(numNodes / 12); i++) {
 		averageTemp_C += getTankNodeTemp(i);
 	}
-	averageTemp_C /= (numNodes / 6);
+	averageTemp_C /= (numNodes / 12);
 	return averageTemp_C;
 }
 
