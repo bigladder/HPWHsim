@@ -493,8 +493,8 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
 				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
-				getNthSimTcouple(1), getNthSimTcouple(2), getNthSimTcouple(3),
-				getNthSimTcouple(4), getNthSimTcouple(5), getNthSimTcouple(6));
+				getNthSimTcouple(1,6), getNthSimTcouple(2,6), getNthSimTcouple(3,6),
+				getNthSimTcouple(4,6), getNthSimTcouple(5,6), getNthSimTcouple(6,6));
 		}
 
 	}
@@ -629,7 +629,7 @@ void HPWH::printTankTemps() {
 
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int options) const {
+int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, int options) const {
 
 	bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
@@ -640,7 +640,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int options) cons
 		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
 			fprintf(outFILE, ",h_src%dIn (Btu),h_src%dOut (Btu)", iHS + 1, iHS + 1);
 		}
-		for (int iTC = 0; iTC < 6; iTC++) {
+		for (int iTC = 0; iTC < nTCouples; iTC++) {
 			fprintf(outFILE, ",tcouple%d (F)", iTC + 1);
 		}
 	}
@@ -649,7 +649,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int options) cons
 		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
 			fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
 		}
-		for (int iTC = 0; iTC < 12; iTC++) {
+		for (int iTC = 0; iTC < nTCouples; iTC++) {
 			fprintf(outFILE, ",tcouple%d (C)", iTC + 1);
 		}
 	}
@@ -657,7 +657,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int options) cons
 
 	return 0;
 }
-int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int options) const {
+int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int options) const {
 
 	bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
@@ -670,10 +670,10 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int options) const {
 			fprintf(outFILE, ",%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(iHS)*1000.),
 				KWH_TO_BTU(getNthHeatSourceEnergyOutput(iHS)*1000.));
 		}
-		for (int iTC = 0; iTC < 12; iTC++) {
-			fprintf(outFILE, ",%0.2f", C_TO_F(getNthSimTcouple(iTC + 1)));
+		for (int iTC = 0; iTC < nTCouples; iTC++) {
+			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, UNITS_F));
 		}
-	}
+	} 
 	else {
 		fprintf(outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput(0)*1000.,
 			getNthHeatSourceEnergyOutput(0)*1000.);
@@ -681,8 +681,8 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int options) const {
 			fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS)*1000.,
 				getNthHeatSourceEnergyOutput(iHS)*1000.);
 		}
-		for (int iTC = 0; iTC < 12; iTC++) {
-			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1));
+		for (int iTC = 0; iTC < nTCouples; iTC++) {
+			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples));
 		}
 	}
 	fprintf(outFILE, "\n");
@@ -1018,8 +1018,8 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 }
 
 
-double HPWH::getNthSimTcouple(int N) const {
-	if (N > 12 || N < 1) {
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
+	if (iTCouple > nTCouple || iTCouple < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
@@ -1027,16 +1027,16 @@ double HPWH::getNthSimTcouple(int N) const {
 	}
 
 	double averageTemp_C = 0;
-	//specify N from 1-6, so use N-1 for node number
-	for (int i = (N - 1)*(numNodes / 12); i < N*(numNodes / 12); i++) {
+	//specify iTCouple from 1-NUMBER_TCOUPLES, so use iTCouple-1 for node number
+	for (int i = (iTCouple - 1)*(numNodes / nTCouple); i < iTCouple*(numNodes / nTCouple); i++) {
 		averageTemp_C += getTankNodeTemp(i);
 	}
-	averageTemp_C /= (numNodes / 12);
+	averageTemp_C /= (numNodes / nTCouple);
 	return averageTemp_C;
 }
 
-double HPWH::getNthSimTcouple(int N, UNITS units) const {
-	double result = getNthSimTcouple(N);
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
+	double result = getNthSimTcouple(iTCouple, nTCouple);
 	if (result == double(HPWH_ABORT)) {
 		return result;
 	}
