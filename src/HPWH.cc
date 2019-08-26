@@ -664,11 +664,11 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 	fprintf(outFILE, "%s", preamble);
 
 	if (doIP) { // Write out imperial units
-		fprintf(outFILE, "%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(0)*1000.),
-			KWH_TO_BTU(getNthHeatSourceEnergyOutput(0)*1000.));
+		fprintf(outFILE, "%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(0)),
+			KWH_TO_BTU(getNthHeatSourceEnergyOutput(0)));
 		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-			fprintf(outFILE, ",%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(iHS)*1000.),
-				KWH_TO_BTU(getNthHeatSourceEnergyOutput(iHS)*1000.));
+			fprintf(outFILE, ",%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(iHS)),
+				KWH_TO_BTU(getNthHeatSourceEnergyOutput(iHS)));
 		}
 		for (int iTC = 0; iTC < nTCouples; iTC++) {
 			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, UNITS_F));
