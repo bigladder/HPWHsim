@@ -641,16 +641,15 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, in
 		pfx = ",";
 	}
 
-	pfx = "";
 	for (int iTC = 0; iTC < nTCouples; iTC++) {
 		fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F":"C");
-		pfx = ",";
 	}
 
 	fprintf(outFILE, "\n");
 
 	return 0;
 }
+
 int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int options) const {
 
 	bool doIP = (options & CSVOPT_IPUNITS) != 0;
@@ -664,10 +663,8 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 		pfx = ",";
 	}
 
-	pfx = "";
 	for (int iTC = 0; iTC < nTCouples; iTC++) {
 		fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
-		pfx = ",";
 	}
 
 
@@ -1032,11 +1029,9 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 
     // Check the full nodes
 	while (weight >= 1.0) {
-		printf("durr: start_ind: %f, ind: %d, weight: %f, avgT: %f  \n", start_ind, ind, weight, averageTemp_C);
 		averageTemp_C += getTankNodeTemp(ind);
 		weight -= 1.0;
 		ind += 1;
-
 	}
 
 	// Check any leftover
