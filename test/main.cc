@@ -255,10 +255,10 @@ int main(int argc, char *argv[])
   
  // static FILE* ppp = NULL;	
  // string filename;
- // filename = "C:/Users/paul/Documents/GitHub/HPWHsim/poop" + input3 + "_" + input1 + "_" + input2 + ".csv";
+ // filename = "C:/Users/paul/Documents/GitHub/HPWHsim/test" + input3 + "_" + input1 + "_" + input2 + ".csv";
  // const char* fName = filename.c_str();
  // ppp = fopen(fName, "wt");
- // hpwh.WriteCSVHeading(ppp, "before row text,",12, IP);
+ // hpwh.WriteCSVHeading(ppp, "before row text,",7, IP);
 
   // ------------------------------------- Simulate --------------------------------------- //
 
@@ -314,10 +314,11 @@ int main(int argc, char *argv[])
       "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
 
 
-	//hpwh.WriteCSVRow(ppp, "before text,",12, IP);
+//	hpwh.WriteCSVRow(ppp, "before text,", 5, IP);
+//	hpwh.WriteCSVRow(ppp, "before text,", 12, IP);
 
   }
-  //fclose(ppp);
+//  fclose(ppp);
 
   controlFile.close();
   outputFile.close();
