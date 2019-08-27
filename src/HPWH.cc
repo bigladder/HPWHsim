@@ -635,24 +635,18 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, in
 
 	fprintf(outFILE, "%s", preamble);
 
-	if (doIP) { // Write out imperial units
-		fprintf(outFILE, "h_src%dIn (Btu),h_src%dOut (Btu)", 1, 1);
-		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-			fprintf(outFILE, ",h_src%dIn (Btu),h_src%dOut (Btu)", iHS + 1, iHS + 1);
-		}
-		for (int iTC = 0; iTC < nTCouples; iTC++) {
-			fprintf(outFILE, ",tcouple%d (F)", iTC + 1);
-		}
+	const char* pfx = "";
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		fprintf(outFILE, "%sh_src%dIn (Wh),h_src%dOut (Wh)", pfx, iHS + 1, iHS + 1);
+		pfx = ",";
 	}
-	else {
-		fprintf(outFILE, "h_src%dIn (Wh),h_src%dOut (Wh)", 1, 1);
-		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-			fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
-		}
-		for (int iTC = 0; iTC < nTCouples; iTC++) {
-			fprintf(outFILE, ",tcouple%d (C)", iTC + 1);
-		}
+
+	pfx = "";
+	for (int iTC = 0; iTC < nTCouples; iTC++) {
+		fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F":"C");
+		pfx = ",";
 	}
+
 	fprintf(outFILE, "\n");
 
 	return 0;
@@ -663,28 +657,20 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 
 	fprintf(outFILE, "%s", preamble);
 
-	if (doIP) { // Write out imperial units
-		fprintf(outFILE, "%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(0)),
-			KWH_TO_BTU(getNthHeatSourceEnergyOutput(0)));
-		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-			fprintf(outFILE, ",%0.2f,%0.2f", KWH_TO_BTU(getNthHeatSourceEnergyInput(iHS)),
-				KWH_TO_BTU(getNthHeatSourceEnergyOutput(iHS)));
-		}
-		for (int iTC = 0; iTC < nTCouples; iTC++) {
-			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, UNITS_F));
-		}
-	} 
-	else {
-		fprintf(outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput(0)*1000.,
-			getNthHeatSourceEnergyOutput(0)*1000.);
-		for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-			fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS)*1000.,
-				getNthHeatSourceEnergyOutput(iHS)*1000.);
-		}
-		for (int iTC = 0; iTC < nTCouples; iTC++) {
-			fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples));
-		}
+	const char* pfx = "";
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS)*1000.,
+			getNthHeatSourceEnergyOutput(iHS)*1000.);
+		pfx = ",";
 	}
+
+	pfx = "";
+	for (int iTC = 0; iTC < nTCouples; iTC++) {
+		fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+		pfx = ",";
+	}
+
+
 	fprintf(outFILE, "\n");
 
 	return 0;
