@@ -1018,6 +1018,8 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 }
 
 
+
+
 double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 	if (iTCouple > nTCouple || iTCouple < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1025,15 +1027,41 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 		}
 		return double(HPWH_ABORT);
 	}
+	if ( nTCouple > numNodes) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have more simulated thermocouples than nodes.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	double weight = (double) numNodes / (double) nTCouple;
+	double start_ind = (iTCouple - 1) * weight;
+	int ind = (int)std::ceil(start_ind);
 
 	double averageTemp_C = 0;
-	//specify iTCouple from 1-NUMBER_TCOUPLES, so use iTCouple-1 for node number
-	for (int i = (iTCouple - 1)*(numNodes / nTCouple); i < iTCouple*(numNodes / nTCouple); i++) {
-		averageTemp_C += getTankNodeTemp(i);
+
+	// Check any intial fraction of nodes 
+	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * ((double) ind - start_ind);
+	weight -= (ind - start_ind);
+
+    // Check the full nodes
+	while (weight >= 1.0) {
+		printf("durr: start_ind: %f, ind: %d, weight: %f, avgT: %f  \n", start_ind, ind, weight, averageTemp_C);
+		averageTemp_C += getTankNodeTemp(ind);
+		weight -= 1.0;
+		ind += 1;
+
 	}
-	averageTemp_C /= (numNodes / nTCouple);
+
+	// Check any leftover
+	averageTemp_C += getTankNodeTemp(ind) * weight;
+
+	averageTemp_C /= ((double)numNodes / (double)nTCouple);
 	return averageTemp_C;
 }
+
+
+
 
 double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
 	double result = getNthSimTcouple(iTCouple, nTCouple);
