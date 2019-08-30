@@ -1021,11 +1021,11 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 	double start_ind = (iTCouple - 1) * weight;
 	int ind = (int)std::ceil(start_ind);
 
-	double averageTemp_C = 0;
+	double averageTemp_C = 0.0;
 
 	// Check any intial fraction of nodes 
-	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * ((double) ind - start_ind);
-	weight -= (ind - start_ind);
+	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * (ind - start_ind);
+	weight -= ( ind - start_ind);
 
     // Check the full nodes
 	while (weight >= 1.0) {
@@ -1257,8 +1257,10 @@ double HPWH::getTankHeatContent_kJ() const {
 	// returns tank heat content relative to 0 C using kJ
 
 	//get average tank temperature
-	double avgTemp = 0;
-	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
+	double avgTemp = 0.0;
+	for (int i = 0; i < numNodes; i++) {
+		avgTemp += tankTemps_C[i];
+	}
 	avgTemp /= numNodes;
 
 	double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
@@ -1351,11 +1353,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// height estimate from Rheem along with the volume is used to get the radius and node_height
 	static const double height = 1.2; //meters
-	const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+	const double rad = sqrt(tankVolume_L / (1000.0 * 3.14159 * height));
 	const double node_height = height / numNodes;
 	
 	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
-	const double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
+	const double UA_bt = tankUA_kJperHrC * rad / (2.0 * (height + rad));
 
 	// UA_r is the faction of the area of the cylinder that's not the top or bottom.
 	const double UA_r = height / (height + rad);
@@ -1363,21 +1365,21 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	if (doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
-		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height)) * minutesPerStep * 60.0;
+		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000.0 * DENSITYWATER_kgperL * 1000.0 * (node_height * node_height)) * minutesPerStep * 60.0;
 		if (tau > 0.5) {
 			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau * UA_bt * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
-		nextTankTemps_C[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-		nextTankTemps_C[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+		nextTankTemps_C[numNodes - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[numNodes - 1] + 2.0 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
 
 		// Internal nodes for the finite difference
 		for (int i = 1; i < numNodes - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
+			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
@@ -1390,13 +1392,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 
 		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
