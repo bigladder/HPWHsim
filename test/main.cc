@@ -143,6 +143,9 @@ int main(int argc, char *argv[])
       model = HPWH::MODELS_Generic3;
     } else if(input2 == "custom") {
       model = HPWH::MODELS_CustomFile;
+	} else if(input2 == "StorageTank") {
+      model = HPWH::MODELS_StorageTank;
+
       //do nothin, use custom-compiled input specified later
     } else {
       model = HPWH::MODELS_basicIntegrated;
@@ -150,6 +153,7 @@ int main(int argc, char *argv[])
       exit(1);
     }
     if (hpwh.HPWHinit_presets(model) != 0) exit(1);
+	else cout << "model initialize:" << model;
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
       newSetpoint = (149 - 32) / 1.8;
     }

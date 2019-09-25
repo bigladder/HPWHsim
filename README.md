@@ -11,4 +11,4 @@ HPWHsim was developed with whole house simulation in mind; it is intended to be 
 3. Open a console in the `build` directory.
 4. Type `cmake ..`.
 5. Type `cmake --build . --config Release`.
-6. Type `ctest` to run the test suite and ensure that your build is working properly.
+6. Type `ctest -C Release` to run the test suite and ensure that your build is working properly.
