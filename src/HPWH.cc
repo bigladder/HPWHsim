@@ -1736,7 +1736,7 @@ bool HPWH::HeatSource::shouldHeat() const {
 				hpwh->msg("engages!\n");
 			}
 			if (hpwh->hpwhVerbosity >= VRB_emetic){
-				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
 			}
 		}
 
@@ -2346,7 +2346,7 @@ int HPWH::checkInputs(){
 	//use a returnVal so that all checks are processed and error messages written
 
 	if (numHeatSources <= 0) {
-		msg("You must have at least one HeatSource");
+		msg("You must have at least one HeatSource.\n");
 		returnVal = HPWH_ABORT;
 	}
 	if ((numNodes % 12) != 0) {
@@ -3349,6 +3349,36 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1] = resistiveElementBottom;
 
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
+	}
+	
+	else if (presetNum == MODELS_StorageTank) {
+		msg("Initializing preset storage tank\n");
+
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = GAL_TO_L(80);
+		tankUA_kJperHrC = 10; //0 to turn off
+
+		doTempDepression = false;
+		//should eventually put tankmixes to true when testing progresses
+		tankMixesOnDraw = false;
+
+		numHeatSources = 1;
+
+		setOfSources = new HeatSource[numHeatSources];
+	
+		HeatSource resistiveElementTop(this);
+		resistiveElementTop.setupAsResistiveElement(0, 0);
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(10000.0));
+		setOfSources[0] = resistiveElementTop;
+
+
+		msg("Initialized preset storage tank\n");
 	}
 
 	//basic compressor tank for testing

@@ -109,6 +109,8 @@ class HPWH {
     MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
     MODELS_genericCustomUEF = 171,   /**< used for creating "generic" model with custom uef*/
 
+	MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
+
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
     MODELS_CustomResTank = 201      /**< HPWH parameters were input via HPWHinit_resTank */
