@@ -2345,7 +2345,7 @@ int HPWH::checkInputs(){
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
 
-	if (numHeatSources <= 0) {
+	if (numHeatSources <= 0 && hpwhModel != MODELS_StorageTank ) {
 		msg("You must have at least one HeatSource.\n");
 		returnVal = HPWH_ABORT;
 	}
@@ -3352,8 +3352,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 	
 	else if (presetNum == MODELS_StorageTank) {
-		msg("Initializing preset storage tank\n");
-
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(127.0);
@@ -3368,17 +3366,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//should eventually put tankmixes to true when testing progresses
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-
-		setOfSources = new HeatSource[numHeatSources];
-	
-		HeatSource resistiveElementTop(this);
-		resistiveElementTop.setupAsResistiveElement(0, 0);
-		resistiveElementTop.addTurnOnLogic(HPWH::topThird(10000.0));
-		setOfSources[0] = resistiveElementTop;
-
-
-		msg("Initialized preset storage tank\n");
+		numHeatSources = 0;
 	}
 
 	//basic compressor tank for testing

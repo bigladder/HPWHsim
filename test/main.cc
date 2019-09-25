@@ -153,7 +153,6 @@ int main(int argc, char *argv[])
       exit(1);
     }
     if (hpwh.HPWHinit_presets(model) != 0) exit(1);
-	else cout << "model initialize:" << model;
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
       newSetpoint = (149 - 32) / 1.8;
     }
