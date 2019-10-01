@@ -147,6 +147,8 @@ int main(int argc, char *argv[])
       model = HPWH::MODELS_Generic3;
     } else if(input2 == "custom") {
       model = HPWH::MODELS_CustomFile;
+	} else if (input2 == "restankRealistic") {
+		model = HPWH::MODELS_restankRealistic;
 	} else if(input2 == "StorageTank") {
       model = HPWH::MODELS_StorageTank;
 
