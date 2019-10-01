@@ -234,19 +234,17 @@ int main(int argc, char *argv[])
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
-//
-// if (inletH > 0) {
-//	  hpwh.setInletByFraction(inletH);
-// }
-//
+ 
+  if (inletH > 0) {
+ 	  hpwh.setInletByFraction(inletH);
+  }
+ 
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
     heatSourcesEnergyOutput.push_back(0.0);
   }
 
-  hpwh.setInletByFraction(23./24.);
-  cout << "The inlet height has been set to node: " << hpwh.getInletHeight() << "\n";
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
   fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
