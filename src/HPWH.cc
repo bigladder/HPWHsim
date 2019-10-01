@@ -800,7 +800,7 @@ int HPWH::getUA(double& UA, UNITS units) const
 }
 
 int HPWH::setInletByFraction(double fractionalHeight){
-	if (fractionalHeight > 1 || fractionalHeight < 0){
+	if (fractionalHeight >= 1 || fractionalHeight < 0){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds fraction for setInletByFraction \n");
 		}
@@ -815,15 +815,15 @@ int HPWH::setInletByFraction(double fractionalHeight){
 	return 0;
 }
 int HPWH::setInletHeight(int nodeNum){
-	//if (nodeNum >= numNodes){
-	//	if (hpwhVerbosity >= VRB_reluctant) {
-	//		msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
-	//	}
-	//	return HPWH_ABORT;
-	//}
-	//else {
+	if (nodeNum >= numNodes){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
+		}
+		return HPWH_ABORT;
+	}
+	else {
 		inletHeight = nodeNum;
-	//}
+	}
 	return 0;
 }
 int HPWH::getInletHeight(){
@@ -1280,12 +1280,12 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		// check to see if drawFraction would draw the node where the inlet is
 		if ( (int)std::floor(numNodes - 1 - drawFraction) <= inletHeight){
-			//if (hpwhVerbosity >= VRB_reluctant) {
+			if (hpwhVerbosity >= VRB_reluctant) {
 				msg("Drawing from the inlet node right now, be careful! NOT Terminating simulation.  \n");
 			    msg("Drawing from the inlet node, numNodes - 1: %i, drawFraction: %.3f, inletHeight: %i  \n", numNodes - 1, drawFraction, inletHeight );
-			//}
-			//simHasFailed = true;
-			//return;
+			}
+			simHasFailed = true;
+			return;
 		}
 
 		wholeNodesToDraw = (int)std::floor(drawFraction);
