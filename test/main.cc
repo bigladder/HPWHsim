@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
   int i, j, outputCode, nSources;
   long minutesToRun;
 
@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
   hpwh.setMaxTempDepression(tempDepressThresh);
   hpwh.setDoTempDepression(HPWH_doTempDepress);
 
-
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
   controlFile.open(fileToOpen.c_str());
@@ -179,6 +178,7 @@ int main(int argc, char *argv[])
   newSetpoint = 0.0;
   doCondu = 1;
   doInvMix = 1;
+  inletH = 0.0;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
   while(controlFile >> var1 >> testVal) {
 	if(var1 == "setpoint") { // If a setpoint was specified then override the default
@@ -192,6 +192,9 @@ int main(int argc, char *argv[])
 	}
 	if (var1 == "doConduction") {
 		doCondu = (testVal > 0.0) ? 1 : 0;
+	}
+	if (var1 == "inletH") {
+		inletH = testVal;
 	}
   }
 
@@ -231,13 +234,19 @@ int main(int argc, char *argv[])
     hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
-
+//
+// if (inletH > 0) {
+//	  hpwh.setInletByFraction(inletH);
+// }
+//
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
     heatSourcesEnergyOutput.push_back(0.0);
   }
 
+  hpwh.setInletByFraction(23./24.);
+  cout << "The inlet height has been set to node: " << hpwh.getInletHeight() << "\n";
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
   fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";

@@ -69,7 +69,7 @@ HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-doInversionMixing(true), doConduction(true)
+doInversionMixing(true), doConduction(true), inletHeight(0)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -104,7 +104,7 @@ HPWH::HPWH(const HPWH &hpwh){
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
 		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
-
+	inletHeight = hpwh.inletHeight;
 
 	outletTemp_C = hpwh.outletTemp_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
@@ -167,6 +167,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
 		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
+	inletHeight = hpwh.inletHeight;
 
 
 	outletTemp_C = hpwh.outletTemp_C;
@@ -254,7 +255,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	//process draws and standby losses
 	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep);
 
-
+	
 	//do HeatSource choice
 	for (int i = 0; i < numHeatSources; i++) {
 		if (hpwhVerbosity >= VRB_emetic) {
@@ -412,10 +413,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
-	// check for inverted temperature profile
+	// check for inverted temperature profile 
 	if (doInversionMixing) {
 		mixTankInversions();
 	}
+
 	//cursory check for inverted temperature profile
 	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -795,6 +797,37 @@ int HPWH::getUA(double& UA, UNITS units) const
 		ret = HPWH_ABORT;
 	}
 	return ret;
+}
+
+int HPWH::setInletByFraction(double fractionalHeight){
+	if (fractionalHeight > 1 || fractionalHeight < 0){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds fraction for setInletByFraction \n");
+		}
+		return HPWH_ABORT;
+	}
+	else if (numNodes * fractionalHeight < 1.0) {
+		setInletHeight(0);
+	}
+	else {
+		setInletHeight( (int)std::floor(numNodes*fractionalHeight) - 1 );
+	}
+	return 0;
+}
+int HPWH::setInletHeight(int nodeNum){
+	//if (nodeNum >= numNodes){
+	//	if (hpwhVerbosity >= VRB_reluctant) {
+	//		msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
+	//	}
+	//	return HPWH_ABORT;
+	//}
+	//else {
+		inletHeight = nodeNum;
+	//}
+	return 0;
+}
+int HPWH::getInletHeight(){
+	return inletHeight;
 }
 
 int HPWH::setMaxTempDepression(double maxDepression) {
@@ -1242,6 +1275,17 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			}
 			simHasFailed = true;
 			return;
+
+		}
+
+		// check to see if drawFraction would draw the node where the inlet is
+		if ( (int)std::floor(numNodes - 1 - drawFraction) <= inletHeight){
+			//if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Drawing from the inlet node right now, be careful! NOT Terminating simulation.  \n");
+			    msg("Drawing from the inlet node, numNodes - 1: %i, drawFraction: %.3f, inletHeight: %i  \n", numNodes - 1, drawFraction, inletHeight );
+			//}
+			//simHasFailed = true;
+			//return;
 		}
 
 		wholeNodesToDraw = (int)std::floor(drawFraction);
@@ -1254,7 +1298,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 				outletTemp_C += tankTemps_C[numNodes - 1 - i];
 			}
 
-			for (int i = numNodes - 1; i >= 0; i--) {
+			for (int i = numNodes - 1; i >= inletHeight; i--) {
 				if (i > wholeNodesToDraw - 1) {
 					//move nodes up
 					tankTemps_C[i] = tankTemps_C[i - wholeNodesToDraw];
@@ -1270,12 +1314,15 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			//add temperature for outletT average
 			outletTemp_C += drawFraction*tankTemps_C[numNodes - 1];
 			//move partial nodes up
-			for (int i = numNodes - 1; i > 0; i--) {
+			for (int i = numNodes - 1; i > inletHeight; i--) {
 				tankTemps_C[i] = tankTemps_C[i] * (1.0 - drawFraction) + tankTemps_C[i - 1] * drawFraction;
 			}
 			//fill in bottom partial node with inletT
-			tankTemps_C[0] = tankTemps_C[0] * (1.0 - drawFraction) + inletT_C*drawFraction;
+			tankTemps_C[inletHeight] = tankTemps_C[inletHeight] * (1.0 - drawFraction) + inletT_C*drawFraction;
 		}
+
+
+
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 		this->outletTemp_C /= (wholeNodesToDraw + drawFraction);

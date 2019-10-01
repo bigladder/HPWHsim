@@ -307,6 +307,13 @@ class HPWH {
   int getUA(double& UA_kJperHrC) const;
   int getUA(double& UA, UNITS units) const;
   /**< Returns the UA, with or without units specified - default is metric */
+  
+  int setInletByFraction(double fractionalHeight);
+  /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
+  int setInletHeight(int nodeNum);
+  /**< This is a setter for the water inlet height, set as one of the tank nodes - default is node 0 */
+  int getInletHeight();
+  /**< returns the water inlet height node number */
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
@@ -450,6 +457,9 @@ class HPWH {
 
   int nodeDensity;
   /**< the number of calculation nodes in a logical node  */
+
+  int inletHeight;
+  /**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
 
 	double tankVolume_L;
 	/**< the volume in liters of the tank  */
