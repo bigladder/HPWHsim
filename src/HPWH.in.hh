@@ -41,7 +41,6 @@ class HPWH {
   static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
 
-
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
   HPWH & operator=(const HPWH &hpwh);  /**< assignment operator  */
@@ -145,6 +144,12 @@ class HPWH {
     TYPE_resistance,  /**< a resistance element  */
     TYPE_compressor   /**< a vapor cycle compressor  */
     };
+
+  /** specifies the unit type for outputs in the CSV file-s  */
+  enum CSVOPTIONS {
+	  CSVOPT_NONE,
+	  CSVOPT_IPUNITS
+  };
 
   struct NodeWeight {
     int nodeNum;
@@ -263,8 +268,8 @@ class HPWH {
   void printTankTemps();
   /**< this prints out all the node temps, kind of nicely formatted
       does not use verbosity, as it is public and expected to be called only when needed  */
-  int WriteCSVHeading(FILE* outFILE, const char* preamble = "") const;
-  int WriteCSVRow(FILE* outFILE, const char* preamble = "") const;
+  int WriteCSVHeading(FILE* outFILE, const char* preamble = "", int nTCouples = 6, int options = CSVOPT_NONE) const;
+  int WriteCSVRow(FILE* outFILE, const char* preamble = "", int nTCouples = 6, int options = CSVOPT_NONE) const;
   /**< a couple of function to write the outputs to a file
       they both will return 0 for success
       the preamble should be supplied with a trailing comma, as these functions do
@@ -322,12 +327,12 @@ class HPWH {
 	/**< returns the temperature of the water at the specified node - with specified units
       or HPWH_ABORT for incorrect node number or unit failure  */
 
-	double getNthSimTcouple(int N /**default units C*/) const;
-  double getNthSimTcouple(int N, UNITS units) const;
-  /**< returns the temperature from a set of 6 virtual "thermocouples", which are constructed
-      from the node temperature array.  Specify t-couple from 1-6, 1 at the bottom
-      using specified units
-      returns HPWH_ABORT for N < 0, > 6, or incorrect units  */
+	double getNthSimTcouple(int iTCouple, int nTCouple /**default units C*/) const;
+  double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const;
+  /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
+	  which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple, 
+	  1 at the bottom using specified units
+      returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
 
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */

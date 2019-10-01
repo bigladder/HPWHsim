@@ -495,8 +495,8 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
 				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
-				getNthSimTcouple(1), getNthSimTcouple(2), getNthSimTcouple(3),
-				getNthSimTcouple(4), getNthSimTcouple(5), getNthSimTcouple(6));
+				getNthSimTcouple(1,6), getNthSimTcouple(2,6), getNthSimTcouple(3,6),
+				getNthSimTcouple(4,6), getNthSimTcouple(5,6), getNthSimTcouple(6,6));
 		}
 
 	}
@@ -631,26 +631,47 @@ void HPWH::printTankTemps() {
 
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble) const {
+int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, int options) const {
+
+	bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
 	fprintf(outFILE, "%s", preamble);
-	fprintf(outFILE, "h_src%dIn (Wh),h_src%dOut (Wh)", 1, 1);
-	for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
+
+	const char* pfx = "";
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		fprintf(outFILE, "%sh_src%dIn (Wh),h_src%dOut (Wh)", pfx, iHS + 1, iHS + 1);
+		pfx = ",";
 	}
-	for (int iTC = 0; iTC < 6; iTC++)  fprintf(outFILE, ",tcouple%d (C)", iTC + 1);
+
+	for (int iTC = 0; iTC < nTCouples; iTC++) {
+		fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F":"C");
+	}
+
 	fprintf(outFILE, "\n");
+
 	return 0;
 }
-int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble) const {
+
+int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int options) const {
+
+	bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
 	fprintf(outFILE, "%s", preamble);
-	fprintf(outFILE, "%0.2f,%0.2f", getNthHeatSourceEnergyInput(0)*1000.,
-		getNthHeatSourceEnergyOutput(0)*1000.);
-	for (int iHS = 1; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS)*1000.,
+
+	const char* pfx = "";
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS)*1000.,
 			getNthHeatSourceEnergyOutput(iHS)*1000.);
+		pfx = ",";
 	}
-	for (int iTC = 0; iTC < 6; iTC++)  fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1));
+
+	for (int iTC = 0; iTC < nTCouples; iTC++) {
+		fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+	}
+
+
 	fprintf(outFILE, "\n");
+
 	return 0;
 }
 
@@ -1013,25 +1034,51 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 }
 
 
-double HPWH::getNthSimTcouple(int N) const {
-	if (N > 6 || N < 1) {
+
+
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
+	if (iTCouple > nTCouple || iTCouple < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
-
-	double averageTemp_C = 0;
-	//specify N from 1-6, so use N-1 for node number
-	for (int i = (N - 1)*(numNodes / 6); i < N*(numNodes / 6); i++) {
-		averageTemp_C += getTankNodeTemp(i);
+	if ( nTCouple > numNodes) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have more simulated thermocouples than nodes.  \n");
+		}
+		return double(HPWH_ABORT);
 	}
-	averageTemp_C /= (numNodes / 6);
+
+	double weight = (double) numNodes / (double) nTCouple;
+	double start_ind = (iTCouple - 1) * weight;
+	int ind = (int)std::ceil(start_ind);
+
+	double averageTemp_C = 0.0;
+
+	// Check any intial fraction of nodes 
+	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * (ind - start_ind);
+	weight -= ( ind - start_ind);
+
+    // Check the full nodes
+	while (weight >= 1.0) {
+		averageTemp_C += getTankNodeTemp(ind);
+		weight -= 1.0;
+		ind += 1;
+	}
+
+	// Check any leftover
+	averageTemp_C += getTankNodeTemp(ind) * weight;
+
+	averageTemp_C /= ((double)numNodes / (double)nTCouple);
 	return averageTemp_C;
 }
 
-double HPWH::getNthSimTcouple(int N, UNITS units) const {
-	double result = getNthSimTcouple(N);
+
+
+
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
+	double result = getNthSimTcouple(iTCouple, nTCouple);
 	if (result == double(HPWH_ABORT)) {
 		return result;
 	}
@@ -1243,8 +1290,10 @@ double HPWH::getTankHeatContent_kJ() const {
 	// returns tank heat content relative to 0 C using kJ
 
 	//get average tank temperature
-	double avgTemp = 0;
-	for (int i = 0; i < numNodes; i++) avgTemp += tankTemps_C[i];
+	double avgTemp = 0.0;
+	for (int i = 0; i < numNodes; i++) {
+		avgTemp += tankTemps_C[i];
+	}
 	avgTemp /= numNodes;
 
 	double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
@@ -1351,11 +1400,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// height estimate from Rheem along with the volume is used to get the radius and node_height
 	static const double height = 1.2; //meters
-	const double rad = sqrt(tankVolume_L / (1000 * 3.14159 * height));
+	const double rad = sqrt(tankVolume_L / (1000.0 * 3.14159 * height));
 	const double node_height = height / numNodes;
 	
 	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
-	const double UA_bt = tankUA_kJperHrC * rad / (2 * (height + rad));
+	const double UA_bt = tankUA_kJperHrC * rad / (2.0 * (height + rad));
 
 	// UA_r is the faction of the area of the cylinder that's not the top or bottom.
 	const double UA_r = height / (height + rad);
@@ -1363,21 +1412,21 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	if (doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
-		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000 * DENSITYWATER_kgperL * 1000 * (node_height * node_height)) * minutesPerStep * 60.0;
+		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000.0 * DENSITYWATER_kgperL * 1000.0 * (node_height * node_height)) * minutesPerStep * 60.0;
 		if (tau > 0.5) {
 			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2 * tau * UA_bt * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau * UA_bt * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
-		nextTankTemps_C[0] = (1 - 2 * tau - bc) * tankTemps_C[0] + 2 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-		nextTankTemps_C[numNodes - 1] = (1 - 2 * tau - bc) * tankTemps_C[numNodes - 1] + 2 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+		nextTankTemps_C[numNodes - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[numNodes - 1] + 2.0 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
 
 		// Internal nodes for the finite difference
 		for (int i = 1; i < numNodes - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2 * tankTemps_C[i] + tankTemps_C[i - 1]);
+			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
@@ -1390,13 +1439,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 
 		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * UA_r * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
