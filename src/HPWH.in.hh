@@ -238,7 +238,8 @@ class HPWH {
 
   int runOneStep(double inletT_C, double drawVolume_L,
                   double ambientT_C, double externalT_C,
-                  DRMODES DRstatus, double minutesPerStep);
+                  DRMODES DRstatus, double minutesPerStep,
+				  double inletVol2_L = 0., double inletT2_C = 0.);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
@@ -320,6 +321,15 @@ class HPWH {
   int getInletHeight();
   /**< returns the water inlet height node number */
 
+  ///////////////////////Must be a better way than repeating the same functions for inlet2. Addressed to future PK
+  int setInlet2ByFraction(double fractionalHeight);
+  /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
+  int setInlet2Height(int nodeNum);
+  /**< This is a setter for the water inlet height, set as one of the tank nodes - default is node 0 */
+  int getInlet2Height();
+  /**< returns the water inlet height node number */
+  ///////////////////////
+
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
   double getTankNodeTemp(int nodeNum /**default units C*/) const;
@@ -384,9 +394,9 @@ class HPWH {
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
   int runOneStep(double drawVolume_L, double ambientT_C,
-                  double externalT_C, DRMODES DRstatus) {
+                  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.) {
         return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-                        externalT_C, DRstatus, member_minutesPerStep);
+			externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C);
   };
 	/** Setters for the what are typically input variables  */
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
@@ -400,7 +410,7 @@ class HPWH {
  private:
   class HeatSource;
 
-	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep);
+	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep, double inletVol2_L, double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	bool areAllHeatSourcesOff() const;
@@ -465,6 +475,9 @@ class HPWH {
 
   int inletHeight;
   /**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
+  
+  int inlet2Height;
+  /**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be between 0 and numNodes-1  */
 
 	double tankVolume_L;
 	/**< the volume in liters of the tank  */
