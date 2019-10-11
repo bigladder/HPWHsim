@@ -244,6 +244,9 @@ int main(int argc, char *argv[])
   if (inletH > 0) {
  	  hpwh.setInletByFraction(inletH);
   }
+  //hpwh.setInletByFraction(0.);
+  hpwh.setInlet2ByFraction( 2./3.);
+
  
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
