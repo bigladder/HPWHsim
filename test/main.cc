@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 					airTemp2,  // Ambient Temp (C)
 					allSchedules[3][i],  // External Temp (C)
 					drStatus, // DDR Status (now an enum. Fixed for now as allow)
-					1.0);    // Minutes per step
+					1.0,0., 0. );    // Minutes per step
 
     // Grab the current status
     getSimTcouples(hpwh, simTCouples, nTestTCouples);
