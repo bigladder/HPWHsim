@@ -1370,7 +1370,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		int lowInletH;
 		double lowInletT;
 		if (inletHeight > inlet2Height){
-			msg("assigning in inletHeight > inlet2Height \n");
 			highInletH = inletHeight;
 			highInletV = drawVolume_L - inletVol2_L;
 			highInletT = inletT_C;
@@ -1378,8 +1377,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			lowInletT = inletT2_C;
 		}
 		else {
-			msg("assigning in NOT in inletHeight > inlet2Height \n");
-
 			highInletH = inlet2Height;
 			highInletV = inletVol2_L;
 			highInletT = inletT2_C;
@@ -1464,7 +1461,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
-		msg("outletTemp_C: %.2f \n\n\n", outletTemp_C);
+		//msg("outletTemp_C: %.2f \n\n\n", outletTemp_C);
 
 		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		/////////////////////////////////////////////////////////////////////////////////////////////////
