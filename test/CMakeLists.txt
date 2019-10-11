@@ -10,14 +10,15 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 
 # Run tests
 set(testNames
- # test50inletheight
-  test30
-  test50
+  
+ # test30
+  #test50
   test70
   test95
   testLockout
   testDr
-  testSandenCombi
+  #testSandenCombi
+  #test50inletheight
 )
 
 set(modelNames
@@ -25,7 +26,7 @@ set(modelNames
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
-  RheemHB50
+  #RheemHB50
   Stiebel220e
   GE502014
 )

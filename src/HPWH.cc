@@ -1346,10 +1346,48 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	//set up some useful variables for calculations
 	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
-	int wholeNodesToDraw;
 	this->outletTemp_C = 0;
+	double inletFraction, drawV;
+
 
 	if (drawVolume_L > 0){
+
+		//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	
+		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
+		if (inletVol2_L > drawVolume_L) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Volume in inlet 2 is greater than the draw volume.  \n");
+			}
+			simHasFailed = true;
+			return;
+		}
+
+		// Check which inlet is higher and use that one if inletHeight > inlet2Height
+		int highInletH;
+		double highInletV;
+		double highInletT;
+		int lowInletH;
+		double lowInletT;
+		if (inletHeight > inlet2Height){
+			msg("assigning in inletHeight > inlet2Height \n");
+			highInletH = inletHeight;
+			highInletV = drawVolume_L - inletVol2_L;
+			highInletT = inletT_C;
+			lowInletH = inlet2Height;
+			lowInletT = inletT2_C;
+		}
+		else {
+			msg("assigning in NOT in inletHeight > inlet2Height \n");
+
+			highInletH = inlet2Height;
+			highInletV = inletVol2_L;
+			highInletT = inletT2_C;
+			lowInletH = inletHeight;
+			lowInletT = inletT_C;
+		}
+		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
 		drawFraction = drawVolume_L / volPerNode_LperNode;
 		if (drawFraction > numNodes) {
@@ -1363,7 +1401,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		// check to see if drawFraction would draw the node where the inlet is
 		if ((int)std::floor(numNodes - 1 - drawFraction) <= inletHeight || (int)std::floor(numNodes - 1 - drawFraction) <= inlet2Height){
 			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Drawing from the inlet node right now, be careful! NOT Terminating simulation.  \n");
+				msg("Drawing from the inlet node right now, be careful! Terminating simulation.  \n");
 				msg("Drawing from the inlet node, numNodes - 1: %i, drawFraction: %.3f, inletHeight: %i, inlet2Height: %i  \n", numNodes - 1, drawFraction, inletHeight, inlet2Height);
 			}
 			simHasFailed = true;
@@ -1372,45 +1410,63 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		double inletVol_L = drawVolume_L - inletVol2_L.
+		//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-		wholeNodesToDraw = (int)std::floor(drawFraction);
-		drawFraction -= wholeNodesToDraw;
 
-		//move whole nodes
-		if (wholeNodesToDraw > 0) {
-			for (int i = 0; i < wholeNodesToDraw; i++) {
-				//add temperature of drawn nodes for outletT average
-				outletTemp_C += tankTemps_C[numNodes - 1 - i];
-			}
+		//wholeNodesToDraw = (int)std::floor(drawFraction);
+		//drawFraction -= wholeNodesToDraw;
+		drawV = drawFraction;
 
-			for (int i = numNodes - 1; i >= inletHeight; i--) {
-				if (i > wholeNodesToDraw - 1) {
-					//move nodes up
-					tankTemps_C[i] = tankTemps_C[i - wholeNodesToDraw];
-				}
-				else {
-					//fill in bottom nodes with inlet water
-					tankTemps_C[i] = inletT_C;
-				}
-			}
-		}
-		//move fractional node
-		if (drawFraction > 0) {
-			//add temperature for outletT average
-			outletTemp_C += drawFraction*tankTemps_C[numNodes - 1];
-			//move partial nodes up
-			for (int i = numNodes - 1; i > inletHeight; i--) {
-				tankTemps_C[i] = tankTemps_C[i] * (1.0 - drawFraction) + tankTemps_C[i - 1] * drawFraction;
-			}
-			//fill in bottom partial node with inletT
-			tankTemps_C[inletHeight] = tankTemps_C[inletHeight] * (1.0 - drawFraction) + inletT_C * drawFraction;
+		while (drawV > 0) {
+
+			 // Draw one node at a time
+			 drawFraction = drawV > 1. ? 1. : drawV;
+
+			 inletFraction = highInletV *  drawFraction / drawVolume_L;
+
+			 //msg("volPerNode_LperNode: %.2f, drawVolume_L: %.2f, drawV: %.2f, inletVol2_L: %.2f \n", volPerNode_LperNode, drawVolume_L, drawV, inletVol2_L);
+			 //msg("drawFraction: %f, inletFraction: %f\n", drawFraction, inletFraction);
+
+
+			 outletTemp_C += drawFraction * tankTemps_C[numNodes - 1];
+
+			 for (int i = numNodes - 1; i >= lowInletH; i--) {
+				 //add temperature for outletT average
+
+				 //msg("tankTemps_C[%i] is: %.1f   ", i, tankTemps_C[i]);
+				 if (i > highInletH) {
+					 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + tankTemps_C[i - 1] * drawFraction;
+				 }
+				 else if (i == lowInletH) {
+					 if (lowInletH == highInletH) {
+						 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + highInletT * inletFraction + lowInletT * (drawFraction - inletFraction);
+					 }
+					 else {
+						 tankTemps_C[i] = tankTemps_C[i] * (1. - (drawFraction - inletFraction)) + lowInletT * (drawFraction - inletFraction);
+					 }
+				 }
+				 else if (i == highInletH) {
+					 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + tankTemps_C[i - 1] * (drawFraction - inletFraction) + highInletT * inletFraction;
+				 }
+				 else if (i < highInletH && i > lowInletH) {
+					 tankTemps_C[i] = tankTemps_C[i] * (1. - (drawFraction - inletFraction)) + tankTemps_C[i - 1] * (drawFraction - inletFraction);
+				 }
+				 else {
+					 msg("WHAT ARE YOU DOING HERE?! YOU SHOULDN'T BE HERE!\n");
+				 }
+				 //msg("tankTemps_C[%i] becomes: %.1f \n", i, tankTemps_C[i]);
+
+			 }
+
+			 drawV -= drawFraction;
 		}
 
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
-		this->outletTemp_C /= (wholeNodesToDraw + drawFraction);
+		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
+		msg("outletTemp_C: %.2f \n\n\n", outletTemp_C);
 
+		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
