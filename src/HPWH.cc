@@ -1347,8 +1347,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	this->outletTemp_C = 0;
-	double inletFraction, drawV;
-
+	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
 
 	if (drawVolume_L > 0){
 
@@ -1364,17 +1363,18 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		// Check which inlet is higher and use that one if inletHeight > inlet2Height
+		// Check which inlet is higher and use that one if inletHeight > inlet2Height
 		int highInletH;
-		double highInletV;
-		double highInletT;
+		double highInletV, highInletT;
 		int lowInletH;
-		double lowInletT;
+		double lowInletT, lowInletV;
 		if (inletHeight > inlet2Height){
 			highInletH = inletHeight;
 			highInletV = drawVolume_L - inletVol2_L;
 			highInletT = inletT_C;
 			lowInletH = inlet2Height;
 			lowInletT = inletT2_C;
+			lowInletV = inletVol2_L;
 		}
 		else {
 			highInletH = inlet2Height;
@@ -1382,12 +1382,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			highInletT = inletT2_C;
 			lowInletH = inletHeight;
 			lowInletT = inletT_C;
+			lowInletV = drawVolume_L - inletVol2_L;
 		}
 		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
-		drawFraction = drawVolume_L / volPerNode_LperNode;
-		if (drawFraction > numNodes) {
+		//calculate how many nodes to draw (drawVolume_N)
+		drawVolume_N = drawVolume_L / volPerNode_LperNode;
+		if (drawVolume_N > numNodes) {
 			if (hpwhVerbosity >= VRB_reluctant) {
 				msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
 			}
@@ -1395,74 +1396,68 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			return;
 		}
 
-		// check to see if drawFraction would draw the node where the inlet is
-		if ((int)std::floor(numNodes - 1 - drawFraction) <= inletHeight || (int)std::floor(numNodes - 1 - drawFraction) <= inlet2Height){
+		// check to see if drawVolume_N would draw the node where the inlet is
+		if ((int)std::floor(numNodes - 1 - drawVolume_N) <= inletHeight || (int)std::floor(numNodes - 1 - drawVolume_N) <= inlet2Height){
 			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Drawing from the inlet node right now, be careful! Terminating simulation.  \n");
-				msg("Drawing from the inlet node, numNodes - 1: %i, drawFraction: %.3f, inletHeight: %i, inlet2Height: %i  \n", numNodes - 1, drawFraction, inletHeight, inlet2Height);
+				msg("Drawing from an inlet node right now, be careful! Terminating simulation.  \n");
+				msg("Drawing from an inlet node, numNodes - 1: %i, drawVolume_N: %.3f, inletHeight: %i, inlet2Height: %i  \n", numNodes - 1, drawVolume_N, inletHeight, inlet2Height);
 			}
 			simHasFailed = true;
 			return;
 		}
 
-
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+		while (drawVolume_N > 0) {
 
+			// Draw one node at a time
+			drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
 
-		//wholeNodesToDraw = (int)std::floor(drawFraction);
-		//drawFraction -= wholeNodesToDraw;
-		drawV = drawFraction;
+			//add temperature for outletT average
+			outletTemp_C += drawFraction * tankTemps_C[numNodes - 1];
 
-		while (drawV > 0) {
+			cumInletFraction = 0.;
+			for (int i = numNodes - 1; i >= lowInletH; i--) {
 
-			 // Draw one node at a time
-			 drawFraction = drawV > 1. ? 1. : drawV;
+				//msg("tankTemps_C[%i] is: %.3f   ", i, tankTemps_C[i]);
+				// Reset inlet inputs at this node. 
+				nodeInletFraction = 0.;
+				nodeInletTV = 0.;
 
-			 inletFraction = highInletV *  drawFraction / drawVolume_L;
+				// Sum of all inlets Vi*Ti at this node
+				if (i == highInletH) {
+					nodeInletTV += highInletV *  drawFraction / drawVolume_L * highInletT;
+					nodeInletFraction += highInletV *  drawFraction / drawVolume_L;
+				}
+				if (i == lowInletH) {
+					nodeInletTV += lowInletV *  drawFraction / drawVolume_L * lowInletT;
+					nodeInletFraction += lowInletV *  drawFraction / drawVolume_L;
 
-			 //msg("volPerNode_LperNode: %.2f, drawVolume_L: %.2f, drawV: %.2f, inletVol2_L: %.2f \n", volPerNode_LperNode, drawVolume_L, drawV, inletVol2_L);
-			 //msg("drawFraction: %f, inletFraction: %f\n", drawFraction, inletFraction);
+					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
+				}
 
+				// Look at the volume and temperature fluxes into this node
+				tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
+					nodeInletTV +
+					(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
 
-			 outletTemp_C += drawFraction * tankTemps_C[numNodes - 1];
+				cumInletFraction += nodeInletFraction;
+				
+				//msg("tankTemps_C[%i] becomes: %.3f \n", i, tankTemps_C[i]);
+				//msg("drawVolume_N: %.3f, cumInletFraction: %.3f, nodeInletFraction: %.3f, nodeInletTV: %.3f \n", drawVolume_N, cumInletFraction, nodeInletFraction, nodeInletTV);
 
-			 for (int i = numNodes - 1; i >= lowInletH; i--) {
-				 //add temperature for outletT average
+			}
 
-				 //msg("tankTemps_C[%i] is: %.1f   ", i, tankTemps_C[i]);
-				 if (i > highInletH) {
-					 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + tankTemps_C[i - 1] * drawFraction;
-				 }
-				 else if (i == lowInletH) {
-					 if (lowInletH == highInletH) {
-						 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + highInletT * inletFraction + lowInletT * (drawFraction - inletFraction);
-					 }
-					 else {
-						 tankTemps_C[i] = tankTemps_C[i] * (1. - (drawFraction - inletFraction)) + lowInletT * (drawFraction - inletFraction);
-					 }
-				 }
-				 else if (i == highInletH) {
-					 tankTemps_C[i] = tankTemps_C[i] * (1. - drawFraction) + tankTemps_C[i - 1] * (drawFraction - inletFraction) + highInletT * inletFraction;
-				 }
-				 else if (i < highInletH && i > lowInletH) {
-					 tankTemps_C[i] = tankTemps_C[i] * (1. - (drawFraction - inletFraction)) + tankTemps_C[i - 1] * (drawFraction - inletFraction);
-				 }
-				 else {
-					 msg("WHAT ARE YOU DOING HERE?! YOU SHOULDN'T BE HERE!\n");
-				 }
-				 //msg("tankTemps_C[%i] becomes: %.1f \n", i, tankTemps_C[i]);
+			// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
+			tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
+			//msg("tankTemps_C[%i] becomes: %.3f \n", lowInletH, tankTemps_C[lowInletH]);
 
-			 }
-
-			 drawV -= drawFraction;
+			drawVolume_N -= drawFraction;
 		}
 
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
-		//msg("outletTemp_C: %.2f \n\n\n", outletTemp_C);
-
 		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
