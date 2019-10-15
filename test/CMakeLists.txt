@@ -17,7 +17,7 @@ set(testNames
   test95
   testLockout
   testDr
-  #testSandenCombi
+  testSandenCombi
   #test50inletheight
 )
 
@@ -26,7 +26,7 @@ set(modelNames
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
-  #RheemHB50
+  RheemHB50
   Stiebel220e
   GE502014
 )

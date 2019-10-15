@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
  	  hpwh.setInletByFraction(inletH);
   }
   //hpwh.setInletByFraction(0.);
-  hpwh.setInlet2ByFraction( 2./3.);
+  //hpwh.setInlet2ByFraction( 2./3.);
 
  
   nSources = hpwh.getNumHeatSources();
@@ -298,14 +298,17 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
-
     // Run the step
     hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
-					GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-					airTemp2,  // Ambient Temp (C)
-					allSchedules[3][i],  // External Temp (C)
-					drStatus, // DDR Status (now an enum. Fixed for now as allow)
-					1.0,0., 0. );    // Minutes per step
+				GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+				airTemp2,  // Ambient Temp (C)
+				allSchedules[3][i],  // External Temp (C)
+				drStatus, // DDR Status (now an enum. Fixed for now as allow)
+				1.0,    // Minutes per step
+				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i]);
+			//		  0., 0.) ;
+
+
 
     // Grab the current status
     getSimTcouples(hpwh, simTCouples, nTestTCouples);

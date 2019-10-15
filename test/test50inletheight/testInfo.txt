@@ -1,3 +1,2 @@
-length_of_test 500
+length_of_test 2880
 setpoint 53
-inletH 0.333333
