@@ -466,6 +466,8 @@ class HPWH {
 	double *nextTankTemps_C;
 	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
 
+	std::vector<int> additionalInletHeights;
+	/**< a vector to hold the heights of any additional inlets  */
 
   // Some outputs
 	double outletTemp_C;
