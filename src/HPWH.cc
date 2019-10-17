@@ -415,11 +415,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
-	// check for inverted temperature profile 
-	if (doInversionMixing) {
-		mixTankInversions();
-	}
-
 	//cursory check for inverted temperature profile
 	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1547,6 +1542,10 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// Assign the new temporary tank temps to the real tank temps.
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
 
+	// check for inverted temperature profile 
+	if (doInversionMixing) {
+		mixTankInversions();
+	}
 }  //end updateTankTemps
 
 
