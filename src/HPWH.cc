@@ -823,13 +823,13 @@ int HPWH::getUA(double& UA, UNITS units) const
 }
 
 int HPWH::setInletByFraction(double fractionalHeight){
-	if (fractionalHeight < 0){
+	if (fractionalHeight > 1. || fractionalHeight < 0.){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds fraction for setInletByFraction \n");
 		}
 		return HPWH_ABORT;
 	}
-	else if (numNodes * fractionalHeight <= 1.0) {
+	else if (numNodes * fractionalHeight < 1.) {
 		setInletHeight(0);
 	}
 	else {
@@ -853,13 +853,13 @@ int HPWH::getInletHeight(){
 	return inletHeight;
 }
 int HPWH::setInlet2ByFraction(double fractionalHeight){
-	if ( fractionalHeight < 0){
+	if (fractionalHeight > 1. || fractionalHeight < 0.){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds fraction for setInletByFraction \n");
 		}
 		return HPWH_ABORT;
 	}
-	else if (numNodes * fractionalHeight <= 1.0) {
+	else if (numNodes * fractionalHeight < 1.) {
 		setInlet2Height(0);
 	}
 	else {
@@ -1443,6 +1443,10 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			//msg("tankTemps_C[%i] becomes: %.3f \n", lowInletH, tankTemps_C[lowInletH]);
 
 			drawVolume_N -= drawFraction;
+
+			if (doInversionMixing) {
+				mixTankInversions();
+			}
 		}
 
 
