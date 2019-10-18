@@ -225,28 +225,22 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Set the hpwh properties. I'll need to update this to select the appropriate model
-  //int result = hpwh.HPWHinit_presets(model);
-  //int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
-  /*int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8, dF_TO_dC(13));
-  if (result == HPWH::HPWH_ABORT) {
-    return 1;
-  }*/
+  if (doInvMix == 0) {
+	  hpwh.setDoInversionMixing(false);
+  }
 
-  if (doInvMix == 0) hpwh.setDoInversionMixing(false);
-  if (doCondu == 0) hpwh.setDoConduction(false);
+  if (doCondu == 0) {
+	  hpwh.setDoConduction(false);
+  }
 
   if(newSetpoint > 0) {
-    hpwh.setSetpoint(newSetpoint);
+	hpwh.setSetpoint(newSetpoint);
     hpwh.resetTankToSetpoint();
   }
  
   if (inletH > 0) {
  	  hpwh.setInletByFraction(inletH);
   }
-  //hpwh.setInletByFraction(0.);
-  //hpwh.setInlet2ByFraction( 2./3.);
-
  
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
@@ -268,12 +262,6 @@ int main(int argc, char *argv[])
   }
   outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6\n";
   
- // static FILE* ppp = NULL;	
- // string filename;
- // filename = "C:/Users/paul/Documents/GitHub/HPWHsim/test" + input3 + "_" + input1 + "_" + input2 + ".csv";
- // const char* fName = filename.c_str();
- // ppp = fopen(fName, "wt");
- // hpwh.WriteCSVHeading(ppp, "before row text,",8, IP);
 
   // ------------------------------------- Simulate --------------------------------------- //
 
@@ -313,11 +301,6 @@ int main(int argc, char *argv[])
     // Grab the current status
     getSimTcouples(hpwh, simTCouples, nTestTCouples);
     getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
-    /*for(int k = 0; k < 6; k++) simTCouples[k] = 25;
-    for(int k = 0; k < nSources; k++) {
-      heatSourcesEnergyInput[k] = 0;
-      heatSourcesEnergyOutput[k] = 0;
-    }*/
 
     // Copy current status into the output file
     if(HPWH_doTempDepress) {
@@ -331,11 +314,7 @@ int main(int argc, char *argv[])
     outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] <<
       "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
 
-
-//	hpwh.WriteCSVRow(ppp, "before text,", 8, IP);
-
   }
- // fclose(ppp);
 
   controlFile.close();
   outputFile.close();
