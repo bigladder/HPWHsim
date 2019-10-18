@@ -308,8 +308,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 
 
-
-
 	//change the things according to DR schedule
 	if (DRstatus == DR_BLOCK) {
 		//force off
@@ -1345,8 +1343,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
 
 	if (drawVolume_L > 0){
-
-		//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
 		if (inletVol2_L > drawVolume_L) {
@@ -1357,8 +1353,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			return;
 		}
 
-		// Check which inlet is higher and use that one if inletHeight > inlet2Height
-		// Check which inlet is higher and use that one if inletHeight > inlet2Height
+		// Check which inlet is higher;
 		int highInletH;
 		double highInletV, highInletT;
 		int lowInletH;
@@ -1379,7 +1374,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			lowInletT = inletT_C;
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
-		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 		//calculate how many nodes to draw (drawVolume_N)
 		drawVolume_N = drawVolume_L / volPerNode_LperNode;
@@ -1392,7 +1386,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
 		while (drawVolume_N > 0) {
 
 			// Draw one node at a time
@@ -1404,7 +1398,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			cumInletFraction = 0.;
 			for (int i = numNodes - 1; i >= lowInletH; i--) {
 
-				//msg("tankTemps_C[%i] is: %.3f   ", i, tankTemps_C[i]);
 				// Reset inlet inputs at this node. 
 				nodeInletFraction = 0.;
 				nodeInletTV = 0.;
@@ -1427,15 +1420,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 					(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
 
 				cumInletFraction += nodeInletFraction;
-				
-				//msg("tankTemps_C[%i] becomes: %.3f \n", i, tankTemps_C[i]);
-				//msg("drawVolume_N: %.3f, cumInletFraction: %.3f, nodeInletFraction: %.3f, nodeInletTV: %.3f \n", drawVolume_N, cumInletFraction, nodeInletFraction, nodeInletTV);
-
+			
 			}
 
 			// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
 			tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
-			//msg("tankTemps_C[%i] becomes: %.3f \n", lowInletH, tankTemps_C[lowInletH]);
 
 			drawVolume_N -= drawFraction;
 
@@ -1447,7 +1436,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
-		//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
@@ -1546,6 +1535,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	if (doInversionMixing) {
 		mixTankInversions();
 	}
+
 }  //end updateTankTemps
 
 
