@@ -69,7 +69,7 @@ HPWH::HPWH() :
 simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-doInversionMixing(true), doConduction(true)
+doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh){
@@ -104,7 +104,8 @@ HPWH::HPWH(const HPWH &hpwh){
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
 		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
-
+	inletHeight = hpwh.inletHeight;
+	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
@@ -167,7 +168,8 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 		tankTemps_C[i] = hpwh.tankTemps_C[i];
 		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
 	}
-
+	inletHeight = hpwh.inletHeight;
+	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
@@ -201,7 +203,8 @@ string HPWH::getVersion(){
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
-	DRMODES DRstatus, double minutesPerStep) {
+	DRMODES DRstatus, double minutesPerStep, 
+	double inletVol2_L, double inletT2_C) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//check for errors
@@ -252,9 +255,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 	//process draws and standby losses
-	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep);
+	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep, inletVol2_L, inletT2_C);
 
-
+	
 	//do HeatSource choice
 	for (int i = 0; i < numHeatSources; i++) {
 		if (hpwhVerbosity >= VRB_emetic) {
@@ -303,8 +306,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 		msg("\n");
 	}
-
-
 
 
 	//change the things according to DR schedule
@@ -412,10 +413,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
-	// check for inverted temperature profile
-	if (doInversionMixing) {
-		mixTankInversions();
-	}
 	//cursory check for inverted temperature profile
 	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -817,6 +814,68 @@ int HPWH::getUA(double& UA, UNITS units) const
 	}
 	return ret;
 }
+
+int HPWH::setInletByFraction(double fractionalHeight){
+	if (fractionalHeight > 1. || fractionalHeight < 0.){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds fraction for setInletByFraction \n");
+		}
+		return HPWH_ABORT;
+	}
+	else if (numNodes * fractionalHeight < 1.) {
+		setInletHeight(0);
+	}
+	else {
+		setInletHeight( (int)std::floor(numNodes*fractionalHeight) - 1 );
+	}
+	return 0;
+}
+int HPWH::setInletHeight(int nodeNum){
+	if (nodeNum >= numNodes){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
+		}
+		return HPWH_ABORT;
+	}
+	else {
+		inletHeight = nodeNum;
+	}
+	return 0;
+}
+int HPWH::getInletHeight(){
+	return inletHeight;
+}
+int HPWH::setInlet2ByFraction(double fractionalHeight){
+	if (fractionalHeight > 1. || fractionalHeight < 0.){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds fraction for setInletByFraction \n");
+		}
+		return HPWH_ABORT;
+	}
+	else if (numNodes * fractionalHeight < 1.) {
+		setInlet2Height(0);
+	}
+	else {
+		setInlet2Height((int)std::floor(numNodes*fractionalHeight) - 1);
+	}
+	return 0;
+}
+int HPWH::setInlet2Height(int nodeNum){
+	if (nodeNum >= numNodes){
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
+		}
+		return HPWH_ABORT;
+	}
+	else {
+		inlet2Height = nodeNum;
+	}
+	return 0;
+}
+int HPWH::getInlet2Height(){
+	return inlet2Height;
+}
+
 
 int HPWH::setMaxTempDepression(double maxDepression) {
   this->maxDepression_C = maxDepression;
@@ -1275,17 +1334,50 @@ double HPWH::getLocationTemp_C() const {
 
 
 //the privates
-void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep) {
+void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep,
+	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
 	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
-	int wholeNodesToDraw;
 	this->outletTemp_C = 0;
+	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
 
 	if (drawVolume_L > 0){
+	
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
-		drawFraction = drawVolume_L / volPerNode_LperNode;
-		if (drawFraction > numNodes) {
+		if (inletVol2_L > drawVolume_L) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Volume in inlet 2 is greater than the draw volume.  \n");
+			}
+			simHasFailed = true;
+			return;
+		}
+
+		// Check which inlet is higher;
+		int highInletH;
+		double highInletV, highInletT;
+		int lowInletH;
+		double lowInletT, lowInletV;
+		if (inletHeight > inlet2Height){
+			highInletH = inletHeight;
+			highInletV = drawVolume_L - inletVol2_L;
+			highInletT = inletT_C;
+			lowInletH = inlet2Height;
+			lowInletT = inletT2_C;
+			lowInletV = inletVol2_L;
+		}
+		else {
+			highInletH = inlet2Height;
+			highInletV = inletVol2_L;
+			highInletT = inletT2_C;
+			lowInletH = inletHeight;
+			lowInletT = inletT_C;
+			lowInletV = drawVolume_L - inletVol2_L;
+		}
+
+		//calculate how many nodes to draw (drawVolume_N)
+		drawVolume_N = drawVolume_L / volPerNode_LperNode;
+		if (drawVolume_N > numNodes) {
 			if (hpwhVerbosity >= VRB_reluctant) {
 				msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
 			}
@@ -1293,42 +1385,59 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			return;
 		}
 
-		wholeNodesToDraw = (int)std::floor(drawFraction);
-		drawFraction -= wholeNodesToDraw;
+		/////////////////////////////////////////////////////////////////////////////////////////////////
 
-		//move whole nodes
-		if (wholeNodesToDraw > 0) {
-			for (int i = 0; i < wholeNodesToDraw; i++) {
-				//add temperature of drawn nodes for outletT average
-				outletTemp_C += tankTemps_C[numNodes - 1 - i];
-			}
+		while (drawVolume_N > 0) {
 
-			for (int i = numNodes - 1; i >= 0; i--) {
-				if (i > wholeNodesToDraw - 1) {
-					//move nodes up
-					tankTemps_C[i] = tankTemps_C[i - wholeNodesToDraw];
-				}
-				else {
-					//fill in bottom nodes with inlet water
-					tankTemps_C[i] = inletT_C;
-				}
-			}
-		}
-		//move fractional node
-		if (drawFraction > 0) {
+			// Draw one node at a time
+			drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+
 			//add temperature for outletT average
-			outletTemp_C += drawFraction*tankTemps_C[numNodes - 1];
-			//move partial nodes up
-			for (int i = numNodes - 1; i > 0; i--) {
-				tankTemps_C[i] = tankTemps_C[i] * (1.0 - drawFraction) + tankTemps_C[i - 1] * drawFraction;
+			outletTemp_C += drawFraction * tankTemps_C[numNodes - 1];
+
+			cumInletFraction = 0.;
+			for (int i = numNodes - 1; i >= lowInletH; i--) {
+
+				// Reset inlet inputs at this node. 
+				nodeInletFraction = 0.;
+				nodeInletTV = 0.;
+
+				// Sum of all inlets Vi*Ti at this node
+				if (i == highInletH) {
+					nodeInletTV += highInletV *  drawFraction / drawVolume_L * highInletT;
+					nodeInletFraction += highInletV *  drawFraction / drawVolume_L;
+				}
+				if (i == lowInletH) {
+					nodeInletTV += lowInletV *  drawFraction / drawVolume_L * lowInletT;
+					nodeInletFraction += lowInletV *  drawFraction / drawVolume_L;
+
+					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
+				}
+
+				// Look at the volume and temperature fluxes into this node
+				tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
+					nodeInletTV +
+					(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
+
+				cumInletFraction += nodeInletFraction;
+			
 			}
-			//fill in bottom partial node with inletT
-			tankTemps_C[0] = tankTemps_C[0] * (1.0 - drawFraction) + inletT_C*drawFraction;
+
+			// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
+			tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
+
+			drawVolume_N -= drawFraction;
+
+			if (doInversionMixing) {
+				mixTankInversions();
+			}
 		}
+
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
-		this->outletTemp_C /= (wholeNodesToDraw + drawFraction);
+		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
 
+		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
 		if (tankMixesOnDraw == true && drawVolume_L > 0) {
@@ -1421,6 +1530,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 	// Assign the new temporary tank temps to the real tank temps.
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
+
+	// check for inverted temperature profile 
+	if (doInversionMixing) {
+		mixTankInversions();
+	}
 
 }  //end updateTankTemps
 
@@ -1785,7 +1899,7 @@ bool HPWH::HeatSource::shouldHeat() const {
 				hpwh->msg("engages!\n");
 			}
 			if (hpwh->hpwhVerbosity >= VRB_emetic){
-				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint);
+				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
 			}
 		}
 
@@ -2394,8 +2508,8 @@ int HPWH::checkInputs(){
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
 
-	if (numHeatSources <= 0) {
-		msg("You must have at least one HeatSource");
+	if (numHeatSources <= 0 && hpwhModel != MODELS_StorageTank ) {
+		msg("You must have at least one HeatSource.\n");
 		returnVal = HPWH_ABORT;
 	}
 	if ((numNodes % 12) != 0) {
@@ -3398,6 +3512,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1] = resistiveElementBottom;
 
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
+	}
+	
+	else if (presetNum == MODELS_StorageTank) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = GAL_TO_L(80);
+		tankUA_kJperHrC = 10; //0 to turn off
+
+		doTempDepression = false;
+		//should eventually put tankmixes to true when testing progresses
+		tankMixesOnDraw = false;
+
+		numHeatSources = 0;
 	}
 
 	//basic compressor tank for testing

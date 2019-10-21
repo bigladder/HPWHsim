@@ -1,4 +1,2 @@
 length_of_test 500
 setpoint 53 
-doConduction 0
-doInversionMixing 0
