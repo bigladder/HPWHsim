@@ -316,19 +316,12 @@ class HPWH {
   
   int setInletByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
-  int setInletHeight(int nodeNum);
-  /**< This is a setter for the water inlet height, set as one of the tank nodes - default is node 0 */
-  int getInletHeight();
-  /**< returns the water inlet height node number */
-
-  ///////////////////////Must be a better way than repeating the same functions for inlet2. Addressed to future PK
   int setInlet2ByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
-  int setInlet2Height(int nodeNum);
-  /**< This is a setter for the water inlet height, set as one of the tank nodes - default is node 0 */
-  int getInlet2Height();
+  int setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
+  /**< This is a setter for the water inlet height, by fraction. */
+  int getInletHeight(int whichInlet);
   /**< returns the water inlet height node number */
-  ///////////////////////
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
