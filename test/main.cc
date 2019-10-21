@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
   int i, j, outputCode, nSources;
   long minutesToRun;
 
@@ -147,6 +147,11 @@ int main(int argc, char *argv[])
       model = HPWH::MODELS_Generic3;
     } else if(input2 == "custom") {
       model = HPWH::MODELS_CustomFile;
+	} else if (input2 == "restankRealistic") {
+		model = HPWH::MODELS_restankRealistic;
+	} else if(input2 == "StorageTank") {
+      model = HPWH::MODELS_StorageTank;
+
       //do nothin, use custom-compiled input specified later
     } else {
       model = HPWH::MODELS_basicIntegrated;
@@ -168,7 +173,6 @@ int main(int argc, char *argv[])
   hpwh.setMaxTempDepression(tempDepressThresh);
   hpwh.setDoTempDepression(HPWH_doTempDepress);
 
-
   // Read the test control file
   fileToOpen = testDirectory + "/" + "testInfo.txt";
   controlFile.open(fileToOpen.c_str());
@@ -180,6 +184,7 @@ int main(int argc, char *argv[])
   newSetpoint = 0.0;
   doCondu = 1;
   doInvMix = 1;
+  inletH = 0.0;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
   while(controlFile >> var1 >> testVal) {
 	if(var1 == "setpoint") { // If a setpoint was specified then override the default
@@ -193,6 +198,9 @@ int main(int argc, char *argv[])
 	}
 	if (var1 == "doConduction") {
 		doCondu = (testVal > 0.0) ? 1 : 0;
+	}
+	if (var1 == "inletH") {
+		inletH = testVal;
 	}
   }
 
@@ -217,22 +225,23 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Set the hpwh properties. I'll need to update this to select the appropriate model
-  //int result = hpwh.HPWHinit_presets(model);
-  //int result = hpwh.HPWHinit_file(testDirectory + "/../parameterFile.txt");
-  /*int result = hpwh.HPWHinit_genericHPWH(GAL_TO_L(50), 2.8, dF_TO_dC(13));
-  if (result == HPWH::HPWH_ABORT) {
-    return 1;
-  }*/
-
-  if (doInvMix == 0) hpwh.setDoInversionMixing(false);
-  if (doCondu == 0) hpwh.setDoConduction(false);
-
-  if(newSetpoint > 0) {
-    hpwh.setSetpoint(newSetpoint);
-    hpwh.resetTankToSetpoint();
+  if (doInvMix == 0) {
+	  hpwh.setDoInversionMixing(false);
   }
 
+  if (doCondu == 0) {
+	  hpwh.setDoConduction(false);
+  }
+
+  if(newSetpoint > 0) {
+	hpwh.setSetpoint(newSetpoint);
+    hpwh.resetTankToSetpoint();
+  }
+ 
+  if (inletH > 0) {
+ 	  hpwh.setInletByFraction(inletH);
+  }
+ 
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
@@ -253,12 +262,6 @@ int main(int argc, char *argv[])
   }
   outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6\n";
   
- // static FILE* ppp = NULL;	
- // string filename;
- // filename = "C:/Users/paul/Documents/GitHub/HPWHsim/test" + input3 + "_" + input1 + "_" + input2 + ".csv";
- // const char* fName = filename.c_str();
- // ppp = fopen(fName, "wt");
- // hpwh.WriteCSVHeading(ppp, "before row text,",8, IP);
 
   // ------------------------------------- Simulate --------------------------------------- //
 
@@ -283,23 +286,21 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
-
     // Run the step
     hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
-					GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-					airTemp2,  // Ambient Temp (C)
-					allSchedules[3][i],  // External Temp (C)
-					drStatus, // DDR Status (now an enum. Fixed for now as allow)
-					1.0);    // Minutes per step
+				GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+				airTemp2,  // Ambient Temp (C)
+				allSchedules[3][i],  // External Temp (C)
+				drStatus, // DDR Status (now an enum. Fixed for now as allow)
+				1.0,    // Minutes per step
+				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i]);
+			//		  0., 0.) ;
+
+
 
     // Grab the current status
     getSimTcouples(hpwh, simTCouples, nTestTCouples);
     getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
-    /*for(int k = 0; k < 6; k++) simTCouples[k] = 25;
-    for(int k = 0; k < nSources; k++) {
-      heatSourcesEnergyInput[k] = 0;
-      heatSourcesEnergyOutput[k] = 0;
-    }*/
 
     // Copy current status into the output file
     if(HPWH_doTempDepress) {
@@ -313,11 +314,7 @@ int main(int argc, char *argv[])
     outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] <<
       "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
 
-
-//	hpwh.WriteCSVRow(ppp, "before text,", 8, IP);
-
   }
- // fclose(ppp);
 
   controlFile.close();
   outputFile.close();
