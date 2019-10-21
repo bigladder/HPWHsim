@@ -816,66 +816,40 @@ int HPWH::getUA(double& UA, UNITS units) const
 }
 
 int HPWH::setInletByFraction(double fractionalHeight){
-	if (fractionalHeight > 1. || fractionalHeight < 0.){
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Out of bounds fraction for setInletByFraction \n");
-		}
-		return HPWH_ABORT;
-	}
-	else if (numNodes * fractionalHeight < 1.) {
-		setInletHeight(0);
-	}
-	else {
-		setInletHeight( (int)std::floor(numNodes*fractionalHeight) - 1 );
-	}
-	return 0;
-}
-int HPWH::setInletHeight(int nodeNum){
-	if (nodeNum >= numNodes){
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
-		}
-		return HPWH_ABORT;
-	}
-	else {
-		inletHeight = nodeNum;
-	}
-	return 0;
-}
-int HPWH::getInletHeight(){
-	return inletHeight;
+	return setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
 }
 int HPWH::setInlet2ByFraction(double fractionalHeight){
+	return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
+}
+
+int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum){
 	if (fractionalHeight > 1. || fractionalHeight < 0.){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds fraction for setInletByFraction \n");
 		}
 		return HPWH_ABORT;
 	}
-	else if (numNodes * fractionalHeight < 1.) {
-		setInlet2Height(0);
-	}
-	else {
-		setInlet2Height((int)std::floor(numNodes*fractionalHeight) - 1);
-	}
+
+	int node = (int)std::floor(numNodes*fractionalHeight);
+	inletNum = (node == numNodes) ? numNodes - 1 : node;
+
 	return 0;
 }
-int HPWH::setInlet2Height(int nodeNum){
-	if (nodeNum >= numNodes){
+int HPWH::getInletHeight(int whichInlet){
+	if (whichInlet == 1) {
+		return inletHeight;
+	}
+	else if (whichInlet == 2) {
+		return inlet2Height;
+	}
+	else
+	{
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Inlet height is greater than or equal to the number of tank nodes, the inlet height must be smaller. Defaulting to 0  \n");
+			msg("Invalid inlet chosen in getInletHeight \n");
 		}
 		return HPWH_ABORT;
 	}
-	else {
-		inlet2Height = nodeNum;
-	}
-	return 0;
 }
-int HPWH::getInlet2Height(){
-	return inlet2Height;
-}
-
 
 int HPWH::setMaxTempDepression(double maxDepression) {
   this->maxDepression_C = maxDepression;

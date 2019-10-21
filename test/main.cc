@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
   if (inletH > 0) {
  	  hpwh.setInletByFraction(inletH);
   }
- 
+
   nSources = hpwh.getNumHeatSources();
   for(i = 0; i < nSources; i++) {
     heatSourcesEnergyInput.push_back(0.0);
@@ -295,7 +295,6 @@ int main(int argc, char *argv[])
 				1.0,    // Minutes per step
 				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i]);
 			//		  0., 0.) ;
-
 
 
     // Grab the current status
