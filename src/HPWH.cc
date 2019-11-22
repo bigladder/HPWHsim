@@ -1076,7 +1076,6 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 
 
 
-
 double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
 	double result = getNthSimTcouple(iTCouple, nTCouple);
 	if (result == double(HPWH_ABORT)) {
@@ -1206,6 +1205,26 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const{
 	return setOfSources[N].typeOfHeatSource;
 }
 
+
+double HPWH::getTankSize(/**default units L*/) const {
+	return tankVolume_L;
+}
+double HPWH::getTankSize(UNITS units) const {
+	double returnVal = getTankSize();
+
+	if (units == UNITS_L) {
+		return returnVal;
+	}
+	else if (units == UNITS_GAL) {
+		return GAL_TO_L(returnVal);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankSize.  \n");
+		}
+		return HPWH_ABORT;
+	}
+}
 
 
 double HPWH::getOutletTemp() const {
