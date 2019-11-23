@@ -300,6 +300,11 @@ class HPWH {
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
 
+  double getTankSize(/**default units L*/) const;
+  double getTankSize(UNITS units) const;
+  /**< returns the tank volume in L or GAL  */
+
+
   int setDoInversionMixing(bool doInvMix);
   /**< This is a simple setter for the logical for running the inversion mixing method, default is true */
 
