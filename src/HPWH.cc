@@ -738,6 +738,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 }
 
 int HPWH::setTankSize_adjustUA(double HPWH_size_L){
+	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
 	double oldA = getTankSurfaceArea();
 	setTankSize(HPWH_size_L);
 	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea();
@@ -762,8 +763,8 @@ double HPWH::getTankSurfaceArea(){
 	// returns tank surface area, ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Using the same form of equation given in RACM 2016 App B, equation 41.
-	double sa = 1.492 * pow(L_TO_GAL(vol_G), 0.6666) + 5.068*pow(L_TO_GAL(vol_G), 0.3333) - 10.913;
-	return sa;
+	return (1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913);
+	
 }
 
 int HPWH::setTankSize(double HPWH_size_L) {
