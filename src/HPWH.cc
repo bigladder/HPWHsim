@@ -737,6 +737,36 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
+int HPWH::setTankSize_adjustUA(double HPWH_size_L){
+	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
+	double oldA = getTankSurfaceArea();
+	setTankSize(HPWH_size_L);
+	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea();
+	return 0;
+}
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
+	if (units == UNITS_L) {
+		return setTankSize_adjustUA(HPWH_size);
+	}
+	else if (units == UNITS_GAL) {
+		return setTankSize_adjustUA(GAL_TO_L(HPWH_size));
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setTankSize_adjustUA.  \n");
+		}
+		return HPWH_ABORT;
+	}
+}
+
+double HPWH::getTankSurfaceArea(){
+	// returns tank surface area, ft2
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
+	// Using the same form of equation given in RACM 2016 App B, equation 41.
+	return (1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913);
+	
+}
+
 int HPWH::setTankSize(double HPWH_size_L) {
 	if (HPWH_size_L <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
