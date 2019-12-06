@@ -265,6 +265,7 @@ int main(int argc, char *argv[])
 
   // ------------------------------------- Simulate --------------------------------------- //
 
+
   // Loop over the minutes in the test
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
   for(i = 0; i < minutesToRun; i++) {

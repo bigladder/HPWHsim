@@ -296,6 +296,14 @@ class HPWH {
   int setDoTempDepression(bool doTempDepress);
   /**< This is a simple setter for the temperature depression option */
 
+  int setTankSize_adjustUA(double HPWH_size_L);
+  int setTankSize_adjustUA(double HPWH_size, UNITS units);
+  /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value but a new A.
+		A is found via getTankSurfaceArea()*/
+
+  double getTankSurfaceArea();
+  /**< Returns the tank surface area based off of real storage tanks*/
+
   int setTankSize(double HPWH_size_L);
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
@@ -718,6 +726,7 @@ inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
+inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 #endif
