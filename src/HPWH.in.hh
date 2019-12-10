@@ -135,8 +135,12 @@ class HPWH {
     UNITS_GAL,        /**< gallons  */
     UNITS_L,          /**< liters  */
     UNITS_kJperHrC,   /**< UA, metric units  */
-    UNITS_BTUperHrF   /**< UA, imperial units  */
-    };
+    UNITS_BTUperHrF,  /**< UA, imperial units  */
+	UNITS_FT,		  /**< feet  */
+	UNITS_M,		  /**< meters */
+	UNITS_FT2,		  /**< square feet  */
+	UNITS_M2,		  /**< square meters */
+  };		  
 
   /** specifies the type of heat source  */
   enum HEATSOURCE_TYPE {
@@ -296,22 +300,21 @@ class HPWH {
   int setDoTempDepression(bool doTempDepress);
   /**< This is a simple setter for the temperature depression option */
 
-  int setTankSize_adjustUA(double HPWH_size_L);
   int setTankSize_adjustUA(double HPWH_size, UNITS units);
   /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value but a new A.
 		A is found via getTankSurfaceArea()*/
 
-  double getTankSurfaceArea();
+  double getTankSurfaceArea(UNITS units);
   /**< Returns the tank surface area based off of real storage tanks*/
+  double getTankRadius(UNITS units);
+  /**< Returns the tank surface radius based off of real storage tanks*/
 
   int setTankSize(double HPWH_size_L);
   int setTankSize(double HPWH_size, UNITS units);
   /**< This is a simple setter for the tank volume in L or GAL */
 
-  double getTankSize(/**default units L*/) const;
   double getTankSize(UNITS units) const;
   /**< returns the tank volume in L or GAL  */
-
 
   int setDoInversionMixing(bool doInvMix);
   /**< This is a simple setter for the logical for running the inversion mixing method, default is true */
@@ -728,5 +731,8 @@ inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
+
+inline double FT_TO_M(double feet) { return (feet / 3.2808); }
+inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
 
 #endif

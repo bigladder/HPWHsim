@@ -737,19 +737,16 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size_L){
-	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
-	double oldA = getTankSurfaceArea();
-	setTankSize(HPWH_size_L);
-	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea();
 	return 0;
 }
 int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
+
 	if (units == UNITS_L) {
 		return setTankSize_adjustUA(HPWH_size);
+		HPWH_size_L = HPWH_size;
 	}
 	else if (units == UNITS_GAL) {
-		return setTankSize_adjustUA(GAL_TO_L(HPWH_size));
+		HPWH_size_L = GAL_TO_L(HPWH_size);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -757,15 +754,50 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
 		}
 		return HPWH_ABORT;
 	}
+	setTankSize(HPWH_size_L);
+	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_L);
+	return 0;
 }
 
-double HPWH::getTankSurfaceArea(){
-	// returns tank surface area, ft2
+double HPWH::getTankSurfaceArea(UNITS units){
+	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Using the same form of equation given in RACM 2016 App B, equation 41.
-	return (1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913);
-	
+	double value = 1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913;
+
+	if (units == UNITS_FT2) {
+		return value;
+	}
+	else if (units == UNITS_M2) {
+		return FT2_TO_M2(value);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankSurfaceArea.  \n");
+		}
+		return HPWH_ABORT;
+	}
 }
+
+double HPWH::getTankRadius(UNITS units){
+	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
+	double value = 0.2244 * pow(L_TO_GAL(tankVolume_L), 0.333) + 0.0749;
+
+	if (units == UNITS_FT) {
+		return value;
+	}
+	else if (units == UNITS_M) {
+		return FT2_TO_M2(value);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankRadius.  \n");
+		}
+		return HPWH_ABORT;
+	}
+}
+
 
 int HPWH::setTankSize(double HPWH_size_L) {
 	if (HPWH_size_L <= 0) {
@@ -1236,17 +1268,12 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const{
 }
 
 
-double HPWH::getTankSize(/**default units L*/) const {
-	return tankVolume_L;
-}
 double HPWH::getTankSize(UNITS units) const {
-	double returnVal = getTankSize();
-
 	if (units == UNITS_L) {
-		return returnVal;
+		return tankVolume_L;
 	}
 	else if (units == UNITS_GAL) {
-		return GAL_TO_L(returnVal);
+		return L_TO_GAL(tankVolume_L);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1484,8 +1511,8 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// height estimate from Rheem along with the volume is used to get the radius and node_height
-	static const double height = 1.2; //meters
-	const double rad = sqrt(tankVolume_L / (1000.0 * 3.14159 * height));
+	const double rad = getTankRadius(UNITS_M);
+	const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
 	const double node_height = height / numNodes;
 	
 	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
@@ -1513,10 +1540,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		for (int i = 1; i < numNodes - 1; i++) {
 			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
+
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ += (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	}
-
 	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
 		
 		for (int i = 0; i < numNodes; i++) {
