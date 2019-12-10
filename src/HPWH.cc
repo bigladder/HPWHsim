@@ -473,15 +473,15 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 
 		for (int j = 0; j < numHeatSources; j++) {
 			heatSources_runTimes_SUM[j] += getNthHeatSourceRunTime(j);
-			heatSources_energyInputs_SUM[j] += getNthHeatSourceEnergyInput(j);
-			heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
+			heatSources_energyInputs_SUM[j] += getNthHeatSourceEnergyInput(j, UNITS_KWH);
+			heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j, UNITS_KWH);
 		}
 
 		//print minutely output
 		if (hpwhVerbosity == VRB_minuteOut) {
 			msg("%f,%f,%f,", tankAmbientT_C[i], drawVolume_L[i], inletT_C[i]);
 			for (int j = 0; j < numHeatSources; j++) {
-				msg("%f,%f,", getNthHeatSourceEnergyInput(j), getNthHeatSourceEnergyOutput(j));
+				msg("%f,%f,", getNthHeatSourceEnergyInput(j, UNITS_KWH), getNthHeatSourceEnergyOutput(j, UNITS_KWH));
 			}
 			msg("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
 				tankTemps_C[0 * numNodes / 12], tankTemps_C[1 * numNodes / 12],
@@ -490,8 +490,8 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
 				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
-				getNthSimTcouple(1,6), getNthSimTcouple(2,6), getNthSimTcouple(3,6),
-				getNthSimTcouple(4,6), getNthSimTcouple(5,6), getNthSimTcouple(6,6));
+				getNthSimTcouple(1, 6, UNITS_C), getNthSimTcouple(2, 6, UNITS_C), getNthSimTcouple(3, 6, UNITS_C),
+				getNthSimTcouple(4, 6, UNITS_C), getNthSimTcouple(5, 6, UNITS_C), getNthSimTcouple(6, 6, UNITS_C));
 		}
 
 	}
@@ -568,14 +568,14 @@ void HPWH::printHeatSourceInfo(){
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		ss << "input energy kwh: " << std::setw(7) << getNthHeatSourceEnergyInput(i) << "\t";
+		ss << "input energy kwh: " << std::setw(7) << getNthHeatSourceEnergyInput(i, UNITS_KWH) << "\t";
 	}
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
 		if (runtime != 0) { 
-			outputVar = getNthHeatSourceEnergyInput(i) / (runtime / 60.0);
+			outputVar = getNthHeatSourceEnergyInput(i, UNITS_KWH) / (runtime / 60.0);
 		}
 		else { 
 			outputVar = 0; 
@@ -585,14 +585,14 @@ void HPWH::printHeatSourceInfo(){
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		ss << "output energy kwh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i) << "\t";
+		ss << "output energy kwh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i, UNITS_KWH) << "\t";
 	}
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
 		if (runtime != 0) { 
-			outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0); 
+			outputVar = getNthHeatSourceEnergyOutput(i, UNITS_KWH) / (runtime / 60.0);
 		}
 		else { 
 			outputVar = 0; 
@@ -617,7 +617,7 @@ void HPWH::printTankTemps() {
 	ss << std::left;
 
 	for (int i = 0; i < getNumNodes(); i++) {
-		ss << std::setw(9) << getTankNodeTemp(i) << " ";
+		ss << std::setw(9) << getTankNodeTemp(i, UNITS_C) << " ";
 	}
 	ss << endl;
 
@@ -655,8 +655,8 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 
 	const char* pfx = "";
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS)*1000.,
-			getNthHeatSourceEnergyOutput(iHS)*1000.);
+		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS, UNITS_KWH)*1000.,
+			getNthHeatSourceEnergyOutput(iHS, UNITS_KWH)*1000.);
 		pfx = ",";
 	}
 
@@ -696,7 +696,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units) {
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getNthSimTcouple.  \n");
+			msg("Incorrect unit specification for setSetpoint.  \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -1118,18 +1118,18 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
 	double averageTemp_C = 0.0;
 
 	// Check any intial fraction of nodes 
-	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * (ind - start_ind);
+	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind), UNITS_C) * (ind - start_ind);
 	weight -= ( ind - start_ind);
 
     // Check the full nodes
 	while (weight >= 1.0) {
-		averageTemp_C += getTankNodeTemp(ind);
+		averageTemp_C += getTankNodeTemp(ind, UNITS_C);
 		weight -= 1.0;
 		ind += 1;
 	}
 
 	// Check any leftover
-	averageTemp_C += getTankNodeTemp(ind) * weight;
+	averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
 
 	averageTemp_C /= ((double)numNodes / (double)nTCouple);
 	return averageTemp_C;
@@ -3173,7 +3173,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	}
 
 	//use tank size setting function since it has bounds checking
-	int failure = this->setTankSize(tankVol_L);
+	int failure = this->setTankSize(tankVol_L, UNITS_L);
 	if (failure == HPWH_ABORT) {
 		return failure;
 	}
@@ -3345,7 +3345,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//set tank volume from input
 	//use tank size setting function since it has bounds checking
-	int failure = this->setTankSize(tankVol_L);
+	int failure = this->setTankSize(tankVol_L, UNITS_L);
 	if (failure == HPWH_ABORT) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Failure to set tank size in generic hpwh init.");
