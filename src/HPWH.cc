@@ -737,12 +737,12 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-	return 0;
-}
 int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
+	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
+	double HPWH_size_L; 
+	double oldA = getTankSurfaceArea(UNITS_FT2);
 
 	if (units == UNITS_L) {
-		return setTankSize_adjustUA(HPWH_size);
 		HPWH_size_L = HPWH_size;
 	}
 	else if (units == UNITS_GAL) {
@@ -754,8 +754,8 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
 		}
 		return HPWH_ABORT;
 	}
-	setTankSize(HPWH_size_L);
-	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_L);
+	setTankSize(HPWH_size_L, UNITS_L);
+	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
 	return 0;
 }
 
@@ -797,7 +797,6 @@ double HPWH::getTankRadius(UNITS units){
 		return HPWH_ABORT;
 	}
 }
-
 
 int HPWH::setTankSize(double HPWH_size_L) {
 	if (HPWH_size_L <= 0) {
