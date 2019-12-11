@@ -617,7 +617,7 @@ void HPWH::printTankTemps() {
 	ss << std::left;
 
 	for (int i = 0; i < getNumNodes(); i++) {
-		ss << std::setw(9) << getTankNodeTemp(i, UNITS_C) << " ";
+		ss << std::setw(9) << getTankNodeTemp(i) << " ";
 	}
 	ss << endl;
 
@@ -675,7 +675,7 @@ bool HPWH::isSetpointFixed(){
 	return setpointFixed;
 }
 
-int HPWH::setSetpoint(double newSetpoint, UNITS units) {
+int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	if (setpointFixed == true) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Unwilling to set setpoint for your currently selected model.  \n");
@@ -734,7 +734,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
 	double HPWH_size_L; 
 	double oldA = getTankSurfaceArea(UNITS_FT2);
@@ -756,7 +756,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
 	return 0;
 }
 
-double HPWH::getTankSurfaceArea(UNITS units){
+double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/){
 	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Using the same form of equation given in RACM 2016 App B, equation 41.
@@ -776,7 +776,7 @@ double HPWH::getTankSurfaceArea(UNITS units){
 	}
 }
 
-double HPWH::getTankRadius(UNITS units){
+double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/){
 	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	double value = 0.2244 * pow(L_TO_GAL(tankVolume_L), 0.333) + 0.0749;
@@ -795,7 +795,7 @@ double HPWH::getTankRadius(UNITS units){
 	}
 }
 
-int HPWH::setTankSize(double HPWH_size, UNITS units) {
+int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
 	if (HPWH_size <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to set the tank volume outside of bounds.  \n");
@@ -828,7 +828,7 @@ int HPWH::setDoConduction(bool doCondu) {
 	return 0;
 }
 
-int HPWH::setUA(double UA, UNITS units) {
+int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/) {
 	if (units == UNITS_kJperHrC) {
 		tankUA_kJperHrC = UA;
 	}
@@ -844,7 +844,7 @@ int HPWH::setUA(double UA, UNITS units) {
 	return 0;
 }
 
-int HPWH::getUA(double& UA, UNITS units) const {
+int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
 	UA = tankUA_kJperHrC;
 	if (units == UNITS_kJperHrC) {
 		// UA is already in correct units
@@ -898,7 +898,7 @@ int HPWH::getInletHeight(int whichInlet){
 	}
 }
 
-int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
+int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
   if(units == UNITS_C) {
 	  this->maxDepression_C = maxDepression;
   }
@@ -1048,7 +1048,7 @@ int HPWH::getNumNodes() const {
 }
 
 
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
+double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 	if (nodeNum > numNodes || nodeNum < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
@@ -1076,7 +1076,7 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
 }
 
 
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_C*/) const {
 	if (iTCouple > nTCouple || iTCouple < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
@@ -1133,7 +1133,7 @@ int HPWH::getNumHeatSources() const {
 }
 
 
-double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
+double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
 	if (N > numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1158,9 +1158,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
 		return double(HPWH_ABORT);
 	}
 }
-
-
-double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
+double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
 	if (N > numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1235,7 +1233,7 @@ double HPWH::getTankSize(UNITS units) const {
 }
 
 
-double HPWH::getOutletTemp(UNITS units) const {
+double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const {
 
 	if (units == UNITS_C) {
 		return outletTemp_C;
@@ -1251,7 +1249,7 @@ double HPWH::getOutletTemp(UNITS units) const {
 	}
 }
 
-double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
+double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the space to the water is the positive direction
 	if (units == UNITS_KWH) {
 		return energyRemovedFromEnvironment_kWh;
@@ -1270,7 +1268,7 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
 	}
 }
 
-double HPWH::getStandbyLosses(UNITS units) const {
+double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the water to the space is the positive direction
 	if (units == UNITS_KWH) {
 		return standbyLosses_kWh;
