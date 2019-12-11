@@ -394,7 +394,7 @@ int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples, int nTCouples) {
   int i;
 
   for(i = 0; i < 6; i++) {
-    tcouples[i] = hpwh.getNthSimTcouple(i + 1, nTCouples);
+	  tcouples[i] = hpwh.getNthSimTcouple(i + 1, nTCouples);
   }
   return 0;
 }
@@ -402,8 +402,8 @@ int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples, int nTCouples) {
 int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs) {
   int i;
   for(i = 0; i < hpwh.getNumHeatSources(); i++) {
-    inputs[i] = hpwh.getNthHeatSourceEnergyInput(i);
-    outputs[i] = hpwh.getNthHeatSourceEnergyOutput(i);
+	  inputs[i] = hpwh.getNthHeatSourceEnergyInput(i);
+	  outputs[i] = hpwh.getNthHeatSourceEnergyOutput(i);
   }
   return 0;
 }

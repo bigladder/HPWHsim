@@ -490,8 +490,8 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
 				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
-				getNthSimTcouple(1,6), getNthSimTcouple(2,6), getNthSimTcouple(3,6),
-				getNthSimTcouple(4,6), getNthSimTcouple(5,6), getNthSimTcouple(6,6));
+				getNthSimTcouple(1, 6), getNthSimTcouple(2, 6), getNthSimTcouple(3, 6),
+				getNthSimTcouple(4, 6), getNthSimTcouple(5, 6), getNthSimTcouple(6, 6));
 		}
 
 	}
@@ -585,14 +585,14 @@ void HPWH::printHeatSourceInfo(){
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		ss << "output energy kwh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i) << "\t";
+		ss << "output energy kwh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i, UNITS_KWH) << "\t";
 	}
 	ss << endl;
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
 		if (runtime != 0) { 
-			outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0); 
+			outputVar = getNthHeatSourceEnergyOutput(i, UNITS_KWH) / (runtime / 60.0);
 		}
 		else { 
 			outputVar = 0; 
@@ -655,8 +655,8 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 
 	const char* pfx = "";
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS)*1000.,
-			getNthHeatSourceEnergyOutput(iHS)*1000.);
+		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS, UNITS_KWH)*1000.,
+			getNthHeatSourceEnergyOutput(iHS, UNITS_KWH)*1000.);
 		pfx = ",";
 	}
 
@@ -675,7 +675,7 @@ bool HPWH::isSetpointFixed(){
 	return setpointFixed;
 }
 
-int HPWH::setSetpoint(double newSetpoint){
+int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	if (setpointFixed == true) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Unwilling to set setpoint for your currently selected model.  \n");
@@ -683,23 +683,20 @@ int HPWH::setSetpoint(double newSetpoint){
 		return HPWH_ABORT;
 	}
 	else{
-		setpoint_C = newSetpoint;
+		if (units == UNITS_C) {
+			setpoint_C = newSetpoint;
+		}
+		else if (units == UNITS_F) {
+			setpoint_C = (F_TO_C(newSetpoint));
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect unit specification for setSetpoint.  \n");
+			}
+			return HPWH_ABORT;
+		}
 	}
 	return 0;
-}
-int HPWH::setSetpoint(double newSetpoint, UNITS units) {
-	if (units == UNITS_C) {
-		return setSetpoint(newSetpoint);
-	}
-	else if (units == UNITS_F) {
-		return setSetpoint(F_TO_C(newSetpoint));
-	}
-	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getNthSimTcouple.  \n");
-		}
-		return HPWH_ABORT;
-	}
 }
 double HPWH::getSetpoint(){
 	return setpoint_C;
@@ -737,19 +734,16 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size_L){
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
-	double oldA = getTankSurfaceArea();
-	setTankSize(HPWH_size_L);
-	tankUA_kJperHrC = tankUA_kJperHrC / oldA * getTankSurfaceArea();
-	return 0;
-}
-int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
+	double HPWH_size_L; 
+	double oldA = getTankSurfaceArea(UNITS_FT2);
+
 	if (units == UNITS_L) {
-		return setTankSize_adjustUA(HPWH_size);
+		HPWH_size_L = HPWH_size;
 	}
 	else if (units == UNITS_GAL) {
-		return setTankSize_adjustUA(GAL_TO_L(HPWH_size));
+		HPWH_size_L = GAL_TO_L(HPWH_size);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -757,18 +751,52 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units){
 		}
 		return HPWH_ABORT;
 	}
+	setTankSize(HPWH_size_L, UNITS_L);
+	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
+	return 0;
 }
 
-double HPWH::getTankSurfaceArea(){
-	// returns tank surface area, ft2
+double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/){
+	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Using the same form of equation given in RACM 2016 App B, equation 41.
-	return (1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913);
-	
+	double value = 1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913;
+
+	if (units == UNITS_FT2) {
+		return value;
+	}
+	else if (units == UNITS_M2) {
+		return FT2_TO_M2(value);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankSurfaceArea.  \n");
+		}
+		return HPWH_ABORT;
+	}
 }
 
-int HPWH::setTankSize(double HPWH_size_L) {
-	if (HPWH_size_L <= 0) {
+double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/){
+	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
+	double value = 0.2244 * pow(L_TO_GAL(tankVolume_L), 0.333) + 0.0749;
+
+	if (units == UNITS_FT) {
+		return value;
+	}
+	else if (units == UNITS_M) {
+		return FT2_TO_M2(value);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getTankRadius.  \n");
+		}
+		return HPWH_ABORT;
+	}
+}
+
+int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
+	if (HPWH_size <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to set the tank volume outside of bounds.  \n");
 		}
@@ -776,23 +804,20 @@ int HPWH::setTankSize(double HPWH_size_L) {
 		return HPWH_ABORT;
 	}
 	else {
-		this->tankVolume_L = HPWH_size_L;
+		if (units == UNITS_L) {
+			this->tankVolume_L = HPWH_size;
+		}
+		else if (units == UNITS_GAL) {
+			this->tankVolume_L = (GAL_TO_L(HPWH_size));
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect unit specification for setTankSize.  \n");
+			}
+			return HPWH_ABORT;
+		}
 	}
 	return 0;
-}
-int HPWH::setTankSize(double HPWH_size, UNITS units) {
-	if (units == UNITS_L) {
-		return setTankSize(HPWH_size);
-	}
-	else if (units == UNITS_GAL) {
-		return setTankSize(GAL_TO_L(HPWH_size));
-	}
-	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for setTankSize.  \n");
-		}
-		return HPWH_ABORT;
-	}
 }
 int HPWH::setDoInversionMixing(bool doInvMix) {
 	this->doInversionMixing = doInvMix;
@@ -803,16 +828,12 @@ int HPWH::setDoConduction(bool doCondu) {
 	return 0;
 }
 
-int HPWH::setUA(double UA_kJperHrC) {
-	tankUA_kJperHrC = UA_kJperHrC;
-	return 0;
-}
-int HPWH::setUA(double UA, UNITS units) {
+int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/) {
 	if (units == UNITS_kJperHrC) {
-		return setUA(UA);
+		tankUA_kJperHrC = UA;
 	}
 	else if (units == UNITS_BTUperHrF) {
-		return setUA(UAf_TO_UAc(UA));
+		tankUA_kJperHrC = UAf_TO_UAc(UA);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -820,15 +841,11 @@ int HPWH::setUA(double UA, UNITS units) {
 		}
 		return HPWH_ABORT;
 	}
-}
-
-int HPWH::getUA(double& UA_kJperHrC) const {
-	UA_kJperHrC = tankUA_kJperHrC;
 	return 0;
 }
-int HPWH::getUA(double& UA, UNITS units) const
-{
-	int ret = getUA(UA);
+
+int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
+	UA = tankUA_kJperHrC;
 	if (units == UNITS_kJperHrC) {
 		// UA is already in correct units
 	}
@@ -840,9 +857,9 @@ int HPWH::getUA(double& UA, UNITS units) const
 			msg("Incorrect unit specification for getUA.  \n");
 		}
 		UA = -1.;
-		ret = HPWH_ABORT;
+		return HPWH_ABORT;
 	}
-	return ret;
+	return 0;
 }
 
 int HPWH::setInletByFraction(double fractionalHeight){
@@ -881,16 +898,12 @@ int HPWH::getInletHeight(int whichInlet){
 	}
 }
 
-int HPWH::setMaxTempDepression(double maxDepression) {
-  this->maxDepression_C = maxDepression;
-  return 0;
-}
-int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
+int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
   if(units == UNITS_C) {
-    return setMaxTempDepression(maxDepression);
+	  this->maxDepression_C = maxDepression;
   }
   else if(units == UNITS_F) {
-    return setMaxTempDepression(F_TO_C(maxDepression));
+	  this->maxDepression_C = F_TO_C(maxDepression);
   }
   else {
 	  if (hpwhVerbosity >= VRB_reluctant) {
@@ -898,6 +911,7 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units) {
 	  }
     return HPWH_ABORT;
   }
+  return 0;
 }
 
 HPWH::HeatingLogic HPWH::topThird(double d) const {
@@ -1033,96 +1047,83 @@ int HPWH::getNumNodes() const {
 	return numNodes;
 }
 
-double HPWH::getTankNodeTemp(int nodeNum) const {
+
+double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 	if (nodeNum > numNodes || nodeNum < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
-	return tankTemps_C[nodeNum];
-}
-
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units) const {
-	double result = getTankNodeTemp(nodeNum);
-	if (result == double(HPWH_ABORT)) {
-		return result;
-	}
-
-	if (units == UNITS_C) {
-		return result;
-	}
-	else if (units == UNITS_F) {
-		return C_TO_F(result);
-	}
-	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getTankNodeTemp.  \n");
+	else{
+		double result = tankTemps_C[nodeNum];
+		if (result == double(HPWH_ABORT)) {
+			return result;
 		}
-		return double(HPWH_ABORT);
+		if (units == UNITS_C) {
+			return result;
+		}
+		else if (units == UNITS_F) {
+			return C_TO_F(result);
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect unit specification for getTankNodeTemp.  \n");
+			}
+			return double(HPWH_ABORT);
+		}
 	}
 }
 
 
-
-
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const {
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_C*/) const {
 	if (iTCouple > nTCouple || iTCouple < 1) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
-	if ( nTCouple > numNodes) {
+	else if (nTCouple > numNodes) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have more simulated thermocouples than nodes.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
-
-	double weight = (double) numNodes / (double) nTCouple;
-	double start_ind = (iTCouple - 1) * weight;
-	int ind = (int)std::ceil(start_ind);
-
-	double averageTemp_C = 0.0;
-
-	// Check any intial fraction of nodes 
-	averageTemp_C += getTankNodeTemp((int) std::floor(start_ind)) * (ind - start_ind);
-	weight -= ( ind - start_ind);
-
-    // Check the full nodes
-	while (weight >= 1.0) {
-		averageTemp_C += getTankNodeTemp(ind);
-		weight -= 1.0;
-		ind += 1;
-	}
-
-	// Check any leftover
-	averageTemp_C += getTankNodeTemp(ind) * weight;
-
-	averageTemp_C /= ((double)numNodes / (double)nTCouple);
-	return averageTemp_C;
-}
-
-
-
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const {
-	double result = getNthSimTcouple(iTCouple, nTCouple);
-	if (result == double(HPWH_ABORT)) {
-		return result;
-	}
-
-	if (units == UNITS_C) {
-		return result;
-	}
-	else if (units == UNITS_F) {
-		return C_TO_F(result);
-	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		double weight = (double)numNodes / (double)nTCouple;
+		double start_ind = (iTCouple - 1) * weight;
+		int ind = (int)std::ceil(start_ind);
+
+		double averageTemp_C = 0.0;
+
+		// Check any intial fraction of nodes 
+		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind), UNITS_C) * (ind - start_ind);
+		weight -= (ind - start_ind);
+
+		// Check the full nodes
+		while (weight >= 1.0) {
+			averageTemp_C += getTankNodeTemp(ind, UNITS_C);
+			weight -= 1.0;
+			ind += 1;
 		}
-		return double(HPWH_ABORT);
+
+		// Check any leftover
+		averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
+
+		averageTemp_C /= ((double)numNodes / (double)nTCouple);
+
+		if (units == UNITS_C) {
+			return averageTemp_C;
+		}
+		else if (units == UNITS_F) {
+			return C_TO_F(averageTemp_C);
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect unit specification for getNthSimTcouple.  \n");
+			}
+			return double(HPWH_ABORT);
+		}
 	}
 }
 
@@ -1132,7 +1133,7 @@ int HPWH::getNumHeatSources() const {
 }
 
 
-double HPWH::getNthHeatSourceEnergyInput(int N) const {
+double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
 	if (N > numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1140,24 +1141,15 @@ double HPWH::getNthHeatSourceEnergyInput(int N) const {
 		}
 		return double(HPWH_ABORT);
 	}
-	return setOfSources[N].energyInput_kWh;
-}
-
-double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
-	//energy used by the heat source is positive - this should always be positive
-	double returnVal = getNthHeatSourceEnergyInput(N);
-	if (returnVal == double(HPWH_ABORT)) {
-		return returnVal;
-	}
 
 	if (units == UNITS_KWH) {
-		return returnVal;
+		return setOfSources[N].energyInput_kWh;
 	}
 	else if (units == UNITS_BTU) {
-		return KWH_TO_BTU(returnVal);
+		return KWH_TO_BTU(setOfSources[N].energyInput_kWh);
 	}
 	else if (units == UNITS_KJ) {
-		return KWH_TO_KJ(returnVal);
+		return KWH_TO_KJ(setOfSources[N].energyInput_kWh);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1166,9 +1158,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units) const {
 		return double(HPWH_ABORT);
 	}
 }
-
-
-double HPWH::getNthHeatSourceEnergyOutput(int N) const {
+double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
 	if (N > numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1176,24 +1166,15 @@ double HPWH::getNthHeatSourceEnergyOutput(int N) const {
 		}
 		return double(HPWH_ABORT);
 	}
-	return setOfSources[N].energyOutput_kWh;
-}
-
-double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units) const {
-	//returns energy from the heat source into the water - this should always be positive
-	double returnVal = getNthHeatSourceEnergyOutput(N);
-	if (returnVal == double(HPWH_ABORT)) {
-		return returnVal;
-	}
 
 	if (units == UNITS_KWH) {
-		return returnVal;
+		return setOfSources[N].energyOutput_kWh;
 	}
 	else if (units == UNITS_BTU) {
-		return KWH_TO_BTU(returnVal);
+		return KWH_TO_BTU(setOfSources[N].energyOutput_kWh);
 	}
 	else if (units == UNITS_KJ) {
-		return KWH_TO_KJ(returnVal);
+		return KWH_TO_KJ(setOfSources[N].energyOutput_kWh);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1236,17 +1217,12 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const{
 }
 
 
-double HPWH::getTankSize(/**default units L*/) const {
-	return tankVolume_L;
-}
 double HPWH::getTankSize(UNITS units) const {
-	double returnVal = getTankSize();
-
 	if (units == UNITS_L) {
-		return returnVal;
+		return tankVolume_L;
 	}
 	else if (units == UNITS_GAL) {
-		return GAL_TO_L(returnVal);
+		return L_TO_GAL(tankVolume_L);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1257,21 +1233,13 @@ double HPWH::getTankSize(UNITS units) const {
 }
 
 
-double HPWH::getOutletTemp() const {
-	return outletTemp_C;
-}
-
-double HPWH::getOutletTemp(UNITS units) const {
-	double returnVal = getOutletTemp();
-	if (returnVal == double(HPWH_ABORT)) {
-		return returnVal;
-	}
+double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const {
 
 	if (units == UNITS_C) {
-		return returnVal;
+		return outletTemp_C;
 	}
 	else if (units == UNITS_F) {
-		return C_TO_F(returnVal);
+		return C_TO_F(outletTemp_C);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1281,24 +1249,16 @@ double HPWH::getOutletTemp(UNITS units) const {
 	}
 }
 
-
-double HPWH::getEnergyRemovedFromEnvironment() const {
+double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the space to the water is the positive direction
-	return energyRemovedFromEnvironment_kWh;
-}
-
-double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
-	//moving heat from the space to the water is the positive direction
-	double returnVal = getEnergyRemovedFromEnvironment();
-
 	if (units == UNITS_KWH) {
-		return returnVal;
+		return energyRemovedFromEnvironment_kWh;
 	}
 	else if (units == UNITS_BTU) {
-		return KWH_TO_BTU(returnVal);
+		return KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
 	}
 	else if (units == UNITS_KJ){
-		return KWH_TO_KJ(returnVal);
+		return KWH_TO_KJ(energyRemovedFromEnvironment_kWh);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1308,24 +1268,16 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units) const {
 	}
 }
 
-
-double HPWH::getStandbyLosses() const {
+double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the water to the space is the positive direction
-	return standbyLosses_kWh;
-}
-
-double HPWH::getStandbyLosses(UNITS units) const {
-	//moving heat from the water to the space is the positive direction
-	double returnVal = getStandbyLosses();
-
 	if (units == UNITS_KWH) {
-		return returnVal;
+		return standbyLosses_kWh;
 	}
 	else if (units == UNITS_BTU) {
-		return KWH_TO_BTU(returnVal);
+		return KWH_TO_BTU(standbyLosses_kWh);
 	}
 	else if (units == UNITS_KJ){
-		return KWH_TO_KJ(returnVal);
+		return KWH_TO_KJ(standbyLosses_kWh);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1484,8 +1436,8 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// height estimate from Rheem along with the volume is used to get the radius and node_height
-	static const double height = 1.2; //meters
-	const double rad = sqrt(tankVolume_L / (1000.0 * 3.14159 * height));
+	const double rad = getTankRadius(UNITS_M);
+	const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
 	const double node_height = height / numNodes;
 	
 	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
@@ -1513,10 +1465,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		for (int i = 1; i < numNodes - 1; i++) {
 			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
+
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ += (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	}
-
 	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
 		
 		for (int i = 0; i < numNodes; i++) {
