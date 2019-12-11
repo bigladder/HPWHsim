@@ -135,8 +135,12 @@ class HPWH {
     UNITS_GAL,        /**< gallons  */
     UNITS_L,          /**< liters  */
     UNITS_kJperHrC,   /**< UA, metric units  */
-    UNITS_BTUperHrF   /**< UA, imperial units  */
-    };
+    UNITS_BTUperHrF,  /**< UA, imperial units  */
+	UNITS_FT,		  /**< feet  */
+	UNITS_M,		  /**< meters */
+	UNITS_FT2,		  /**< square feet  */
+	UNITS_M2,		  /**< square meters */
+  };		  
 
   /** specifies the type of heat source  */
   enum HEATSOURCE_TYPE {
@@ -279,8 +283,7 @@ class HPWH {
 
 
   bool isSetpointFixed();  /**< is the setpoint allowed to be changed */
-  int setSetpoint(double newSetpoint /**<default units C*/);
-  int setSetpoint(double newSetpoint, UNITS units);
+  int setSetpoint(double newSetpoint, UNITS units = UNITS_C);/**<default units C*/
   /**< a function to change the setpoint - useful for dynamically setting it
       The return value is 0 for successful setting, HPWH_ABORT for units failure  */
   double getSetpoint();
@@ -296,22 +299,20 @@ class HPWH {
   int setDoTempDepression(bool doTempDepress);
   /**< This is a simple setter for the temperature depression option */
 
-  int setTankSize_adjustUA(double HPWH_size_L);
-  int setTankSize_adjustUA(double HPWH_size, UNITS units);
+  int setTankSize_adjustUA(double HPWH_size, UNITS units );
   /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value but a new A.
 		A is found via getTankSurfaceArea()*/
 
-  double getTankSurfaceArea();
+  double getTankSurfaceArea(UNITS units = UNITS_FT2);
   /**< Returns the tank surface area based off of real storage tanks*/
+  double getTankRadius(UNITS units = UNITS_FT);
+  /**< Returns the tank surface radius based off of real storage tanks*/
 
-  int setTankSize(double HPWH_size_L);
-  int setTankSize(double HPWH_size, UNITS units);
-  /**< This is a simple setter for the tank volume in L or GAL */
+  int setTankSize(double HPWH_size, UNITS units = UNITS_L);
+  /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
 
-  double getTankSize(/**default units L*/) const;
-  double getTankSize(UNITS units) const;
+  double getTankSize(UNITS units = UNITS_L) const;
   /**< returns the tank volume in L or GAL  */
-
 
   int setDoInversionMixing(bool doInvMix);
   /**< This is a simple setter for the logical for running the inversion mixing method, default is true */
@@ -319,13 +320,11 @@ class HPWH {
   int setDoConduction(bool doCondu);
   /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
-  int setUA(double UA_kJperHrC);
-  int setUA(double UA, UNITS units);
-  /**< This is a setter for the UA, with or without units specified - default is metric */
+  int setUA(double UA, UNITS units = UNITS_kJperHrC);
+  /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC */
 
-  int getUA(double& UA_kJperHrC) const;
-  int getUA(double& UA, UNITS units) const;
-  /**< Returns the UA, with or without units specified - default is metric */
+  int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
+  /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
   
   int setInletByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
@@ -338,13 +337,11 @@ class HPWH {
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
-  double getTankNodeTemp(int nodeNum /**default units C*/) const;
-  double getTankNodeTemp(int nodeNum, UNITS units) const;
+	double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
 	/**< returns the temperature of the water at the specified node - with specified units
       or HPWH_ABORT for incorrect node number or unit failure  */
 
-	double getNthSimTcouple(int iTCouple, int nTCouple /**default units C*/) const;
-  double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units) const;
+	double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
   /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
 	  which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple, 
 	  1 at the bottom using specified units
@@ -352,15 +349,12 @@ class HPWH {
 
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */
-	double getNthHeatSourceEnergyInput(int N /**default units kWh*/) const;
-	double getNthHeatSourceEnergyInput(int N, UNITS units) const;
+	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
       returns HPWH_ABORT for N out of bounds or incorrect units  */
 
-
-  double getNthHeatSourceEnergyOutput(int N /**default units kWh*/) const;
-	double getNthHeatSourceEnergyOutput(int N, UNITS units) const;
+	double getNthHeatSourceEnergyOutput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy output from the Nth heat source, with the specified units
       energy put into the water is positive - should always be positive
       returns HPWH_ABORT for N out of bounds or incorrect units  */
@@ -375,20 +369,17 @@ class HPWH {
   /**< returns the enum value for what type of heat source the Nth heat source is  */
 
 
-
-	double getOutletTemp(/**default units C*/) const;
-	double getOutletTemp(UNITS units) const;
+  double getOutletTemp(UNITS units = UNITS_C) const;
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
 
-	double getEnergyRemovedFromEnvironment(/**default units kWh*/) const;
-	double getEnergyRemovedFromEnvironment(UNITS units) const;
+  double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
       (not net energy - does not include standby)
       moving heat from the space to the water is the positive direction
       returns HPWH_ABORT for incorrect units  */
-  double getStandbyLosses(/**default units kWh*/) const;
-	double getStandbyLosses(UNITS units) const;
+
+  double getStandbyLosses(UNITS units = UNITS_KWH) const;
 	/**< get the amount of heat lost through the tank in specified units
       moving heat from the water to the space is the positive direction
       negative should occur seldom
@@ -409,8 +400,7 @@ class HPWH {
   void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
 
   double getLocationTemp_C() const;
-  int setMaxTempDepression(double maxDepression);
-  int setMaxTempDepression(double maxDepression, UNITS units);
+  int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
 
  private:
@@ -728,5 +718,8 @@ inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
+
+inline double FT_TO_M(double feet) { return (feet / 3.2808); }
+inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
 
 #endif
