@@ -393,7 +393,7 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples, int nTCouples) {
   int i;
 
-  for(i = 0; i <= 6; i++) {
+  for(i = 0; i < 6; i++) {
 	  tcouples[i] = hpwh.getNthSimTcouple(i + 1, nTCouples);
   }
   return 0;
