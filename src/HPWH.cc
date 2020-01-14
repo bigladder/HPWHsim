@@ -664,7 +664,6 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 		fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
 	}
 
-
 	fprintf(outFILE, "\n");
 
 	return 0;
@@ -1049,7 +1048,7 @@ int HPWH::getNumNodes() const {
 
 
 double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
-	if (nodeNum > numNodes || nodeNum < 0) {
+	if (nodeNum >= numNodes || nodeNum < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
 		}
@@ -1097,8 +1096,8 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_
 		double averageTemp_C = 0.0;
 
 		// Check any intial fraction of nodes 
-		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind), UNITS_C) * (ind - start_ind);
-		weight -= (ind - start_ind);
+		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind), UNITS_C) * ((double)ind - start_ind);
+		weight -= ((double)ind - start_ind);
 
 		// Check the full nodes
 		while (weight >= 1.0) {
@@ -1108,8 +1107,10 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_
 		}
 
 		// Check any leftover
-		averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
-
+		if (weight > 0.) {
+			averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
+		}
+		// Divide by the original weight to get the true average
 		averageTemp_C /= ((double)numNodes / (double)nTCouple);
 
 		if (units == UNITS_C) {
@@ -1135,7 +1136,7 @@ int HPWH::getNumHeatSources() const {
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
-	if (N > numHeatSources || N < 0) {
+	if (N >= numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
 		}
@@ -1160,7 +1161,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) cons
 }
 double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
-	if (N > numHeatSources || N < 0) {
+	if (N >= numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the energy output of a heat source that does not exist.  \n");
 		}
@@ -1186,7 +1187,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) con
 
 
 double HPWH::getNthHeatSourceRunTime(int N) const {
-	if (N > numHeatSources || N < 0) {
+	if (N >= numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the run time of a heat source that does not exist.  \n");
 		}
@@ -1197,7 +1198,7 @@ double HPWH::getNthHeatSourceRunTime(int N) const {
 
 
 int HPWH::isNthHeatSourceRunning(int N) const{
-	if (N > numHeatSources || N < 0) {
+	if (N >= numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the status of a heat source that does not exist.  \n");
 		}
