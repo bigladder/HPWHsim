@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string> 
 
 #define MAX_DIR_LENGTH 255
 #define DEBUG 0
@@ -30,8 +31,6 @@ typedef std::vector<double> schedule;
 
 
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
-int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples, int nTCouples);
-int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs);
 
 int main(int argc, char *argv[])
 {
@@ -44,9 +43,6 @@ int main(int argc, char *argv[])
 
   const int nTestTCouples = 6;
 
-  std::vector<double> simTCouples(nTestTCouples);
-  std::vector<double> heatSourcesEnergyInput, heatSourcesEnergyOutput;
-
   // Schedule stuff
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
@@ -54,15 +50,17 @@ int main(int argc, char *argv[])
   string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName;
   double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
-  int i, j, outputCode, nSources;
+  int i, outputCode;
   long minutesToRun;
-
 
   bool HPWH_doTempDepress;
   int doInvMix, doCondu;
 
-  ofstream outputFile;
+  FILE * outputFile;
   ifstream controlFile;
+
+  string strPreamble;
+  string strHead = "minutes,Ta,inletT,draw,";
 
   //.......................................
   //process command line arguments
@@ -242,25 +240,15 @@ int main(int argc, char *argv[])
  	  hpwh.setInletByFraction(inletH);
   }
 
-  nSources = hpwh.getNumHeatSources();
-  for(i = 0; i < nSources; i++) {
-    heatSourcesEnergyInput.push_back(0.0);
-    heatSourcesEnergyOutput.push_back(0.0);
-  }
-
-
   // ----------------------Open the Output File and Print the Header---------------------------- //
   fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
-  outputFile.open(fileToOpen.c_str());
-  if(!outputFile.is_open()) {
-    cout << "Could not open output file " << fileToOpen << "\n";
-    exit(1);
-  }
-  outputFile << "minutes,Ta,inletT,draw";
-  for(i = 0; i < hpwh.getNumHeatSources(); i++) {
-    outputFile << ",input_kWh" << i + 1 << ",output_kWh" << i + 1;
-  }
-  outputFile << ",simTcouples1,simTcouples2,simTcouples3,simTcouples4,simTcouples5,simTcouples6\n";
+ 
+  if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0) {
+  cout << "Could not open output file " << fileToOpen << "\n";
+  exit(1);
+ }
+
+  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
   
 
   // ------------------------------------- Simulate --------------------------------------- //
@@ -298,26 +286,17 @@ int main(int argc, char *argv[])
 			//		  0., 0.) ;
 
 
-    // Grab the current status
-    getSimTcouples(hpwh, simTCouples, nTestTCouples);
-    getHeatSources(hpwh, heatSourcesEnergyInput, heatSourcesEnergyOutput);
-
     // Copy current status into the output file
     if(HPWH_doTempDepress) {
       airTemp2 = hpwh.getLocationTemp_C();
     }
-//    outputFile << i << "," << allSchedules[2][i] << "," << allSchedules[0][i] << "," << allSchedules[1][i];
-    outputFile << i << "," << airTemp2 << "," << allSchedules[0][i] << "," << allSchedules[1][i];
-    for(j = 0; j < hpwh.getNumHeatSources(); j++) {
-      outputFile << "," << heatSourcesEnergyInput[j] << "," << heatSourcesEnergyOutput[j];
-    }
-    outputFile << "," << simTCouples[0] << "," << simTCouples[1] << "," << simTCouples[2] <<
-      "," << simTCouples[3] << "," << simTCouples[4] << "," << simTCouples[5] << "\n";
 
+	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
+	hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
   }
 
   controlFile.close();
-  outputFile.close();
+  fclose(outputFile);
 
   return 0;
 
@@ -387,23 +366,4 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 
   return 0;
 
-}
-
-
-int getSimTcouples(HPWH &hpwh, std::vector<double> &tcouples, int nTCouples) {
-  int i;
-
-  for(i = 0; i < 6; i++) {
-	  tcouples[i] = hpwh.getNthSimTcouple(i + 1, nTCouples);
-  }
-  return 0;
-}
-
-int getHeatSources(HPWH &hpwh, std::vector<double> &inputs, std::vector<double> &outputs) {
-  int i;
-  for(i = 0; i < hpwh.getNumHeatSources(); i++) {
-	  inputs[i] = hpwh.getNthHeatSourceEnergyInput(i);
-	  outputs[i] = hpwh.getNthHeatSourceEnergyOutput(i);
-  }
-  return 0;
 }

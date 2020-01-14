@@ -664,7 +664,6 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 		fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
 	}
 
-
 	fprintf(outFILE, "\n");
 
 	return 0;
@@ -1097,8 +1096,8 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_
 		double averageTemp_C = 0.0;
 
 		// Check any intial fraction of nodes 
-		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind), UNITS_C) * (ind - start_ind);
-		weight -= (ind - start_ind);
+		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind), UNITS_C) * ((double)ind - start_ind);
+		weight -= ((double)ind - start_ind);
 
 		// Check the full nodes
 		while (weight >= 1.0) {
@@ -1108,8 +1107,10 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_
 		}
 
 		// Check any leftover
-		averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
-
+		if (weight > 0.) {
+			averageTemp_C += getTankNodeTemp(ind, UNITS_C) * weight;
+		}
+		// Divide by the original weight to get the true average
 		averageTemp_C /= ((double)numNodes / (double)nTCouple);
 
 		if (units == UNITS_C) {
