@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 
   // ------------------------------------- Simulate --------------------------------------- //
 
-
+  vector<double>* nodeExtraHeat_W = NULL;
   // Loop over the minutes in the test
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
   for(i = 0; i < minutesToRun; i++) {
@@ -275,6 +275,13 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
+
+	if ( i == 15 || i== 100 || i== 150){
+		nodeExtraHeat_W = { 1000, 20000, 3000, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+	}
+	else{
+		nodeExtraHeat_W = NULL;
+	}
     // Run the step
     hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 				GAL_TO_L(allSchedules[1][i]), // Flow in gallons
@@ -282,8 +289,8 @@ int main(int argc, char *argv[])
 				allSchedules[3][i],  // External Temp (C)
 				drStatus, // DDR Status (now an enum. Fixed for now as allow)
 				1.0,    // Minutes per step
-				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i]);
-			//		  0., 0.) ;
+				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
+				0., 0., nodeExtraHeat_W);
 
 
     // Copy current status into the output file

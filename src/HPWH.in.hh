@@ -146,7 +146,8 @@ class HPWH {
   enum HEATSOURCE_TYPE {
     TYPE_none,        /**< a default to check to make sure it's been set  */
     TYPE_resistance,  /**< a resistance element  */
-    TYPE_compressor   /**< a vapor cycle compressor  */
+    TYPE_compressor,   /**< a vapor cycle compressor  */
+	TYPE_extra		  /**< an extra element to add user defined heat*/
     };
 
   /** specifies the unit type for outputs in the CSV file-s  */
@@ -391,9 +392,11 @@ class HPWH {
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
   int runOneStep(double drawVolume_L, double ambientT_C,
-                  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.) {
+                  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+				  vector<double>* nodeExtraHeat_W = NULL) {
         return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-			externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C);
+			externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C,
+			nodeExtraHeat_W);
   };
 	/** Setters for the what are typically input variables  */
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
@@ -413,6 +416,9 @@ class HPWH {
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
+
+	void addExtraHeat(vector<double>* nodeExtraHeat_W);
+	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 
