@@ -20,13 +20,13 @@ set(testNames
 )
 
 set(modelNames
-  #StorageTank
-  AOSmithPHPT60
-  AOSmithHPTU80
-  Sanden80
-  RheemHB50
-  Stiebel220e
-  GE502014
+  StorageTank
+ # AOSmithPHPT60
+ # AOSmithHPTU80
+#  Sanden80
+#  RheemHB50
+#  Stiebel220e
+  #GE502014
 )
 
 set(lockoutTestModels
