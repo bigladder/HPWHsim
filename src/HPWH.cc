@@ -356,7 +356,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			}
 
 			//and add heat if it is
-			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesPerStep);
+			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
 			//if it finished early
 			if (heatSourcePtr->runtime_min < minutesToRun) {
 				//debugging message handling
