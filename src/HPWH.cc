@@ -382,7 +382,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 	//If theres extra user defined heat to add -> Add extra heat!
-	if (nodePowerExtra_W != NULL) {
+	if (nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
 		addExtraHeat(nodePowerExtra_W, tankAmbientT_C, minutesToRun);
 	}
 
@@ -1563,9 +1563,9 @@ void HPWH::mixTankInversions() {
 
 
 void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesToRun){
-	if ((*nodePowerExtra_W).size() != 12){
+	if ((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH  (%i) does not have 12 nodes  \n", (*nodePowerExtra_W).size(), numNodes);
+			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n", (*nodePowerExtra_W).size(), CONDENSITY_SIZE);
 		}
 		simHasFailed = true;
 	}
@@ -2412,20 +2412,31 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
-
-	//get sum of vector
+	
+	std::vector<double> tempCondensity(CONDENSITY_SIZE);
 	double watts = 0.0;
 	for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
+		//get sum of vector
 		watts += (*nodePowerExtra_W)[i];
+
+		//put into vector for normalization
+		tempCondensity[i] = (*nodePowerExtra_W)[i];
 	}
 
-	std::vector<double> tempCondensity = *nodePowerExtra_W;
 	normalize(tempCondensity);
+	
+	if (hpwh->hpwhVerbosity >= VRB_emetic){
+		hpwh->msg("extra heat condensity: ");
+		for (unsigned int i = 0; i < tempCondensity.size(); i++) {
+			hpwh->msg("C[%d]: %f", i, tempCondensity[i]);
+		}
+		hpwh->msg("\n ");
+	}
+
 	// set condensity based on normalized vector
 	setCondensity( tempCondensity[0], tempCondensity[1], tempCondensity[2], tempCondensity[3], 
 		tempCondensity[4], tempCondensity[5], tempCondensity[6], tempCondensity[7], 
 		tempCondensity[8], tempCondensity[9], tempCondensity[10], tempCondensity[11] );
-   
 
 	perfMap.clear();
 	perfMap.reserve(2);
