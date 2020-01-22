@@ -392,13 +392,15 @@ class HPWH {
    * returns using kilojoules */
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
-  int runOneStep(double drawVolume_L, double ambientT_C,
-                  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
-				  vector<double>* nodeExtraHeat_W = NULL) {
-        return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-			externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C,
-			nodeExtraHeat_W);
-  };
+	int runOneStep(double drawVolume_L, double ambientT_C,
+	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+	  std::vector<double>* nodeExtraHeat_W = NULL) {
+	  return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
+		  externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C,
+		  nodeExtraHeat_W);
+	};
+
+
 	/** Setters for the what are typically input variables  */
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
   void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
