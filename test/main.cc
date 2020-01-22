@@ -279,8 +279,8 @@ int main(int argc, char *argv[])
     }
 	
 	vectptr = NULL;
-	if ( i == 15 || i== 100 || i== 150){
-		nodeExtraHeat_W = { 1000., 2000., 3000., 4., 5, 6, 7, 8, 9, 10, 11, 12 };
+	if ( i == 15 || i== 16 || i== 17){
+		nodeExtraHeat_W = { 25000, 2., 3., 4., 5, 6, 7, 8, 9, 10, 11, 12 };
 		vectptr = &nodeExtraHeat_W;
 		cout << "Now on minute " << i << "\n";
 	

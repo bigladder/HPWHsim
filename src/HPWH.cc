@@ -2022,7 +2022,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 		//after you've done everything, any leftover capacity is time that didn't run
 		this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
 #if 1	// error check, 1-22-2017
-		if (runtime_min < 0.)
+		if (runtime_min < -0.001)
 			if (hpwh->hpwhVerbosity >= VRB_reluctant)
 				hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
 #endif
@@ -3589,7 +3589,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		
 		//initial guess, will get reset based on the input heat vector
 		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		
 		
 		setOfSources[0] = extra;
 	}
