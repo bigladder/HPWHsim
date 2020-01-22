@@ -205,7 +205,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
 	DRMODES DRstatus, double minutesPerStep, 
 	double inletVol2_L, double inletT2_C,
-	std::vector<double>* nodeExtraHeat_W) {
+	std::vector<double>* nodePowerExtra_W) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//check for errors
@@ -382,9 +382,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 	//If theres extra user defined heat to add -> Add extra heat!
-	if (nodeExtraHeat_W != NULL) {
-		msg("runOneStep entering addExtraHeat if\n");
-		addExtraHeat(nodeExtraHeat_W, tankAmbientT_C, minutesToRun);
+	if (nodePowerExtra_W != NULL) {
+		addExtraHeat(nodePowerExtra_W, tankAmbientT_C, minutesToRun);
 	}
 
 
@@ -1563,10 +1562,10 @@ void HPWH::mixTankInversions() {
 }
 
 
-void HPWH::addExtraHeat(std::vector<double>* nodeExtraHeat_W, double tankAmbientT_C, double minutesToRun){
-	if ((*nodeExtraHeat_W).size() != 12){
+void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesToRun){
+	if ((*nodePowerExtra_W).size() != 12){
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH  (%i) does not have 12 nodes  \n", (*nodeExtraHeat_W).size(), numNodes);
+			msg("nodeExtraHeat_KWH  (%i) does not have 12 nodes  \n", (*nodePowerExtra_W).size(), numNodes);
 		}
 		simHasFailed = true;
 	}
@@ -1575,7 +1574,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodeExtraHeat_W, double tankAmbient
 		if (setOfSources[i].typeOfHeatSource == TYPE_extra) {
 	
 			// Set up the extra heat source
-			setOfSources[i].setupExtraHeat(nodeExtraHeat_W);
+			setOfSources[i].setupExtraHeat(nodePowerExtra_W);
 		
 			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
 			calcDerivedHeatingValues();
@@ -2412,15 +2411,15 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodeExtraHeat_W) {
+void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 
 	//get sum of vector
 	double watts = 0.0;
-	for (unsigned int i = 0; i < (*nodeExtraHeat_W).size(); i++) {
-		watts += (*nodeExtraHeat_W)[i];
+	for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
+		watts += (*nodePowerExtra_W)[i];
 	}
 
-	std::vector<double> tempCondensity = *nodeExtraHeat_W;
+	std::vector<double> tempCondensity = *nodePowerExtra_W;
 	normalize(tempCondensity);
 	// set condensity based on normalized vector
 	setCondensity( tempCondensity[0], tempCondensity[1], tempCondensity[2], tempCondensity[3], 
