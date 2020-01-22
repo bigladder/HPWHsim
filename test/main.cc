@@ -278,14 +278,12 @@ int main(int argc, char *argv[])
       drStatus = HPWH::DR_ENGAGE;
     }
 	
-//vectptr = NULL;
-//if ( i == 15 || i== 16 || i== 17){
-//	nodeExtraHeat_W = { 25000, 2., 3., 4., 5, 6, 7, 8, 9, 10, 11, 12 };
-//	vectptr = &nodeExtraHeat_W;
-//	cout << "Now on minute " << i << "\n";
-//
-//}
-//
+	vectptr = NULL;
+	if ( i == 15 || i== 16 || i== 17){
+		nodeExtraHeat_W = {20000 };
+		vectptr = &nodeExtraHeat_W;
+	}
+	
     // Run the step
 	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		GAL_TO_L(allSchedules[1][i]), // Flow in gallons
