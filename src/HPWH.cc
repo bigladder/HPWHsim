@@ -204,8 +204,8 @@ string HPWH::getVersion(){
 int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
 	DRMODES DRstatus, double minutesPerStep, 
-	double inletVol2_L, double inletT2_C, 
-	vector<double>* nodeExtraHeat_W) {
+	double inletVol2_L, double inletT2_C,
+	std::vector<double>* nodeExtraHeat_W) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//check for errors
@@ -356,7 +356,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			}
 
 			//and add heat if it is
-			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesPerStep);
 			//if it finished early
 			if (heatSourcePtr->runtime_min < minutesToRun) {
 				//debugging message handling
@@ -380,10 +380,14 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		isHeating = false;
 	}
 
+
 	//If theres extra user defined heat to add -> Add extra heat!
 	if (nodeExtraHeat_W != NULL) {
-		addExtraHeat(nodeExtraHeat_W);
+		msg("runOneStep entering addExtraHeat if\n");
+		addExtraHeat(nodeExtraHeat_W, tankAmbientT_C, minutesToRun);
 	}
+
+
 
 	//track the depressed local temperature
 	if (doTempDepression) {
@@ -1559,29 +1563,25 @@ void HPWH::mixTankInversions() {
 }
 
 
-void addExtraHeat(vector<double>* nodeExtraHeat_W){
-	if ((*nodeExtraHeat_W).size() > numNodes){
+void HPWH::addExtraHeat(std::vector<double>* nodeExtraHeat_W, double tankAmbientT_C, double minutesToRun){
+	if ((*nodeExtraHeat_W).size() != 12){
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH has more nodes (%i) than the HPWH tank (%i)  \n", (*nodeExtraHeat_KWH).size(), numNodes);
+			msg("nodeExtraHeat_KWH  (%i) does not have 12 nodes  \n", (*nodeExtraHeat_W).size(), numNodes);
 		}
-		return HPWH_ABORT;
+		simHasFailed = true;
 	}
-
-	double minutesToRun = minutesPerStep;
-
-	for (i = 0; i < numHeatSources; i++){
-		if (setOfSources[i].typeOfHeatSource = TYPE_extra) {
-
+	
+	for (int i = 0; i < numHeatSources; i++){
+		if (setOfSources[i].typeOfHeatSource == TYPE_extra) {
+	
 			// Set up the extra heat source
-			setOfSources[i].setupExtraHeat(vector<double>* nodeExtraHeat_W))
-
+			setOfSources[i].setupExtraHeat(nodeExtraHeat_W);
+		
+			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
+			calcDerivedHeatingValues();
+	
 			// add heat 
-			setOfSources[i].addHeat(heatSourceAmbientT_C, minutesToRun);
-
-			if (doInversionMixing) {
-				mixTankInversions();
-			}
-			break;
+			setOfSources[i].addHeat(tankAmbientT_C, minutesToRun);
 		}
 	}
 }
@@ -2382,8 +2382,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 
 
-
-
 void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 	int i;
 
@@ -2414,20 +2412,21 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-void HPWH::HeatSource::setupExtraHeat(vector<double>* nodeExtraHeat_W)) {
+void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodeExtraHeat_W) {
 
 	//get sum of vector
-	double watts = 0.0;\
-	for (int i = 0; i < (*nodeExtraHeat_W).size(); i++) {
+	double watts = 0.0;
+	for (unsigned int i = 0; i < (*nodeExtraHeat_W).size(); i++) {
 		watts += (*nodeExtraHeat_W)[i];
 	}
 
-	vector<double> tempCondensity = *nodeExtraHeat_W;
+	std::vector<double> tempCondensity = *nodeExtraHeat_W;
 	normalize(tempCondensity);
 	// set condensity based on normalized vector
 	setCondensity( tempCondensity[0], tempCondensity[1], tempCondensity[2], tempCondensity[3], 
 		tempCondensity[4], tempCondensity[5], tempCondensity[6], tempCondensity[7], 
 		tempCondensity[8], tempCondensity[9], tempCondensity[10], tempCondensity[11] );
+   
 
 	perfMap.clear();
 	perfMap.reserve(2);
@@ -2444,8 +2443,6 @@ void HPWH::HeatSource::setupExtraHeat(vector<double>* nodeExtraHeat_W)) {
 		{ 1.0, 0.0, 0.0 } // COP Coefficients (COP_coeffs)
 	});
 
-	// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
-	calcDerivedHeatingValues();
 }
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2457,8 +2454,6 @@ void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 }
 
 void HPWH::calcDerivedValues(){
-	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
-
 	// tank node density (number of calculation nodes per regular node)
 	nodeDensity = numNodes / 12;
 
@@ -2474,10 +2469,11 @@ void HPWH::calcDerivedValues(){
 			setOfSources[i].depressesTemperature = false;
 		}
 	}
-
 }
 
 void HPWH::calcDerivedHeatingValues(){
+	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
+
 	//condentropy/shrinkage
 	double condentropy = 0;
 	double alpha = 1, beta = 2;  // Mapping from condentropy to shrinkage
@@ -2568,7 +2564,6 @@ int HPWH::checkInputs(){
 	}
 
 
-
 	double condensitySum;
 	//loop through all heat sources to check each for malconfigurations
 	for (int i = 0; i < numHeatSources; i++) {
@@ -2589,7 +2584,7 @@ int HPWH::checkInputs(){
 		condensitySum = 0;
 		for (int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += setOfSources[i].condensity[j];
 		if (fabs(condensitySum - 1.0) > 1e-6) {
-			msg("The condensity for hearsource %d does not sum to 1.  \n", i);
+			msg("The condensity for heatsource %d does not sum to 1.  \n", i);
 			msg("It sums to %f \n", condensitySum);
 			returnVal = HPWH_ABORT;
 		}
@@ -2601,7 +2596,7 @@ int HPWH::checkInputs(){
 
 
 	}
-
+	
 	//Check if the UA is out of bounds
 	if (tankUA_kJperHrC < 0.0) {
 		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
@@ -3576,20 +3571,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankUA_kJperHrC = 10; //0 to turn off
 
 		doTempDepression = false;
-		//should eventually put tankmixes to true when testing progresses
 		tankMixesOnDraw = false;
 
 		////////////////////////////////////////////////////
 		numHeatSources = 1;
-
+		setOfSources = new HeatSource[numHeatSources];
+		
 		HeatSource extra(this);
-
+		
 		//compressor values
 		extra.isOn = false;
 		extra.isVIP = false;
 		extra.typeOfHeatSource = TYPE_extra;
 		extra.configuration = HeatSource::CONFIG_WRAPPED;
-
+		
+		extra.addTurnOnLogic(HPWH::bottomThird(200));
+		
+		//initial guess, will get reset based on the input heat vector
+		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		
+		
+		setOfSources[0] = extra;
 	}
 
 	//basic compressor tank for testing
