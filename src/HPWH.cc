@@ -1581,6 +1581,12 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbien
 	
 			// add heat 
 			setOfSources[i].addHeat(tankAmbientT_C, minutesToRun);
+
+			setOfSources[i].perfMap.clear();
+			
+			// 0 out to ignore
+			setOfSources[i].energyInput_kWh = 0.0;
+			setOfSources[i].energyOutput_kWh = 0.0;
 		}
 	}
 }
@@ -3572,10 +3578,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	else if (presetNum == MODELS_StorageTank) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
-		setpoint_C = F_TO_C(127.0);
+		setpoint_C = 52;
 
 		//start tank off at setpoint
 		resetTankToSetpoint();
+
+		setpoint_C = 800;
 
 		tankVolume_L = GAL_TO_L(80);
 		tankUA_kJperHrC = 10; //0 to turn off
@@ -3595,11 +3603,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.typeOfHeatSource = TYPE_extra;
 		extra.configuration = HeatSource::CONFIG_WRAPPED;
 		
-		extra.addTurnOnLogic(HPWH::bottomThird(200));
-		
+		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
+
 		//initial guess, will get reset based on the input heat vector
 		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		
+
 		setOfSources[0] = extra;
 	}
 
