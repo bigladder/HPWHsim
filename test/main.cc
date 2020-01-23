@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 	
 	vectptr = NULL;
 	if ( i == 15 || i== 16 || i== 17){
-		nodeExtraHeat_W = {20000 };
+		nodeExtraHeat_W = {200000 };
 		vectptr = &nodeExtraHeat_W;
 	}
 	

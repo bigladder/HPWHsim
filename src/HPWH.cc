@@ -383,7 +383,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	//If theres extra user defined heat to add -> Add extra heat!
 	if (nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(nodePowerExtra_W, tankAmbientT_C, minutesToRun);
+		addExtraHeat(nodePowerExtra_W, tankAmbientT_C, minutesPerStep);
 	}
 
 
@@ -1562,14 +1562,19 @@ void HPWH::mixTankInversions() {
 }
 
 
-void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesToRun){
+void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesPerStep){
 	if ((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n", (*nodePowerExtra_W).size(), CONDENSITY_SIZE);
 		}
 		simHasFailed = true;
 	}
-	
+
+	//for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++){
+	//	tankTemps_C[i] += (*nodePowerExtra_W)[i] * minutesPerStep * 60. / (CPWATER_kJperkgC * 1000. * DENSITYWATER_kgperL * tankVolume_L / numNodes);
+	//}
+	//mixTankInversions();
+
 	for (int i = 0; i < numHeatSources; i++){
 		if (setOfSources[i].typeOfHeatSource == TYPE_extra) {
 	
@@ -1581,10 +1586,9 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbien
 	
 			// add heat 
 			setOfSources[i].addHeat(tankAmbientT_C, minutesToRun);
-
-			setOfSources[i].perfMap.clear();
 			
-			// 0 out to ignore
+			// 0 out to ignore features
+			setOfSources[i].perfMap.clear();
 			setOfSources[i].energyInput_kWh = 0.0;
 			setOfSources[i].energyOutput_kWh = 0.0;
 		}
