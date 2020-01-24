@@ -275,7 +275,10 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
+	if (i == 3) { allSchedules[1][i] = 80.1; }
     // Run the step
+	cout << "Now on minute " << i << "\n";
+
     hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 				GAL_TO_L(allSchedules[1][i]), // Flow in gallons
 				airTemp2,  // Ambient Temp (C)
