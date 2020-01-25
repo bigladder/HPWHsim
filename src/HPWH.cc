@@ -1363,9 +1363,9 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 				outletTemp_C += tankTemps_C[i];
 				tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
 			}
-			outletTemp_C = (outletTemp_C*tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L)) * numNodes;
+			outletTemp_C = (outletTemp_C / numNodes * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))/drawVolume_L * (drawVolume_L / volPerNode_LperNode);
 
-			drawVolume_N = -1.;
+			drawVolume_N = 0.;
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////

@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
   ifstream controlFile;
 
   string strPreamble;
-  string strHead = "minutes,Ta,inletT,draw,";
+  string strHead = "minutes,Ta,inletT,draw,outletT";
 
   //.......................................
   //process command line arguments
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
-	if (i == 3) { allSchedules[1][i] = 80.1; }
+	if (i == 1) { allSchedules[1][i] = 80.1; }
     // Run the step
 	cout << "Now on minute " << i << "\n";
 
@@ -294,7 +294,9 @@ int main(int argc, char *argv[])
       airTemp2 = hpwh.getLocationTemp_C();
     }
 
-	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
+	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+		std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", " +
+		std::to_string(hpwh.getOutletTemp()) + ",";
 	hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
   }
 
