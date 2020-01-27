@@ -1585,7 +1585,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbien
 			calcDerivedHeatingValues();
 	
 			// add heat 
-			setOfSources[i].addHeat(tankAmbientT_C, minutesToRun);
+			setOfSources[i].addHeat(tankAmbientT_C, minutesPerStep);
 			
 			// 0 out to ignore features
 			setOfSources[i].perfMap.clear();
