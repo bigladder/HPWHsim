@@ -121,8 +121,8 @@ HPWH::HPWH(const HPWH &hpwh){
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
-	UA_top = hpwh.UA_top;
-	UA_rad = hpwh.UA_rad;
+	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaTop = hpwh.fracAreaTop;
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh){
@@ -189,8 +189,8 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
-	UA_top = hpwh.UA_top;
-	UA_rad = hpwh.UA_rad;
+	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaTop = hpwh.fracAreaTop;
 
 	return *this;
 }
@@ -1456,7 +1456,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau * tankUA_kJperHrC * UA_top * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau * tankUA_kJperHrC * fracAreaTop * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
 		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
@@ -1469,8 +1469,8 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
-		standbyLosses_kJ += (tankUA_kJperHrC * UA_top * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	}
 	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
@@ -1480,13 +1480,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 
 		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
@@ -1499,7 +1499,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) {
 			//faction of tank area on the sides
 			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = (tankUA_kJperHrC * UA_rad / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
 			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 			//The effect of standby loss on temperature in each node
@@ -2403,11 +2403,11 @@ void HPWH::calcUAandSizeConstants() {
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// We assume the UA is divided only by the surface area of the tank and ignore fittings, etc.
-	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * UA_top + UA_rad is the total tank area.
-	UA_top = tank_rad / (2.0 * (tank_height + tank_rad));
+	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * fracAreaTop + fracAreaTop is the total tank area.
+	fracAreaTop = tank_rad / (2.0 * (tank_height + tank_rad));
 
-	// UA_rad is the faction of the area of the cylinder that's not the top or bottom.
-	UA_rad = tank_height / (tank_height + tank_rad);
+	// fracAreaTop is the faction of the area of the cylinder that's not the top or bottom.
+	fracAreaTop = tank_height / (tank_height + tank_rad);
 }
 
 void HPWH::calcDerivedValues(){

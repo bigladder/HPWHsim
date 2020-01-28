@@ -486,9 +486,9 @@ class HPWH {
 	/**< the volume in liters of a single node  */
 	double node_height;	
 	/**< the height in meters of the one node  */
-	double UA_top;	
+	double fracAreaTop;	
 	/**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
-	double UA_rad;	
+	double fracAreaSide;	
 	/**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
 
 
