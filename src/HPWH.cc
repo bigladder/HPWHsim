@@ -1357,15 +1357,22 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 			lowInletT = inletT_C;
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
-
 		//calculate how many nodes to draw (drawVolume_N)
 		drawVolume_N = drawVolume_L / volPerNode_LperNode;
-		if (drawVolume_N > numNodes) {
+		if (drawVolume_L > tankVolume_L) {
 			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+				//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+				msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Continuing simulation at your own risk.  \n");
 			}
-			simHasFailed = true;
-			return;
+			//simHasFailed = true;
+			//return;
+			for (int i = 0; i < numNodes; i++){
+				outletTemp_C += tankTemps_C[i];
+				tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
+			}
+			outletTemp_C = (outletTemp_C / numNodes * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))/drawVolume_L * (drawVolume_L / volPerNode_LperNode);
+
+			drawVolume_N = 0.;
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////
