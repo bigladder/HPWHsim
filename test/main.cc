@@ -184,6 +184,7 @@ int main(int argc, char *argv[])
   doInvMix = 1;
   inletH = 0.0;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
+
   while(controlFile >> var1 >> testVal) {
 	if(var1 == "setpoint") { // If a setpoint was specified then override the default
 		newSetpoint = testVal;
@@ -206,7 +207,6 @@ int main(int argc, char *argv[])
     cout << "Error, must record length_of_test in testInfo.txt file\n";
     exit(1);
   }
-
 
   // ------------------------------------- Read Schedules--------------------------------------- //
   scheduleNames.push_back("inletT");
@@ -252,11 +252,13 @@ int main(int argc, char *argv[])
   
 
   // ------------------------------------- Simulate --------------------------------------- //
-
-
-  // Loop over the minutes in the test
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
+
+  std::vector<double> nodeExtraHeat_W;
+  std::vector<double>* vectptr = NULL;
+  // Loop over the minutes in the test
   for(i = 0; i < minutesToRun; i++) {
+
     if(DEBUG) {
       cout << "Now on minute " << i << "\n";
     }
@@ -275,19 +277,22 @@ int main(int argc, char *argv[])
     } else if(allSchedules[4][i] == 2) {
       drStatus = HPWH::DR_ENGAGE;
     }
-	if (i == 1) { allSchedules[1][i] = 80.1; }
+
+//	vectptr = NULL;
+//	if ( i == 15 || i== 16 || i== 17){
+//		nodeExtraHeat_W = {200000 };
+	//	vectptr = &nodeExtraHeat_W;
+	//}
+	
     // Run the step
-	cout << "Now on minute " << i << "\n";
-
-    hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
-				GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-				airTemp2,  // Ambient Temp (C)
-				allSchedules[3][i],  // External Temp (C)
-				drStatus, // DDR Status (now an enum. Fixed for now as allow)
-				1.0,    // Minutes per step
-				1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i]);
-			//		  0., 0.) ;
-
+	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
+		GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+		airTemp2,  // Ambient Temp (C)
+		allSchedules[3][i],  // External Temp (C)
+		drStatus, // DDR Status (now an enum. Fixed for now as allow)
+		1.0,    // Minutes per step
+		1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
+		vectptr);
 
     // Copy current status into the output file
     if(HPWH_doTempDepress) {
@@ -361,11 +366,11 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   }
 
   //print out the whole schedule
-  if(DEBUG == 1){
-    for(i = 0; (unsigned)i < scheduleArray.size(); i++){
-      cout << "scheduleArray[" << i << "] = " << scheduleArray[i] << "\n";
-    }
-  }
+// if(DEBUG == 1){
+//   for(i = 0; (unsigned)i < scheduleArray.size(); i++){
+//     cout << "scheduleArray[" << i << "] = " << scheduleArray[i] << "\n";
+//   }
+// }
 
   inputFile.close();
 
