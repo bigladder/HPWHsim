@@ -122,7 +122,7 @@ HPWH::HPWH(const HPWH &hpwh){
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
-	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaSide = hpwh.fracAreaSide;
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh){
@@ -190,7 +190,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
-	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaSide = hpwh.fracAreaSide;
 
 	return *this;
 }
@@ -1499,7 +1499,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) {
 			//faction of tank area on the sides
 			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
 			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 			//The effect of standby loss on temperature in each node
@@ -2403,11 +2403,11 @@ void HPWH::calcUAandSizeConstants() {
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// We assume the UA is divided only by the surface area of the tank and ignore fittings, etc.
-	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * fracAreaTop + fracAreaTop is the total tank area.
+	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * fracAreaTop + fracAreaSide is the total tank area.
 	fracAreaTop = tank_rad / (2.0 * (tank_height + tank_rad));
 
-	// fracAreaTop is the faction of the area of the cylinder that's not the top or bottom.
-	fracAreaTop = tank_height / (tank_height + tank_rad);
+	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
+	fracAreaSide = tank_height / (tank_height + tank_rad);
 }
 
 void HPWH::calcDerivedValues(){
@@ -4295,7 +4295,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		tankVolume_L = 299.5;
-		tankUA_kJperHrC = 9;
+		tankUA_kJperHrC = 0;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
