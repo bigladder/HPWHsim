@@ -1443,20 +1443,10 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	} //end if(draw_volume_L > 0)
 
 
-//// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
-//// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
-//// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-//// height estimate from Rheem along with the volume is used to get the radius and node_height
-//const double rad = getTankRadius(UNITS_M);
-//const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
-//const double node_height = height / numNodes;
-//
-//// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_top + UA_radad is the total tank area.
-//const double UA_top = tankUA_kJperHrC * rad / (2.0 * (height + rad));
-//
-//// UA_rad is the faction of the area of the cylinder that's not the top or bottom.
-//const double UA_rad = height / (height + rad);
-
+	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// height estimate from Rheem along with the volume is used to get the radius and node_height
 	if (doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
@@ -2404,16 +2394,16 @@ void HPWH::calcUAandSizeConstants() {
 
 	volPerNode_LperNode = tankVolume_L / numNodes;
 
-	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
-	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
-	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-	// height estimate from Rheem along with the volume is used to get the radius and node_height
+
 	const double tank_rad = getTankRadius(UNITS_M);
 	const double tank_height = tankVolume_L / (1000.0 * 3.14159 * tank_rad * tank_rad);
 
 	node_height = tank_height / numNodes;
-
-	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_top + UA_rad is the total tank area.
+	
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// We assume the UA is divided only by the surface area of the tank and ignore fittings, etc.
+	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * UA_top + UA_rad is the total tank area.
 	UA_top = tank_rad / (2.0 * (tank_height + tank_rad));
 
 	// UA_rad is the faction of the area of the cylinder that's not the top or bottom.
