@@ -119,6 +119,10 @@ HPWH::HPWH(const HPWH &hpwh){
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
+	volPerNode_LperNode = hpwh.volPerNode_LperNode;
+	node_height = hpwh.node_height;
+	UA_top = hpwh.UA_top;
+	UA_rad = hpwh.UA_rad;
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh){
@@ -182,6 +186,11 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
+
+	volPerNode_LperNode = hpwh.volPerNode_LperNode;
+	node_height = hpwh.node_height;
+	UA_top = hpwh.UA_top;
+	UA_rad = hpwh.UA_rad;
 
 	return *this;
 }
@@ -736,7 +745,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
 	double HPWH_size_L; 
-	double oldA = getTankSurfaceArea(UNITS_FT2);
+	double oldArea = getTankSurfaceArea(UNITS_FT2);
 
 	if (units == UNITS_L) {
 		HPWH_size_L = HPWH_size;
@@ -751,7 +760,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
 		return HPWH_ABORT;
 	}
 	setTankSize(HPWH_size_L, UNITS_L);
-	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
+	setUA(tankUA_kJperHrC / oldArea * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
 	return 0;
 }
 
@@ -816,6 +825,7 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
 			return HPWH_ABORT;
 		}
 	}
+	calcUAandSizeConstants();
 	return 0;
 }
 int HPWH::setDoInversionMixing(bool doInvMix) {
@@ -840,6 +850,7 @@ int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/) {
 		}
 		return HPWH_ABORT;
 	}
+	calcUAandSizeConstants();
 	return 0;
 }
 
@@ -1313,7 +1324,6 @@ double HPWH::getLocationTemp_C() const {
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep,
 	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
-	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	this->outletTemp_C = 0;
 	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
@@ -1433,19 +1443,19 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	} //end if(draw_volume_L > 0)
 
 
-	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
-	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
-	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-	// height estimate from Rheem along with the volume is used to get the radius and node_height
-	const double rad = getTankRadius(UNITS_M);
-	const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
-	const double node_height = height / numNodes;
-	
-	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_bt + UA_r is the total tank area.
-	const double UA_bt = tankUA_kJperHrC * rad / (2.0 * (height + rad));
-
-	// UA_r is the faction of the area of the cylinder that's not the top or bottom.
-	const double UA_r = height / (height + rad);
+//// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+//// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+//// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+//// height estimate from Rheem along with the volume is used to get the radius and node_height
+//const double rad = getTankRadius(UNITS_M);
+//const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
+//const double node_height = height / numNodes;
+//
+//// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_top + UA_radad is the total tank area.
+//const double UA_top = tankUA_kJperHrC * rad / (2.0 * (height + rad));
+//
+//// UA_rad is the faction of the area of the cylinder that's not the top or bottom.
+//const double UA_rad = height / (height + rad);
 
 	if (doConduction) {
 
@@ -1456,7 +1466,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau * UA_bt * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau * tankUA_kJperHrC * UA_top * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
 		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
@@ -1469,8 +1479,8 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
-		standbyLosses_kJ += (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ += (tankUA_kJperHrC * UA_top * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	}
 	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
@@ -1480,13 +1490,13 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 
 		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * UA_bt * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ = (tankUA_kJperHrC * UA_top * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
@@ -1499,7 +1509,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) {
 			//faction of tank area on the sides
 			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = (tankUA_kJperHrC * UA_r / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+			double standbyLosses_kJ = (tankUA_kJperHrC * UA_rad / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
 			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 			//The effect of standby loss on temperature in each node
@@ -2389,6 +2399,27 @@ void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
+void HPWH::calcUAandSizeConstants() {
+	// gets called when initializing and reseting tank sizes  or UA
+
+	volPerNode_LperNode = tankVolume_L / numNodes;
+
+	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	const double tank_rad = getTankRadius(UNITS_M);
+	const double tank_height = tankVolume_L / (1000.0 * 3.14159 * tank_rad * tank_rad);
+
+	node_height = tank_height / numNodes;
+
+	// The fraction of UA that is on the top or the bottom of the tank. So 2 * UA_top + UA_rad is the total tank area.
+	UA_top = tank_rad / (2.0 * (tank_height + tank_rad));
+
+	// UA_rad is the faction of the area of the cylinder that's not the top or bottom.
+	UA_rad = tank_height / (tank_height + tank_rad);
+}
+
 void HPWH::calcDerivedValues(){
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
@@ -2478,9 +2509,10 @@ void HPWH::calcDerivedValues(){
 		}
 	}
 
-
-
+	calcUAandSizeConstants();
 }
+
+
 
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs(){
