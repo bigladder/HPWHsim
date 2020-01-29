@@ -825,7 +825,7 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
 			return HPWH_ABORT;
 		}
 	}
-	calcUAandSizeConstants();
+	calcSizeConstants();
 	return 0;
 }
 int HPWH::setDoInversionMixing(bool doInvMix) {
@@ -850,7 +850,6 @@ int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/) {
 		}
 		return HPWH_ABORT;
 	}
-	calcUAandSizeConstants();
 	return 0;
 }
 
@@ -2389,7 +2388,7 @@ void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
-void HPWH::calcUAandSizeConstants() {
+void HPWH::calcSizeConstants() {
 	// gets called when initializing and reseting tank sizes  or UA
 
 	volPerNode_LperNode = tankVolume_L / numNodes;
@@ -2499,7 +2498,7 @@ void HPWH::calcDerivedValues(){
 		}
 	}
 
-	calcUAandSizeConstants();
+	calcSizeConstants();
 }
 
 

@@ -420,7 +420,7 @@ class HPWH {
 
   void calcDerivedValues();
 	/**< a helper function for the inits, calculating condentropy and the lowest node  */
-  void calcUAandSizeConstants();
+  void calcSizeConstants();
   /**< a helper function to set constants for the UA and tank size*/
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
