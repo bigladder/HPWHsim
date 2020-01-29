@@ -60,19 +60,19 @@ const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const std::string HPWH::version_maint = HPWHVRSN_META;
 
 #define SETPOINT_FIX	// #define to include fixes for
-						// setpoint-below-water-temp issues
-						//   1-22-2017
+// setpoint-below-water-temp issues
+//   1-22-2017
 
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
-messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0)
+	simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
+	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
+	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+	doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0)
 {  }
 
-HPWH::HPWH(const HPWH &hpwh){
+HPWH::HPWH(const HPWH &hpwh) {
 	simHasFailed = hpwh.simHasFailed;
 
 	hpwhVerbosity = hpwh.hpwhVerbosity;
@@ -114,18 +114,14 @@ HPWH::HPWH(const HPWH &hpwh){
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
 	doTempDepression = hpwh.doTempDepression;
 
-	doInversionMixing = hpwh.doInversionMixing; 
+	doInversionMixing = hpwh.doInversionMixing;
 	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
-	volPerNode_LperNode = hpwh.volPerNode_LperNode;
-	node_height = hpwh.node_height;
-	fracAreaTop = hpwh.fracAreaTop;
-	fracAreaSide = hpwh.fracAreaSide;
 }
 
-HPWH & HPWH::operator=(const HPWH &hpwh){
+HPWH & HPWH::operator=(const HPWH &hpwh) {
 	if (this == &hpwh) {
 		return *this;
 	}
@@ -187,11 +183,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh){
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
-	volPerNode_LperNode = hpwh.volPerNode_LperNode;
-	node_height = hpwh.node_height;
-	fracAreaTop = hpwh.fracAreaTop;
-	fracAreaSide = hpwh.fracAreaSide;
-
 	return *this;
 }
 
@@ -201,7 +192,7 @@ HPWH::~HPWH() {
 	delete[] setOfSources;
 }
 
-string HPWH::getVersion(){
+string HPWH::getVersion() {
 	std::stringstream version;
 
 	version << version_major << '.' << version_minor << '.' << version_patch << version_maint;
@@ -212,7 +203,7 @@ string HPWH::getVersion(){
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
-	DRMODES DRstatus, double minutesPerStep, 
+	DRMODES DRstatus, double minutesPerStep,
 	double inletVol2_L, double inletT2_C) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
@@ -266,7 +257,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	//process draws and standby losses
 	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep, inletVol2_L, inletT2_C);
 
-	
+
 	//do HeatSource choice
 	for (int i = 0; i < numHeatSources; i++) {
 		if (hpwhVerbosity >= VRB_emetic) {
@@ -308,7 +299,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	}  //end loop over heat sources
 
-	if (hpwhVerbosity >= VRB_emetic){
+	if (hpwhVerbosity >= VRB_emetic) {
 		msg("after heat source choosing:  ");
 		for (int i = 0; i < numHeatSources; i++) {
 			msg("heat source %d: %d \t", i, setOfSources[i].isEngaged());
@@ -332,7 +323,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		if (areAllHeatSourcesOff() == true) {
 			if (compressorIndex > -1) {
 				setOfSources[compressorIndex].engageHeatSource();
-			} else if (lowestElementIndex > -1) {
+			}
+			else if (lowestElementIndex > -1) {
 				setOfSources[lowestElementIndex].engageHeatSource();
 			}
 		}
@@ -359,7 +351,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			HeatSource* heatSourcePtr;
 			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
 				heatSourcePtr = setOfSources[i].backupHeatSource;
-			} else {
+			}
+			else {
 				heatSourcePtr = &setOfSources[i];
 			}
 
@@ -368,7 +361,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			//if it finished early
 			if (heatSourcePtr->runtime_min < minutesToRun) {
 				//debugging message handling
-				if (hpwhVerbosity >= VRB_emetic){
+				if (hpwhVerbosity >= VRB_emetic) {
 					msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", heatSourcePtr->runtime_min, minutesToRun);
 				}
 
@@ -398,10 +391,10 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			}
 		}
 
-		if (compressorRan){
+		if (compressorRan) {
 			temperatureGoal -= maxDepression_C;		//hardcoded 4.5 degree total drop - from experimental data. Changed to an input
 		}
-		else{
+		else {
 			//otherwise, do nothing, we're going back to ambient
 		}
 
@@ -423,7 +416,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	}
 
 	//cursory check for inverted temperature profile
-	if (tankTemps_C[numNodes-1] < tankTemps_C[0]) {
+	if (tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("The top of the tank is cooler than the bottom.  \n");
 		}
@@ -526,14 +519,14 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 
 
 
-void HPWH::setVerbosity(VERBOSITY hpwhVrb){
+void HPWH::setVerbosity(VERBOSITY hpwhVrb) {
 	hpwhVerbosity = hpwhVrb;
 }
-void HPWH::setMessageCallback(void(*callbackFunc)(const string message, void* contextPtr), void* contextPtr){
+void HPWH::setMessageCallback(void(*callbackFunc)(const string message, void* contextPtr), void* contextPtr) {
 	messageCallback = callbackFunc;
 	messageCallbackContextPtr = contextPtr;
 }
-void HPWH::sayMessage(const string message) const{
+void HPWH::sayMessage(const string message) const {
 	if (messageCallback != NULL) {
 		(*messageCallback)(message, messageCallbackContextPtr);
 	}
@@ -564,7 +557,7 @@ void HPWH::msgV(const char* fmt, va_list ap /*=NULL*/) const {
 }		// HPWH::msgV
 
 
-void HPWH::printHeatSourceInfo(){
+void HPWH::printHeatSourceInfo() {
 	std::stringstream ss;
 	double runtime = 0, outputVar = 0;
 
@@ -583,11 +576,11 @@ void HPWH::printHeatSourceInfo(){
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
-		if (runtime != 0) { 
+		if (runtime != 0) {
 			outputVar = getNthHeatSourceEnergyInput(i) / (runtime / 60.0);
 		}
-		else { 
-			outputVar = 0; 
+		else {
+			outputVar = 0;
 		}
 		ss << "input power kw: " << std::setw(7) << outputVar << "\t\t";
 	}
@@ -600,11 +593,11 @@ void HPWH::printHeatSourceInfo(){
 
 	for (int i = 0; i < getNumHeatSources(); i++) {
 		runtime = getNthHeatSourceRunTime(i);
-		if (runtime != 0) { 
+		if (runtime != 0) {
 			outputVar = getNthHeatSourceEnergyOutput(i, UNITS_KWH) / (runtime / 60.0);
 		}
-		else { 
-			outputVar = 0; 
+		else {
+			outputVar = 0;
 		}
 		ss << "output power kw: " << std::setw(7) << outputVar << "\t";
 	}
@@ -648,7 +641,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, in
 	}
 
 	for (int iTC = 0; iTC < nTCouples; iTC++) {
-		fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F":"C");
+		fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F" : "C");
 	}
 
 	fprintf(outFILE, "\n");
@@ -679,7 +672,7 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 }
 
 
-bool HPWH::isSetpointFixed(){
+bool HPWH::isSetpointFixed() {
 	return setpointFixed;
 }
 
@@ -690,7 +683,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 		}
 		return HPWH_ABORT;
 	}
-	else{
+	else {
 		if (units == UNITS_C) {
 			setpoint_C = newSetpoint;
 		}
@@ -706,12 +699,12 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	}
 	return 0;
 }
-double HPWH::getSetpoint(){
+double HPWH::getSetpoint() {
 	return setpoint_C;
 }
 
 
-int HPWH::resetTankToSetpoint(){
+int HPWH::resetTankToSetpoint() {
 	for (int i = 0; i < numNodes; i++) {
 		tankTemps_C[i] = setpoint_C;
 	}
@@ -742,10 +735,10 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
-	double HPWH_size_L; 
-	double oldArea = getTankSurfaceArea(UNITS_FT2);
+	double HPWH_size_L;
+	double oldA = getTankSurfaceArea(UNITS_FT2);
 
 	if (units == UNITS_L) {
 		HPWH_size_L = HPWH_size;
@@ -760,11 +753,11 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/){
 		return HPWH_ABORT;
 	}
 	setTankSize(HPWH_size_L, UNITS_L);
-	setUA(tankUA_kJperHrC / oldArea * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
+	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
 	return 0;
 }
 
-double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/){
+double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Using the same form of equation given in RACM 2016 App B, equation 41.
@@ -784,7 +777,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/){
 	}
 }
 
-double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/){
+double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) {
 	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	double value = 0.2244 * pow(L_TO_GAL(tankVolume_L), 0.333) + 0.0749;
@@ -825,7 +818,6 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
 			return HPWH_ABORT;
 		}
 	}
-	calcSizeConstants();
 	return 0;
 }
 int HPWH::setDoInversionMixing(bool doInvMix) {
@@ -859,7 +851,7 @@ int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
 		// UA is already in correct units
 	}
 	else if (units == UNITS_BTUperHrF) {
-		UA = UA / UAf_TO_UAc( 1.);
+		UA = UA / UAf_TO_UAc(1.);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -871,15 +863,15 @@ int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
 	return 0;
 }
 
-int HPWH::setInletByFraction(double fractionalHeight){
+int HPWH::setInletByFraction(double fractionalHeight) {
 	return setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
 }
-int HPWH::setInlet2ByFraction(double fractionalHeight){
+int HPWH::setInlet2ByFraction(double fractionalHeight) {
 	return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
 }
 
-int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum){
-	if (fractionalHeight > 1. || fractionalHeight < 0.){
+int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum) {
+	if (fractionalHeight > 1. || fractionalHeight < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds fraction for setInletByFraction \n");
 		}
@@ -891,7 +883,7 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum)
 
 	return 0;
 }
-int HPWH::getInletHeight(int whichInlet){
+int HPWH::getInletHeight(int whichInlet) {
 	if (whichInlet == 1) {
 		return inletHeight;
 	}
@@ -908,33 +900,33 @@ int HPWH::getInletHeight(int whichInlet){
 }
 
 int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
-  if(units == UNITS_C) {
-	  this->maxDepression_C = maxDepression;
-  }
-  else if(units == UNITS_F) {
-	  this->maxDepression_C = F_TO_C(maxDepression);
-  }
-  else {
-	  if (hpwhVerbosity >= VRB_reluctant) {
-		  msg("Incorrect unit specification for max Temp Depression.  \n");
-	  }
-    return HPWH_ABORT;
-  }
-  return 0;
+	if (units == UNITS_C) {
+		this->maxDepression_C = maxDepression;
+	}
+	else if (units == UNITS_F) {
+		this->maxDepression_C = F_TO_C(maxDepression);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for max Temp Depression.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return 0;
 }
 
 HPWH::HeatingLogic HPWH::topThird(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {9,10,11,12}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 9,10,11,12 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("top third", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::topThird_absolute(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {9,10,11,12}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 9,10,11,12 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("top third absolute", nodeWeights, d, true);
 }
@@ -942,72 +934,72 @@ HPWH::HeatingLogic HPWH::topThird_absolute(double d) const {
 
 HPWH::HeatingLogic HPWH::bottomThird(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {1,2,3,4}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 1,2,3,4 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("bottom third", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::bottomSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {1,2}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 1,2 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("bottom sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::secondSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {3,4}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 3,4 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("second sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::thirdSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {5,6}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 5,6 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("third sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::fourthSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {7,8}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 7,8 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("fourth sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::fifthSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {9,10}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 9,10 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("fifth sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::topSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {11,12}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 11,12 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("top sixth", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::bottomHalf(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {1,2,3,4,5,6}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 1,2,3,4,5,6 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("bottom half", nodeWeights, d);
 }
 
 HPWH::HeatingLogic HPWH::bottomTwelth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {7,8,9,10,11,12}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 7,8,9,10,11,12 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("bottom twelth", nodeWeights, d);
 }
@@ -1038,16 +1030,16 @@ HPWH::HeatingLogic HPWH::bottomTwelthMaxTemp(double d) const {
 
 HPWH::HeatingLogic HPWH::largeDraw(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {1,2,3,4}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 1,2,3,4 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("large draw", nodeWeights, d, true);
 }
 
 HPWH::HeatingLogic HPWH::largerDraw(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : {1,2,3,4,5,6}) {
-			nodeWeights.emplace_back(i);
+	for (auto i : { 1,2,3,4,5,6 }) {
+		nodeWeights.emplace_back(i);
 	}
 	return HPWH::HeatingLogic("larger draw", nodeWeights, d, true);
 }
@@ -1064,7 +1056,7 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 		}
 		return double(HPWH_ABORT);
 	}
-	else{
+	else {
 		double result = tankTemps_C[nodeNum];
 		if (result == double(HPWH_ABORT)) {
 			return result;
@@ -1207,23 +1199,23 @@ double HPWH::getNthHeatSourceRunTime(int N) const {
 }
 
 
-int HPWH::isNthHeatSourceRunning(int N) const{
+int HPWH::isNthHeatSourceRunning(int N) const {
 	if (N >= numHeatSources || N < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the status of a heat source that does not exist.  \n");
 		}
 		return HPWH_ABORT;
 	}
-	if (setOfSources[N].isEngaged()){
+	if (setOfSources[N].isEngaged()) {
 		return 1;
 	}
-	else{
+	else {
 		return 0;
 	}
 }
 
 
-HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const{
+HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const {
 	return setOfSources[N].typeOfHeatSource;
 }
 
@@ -1268,7 +1260,7 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const {
 	else if (units == UNITS_BTU) {
 		return KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
 	}
-	else if (units == UNITS_KJ){
+	else if (units == UNITS_KJ) {
 		return KWH_TO_KJ(energyRemovedFromEnvironment_kWh);
 	}
 	else {
@@ -1287,7 +1279,7 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const {
 	else if (units == UNITS_BTU) {
 		return KWH_TO_BTU(standbyLosses_kWh);
 	}
-	else if (units == UNITS_KJ){
+	else if (units == UNITS_KJ) {
 		return KWH_TO_KJ(standbyLosses_kWh);
 	}
 	else {
@@ -1313,7 +1305,7 @@ double HPWH::getTankHeatContent_kJ() const {
 }
 
 double HPWH::getLocationTemp_C() const {
-  return locationTemperature_C;
+	return locationTemperature_C;
 }
 
 
@@ -1323,12 +1315,13 @@ double HPWH::getLocationTemp_C() const {
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep,
 	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
+	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	this->outletTemp_C = 0;
 	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
 
-	if (drawVolume_L > 0){
-	
+	if (drawVolume_L > 0) {
+
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
 		if (inletVol2_L > drawVolume_L) {
 			if (hpwhVerbosity >= VRB_reluctant) {
@@ -1343,7 +1336,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		double highInletV, highInletT;
 		int lowInletH;
 		double lowInletT, lowInletV;
-		if (inletHeight > inlet2Height){
+		if (inletHeight > inlet2Height) {
 			highInletH = inletHeight;
 			highInletV = drawVolume_L - inletVol2_L;
 			highInletT = inletT_C;
@@ -1389,12 +1382,12 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 				// Sum of all inlets Vi*Ti at this node
 				if (i == highInletH) {
-					nodeInletTV += highInletV *  drawFraction / drawVolume_L * highInletT;
-					nodeInletFraction += highInletV *  drawFraction / drawVolume_L;
+					nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
+					nodeInletFraction += highInletV * drawFraction / drawVolume_L;
 				}
 				if (i == lowInletH) {
-					nodeInletTV += lowInletV *  drawFraction / drawVolume_L * lowInletT;
-					nodeInletFraction += lowInletV *  drawFraction / drawVolume_L;
+					nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
+					nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
 
 					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
 				}
@@ -1405,7 +1398,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 					(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
 
 				cumInletFraction += nodeInletFraction;
-			
+
 			}
 
 			// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
@@ -1446,6 +1439,16 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	const double rad = getTankRadius(UNITS_M);
+	const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
+	const double node_height = height / numNodes;
+
+	// The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop + fracAreaSide is the total tank area.
+	const double fracAreaTop = rad / (2.0 * (height + rad));
+
+	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
+	const double fracAreaSide = height / (height + rad);
+
 	if (doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
@@ -1455,7 +1458,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau * tankUA_kJperHrC * fracAreaTop * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * node_height / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
 		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
@@ -1473,7 +1476,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	}
 	else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
-		
+
 		for (int i = 0; i < numNodes; i++) {
 			nextTankTemps_C[i] = tankTemps_C[i];
 		}
@@ -1496,15 +1499,15 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 	//calculate standby losses from the sides of the tank
 	for (int i = 0; i < numNodes; i++) {
-			//faction of tank area on the sides
-			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
-			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+		//faction of tank area on the sides
+		//kJ's lost as standby in the current time step for each node.
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
-			//The effect of standby loss on temperature in each node
-			nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		//The effect of standby loss on temperature in each node
+		nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
 	}
-	
+
 
 	// Assign the new temporary tank temps to the real tank temps.
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
@@ -1526,11 +1529,11 @@ void HPWH::mixTankInversions() {
 	do {
 		hasInversion = false;
 		//Start from the top and check downwards
-		for (int i = numNodes-1; i >= 0; i--) {
+		for (int i = numNodes - 1; i >= 0; i--) {
 			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
 				// Temperature inversion!
 				hasInversion = true;
-				
+
 				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
 				double Tmixed = 0.0;
 				double massMixed = 0.0;
@@ -1547,10 +1550,10 @@ void HPWH::mixTankInversions() {
 				// Assign the tank temps from i to k
 				for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
 			}
-			
+
 		}
-				
-	} while ( hasInversion );
+
+	} while (hasInversion);
 }
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -1606,7 +1609,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
 	typeOfHeatSource(TYPE_none) {}
 
-HPWH::HeatSource::HeatSource(const HeatSource &hSource){
+HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
 	isOn = hSource.isOn;
 	lockedOut = hSource.lockedOut;
@@ -1650,7 +1653,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource){
 
 }
 
-HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource){
+HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	if (this == &hSource) {
 		return *this;
 	}
@@ -1865,7 +1868,8 @@ bool HPWH::HeatSource::shouldHeat() const {
 
 		if (turnOnLogicSet[i].isAbsolute) {
 			comparison = turnOnLogicSet[i].decisionPoint;
-		} else {
+		}
+		else {
 			comparison = hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint;
 		}
 
@@ -1876,7 +1880,7 @@ bool HPWH::HeatSource::shouldHeat() const {
 			if (hpwh->hpwhVerbosity >= VRB_typical) {
 				hpwh->msg("engages!\n");
 			}
-			if (hpwh->hpwhVerbosity >= VRB_emetic){
+			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
 			}
 		}
@@ -1884,7 +1888,7 @@ bool HPWH::HeatSource::shouldHeat() const {
 		//quit searching the logics if one of them turns it on
 		if (shouldEngage) break;
 
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("returns: %d \t", shouldEngage);
 		}
 	}  //end loop over set of logic conditions
@@ -1909,14 +1913,14 @@ bool HPWH::HeatSource::shutsOff() const {
 
 	if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C) {
 		shutOff = true;
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
 		}
 		return shutOff;
 	}
 
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
 		}
 
@@ -1925,7 +1929,8 @@ bool HPWH::HeatSource::shutsOff() const {
 
 		if (shutOffLogicSet[i].isAbsolute) {
 			comparison = shutOffLogicSet[i].decisionPoint;
-		} else {
+		}
+		else {
 			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
 		}
 
@@ -1939,7 +1944,7 @@ bool HPWH::HeatSource::shutsOff() const {
 		}
 	}
 
-	if (hpwh->hpwhVerbosity >= VRB_emetic){
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("returns: %d \n", shutOff);
 	}
 	return shutOff;
@@ -1953,7 +1958,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	// passing it on works
 	leftoverCap_kJ = 0.0;
 
-	switch (configuration){
+	switch (configuration) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
@@ -1968,19 +1973,19 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 		getCapacity(externalT_C, getCondenserTemp(), input_BTUperHr, cap_BTUperHr, cop);
 
 		//some outputs for debugging
-		if (hpwh->hpwhVerbosity >= VRB_typical){
+		if (hpwh->hpwhVerbosity >= VRB_typical) {
 			hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n", BTU_TO_KWH(cap_BTUperHr)*(minutesToRun) / 60.0, cap_BTUperHr);
 		}
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("heatDistribution: %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf \n", heatDistribution[0], heatDistribution[1], heatDistribution[2], heatDistribution[3], heatDistribution[4], heatDistribution[5], heatDistribution[6], heatDistribution[7], heatDistribution[8], heatDistribution[9], heatDistribution[10], heatDistribution[11]);
 		}
 		//the loop over nodes here is intentional - essentially each node that has
 		//some amount of heatDistribution acts as a separate resistive element
 		//maybe start from the top and go down?  test this with graphs
-		for (int i = hpwh->numNodes - 1; i >= 0; i--){
+		for (int i = hpwh->numNodes - 1; i >= 0; i--) {
 			//for(int i = 0; i < hpwh->numNodes; i++){
 			captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
-			if (captmp_kJ != 0){
+			if (captmp_kJ != 0) {
 				//add leftoverCap to the next run, and keep passing it on
 				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
 			}
@@ -2013,7 +2018,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 //the private functions
 void HPWH::HeatSource::sortPerformanceMap() {
 	std::sort(perfMap.begin(), perfMap.end(),
-	[](const HPWH::HeatSource::perfPoint & a, const HPWH::HeatSource::perfPoint & b) -> bool {
+		[](const HPWH::HeatSource::perfPoint & a, const HPWH::HeatSource::perfPoint & b) -> bool {
 		return a.T_F < b.T_F;
 	});
 }
@@ -2058,12 +2063,12 @@ double HPWH::HeatSource::getCondenserTemp() {
 			condenserTemp_C += (condensity[j] / tempNodesPerCondensityNode) * hpwh->tankTemps_C[i];
 			//the weights don't need to be added to divide out later because they should always sum to 1
 
-			if (hpwh->hpwhVerbosity >= VRB_emetic){
+			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("condenserTemp_C:\t %.2lf \ti:\t %d \tj\t %d \tcondensity[j]:\t %.2lf \ttankTemps_C[i]:\t %.2lf\n", condenserTemp_C, i, j, condensity[j], hpwh->tankTemps_C[i]);
 			}
 		}
 	}
-	if (hpwh->hpwhVerbosity >= VRB_typical){
+	if (hpwh->hpwhVerbosity >= VRB_typical) {
 		hpwh->msg("condenser temp %.2lf \n", condenserTemp_C);
 	}
 	return condenserTemp_C;
@@ -2084,17 +2089,19 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	size_t i_prev = 0;
 	size_t i_next = 1;
 	for (size_t i = 0; i < perfMap.size(); ++i) {
-		if (externalT_F < perfMap[i].T_F){
+		if (externalT_F < perfMap[i].T_F) {
 			if (i == 0) {
 				extrapolate = true;
 				i_prev = 0;
 				i_next = 1;
-			} else {
+			}
+			else {
 				i_prev = i - 1;
 				i_next = i;
 			}
 			break;
-		} else {
+		}
+		else {
 			if (i == perfMap.size() - 1) {
 				extrapolate = true;
 				i_prev = i - 1;
@@ -2122,7 +2129,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
 	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-	if (hpwh->hpwhVerbosity >= VRB_emetic){
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
 		hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
 		hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
@@ -2137,7 +2144,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	cop = COP_T1 + (externalT_F - perfMap[i_prev].T_F) * ((COP_T2 - COP_T1) / (perfMap[i_next].T_F - perfMap[i_prev].T_F));
 	input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - perfMap[i_prev].T_F) *
 		((inputPower_T2_Watts - inputPower_T1_Watts)
-		/ (perfMap[i_next].T_F - perfMap[i_prev].T_F))
+			/ (perfMap[i_next].T_F - perfMap[i_prev].T_F))
 		) / 1000.0);  //1000 converts w to kw
 	cap_BTUperHr = cop * input_BTUperHr;
 
@@ -2146,11 +2153,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	//that is based on the flow rate.  The equation is a fit to three points,
 	//measured experimentally - 12 percent reduction at 150 cfm, 10 percent at
 	//200, and 0 at 375. Flow is expressed as fraction of full flow.
-	if (airflowFreedom != 1){
+	if (airflowFreedom != 1) {
 		double airflow = 375 * airflowFreedom;
 		cop *= 0.00056*airflow + 0.79;
 	}
-	if (hpwh->hpwhVerbosity >= VRB_typical){
+	if (hpwh->hpwhVerbosity >= VRB_typical) {
 		hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n", cop, input_BTUperHr, cap_BTUperHr);
 	}
 }
@@ -2194,18 +2201,18 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 
 	double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
 
-	if (hpwh->hpwhVerbosity >= VRB_emetic){
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("node %2d   cap_kwh %.4lf \n", node, KJ_TO_KWH(cap_kJ));
 	}
 
 	// find the first node (from the bottom) that does not have the same temperature as the one above it
 	// if they all have the same temp., use the top node, hpwh->numNodes-1
 	setPointNodeNum = node;
-	for (int i = node; i < hpwh->numNodes - 1; i++){
+	for (int i = node; i < hpwh->numNodes - 1; i++) {
 		if (hpwh->tankTemps_C[i] != hpwh->tankTemps_C[i + 1]) {
 			break;
 		}
-		else{
+		else {
 			setPointNodeNum = i + 1;
 		}
 	}
@@ -2227,7 +2234,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 		Q_kJ = CPWATER_kJperkgC * volumePerNode_L * DENSITYWATER_kgperL * (setPointNodeNum + 1 - node) * deltaT_C;
 
 		//Running the rest of the time won't recover
-		if (Q_kJ > cap_kJ){
+		if (Q_kJ > cap_kJ) {
 			for (int j = node; j <= setPointNodeNum; j++) {
 				hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / volumePerNode_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
 			}
@@ -2243,8 +2250,8 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 		setPointNodeNum++;
 #else
 		//temp will recover by/before end of timestep
-		else{
-			for (int j = node; j <= setPointNodeNum; j++){
+		else {
+			for (int j = node; j <= setPointNodeNum; j++) {
 				hpwh->tankTemps_C[j] = targetTemp_C;
 			}
 			setPointNodeNum++;
@@ -2268,21 +2275,21 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr = 0;
 	cop = 0;
 
-	do{
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+	do {
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
 		}
 
 		//how much heat is available this timestep
 		getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 		heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
 		}
 
 		//adjust capacity for how much time is left in this step
 		heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
 		}
 
@@ -2292,26 +2299,26 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		//protect against dividing by zero - if bottom node is at (or above) setpoint,
 		//add no heat
-		if (nodeHeat_kJperNode <= 0) { 
-			nodeFrac = 0; 
+		if (nodeHeat_kJperNode <= 0) {
+			nodeFrac = 0;
 		}
-		else { 
-			nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode; 
+		else {
+			nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
 		}
 
-		if (hpwh->hpwhVerbosity >= VRB_emetic){
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
 		}
 		//if more than one, round down to 1 and subtract the amount of time it would
 		//take to heat that node from the timeRemaining
-		if (nodeFrac > 1){
+		if (nodeFrac > 1) {
 			nodeFrac = 1;
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
 		//otherwise just the fraction available
 		//this should make heatingCapacity == 0  if nodeFrac < 1
-		else{
+		else {
 			timeUsed_min = timeRemaining_min;
 			timeRemaining_min = 0;
 		}
@@ -2325,9 +2332,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 
 		//track outputs - weight by the time ran
-		input_BTUperHr += inputTemp_BTUperHr*timeUsed_min;
-		cap_BTUperHr += capTemp_BTUperHr*timeUsed_min;
-		cop += copTemp*timeUsed_min;
+		input_BTUperHr += inputTemp_BTUperHr * timeUsed_min;
+		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
+		cop += copTemp * timeUsed_min;
 
 
 		//if there's still time remaining and you haven't heated to the cutoff
@@ -2339,7 +2346,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cop /= (minutesToRun - timeRemaining_min);
 
-	if (hpwh->hpwhVerbosity >= VRB_emetic){
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
 	}
 	//return the time left
@@ -2367,13 +2374,13 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 		50, // Temperature (T_F)
 		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
-	});
+		});
 
 	perfMap.push_back({
 		67, // Temperature (T_F)
 		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
-	});
+		});
 
 	configuration = CONFIG_SUBMERGED; //immersed in tank
 
@@ -2381,35 +2388,14 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 }
 
 
-void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic){
+void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 	this->turnOnLogicSet.push_back(logic);
 }
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
-void HPWH::calcSizeConstants() {
-	// gets called when initializing and reseting tank sizes  or UA
-
-	volPerNode_LperNode = tankVolume_L / numNodes;
-
-
-	const double tank_rad = getTankRadius(UNITS_M);
-	const double tank_height = tankVolume_L / (1000.0 * 3.14159 * tank_rad * tank_rad);
-
-	node_height = tank_height / numNodes;
-	
-	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
-	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-	// We assume the UA is divided only by the surface area of the tank and ignore fittings, etc.
-	// The fraction of UA that is on the top or the bottom of the tank, such that 2 * fracAreaTop + fracAreaSide is the total tank area.
-	fracAreaTop = tank_rad / (2.0 * (tank_height + tank_rad));
-
-	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
-	fracAreaSide = tank_height / (tank_height + tank_rad);
-}
-
-void HPWH::calcDerivedValues(){
+void HPWH::calcDerivedValues() {
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
 	// tank node density (number of calculation nodes per regular node)
@@ -2470,7 +2456,8 @@ void HPWH::calcDerivedValues(){
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
-		} else {
+		}
+		else {
 			for (int j = 0; j < CONDENSITY_SIZE; j++) {
 				if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
 					lowestElementIndex = i;
@@ -2498,17 +2485,16 @@ void HPWH::calcDerivedValues(){
 		}
 	}
 
-	calcSizeConstants();
+
+
 }
 
-
-
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
-int HPWH::checkInputs(){
+int HPWH::checkInputs() {
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
 
-	if (numHeatSources <= 0 && hpwhModel != MODELS_StorageTank ) {
+	if (numHeatSources <= 0 && hpwhModel != MODELS_StorageTank) {
 		msg("You must have at least one HeatSource.\n");
 		returnVal = HPWH_ABORT;
 	}
@@ -2565,7 +2551,7 @@ int HPWH::checkInputs(){
 }
 
 #ifndef HPWH_ABRIDGED
-int HPWH::HPWHinit_file(string configFile){
+int HPWH::HPWHinit_file(string configFile) {
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
 	//clear out old stuff if you're re-initializing
@@ -2593,7 +2579,7 @@ int HPWH::HPWHinit_file(string configFile){
 	string line_s;
 	std::stringstream line_ss;
 	string token;
-	while (std::getline(inputFILE, line_s)){
+	while (std::getline(inputFILE, line_s)) {
 		line_ss.clear();
 		line_ss.str(line_s);
 
@@ -2787,7 +2773,8 @@ int HPWH::HPWHinit_file(string configFile){
 							weights.push_back(std::stod(nextToken));
 							line_ss >> nextToken;
 						}
-					} else {
+					}
+					else {
 						for (auto n : nodeNums) {
 							n += 0; // used to get rid of unused variable compiler warning
 							weights.push_back(1.0);
@@ -2808,7 +2795,7 @@ int HPWH::HPWHinit_file(string configFile){
 					bool absolute = (nextToken == "absolute");
 					std::string compareStr;
 					line_ss >> compareStr >> tempDouble >> units;
-					std::function<bool(double,double)> compare;
+					std::function<bool(double, double)> compare;
 					if (compareStr == "<") compare = std::less<double>();
 					else if (compareStr == ">") compare = std::greater<double>();
 					else {
@@ -2833,13 +2820,14 @@ int HPWH::HPWHinit_file(string configFile){
 						return HPWH_ABORT;
 					}
 					std::vector<NodeWeight> nodeWeights;
-					for (size_t i = 0; i < nodeNums.size(); i++ ) {
-							nodeWeights.emplace_back(nodeNums[i],weights[i]);
+					for (size_t i = 0; i < nodeNums.size(); i++) {
+						nodeWeights.emplace_back(nodeNums[i], weights[i]);
 					}
 					HPWH::HeatingLogic logic("custom", nodeWeights, tempDouble, absolute, compare);
 					if (token == "onlogic") {
 						setOfSources[heatsource].addTurnOnLogic(logic);
-					} else { // "offlogic"
+					}
+					else { // "offlogic"
 						setOfSources[heatsource].addShutOffLogic(logic);
 					}
 				}
@@ -2961,7 +2949,7 @@ int HPWH::HPWHinit_file(string configFile){
 				line_ss >> nTemps;
 				setOfSources[heatsource].perfMap.resize(nTemps);
 			}
-			else if (std::regex_match(token, std::regex("T\\d+"))){
+			else if (std::regex_match(token, std::regex("T\\d+"))) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("T(\\d+)"));
 				nTemps = std::stoi(match[1].str());
@@ -2969,13 +2957,13 @@ int HPWH::HPWHinit_file(string configFile){
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
-						if (true || hpwhVerbosity >= VRB_reluctant){
+						if (true || hpwhVerbosity >= VRB_reluctant) {
 							msg("%s specified for heatsource %d before definition of nTemps.  \n", token.c_str(), heatsource);
 						}
 						return HPWH_ABORT;
 					}
 					else {
-						if (true || hpwhVerbosity >= VRB_reluctant){
+						if (true || hpwhVerbosity >= VRB_reluctant) {
 							msg("Incorrect specification for %s from heatsource %d. nTemps, %d, is less than %d.  \n", token.c_str(), heatsource, maxTemps, nTemps);
 						}
 						return HPWH_ABORT;
@@ -2994,20 +2982,20 @@ int HPWH::HPWHinit_file(string configFile){
 				}
 				setOfSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
 			}
-			else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)"))){
+			else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)"))) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("(inPow|cop)T(\\d+)(const|lin|quad)"));
 				string var = match[1].str();
 				nTemps = std::stoi(match[2].str());
 				string coeff = match[3].str();
 				int coeff_num;
-				if (coeff == "const"){
+				if (coeff == "const") {
 					coeff_num = 0;
 				}
-				else if (coeff == "lin"){
+				else if (coeff == "lin") {
 					coeff_num = 1;
 				}
-				else if (coeff == "quad"){
+				else if (coeff == "quad") {
 					coeff_num = 2;
 				}
 
@@ -3015,13 +3003,13 @@ int HPWH::HPWHinit_file(string configFile){
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
-						if (hpwhVerbosity >= VRB_reluctant){
+						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("%s specified for heatsource %d before definition of nTemps.  \n", token.c_str(), heatsource);
 						}
 						return HPWH_ABORT;
 					}
 					else {
-						if (hpwhVerbosity >= VRB_reluctant){
+						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("Incorrect specification for %s from heatsource %d. nTemps, %d, is less than %d.  \n", token.c_str(), heatsource, maxTemps, nTemps);
 						}
 						return HPWH_ABORT;
@@ -3036,7 +3024,7 @@ int HPWH::HPWHinit_file(string configFile){
 					setOfSources[heatsource].perfMap[nTemps - 1].COP_coeffs[coeff_num] = tempDouble;
 				}
 			}
-			else if (token == "hysteresis"){
+			else if (token == "hysteresis") {
 				line_ss >> tempDouble >> units;
 				if (units == "F")  tempDouble = dF_TO_dC(tempDouble);
 				else if (units == "C"); //do nothing, lol
@@ -3048,15 +3036,15 @@ int HPWH::HPWHinit_file(string configFile){
 				}
 				setOfSources[heatsource].hysteresis_dC = tempDouble;
 			}
-			else if (token == "backupSource"){
+			else if (token == "backupSource") {
 				line_ss >> sourceNum;
 				setOfSources[heatsource].backupHeatSource = &setOfSources[sourceNum];
 			}
-			else if (token == "companionSource"){
+			else if (token == "companionSource") {
 				line_ss >> sourceNum;
 				setOfSources[heatsource].companionHeatSource = &setOfSources[sourceNum];
 			}
-			else if (token == "followedBySource"){
+			else if (token == "followedBySource") {
 				line_ss >> sourceNum;
 				setOfSources[heatsource].followedByHeatSource = &setOfSources[sourceNum];
 			}
@@ -3101,11 +3089,11 @@ int HPWH::HPWHinit_file(string configFile){
 }
 #endif
 
-int HPWH::HPWHinit_resTank(){
+int HPWH::HPWHinit_resTank() {
 	//a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
 	return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
-int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W){
+int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W) {
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -3165,7 +3153,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
 	double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
 	double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-	tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator); 
+	tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator);
 
 	if (tankUA_kJperHrC < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
@@ -3190,7 +3178,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	}
 
 
-	if (hpwhVerbosity >= VRB_emetic){
+	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < numHeatSources; i++) {
 			msg("heat source %d: %p \n", i, &setOfSources[i]);
 		}
@@ -3201,7 +3189,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	return 0;  //successful init returns 0
 }
 
-int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C){
+int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C) {
 	//return 0 on success, HPWH_ABORT for failure
 	simHasFailed = true;  //this gets cleared on successful completion of init
 
@@ -3250,13 +3238,13 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 		50, // Temperature (T_F)
 		{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-	});
+		});
 
 	compressor.perfMap.push_back({
 		70, // Temperature (T_F)
 		{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-	});
+		});
 
 	compressor.minT = F_TO_C(45.);
 	compressor.maxT = F_TO_C(120.);
@@ -3318,7 +3306,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	//force COP to be 70% of GE at UEF 2 and 95% at UEF 3.4
 	//use a fudge factor to scale cop and input power in tandem to maintain constant capacity
 	double fUEF = (energyFactor - 2.0) / uefSpan;
-	double genericFudge = (1. - fUEF)*.7 + fUEF*.95;
+	double genericFudge = (1. - fUEF)*.7 + fUEF * .95;
 
 	compressor.perfMap[0].COP_coeffs[0] *= genericFudge;
 	compressor.perfMap[0].COP_coeffs[1] *= genericFudge;
@@ -3373,7 +3361,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 		setOfSources[i].sortPerformanceMap();
 	}
 
-	if (hpwhVerbosity >= VRB_emetic){
+	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < numHeatSources; i++) {
 			msg("heat source %d: %p \n", i, &setOfSources[i]);
 		}
@@ -3513,7 +3501,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 	}
-	
+
 	else if (presetNum == MODELS_StorageTank) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
@@ -3582,13 +3570,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{0.290 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{0.375 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = 0;
 		compressor.maxT = F_TO_C(120.);
@@ -3647,13 +3635,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{0.290 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{0.375 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.maxT = F_TO_C(120.);
 		compressor.hysteresis_dC = 0;  //no hysteresis
@@ -3706,13 +3694,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(45.0);
 		compressor.maxT = F_TO_C(120.);
@@ -3788,13 +3776,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(45.0);
 		compressor.maxT = F_TO_C(120.);
@@ -3870,13 +3858,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{0.3 * 1000, 0.00159 * 1000, 0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.7, -0.0210, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{0.378 * 1000, 0.00121 * 1000, 0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
 			{4.8, -0.0167, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(45.0);
 		compressor.maxT = F_TO_C(120.);
@@ -3956,31 +3944,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			17, // Temperature (T_F)
 			{1650, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			35, // Temperature (T_F)
 			{1100, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
 			{880, 3.1, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{740, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
 			{790, 2, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.hysteresis_dC = 4;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -4033,31 +4021,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			17, // Temperature (T_F)
 			{1650, 5.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			35, // Temperature (T_F)
 			{1100, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
 			{880, 3.1, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{740, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
 			{790, 2, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.hysteresis_dC = 4;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -4106,26 +4094,26 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 5.0;
 		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
-                // performance map
+		// performance map
 		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
 			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
 			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(42.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4135,7 +4123,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//top resistor values
 		if (presetNum == MODELS_RheemHBDR2250) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
-		} else {
+		}
+		else {
 			resistiveElementTop.setupAsResistiveElement(8, 4500);
 		}
 		resistiveElementTop.isVIP = true;
@@ -4143,7 +4132,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//bottom resistor values
 		if (presetNum == MODELS_RheemHBDR2250) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
-		} else {
+		}
+		else {
 			resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		}
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -4160,10 +4150,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
 		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
-//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
+		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
 
-		//set everything in its places
+				//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		setOfSources[2] = compressor;
@@ -4176,7 +4166,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
-                setOfSources[0].companionHeatSource = &setOfSources[2];
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 
 
 	}
@@ -4190,7 +4180,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		if (presetNum == MODELS_AOSmithHPTU66) {
 			tankVolume_L = 244.6;
-		} else {
+		}
+		else {
 			tankVolume_L = 221.4;
 		}
 		tankUA_kJperHrC = 8;
@@ -4213,26 +4204,26 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double split = 1.0 / 4.0;
 		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-                // performance map
+		// performance map
 		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
 			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
 			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(42.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4242,7 +4233,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//top resistor values
 		if (presetNum == MODELS_RheemHBDR2265) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
-		} else {
+		}
+		else {
 			resistiveElementTop.setupAsResistiveElement(8, 4500);
 		}
 		resistiveElementTop.isVIP = true;
@@ -4250,7 +4242,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//bottom resistor values
 		if (presetNum == MODELS_RheemHBDR2265) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
-		} else {
+		}
+		else {
 			resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		}
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -4266,10 +4259,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
 		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
-//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
+		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
 
 
-		//set everything in its places
+				//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		setOfSources[2] = compressor;
@@ -4282,7 +4275,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
-                setOfSources[0].companionHeatSource = &setOfSources[2];
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 || presetNum == MODELS_RheemHBDR4580) {
@@ -4321,19 +4314,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{170, 2.02, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
 			{94.1, 3.15, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(42.0);
 		compressor.maxT = F_TO_C(120.0);
@@ -4342,7 +4335,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//top resistor values
 		if (presetNum == MODELS_RheemHBDR2280) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
-		} else {
+		}
+		else {
 			resistiveElementTop.setupAsResistiveElement(8, 4500);
 		}
 		resistiveElementTop.isVIP = true;
@@ -4350,7 +4344,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//bottom resistor values
 		if (presetNum == MODELS_RheemHBDR2280) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
-		} else {
+		}
+		else {
 			resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		}
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -4364,13 +4359,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 
 		std::vector<NodeWeight> nodeWeights;
-//		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
+		//		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
 		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
-//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
+		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 
-		//set everything in its places
+				//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		setOfSources[2] = compressor;
@@ -4383,7 +4378,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
-                setOfSources[0].companionHeatSource = &setOfSources[2];
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
@@ -4422,13 +4417,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{142.6, 2.152, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(42.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4452,7 +4447,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80.108)));
 
 		// resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
-                resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
 
 
 		//set everything in its places
@@ -4504,13 +4499,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4584,13 +4579,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		//top resistor values
 		resistiveElementTop.setupAsResistiveElement(6, 4500);
@@ -4661,13 +4656,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4745,13 +4740,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4829,13 +4824,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.);
@@ -4914,15 +4909,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			47, // Temperature (T_F)
 			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
-		compressor.hysteresis_dC =  dF_TO_dC(1);
+		compressor.hysteresis_dC = dF_TO_dC(1);
 		compressor.minT = F_TO_C(40.0);
 		compressor.maxT = F_TO_C(120.0);
 
@@ -4997,13 +4992,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{295.55337, 2.28518, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.744118, -0.025946, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{282.2126, 2.82001, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{8.012112, -0.039394, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(32.0);
 		compressor.maxT = F_TO_C(120.);
@@ -5055,13 +5050,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{472.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{2.942642, -0.0125954, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{439.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{3.95076, -0.01638033, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(45.0);
 		compressor.maxT = F_TO_C(120.);
@@ -5131,13 +5126,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{272.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{4.042642, -0.0205954, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{239.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.25076, -0.02638033, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(40.0);
 		compressor.maxT = F_TO_C(120.);
@@ -5212,13 +5207,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{172.58616, 2.09340, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.242642, -0.0285954, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
 			{139.5615, 2.62997, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{6.75076, -0.03638033, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(35.0);
 		compressor.maxT = F_TO_C(120.);
@@ -5292,13 +5287,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			50, // Temperature (T_F)
 			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{4.29, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.perfMap.push_back({
 			70, // Temperature (T_F)
 			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{5.61, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-		});
+			});
 
 		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.);
@@ -5338,9 +5333,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	else {
-	if (hpwhVerbosity >= VRB_reluctant) {
-		msg("You have tried to select a preset model which does not exist.  \n");
-	}
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have tried to select a preset model which does not exist.  \n");
+		}
 		return HPWH_ABORT;
 	}
 
@@ -5364,7 +5359,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[i].sortPerformanceMap();
 	}
 
-	if (hpwhVerbosity >= VRB_emetic){
+	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < numHeatSources; i++) {
 			msg("heat source %d: %p \n", i, &setOfSources[i]);
 		}
