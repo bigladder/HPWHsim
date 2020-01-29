@@ -118,7 +118,11 @@ HPWH::HPWH(const HPWH &hpwh) {
 	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
-
+	
+	volPerNode_LperNode = hpwh.volPerNode_LperNode;
+	node_height = hpwh.node_height;
+	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaSide = hpwh.fracAreaSide;
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh) {
@@ -182,6 +186,11 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	doConduction = hpwh.doConduction;
 
 	locationTemperature_C = hpwh.locationTemperature_C;
+
+	volPerNode_LperNode = hpwh.volPerNode_LperNode;
+	node_height = hpwh.node_height;
+	fracAreaTop = hpwh.fracAreaTop;
+	fracAreaSide = hpwh.fracAreaSide;
 
 	return *this;
 }
@@ -818,6 +827,9 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
 			return HPWH_ABORT;
 		}
 	}
+	
+	calcSizeConstants();
+
 	return 0;
 }
 int HPWH::setDoInversionMixing(bool doInvMix) {
@@ -1315,7 +1327,6 @@ double HPWH::getLocationTemp_C() const {
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep,
 	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
-	double volPerNode_LperNode = tankVolume_L / numNodes;
 	double drawFraction;
 	this->outletTemp_C = 0;
 	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
@@ -1434,20 +1445,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 	} //end if(draw_volume_L > 0)
 
-
-	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
-	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
-	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-	// height estimate from Rheem along with the volume is used to get the radius and node_height
-	const double rad = getTankRadius(UNITS_M);
-	const double height = tankVolume_L / (1000.0 * 3.14159 * rad * rad);
-	const double node_height = height / numNodes;
-
-	// The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop + fracAreaSide is the total tank area.
-	const double fracAreaTop = rad / (2.0 * (height + rad));
-
-	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
-	const double fracAreaSide = height / (height + rad);
 
 	if (doConduction) {
 
@@ -2394,6 +2391,23 @@ void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
+void HPWH::calcSizeConstants() {
+	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
+	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
+	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
+	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	const double tank_rad = getTankRadius(UNITS_M);
+	const double tank_height = tankVolume_L / (1000.0 * 3.14159 * tank_rad * tank_rad);
+	volPerNode_LperNode = tankVolume_L / numNodes;
+
+	node_height = tank_height / numNodes;
+
+	// The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop + fracAreaSide is the total tank area.
+	fracAreaTop = tank_rad / (2.0 * (tank_height + tank_rad));
+
+	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
+	fracAreaSide = tank_height / (tank_height + tank_rad);
+}
 
 void HPWH::calcDerivedValues() {
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
@@ -2485,7 +2499,7 @@ void HPWH::calcDerivedValues() {
 		}
 	}
 
-
+	calcSizeConstants();
 
 }
 
