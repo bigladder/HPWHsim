@@ -4295,7 +4295,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		tankVolume_L = 299.5;
-		tankUA_kJperHrC = 0;
+		tankUA_kJperHrC = 9;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
