@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
   ifstream controlFile;
 
   string strPreamble;
-  string strHead = "minutes,Ta,inletT,draw,outletT";
+  // string strHead = "minutes,Ta,inletT,draw,outletT,";
+  string strHead = "minutes,Ta,inletT,draw,";
 
   //.......................................
   //process command line arguments
@@ -278,12 +279,6 @@ int main(int argc, char *argv[])
       drStatus = HPWH::DR_ENGAGE;
     }
 
-//	vectptr = NULL;
-//	if ( i == 15 || i== 16 || i== 17){
-//		nodeExtraHeat_W = {200000 };
-	//	vectptr = &nodeExtraHeat_W;
-	//}
-	
     // Run the step
 	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		GAL_TO_L(allSchedules[1][i]), // Flow in gallons
@@ -300,8 +295,8 @@ int main(int argc, char *argv[])
     }
 
 	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-		std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", " +
-		std::to_string(hpwh.getOutletTemp()) + ",";
+		std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+		//std::to_string(hpwh.getOutletTemp()) + ",";
 	hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
   }
 
