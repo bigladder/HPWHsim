@@ -2502,13 +2502,13 @@ void HPWH::calcSizeConstants() {
 }
 
 void HPWH::calcDerivedValues() {
-	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
-
 	// tank node density (number of calculation nodes per regular node)
 	nodeDensity = numNodes / 12;
 
 	// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
 	calcDerivedHeatingValues();
+
+	calcSizeConstants();
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
@@ -2607,7 +2607,6 @@ void HPWH::calcDerivedHeatingValues(){
 		}
 	}
 
-	calcSizeConstants();
 }
 
 
