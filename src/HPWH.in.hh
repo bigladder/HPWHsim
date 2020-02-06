@@ -428,9 +428,12 @@ class HPWH {
 	/**< functions to calculate what the temperature in a portion of the tank is  */
 
   void calcDerivedValues();
-	/**< a helper function for the inits  */
+	/**< a helper function for the inits, calculating condentropy and the lowest node  */
+  void calcSizeConstants();
+  /**< a helper function to set constants for the UA and tank size*/
   void calcDerivedHeatingValues(); 
   /**< a helper for the helper, calculating condentropy and the lowest node*/
+
 
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
@@ -469,28 +472,38 @@ class HPWH {
 	HeatSource *setOfSources;
 	/**< an array containing the HeatSources, in order of priority  */
 
-  int compressorIndex;
-  /**< The index of the compressor heat source (set to -1 if no compressor)*/
+	int compressorIndex;
+	/**< The index of the compressor heat source (set to -1 if no compressor)*/
 
-  int lowestElementIndex;
-  /**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
+	int lowestElementIndex;
+	/**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
 
 	int numNodes;
 	/**< the number of nodes in the tank - must be >= 12, in multiples of 12  */
 
-  int nodeDensity;
-  /**< the number of calculation nodes in a logical node  */
+	int nodeDensity;
+	/**< the number of calculation nodes in a logical node  */
 
-  int inletHeight;
-  /**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
+	int inletHeight;
+	/**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
   
-  int inlet2Height;
-  /**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be between 0 and numNodes-1  */
+	 int inlet2Height;
+	/**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be between 0 and numNodes-1  */
 
 	double tankVolume_L;
 	/**< the volume in liters of the tank  */
 	double tankUA_kJperHrC;
 	/**< the UA of the tank, in metric units  */
+
+	double volPerNode_LperNode;
+	/**< the volume in liters of a single node  */
+	double node_height;	
+	/**< the height in meters of the one node  */
+	double fracAreaTop;	
+	/**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
+	double fracAreaSide;	
+	/**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
+
 
 	double setpoint_C;
 	/**< the setpoint of the tank  */
