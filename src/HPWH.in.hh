@@ -146,7 +146,8 @@ class HPWH {
   enum HEATSOURCE_TYPE {
     TYPE_none,        /**< a default to check to make sure it's been set  */
     TYPE_resistance,  /**< a resistance element  */
-    TYPE_compressor   /**< a vapor cycle compressor  */
+    TYPE_compressor,   /**< a vapor cycle compressor  */
+	TYPE_extra		  /**< an extra element to add user defined heat*/
     };
 
   /** specifies the unit type for outputs in the CSV file-s  */
@@ -243,7 +244,8 @@ class HPWH {
   int runOneStep(double inletT_C, double drawVolume_L,
                   double ambientT_C, double externalT_C,
                   DRMODES DRstatus, double minutesPerStep,
-				  double inletVol2_L = 0., double inletT2_C = 0.);
+				  double inletVol2_L = 0., double inletT2_C = 0.,
+				  std::vector<double>* nodePowerExtra_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
@@ -390,11 +392,15 @@ class HPWH {
    * returns using kilojoules */
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
-  int runOneStep(double drawVolume_L, double ambientT_C,
-                  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.) {
-        return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-			externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C);
-  };
+	int runOneStep(double drawVolume_L, double ambientT_C,
+	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+	  std::vector<double>* nodePowerExtra_W = NULL) {
+	  return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
+		  externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C,
+		  nodePowerExtra_W);
+	};
+
+
 	/** Setters for the what are typically input variables  */
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
   void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
@@ -414,6 +420,9 @@ class HPWH {
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
 
+	void addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesPerStep);
+	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
+
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 
 	/**< functions to calculate what the temperature in a portion of the tank is  */
@@ -422,6 +431,10 @@ class HPWH {
 	/**< a helper function for the inits, calculating condentropy and the lowest node  */
   void calcSizeConstants();
   /**< a helper function to set constants for the UA and tank size*/
+  void calcDerivedHeatingValues(); 
+  /**< a helper for the helper, calculating condentropy and the lowest node*/
+
+
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
@@ -550,6 +563,9 @@ class HPWH::HeatSource {
   void setupAsResistiveElement(int node, double Watts);
   /**< configure the heat source to be a resisive element, positioned at the
       specified node, with the specified power in watts */
+  void setupExtraHeat(std::vector<double>* nodePowerExtra_W);
+  /**< Configure a user defined heat source added as extra, based off using 
+		nodePowerExtra_W as the total watt input and the condensity*/
 
 	bool isEngaged() const;
   /**< return whether or not the heat source is engaged */
