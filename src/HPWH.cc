@@ -2134,65 +2134,66 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	bool extrapolate = false;
 	size_t i_prev = 0;
 	size_t i_next = 1;
-	for (size_t i = 0; i < perfMap.size(); ++i) {
-		if (externalT_F < perfMap[i].T_F) {
-			if (i == 0) {
-				extrapolate = true;
-				i_prev = 0;
-				i_next = 1;
-			}
-			else {
-				i_prev = i - 1;
-				i_next = i;
-			}
-			break;
-		}
-		else {
-			if (i == perfMap.size() - 1) {
-				extrapolate = true;
-				i_prev = i - 1;
-				i_next = i;
+	if (perfMap.size() > 1) {
+		for (size_t i = 0; i < perfMap.size(); ++i) {
+			if (externalT_F < perfMap[i].T_F) {
+				if (i == 0) {
+					extrapolate = true;
+					i_prev = 0;
+					i_next = 1;
+				}
+				else {
+					i_prev = i - 1;
+					i_next = i;
+				}
 				break;
 			}
-		}
-	}
-
-
-	// Calculate COP and Input Power at each of the two reference temepratures
-	COP_T1 = perfMap[i_prev].COP_coeffs[0];
-	COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
-	COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
-
-	COP_T2 = perfMap[i_next].COP_coeffs[0];
-	COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
-	COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
-
-	inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
-	inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
-	inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
-
-	inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
-	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
-	inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
-
-	if (hpwh->hpwhVerbosity >= VRB_emetic) {
-		hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
-		hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
-		hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
-
-		if (extrapolate) {
-			hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: %.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n", externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F);
+			else {
+				if (i == perfMap.size() - 1) {
+					extrapolate = true;
+					i_prev = i - 1;
+					i_next = i;
+					break;
+				}
+			}
 		}
 
-	}
 
-	// Interpolate to get COP and input power at the current ambient temperature
-	cop = COP_T1 + (externalT_F - perfMap[i_prev].T_F) * ((COP_T2 - COP_T1) / (perfMap[i_next].T_F - perfMap[i_prev].T_F));
-	input_BTUperHr = KWH_TO_BTU((inputPower_T1_Watts + (externalT_F - perfMap[i_prev].T_F) *
-		((inputPower_T2_Watts - inputPower_T1_Watts)
-			/ (perfMap[i_next].T_F - perfMap[i_prev].T_F))
-		) / 1000.0);  //1000 converts w to kw
-	cap_BTUperHr = cop * input_BTUperHr;
+		// Calculate COP and Input Power at each of the two reference temepratures
+		COP_T1 = perfMap[i_prev].COP_coeffs[0];
+		COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
+		COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+
+		COP_T2 = perfMap[i_next].COP_coeffs[0];
+		COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
+		COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+
+		inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
+		inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
+		inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+
+		inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
+		inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
+		inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
+			hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
+			hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
+			hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
+
+			if (extrapolate) {
+				hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: %.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n", externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F);
+			}
+
+		}
+
+		// Interpolate to get COP and input power at the current ambient temperature
+		// Interpolate to get COP and input power at the current ambient temperature
+		linearInterp(cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
+		linearInterp(input_BTUperHr, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, inputPower_T1_Watts, inputPower_T2_Watts);
+		input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0);//1000 converts w to kw);
+		cap_BTUperHr = cop * input_BTUperHr;
+	}
 
 	//here is where the scaling for flow restriction happens
 	//the input power doesn't change, we just scale the cop by a small percentage
@@ -2208,6 +2209,9 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 }
 
+void HPWH::HeatSource::linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1) {
+	ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+}
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
@@ -3138,10 +3142,10 @@ int HPWH::HPWHinit_file(string configFile) {
 				line_ss >> tempDouble;
 
 				if (var == "inPow") {
-					setOfSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs[coeff_num] = tempDouble;
+					setOfSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(tempDouble);
 				}
 				else if (var == "cop") {
-					setOfSources[heatsource].perfMap[nTemps - 1].COP_coeffs[coeff_num] = tempDouble;
+					setOfSources[heatsource].perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
 				}
 			}
 			else if (token == "hysteresis") {
@@ -4048,6 +4052,61 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
+	}
+
+	else if (presetNum == MODELS_CxA_20_175) {
+	numNodes = 96;
+	tankTemps_C = new double[numNodes];
+	setpoint_C = F_TO_C(127.0);
+	setpointFixed = false;
+
+	//start tank off at setpoint
+	resetTankToSetpoint();
+
+	tankVolume_L = 315;
+	tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 175 gallon tank
+	setTankSize_adjustUA(175, UNITS_GAL);
+
+	doTempDepression = false;
+	tankMixesOnDraw = false;
+
+	numHeatSources = 1;
+	setOfSources = new HeatSource[numHeatSources];
+
+	HeatSource compressor(this);
+
+	compressor.isOn = false;
+	compressor.isVIP = true;
+	compressor.typeOfHeatSource = TYPE_compressor;
+
+	compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	compressor.perfMap.reserve(1);
+
+	compressor.perfMap.push_back({
+		40, // Temperature (T_F)
+		{1100, 4.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+
+	// Below left same as Sanden80 but will have to change because the setpoint has changed!
+	compressor.hysteresis_dC = 4;
+	compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+	std::vector<NodeWeight> nodeWeights;
+	nodeWeights.emplace_back(8);
+	compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
+	compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+
+	//lowT cutoff
+	std::vector<NodeWeight> nodeWeights1;
+	nodeWeights1.emplace_back(1);
+	compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
+	compressor.depressesTemperature = false;  //no temp depression
+
+	//set everything in its places
+	setOfSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_Sanden80) {
 		numNodes = 96;

@@ -112,7 +112,12 @@ class HPWH {
 
     // Non-preset models
     MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
-    MODELS_CustomResTank = 201      /**< HPWH parameters were input via HPWHinit_resTank */
+    MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
+	
+	// Larger Colmac model
+	MODELS_CxA_20_175 = 210  /**<  Colmac 175 gallon (why not?)  external heat pump  */
+
+
     };
 
   ///specifies the modes for writing output
@@ -603,7 +608,9 @@ class HPWH::HeatSource {
                      double cnd5, double cnd6, double cnd7, double cnd8,
                      double cnd9, double cnd10, double cnd11, double cnd12);
   /**< a function to set the condensity values, it pretties up the init funcs. */
-
+	
+	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
+	/**< Does a simple linear interpolation between two points to the xnew point */
 
  private:
   //start with a few type definitions
@@ -659,8 +666,8 @@ class HPWH::HeatSource {
 
   struct perfPoint {
     double T_F;
-    double inputPower_coeffs[3]; // c0 + c1*T + c2*T*T
-    double COP_coeffs[3]; // c0 + c1*T + c2*T*T
+	std::vector<double>  inputPower_coeffs; // c0 + c1*T + c2*T*T
+	std::vector<double>  COP_coeffs; // c0 + c1*T + c2*T*T
   };
 
   std::vector<perfPoint> perfMap;

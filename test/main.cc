@@ -150,7 +150,8 @@ int main(int argc, char *argv[])
 		model = HPWH::MODELS_restankRealistic;
 	} else if(input2 == "StorageTank") {
       model = HPWH::MODELS_StorageTank;
-
+	} else if (input2 == "MODELS_CxA_20_175") {
+		model = HPWH::MODELS_CxA_20_175;
       //do nothin, use custom-compiled input specified later
     } else {
       model = HPWH::MODELS_basicIntegrated;
