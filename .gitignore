@@ -11,3 +11,4 @@ nightly_pull.sh
 
 build/
 builds/
+*.xlsx
