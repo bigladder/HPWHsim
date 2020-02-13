@@ -115,9 +115,7 @@ class HPWH {
     MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
 	
 	// Larger Colmac model
-	MODELS_CxA_20_175 = 210  /**<  Colmac 175 gallon (why not?)  external heat pump  */
-
-
+	MODELS_CxA_20 = 210  /**<  Colmac 175 gallon (why not?)  external heat pump  */
     };
 
   ///specifies the modes for writing output
