@@ -69,7 +69,7 @@ HPWH::HPWH() :
 	simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0)
+	doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -94,6 +94,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 
 	tankVolume_L = hpwh.tankVolume_L;
 	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
+	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
 	numNodes = hpwh.numNodes;
@@ -159,6 +160,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	tankVolume_L = hpwh.tankVolume_L;
 	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
+	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
 	numNodes = hpwh.numNodes;
@@ -883,6 +885,39 @@ int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
 	return 0;
 }
 
+int HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/) {
+	if (units == UNITS_kJperHrC) {
+		fittingsUA_kJperHrC = UA;
+	}
+	else if (units == UNITS_BTUperHrF) {
+		fittingsUA_kJperHrC = UAf_TO_UAc(UA);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setFittingsUA.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return 0;
+}
+int HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const {
+	UA = fittingsUA_kJperHrC;
+	if (units == UNITS_kJperHrC) {
+		// UA is already in correct units
+	}
+	else if (units == UNITS_BTUperHrF) {
+		UA = UA / UAf_TO_UAc(1.);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getUA.  \n");
+		}
+		UA = -1.;
+		return HPWH_ABORT;
+	}
+	return 0;
+}
+
 int HPWH::setInletByFraction(double fractionalHeight) {
 	return setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
 }
@@ -1513,7 +1548,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) {
 		//faction of tank area on the sides
 		//kJ's lost as standby in the current time step for each node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0);
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
 		//The effect of standby loss on temperature in each node
