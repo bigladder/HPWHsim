@@ -4109,11 +4109,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	doTempDepression = false;
 	tankMixesOnDraw = false;
 
-	numHeatSources = 2;
+	numHeatSources = 1;
 	setOfSources = new HeatSource[numHeatSources];
 
 	HeatSource compressor(this);
-	HeatSource resistiveElement(this);
+	//HeatSource resistiveElement(this);
 
 	compressor.isOn = false;
 	compressor.isVIP = true;
@@ -4131,9 +4131,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		});
 
 	//internal resistor values
-	resistiveElement.setupAsResistiveElement(0, 35000);
-	resistiveElement.hysteresis_dC = dF_TO_dC(4);
-	resistiveElement.configuration = HeatSource::CONFIG_EXTERNAL;
+	//resistiveElement.setupAsResistiveElement(0, 35000);
+	//resistiveElement.hysteresis_dC = dF_TO_dC(4);
+	//resistiveElement.configuration = HeatSource::CONFIG_EXTERNAL;
 
 	//logic conditions
 	compressor.minT = F_TO_C(40.0);
@@ -4154,13 +4154,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	//set everything in its places
 	setOfSources[0] = compressor;
-	setOfSources[1] = resistiveElement;
+	//setOfSources[1] = resistiveElement;
 
 	//and you have to do this after putting them into setOfSources, otherwise
 	//you don't get the right pointers
-	setOfSources[1].backupHeatSource = &setOfSources[0];
-	setOfSources[0].backupHeatSource = &setOfSources[1];
-	setOfSources[1].followedByHeatSource = &setOfSources[0];
+	//setOfSources[1].backupHeatSource = &setOfSources[0];
+	//setOfSources[1].backupHeatSource = &setOfSources[0];
+	//setOfSources[0].backupHeatSource = &setOfSources[1];
+	//setOfSources[0].backupHeatSource = &setOfSources[1];
+	//setOfSources[1].followedByHeatSource = &setOfSources[0];
+	//setOfSources[1].followedByHeatSource = &setOfSources[0];
 	}
 
 	else if (presetNum == MODELS_Sanden80) {
