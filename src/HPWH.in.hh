@@ -327,7 +327,14 @@ class HPWH {
 
   int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
   /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
-  
+
+  int getFittingsUA(double& UA, UNITS units = UNITS_kJperHrC) const;
+  /**< Returns the UAof just the fittings, with or without units specified - default is metric, kJperHrC  */
+
+  int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
+  /**< This is a setter for the UA of just the fittings, with or without units specified - default is metric, kJperHrC */
+
+
   int setInletByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setInlet2ByFraction(double fractionalHeight);
@@ -494,6 +501,8 @@ class HPWH {
 	/**< the volume in liters of the tank  */
 	double tankUA_kJperHrC;
 	/**< the UA of the tank, in metric units  */
+	double fittingsUA_kJperHrC;
+	/**< the UA of the fittings for the tank, in metric units  */
 
 	double volPerNode_LperNode;
 	/**< the volume in liters of a single node  */
