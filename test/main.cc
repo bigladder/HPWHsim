@@ -252,7 +252,6 @@ int main(int argc, char *argv[])
 
   hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
   
-
   // ------------------------------------- Simulate --------------------------------------- //
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
