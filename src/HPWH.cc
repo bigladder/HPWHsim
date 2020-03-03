@@ -4138,7 +4138,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	resetTankToSetpoint();
 
 	tankVolume_L = 315;
-	tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 175 gallon tank
+	tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
 	setTankSize_adjustUA(800, UNITS_GAL);
 
 	doTempDepression = false;
