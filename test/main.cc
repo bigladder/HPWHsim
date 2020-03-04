@@ -260,9 +260,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for(i = 0; i < minutesToRun; i++) {
 
-	// if(DEBUG) {
+	if(DEBUG) {
       cout << "Now on minute " << i << "\n";
-    //}
+    }
 
     if(HPWH_doTempDepress) {
       airTemp2 = F_TO_C(airTemp);
