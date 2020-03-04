@@ -2171,8 +2171,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	size_t i_next = 1;
 	double Tout_F = C_TO_F(hpwh->getSetpoint());
 
-	hpwh->msg("externalT_F: %.2lf, externalT_C: %.2lf\n", externalT_F, externalT_C);
-
 	if (perfMap.size() > 1) {
 		for (size_t i = 0; i < perfMap.size(); ++i) {
 			if (externalT_F < perfMap[i].T_F) {
@@ -2262,10 +2260,10 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 
 	cap_BTUperHr = cop * input_BTUperHr;
-	//if (hpwh->hpwhVerbosity >= VRB_emetic) {
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 	hpwh->msg("externalT_F: %.2lf, Tout_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, Tout_F, condenserTemp_F);
 	hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n", input_BTUperHr, cop, cap_BTUperHr);
-	//}
+	}
 	//here is where the scaling for flow restriction happens
 	//the input power doesn't change, we just scale the cop by a small percentage
 	//that is based on the flow rate.  The equation is a fit to three points,
