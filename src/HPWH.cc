@@ -358,6 +358,13 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			setOfSources[i].unlockHeatSource();
 		}
 
+		if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL){
+			setOfSources[i].disengageHeatSource();
+			if (hpwhVerbosity >= HPWH::VRB_emetic) {
+				msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
+			}
+		}
+
 		//going through in order, check if the heat source is on
 		if (setOfSources[i].isEngaged()) {
 
@@ -1870,12 +1877,12 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const {
 				hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
 			}
 		}
-		if (lock == true && backupHeatSource == NULL) {
-			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
-				hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
-			}
-			lock = false;
-		}
+	//	if (lock == true && backupHeatSource == NULL) {
+	//		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+	//			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
+	//		}
+	//		lock = false;
+	//	}
 		if (hpwh->hpwhVerbosity >= VRB_typical) {
 			hpwh->msg("\n");
 		}
@@ -4170,19 +4177,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	//logic conditions
 	compressor.minT = F_TO_C(40.0);
-	compressor.maxT = F_TO_C(110.);
-	compressor.hysteresis_dC = 4;
+	compressor.hysteresis_dC = 0;
 	compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
 	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(8);
-	//compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(110), true));
-	compressor.addTurnOnLogic(HPWH::fourthSixth(15.));
+	nodeWeights.emplace_back(4);
+	compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+	//compressor.addTurnOnLogic(HPWH::secondSixth(15.));
 
 	//lowT cutoff
 	std::vector<NodeWeight> nodeWeights1;
 	nodeWeights1.emplace_back(1);
-	compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(110.), true, std::greater<double>()));
+	compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
 	compressor.depressesTemperature = false;  //no temp depression
 
 	//set everything in its places

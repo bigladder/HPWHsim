@@ -12,23 +12,23 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 set(testNames
   test30
   test50
-  #test70
-  #test95
-  #testLockout
-  #testDr
+  test70
+  test95
+  testLockout
+  testDr
   testSandenCombi
-  testLargeComp
+  #testLargeComp
 )
 
 set(modelNames
 #  StorageTank
-  CxA_20
+#  CxA_20
   AOSmithPHPT60
- #AOSmithHPTU80
- #Sanden80
- #RheemHB50
- #Stiebel220e
- #GE502014
+  AOSmithHPTU80
+  Sanden80
+  RheemHB50
+  Stiebel220e
+  GE502014
 )
 
 set(lockoutTestModels
