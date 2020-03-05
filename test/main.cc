@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
   for(i = 0; i < minutesToRun; i++) {
 
 	if(DEBUG) {
-      cout << "Now on minute " << i << "\n";
+      cout << "Now on minute: " << i << "\n";
     }
 
     if(HPWH_doTempDepress) {
