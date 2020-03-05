@@ -4136,7 +4136,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	else if (presetNum == MODELS_CxA_20) {
 	numNodes = 96;
 	tankTemps_C = new double[numNodes];
-	setpoint_C = F_TO_C(127.0);
+	setpoint_C = F_TO_C(135.0);
 	setpointFixed = false;
 
 	//start tank off at setpoint
