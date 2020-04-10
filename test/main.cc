@@ -150,7 +150,8 @@ int main(int argc, char *argv[])
 		model = HPWH::MODELS_restankRealistic;
 	} else if(input2 == "StorageTank") {
       model = HPWH::MODELS_StorageTank;
-
+	} else if (input2 == "CxA_20") {
+		model = HPWH::MODELS_CxA_20;
       //do nothin, use custom-compiled input specified later
     } else {
       model = HPWH::MODELS_basicIntegrated;
@@ -259,8 +260,8 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for(i = 0; i < minutesToRun; i++) {
 
-    if(DEBUG) {
-      cout << "Now on minute " << i << "\n";
+	if(DEBUG) {
+      cout << "Now on minute: " << i << "\n";
     }
 
     if(HPWH_doTempDepress) {
