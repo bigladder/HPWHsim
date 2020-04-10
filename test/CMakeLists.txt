@@ -17,10 +17,12 @@ set(testNames
   testLockout
   testDr
   testSandenCombi
+  #testLargeComp
 )
 
 set(modelNames
 #  StorageTank
+#  CxA_20
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
