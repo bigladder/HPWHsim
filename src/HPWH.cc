@@ -4263,7 +4263,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 	//	MODELS_NG2
-	else if (presetNum == MODELS_NG1) {
+	else if (presetNum == MODELS_NG2) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
