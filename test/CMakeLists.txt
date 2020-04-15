@@ -38,6 +38,7 @@ set(lockoutTestModels
 )
 
 set(largeCompressorTests
+  testLargeComp45
   testLargeComp60
   testLargeComp95
 )
