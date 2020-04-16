@@ -4134,75 +4134,190 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	else if (presetNum == MODELS_CxA_20) {
-	numNodes = 96;
-	tankTemps_C = new double[numNodes];
-	setpoint_C = F_TO_C(135.0);
-	setpointFixed = false;
+		numNodes = 96;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		setpointFixed = false;
 
-	//start tank off at setpoint
-	resetTankToSetpoint();
+		//start tank off at setpoint
+		resetTankToSetpoint();
 
-	tankVolume_L = 315;
-	tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
-	setTankSize_adjustUA(800, UNITS_GAL);
+		tankVolume_L = 315;
+		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
+		setTankSize_adjustUA(800, UNITS_GAL);
 
-	doTempDepression = false;
-	tankMixesOnDraw = false;
+		doTempDepression = false;
+		tankMixesOnDraw = false;
 
-	numHeatSources = 1;
-	setOfSources = new HeatSource[numHeatSources];
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
 
-	HeatSource compressor(this);
-	//HeatSource resistiveElement(this);
+		HeatSource compressor(this);
+		//HeatSource resistiveElement(this);
 
-	compressor.isOn = false;
-	compressor.isVIP = true;
-	compressor.typeOfHeatSource = TYPE_compressor;
-	compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	compressor.perfMap.reserve(1);
-	compressor.perfMap.push_back({
-		40, // Temperature (T_F)
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.perfMap.reserve(1);
+		compressor.perfMap.push_back({
+			40, // Temperature (T_F)
 
-		{13.77317898,0.098118687,-0.127961444,0.015252227,-0.000398994,0.001158229,
-		0.000570153,-7.3854E-05,-9.61881E-07,-0.000498209,1.52307E-07}, // Input Power Coefficients (inputPower_coeffs)
+			{13.77317898,0.098118687,-0.127961444,0.015252227,-0.000398994,0.001158229,
+			0.000570153,-7.3854E-05,-9.61881E-07,-0.000498209,1.52307E-07}, // Input Power Coefficients (inputPower_coeffs)
 
-		{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05, 
-		-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
-		});
+			{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05, 
+			-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+			});
 
-	//internal resistor values
-	//resistiveElement.setupAsResistiveElement(0, 35000);
-	//resistiveElement.hysteresis_dC = dF_TO_dC(4);
-	//resistiveElement.configuration = HeatSource::CONFIG_EXTERNAL;
+		//internal resistor values
+		//resistiveElement.setupAsResistiveElement(0, 35000);
+		//resistiveElement.hysteresis_dC = dF_TO_dC(4);
+		//resistiveElement.configuration = HeatSource::CONFIG_EXTERNAL;
 
-	//logic conditions
-	compressor.minT = F_TO_C(40.0);
-	compressor.hysteresis_dC = 0;
-	compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		//logic conditions
+		compressor.minT = F_TO_C(40.0);
+		compressor.hysteresis_dC = 0;
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
-	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(4);
-	compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
-	//compressor.addTurnOnLogic(HPWH::secondSixth(15.));
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		//compressor.addTurnOnLogic(HPWH::secondSixth(15.));
 
-	//lowT cutoff
-	std::vector<NodeWeight> nodeWeights1;
-	nodeWeights1.emplace_back(1);
-	compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
-	compressor.depressesTemperature = false;  //no temp depression
+		//lowT cutoff
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(1);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
 
-	//set everything in its places
-	setOfSources[0] = compressor;
-	//setOfSources[1] = resistiveElement;
+		//set everything in its places
+		setOfSources[0] = compressor;
+		//setOfSources[1] = resistiveElement;
 
-	//and you have to do this after putting them into setOfSources, otherwise
-	//you don't get the right pointers
-	//setOfSources[1].backupHeatSource = &setOfSources[0];
-	//setOfSources[1].backupHeatSource = &setOfSources[0];
-	//setOfSources[0].backupHeatSource = &setOfSources[1];
-	//setOfSources[0].backupHeatSource = &setOfSources[1];
-	//setOfSources[1].followedByHeatSource = &setOfSources[0];
-	//setOfSources[1].followedByHeatSource = &setOfSources[0];
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		//setOfSources[1].backupHeatSource = &setOfSources[0];
+		//setOfSources[1].backupHeatSource = &setOfSources[0];
+		//setOfSources[0].backupHeatSource = &setOfSources[1];
+		//setOfSources[0].backupHeatSource = &setOfSources[1];
+		//setOfSources[1].followedByHeatSource = &setOfSources[0];
+		//setOfSources[1].followedByHeatSource = &setOfSources[0];
+	}
+
+	// MODELS_NG1
+	else if (presetNum == MODELS_NG1) {
+		numNodes = 96;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		setpointFixed = false;
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = 315;
+		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
+		setTankSize_adjustUA(800, UNITS_GAL);
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		//HeatSource resistiveElement(this);
+
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.perfMap.reserve(1);
+		compressor.perfMap.push_back({
+			40, // Temperature (T_F)
+
+			{-16.70800526, -0.059330655, 0.347312024, 0.064635197, 5.72238E-05, -0.0012, 
+			-5.96939E-05, 0.000590259, 0.000205245, 0., 0. }, // Input Power Coefficients (inputPower_coeffs)
+
+			{9.303718114, 0.155390929, -0.119287653, -0.016666576, -0.000201174, 0.000458718,
+			0.000107283, -0.000565394, -0.000671645, -2.38619E-05, 3.09073E-06 } // COP Coefficients (COP_coeffs)
+			});
+
+		//logic conditions
+		compressor.minT = F_TO_C(40.0);
+		compressor.hysteresis_dC = 0;
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		//compressor.addTurnOnLogic(HPWH::secondSixth(15.));
+
+		//lowT cutoff
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(1);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+	}
+	//	MODELS_NG2
+	else if (presetNum == MODELS_NG2) {
+		numNodes = 96;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		setpointFixed = false;
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = 315;
+		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
+		setTankSize_adjustUA(800, UNITS_GAL);
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		//HeatSource resistiveElement(this);
+
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.perfMap.reserve(1);
+		compressor.perfMap.push_back({
+			40, // Temperature (T_F)
+
+			{7.693092424, -0.072548382, 0.067038406, 0.03924693, -0.000769036, -0.000369488, -0.000302597, 
+			0.001689189, 0.001862817, -0.000298513, -6.19946E-06 }, // Input Power Coefficients (inputPower_coeffs)
+
+			{4.136420036, 0.096548903, -0.008264666, -0.012210397, -4.09371E-05, 1.04316E-05, 9.01584E-05, 
+			-0.000460458, -0.000650959, -8.0251E-05, 3.71129E-06 } // COP Coefficients (COP_coeffs)
+			});
+
+		//logic conditions
+		compressor.minT = F_TO_C(45.0);
+		compressor.hysteresis_dC = 0;
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		//compressor.addTurnOnLogic(HPWH::secondSixth(15.));
+
+		//lowT cutoff
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(1);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//set everything in its places
+		setOfSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_Sanden80) {
