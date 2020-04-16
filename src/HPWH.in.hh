@@ -114,7 +114,12 @@ class HPWH {
     MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
 	
 	// Larger Colmac model
-	MODELS_CxA_20 = 210  /**<  Colmac 175 gallon (why not?)  external heat pump  */
+	MODELS_CxA_20 = 210,  /**<  Colmac 800 gallon (why not?)  external heat pump  */
+
+	// Larger Nyle models
+	MODELS_NG1 = 220,  /*< Nyle C185A external heat pump  */
+	MODELS_NG2 = 221   /*< Nyle C250A external heat pump  */
+
     };
 
   ///specifies the modes for writing output

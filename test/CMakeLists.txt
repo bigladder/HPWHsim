@@ -17,12 +17,10 @@ set(testNames
   testLockout
   testDr
   testSandenCombi
-  #testLargeComp
 )
 
 set(modelNames
-#  StorageTank
-#  CxA_20
+#  StorageTank  
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
@@ -39,6 +37,16 @@ set(lockoutTestModels
   GE502014
 )
 
+set(largeCompressorTests
+  testLargeComp45
+  testLargeComp60
+  testLargeComp95
+)
+set(largeCompressorNames
+  CxA_20
+  NG1
+  NG2
+) 
 
 ## Tests for succssful runs
 function( add_model_test )
@@ -77,6 +85,15 @@ foreach(test ${testNames})
   foreach(model ${modelNames})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
+#Add large compressor tests to the list
+foreach(test ${largeCompressorTests})
+  foreach(model ${largeCompressorNames})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+	#No files for these yet
+    #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
 
@@ -128,5 +145,14 @@ foreach(test ${testNames})
   foreach(model ${modelNames})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
+#Add large compressor tests to the list
+foreach(test ${largeCompressorTests})
+  foreach(model ${largeCompressorNames})
+    add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+	#No files for these yet
+    #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
