@@ -71,8 +71,7 @@ int main(int argc, char *argv[])
 
   //Obvious wrong number of command line arguments
   if ((argc > 6)) {
-    // printf("Invalid input.  This program takes a single argument.  Help is on the way:\n\n");
-    cout << "Invalid input. This program takes three arguments: model specification type, model specification, and test name\n";
+    cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80), and test name (ie. test50)\n";
     exit(1);
   }
   //Help message
@@ -150,13 +149,22 @@ int main(int argc, char *argv[])
 		model = HPWH::MODELS_restankRealistic;
 	} else if(input2 == "StorageTank") {
 		model = HPWH::MODELS_StorageTank;
-	} else if (input2 == "CxA_20") {
-		model = HPWH::MODELS_CxA_20;
-	} else if (input2 == "NG1") {
-		model = HPWH::MODELS_NG1;
-	} else if (input2 == "NG2") {
-		model = HPWH::MODELS_NG2;
+	} else if (input2 == "ColmacCxV_5_SP") {
+		model = HPWH::MODELS_ColmacCxV_5_SP;
+	} else if (input2 == "ColmacCxA_20_SP") {
+		model = HPWH::MODELS_ColmacCxA_20_SP;
+	} else if (input2 == "ColmacCxA_30_SP") {
+		model = HPWH::MODELS_ColmacCxA_30_SP;	
+	} else if (input2 == "NyleC25A_SP") {
+		model = HPWH::MODELS_NyleC25A_SP;
+	} else if (input2 == "NyleC90A_SP") {
+		model = HPWH::MODELS_NyleC90A_SP;	
+	} else if (input2 == "NyleC185A_SP") {
+		model = HPWH::MODELS_NyleC185A_SP;
+	} else if (input2 == "NyleC250A_SP") {
+		model = HPWH::MODELS_NyleC250A_SP;
       //do nothin, use custom-compiled input specified later
+	  
     } else {
       model = HPWH::MODELS_basicIntegrated;
       cout << "Couldn't find model " << input2 << ".  Exiting...\n";
