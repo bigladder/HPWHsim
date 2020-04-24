@@ -40,6 +40,11 @@ class HPWH {
   //this saves on computations */
   static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
+  static const float ASPECTRATIO; /**< A constant to define the aspect ratio between the tank height and
+								  radius (H/R). Used to find the radius and tank height from the volume and then
+								  find the surface area. It is derived from the median value of 88 
+								  insulated storage tanks currently available on the market from
+								  Sanden, AOSmith, HTP, Rheem, and Niles,  */
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -786,6 +791,7 @@ inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
+inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }

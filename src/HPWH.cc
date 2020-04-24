@@ -56,6 +56,7 @@ const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.180f;
 const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
+const float HPWH::ASPECTRATIO = 5.410f;
 
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
@@ -787,8 +788,9 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
-	// Using the same form of equation given in RACM 2016 App B, equation 41.
-	double value = 1.492 * pow(L_TO_GAL(tankVolume_L), 0.6666) + 5.068*pow(L_TO_GAL(tankVolume_L), 0.3333) - 10.913;
+	// Corresponds to the inner tank with volume tankVolume_L with the assumption that the aspect ratio is the same
+	// as the outer dimenisions of the whole unit. 
+	double value = 3.14159 * pow(getTankRadius(UNITS_FT),2) * (2. * ASPECTRATIO + 1);
 
 	if (units == UNITS_FT2) {
 		return value;
@@ -806,14 +808,15 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 
 double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) {
 	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
-	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
-	double value = 0.2244 * pow(L_TO_GAL(tankVolume_L), 0.333) + 0.0749;
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles, 
+	// assumes the aspect ratio for the outer measurements is the same is the actual tank.
+	double value = pow(L_TO_FT3(tankVolume_L) / 3.14159 / ASPECTRATIO, 1./3.);
 
 	if (units == UNITS_FT) {
 		return value;
 	}
 	else if (units == UNITS_M) {
-		return FT2_TO_M2(value);
+		return FT_TO_M(value);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -2571,9 +2574,10 @@ void HPWH::calcSizeConstants() {
 	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
-	// height estimate from Rheem along with the volume is used to get the radius and node_height
+	// The assumption is that the aspect ratio is the same for all tanks and is the same for the outside measurements of the unit 
+	// and the inner water tank. 
 	const double tank_rad = getTankRadius(UNITS_M);
-	const double tank_height = tankVolume_L / (1000.0 * 3.14159 * tank_rad * tank_rad);
+	const double tank_height = ASPECTRATIO * tank_rad;
 	volPerNode_LperNode = tankVolume_L / numNodes;
 
 	node_height = tank_height / numNodes;
