@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
   //Obvious wrong number of command line arguments
   if ((argc > 6)) {
-    cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80), and test name (ie. test50)\n";
+    cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and output directory\n";
     exit(1);
   }
   //Help message
