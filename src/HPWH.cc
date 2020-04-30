@@ -55,7 +55,7 @@ const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.180f;
 const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
-const float HPWH::ASPECTRATIO = 5.410f;
+const float HPWH::ASPECTRATIO = 4.75f;
 
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
@@ -789,7 +789,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Corresponds to the inner tank with volume tankVolume_L with the assumption that the aspect ratio is the same
 	// as the outer dimenisions of the whole unit. 
-	double value = 3.14159 * pow(getTankRadius(UNITS_FT),2) * (2. * ASPECTRATIO + 1);
+	double value = 2. * 3.14159 * pow(getTankRadius(UNITS_FT),2) * (ASPECTRATIO + 1);
 
 	if (units == UNITS_FT2) {
 		return value;
