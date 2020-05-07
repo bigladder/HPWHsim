@@ -563,7 +563,6 @@ class HPWH {
 
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
-
 };  //end of HPWH class
 
 
@@ -628,6 +627,9 @@ class HPWH::HeatSource {
 	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
 
+	void defrostDerate(double &to_derate, double airT_C);
+	/**< Derates the COP of a system based on the air temperature */
+
  private:
   //start with a few type definitions
   enum COIL_CONFIG {
@@ -645,6 +647,9 @@ class HPWH::HeatSource {
 
   bool lockedOut;
   /**< is the heat source locked out	 */
+
+  bool doDefrost;
+  /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
   // some outputs
 	double runtime_min;
@@ -693,6 +698,13 @@ class HPWH::HeatSource {
 	std::vector<HeatingLogic> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
 	std::vector<HeatingLogic> shutOffLogicSet;
+
+	struct defrostPoint {
+		double T_F;
+		double derate_fraction;
+	};
+	std::vector<defrostPoint> defrostMap;
+	/**< A list of points for the defrost derate factor ordered by increasing external temperature */
 
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
