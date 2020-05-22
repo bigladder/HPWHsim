@@ -40,15 +40,16 @@ set(lockoutTestModels
 set(largeCompressorTests
   testLargeComp45
   testLargeComp60
-  testLargeComp95
 )
 set(largeCompressorNames
-  CxA_20
-  NG1
-  NG2
-) 
-
-## Tests for succssful runs
+  #ColmacCxV_5_SP
+  ColmacCxA_20_SP
+  ColmacCxA_30_SP
+  NyleC90A_SP 
+  NyleC185A_SP
+  NyleC250A_SP
+)
+#Tests for succssful runs
 function( add_model_test )
   set(options)
   set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
