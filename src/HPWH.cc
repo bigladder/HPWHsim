@@ -2309,7 +2309,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 }
 
-void HPWH::HeatSource::setupDefaultDefrost(double  /*=0.8865*/) {
+void HPWH::HeatSource::setupDefrostMap(double  derate35/*=0.8865*/) {
 	doDefrost = true;
 	defrostMap.reserve(3);
 	defrostMap.push_back({ 17., 1. });
