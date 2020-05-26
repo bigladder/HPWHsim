@@ -627,6 +627,8 @@ class HPWH::HeatSource {
 	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
 
+	void setupDefaultDefrost(double derate35 = 0.8865);
+	/**< configure the heat source with a default for the defrost derating */
 	void defrostDerate(double &to_derate, double airT_C);
 	/**< Derates the COP of a system based on the air temperature */
 

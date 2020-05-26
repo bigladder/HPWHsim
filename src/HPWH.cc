@@ -2308,6 +2308,14 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 }
 
+void HPWH::HeatSource::setupDefaultDefrost(double  /*=0.8865*/) {
+	doDefrost = true;
+	defrostMap.reserve(3);
+	defrostMap.push_back({ 17., 1. });
+	defrostMap.push_back({ 35., derate35 });
+	defrostMap.push_back({ 47., 1. });
+}
+
 void HPWH::HeatSource::defrostDerate(double &to_derate, double airT_F) {
 	if (airT_F <= defrostMap[0].T_F || airT_F >= defrostMap[defrostMap.size() - 1].T_F) {
 		return; // Air temperature outside bounds of the defrost map. There is no extrapolation here.
@@ -4219,11 +4227,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		// Defrost components of input
-		compressor.doDefrost = true;
-		compressor.defrostMap.reserve(3);
-		compressor.defrostMap.push_back({ 17., 1. });
-		compressor.defrostMap.push_back({ 35., 0.75 });
-		compressor.defrostMap.push_back({ 47., 1. });
+		compressor.setupDefaultDefrost();
 
 		//logic conditions
 		compressor.minT = F_TO_C(40.0);
