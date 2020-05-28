@@ -341,8 +341,10 @@ class HPWH {
 		A is found via getTankSurfaceArea()*/
 
   double getTankSurfaceArea(UNITS units = UNITS_FT2);
+  static double getTankSurfaceArea(double vol, UNITS volUnits = UNITS_L, UNITS surfAUnits = UNITS_FT2);
   /**< Returns the tank surface area based off of real storage tanks*/
   double getTankRadius(UNITS units = UNITS_FT);
+  static double getTankRadius(double vol, UNITS volUnits = UNITS_L, UNITS radiusUnits = UNITS_FT);
   /**< Returns the tank surface radius based off of real storage tanks*/
 
   int setTankSize(double HPWH_size, UNITS units = UNITS_L);
