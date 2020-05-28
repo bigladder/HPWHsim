@@ -70,8 +70,10 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 HPWH::HPWH() :
 	simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true), inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
+	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
+	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
+	doInversionMixing(true), doConduction(true),
+	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -1697,7 +1699,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 //these are the HeatSource functions
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
-	:hpwh(parentInput), isOn(false), lockedOut(false), backupHeatSource(NULL), companionHeatSource(NULL),
+	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
 	typeOfHeatSource(TYPE_none) {}
 
@@ -1705,6 +1707,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
 	isOn = hSource.isOn;
 	lockedOut = hSource.lockedOut;
+	doDefrost = hSource.doDefrost;
 
 	runtime_min = hSource.runtime_min;
 	energyInput_kWh = hSource.energyInput_kWh;
@@ -1725,6 +1728,8 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
+	
+	defrostMap = hSource.defrostMap;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -1753,6 +1758,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
 	isOn = hSource.isOn;
 	lockedOut = hSource.lockedOut;
+	doDefrost = hSource.doDefrost;
 
 	runtime_min = hSource.runtime_min;
 	energyInput_kWh = hSource.energyInput_kWh;
@@ -1778,6 +1784,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
+
+	defrostMap = hSource.defrostMap;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -2270,7 +2278,13 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 			perfMap[0].COP_coeffs[10] * externalT_F * Tout_F * condenserTemp_F;
 	}
 
+	if (doDefrost) {
+		//adjust COP by the defrost factor
+		defrostDerate(cop, externalT_F);
+	}
+
 	cap_BTUperHr = cop * input_BTUperHr;
+
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 	hpwh->msg("externalT_F: %.2lf, Tout_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, Tout_F, condenserTemp_F);
 	hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n", input_BTUperHr, cop, cap_BTUperHr);
@@ -2289,7 +2303,36 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 		if (cop < 0.) {
 			hpwh->msg(" Warning: COP is Negative! \n");
 		}
+		if (cop < 1.) {
+			hpwh->msg(" Warning: COP is Less than 1! \n");
+		}
 	}
+}
+
+void HPWH::HeatSource::setupDefrostMap(double  derate35/*=0.8865*/) {
+	doDefrost = true;
+	defrostMap.reserve(3);
+	defrostMap.push_back({ 17., 1. });
+	defrostMap.push_back({ 35., derate35 });
+	defrostMap.push_back({ 47., 1. });
+}
+
+void HPWH::HeatSource::defrostDerate(double &to_derate, double airT_F) {
+	if (airT_F <= defrostMap[0].T_F || airT_F >= defrostMap[defrostMap.size() - 1].T_F) {
+		return; // Air temperature outside bounds of the defrost map. There is no extrapolation here.
+	}
+	double derate_factor = 1.;
+	size_t i_prev = 0;
+	for (size_t i = 1; i < defrostMap.size(); ++i) {
+		if (airT_F <= defrostMap[i].T_F) {
+			i_prev = i - 1;
+			break;
+		}
+	}
+	linearInterp(derate_factor, airT_F, 
+		defrostMap[i_prev].T_F, defrostMap[i_prev + 1].T_F, 
+		defrostMap[i_prev].derate_fraction, defrostMap[i_prev + 1].derate_fraction);
+	to_derate *= derate_factor;
 }
 
 void HPWH::HeatSource::linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1) {
@@ -2743,6 +2786,18 @@ int HPWH::checkInputs() {
 			returnVal = HPWH_ABORT;
 		}
 
+		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+			if (setOfSources[i].doDefrost) {
+				if (setOfSources[i].defrostMap.size() < 3) {
+					msg("Defrost logic set to true but no valid defrost map of length 3 or greater set. \n");
+					returnVal = HPWH_ABORT;
+				}
+				if (setOfSources[i].configuration != HeatSource::CONFIG_EXTERNAL) {
+					msg("Defrost is only simulated for external compressors. \n");
+					returnVal = HPWH_ABORT;
+				}
+			}
+		}
 
 	}
 	
@@ -2751,8 +2806,6 @@ int HPWH::checkInputs() {
 		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
 		returnVal = HPWH_ABORT;
 	}
-
-
 
 	//if there's no failures, return 0
 	return returnVal;
