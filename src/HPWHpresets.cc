@@ -881,6 +881,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
+		//Defrost Derate 
+		compressor.setupDefrostMap();
+
 		if (presetNum == MODELS_ColmacCxV_5_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.minT = F_TO_C(-4.0);
@@ -972,6 +975,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		nodeWeights1.emplace_back(1);
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
+
+		//Defrost Derate 
+		compressor.setupDefrostMap();
 
 		if (presetNum == MODELS_NyleC250A_SP) {
 			setTankSize_adjustUA(800., UNITS_GAL);
