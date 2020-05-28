@@ -12,11 +12,6 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 set(testNames
   test30
   test50
-  test70
-  test95
-  testLockout
-  testDr
-  testSandenCombi
 )
 
 set(modelNames
@@ -24,9 +19,6 @@ set(modelNames
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
-  RheemHB50
-  Stiebel220e
-  GE502014
 )
 
 set(lockoutTestModels
@@ -40,6 +32,7 @@ set(lockoutTestModels
 set(largeCompressorTests
   testLargeComp45
   testLargeComp60
+  testLargeCompRE45
 )
 set(largeCompressorNames
   #ColmacCxV_5_SP
