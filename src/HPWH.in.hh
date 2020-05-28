@@ -126,13 +126,6 @@ class HPWH {
 	  MODELS_ColmacCxA_20_SP = 213,  /**<  Colmac CxA_20 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_25_SP = 213,  /**<  Colmac CxA_25 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_30_SP = 214,  /**<  Colmac CxA_30 external heat pump in Single Pass Mode */
-	  // Larger Colmac models in multi pass configuration 
-	  MODELS_ColmacCxV_5_MP  = 220,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
-	  MODELS_ColmacCxA_10_MP = 221,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_15_MP = 222,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_20_MP = 223,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_25_MP = 223,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_30_MP = 224,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
 	  
 	  // Larger Nyle models in single pass configuration
 	  MODELS_NyleC25A_SP  = 230, /*< Nyle C25A external heat pump in Single Pass Mode  */
@@ -141,13 +134,22 @@ class HPWH {
 	  MODELS_NyleC125A_SP = 233, /*< Nyle C125A external heat pump in Single Pass Mode */
 	  MODELS_NyleC185A_SP = 234, /*< Nyle C185A external heat pump in Single Pass Mode */
 	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */
+
+	  // Larger Colmac models in multi pass configuration 
+	  MODELS_ColmacCxV_5_MP  = 310,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
+	  MODELS_ColmacCxA_10_MP = 311,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_15_MP = 312,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_20_MP = 313,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_25_MP = 313,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_30_MP = 314,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
+
 	  // Larger Nyle models in multi pass configuration
-	  MODELS_NyleC25A_MP  = 240, /*< Nyle C25A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC60A_MP = 241,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC90A_MP = 242,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC125A_MP = 243, /*< Nyle C125A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC185A_MP = 244, /*< Nyle C185A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC250A_MP = 245  /*< Nyle C250A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC25A_MP  = 320, /*< Nyle C25A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC60A_MP  = 321,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC90A_MP  = 322,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC125A_MP = 323, /*< Nyle C125A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC185A_MP = 324, /*< Nyle C185A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_MP = 325  /*< Nyle C250A external heat pump in Multi Pass Mode */
     };
 
   ///specifies the modes for writing output
@@ -275,6 +277,20 @@ class HPWH {
    * factor is not strongly correlated with energy use, most settings
    * are taken from the GE2015_STDMode model.
    */
+
+  int setResistiveElements(double upperPower_W, double lowerPower_W);
+	/**< This function will set resistive elements for large HPWH's if a value is zero it will 
+	* interpret that as not being added. This will overwrite any existing resistive elements.
+	*
+	* Several assumptions regarding the tank configuration are assumed. They are defined in 
+	* in the presets on a case by case basis. Running this some ofthe logics are also set a
+	* to standard setting, with upper as VIP activating when the top third of tank is too cold. 
+	* The bottom typically has the same control temperatures as compressor but no lowT cutoff, 
+	* this is not changed in this function but in the presets.
+	*/
+	   
+
+
 
   int runOneStep(double inletT_C, double drawVolume_L,
                   double ambientT_C, double externalT_C,
@@ -609,6 +625,9 @@ class HPWH::HeatSource {
   void setupExtraHeat(std::vector<double>* nodePowerExtra_W);
   /**< Configure a user defined heat source added as extra, based off using 
 		nodePowerExtra_W as the total watt input and the condensity*/
+
+  void resetResistiveElementWatts(double Watts);
+  /**< resets the performance map for a resistance element*/
 
 	bool isEngaged() const;
   /**< return whether or not the heat source is engaged */

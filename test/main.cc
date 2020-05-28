@@ -15,7 +15,6 @@
 #include <string> 
 
 #define MAX_DIR_LENGTH 255
-#define DEBUG 0
 
 using std::cout;
 using std::endl;
@@ -34,150 +33,183 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 
 int main(int argc, char *argv[])
 {
-  HPWH hpwh;
+	HPWH hpwh;
 
-  HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
-  HPWH::MODELS model;
-  HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
-  // HPWH::UNITS units = HPWH::UNITS_F;
+	HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
+	HPWH::MODELS model;
+	HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
+	// HPWH::UNITS units = HPWH::UNITS_F;
 
-  const int nTestTCouples = 6;
+	const int nTestTCouples = 6;
 
-  // Schedule stuff
-  std::vector<string> scheduleNames;
-  std::vector<schedule> allSchedules(5);
+	// Schedule stuff
+	std::vector<string> scheduleNames;
+	std::vector<schedule> allSchedules(5);
 
-  string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
-  string inputVariableName;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
-  int i, outputCode;
-  long minutesToRun;
+	string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
+	string inputVariableName;
+	double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, resistWatts;
+	int i, outputCode;
+	long minutesToRun;
 
-  bool HPWH_doTempDepress;
-  int doInvMix, doCondu;
+	bool HPWH_doTempDepress;
+	int doInvMix, doCondu;
 
-  FILE * outputFile;
-  ifstream controlFile;
+	FILE * outputFile;
+	ifstream controlFile;
 
-  string strPreamble;
-  // string strHead = "minutes,Ta,inletT,draw,outletT,";
-  string strHead = "minutes,Ta,inletT,draw,";
+	string strPreamble;
+	// string strHead = "minutes,Ta,inletT,draw,outletT,";
+	string strHead = "minutes,Ta,inletT,draw,";
 
-  //.......................................
-  //process command line arguments
-  //.......................................
+	//.......................................
+	//process command line arguments
+	//.......................................
 
-  cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
+	cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
-  //Obvious wrong number of command line arguments
-  if ((argc > 6)) {
-    cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and output directory\n";
-    exit(1);
-  }
-  //Help message
-  if(argc > 1) {
-    input1 = argv[1];
-    input2 = argv[2];
-    input3 = argv[3];
-    outputDirectory = argv[4];
-  } else {
-    input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
-    input2 = "def";
-    input3 = "ghi";
-    outputDirectory = ".";
-  }
-  if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
-    cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
-    cout << "All input files should be located in the test directory, with these names:\n";
-    cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
-    cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
-    exit(1);
-  }
+	//Obvious wrong number of command line arguments
+	if ((argc > 6)) {
+		cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and output directory\n";
+		exit(1);
+	}
+	//Help message
+	if (argc > 1) {
+		input1 = argv[1];
+		input2 = argv[2];
+		input3 = argv[3];
+		outputDirectory = argv[4];
+	}
+	else {
+		input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
+		input2 = "def";
+		input3 = "ghi";
+		outputDirectory = ".";
+	}
+	if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
+		cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
+		cout << "All input files should be located in the test directory, with these names:\n";
+		cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
+		cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
+		exit(1);
+	}
 
-  if(argc == 6) {
-    airTemp = std::stoi(argv[5]);
-    HPWH_doTempDepress = true;
-  } else {
-    airTemp = 0;
-    HPWH_doTempDepress = false;
-  }
+	if (argc == 6) {
+		airTemp = std::stoi(argv[5]);
+		HPWH_doTempDepress = true;
+	}
+	else {
+		airTemp = 0;
+		HPWH_doTempDepress = false;
+	}
 
-  //Only input file specified -- don't suffix with .csv
-  testDirectory = input3;
+	//Only input file specified -- don't suffix with .csv
+	testDirectory = input3;
 
-  // Parse the model
-  newSetpoint = 0;
-  if(input1 == "Preset") {
-    inputFile = "";
-    if(input2 == "Voltex60" || input2 == "AOSmithPHPT60") {
-		model = HPWH::MODELS_AOSmithPHPT60;
-    } else if(input2 == "Voltex80" || input2 == "AOSmith80") {
-		model = HPWH::MODELS_AOSmithPHPT80;
-    } else if(input2 == "GEred" || input2 == "GE") {
-		model = HPWH::MODELS_GE2012;
-    } else if(input2 == "SandenGAU" || input2 == "Sanden80" || input2 == "SandenGen3") {
-		model = HPWH::MODELS_Sanden80;
-    } else if(input2 == "SandenGES" || input2 == "Sanden40") {
-		model = HPWH::MODELS_Sanden40;
-    } else if(input2 == "AOSmithHPTU50") {
-		model = HPWH::MODELS_AOSmithHPTU50;
-    } else if(input2 == "AOSmithHPTU66") {
-		model = HPWH::MODELS_AOSmithHPTU66;
-    } else if(input2 == "AOSmithHPTU80") {
-		model = HPWH::MODELS_AOSmithHPTU80;
-    } else if(input2 == "AOSmithHPTU80DR") {
-		model = HPWH::MODELS_AOSmithHPTU80_DR;
-    } else if(input2 == "GE502014STDMode" || input2 == "GE2014STDMode") {
-		model = HPWH::MODELS_GE2014STDMode;
-    } else if(input2 == "GE502014" || input2 == "GE2014") {
-		model = HPWH::MODELS_GE2014;
-    } else if(input2 == "GE802014") {
-		model = HPWH::MODELS_GE2014_80DR;
-    } else if(input2 == "RheemHB50") {
-		model = HPWH::MODELS_RheemHB50;
-    } else if(input2 == "Stiebel220e" || input2 == "Stiebel220E") {
-		model = HPWH::MODELS_Stiebel220E;
-    } else if(input2 == "Generic1") {
-		model = HPWH::MODELS_Generic1;
-    } else if(input2 == "Generic2") {
-		model = HPWH::MODELS_Generic2;
-    } else if(input2 == "Generic3") {
-		model = HPWH::MODELS_Generic3;
-    } else if(input2 == "custom") {
-		model = HPWH::MODELS_CustomFile;
-	} else if (input2 == "restankRealistic") {
-		model = HPWH::MODELS_restankRealistic;
-	} else if(input2 == "StorageTank") {
-		model = HPWH::MODELS_StorageTank;
-	} else if (input2 == "ColmacCxV_5_SP") {
-		model = HPWH::MODELS_ColmacCxV_5_SP;
-	} else if (input2 == "ColmacCxA_20_SP") {
-		model = HPWH::MODELS_ColmacCxA_20_SP;
-	} else if (input2 == "ColmacCxA_30_SP") {
-		model = HPWH::MODELS_ColmacCxA_30_SP;	
-	} else if (input2 == "NyleC25A_SP") {
-		model = HPWH::MODELS_NyleC25A_SP;
-	} else if (input2 == "NyleC90A_SP") {
-		model = HPWH::MODELS_NyleC90A_SP;	
-	} else if (input2 == "NyleC185A_SP") {
-		model = HPWH::MODELS_NyleC185A_SP;
-	} else if (input2 == "NyleC250A_SP") {
-		model = HPWH::MODELS_NyleC250A_SP;
-      //do nothin, use custom-compiled input specified later
-	  
-    } else {
-      model = HPWH::MODELS_basicIntegrated;
-      cout << "Couldn't find model " << input2 << ".  Exiting...\n";
-      exit(1);
-    }
-    if (hpwh.HPWHinit_presets(model) != 0) exit(1);
-    if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
-      newSetpoint = (149 - 32) / 1.8;
-    }
-  } else {
-    inputFile = input2 + ".txt";
-    if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
-  }
+	// Parse the model
+	newSetpoint = 0;
+	if (input1 == "Preset") {
+		inputFile = "";
+		if (input2 == "Voltex60" || input2 == "AOSmithPHPT60") {
+			model = HPWH::MODELS_AOSmithPHPT60;
+		}
+		else if (input2 == "Voltex80" || input2 == "AOSmith80") {
+			model = HPWH::MODELS_AOSmithPHPT80;
+		}
+		else if (input2 == "GEred" || input2 == "GE") {
+			model = HPWH::MODELS_GE2012;
+		}
+		else if (input2 == "SandenGAU" || input2 == "Sanden80" || input2 == "SandenGen3") {
+			model = HPWH::MODELS_Sanden80;
+		}
+		else if (input2 == "SandenGES" || input2 == "Sanden40") {
+			model = HPWH::MODELS_Sanden40;
+		}
+		else if (input2 == "AOSmithHPTU50") {
+			model = HPWH::MODELS_AOSmithHPTU50;
+		}
+		else if (input2 == "AOSmithHPTU66") {
+			model = HPWH::MODELS_AOSmithHPTU66;
+		}
+		else if (input2 == "AOSmithHPTU80") {
+			model = HPWH::MODELS_AOSmithHPTU80;
+		}
+		else if (input2 == "AOSmithHPTU80DR") {
+			model = HPWH::MODELS_AOSmithHPTU80_DR;
+		}
+		else if (input2 == "GE502014STDMode" || input2 == "GE2014STDMode") {
+			model = HPWH::MODELS_GE2014STDMode;
+		}
+		else if (input2 == "GE502014" || input2 == "GE2014") {
+			model = HPWH::MODELS_GE2014;
+		}
+		else if (input2 == "GE802014") {
+			model = HPWH::MODELS_GE2014_80DR;
+		}
+		else if (input2 == "RheemHB50") {
+			model = HPWH::MODELS_RheemHB50;
+		}
+		else if (input2 == "Stiebel220e" || input2 == "Stiebel220E") {
+			model = HPWH::MODELS_Stiebel220E;
+		}
+		else if (input2 == "Generic1") {
+			model = HPWH::MODELS_Generic1;
+		}
+		else if (input2 == "Generic2") {
+			model = HPWH::MODELS_Generic2;
+		}
+		else if (input2 == "Generic3") {
+			model = HPWH::MODELS_Generic3;
+		}
+		else if (input2 == "custom") {
+			model = HPWH::MODELS_CustomFile;
+		}
+		else if (input2 == "restankRealistic") {
+			model = HPWH::MODELS_restankRealistic;
+		}
+		else if (input2 == "StorageTank") {
+			model = HPWH::MODELS_StorageTank;
+		}
+		else if (input2 == "ColmacCxV_5_SP") {
+			model = HPWH::MODELS_ColmacCxV_5_SP;
+		}
+		else if (input2 == "ColmacCxA_20_SP") {
+			model = HPWH::MODELS_ColmacCxA_20_SP;
+		}
+		else if (input2 == "ColmacCxA_30_SP") {
+			model = HPWH::MODELS_ColmacCxA_30_SP;
+		}
+		else if (input2 == "NyleC25A_SP") {
+			model = HPWH::MODELS_NyleC25A_SP;
+		}
+		else if (input2 == "NyleC90A_SP") {
+			model = HPWH::MODELS_NyleC90A_SP;
+		}
+		else if (input2 == "NyleC185A_SP") {
+			model = HPWH::MODELS_NyleC185A_SP;
+		}
+		else if (input2 == "NyleC250A_SP") {
+			model = HPWH::MODELS_NyleC250A_SP;
+			//do nothin, use custom-compiled input specified later
+
+		}
+		else {
+			model = HPWH::MODELS_basicIntegrated;
+			cout << "Couldn't find model " << input2 << ".  Exiting...\n";
+			exit(1);
+		}
+		if (hpwh.HPWHinit_presets(model) != 0) {
+			cout << "Model found but Failed to initalize preset" << input2 << "\n";
+			exit(1);
+		}
+		if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
+			newSetpoint = (149 - 32) / 1.8;
+		}
+	}
+	else {
+		inputFile = input2 + ".txt";
+		if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
+	}
 
   // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
   // try and trigger the lockout and hysteresis conditions
@@ -193,10 +225,11 @@ int main(int argc, char *argv[])
     exit(1);
   }
   minutesToRun = 0;
-  newSetpoint = 0.0;
+  newSetpoint = 0.;
   doCondu = 1;
   doInvMix = 1;
-  inletH = 0.0;
+  inletH = 0.;
+  resistWatts = 0.;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -214,6 +247,9 @@ int main(int argc, char *argv[])
 	}
 	if (var1 == "inletH") {
 		inletH = testVal;
+	}
+	if (var1 == "REwatts") {
+		resistWatts = testVal;
 	}
   }
 
@@ -250,8 +286,20 @@ int main(int argc, char *argv[])
     hpwh.resetTankToSetpoint();
   }
  
-  if (inletH > 0) {
+  if (inletH > 0.) {
  	  hpwh.setInletByFraction(inletH);
+  }
+
+  if (resistWatts > 0.) {
+	// if less than 1 use the rule  where tank gallons/10 is the kW, assuming resistWatts is 1/10 = 0.1
+	if (resistWatts < 1.) {
+		resistWatts = L_TO_GAL(hpwh.getTankSize()) * resistWatts * 1000;
+	}
+	if (hpwh.setResistiveElements(resistWatts, resistWatts) != 0) {
+		cout << "addResistiveElementsToLargeHPWHs " << resistWatts << " Watts!\n";
+		exit(1);
+	}
+	
   }
 
   // ----------------------Open the Output File and Print the Header---------------------------- //
@@ -272,9 +320,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for(i = 0; i < minutesToRun; i++) {
 
-	if(DEBUG) {
+#ifdef _DEBUG
       cout << "Now on minute: " << i << "\n";
-    }
+#endif
 
     if(HPWH_doTempDepress) {
       airTemp2 = F_TO_C(airTemp);

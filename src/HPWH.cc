@@ -1696,6 +1696,42 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 	return sum / totWeight;
 }
 
+int HPWH::setResistiveElements(double upperPower_W, double lowerPower_W) {
+	int returnVal = 0;
+
+	// Check on the inputs
+	if (numHeatSources < 1)
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistive Elements cannot be added to a larger HPWH that does not already have a heat source\n");
+		}
+		return HPWH_ABORT;
+	}
+	if (upperPower_W < 0 || lowerPower_W < 0)
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistive Elements cannot be defined with negative powers\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	// Reset logics
+	if (upperPower_W > 0.) {
+		setOfSources[0].isVIP = true; // We know the top element is in index 0
+		setOfSources[1].isVIP = false; // We know the compressor is in index 1
+	}
+	else if (upperPower_W == 0.) {
+		setOfSources[0].isVIP = false; // We know the top element is in index 0
+		setOfSources[1].isVIP = true; // We know the compressor is in index 1
+	}
+	// Reset element powers
+	setOfSources[0].resetResistiveElementWatts(upperPower_W); // We know the top element is in index 0
+	setOfSources[2].resetResistiveElementWatts(lowerPower_W);// We know the bottom element is in index 2
+	
+	return returnVal;
+}
+
+
 //these are the HeatSource functions
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
@@ -2071,6 +2107,10 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 
 		// calculate capacity btu/hr, input btu/hr, and cop
 		getCapacity(externalT_C, getCondenserTemp(), input_BTUperHr, cap_BTUperHr, cop);
+		// If there's no heat to add get out of here!
+		if (cap_BTUperHr == 0.) {
+			break;
+		}
 
 		//some outputs for debugging
 		if (hpwh->hpwhVerbosity >= VRB_typical) {
@@ -2542,19 +2582,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node, double Watts) {
 	}
 	condensity[node] = 1;
 
-	perfMap.reserve(2);
-
-	perfMap.push_back({
-		50, // Temperature (T_F)
-		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
-		});
-
-	perfMap.push_back({
-		67, // Temperature (T_F)
-		{Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0, 0.0, 0.0} // COP Coefficients (COP_coeffs)
-		});
+	resetResistiveElementWatts(Watts);
 
 	configuration = CONFIG_SUBMERGED; //immersed in tank
 
@@ -2589,22 +2617,26 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 		tempCondensity[4], tempCondensity[5], tempCondensity[6], tempCondensity[7], 
 		tempCondensity[8], tempCondensity[9], tempCondensity[10], tempCondensity[11] );
 
+	resetResistiveElementWatts(watts);
+}
+
+void HPWH::HeatSource::resetResistiveElementWatts(double Watts) {
 	perfMap.clear();
 	perfMap.reserve(2);
 
 	perfMap.push_back({
 		50, // Temperature (T_F)
-		{ watts, 0.0, 0.0 }, // Input Power Coefficients (inputPower_coeffs)
+		{ Watts, 0.0, 0.0 }, // Input Power Coefficients (inputPower_coeffs)
 		{ 1.0, 0.0, 0.0 } // COP Coefficients (COP_coeffs)
-	});
+		});
 
 	perfMap.push_back({
 		67, // Temperature (T_F)
-		{ watts, 0.0, 0.0 }, // Input Power Coefficients (inputPower_coeffs)
+		{ Watts, 0.0, 0.0 }, // Input Power Coefficients (inputPower_coeffs)
 		{ 1.0, 0.0, 0.0 } // COP Coefficients (COP_coeffs)
-	});
-
+		});
 }
+
 ////////////////////////////////////////////////////////////////////////////
 
 void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
