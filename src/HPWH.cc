@@ -787,45 +787,72 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 	return 0;
 }
 
+/*static*/ double HPWH::getTankSurfaceArea(double vol, UNITS volUnits/*=UNITS_L*/, UNITS surfAUnits /*=UNITS_FT2*/)
+{
+	// returns tank surface area, old defualt was in ft2
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
+	// Corresponds to the inner tank with volume tankVolume_L with the assumption that the aspect ratio is the same
+	// as the outer dimenisions of the whole unit.
+	double radius = getTankRadius(vol, volUnits, UNITS_FT);
+
+	double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1);
+
+	if (value >= 0.)
+	{	if (surfAUnits == UNITS_M2)
+			value = FT2_TO_M2(value);
+		else if (surfAUnits != UNITS_FT2)
+			value = -1.;
+	}
+	return value;
+}
+
 double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Corresponds to the inner tank with volume tankVolume_L with the assumption that the aspect ratio is the same
-	// as the outer dimenisions of the whole unit. 
-	double value = 2. * 3.14159 * pow(getTankRadius(UNITS_FT),2) * (ASPECTRATIO + 1);
-
-	if (units == UNITS_FT2) {
-		return value;
-	}
-	else if (units == UNITS_M2) {
-		return FT2_TO_M2(value);
-	}
-	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
+	// as the outer dimenisions of the whole unit.
+	double value = getTankSurfaceArea(tankVolume_L, UNITS_L, units);
+	if (value < 0.)
+	{	if (hpwhVerbosity >= VRB_reluctant)
 			msg("Incorrect unit specification for getTankSurfaceArea.  \n");
-		}
-		return HPWH_ABORT;
+		value = HPWH_ABORT;
 	}
+	return value;
+}
+
+/*static*/ double HPWH::getTankRadius(double vol, UNITS volUnits/*=UNITS_L*/, UNITS radiusUnits /*=UNITS_FT*/)
+{	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
+	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles, 
+	// assumes the aspect ratio for the outer measurements is the same is the actual tank.
+	double volft3 =
+		  volUnits == UNITS_L   ? L_TO_FT3(vol)
+		: volUnits == UNITS_GAL ? L_TO_FT3(GAL_TO_L(vol))
+		:                         -1.;
+
+	double value = -1.;
+	if (volft3 >= 0.)
+	{	value = pow(volft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
+		if (radiusUnits == UNITS_M)
+			value = FT_TO_M(value);
+		else if (radiusUnits != UNITS_FT)
+			value = -1.;
+	}
+	return value;
 }
 
 double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) {
 	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles, 
 	// assumes the aspect ratio for the outer measurements is the same is the actual tank.
-	double value = pow(L_TO_FT3(tankVolume_L) / 3.14159 / ASPECTRATIO, 1./3.);
 
-	if (units == UNITS_FT) {
-		return value;
-	}
-	else if (units == UNITS_M) {
-		return FT_TO_M(value);
-	}
-	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
+	double value = getTankRadius(tankVolume_L, UNITS_L, units);
+
+	if (value < 0.)
+	{	if (hpwhVerbosity >= VRB_reluctant)
 			msg("Incorrect unit specification for getTankRadius.  \n");
-		}
-		return HPWH_ABORT;
+		value = HPWH_ABORT;
 	}
+	return value;
 }
 
 int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
