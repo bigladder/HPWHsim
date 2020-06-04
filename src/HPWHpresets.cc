@@ -868,6 +868,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.perfMap.reserve(1);
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.depressesTemperature = false;  //no temp depression
 
 		//Add resistance elements in
 		//top resistor values
@@ -889,22 +890,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			std::vector<NodeWeight> nodeWeights;
 			nodeWeights.emplace_back(4);
 			compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, compStart, true));
-			//compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(45), false));
 
 			//lowT cutoff
 			std::vector<NodeWeight> nodeWeights1;
 			nodeWeights1.emplace_back(1);
 			compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
-			compressor.depressesTemperature = false;  //no temp depression
 
 			//Defrost Derate 
 			compressor.setupDefrostMap();
-
-			//Resistance elements logic
-			resistiveElementBottom.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, compStart, true));
-			resistiveElementBottom.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
-
-			resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
 			if (presetNum == MODELS_ColmacCxV_5_SP) {
 				setTankSize_adjustUA(200., UNITS_GAL);
@@ -952,6 +945,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 
+				//Resistance elements logic
+				resistiveElementBottom.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, compStart, true));
+				resistiveElementBottom.maxT = compressor.minT;
+				resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 			} //End if MODELS_ColmacCxV_5_SP
 
 		} // End if Colmac CxA
@@ -972,14 +969,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			std::vector<NodeWeight> nodeWeights1;
 			nodeWeights1.emplace_back(1);
 			compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
-			compressor.depressesTemperature = false;  //no temp depression
 
 			//Defrost Derate 
-			compressor.setupDefrostMap();
+			compressor.setupDefrostMap();;
 
 			//Resistance elements logic
 			resistiveElementBottom.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, compStart, true));
-			resistiveElementBottom.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+			resistiveElementBottom.maxT = compressor.minT;
 
 			resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
@@ -1045,10 +1041,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//and you have to do this after putting them into setOfSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		//setOfSources[2].backupHeatSource = &setOfSources[1];
+		//setOfSources[1].backupHeatSource = &setOfSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[0].followedByHeatSource = &setOfSources[2];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 	}
 

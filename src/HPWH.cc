@@ -309,11 +309,14 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		//if nothing is currently on, then check if something should come on
 		else /* (isHeating == false) */ {
 			if (setOfSources[i].shouldHeat()) {
-				setOfSources[i].engageHeatSource();
+				setOfSources[i].engageHeatSource(); 
 				//engaging a heat source sets isHeating to true, so this will only trigger once
 			}
 		}
 
+#ifdef _DEBUG
+		cout << "heat source: " << i << ", engaged: " << setOfSources[i].isEngaged() << "\n";
+#endif
 	}  //end loop over heat sources
 
 	if (hpwhVerbosity >= VRB_emetic) {
@@ -1700,6 +1703,14 @@ int HPWH::setResistiveElements(double upperPower_W, double lowerPower_W) {
 	int returnVal = 0;
 
 	// Check on the inputs
+	if ( !( (MODELS_ColmacCxV_5_SP <= hpwhModel && hpwhModel <= MODELS_NyleC250A_SP) || 
+		(MODELS_Sanden80 <= hpwhModel &&  hpwhModel <= MODELS_Sanden_GS3_45HPA_US_SP)) )
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistive Elements can only be added to a large external HPWHs\n");
+		}
+		return HPWH_ABORT;
+	}
 	if (numHeatSources < 1)
 	{
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1719,14 +1730,16 @@ int HPWH::setResistiveElements(double upperPower_W, double lowerPower_W) {
 	if (upperPower_W > 0.) {
 		setOfSources[0].isVIP = true; // We know the top element is in index 0
 		setOfSources[1].isVIP = false; // We know the compressor is in index 1
+		setOfSources[0].companionHeatSource = &setOfSources[1];
 	}
 	else if (upperPower_W == 0.) {
 		setOfSources[0].isVIP = false; // We know the top element is in index 0
 		setOfSources[1].isVIP = true; // We know the compressor is in index 1
 	}
+
 	// Reset element powers
 	setOfSources[0].resetResistiveElementWatts(upperPower_W); // We know the top element is in index 0
-	setOfSources[2].resetResistiveElementWatts(lowerPower_W);// We know the bottom element is in index 2
+	setOfSources[2].resetResistiveElementWatts(lowerPower_W); // We know the bottom element is in index 2
 	
 	return returnVal;
 }
@@ -1979,7 +1992,8 @@ void HPWH::HeatSource::engageHeatSource() {
 	hpwh->isHeating = true;
 	if (companionHeatSource != NULL &&
 		companionHeatSource->shutsOff() != true &&
-		companionHeatSource->isEngaged() == false) {
+		companionHeatSource->isEngaged() == false &&
+		companionHeatSource->isLockedOut() == false) {
 		companionHeatSource->engageHeatSource();
 	}
 }
