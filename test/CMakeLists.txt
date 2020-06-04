@@ -12,6 +12,11 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 set(testNames
   test30
   test50
+  test70
+  test95
+  testLockout
+  testDr
+  testSandenCombi
 )
 
 set(modelNames
@@ -19,6 +24,9 @@ set(modelNames
   AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
+  RheemHB50
+  Stiebel220e
+  GE502014
 )
 
 set(lockoutTestModels
@@ -42,6 +50,7 @@ set(largeCompressorNames
   NyleC185A_SP
   NyleC250A_SP
 )
+
 #Tests for succssful runs
 function( add_model_test )
   set(options)

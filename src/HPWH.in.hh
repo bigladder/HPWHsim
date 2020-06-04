@@ -109,7 +109,6 @@ class HPWH {
 	  MODELS_Generic2 = 161,         /**< Generic Tier 2 */
 	  MODELS_Generic3 = 162,          /**< Generic Tier 3 */
 
-
 	  MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
 	  MODELS_genericCustomUEF = 171,   /**< used for creating "generic" model with custom uef*/
 
