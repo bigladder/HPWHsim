@@ -149,21 +149,43 @@ int main(int argc, char *argv[])
 		model = HPWH::MODELS_restankRealistic;
 	} else if(input2 == "StorageTank") {
 		model = HPWH::MODELS_StorageTank;
-	} else if (input2 == "ColmacCxV_5_SP") {
-		model = HPWH::MODELS_ColmacCxV_5_SP;
+	} else if(input2 == "BWC2020_65"){
+		model = HPWH::MODELS_BWC2020_65;
+	} 
+	// New Rheems
+	else if (input2 == "Rheem2020Prem40") {
+	  model = HPWH::MODELS_Rheem2020Prem40;
+	} else if (input2 == "Rheem2020Prem50") {
+		model = HPWH::MODELS_Rheem2020Prem50;
+	} else if (input2 == "Rheem2020Prem65") {
+		model = HPWH::MODELS_Rheem2020Prem65;
+	} else if (input2 == "Rheem2020Prem80") {
+		model = HPWH::MODELS_Rheem2020Prem80;
+	} else if (input2 == "Rheem2020Build40") {
+		model = HPWH::MODELS_Rheem2020Build40;
+	} else if (input2 == "Rheem2020Build50") {
+		model = HPWH::MODELS_Rheem2020Build50;
+	} else if (input2 == "Rheem2020Build65") {
+		model = HPWH::MODELS_Rheem2020Build65;
+	} else if (input2 == "Rheem2020Build80") {
+		model = HPWH::MODELS_Rheem2020Build80;
+	}
+	// Large HPWH's
+	else if (input2 == "ColmacCxV_5_SP") {
+	  model = HPWH::MODELS_ColmacCxV_5_SP;
 	} else if (input2 == "ColmacCxA_20_SP") {
-		model = HPWH::MODELS_ColmacCxA_20_SP;
+	  model = HPWH::MODELS_ColmacCxA_20_SP;
 	} else if (input2 == "ColmacCxA_30_SP") {
-		model = HPWH::MODELS_ColmacCxA_30_SP;	
+	  model = HPWH::MODELS_ColmacCxA_30_SP;
 	} else if (input2 == "NyleC25A_SP") {
-		model = HPWH::MODELS_NyleC25A_SP;
+	  model = HPWH::MODELS_NyleC25A_SP;
 	} else if (input2 == "NyleC90A_SP") {
-		model = HPWH::MODELS_NyleC90A_SP;	
+	  model = HPWH::MODELS_NyleC90A_SP;
 	} else if (input2 == "NyleC185A_SP") {
-		model = HPWH::MODELS_NyleC185A_SP;
+	  model = HPWH::MODELS_NyleC185A_SP;
 	} else if (input2 == "NyleC250A_SP") {
-		model = HPWH::MODELS_NyleC250A_SP;
-      //do nothin, use custom-compiled input specified later
+	  model = HPWH::MODELS_NyleC250A_SP;
+    //do nothin, use custom-compiled input specified later
 	  
     } else {
       model = HPWH::MODELS_basicIntegrated;

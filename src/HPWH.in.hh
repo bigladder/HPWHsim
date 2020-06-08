@@ -86,6 +86,8 @@ class HPWH {
 	  MODELS_GE2014 = 112,           /**< 2014 GE model run in the efficiency mode */
 	  MODELS_GE2014_80 = 114,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
 	  MODELS_GE2014_80DR = 115,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
+	  MODELS_BWC2020_65 = 116,    /**<  The 2020 Bradford White 65 gallon unit  */
+
 
 	  // Sanden CO2 transcritical heat pump water heaters
 	  MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
@@ -100,18 +102,26 @@ class HPWH {
 	  MODELS_RheemHBDR4565 = 144,    /**< 65 gallon, 4500 W resistance Rheem HB Duct Ready */
 	  MODELS_RheemHBDR2280 = 145,    /**< 80 gallon, 2250 W resistance Rheem HB Duct Ready */
 	  MODELS_RheemHBDR4580 = 146,    /**< 80 gallon, 4500 W resistance Rheem HB Duct Ready */
+	  
+	  // The new new Rheem
+	  MODELS_Rheem2020Prem40  = 151,   /**< 40 gallon, Rheem 2020 Premium */
+	  MODELS_Rheem2020Prem50  = 152,   /**< 50 gallon, Rheem 2020 Premium */
+	  MODELS_Rheem2020Prem65  = 153,   /**< 65 gallon, Rheem 2020 Premium */
+	  MODELS_Rheem2020Prem80  = 154,   /**< 80 gallon, Rheem 2020 Premium */
+	  MODELS_Rheem2020Build40 = 155,   /**< 40 gallon, Rheem 2020 Builder */
+	  MODELS_Rheem2020Build50 = 156,   /**< 50 gallon, Rheem 2020 Builder */
+	  MODELS_Rheem2020Build65 = 157,   /**< 65 gallon, Rheem 2020 Builder */
+	  MODELS_Rheem2020Build80 = 158,   /**< 80 gallon, Rheem 2020 Builder */
 
 	  // The new-ish Stiebel
-	  MODELS_Stiebel220E = 150,      /**< Stiebel Eltron (2014 model?) */
+	  MODELS_Stiebel220E = 160,      /**< Stiebel Eltron (2014 model?) */
 
 	  // Generic water heaters, corresponding to the tiers 1, 2, and 3
-	  MODELS_Generic1 = 160,         /**< Generic Tier 1 */
-	  MODELS_Generic2 = 161,         /**< Generic Tier 2 */
-	  MODELS_Generic3 = 162,          /**< Generic Tier 3 */
-
-
-	  MODELS_UEF2generic = 170,   /**< UEF 2.0, modified GE2014STDMode case */
-	  MODELS_genericCustomUEF = 171,   /**< used for creating "generic" model with custom uef*/
+	  MODELS_Generic1 = 170,         /**< Generic Tier 1 */
+	  MODELS_Generic2 = 171,         /**< Generic Tier 2 */
+	  MODELS_Generic3 = 172,          /**< Generic Tier 3 */
+	  MODELS_UEF2generic = 173,   /**< UEF 2.0, modified GE2014STDMode case */
+	  MODELS_genericCustomUEF = 174,   /**< used for creating "generic" model with custom uef*/
 
 	  MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
 
