@@ -185,6 +185,12 @@ class HPWH {
 	TYPE_extra		  /**< an extra element to add user defined heat*/
     };
 
+  /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
+  enum EXTRAP_METHOD {
+	  EXTRAP_LINEAR, /**< the default extrapolates linearly */
+	  EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest point  */
+  };
+
   /** specifies the unit type for outputs in the CSV file-s  */
   enum CSVOPTIONS {
 	  CSVOPT_NONE,
@@ -651,6 +657,8 @@ class HPWH::HeatSource {
 	
 	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
+	void regressedMethod(double &ynew, std::vector<double> &coefficents, double x1, double x2, double x3);
+	/**< Does a calculation based on the ten term regression equation  */
 
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
@@ -766,6 +774,7 @@ class HPWH::HeatSource {
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
 
+	EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
 
 
