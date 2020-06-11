@@ -1279,8 +1279,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
-
-				//set everything in its places
+		//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		setOfSources[2] = compressor;
@@ -2095,16 +2094,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		if (presetNum == MODELS_Rheem2020Prem40) {
-			tankVolume_L = GAL_TO_L(40);
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 9.5;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem50) {
-			tankVolume_L = GAL_TO_L(50);
+			tankVolume_L = GAL_TO_L(45.1);
+			tankUA_kJperHrC = 8.55;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem65) {
-			tankVolume_L = GAL_TO_L(65);
+			tankVolume_L = GAL_TO_L(58.5);		
+			tankUA_kJperHrC = 10.64;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem80) {
-			tankVolume_L = GAL_TO_L(80);
+			tankVolume_L = GAL_TO_L(72);
+			tankUA_kJperHrC = 10.83;
 		}
 		tankUA_kJperHrC = 7;
 
@@ -2142,7 +2145,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		compressor.hysteresis_dC = dF_TO_dC(1);
-		compressor.minT = F_TO_C(40.0);
+		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.0);
 
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
@@ -2189,18 +2192,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		if (presetNum == MODELS_Rheem2020Build40) {
-			tankVolume_L = GAL_TO_L(40);
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 9.5;
 		}
 		else if (presetNum == MODELS_Rheem2020Build50) {
-			tankVolume_L = GAL_TO_L(50);
+			tankVolume_L = GAL_TO_L(45.1);
+			tankUA_kJperHrC = 8.55;
 		}
 		else if (presetNum == MODELS_Rheem2020Build65) {
-			tankVolume_L = GAL_TO_L(65);
+			tankVolume_L = GAL_TO_L(58.5);
+			tankUA_kJperHrC = 10.64;
 		}
 		else if (presetNum == MODELS_Rheem2020Build80) {
-			tankVolume_L = GAL_TO_L(80);
+			tankVolume_L = GAL_TO_L(72.);
+			tankUA_kJperHrC = 10.83;
 		}
-		tankUA_kJperHrC = 7;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
@@ -2236,7 +2242,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		compressor.hysteresis_dC = dF_TO_dC(1);
-		compressor.minT = F_TO_C(40.0);
+		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.0);
 
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
