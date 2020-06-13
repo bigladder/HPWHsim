@@ -27,6 +27,12 @@ set(modelNames
   RheemHB50
   Stiebel220e
   GE502014
+#  Rheem2020Prem40
+#  Rheem2020Prem50
+#  Rheem2020Prem80
+#  Rheem2020Build40
+#  Rheem2020Build65
+#  Rheem2020Build80
 )
 
 set(lockoutTestModels
