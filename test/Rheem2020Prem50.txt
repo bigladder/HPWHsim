@@ -2,7 +2,7 @@ verbosity silent
 numNodes 12 #number of nodes
 setpoint 127 F
 volume 45.1 gal
-UA 8.55 kJperHrC
+UA 9 kJperHrC
 depressTemp false
 mixOnDraw false
 
@@ -93,7 +93,7 @@ heatsource 1 offlogic bottomTwelthMaxTemp 100 F
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
 
-heatsource 0 followedBySource 1
+heatsource 0 followedBySource 2
 heatsource 1 followedBySource 2
 
 heatsource 0 companionSource 2
