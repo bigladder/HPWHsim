@@ -380,8 +380,23 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 				heatSourcePtr = &setOfSources[i];
 			}
 
+			double tempSetpoint_C = -273.15;
+			// Check the air temprature and setpoint against maxOut_at_LowAir
+			if (heatSourcePtr->typeOfHeatSource == TYPE_compressor) {
+				if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowAir.airT_C && 
+					setpoint_C >= heatSourcePtr->maxOut_at_LowAir.outT_C) {
+					tempSetpoint_C = setpoint_C; //Store setpoint
+					setSetpoint(heatSourcePtr->maxOut_at_LowAir.outT_C); // Reset to know setpoint
+				}
+			}
 			//and add heat if it is
 			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+
+			//Change the setpoint back to what it was pre-compressor depression
+			if (tempSetpoint_C > -273) {
+				setSetpoint(tempSetpoint_C);
+			}
+
 			//if it finished early
 			if (heatSourcePtr->runtime_min < minutesToRun) {
 				//debugging message handling
@@ -1728,7 +1743,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR) {}
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowAir{100, -273.15} {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
@@ -1764,6 +1779,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
+	maxOut_at_LowAir = hSource.maxOut_at_LowAir;
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;
@@ -1820,6 +1836,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
+	maxOut_at_LowAir = hSource.maxOut_at_LowAir;
 	hysteresis_dC = hSource.hysteresis_dC;
 
 	depressesTemperature = hSource.depressesTemperature;

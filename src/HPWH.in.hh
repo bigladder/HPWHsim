@@ -126,28 +126,37 @@ class HPWH {
 	  MODELS_ColmacCxA_20_SP = 213,  /**<  Colmac CxA_20 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_25_SP = 213,  /**<  Colmac CxA_25 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_30_SP = 214,  /**<  Colmac CxA_30 external heat pump in Single Pass Mode */
+
 	  // Larger Colmac models in multi pass configuration 
-	  MODELS_ColmacCxV_5_MP  = 220,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
-	  MODELS_ColmacCxA_10_MP = 221,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_15_MP = 222,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_20_MP = 223,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_25_MP = 223,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_30_MP = 224,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxV_5_MP  = 310,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
+	  MODELS_ColmacCxA_10_MP = 311,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_15_MP = 312,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_20_MP = 313,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_25_MP = 313,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_30_MP = 314,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
 	  
 	  // Larger Nyle models in single pass configuration
-	  MODELS_NyleC25A_SP  = 230, /*< Nyle C25A external heat pump in Single Pass Mode  */
+	  MODELS_NyleC25A_SP = 230, /*< Nyle C25A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC60A_SP = 231,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_SP = 232,  /*< Nyle C90A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC125A_SP = 233, /*< Nyle C125A external heat pump in Single Pass Mode */
 	  MODELS_NyleC185A_SP = 234, /*< Nyle C185A external heat pump in Single Pass Mode */
-	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */
+	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */	 
+	  // Larger Nyle models with the cold weather package!
+	  MODELS_NyleC25A_C_SP  = 240, /*< Nyle C25A external heat pump in Single Pass Mode  */
+	  MODELS_NyleC60A_C_SP  = 241,  /*< Nyle C60A external heat pump in Single Pass Mode  */
+	  MODELS_NyleC90A_C_SP  = 242,  /*< Nyle C90A external heat pump in Single Pass Mode  */
+	  MODELS_NyleC125A_C_SP = 243, /*< Nyle C125A external heat pump in Single Pass Mode */
+	  MODELS_NyleC185A_C_SP = 244, /*< Nyle C185A external heat pump in Single Pass Mode */
+	  MODELS_NyleC250A_C_SP = 245, /*< Nyle C250A external heat pump in Single Pass Mode */
+
 	  // Larger Nyle models in multi pass configuration
-	  MODELS_NyleC25A_MP  = 240, /*< Nyle C25A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC60A_MP = 241,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC90A_MP = 242,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC125A_MP = 243, /*< Nyle C125A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC185A_MP = 244, /*< Nyle C185A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC250A_MP = 245  /*< Nyle C250A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC25A_MP  = 330, /*< Nyle C25A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC60A_MP  = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC90A_MP  = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC125A_MP = 333, /*< Nyle C125A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC185A_MP = 334, /*< Nyle C185A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_MP = 335  /*< Nyle C250A external heat pump in Multi Pass Mode */
     };
 
   ///specifies the modes for writing output
@@ -741,6 +750,13 @@ class HPWH::HeatSource {
 	std::vector<defrostPoint> defrostMap;
 	/**< A list of points for the defrost derate factor ordered by increasing external temperature */
 
+	struct maxOut_minAir {
+		double outT_C;
+		double airT_C;
+	 };
+	maxOut_minAir maxOut_at_LowAir;
+	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
+
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
@@ -750,6 +766,7 @@ class HPWH::HeatSource {
 
   double maxT;
   /**<  maximum operating temperature of HPWH environment */
+
 
 	double hysteresis_dC;
 	/**< a hysteresis term that prevents short cycling due to heat pump self-interaction

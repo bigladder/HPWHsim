@@ -841,7 +841,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	// If a Colmac single pass preset
+	// If a Colmac single pass preset cold weather or not
 	else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
@@ -864,21 +864,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 
 		//logic conditions
-		compressor.minT = F_TO_C(40.0);
+		compressor.minT = F_TO_C(40.);
 		compressor.hysteresis_dC = 0;
-		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(40), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(35.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -935,7 +935,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 	
 	// If Nyle single pass preset
-	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {
+	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
@@ -960,30 +960,40 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 
 		//logic conditions
-		compressor.minT = F_TO_C(40.0); // Min air temperature sans Cold Weather Package
+
+		//logic conditions
+		if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {// If not cold weather package
+			compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
+		}
+		else {
+			compressor.minT = F_TO_C(35.);// Min air temperature WITH Cold Weather Package
+		}
 		compressor.maxT = F_TO_C(120.0); // Max air temperature
 		compressor.hysteresis_dC = 0;
-		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+		// Defines the maximum outlet temperature at the a low air temperature
+		compressor.maxOut_at_LowAir.outT_C = F_TO_C(140.);  
+		compressor.maxOut_at_LowAir.airT_C = F_TO_C(40.);
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(40), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(35.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
-		//Perfmap for input power made from data for C185A_SP to be scalled for other models
-
-		if (presetNum == MODELS_NyleC25A_SP) {
+		//Perfmaps for each compressor size
+		if (presetNum == MODELS_NyleC25A_SP || presetNum == MODELS_NyleC25A_C_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -995,7 +1005,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-0.000384778,-0.000404744,-0.000036277, 0.000001900 } // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC60A_SP) {
+		else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP) {
 			setTankSize_adjustUA(300., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1007,7 +1017,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-0.0003311463,-0.0002154270,0.0001307922,0.0000005568} // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC90A_SP) {
+		else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP) {
 			setTankSize_adjustUA(400., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1019,7 +1029,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					0.00006002498,-0.00045661397,-0.00034003896,-0.00004327766,0.00000176015} // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC125A_SP) {
+		else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP) {
 			setTankSize_adjustUA(500., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1031,7 +1041,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-1.4452E-05, -0.000492486, -0.000376814,	7.85911E-05,	1.47884E-06}// COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC185A_SP) {
+		else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP) {
 			setTankSize_adjustUA(800., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1043,7 +1053,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 						9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06}// COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC250A_SP) {
+		else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP) {
 			setTankSize_adjustUA(800., UNITS_GAL);
 
 			compressor.perfMap.push_back({
