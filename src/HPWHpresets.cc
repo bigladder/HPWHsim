@@ -2033,6 +2033,280 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
+	//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvTO BE UPDATEDvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	//PRELIMINARY PRESET USING GE2014 DATA 
+	else if (presetNum == MODELS_BWC2020_65) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = GAL_TO_L(65);
+		tankUA_kJperHrC = 10.;
+
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+		//voltex60 tier 1 values
+		compressor.perfMap.reserve(2);
+
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.minT = F_TO_C(37.0);
+		compressor.maxT = F_TO_C(120.);
+		compressor.hysteresis_dC = dF_TO_dC(2);
+		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+		//top resistor values
+		resistiveElementTop.setupAsResistiveElement(6, 4500);
+		resistiveElementTop.isVIP = true;
+
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, 4000);
+		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+
+		//logic conditions
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+		resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+
+		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
+		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
+		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+
+		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+	}
+	// If Rheem Premium TO BE UPDATED 
+	else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		if (presetNum == MODELS_Rheem2020Prem40) {
+			tankVolume_L = GAL_TO_L(40);
+		}
+		else if (presetNum == MODELS_Rheem2020Prem50) {
+			tankVolume_L = GAL_TO_L(50);
+		}
+		else if (presetNum == MODELS_Rheem2020Prem65) {
+			tankVolume_L = GAL_TO_L(65);
+		}
+		else if (presetNum == MODELS_Rheem2020Prem80) {
+			tankVolume_L = GAL_TO_L(80);
+		}
+		tankUA_kJperHrC = 7;
+
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+		//voltex60 tier 1 values
+		compressor.perfMap.reserve(2);
+
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.hysteresis_dC = dF_TO_dC(1);
+		compressor.minT = F_TO_C(40.0);
+		compressor.maxT = F_TO_C(120.0);
+
+		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+
+		//top resistor values
+		resistiveElementTop.setupAsResistiveElement(8, 4200);
+		resistiveElementTop.isVIP = true;
+
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, 2250);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+
+		//logic conditions
+		double compStart = dF_TO_dC(38);
+		double standbyT = dF_TO_dC(13.2639);
+		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
+
+		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
+
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+	}
+	// If Rheem Premium TO BE UPDATED 
+	else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		if (presetNum == MODELS_Rheem2020Build40) {
+			tankVolume_L = GAL_TO_L(40);
+		}
+		else if (presetNum == MODELS_Rheem2020Build50) {
+			tankVolume_L = GAL_TO_L(50);
+		}
+		else if (presetNum == MODELS_Rheem2020Build65) {
+			tankVolume_L = GAL_TO_L(65);
+		}
+		else if (presetNum == MODELS_Rheem2020Build80) {
+			tankVolume_L = GAL_TO_L(80);
+		}
+		tankUA_kJperHrC = 7;
+
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+		//voltex60 tier 1 values
+		compressor.perfMap.reserve(2);
+
+		compressor.perfMap.push_back({
+			47, // Temperature (T_F)
+			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.hysteresis_dC = dF_TO_dC(1);
+		compressor.minT = F_TO_C(40.0);
+		compressor.maxT = F_TO_C(120.0);
+
+		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+
+		//top resistor values
+		resistiveElementTop.setupAsResistiveElement(8, 4200);
+		resistiveElementTop.isVIP = true;
+
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, 2250);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+
+		//logic conditions
+		double compStart = dF_TO_dC(38);
+		double standbyT = dF_TO_dC(13.2639);
+		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
+
+		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
+
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+	}
+	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^TO BE UPDATED^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	else if (presetNum == MODELS_RheemHB50) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
