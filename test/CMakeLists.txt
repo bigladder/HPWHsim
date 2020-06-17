@@ -46,14 +46,19 @@ set(lockoutTestModels
 set(largeCompressorTests
   testLargeComp45
   testLargeComp60
+  testLargeCompHot
 )
 set(largeCompressorNames
   #ColmacCxV_5_SP
   ColmacCxA_20_SP
   ColmacCxA_30_SP
+  NyleC25A_SP
   NyleC90A_SP 
   NyleC185A_SP
   NyleC250A_SP
+  NyleC90A_C_SP 
+  NyleC185A_C_SP
+  NyleC250A_C_SP
 )
 #Tests for succssful runs
 function( add_model_test )
