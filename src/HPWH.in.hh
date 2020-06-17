@@ -143,7 +143,6 @@ class HPWH {
 	  MODELS_NyleC185A_SP = 234, /*< Nyle C185A external heat pump in Single Pass Mode */
 	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */	 
 	  // Larger Nyle models with the cold weather package!
-	  MODELS_NyleC25A_C_SP  = 240, /*< Nyle C25A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC60A_C_SP  = 241,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_C_SP  = 242,  /*< Nyle C90A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC125A_C_SP = 243, /*< Nyle C125A external heat pump in Single Pass Mode */
