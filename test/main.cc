@@ -190,8 +190,6 @@ int main(int argc, char *argv[])
 	  model = HPWH::MODELS_NyleC185A_SP;
 	} else if (input2 == "NyleC250A_SP") {
 		model = HPWH::MODELS_NyleC250A_SP;
-	} else if (input2 == "NyleC25A_C_SP") {
-		model = HPWH::MODELS_NyleC25A_C_SP;
 	} else if (input2 == "NyleC90A_C_SP") {
 		model = HPWH::MODELS_NyleC90A_C_SP;
 	} else if (input2 == "NyleC185A_C_SP") {
