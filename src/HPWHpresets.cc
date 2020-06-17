@@ -2010,7 +2010,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		tankVolume_L = GAL_TO_L(65);
-		tankUA_kJperHrC = 10.;
+		tankUA_kJperHrC = 7.6;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
