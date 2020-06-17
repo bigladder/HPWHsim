@@ -13,7 +13,7 @@ numHeatSources 3
 heatsource 2 isVIP false
 heatsource 2 isOn false
 heatsource 2 type compressor
-heatsource 2 condensity 0.25 0.25 0.25 0.25 0 0 0 0 0 0 0 0
+heatsource 2 condensity .167 .167 .167 .167 .167 .165 0 0 0 0 0 0
 heatsource 2 nTemps 2
 heatsource 2 T1 50F
 heatsource 2 T2 67 F
@@ -23,10 +23,10 @@ heatsource 2 inPowT1quad 0
 heatsource 2 inPowT2const 143.943813
 heatsource 2 inPowT2lin 2.04082
 heatsource 2 inPowT2quad 0
-heatsource 2 copT1const 6.94932
+heatsource 2 copT1const 7.0
 heatsource 2 copT1lin -0.034543
 heatsource 2 copT1quad 0.0
-heatsource 2 copT2const 7.883058
+heatsource 2 copT2const 8.0
 heatsource 2 copT2lin -0.038308
 heatsource 2 copT2quad 0.0
 heatsource 2 minT 37F
