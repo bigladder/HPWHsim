@@ -993,7 +993,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setupDefrostMap();
 
 		//Perfmaps for each compressor size
-		if (presetNum == MODELS_NyleC25A_SP || presetNum == MODELS_NyleC25A_C_SP) {
+		if (presetNum == MODELS_NyleC25A_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)

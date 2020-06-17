@@ -50,7 +50,6 @@ set(largeCompressorNames
   NyleC90A_SP 
   NyleC185A_SP
   NyleC250A_SP
-  NyleC25A_C_SP
   NyleC90A_C_SP 
   NyleC185A_C_SP
   NyleC250A_C_SP
