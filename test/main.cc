@@ -15,7 +15,7 @@
 #include <string> 
 
 #define MAX_DIR_LENGTH 255
-#define DEBUG 0
+#define DEBUG 1
 
 using std::cout;
 using std::endl;
@@ -29,7 +29,7 @@ using std::ofstream;
 
 typedef std::vector<double> schedule;
 
-
+double getCOP(HPWH &hpwh);
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
 
 int main(int argc, char *argv[])
@@ -61,7 +61,12 @@ int main(int argc, char *argv[])
 
   string strPreamble;
   // string strHead = "minutes,Ta,inletT,draw,outletT,";
+  //string strHead = "minutes,Ta,inletT,draw,COP,";
   string strHead = "minutes,Ta,inletT,draw,";
+
+  if (DEBUG) {
+	 hpwh.setVerbosity(HPWH::VRB_reluctant);
+  }
 
   //.......................................
   //process command line arguments
@@ -180,13 +185,22 @@ int main(int argc, char *argv[])
 	} else if (input2 == "NyleC25A_SP") {
 	  model = HPWH::MODELS_NyleC25A_SP;
 	} else if (input2 == "NyleC90A_SP") {
-	  model = HPWH::MODELS_NyleC90A_SP;
+		model = HPWH::MODELS_NyleC90A_SP;
 	} else if (input2 == "NyleC185A_SP") {
 	  model = HPWH::MODELS_NyleC185A_SP;
 	} else if (input2 == "NyleC250A_SP") {
-	  model = HPWH::MODELS_NyleC250A_SP;
-    //do nothin, use custom-compiled input specified later
-	  
+		model = HPWH::MODELS_NyleC250A_SP;
+	} else if (input2 == "NyleC25A_C_SP") {
+		model = HPWH::MODELS_NyleC25A_C_SP;
+	} else if (input2 == "NyleC90A_C_SP") {
+		model = HPWH::MODELS_NyleC90A_C_SP;
+	} else if (input2 == "NyleC185A_C_SP") {
+		model = HPWH::MODELS_NyleC185A_C_SP;
+	} else if (input2 == "NyleC250A_C_SP") {
+		model = HPWH::MODELS_NyleC250A_C_SP;
+
+	//do nothin, use custom-compiled input specified later
+
     } else {
       model = HPWH::MODELS_basicIntegrated;
       cout << "Couldn't find model " << input2 << ".  Exiting...\n";
@@ -330,7 +344,7 @@ int main(int argc, char *argv[])
 
 	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
 		std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
-		//std::to_string(hpwh.getOutletTemp()) + ",";
+		//std::to_string(getCOP(hpwh)) + ",";
 	hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
   }
 
@@ -342,8 +356,22 @@ int main(int argc, char *argv[])
 }
 
 
+//Function to calculate COP at a time step
+double getCOP(HPWH &hpwh) {
+	double inPow = 0;
+	double outPow = 0;
 
-
+	for (int ii = 0; ii < hpwh.getNumHeatSources(); ii++) {
+		inPow += hpwh.getNthHeatSourceEnergyInput(ii);
+		outPow += hpwh.getNthHeatSourceEnergyOutput(ii);
+	}
+	if (inPow == 0) {
+		return 0;
+	}
+	else {
+		return (outPow / inPow);
+	}
+}
 
 
 
