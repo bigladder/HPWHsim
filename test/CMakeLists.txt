@@ -10,13 +10,13 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 
 # Run tests
 set(testNames
-  test30
-  test50
-  test70
-  test95
-  testLockout
-  testDr
-  testSandenCombi
+ test30
+ test50
+ test70
+ test95
+ testLockout
+ testDr
+ testSandenCombi
 )
 
 set(modelNames
@@ -27,12 +27,9 @@ set(modelNames
   RheemHB50
   Stiebel220e
   GE502014
-#  Rheem2020Prem40
-#  Rheem2020Prem50
-#  Rheem2020Prem80
-#  Rheem2020Build40
-#  Rheem2020Build65
-#  Rheem2020Build80
+  Rheem2020Prem40
+  Rheem2020Prem50
+  Rheem2020Build50
 )
 
 set(lockoutTestModels
