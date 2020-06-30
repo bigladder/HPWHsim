@@ -866,9 +866,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
-
-		//logic conditions
-		compressor.minT = F_TO_C(40.);
 		compressor.hysteresis_dC = 0;
 
 		std::vector<NodeWeight> nodeWeights;
@@ -886,11 +883,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		if (presetNum == MODELS_ColmacCxV_5_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
+			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
-			msg("MODELS_ColmacCxV_5_SP has not been set yet, aborting.  \n");
-			return HPWH_ABORT;
+
+			//Set the scalled performance map in it's place
+			compressor.perfMap.push_back({
+				95, // Temperature (T_F)
+
+				{6.794894025, 0.027165115, -0.077132938, -0.017604433, -0.000105034, 0.0004717, 0.000183841,
+				-2.04271E-05, 0.00016801, 1.45728E-05, -1.397E-06}, // Input Power Coefficients (inputPower_coeffs)
+
+				{2.390445062, 0.114468216, -0.019965567, 0.003197647, 7.87671E-05, 4.97273E-05, -0.00010472, 
+				-0.000610525, -0.000399075, 9.16541E-05, 2.1789E-06 } // COP Coefficients (COP_coeffs)
+				});
 		}
 		else {
+			//logic conditions
+			compressor.minT = F_TO_C(40.);
+
 			//Perfmap for input power made from data for CxA-20 to be scalled for other models
 			std::vector<double> inputPwr_coeffs = { 13.77317898,0.098118687,-0.127961444,0.015252227,-0.000398994,0.001158229,
 					0.000570153,-7.3854E-05,-9.61881E-07,-0.000498209,1.52307E-07 };
@@ -899,35 +909,82 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			if (presetNum == MODELS_ColmacCxA_10_SP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
 				pwrScalar = 0.497;// Scalar to adjust inputPwr_coeffs
+
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.491234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05, -0.0001036,
+					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_15_SP) {
 				setTankSize_adjustUA(600., UNITS_GAL);
 				pwrScalar = 0.736;// Scalar to adjust inputPwr_coeffs
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.531234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05,-0.0001036,
+					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_SP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				pwrScalar = 1.0;// Scalar to adjust inputPwr_coeffs
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
+					-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_25_SP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 				double pwrScalar = 1.167;// Scalar to adjust inputPwr_coeffs
+
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.546234434, 0.162032056,-0.019707518, 0.001442995, -0.000246901,4.17009E-05, 
+					-0.0001036,-0.000573599,-0.000361645,0.000105189,1.85347E-06} // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_30_SP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 				pwrScalar = 1.516;// Scalar to adjust inputPwr_coeffs
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{-0.752956487,0.136869141,-0.020279585,0.042144248,-0.000134414,0.000112906,
+					-0.000185292,-0.000529395,-0.000115976,-9.32334E-05,5.90538E-07} // COP Coefficients (COP_coeffs)
+					});
 			}
-
-			std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-				std::bind1st(std::multiplies<double>(), pwrScalar));
-			//Set the scalled performance map in it's place
-			compressor.perfMap.push_back({
-				0, // Temperature (T_F)
-
-				inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
-
-				{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
-				-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
-				});
 		} //End if MODELS_ColmacCxV_5_SP
 
 		//set everything in its places

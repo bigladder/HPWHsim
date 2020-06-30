@@ -1,2 +1,2 @@
-length_of_test 500
+length_of_test 800
 setpoint 65
