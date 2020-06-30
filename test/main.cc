@@ -15,7 +15,7 @@
 #include <string> 
 
 #define MAX_DIR_LENGTH 255
-#define DEBUG 1
+#define DEBUG 0
 
 using std::cout;
 using std::endl;
@@ -177,17 +177,23 @@ int main(int argc, char *argv[])
 	}
 	// Large HPWH's
 	else if (input2 == "ColmacCxV_5_SP") {
-	  model = HPWH::MODELS_ColmacCxV_5_SP;
+		model = HPWH::MODELS_ColmacCxV_5_SP;
+	} else if (input2 == "ColmacCxA_10_SP") {
+		model = HPWH::MODELS_ColmacCxA_10_SP;
+	} else if (input2 == "ColmacCxA_15_SP") {
+		model = HPWH::MODELS_ColmacCxA_15_SP;
 	} else if (input2 == "ColmacCxA_20_SP") {
-	  model = HPWH::MODELS_ColmacCxA_20_SP;
+		model = HPWH::MODELS_ColmacCxA_20_SP;
+	} else if (input2 == "ColmacCxA_25_SP") {
+		model = HPWH::MODELS_ColmacCxA_25_SP;
 	} else if (input2 == "ColmacCxA_30_SP") {
-	  model = HPWH::MODELS_ColmacCxA_30_SP;
+		model = HPWH::MODELS_ColmacCxA_30_SP;
 	} else if (input2 == "NyleC25A_SP") {
-	  model = HPWH::MODELS_NyleC25A_SP;
+		model = HPWH::MODELS_NyleC25A_SP;
 	} else if (input2 == "NyleC90A_SP") {
 		model = HPWH::MODELS_NyleC90A_SP;
 	} else if (input2 == "NyleC185A_SP") {
-	  model = HPWH::MODELS_NyleC185A_SP;
+		model = HPWH::MODELS_NyleC185A_SP;
 	} else if (input2 == "NyleC250A_SP") {
 		model = HPWH::MODELS_NyleC250A_SP;
 	} else if (input2 == "NyleC90A_C_SP") {
