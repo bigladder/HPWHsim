@@ -10,37 +10,37 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 
 # Run tests
 set(testNames
-  test30
-  test50
-  test70
-  test95
-  testLockout
-  testDr
-  testSandenCombi
+# test30
+# test50
+## test70
+ #test95
+# testLockout
+# testDr
+# testSandenCombi
+  testHVT40
+  testHVT50
 )
 
 set(modelNames
 #  StorageTank  
-  AOSmithPHPT60
-  AOSmithHPTU80
-  Sanden80
-  RheemHB50
-  Stiebel220e
-  GE502014
-#  Rheem2020Prem40
-#  Rheem2020Prem50
-#  Rheem2020Prem80
-#  Rheem2020Build40
-#  Rheem2020Build65
-#  Rheem2020Build80
+
+ # AOSmithPHPT60
+ # AOSmithHPTU80
+ # Sanden80
+ # RheemHB50
+ # Stiebel220e
+ # GE502014
+  Rheem2020Prem40
+  Rheem2020Prem50
+  Rheem2020Build50
 )
 
 set(lockoutTestModels
-  AOSmithPHPT60
-  AOSmithHPTU80
-  RheemHB50
-  Stiebel220e
-  GE502014
+#  AOSmithPHPT60
+#  AOSmithHPTU80
+#  RheemHB50
+#  Stiebel220e
+#  GE502014
 )
 
 set(largeCompressorTests
@@ -48,12 +48,16 @@ set(largeCompressorTests
   testLargeComp60
 )
 set(largeCompressorNames
-  #ColmacCxV_5_SP
-  ColmacCxA_20_SP
-  ColmacCxA_30_SP
-  NyleC90A_SP 
-  NyleC185A_SP
-  NyleC250A_SP
+
+#  ColmacCxA_20_SP
+#  ColmacCxA_30_SP
+#  NyleC25A_SP
+#  NyleC90A_SP 
+#  NyleC185A_SP
+#  NyleC250A_SP
+#  NyleC90A_C_SP 
+#  NyleC185A_C_SP
+ # NyleC250A_C_SP
 )
 #Tests for succssful runs
 function( add_model_test )
