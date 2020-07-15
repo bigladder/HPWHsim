@@ -19,6 +19,7 @@ set(testNames
 # testSandenCombi
   testHVT40
   testHVT50
+  testDOE_24hr50
 )
 
 set(modelNames
