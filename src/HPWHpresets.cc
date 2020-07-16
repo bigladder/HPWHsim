@@ -1194,8 +1194,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
-		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
-
+		if (presetNum == MODELS_Sanden80) {
+			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+		}
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
