@@ -2,7 +2,7 @@ verbosity silent
 numNodes 12 
 setpoint 127 F
 volume 45.1 gal 
-UA 9 kJperHrC 
+UA 8.55 kJperHrC 
 depressTemp false
 mixOnDraw true
 
@@ -13,7 +13,7 @@ numHeatSources 3
 heatsource 2 isVIP false
 heatsource 2 isOn false
 heatsource 2 type compressor
-heatsource 2 condensity .167 .167 .167 .167 .167 .165 0 0 0 0 0 0
+heatsource 2 condensity  .2 .2 .2 .2 .2 0 0 0 0 0 0 0
 heatsource 2 nTemps 2
 heatsource 2 T1 50 F
 heatsource 2 T2 67 F

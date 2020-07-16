@@ -8,32 +8,40 @@ target_link_libraries(testTool libHPWHsim)
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
+
 # Run tests
 set(testNames
 # test30
-# test50
-## test70
+ test50
+# test70
  #test95
 # testLockout
 # testDr
 # testSandenCombi
-  testHVT40
-  testHVT50
-  testDOE_24hr50
+ # testHVT40
+#  testHVT50
+  #testDOE_24hr50
 )
 
 set(modelNames
 #  StorageTank  
-
  # AOSmithPHPT60
- # AOSmithHPTU80
- # Sanden80
+  AOSmithHPTU50
+  AOSmithHPTU66
+  AOSmithHPTU80
+  Sanden80
+ # Sanden40
  # RheemHB50
  # Stiebel220e
- # GE502014
+  GE502014
   Rheem2020Prem40
   Rheem2020Prem50
+  Rheem2020Prem65
+  Rheem2020Prem80
   Rheem2020Build50
+  Rheem2020Build65
+  Rheem2020Build80
 )
 
 set(lockoutTestModels
@@ -44,9 +52,24 @@ set(lockoutTestModels
 #  GE502014
 )
 
+set(yearTests
+  testCA_1BR_CTZ1
+  testCA_1BR_CTZ12
+  testCA_1BR_CTZ15
+  testCA_1BR_CTZ16
+  testCA_3BR_CTZ1
+  testCA_3BR_CTZ12
+  testCA_3BR_CTZ15
+  testCA_3BR_CTZ16
+  testCA_5BR_CTZ1
+  testCA_5BR_CTZ12
+  testCA_5BR_CTZ15
+  testCA_5BR_CTZ16
+)
+
 set(largeCompressorTests
-  testLargeComp45
-  testLargeComp60
+ # testLargeComp45
+ # testLargeComp60
 )
 set(largeCompressorNames
 
@@ -60,7 +83,7 @@ set(largeCompressorNames
 #  NyleC185A_C_SP
  # NyleC250A_C_SP
 )
-#Tests for succssful runs
+#Tests for successful runs
 function( add_model_test )
   set(options)
   set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
@@ -108,6 +131,14 @@ foreach(test ${largeCompressorTests})
     #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Add small compressor yearly tests to the list
+foreach(test ${yearTests})
+  foreach(model ${modelNames})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+  endforeach(model)
+endforeach(test)
+
 
 # Tests for differences between File and Preset versions
 function( add_file_test )
@@ -160,7 +191,7 @@ foreach(test ${testNames})
   endforeach(model)
 endforeach(test)
 
-#Add large compressor tests to the list
+#Add large compressor tests to the regression list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")

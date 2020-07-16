@@ -2095,18 +2095,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		if (presetNum == MODELS_Rheem2020Prem40) {
-			tankVolume_L = GAL_TO_L(40);
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 9.5;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem50) {
-			tankVolume_L = GAL_TO_L(50);
+			tankVolume_L = GAL_TO_L(45.1);
+			tankUA_kJperHrC = 8.55;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem65) {
-			tankVolume_L = GAL_TO_L(65);
+			tankVolume_L = GAL_TO_L(58.5);
+			tankUA_kJperHrC = 10.64;
 		}
 		else if (presetNum == MODELS_Rheem2020Prem80) {
-			tankVolume_L = GAL_TO_L(80);
+			tankVolume_L = GAL_TO_L(72.0);
+			tankUA_kJperHrC = 10.83;
 		}
-		tankUA_kJperHrC = 7;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
@@ -2123,48 +2126,44 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
 
 		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
+			50, // Temperature (T_F)
+			{250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
+			{6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
 			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
-			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+			{275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
+			{7.0, -0.0168, -0.0001} // COP Coefficients (COP_coeffs)
 			});
 
-		compressor.hysteresis_dC = dF_TO_dC(1);
-		compressor.minT = F_TO_C(40.0);
+		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.0);
-
+		compressor.hysteresis_dC = dF_TO_dC(1);
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
 		//top resistor values
-		resistiveElementTop.setupAsResistiveElement(8, 4200);
+		resistiveElementTop.setupAsResistiveElement(8, 4500);
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		resistiveElementBottom.setupAsResistiveElement(0, 2250);
-		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+		resistiveElementBottom.setupAsResistiveElement(0, 4500);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
 
 		//logic conditions
-		double compStart = dF_TO_dC(38);
-		double standbyT = dF_TO_dC(13.2639);
+		double compStart = dF_TO_dC(32);
+		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
-
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
-
 
 		//set everything in its places
 		setOfSources[0] = resistiveElementTop;
@@ -2173,13 +2172,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//and you have to do this after putting them into setOfSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+		setOfSources[2].backupHeatSource = &setOfSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[0].followedByHeatSource = &setOfSources[2];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
-	// If Rheem Premium TO BE UPDATED 
+	// If Rheem Premium  
 	else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
@@ -2189,18 +2190,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resetTankToSetpoint();
 
 		if (presetNum == MODELS_Rheem2020Build40) {
-			tankVolume_L = GAL_TO_L(40);
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 9.5;
 		}
 		else if (presetNum == MODELS_Rheem2020Build50) {
-			tankVolume_L = GAL_TO_L(50);
+			tankVolume_L = GAL_TO_L(45.1);
+			tankUA_kJperHrC = 8.55;
 		}
 		else if (presetNum == MODELS_Rheem2020Build65) {
-			tankVolume_L = GAL_TO_L(65);
+			tankVolume_L = GAL_TO_L(58.5);
+			tankUA_kJperHrC = 10.64;
 		}
 		else if (presetNum == MODELS_Rheem2020Build80) {
-			tankVolume_L = GAL_TO_L(80);
+			tankVolume_L = GAL_TO_L(72.0);
+			tankUA_kJperHrC = 10.83;
 		}
-		tankUA_kJperHrC = 7;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
@@ -2217,48 +2221,44 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
 
-		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
 
 		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{280, 4.97342, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
+			50, // Temperature (T_F)
+			{220.0, 0.8743, 0.00454}, // Input Power Coefficients (inputPower_coeffs)
+			{ 7.96064, -0.0448, 0.0} // COP Coefficients (COP_coeffs)
 			});
 
 		compressor.perfMap.push_back({
 			67, // Temperature (T_F)
-			{280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-			{6.3, -0.03, 0.0} // COP Coefficients (COP_coeffs)
+			{275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
+			{8.45936, -0.04539, 0.0} // COP Coefficients (COP_coeffs)
 			});
 
 		compressor.hysteresis_dC = dF_TO_dC(1);
-		compressor.minT = F_TO_C(40.0);
+		compressor.minT = F_TO_C(37.0);
 		compressor.maxT = F_TO_C(120.0);
 
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
 		//top resistor values
-		resistiveElementTop.setupAsResistiveElement(8, 4200);
+		resistiveElementTop.setupAsResistiveElement(8, 4500);
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		resistiveElementBottom.setupAsResistiveElement(0, 2250);
-		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+		resistiveElementBottom.setupAsResistiveElement(0, 4500);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
 
 		//logic conditions
-		double compStart = dF_TO_dC(38);
-		double standbyT = dF_TO_dC(13.2639);
+		double compStart = dF_TO_dC(30);
+		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
-
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
-
 
 		//set everything in its places
 		setOfSources[0] = resistiveElementTop;
@@ -2267,11 +2267,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//and you have to do this after putting them into setOfSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
+		setOfSources[2].backupHeatSource = &setOfSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[0].followedByHeatSource = &setOfSources[2];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
 	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^TO BE UPDATED^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	else if (presetNum == MODELS_RheemHB50) {
