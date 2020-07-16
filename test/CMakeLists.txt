@@ -8,17 +8,18 @@ target_link_libraries(testTool libHPWHsim)
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
+# Clear output file for yearly tests
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
 
 # Run tests
 set(testNames
-# test30
+ test30
  test50
-# test70
- #test95
-# testLockout
-# testDr
-# testSandenCombi
+ test70
+ test95
+ testLockout
+ testDr
+ testSandenCombi
  # testHVT40
 #  testHVT50
   #testDOE_24hr50
@@ -26,62 +27,52 @@ set(testNames
 
 set(modelNames
 #  StorageTank  
- # AOSmithPHPT60
-  AOSmithHPTU50
-  AOSmithHPTU66
+  AOSmithPHPT60
   AOSmithHPTU80
   Sanden80
- # Sanden40
- # RheemHB50
- # Stiebel220e
+  RheemHB50
+  Stiebel220e
   GE502014
   Rheem2020Prem40
   Rheem2020Prem50
-  Rheem2020Prem65
-  Rheem2020Prem80
   Rheem2020Build50
-  Rheem2020Build65
-  Rheem2020Build80
 )
 
 set(lockoutTestModels
-#  AOSmithPHPT60
-#  AOSmithHPTU80
-#  RheemHB50
-#  Stiebel220e
-#  GE502014
+  AOSmithPHPT60
+  AOSmithHPTU80
+  RheemHB50
+  Stiebel220e
+  GE502014
 )
 
-set(yearTests
-  testCA_1BR_CTZ1
-  testCA_1BR_CTZ12
-  testCA_1BR_CTZ15
-  testCA_1BR_CTZ16
-  testCA_3BR_CTZ1
-  testCA_3BR_CTZ12
+set(yearTestsModels                
+  AOSmithHPTU80       
+  Sanden80            
+  GE502014            
+  Rheem2020Prem40 
+  Rheem2020Prem50
+  Rheem2020Build50
+)                                  
+set(yearTests                                        
   testCA_3BR_CTZ15
   testCA_3BR_CTZ16
-  testCA_5BR_CTZ1
-  testCA_5BR_CTZ12
-  testCA_5BR_CTZ15
-  testCA_5BR_CTZ16
 )
 
 set(largeCompressorTests
- # testLargeComp45
- # testLargeComp60
+  testLargeComp45
+  testLargeComp60
 )
 set(largeCompressorNames
-
-#  ColmacCxA_20_SP
-#  ColmacCxA_30_SP
-#  NyleC25A_SP
-#  NyleC90A_SP 
-#  NyleC185A_SP
-#  NyleC250A_SP
-#  NyleC90A_C_SP 
-#  NyleC185A_C_SP
- # NyleC250A_C_SP
+  ColmacCxA_20_SP
+  ColmacCxA_30_SP
+  NyleC25A_SP
+  NyleC90A_SP 
+  NyleC185A_SP
+  NyleC250A_SP
+  NyleC90A_C_SP 
+  NyleC185A_C_SP
+  NyleC250A_C_SP
 )
 #Tests for successful runs
 function( add_model_test )
@@ -134,7 +125,7 @@ endforeach(test)
 
 #Add small compressor yearly tests to the list
 foreach(test ${yearTests})
-  foreach(model ${modelNames})
+  foreach(model ${yearTestsModels})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
   endforeach(model)
 endforeach(test)
@@ -199,3 +190,6 @@ foreach(test ${largeCompressorTests})
     #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Add regression test for yearly file 
+add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
