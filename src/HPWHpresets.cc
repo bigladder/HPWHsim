@@ -2199,7 +2199,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		doTempDepression = false;
-		tankMixesOnDraw = false;
+		tankMixesOnDraw = true;
 
 		numHeatSources = 3;
 		setOfSources = new HeatSource[numHeatSources];
@@ -2294,7 +2294,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		doTempDepression = false;
-		tankMixesOnDraw = false;
+		tankMixesOnDraw = true;
 
 		numHeatSources = 3;
 		setOfSources = new HeatSource[numHeatSources];
