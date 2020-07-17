@@ -47,16 +47,20 @@ int main(int argc, char *argv[])
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
 
-  string testDirectory, fileToOpen, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
-  string inputVariableName;
+  string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
+  string inputVariableName, firstCol;
   double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
   int i, outputCode;
   long minutesToRun;
+
+  double cumHeatIn[3] = { 0,0,0 };
+  double cumHeatOut[3] = { 0,0,0 };
 
   bool HPWH_doTempDepress;
   int doInvMix, doCondu;
 
   FILE * outputFile;
+  FILE * yearOutFile;
   ifstream controlFile;
 
   string strPreamble;
@@ -294,16 +298,25 @@ int main(int argc, char *argv[])
  	  hpwh.setInletByFraction(inletH);
   }
 
-  // ----------------------Open the Output File and Print the Header---------------------------- //
-  fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
+  // ----------------------Open the Output Files and Print the Header---------------------------- //
  
-  if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0) {
-  cout << "Could not open output file " << fileToOpen << "\n";
-  exit(1);
- }
+  if (minutesToRun > 500000.) {
+	  fileToOpen = outputDirectory + "/DHW_YRLY.csv";
 
-  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
-  
+	  if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0) {
+		  cout << "Could not open output file " << fileToOpen << "\n";
+		  exit(1);
+	  }
+  }
+  else {
+	  fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
+
+	  if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0) {
+		  cout << "Could not open output file " << fileToOpen << "\n";
+		  exit(1);
+	  }
+	  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
+  }
   // ------------------------------------- Simulate --------------------------------------- //
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
@@ -341,19 +354,45 @@ int main(int argc, char *argv[])
 		1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
 		vectptr);
 
-    // Copy current status into the output file
-    if(HPWH_doTempDepress) {
-      airTemp2 = hpwh.getLocationTemp_C();
-    }
-
-	strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-		std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
-		//std::to_string(getCOP(hpwh)) + ",";
-	hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+	if (minutesToRun < 500000.) {
+		// Copy current status into the output file
+		if (HPWH_doTempDepress) {
+			airTemp2 = hpwh.getLocationTemp_C();
+		}
+		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+			//std::to_string(hpwh.getOutletTemp()) + ",";
+		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+	}
+	
+	for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+		cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+		cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+		//cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
+	}
   }
 
+  if (minutesToRun > 500000.) {
+	firstCol = input3 + "," + input1 + "," + input2;
+	fprintf(yearOutFile, "%s", firstCol.c_str());
+	double totalIn = 0, totalOut = 0;
+	for (int iHS = 0; iHS < 3; iHS++) {
+		fprintf(yearOutFile, ",%0.0f,%0.0f", cumHeatIn[iHS], cumHeatOut[iHS]);
+		totalIn += cumHeatIn[iHS];
+		totalOut += cumHeatOut[iHS];
+	}
+	fprintf(yearOutFile, ",%0.0f,%0.0f", totalIn, totalOut);
+	for (int iHS = 0; iHS < 3; iHS++) {
+		fprintf(yearOutFile, ",%0.2f", cumHeatOut[iHS] /cumHeatIn[iHS]);
+	}
+	fprintf(yearOutFile, ",%0.2f", totalOut/totalIn);
+	fprintf(yearOutFile, "\n");
+	fclose(yearOutFile);
+  }
+  else {
+	fclose(outputFile);
+  }
   controlFile.close();
-  fclose(outputFile);
 
   return 0;
 
@@ -381,8 +420,8 @@ double getCOP(HPWH &hpwh) {
 
 // this function reads the named schedule into the provided array
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
-  long i, minuteTmp;
-  string line, snippet, s;
+  long i, minuteHrTmp;
+  string line, snippet, s, minORhr;
   double valTmp;
   ifstream inputFile(scheduleFileName.c_str());
   //open the schedule file provided
@@ -394,37 +433,62 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   }
 
   inputFile >> snippet >> valTmp;
+  // cout << "snippet " << snippet << " valTmp"<< valTmp<<'\n';
+
   if(snippet != "default") {
     cout << "First line of " << scheduleFileName << " must specify default\n";
     return 1;
   }
   // cout << valTmp << " minutes = " << minutesOfTest << "\n";
-  // cout << "size " << scheduleArray.size() << "\n";
+
   // Fill with the default value
   for(i = 0; i < minutesOfTest; i++) {
     scheduleArray.push_back(valTmp);
     // scheduleArray[i] = valTmp;
   }
 
+
   // Burn the first two lines
   std::getline(inputFile, line);
   std::getline(inputFile, line);
 
-  // Read all the exceptions
-  while(std::getline(inputFile, line)) {
-    std::stringstream ss(line); // Will parse with a stringstream
+  std::stringstream ss(line); // Will parse with a stringstream
+  // Grab the first token, which is the minute
+  std::getline(ss, s, ',');
+  std::istringstream(s) >> minORhr;
+  // cout <<  " minutes or hour: " << minORhr << "\n";
 
-    // Grab the first token, which is the minute
-    std::getline(ss, s, ',');
-    std::istringstream(s) >> minuteTmp;
+	// Read all the exceptions
+	while (std::getline(inputFile, line)) {
+		std::stringstream ss(line); // Will parse with a stringstream
 
-    // Grab the second token, which is the value
-    std::getline(ss, s, ',');
-    std::istringstream(s) >> valTmp;
+		// Grab the first token, which is the minute
+		std::getline(ss, s, ',');
+		std::istringstream(s) >> minuteHrTmp;
+		//cout << "minuteHrTmp " << minuteHrTmp << "\n";
 
-    // Update the value
-    scheduleArray[minuteTmp] = valTmp;
-  }
+		// Grab the second token, which is the value
+		std::getline(ss, s, ',');
+		std::istringstream(s) >> valTmp;
+
+		// Update the value
+		if (tolower(minORhr.at(0)) == 'm') {
+			scheduleArray[minuteHrTmp] = valTmp;
+		}
+		else if (tolower(minORhr.at(0)) == 'h') {
+			for (int j = minuteHrTmp * 60; j < (minuteHrTmp+1) * 60; j++) {
+				scheduleArray[j] = valTmp;
+				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
+
+			}
+		}
+		else {
+			cout << "Must specify time by minute or hour" << "\n";
+			return 1;
+		}
+	}
+  
+  
 
   //print out the whole schedule
 // if(DEBUG == 1){

@@ -8,6 +8,10 @@ target_link_libraries(testTool libHPWHsim)
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
+# Clear output file for yearly tests
+#add_custom_target(do_always ALL COMMAND ${CMAKE_COMMAND} file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") )
+add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
+
 # Run tests
 set(testNames
  test30
@@ -40,6 +44,19 @@ set(lockoutTestModels
   GE502014
 )
 
+set(yearTestsModels                
+  AOSmithHPTU80       
+  Sanden80            
+  GE502014            
+  Rheem2020Prem40 
+  Rheem2020Prem50
+  Rheem2020Build50
+)                                  
+set(yearTests                                        
+  testCA_3BR_CTZ15
+  testCA_3BR_CTZ16
+)
+
 set(largeCompressorTests
   testLargeComp45
   testLargeComp60
@@ -60,7 +77,9 @@ set(largeCompressorNames
   NyleC185A_C_SP
   NyleC250A_C_SP
 )
-#Tests for succssful runs
+
+		 
+#Tests for successful runs
 function( add_model_test )
   set(options)
   set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
@@ -108,6 +127,14 @@ foreach(test ${largeCompressorTests})
     #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Add small compressor yearly tests to the list
+foreach(test ${yearTests})
+  foreach(model ${yearTestsModels})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+  endforeach(model)
+endforeach(test)
+
 
 # Tests for differences between File and Preset versions
 function( add_file_test )
@@ -160,7 +187,7 @@ foreach(test ${testNames})
   endforeach(model)
 endforeach(test)
 
-#Add large compressor tests to the list
+#Add large compressor tests to the regression list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
@@ -168,3 +195,6 @@ foreach(test ${largeCompressorTests})
     #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Add regression test for yearly file 
+add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
