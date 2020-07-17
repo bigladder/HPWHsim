@@ -29,7 +29,7 @@ using std::ofstream;
 
 typedef std::vector<double> schedule;
 
-
+double getCOP(HPWH &hpwh);
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
 
 int main(int argc, char *argv[])
@@ -65,7 +65,12 @@ int main(int argc, char *argv[])
 
   string strPreamble;
   // string strHead = "minutes,Ta,inletT,draw,outletT,";
+  //string strHead = "minutes,Ta,inletT,draw,COP,";
   string strHead = "minutes,Ta,inletT,draw,";
+
+  if (DEBUG) {
+	 hpwh.setVerbosity(HPWH::VRB_reluctant);
+  }
 
   //.......................................
   //process command line arguments
@@ -176,21 +181,34 @@ int main(int argc, char *argv[])
 	}
 	// Large HPWH's
 	else if (input2 == "ColmacCxV_5_SP") {
-	  model = HPWH::MODELS_ColmacCxV_5_SP;
+		model = HPWH::MODELS_ColmacCxV_5_SP;
+	} else if (input2 == "ColmacCxA_10_SP") {
+		model = HPWH::MODELS_ColmacCxA_10_SP;
+	} else if (input2 == "ColmacCxA_15_SP") {
+		model = HPWH::MODELS_ColmacCxA_15_SP;
 	} else if (input2 == "ColmacCxA_20_SP") {
-	  model = HPWH::MODELS_ColmacCxA_20_SP;
+		model = HPWH::MODELS_ColmacCxA_20_SP;
+	} else if (input2 == "ColmacCxA_25_SP") {
+		model = HPWH::MODELS_ColmacCxA_25_SP;
 	} else if (input2 == "ColmacCxA_30_SP") {
-	  model = HPWH::MODELS_ColmacCxA_30_SP;
+		model = HPWH::MODELS_ColmacCxA_30_SP;
 	} else if (input2 == "NyleC25A_SP") {
-	  model = HPWH::MODELS_NyleC25A_SP;
+		model = HPWH::MODELS_NyleC25A_SP;
 	} else if (input2 == "NyleC90A_SP") {
-	  model = HPWH::MODELS_NyleC90A_SP;
+		model = HPWH::MODELS_NyleC90A_SP;
 	} else if (input2 == "NyleC185A_SP") {
-	  model = HPWH::MODELS_NyleC185A_SP;
+		model = HPWH::MODELS_NyleC185A_SP;
 	} else if (input2 == "NyleC250A_SP") {
-	  model = HPWH::MODELS_NyleC250A_SP;
-    //do nothin, use custom-compiled input specified later
-	  
+		model = HPWH::MODELS_NyleC250A_SP;
+	} else if (input2 == "NyleC90A_C_SP") {
+		model = HPWH::MODELS_NyleC90A_C_SP;
+	} else if (input2 == "NyleC185A_C_SP") {
+		model = HPWH::MODELS_NyleC185A_C_SP;
+	} else if (input2 == "NyleC250A_C_SP") {
+		model = HPWH::MODELS_NyleC250A_C_SP;
+
+	//do nothin, use custom-compiled input specified later
+
     } else {
       model = HPWH::MODELS_basicIntegrated;
       cout << "Couldn't find model " << input2 << ".  Exiting...\n";
@@ -381,8 +399,22 @@ int main(int argc, char *argv[])
 }
 
 
+//Function to calculate COP at a time step
+double getCOP(HPWH &hpwh) {
+	double inPow = 0;
+	double outPow = 0;
 
-
+	for (int ii = 0; ii < hpwh.getNumHeatSources(); ii++) {
+		inPow += hpwh.getNthHeatSourceEnergyInput(ii);
+		outPow += hpwh.getNthHeatSourceEnergyOutput(ii);
+	}
+	if (inPow == 0) {
+		return 0;
+	}
+	else {
+		return (outPow / inPow);
+	}
+}
 
 
 

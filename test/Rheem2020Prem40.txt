@@ -79,9 +79,7 @@ heatsource 1 copT2quad 0.0
 heatsource 1 hysteresis 4 F
 heatsource 1 coilConfig submerged
 
-
 heatsource 0 onlogic topSixth 20.4167 F
-
 heatsource 2 onlogic bottomThird 32 F
 heatsource 2 onlogic standby 9 F
 

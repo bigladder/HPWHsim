@@ -841,7 +841,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	// If a Colmac single pass preset
+	// If a Colmac single pass preset cold weather or not
 	else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
@@ -864,21 +864,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		compressor.perfMap.reserve(1);
-
-		//logic conditions
-		compressor.minT = F_TO_C(40.0);
-		compressor.hysteresis_dC = 0;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.perfMap.reserve(1);
+		compressor.hysteresis_dC = 0;
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(40), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(35.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -886,11 +883,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		if (presetNum == MODELS_ColmacCxV_5_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
+			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
-			msg("MODELS_ColmacCxV_5_SP has not been set yet, aborting.  \n");
-			return HPWH_ABORT;
+
+			//Set the scalled performance map in it's place
+			compressor.perfMap.push_back({
+				95, // Temperature (T_F)
+
+				{6.794894025, 0.027165115, -0.077132938, -0.017604433, -0.000105034, 0.0004717, 0.000183841,
+				-2.04271E-05, 0.00016801, 1.45728E-05, -1.397E-06}, // Input Power Coefficients (inputPower_coeffs)
+
+				{2.390445062, 0.114468216, -0.019965567, 0.003197647, 7.87671E-05, 4.97273E-05, -0.00010472, 
+				-0.000610525, -0.000399075, 9.16541E-05, 2.1789E-06 } // COP Coefficients (COP_coeffs)
+				});
 		}
 		else {
+			//logic conditions
+			compressor.minT = F_TO_C(40.);
+
 			//Perfmap for input power made from data for CxA-20 to be scalled for other models
 			std::vector<double> inputPwr_coeffs = { 13.77317898,0.098118687,-0.127961444,0.015252227,-0.000398994,0.001158229,
 					0.000570153,-7.3854E-05,-9.61881E-07,-0.000498209,1.52307E-07 };
@@ -899,35 +909,82 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			if (presetNum == MODELS_ColmacCxA_10_SP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
 				pwrScalar = 0.497;// Scalar to adjust inputPwr_coeffs
+
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.491234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05, -0.0001036,
+					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_15_SP) {
 				setTankSize_adjustUA(600., UNITS_GAL);
 				pwrScalar = 0.736;// Scalar to adjust inputPwr_coeffs
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.531234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05,-0.0001036,
+					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_SP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				pwrScalar = 1.0;// Scalar to adjust inputPwr_coeffs
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
+					-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_25_SP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 				double pwrScalar = 1.167;// Scalar to adjust inputPwr_coeffs
+
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.546234434, 0.162032056,-0.019707518, 0.001442995, -0.000246901,4.17009E-05, 
+					-0.0001036,-0.000573599,-0.000361645,0.000105189,1.85347E-06} // COP Coefficients (COP_coeffs)
+					});
+
 			}
 			else if (presetNum == MODELS_ColmacCxA_30_SP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 				pwrScalar = 1.516;// Scalar to adjust inputPwr_coeffs
+				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
+					std::bind1st(std::multiplies<double>(), pwrScalar));
+
+				//Set the scalled performance map in it's place
+				compressor.perfMap.push_back({
+					95, // Temperature (T_F)
+
+					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+
+					{-0.752956487,0.136869141,-0.020279585,0.042144248,-0.000134414,0.000112906,
+					-0.000185292,-0.000529395,-0.000115976,-9.32334E-05,5.90538E-07} // COP Coefficients (COP_coeffs)
+					});
 			}
-
-			std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-				std::bind1st(std::multiplies<double>(), pwrScalar));
-			//Set the scalled performance map in it's place
-			compressor.perfMap.push_back({
-				0, // Temperature (T_F)
-
-				inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
-
-				{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
-				-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
-				});
 		} //End if MODELS_ColmacCxV_5_SP
 
 		//set everything in its places
@@ -935,7 +992,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 	
 	// If Nyle single pass preset
-	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {
+	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
@@ -959,80 +1016,113 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.extrapolationMethod = EXTRAP_NEAREST;
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 
 		//logic conditions
-		compressor.minT = F_TO_C(40.0);
+
+		//logic conditions
+		if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {// If not cold weather package
+			compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
+		}
+		else {
+			compressor.minT = F_TO_C(35.);// Min air temperature WITH Cold Weather Package
+		}
+		compressor.maxT = F_TO_C(120.0); // Max air temperature
 		compressor.hysteresis_dC = 0;
-		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+
+		// Defines the maximum outlet temperature at the a low air temperature
+		compressor.maxOut_at_LowAir.outT_C = F_TO_C(140.);  
+		compressor.maxOut_at_LowAir.airT_C = F_TO_C(40.);
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(90), true));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(40), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(100.), true, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(35.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
-		if (presetNum == MODELS_NyleC250A_SP) {
-			setTankSize_adjustUA(800., UNITS_GAL);
-			compressor.minT = F_TO_C(45.0);
-
+		//Perfmaps for each compressor size
+		if (presetNum == MODELS_NyleC25A_SP) {
+			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.perfMap.push_back({
-				0, // Temperature (T_F)
+					90, // Temperature (T_F)
 
-				{7.693092424, -0.072548382, 0.067038406, 0.03924693, -0.000769036, -0.000369488, -0.000302597,
-				0.001689189, 0.001862817, -0.000298513, -6.19946E-06 }, // Input Power Coefficients (inputPower_coeffs)
+					{4.060120364 ,-0.020584279,-0.024201054,-0.007023945,0.000017461,0.000110366,0.000060338,
+					0.000120015,0.000111068,0.000138907,-0.000001569}, // Input Power Coefficients (inputPower_coeffs)
 
-				{4.136420036, 0.096548903, -0.008264666, -0.012210397, -4.09371E-05, 1.04316E-05, 9.01584E-05,
-				-0.000460458, -0.000650959, -8.0251E-05, 3.71129E-06 } // COP Coefficients (COP_coeffs)
+					{0.462979529,0.065656840,0.001077377,0.003428059,0.000243692,0.000021522,0.000005143,
+					-0.000384778,-0.000404744,-0.000036277, 0.000001900 } // COP Coefficients (COP_coeffs)
 				});
 		}
-		else {
-			//Perfmap for input power made from data for C185A_SP to be scalled for other models
-			std::vector<double> inputPwr_coeffs = { -16.70800526, -0.059330655, 0.347312024, 0.064635197, 5.72238E-05, -0.0012,
-					-5.96939E-05, 0.000590259, 0.000205245, 0., 0. }; // Input Power Coefficients (inputPower_coeffs);
-			double pwrScalar = 0.0;
-
-			if (presetNum == MODELS_NyleC25A_SP) {
-				setTankSize_adjustUA(200., UNITS_GAL);
-				pwrScalar = 0.112; // Scalar to adjust inputPwr_coeffs
-			}
-			else if (presetNum == MODELS_NyleC60A_SP) {
-				setTankSize_adjustUA(300., UNITS_GAL);
-				pwrScalar = 0.281; // Scalar to adjust inputPwr_coeffs
-			}
-			else if (presetNum == MODELS_NyleC90A_SP) {
-				setTankSize_adjustUA(400., UNITS_GAL);
-				pwrScalar = .493; // Scalar to adjust inputPwr_coeffs
-			}
-			else if (presetNum == MODELS_NyleC125A_SP) {
-				setTankSize_adjustUA(500., UNITS_GAL);
-				pwrScalar = 0.642; // Scalar to adjust inputPwr_coeffs
-			}
-			else if (presetNum == MODELS_NyleC185A_SP) {
-				setTankSize_adjustUA(800., UNITS_GAL);
-				pwrScalar = 1.; // Scalar to adjust inputPwr_coeffs
-			}
-			// Adjust inputPwr_coeffs by the pwrScalar for the HPWH model chosen.
-			std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-					std::bind1st(std::multiplies<double>(), pwrScalar));
-
-			//Set the scalled performance map in it's place
+		else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP) {
+			setTankSize_adjustUA(300., UNITS_GAL);
 			compressor.perfMap.push_back({
-				0, // Temperature (T_F)
+					90, // Temperature (T_F)
 
-				inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{-0.1180905709,0.0045354306,0.0314990479,-0.0406839757,0.0002355294,0.0000818684,0.0001943834,
+					-0.0002160871,0.0003053633,0.0003612413,-0.0000035912}, // Input Power Coefficients (inputPower_coeffs)
 
-				{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
-				-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					{6.8205043418,0.0860385185,-0.0748330699,-0.0172447955,0.0000510842,0.0002187441,-0.0000321036,
+					-0.0003311463,-0.0002154270,0.0001307922,0.0000005568} // COP Coefficients (COP_coeffs)
 				});
-		} // End if MODELS_NyleC250A_SP
+		}
+		else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP) {
+			setTankSize_adjustUA(400., UNITS_GAL);
+			compressor.perfMap.push_back({
+					90, // Temperature (T_F)
+
+					{13.27612215047,-0.01014009337,-0.13401028549,-0.02325705976,-0.00032515646,0.00040270625,
+					0.00001988733,0.00069451670,0.00069067890,0.00071091372,-0.00000854352}, // Input Power Coefficients (inputPower_coeffs)
+
+					{1.49112327987,0.06616282153,0.00715307252,-0.01269458185,0.00031448571,0.00001765313,
+					0.00006002498,-0.00045661397,-0.00034003896,-0.00004327766,0.00000176015} // COP Coefficients (COP_coeffs)
+				});
+		}
+		else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP) {
+			setTankSize_adjustUA(500., UNITS_GAL);
+			compressor.perfMap.push_back({
+					90, // Temperature (T_F)
+
+					{-3.558277209, -0.038590968,	0.136307181, -0.016945699,0.000983753, -5.18201E-05,	
+					0.000476904, -0.000514211, -0.000359172,	0.000266509, -1.58646E-07}, // Input Power Coefficients (inputPower_coeffs)
+
+					{4.889555031,	0.117102769, -0.060005795, -0.011871234, -1.79926E-05,	0.000207293, 
+					-1.4452E-05, -0.000492486, -0.000376814,	7.85911E-05,	1.47884E-06}// COP Coefficients (COP_coeffs)
+				});
+		}
+		else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP) {
+			setTankSize_adjustUA(800., UNITS_GAL);
+			compressor.perfMap.push_back({
+					90, // Temperature (T_F)
+
+					{18.58007733, -0.215324777, -0.089782421,	0.01503161,	0.000332503,	0.000274216,
+					2.70498E-05,	0.001387914,	0.000449199,	0.000829578, -5.28641E-06}, // Input Power Coefficients (inputPower_coeffs)
+
+					{-0.629432348,	0.181466663,	0.00044047,	0.012104957, -6.61515E-05,	9.29975E-05,	
+						9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06}// COP Coefficients (COP_coeffs)
+				});
+		}
+		else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP) {
+			setTankSize_adjustUA(800., UNITS_GAL);
+
+			compressor.perfMap.push_back({
+				90, // Temperature (T_F)
+
+				{-13.89057656,0.025902417,0.304250541,0.061695153,-0.001474249,-0.001126845,-0.000220192,
+				0.001241026,0.000571009,-0.000479282,9.04063E-06},// Input Power Coefficients (inputPower_coeffs)
+
+				{7.443904067,0.185978755,-0.098481635,-0.002500073,0.000127658,0.000444321,0.000139547,
+				-0.001000195,-0.001140199,-8.77557E-05,4.87405E-06} // COP Coefficients (COP_coeffs)
+				});
+		}
 
 		//set everything in its places
 		setOfSources[0] = compressor;
@@ -1104,8 +1194,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
-		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
-
+		if (presetNum == MODELS_Sanden80) {
+			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+		}
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
@@ -1279,8 +1370,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
-
-				//set everything in its places
+		//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
 		setOfSources[2] = compressor;
@@ -2000,8 +2090,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvTO BE UPDATEDvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-	//PRELIMINARY PRESET USING GE2014 DATA 
+	// PRESET USING GE2014 DATA 
 	else if (presetNum == MODELS_BWC2020_65) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
@@ -2010,8 +2099,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = GAL_TO_L(65);
-		tankUA_kJperHrC = 10.;
+		tankVolume_L = GAL_TO_L(64);
+		tankUA_kJperHrC = 7.6;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
@@ -2082,10 +2171,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[2].backupHeatSource = &setOfSources[1];
 		setOfSources[1].backupHeatSource = &setOfSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
 	}
-	// If Rheem Premium TO BE UPDATED 
+	// If Rheem Premium
 	else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
@@ -2112,7 +2199,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		doTempDepression = false;
-		tankMixesOnDraw = true;
+		tankMixesOnDraw = false;
 
 		numHeatSources = 3;
 		setOfSources = new HeatSource[numHeatSources];
@@ -2128,7 +2215,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
 
-		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
 
 		compressor.perfMap.push_back({
@@ -2180,7 +2266,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
-	// If Rheem Premium  
+
+	// If Rheem Build
 	else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
@@ -2207,7 +2294,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		doTempDepression = false;
-		tankMixesOnDraw = true;
+		tankMixesOnDraw = false;
 
 		numHeatSources = 3;
 		setOfSources = new HeatSource[numHeatSources];
@@ -2224,7 +2311,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
 
 		compressor.perfMap.reserve(2);
-
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
 			{220.0, 0.8743, 0.00454}, // Input Power Coefficients (inputPower_coeffs)
@@ -2260,6 +2346,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
+
 		//set everything in its places
 		setOfSources[0] = resistiveElementTop;
 		setOfSources[1] = resistiveElementBottom;
@@ -2275,7 +2362,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
-	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^TO BE UPDATED^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 	else if (presetNum == MODELS_RheemHB50) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
