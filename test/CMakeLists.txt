@@ -20,9 +20,6 @@ set(testNames
  testLockout
  testDr
  testSandenCombi
- # testHVT40
-#  testHVT50
-  #testDOE_24hr50
 )
 
 set(modelNames
@@ -62,9 +59,14 @@ set(yearTests
 set(largeCompressorTests
   testLargeComp45
   testLargeComp60
+  testLargeCompHot
 )
 set(largeCompressorNames
+  ColmacCxV_5_SP
+  ColmacCxA_10_SP
+  ColmacCxA_15_SP
   ColmacCxA_20_SP
+  ColmacCxA_25_SP
   ColmacCxA_30_SP
   NyleC25A_SP
   NyleC90A_SP 
