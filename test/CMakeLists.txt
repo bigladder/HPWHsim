@@ -8,9 +8,8 @@ target_link_libraries(testTool libHPWHsim)
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
-
 # Clear output file for yearly tests
-file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
+file(REMOVE  "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") 
 
 # Run tests
 set(testNames
@@ -78,6 +77,7 @@ set(largeCompressorNames
   NyleC250A_C_SP
 )
 
+		 
 #Tests for successful runs
 function( add_model_test )
   set(options)
@@ -196,4 +196,4 @@ foreach(test ${largeCompressorTests})
 endforeach(test)
 
 #Add regression test for yearly file 
-add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
+#add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
