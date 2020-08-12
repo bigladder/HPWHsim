@@ -868,14 +868,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 
+		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(40), false));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(35.), false, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -886,103 +887,88 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
 
-			//Set the scalled performance map in it's place
 			compressor.perfMap.push_back({
-				95, // Temperature (T_F)
+				105, // Temperature (T_F)
 
-				{6.794894025, 0.027165115, -0.077132938, -0.017604433, -0.000105034, 0.0004717, 0.000183841,
-				-2.04271E-05, 0.00016801, 1.45728E-05, -1.397E-06}, // Input Power Coefficients (inputPower_coeffs)
+				{-63.03503461, -0.113969285,1.131886391,-0.395945059,-0.000146565,-0.004548549,
+				6.41633E-05,0.000942556,0.00203668,0.002724261,-1.37743E-05}, // Input Power Coefficients (inputPower_coeffs)
 
-				{2.390445062, 0.114468216, -0.019965567, 0.003197647, 7.87671E-05, 4.97273E-05, -0.00010472, 
-				-0.000610525, -0.000399075, 9.16541E-05, 2.1789E-06 } // COP Coefficients (COP_coeffs)
+				{75.51023893,0.192639579,-1.236500063,0.410918932,-8.30539E-05,0.004998052,1.49907E-05,
+				-0.001081378 ,-0.002400876, -0.002843726,1.5949E-05} // COP Coefficients (COP_coeffs)
 				});
 		}
 		else {
 			//logic conditions
 			compressor.minT = F_TO_C(40.);
-
-			//Perfmap for input power made from data for CxA-20 to be scalled for other models
-			std::vector<double> inputPwr_coeffs = { 13.77317898,0.098118687,-0.127961444,0.015252227,-0.000398994,0.001158229,
-					0.000570153,-7.3854E-05,-9.61881E-07,-0.000498209,1.52307E-07 };
-			double pwrScalar = 0.0;
-
+			
 			if (presetNum == MODELS_ColmacCxA_10_SP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
-				pwrScalar = 0.497;// Scalar to adjust inputPwr_coeffs
 
-				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-					std::bind1st(std::multiplies<double>(), pwrScalar));
-				//Set the scalled performance map in it's place
 				compressor.perfMap.push_back({
-					95, // Temperature (T_F)
+					105, // Temperature (T_F)
 
-					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{6.245405475,0.017843061, -0.004880269, -0.005480953, -3.36344E-05,
+					0.000153143,0.000131151,1.55439E-05,-0.000207022,1.45476E-05,1.13399E-06}, // Input Power Coefficients (inputPower_coeffs)
 
-					{0.491234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05, -0.0001036,
-					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
-					});
+					{2.999798697,0.049642812,-0.01948994,-0.004284595,9.38143E-05,
+					4.84994E-05,-3.8207E-05,-0.000202575,2.55782E-05,5.76961E-05,-4.67458E-07} // COP Coefficients (COP_coeffs)
+				});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_15_SP) {
+
 				setTankSize_adjustUA(600., UNITS_GAL);
-				pwrScalar = 0.736;// Scalar to adjust inputPwr_coeffs
-				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-					std::bind1st(std::multiplies<double>(), pwrScalar));
-				//Set the scalled performance map in it's place
 				compressor.perfMap.push_back({
 					95, // Temperature (T_F)
 
-					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{13.66353179,0.00995298,-0.034178789 ,-0.013976793 ,-0.000110695,0.000260479,0.000232498,
+					0.000194561, -0.000339296,5.31754E-06,2.3653E-06}, // Input Power Coefficients (inputPower_coeffs
 
-					{0.531234434,0.162032056,-0.019707518,0.001442995,-0.000246901,4.17009E-05,-0.0001036,
-					-0.000573599,-0.000361645,0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					{1.945158936,0.041271369,-0.011142406,-0.001605424,4.92958E-05,3.48959E-05,-3.22831E-05,
+					-0.000165898,1.12053E-05,3.92771E-05,-3.52623E-07} // COP Coefficients (COP_coeffs)
 					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_SP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				//Set the scalled performance map in it's place
+
 				compressor.perfMap.push_back({
 					95, // Temperature (T_F)
 
-					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{18.72568714,0.027659996,-0.086369893,-0.007301256, -0.000514866,0.000442547,0.000231776,0.000564562,
+					-0.000453523,-0.000106934,4.17353E-06}, // Input Power Coefficients (inputPower_coeffs)
 
-					{0.466234434, 0.162032056, -0.019707518, 0.001442995, -0.000246901, 4.17009E-05,
-					-0.0001036,-0.000573599, -0.000361645, 0.000105189,1.85347E-06 } // COP Coefficients (COP_coeffs)
+					{1.731863198,0.057728361,-0.00874979,0.002559259,0.000133259,4.50948E-05,-3.21827E-05,-0.000317704,
+					-6.47424E-05,1.90658E-05,3.35539E-08 } // COP Coefficients (COP_coeffs)
 					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_25_SP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
-				double pwrScalar = 1.167;// Scalar to adjust inputPwr_coeffs
 
-				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-					std::bind1st(std::multiplies<double>(), pwrScalar));
-				//Set the scalled performance map in it's place
 				compressor.perfMap.push_back({
 					95, // Temperature (T_F)
 
-					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{10.14179201,0.015981041,0.043484303,0.038453377,-0.000555971,0.000135448,0.000263362,
+					0.000755368,-0.000740822,-0.000395114,5.98699E-06}, // Input Power Coefficients (inputPower_coeffs)
+					
 
-					{0.546234434, 0.162032056,-0.019707518, 0.001442995, -0.000246901,4.17009E-05, 
-					-0.0001036,-0.000573599,-0.000361645,0.000105189,1.85347E-06} // COP Coefficients (COP_coeffs)
+					{3.102088551,0.061014745,-0.025923335,-0.001847663,0.000101461,9.75336E-05,-2.82794E-05,
+					-0.000334181 ,-6.88623E-05,4.09758E-05,1.45752E-07} // COP Coefficients (COP_coeffs)
 					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_30_SP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
-				pwrScalar = 1.516;// Scalar to adjust inputPwr_coeffs
-				std::transform(inputPwr_coeffs.begin(), inputPwr_coeffs.end(), inputPwr_coeffs.begin(),
-					std::bind1st(std::multiplies<double>(), pwrScalar));
 
-				//Set the scalled performance map in it's place
 				compressor.perfMap.push_back({
 					95, // Temperature (T_F)
 
-					inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs)
+					{13.36929355,-0.055689603,0.034403032,-0.03850619,-0.00053802,0.00010938,0.000356058,0.001429926,
+					0.00019538, 0.000138577, -9.59205E-07}, // Input Power Coefficients (inputPower_coeffs)
 
-					{-0.752956487,0.136869141,-0.020279585,0.042144248,-0.000134414,0.000112906,
-					-0.000185292,-0.000529395,-0.000115976,-9.32334E-05,5.90538E-07} // COP Coefficients (COP_coeffs)
+					{4.433780491,0.061659096,-0.041408782,-0.0012498,7.91626E-05,0.000150242,-3.00005E-05,-0.000342003,
+					-9.42052E-05,3.39684E-05,3.60339E-07} // COP Coefficients (COP_coeffs)
 					});
 			}
 		} //End if MODELS_ColmacCxV_5_SP
@@ -1033,8 +1019,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.hysteresis_dC = 0;
 
 		// Defines the maximum outlet temperature at the a low air temperature
-		compressor.maxOut_at_LowAir.outT_C = F_TO_C(140.);  
-		compressor.maxOut_at_LowAir.airT_C = F_TO_C(40.);
+		compressor.maxOut_at_LowT.outT_C = F_TO_C(140.);  
+		compressor.maxOut_at_LowT.airT_C = F_TO_C(40.);
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
