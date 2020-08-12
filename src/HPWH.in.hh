@@ -134,16 +134,16 @@ class HPWH {
 	  MODELS_ColmacCxA_10_SP = 211,  /**<  Colmac CxA_10 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_15_SP = 212,  /**<  Colmac CxA_15 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_20_SP = 213,  /**<  Colmac CxA_20 external heat pump in Single Pass Mode */
-	  MODELS_ColmacCxA_25_SP = 213,  /**<  Colmac CxA_25 external heat pump in Single Pass Mode */
-	  MODELS_ColmacCxA_30_SP = 214,  /**<  Colmac CxA_30 external heat pump in Single Pass Mode */
+	  MODELS_ColmacCxA_25_SP = 214,  /**<  Colmac CxA_25 external heat pump in Single Pass Mode */
+	  MODELS_ColmacCxA_30_SP = 215,  /**<  Colmac CxA_30 external heat pump in Single Pass Mode */
 
 	  // Larger Colmac models in multi pass configuration 
 	  MODELS_ColmacCxV_5_MP  = 310,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
 	  MODELS_ColmacCxA_10_MP = 311,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_15_MP = 312,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_20_MP = 313,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_25_MP = 313,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
-	  MODELS_ColmacCxA_30_MP = 314,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_25_MP = 314,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
+	  MODELS_ColmacCxA_30_MP = 315,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
 	  
 	  // Larger Nyle models in single pass configuration
 	  MODELS_NyleC25A_SP = 230, /*< Nyle C25A external heat pump in Single Pass Mode  */
@@ -763,7 +763,7 @@ class HPWH::HeatSource {
 		double outT_C;
 		double airT_C;
 	 };
-	maxOut_minAir maxOut_at_LowAir;
+	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
   void addTurnOnLogic(HeatingLogic logic);
