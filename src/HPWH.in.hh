@@ -459,6 +459,10 @@ class HPWH {
   /**< get the heat content of the tank, relative to zero celsius
    * returns using kilojoules */
 
+  int getHPWHModel()const;
+  /**< get the model number of the HPWHsim model number of the hpwh */
+
+
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
 	int runOneStep(double drawVolume_L, double ambientT_C,
 	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
