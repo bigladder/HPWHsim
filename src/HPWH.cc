@@ -1420,7 +1420,9 @@ double HPWH::getLocationTemp_C() const {
 	return locationTemperature_C;
 }
 
-
+int HPWH::getHPWHModel() const {
+	return hpwhModel;
+}
 
 
 //the privates
