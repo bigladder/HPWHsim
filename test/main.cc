@@ -344,6 +344,12 @@ int main(int argc, char *argv[])
       drStatus = HPWH::DR_ENGAGE;
     }
 
+	if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
+	//Do a simple mix down of the draw for the cold water temperature
+		if (hpwh.getSetpoint() <= 125. ){
+			allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getSetpoint() - allSchedules[0][i]);
+		}
+	}
     // Run the step
 	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		GAL_TO_L(allSchedules[1][i]), // Flow in gallons

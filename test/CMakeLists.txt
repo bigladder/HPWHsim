@@ -78,7 +78,21 @@ set(largeCompressorNames
   NyleC250A_C_SP
 )
 
-		 
+set(yearLargeTestsModels   
+  ColmacCxV_5_SP
+  ColmacCxA_10_SP
+  ColmacCxA_15_SP
+  ColmacCxA_20_SP
+  ColmacCxA_25_SP
+  ColmacCxA_30_SP
+  NyleC90A_SP
+  NyleC185A_SP
+  NyleC250A_SP
+)                                  
+set(yearLargeTests                                        
+  testCA_36Unit_CTZ12
+)
+
 #Tests for successful runs
 function( add_model_test )
   set(options)
@@ -131,6 +145,13 @@ endforeach(test)
 #Add small compressor yearly tests to the list
 foreach(test ${yearTests})
   foreach(model ${yearTestsModels})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+  endforeach(model)
+endforeach(test)
+
+#Add LARGE compressor yearly tests to the list
+foreach(test ${yearLargeTests})
+  foreach(model ${yearLargeTestsModels})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
   endforeach(model)
 endforeach(test)
