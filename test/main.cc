@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 	if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
 	//Do a simple mix down of the draw for the cold water temperature
 		if (hpwh.getSetpoint() <= 125. ){
-			allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getSetpoint() - allSchedules[0][i]);
+			allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
 		}
 	}
     // Run the step
