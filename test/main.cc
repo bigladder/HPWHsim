@@ -426,7 +426,8 @@ double getCOP(HPWH &hpwh) {
 
 // this function reads the named schedule into the provided array
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
-  long i, minuteHrTmp;
+  long minuteHrTmp;
+  bool hourInput;
   string line, snippet, s, minORhr;
   double valTmp;
   ifstream inputFile(scheduleFileName.c_str());
@@ -448,54 +449,39 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   // cout << valTmp << " minutes = " << minutesOfTest << "\n";
 
   // Fill with the default value
-  for(i = 0; i < minutesOfTest; i++) {
-    scheduleArray.push_back(valTmp);
-    // scheduleArray[i] = valTmp;
-  }
-
+  scheduleArray.assign(minutesOfTest, valTmp);
 
   // Burn the first two lines
   std::getline(inputFile, line);
   std::getline(inputFile, line);
 
   std::stringstream ss(line); // Will parse with a stringstream
-  // Grab the first token, which is the minute
-  std::getline(ss, s, ',');
-  std::istringstream(s) >> minORhr;
-  // cout <<  " minutes or hour: " << minORhr << "\n";
-
-	// Read all the exceptions
-	while (std::getline(inputFile, line)) {
-		std::stringstream ss(line); // Will parse with a stringstream
-
-		// Grab the first token, which is the minute
-		std::getline(ss, s, ',');
-		std::istringstream(s) >> minuteHrTmp;
-		//cout << "minuteHrTmp " << minuteHrTmp << "\n";
-
-		// Grab the second token, which is the value
-		std::getline(ss, s, ',');
-		std::istringstream(s) >> valTmp;
+  // Grab the first token, which is the minute or hour marker
+  ss >> minORhr;
+  if (minORhr.empty() ) { // If nothing left in the file
+	  return 0;
+  }
+  hourInput = tolower(minORhr.at(0)) == 'h';
+  char c; // to eat the commas nom nom
+  // Read all the exceptions to the default value
+  while (inputFile >> minuteHrTmp >> c >> valTmp) {
 
 		// Update the value
-		if (tolower(minORhr.at(0)) == 'm') {
+		if (!hourInput) {
 			scheduleArray[minuteHrTmp] = valTmp;
 		}
-		else if (tolower(minORhr.at(0)) == 'h') {
+		else if (hourInput) {
 			for (int j = minuteHrTmp * 60; j < (minuteHrTmp+1) * 60; j++) {
 				scheduleArray[j] = valTmp;
 				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
-
 			}
 		}
 		else {
 			cout << "Must specify time by minute or hour" << "\n";
 			return 1;
 		}
-	}
+  }
   
-  
-
   //print out the whole schedule
 // if(DEBUG == 1){
 //   for(i = 0; (unsigned)i < scheduleArray.size(); i++){
