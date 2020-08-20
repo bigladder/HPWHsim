@@ -919,7 +919,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 				setTankSize_adjustUA(600., UNITS_GAL);
 				compressor.perfMap.push_back({
-					95, // Temperature (T_F)
+					105, // Temperature (T_F)
 
 					{13.66353179,0.00995298,-0.034178789 ,-0.013976793 ,-0.000110695,0.000260479,0.000232498,
 					0.000194561, -0.000339296,5.31754E-06,2.3653E-06}, // Input Power Coefficients (inputPower_coeffs
@@ -933,7 +933,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(800., UNITS_GAL);
 
 				compressor.perfMap.push_back({
-					95, // Temperature (T_F)
+					105, // Temperature (T_F)
 
 					{18.72568714,0.027659996,-0.086369893,-0.007301256, -0.000514866,0.000442547,0.000231776,0.000564562,
 					-0.000453523,-0.000106934,4.17353E-06}, // Input Power Coefficients (inputPower_coeffs)
@@ -947,7 +947,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 
 				compressor.perfMap.push_back({
-					95, // Temperature (T_F)
+					105, // Temperature (T_F)
 
 					{10.14179201,0.015981041,0.043484303,0.038453377,-0.000555971,0.000135448,0.000263362,
 					0.000755368,-0.000740822,-0.000395114,5.98699E-06}, // Input Power Coefficients (inputPower_coeffs)
@@ -962,7 +962,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 
 				compressor.perfMap.push_back({
-					95, // Temperature (T_F)
+					105, // Temperature (T_F)
 
 					{13.36929355,-0.055689603,0.034403032,-0.03850619,-0.00053802,0.00010938,0.000356058,0.001429926,
 					0.00019538, 0.000138577, -9.59205E-07}, // Input Power Coefficients (inputPower_coeffs)
