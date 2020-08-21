@@ -29,7 +29,6 @@ using std::ofstream;
 
 typedef std::vector<double> schedule;
 
-double getCOP(HPWH &hpwh);
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
 
 int main(int argc, char *argv[])
@@ -323,59 +322,63 @@ int main(int argc, char *argv[])
   std::vector<double> nodeExtraHeat_W;
   std::vector<double>* vectptr = NULL;
   // Loop over the minutes in the test
-  for(i = 0; i < minutesToRun; i++) {
+  for (i = 0; i < minutesToRun; i++) {
 
-	if(DEBUG) {
-      cout << "Now on minute: " << i << "\n";
-    }
+	  if (DEBUG) {
+		  cout << "Now on minute: " << i << "\n";
+	  }
 
-    if(HPWH_doTempDepress) {
-      airTemp2 = F_TO_C(airTemp);
-    } else {
-      airTemp2 = allSchedules[2][i];
-    }
+	  if (HPWH_doTempDepress) {
+		  airTemp2 = F_TO_C(airTemp);
+	  }
+	  else {
+		  airTemp2 = allSchedules[2][i];
+	  }
 
-    // Process the dr status
-    if(allSchedules[4][i] == 0) {
-      drStatus = HPWH::DR_BLOCK;
-    } else if(allSchedules[4][i] == 1) {
-      drStatus = HPWH::DR_ALLOW;
-    } else if(allSchedules[4][i] == 2) {
-      drStatus = HPWH::DR_ENGAGE;
-    }
+	  // Process the dr status
+	  if (allSchedules[4][i] == 0) {
+		  drStatus = HPWH::DR_BLOCK;
+	  }
+	  else if (allSchedules[4][i] == 1) {
+		  drStatus = HPWH::DR_ALLOW;
+	  }
+	  else if (allSchedules[4][i] == 2) {
+		  drStatus = HPWH::DR_ENGAGE;
+	  }
 
-	if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
-	//Do a simple mix down of the draw for the cold water temperature
-		if (hpwh.getSetpoint() <= 125. ){
-			allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
-		}
-	}
-    // Run the step
-	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
-		GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-		airTemp2,  // Ambient Temp (C)
-		allSchedules[3][i],  // External Temp (C)
-		drStatus, // DDR Status (now an enum. Fixed for now as allow)
-		1.0,    // Minutes per step
-		1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
-		vectptr);
+	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
+		  //Do a simple mix down of the draw for the cold water temperature
+		  if (hpwh.getSetpoint() <= 125.) {
+			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
+		  }
+	  }
+	  // Run the step
+	  hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
+		  GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+		  airTemp2,  // Ambient Temp (C)
+		  allSchedules[3][i],  // External Temp (C)
+		  drStatus, // DDR Status (now an enum. Fixed for now as allow)
+		  1.0,    // Minutes per step
+		  1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
+		  vectptr);
 
-	if (minutesToRun < 500000.) {
-		// Copy current status into the output file
-		if (HPWH_doTempDepress) {
-			airTemp2 = hpwh.getLocationTemp_C();
-		}
-		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
-			//std::to_string(hpwh.getOutletTemp()) + ",";
-		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
-	}
-	
-	for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-		cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
-		cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
-		//cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
-	}
+	  if (minutesToRun < 500000.) {
+		  // Copy current status into the output file
+		  if (HPWH_doTempDepress) {
+			  airTemp2 = hpwh.getLocationTemp_C();
+		  }
+		  strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+			  //std::to_string(hpwh.getOutletTemp()) + ",";
+		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+	  }
+	  else {
+		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+			  cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+			  cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+			  //cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
+		  }
+	  }
   }
 
   if (minutesToRun > 500000.) {
@@ -402,24 +405,6 @@ int main(int argc, char *argv[])
 
   return 0;
 
-}
-
-
-//Function to calculate COP at a time step
-double getCOP(HPWH &hpwh) {
-	double inPow = 0;
-	double outPow = 0;
-
-	for (int ii = 0; ii < hpwh.getNumHeatSources(); ii++) {
-		inPow += hpwh.getNthHeatSourceEnergyInput(ii);
-		outPow += hpwh.getNthHeatSourceEnergyOutput(ii);
-	}
-	if (inPow == 0) {
-		return 0;
-	}
-	else {
-		return (outPow / inPow);
-	}
 }
 
 
