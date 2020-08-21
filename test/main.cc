@@ -29,7 +29,6 @@ using std::ofstream;
 
 typedef std::vector<double> schedule;
 
-double getCOP(HPWH &hpwh);
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
 
 int main(int argc, char *argv[])
@@ -323,53 +322,63 @@ int main(int argc, char *argv[])
   std::vector<double> nodeExtraHeat_W;
   std::vector<double>* vectptr = NULL;
   // Loop over the minutes in the test
-  for(i = 0; i < minutesToRun; i++) {
+  for (i = 0; i < minutesToRun; i++) {
 
-	if(DEBUG) {
-      cout << "Now on minute: " << i << "\n";
-    }
+	  if (DEBUG) {
+		  cout << "Now on minute: " << i << "\n";
+	  }
 
-    if(HPWH_doTempDepress) {
-      airTemp2 = F_TO_C(airTemp);
-    } else {
-      airTemp2 = allSchedules[2][i];
-    }
+	  if (HPWH_doTempDepress) {
+		  airTemp2 = F_TO_C(airTemp);
+	  }
+	  else {
+		  airTemp2 = allSchedules[2][i];
+	  }
 
-    // Process the dr status
-    if(allSchedules[4][i] == 0) {
-      drStatus = HPWH::DR_BLOCK;
-    } else if(allSchedules[4][i] == 1) {
-      drStatus = HPWH::DR_ALLOW;
-    } else if(allSchedules[4][i] == 2) {
-      drStatus = HPWH::DR_ENGAGE;
-    }
+	  // Process the dr status
+	  if (allSchedules[4][i] == 0) {
+		  drStatus = HPWH::DR_BLOCK;
+	  }
+	  else if (allSchedules[4][i] == 1) {
+		  drStatus = HPWH::DR_ALLOW;
+	  }
+	  else if (allSchedules[4][i] == 2) {
+		  drStatus = HPWH::DR_ENGAGE;
+	  }
 
-    // Run the step
-	hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
-		GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-		airTemp2,  // Ambient Temp (C)
-		allSchedules[3][i],  // External Temp (C)
-		drStatus, // DDR Status (now an enum. Fixed for now as allow)
-		1.0,    // Minutes per step
-		1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
-		vectptr);
+	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
+		  //Do a simple mix down of the draw for the cold water temperature
+		  if (hpwh.getSetpoint() <= 125.) {
+			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
+		  }
+	  }
+	  // Run the step
+	  hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
+		  GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+		  airTemp2,  // Ambient Temp (C)
+		  allSchedules[3][i],  // External Temp (C)
+		  drStatus, // DDR Status (now an enum. Fixed for now as allow)
+		  1.0,    // Minutes per step
+		  1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
+		  vectptr);
 
-	if (minutesToRun < 500000.) {
-		// Copy current status into the output file
-		if (HPWH_doTempDepress) {
-			airTemp2 = hpwh.getLocationTemp_C();
-		}
-		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
-			//std::to_string(hpwh.getOutletTemp()) + ",";
-		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
-	}
-	
-	for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-		cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
-		cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
-		//cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
-	}
+	  if (minutesToRun < 500000.) {
+		  // Copy current status into the output file
+		  if (HPWH_doTempDepress) {
+			  airTemp2 = hpwh.getLocationTemp_C();
+		  }
+		  strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+			  //std::to_string(hpwh.getOutletTemp()) + ",";
+		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+	  }
+	  else {
+		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+			  cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+			  cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+			  //cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
+		  }
+	  }
   }
 
   if (minutesToRun > 500000.) {
@@ -399,28 +408,11 @@ int main(int argc, char *argv[])
 }
 
 
-//Function to calculate COP at a time step
-double getCOP(HPWH &hpwh) {
-	double inPow = 0;
-	double outPow = 0;
-
-	for (int ii = 0; ii < hpwh.getNumHeatSources(); ii++) {
-		inPow += hpwh.getNthHeatSourceEnergyInput(ii);
-		outPow += hpwh.getNthHeatSourceEnergyOutput(ii);
-	}
-	if (inPow == 0) {
-		return 0;
-	}
-	else {
-		return (outPow / inPow);
-	}
-}
-
-
 
 // this function reads the named schedule into the provided array
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
-  long i, minuteHrTmp;
+  long minuteHrTmp;
+  bool hourInput;
   string line, snippet, s, minORhr;
   double valTmp;
   ifstream inputFile(scheduleFileName.c_str());
@@ -442,54 +434,39 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   // cout << valTmp << " minutes = " << minutesOfTest << "\n";
 
   // Fill with the default value
-  for(i = 0; i < minutesOfTest; i++) {
-    scheduleArray.push_back(valTmp);
-    // scheduleArray[i] = valTmp;
-  }
-
+  scheduleArray.assign(minutesOfTest, valTmp);
 
   // Burn the first two lines
   std::getline(inputFile, line);
   std::getline(inputFile, line);
 
   std::stringstream ss(line); // Will parse with a stringstream
-  // Grab the first token, which is the minute
-  std::getline(ss, s, ',');
-  std::istringstream(s) >> minORhr;
-  // cout <<  " minutes or hour: " << minORhr << "\n";
-
-	// Read all the exceptions
-	while (std::getline(inputFile, line)) {
-		std::stringstream ss(line); // Will parse with a stringstream
-
-		// Grab the first token, which is the minute
-		std::getline(ss, s, ',');
-		std::istringstream(s) >> minuteHrTmp;
-		//cout << "minuteHrTmp " << minuteHrTmp << "\n";
-
-		// Grab the second token, which is the value
-		std::getline(ss, s, ',');
-		std::istringstream(s) >> valTmp;
+  // Grab the first token, which is the minute or hour marker
+  ss >> minORhr;
+  if (minORhr.empty() ) { // If nothing left in the file
+	  return 0;
+  }
+  hourInput = tolower(minORhr.at(0)) == 'h';
+  char c; // to eat the commas nom nom
+  // Read all the exceptions to the default value
+  while (inputFile >> minuteHrTmp >> c >> valTmp) {
 
 		// Update the value
-		if (tolower(minORhr.at(0)) == 'm') {
+		if (!hourInput) {
 			scheduleArray[minuteHrTmp] = valTmp;
 		}
-		else if (tolower(minORhr.at(0)) == 'h') {
+		else if (hourInput) {
 			for (int j = minuteHrTmp * 60; j < (minuteHrTmp+1) * 60; j++) {
 				scheduleArray[j] = valTmp;
 				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
-
 			}
 		}
 		else {
 			cout << "Must specify time by minute or hour" << "\n";
 			return 1;
 		}
-	}
+  }
   
-  
-
   //print out the whole schedule
 // if(DEBUG == 1){
 //   for(i = 0; (unsigned)i < scheduleArray.size(); i++){
