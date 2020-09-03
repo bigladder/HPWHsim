@@ -218,7 +218,6 @@ string HPWH::getVersion() {
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
-
 	DRMODES DRstatus, double minutesPerStep, 
 	double inletVol2_L, double inletT2_C,
 	std::vector<double>* nodePowerExtra_W) {
@@ -273,7 +272,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	//process draws and standby losses
 	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep, inletVol2_L, inletT2_C);
-
 
 	//do HeatSource choice
 	for (int i = 0; i < numHeatSources; i++) {
@@ -1560,7 +1558,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		// Get the "constant" tau for the stability condition and the conduction calculation
 		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000.0 * DENSITYWATER_kgperL * 1000.0 * (node_height * node_height)) * minutesPerStep * 60.0;
 		if (tau > 0.5) {
-			msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
+			}
+			simHasFailed = true;
+			return;
 		}
 
 		// Boundary condition for the finite difference. 
