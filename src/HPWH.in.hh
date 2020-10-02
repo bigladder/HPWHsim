@@ -53,12 +53,12 @@ class HPWH {
 
   ///specifies the various modes for the Demand Response (DR) abilities
   ///values may vary - names should be used
-  enum DRMODES{
-    DR_BLOCK = 0,   /**<this mode prohibits the elements from engaging and turns
-                    off any currently running  */
-    DR_ALLOW = 1,   /**< this mode allows the water heater to run normally  */
-    DR_ENGAGE = 2  /**< this mode forces an element to turn on  */
-    };
+	enum DRMODES {
+		DR_ALLOW = 0b000,   /**< this mode allows the water heater to run normally */
+		DR_LOC   = 0b001, /**< this mode locks out the resistance  elements  */
+		DR_LOR   = 0b010, /**< this mode locks out the compressor   */
+		DR_TOO   = 0b100, /**< this mode ignores the dead band checks and forces the compressor and bottom resistance elements. */
+	};
 
   ///specifies the allowable preset HPWH models
   ///values may vary - names should be used
@@ -313,7 +313,7 @@ class HPWH {
 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L,
                   double *tankAmbientT_C, double *heatSourceAmbientT_C,
-                  DRMODES *DRstatus, double minutesPerStep);
+					DRMODES *DRstatus, double minutesPerStep);
 	/**< This function will progress the simulation forward in time by N (equal) steps
 	 * The calculated values will be summed or averaged, as appropriate, and
 	 * then stored in the usual variables to be accessed through functions
@@ -462,6 +462,9 @@ class HPWH {
   int getHPWHModel()const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
+  bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal);
+  /**< Checks the demand response signal against the different heat source types  */
+
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
 	int runOneStep(double drawVolume_L, double ambientT_C,
@@ -534,6 +537,7 @@ class HPWH {
 	/**< function pointer to indicate an external message processing function  */
   void* messageCallbackContextPtr;
 	/**< caller context pointer for external message processing  */
+
 
 
   MODELS hpwhModel;
@@ -616,6 +620,10 @@ class HPWH {
 
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
+
+  DRMODES prevDRstatus;
+  /**< the DR signal sent during the previous time step of runOneStep*/
+
 };  //end of HPWH class
 
 
@@ -851,5 +859,10 @@ inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
+
+inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
+{
+	return static_cast<HPWH::DRMODES>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 #endif

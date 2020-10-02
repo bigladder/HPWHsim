@@ -90,7 +90,6 @@ heatsource 2 onlogic bottomThird 43.6 F
 heatsource 1 onlogic bottomThird 43.6 F
 heatsource 2 onlogic standby 23.8 F
 
-heatsource 0 backupSource 1
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
 
