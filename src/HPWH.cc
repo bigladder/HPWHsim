@@ -73,7 +73,8 @@ HPWH::HPWH() :
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
 	doInversionMixing(true), doConduction(true),
-	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
+	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.),
+	prevDRstatus(DR_ALLOW)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -128,6 +129,8 @@ HPWH::HPWH(const HPWH &hpwh) {
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
+	prevDRstatus = hpwh.prevDRstatus;
+
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh) {
@@ -197,7 +200,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
-
+	prevDRstatus = hpwh.prevDRstatus;
 	return *this;
 }
 
@@ -273,46 +276,74 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	//process draws and standby losses
 	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep, inletVol2_L, inletT2_C);
 
-	//do HeatSource choice
-	for (int i = 0; i < numHeatSources; i++) {
-		if (hpwhVerbosity >= VRB_emetic) {
-			msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
+
+	if ((DRstatus & DR_TOO) != 0) { // if DR signal includes ignoring the deadband
+		// turn on the compressor and last resistance element. 
+		setOfSources[compressorIndex].engageHeatSource();
+		if (lowestElementIndex >= 0) {
+			setOfSources[lowestElementIndex].engageHeatSource();
 		}
-		if (isHeating == true) {
-			//check if anything that is on needs to turn off (generally for lowT cutoffs)
-			//things that just turn on later this step are checked for this in shouldHeat
-			if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff()) {
-				setOfSources[i].disengageHeatSource();
-				//check if the backup heat source would have to shut off too
-				if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true) {
-					//and if not, go ahead and turn it on
-					setOfSources[i].backupHeatSource->engageHeatSource();
+
+		if (hpwhVerbosity >= VRB_typical) {
+			msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i, prevDRstatus = %i \n", DRstatus, prevDRstatus);
+		}
+	}
+
+	if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0){
+		turnAllHeatSourcesOff(); // turns off isheating
+		if (hpwhVerbosity >= VRB_typical) {
+			msg("DR_LOC | DR_LOC everything off, DRstatus = %i, prevDRstatus = %i \n", DRstatus, prevDRstatus);
+		}
+	}
+	else { //do normal check
+		//do HeatSource choice
+		for (int i = 0; i < numHeatSources; i++) {
+			if (hpwhVerbosity >= VRB_emetic) {
+				msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
+			}
+			if (isHeating == true) {
+				//check if anything that is on needs to turn off (generally for lowT cutoffs)
+				//things that just turn on later this step are checked for this in shouldHeat
+				if (setOfSources[i].isEngaged() && setOfSources[i].shutsOff()) {
+					setOfSources[i].disengageHeatSource();
+					//check if the backup heat source would have to shut off too
+					if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true) {
+						//and if not, go ahead and turn it on
+						setOfSources[i].backupHeatSource->engageHeatSource();
+					}
+				}
+
+				//if there's a priority HeatSource (e.g. upper resistor) and it needs to
+				//come on, then turn  off and start it up
+				if (setOfSources[i].isVIP) {
+					if (hpwhVerbosity >= VRB_emetic) {
+						msg("\tVIP check");
+					}
+					if (setOfSources[i].shouldHeat()) {
+						if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
+							if (compressorIndex >= 0) {
+								setOfSources[compressorIndex].engageHeatSource();
+							}
+						}
+						else {
+							turnAllHeatSourcesOff();
+							setOfSources[i].engageHeatSource();
+							//stop looking if the VIP needs to run
+							break;
+						}
+					}
 				}
 			}
-
-			//if there's a priority HeatSource (e.g. upper resistor) and it needs to
-			//come on, then turn everything off and start it up
-			if (setOfSources[i].isVIP) {
-				if (hpwhVerbosity >= VRB_emetic) {
-					msg("\tVIP check");
-				}
+			//if nothing is currently on, then check if something should come on
+			else /* (isHeating == false) */ {
 				if (setOfSources[i].shouldHeat()) {
-					turnAllHeatSourcesOff();
 					setOfSources[i].engageHeatSource();
-					//stop looking if the VIP needs to run
-					break;
+					//engaging a heat source sets isHeating to true, so this will only trigger once
 				}
 			}
-		}
-		//if nothing is currently on, then check if something should come on
-		else /* (isHeating == false) */ {
-			if (setOfSources[i].shouldHeat()) {
-				setOfSources[i].engageHeatSource();
-				//engaging a heat source sets isHeating to true, so this will only trigger once
-			}
-		}
 
-	}  //end loop over heat sources
+		}  //end loop over heat sources
+	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		msg("after heat source choosing:  ");
@@ -320,29 +351,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			msg("heat source %d: %d \t", i, setOfSources[i].isEngaged());
 		}
 		msg("\n");
-	}
-
-
-	//change the things according to DR schedule
-	if (DRstatus == DR_BLOCK) {
-		//force off
-		turnAllHeatSourcesOff();
-		isHeating = false;
-	}
-	else if (DRstatus == DR_ALLOW) {
-		//do nothing
-	}
-	else if (DRstatus == DR_ENGAGE) {
-		//if nothing else is on, force the first heat source on
-		//this may or may not be desired behavior, pending more research (and funding)
-		if (areAllHeatSourcesOff() == true) {
-			if (compressorIndex > -1) {
-				setOfSources[compressorIndex].engageHeatSource();
-			}
-			else if (lowestElementIndex > -1) {
-				setOfSources[lowestElementIndex].engageHeatSource();
-			}
-		}
 	}
 
 	//do heating logic
@@ -353,13 +361,22 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		if (hpwhVerbosity >= VRB_emetic) {
 			msg("Checking lock-out logic for heat source %d:\n", i);
 		}
-		if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
+		if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
 			setOfSources[i].lockOutHeatSource();
-		}
-		if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
-			setOfSources[i].unlockHeatSource();
-		}
 
+			if (hpwhVerbosity >= VRB_typical) {
+			msg("Locked out heat source, DRstatus = %i, prevDRstatus = %i\n", DRstatus, prevDRstatus);
+			}
+		}
+		else
+		{
+			if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
+				setOfSources[i].lockOutHeatSource();
+			}
+			if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
+				setOfSources[i].unlockHeatSource();
+			}
+		}
 		if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL){
 			setOfSources[i].disengageHeatSource();
 			if (hpwhVerbosity >= HPWH::VRB_emetic) {
@@ -372,7 +389,16 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 			HeatSource* heatSourcePtr;
 			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
-				heatSourcePtr = setOfSources[i].backupHeatSource;
+				if (shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
+
+					if (hpwhVerbosity >= VRB_typical) {
+						msg("Locked out back up heat source and disengaged heat source %i, DRstatus = %i, prevDRstatus = %i\n", i, DRstatus, prevDRstatus);
+					}
+					continue;
+				}
+				else {
+					heatSourcePtr = setOfSources[i].backupHeatSource;
+				}
 			}
 			else {
 				heatSourcePtr = &setOfSources[i];
@@ -479,6 +505,9 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	if (hpwhVerbosity >= VRB_typical) {
 		msg("Ending runOneStep.  \n\n\n\n");
 	}
+
+	prevDRstatus = DRstatus;
+
 	return 0;  //successful completion of the step returns 0
 } //end runOneStep
 
@@ -1988,6 +2017,17 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
 	}
 }
 
+bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) {
+	
+	if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
+		return true;
+	}
+	else if (hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
+		return true;
+	}
+	return false;
+}
+
 void HPWH::HeatSource::engageHeatSource() {
 	isOn = true;
 	hpwh->isHeating = true;
@@ -2771,8 +2811,6 @@ void HPWH::calcDerivedHeatingValues(){
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		msg(outputString, " compressorIndex : %d \n", compressorIndex);
-	}
-	if (hpwhVerbosity >= VRB_emetic) {
 		msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
 	}
 

@@ -336,15 +336,7 @@ int main(int argc, char *argv[])
 	  }
 
 	  // Process the dr status
-	  if (allSchedules[4][i] == 0) {
-		  drStatus = HPWH::DR_BLOCK;
-	  }
-	  else if (allSchedules[4][i] == 1) {
-		  drStatus = HPWH::DR_ALLOW;
-	  }
-	  else if (allSchedules[4][i] == 2) {
-		  drStatus = HPWH::DR_ENGAGE;
-	  }
+	  drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
 	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
 		  //Do a simple mix down of the draw for the cold water temperature
