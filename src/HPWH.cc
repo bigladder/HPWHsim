@@ -73,8 +73,7 @@ HPWH::HPWH() :
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
 	doInversionMixing(true), doConduction(true),
-	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.),
-	prevDRstatus(DR_ALLOW)
+	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -129,7 +128,6 @@ HPWH::HPWH(const HPWH &hpwh) {
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
-	prevDRstatus = hpwh.prevDRstatus;
 
 }
 
@@ -200,7 +198,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
-	prevDRstatus = hpwh.prevDRstatus;
 	return *this;
 }
 
@@ -279,20 +276,22 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	if ((DRstatus & DR_TOO) != 0) { // if DR signal includes ignoring the deadband
 		// turn on the compressor and last resistance element. 
-		setOfSources[compressorIndex].engageHeatSource();
+		if (compressorIndex >= 0) {
+			setOfSources[compressorIndex].engageHeatSource(DRstatus);
+		}
 		if (lowestElementIndex >= 0) {
-			setOfSources[lowestElementIndex].engageHeatSource();
+			setOfSources[lowestElementIndex].engageHeatSource(DRstatus);
 		}
 
 		if (hpwhVerbosity >= VRB_typical) {
-			msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i, prevDRstatus = %i \n", DRstatus, prevDRstatus);
+			msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i \n", DRstatus);
 		}
 	}
 
 	if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0){
 		turnAllHeatSourcesOff(); // turns off isheating
 		if (hpwhVerbosity >= VRB_typical) {
-			msg("DR_LOC | DR_LOC everything off, DRstatus = %i, prevDRstatus = %i \n", DRstatus, prevDRstatus);
+			msg("DR_LOC | DR_LOC everything off, DRstatus = %i \n", DRstatus);
 		}
 	}
 	else { //do normal check
@@ -309,7 +308,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 					//check if the backup heat source would have to shut off too
 					if (setOfSources[i].backupHeatSource != NULL && setOfSources[i].backupHeatSource->shutsOff() != true) {
 						//and if not, go ahead and turn it on
-						setOfSources[i].backupHeatSource->engageHeatSource();
+						setOfSources[i].backupHeatSource->engageHeatSource(DRstatus);
 					}
 				}
 
@@ -322,12 +321,13 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 					if (setOfSources[i].shouldHeat()) {
 						if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
 							if (compressorIndex >= 0) {
-								setOfSources[compressorIndex].engageHeatSource();
+								setOfSources[compressorIndex].engageHeatSource(DRstatus);
+								break;
 							}
 						}
 						else {
 							turnAllHeatSourcesOff();
-							setOfSources[i].engageHeatSource();
+							setOfSources[i].engageHeatSource(DRstatus);						
 							//stop looking if the VIP needs to run
 							break;
 						}
@@ -337,7 +337,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			//if nothing is currently on, then check if something should come on
 			else /* (isHeating == false) */ {
 				if (setOfSources[i].shouldHeat()) {
-					setOfSources[i].engageHeatSource();
+					setOfSources[i].engageHeatSource(DRstatus);
 					//engaging a heat source sets isHeating to true, so this will only trigger once
 				}
 			}
@@ -363,9 +363,8 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 		if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
 			setOfSources[i].lockOutHeatSource();
-
 			if (hpwhVerbosity >= VRB_typical) {
-			msg("Locked out heat source, DRstatus = %i, prevDRstatus = %i\n", DRstatus, prevDRstatus);
+				msg("Locked out heat source, DRstatus = %i\n", DRstatus);
 			}
 		}
 		else
@@ -389,10 +388,12 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 			HeatSource* heatSourcePtr;
 			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
-				if (shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
-
+				// Check that the backup isn't locked out too
+				setOfSources[i].backupHeatSource->unlockHeatSource();
+				if (setOfSources[i].backupHeatSource->shouldLockOut(heatSourceAmbientT_C) ||
+					shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
 					if (hpwhVerbosity >= VRB_typical) {
-						msg("Locked out back up heat source and disengaged heat source %i, DRstatus = %i, prevDRstatus = %i\n", i, DRstatus, prevDRstatus);
+						msg("Locked out back up heat source and engaged heat source %i, DRstatus = %i\n", i, DRstatus );
 					}
 					continue;
 				}
@@ -436,7 +437,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 				//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
 				if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
 					//turn it on
-					setOfSources[i].followedByHeatSource->engageHeatSource();
+					setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
 				}
 			}
 		}
@@ -506,7 +507,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		msg("Ending runOneStep.  \n\n\n\n");
 	}
 
-	prevDRstatus = DRstatus;
 
 	return 0;  //successful completion of the step returns 0
 } //end runOneStep
@@ -2028,13 +2028,15 @@ bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) {
 	return false;
 }
 
-void HPWH::HeatSource::engageHeatSource() {
+void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal) {
 	isOn = true;
 	hpwh->isHeating = true;
 	if (companionHeatSource != NULL &&
 		companionHeatSource->shutsOff() != true &&
-		companionHeatSource->isEngaged() == false) {
-		companionHeatSource->engageHeatSource();
+		companionHeatSource->isEngaged() == false &&
+		hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource, DR_signal) == false)
+	{
+		companionHeatSource->engageHeatSource(DR_signal);
 	}
 }
 

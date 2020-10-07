@@ -324,9 +324,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for (i = 0; i < minutesToRun; i++) {
 
-	  if (DEBUG) {
+	  //if (DEBUG) {
 		  cout << "Now on minute: " << i << "\n";
-	  }
+	//  }
 
 	  if (HPWH_doTempDepress) {
 		  airTemp2 = F_TO_C(airTemp);
@@ -363,6 +363,9 @@ int main(int argc, char *argv[])
 			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
 			  //std::to_string(hpwh.getOutletTemp()) + ",";
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+		  cout << "Now on minute: " << i << ", heat source 0: " << hpwh.getNthHeatSourceEnergyInput(0, HPWH::UNITS_KWH)*1000. <<
+			  ", heat source 1: " << hpwh.getNthHeatSourceEnergyInput(1, HPWH::UNITS_KWH)*1000. <<
+			  ", heat source 2: " << hpwh.getNthHeatSourceEnergyInput(2, HPWH::UNITS_KWH)*1000. << "\n";
 	  }
 	  else {
 		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
