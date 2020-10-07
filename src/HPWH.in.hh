@@ -650,7 +650,7 @@ class HPWH::HeatSource {
 
 	bool isEngaged() const;
   /**< return whether or not the heat source is engaged */
-	void engageHeatSource();
+	void engageHeatSource(DRMODES DRstatus = DR_ALLOW);
   /**< turn heat source on, i.e. set isEngaged to TRUE */
 	void disengageHeatSource();
   /**< turn heat source off, i.e. set isEngaged to FALSE */
