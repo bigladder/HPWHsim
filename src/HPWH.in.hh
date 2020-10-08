@@ -55,8 +55,8 @@ class HPWH {
   ///values may vary - names should be used
 	enum DRMODES {
 		DR_ALLOW = 0b000,   /**< this mode allows the water heater to run normally */
-		DR_LOC   = 0b001, /**< this mode locks out the resistance  elements  */
-		DR_LOR   = 0b010, /**< this mode locks out the compressor   */
+		DR_LOC   = 0b001, /**< this mode locks out the compressor */
+		DR_LOR   = 0b010, /**< this mode locks out the resistance elements */
 		DR_TOO   = 0b100, /**< this mode ignores the dead band checks and forces the compressor and bottom resistance elements. */
 	};
 
