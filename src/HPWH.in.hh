@@ -621,9 +621,6 @@ class HPWH {
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
-  DRMODES prevDRstatus;
-  /**< the DR signal sent during the previous time step of runOneStep*/
-
 };  //end of HPWH class
 
 
