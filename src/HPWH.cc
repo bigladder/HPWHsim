@@ -1666,7 +1666,7 @@ void HPWH::mixTankInversions() {
 	do {
 		hasInversion = false;
 		//Start from the top and check downwards
-		for (int i = numNodes - 1; i >= 0; i--) {
+		for (int i = numNodes - 1; i > 0; i--) {
 			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
 				// Temperature inversion!
 				hasInversion = true;
