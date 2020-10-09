@@ -218,7 +218,7 @@ string HPWH::getVersion() {
 
 int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
-	DRMODES DRstatus, double minutesPerStep, 
+	DRMODES DRstatus,
 	double inletVol2_L, double inletT2_C,
 	std::vector<double>* nodePowerExtra_W) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
@@ -271,7 +271,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 	//process draws and standby losses
-	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, minutesPerStep, inletVol2_L, inletT2_C);
+	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
 
 
 	if ((DRstatus & DR_TOO) != 0) { // if DR signal includes ignoring the deadband
@@ -450,7 +450,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 	//If theres extra user defined heat to add -> Add extra heat!
 	if (nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(nodePowerExtra_W, tankAmbientT_C, minutesPerStep);
+		addExtraHeat(nodePowerExtra_W, tankAmbientT_C);
 	}
 
 
@@ -514,7 +514,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 	double *tankAmbientT_C, double *heatSourceAmbientT_C,
-	DRMODES *DRstatus, double minutesPerStep) {
+	DRMODES *DRstatus) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//these are all the accumulating variables we'll need
@@ -532,7 +532,7 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 	//run the sim one step at a time, accumulating the outputs as you go
 	for (int i = 0; i < N; i++) {
 		runOneStep(inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i],
-			DRstatus[i], minutesPerStep);
+			DRstatus[i]);
 
 		if (simHasFailed) {
 			if (hpwhVerbosity >= VRB_reluctant) {
@@ -1453,7 +1453,7 @@ int HPWH::getHPWHModel() const {
 
 
 //the privates
-void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C, double minutesPerStep,
+void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C,
 	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
 	double drawFraction;
@@ -1694,7 +1694,7 @@ void HPWH::mixTankInversions() {
 }
 
 
-void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesPerStep){
+void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C){
 	if ((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n", (*nodePowerExtra_W).size(), CONDENSITY_SIZE);
