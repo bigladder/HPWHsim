@@ -302,7 +302,7 @@ class HPWH {
 
   int runOneStep(double inletT_C, double drawVolume_L,
                   double ambientT_C, double externalT_C,
-                  DRMODES DRstatus, double minutesPerStep,
+                  DRMODES DRstatus, 
 				  double inletVol2_L = 0., double inletT2_C = 0.,
 				  std::vector<double>* nodePowerExtra_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
@@ -313,7 +313,7 @@ class HPWH {
 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L,
                   double *tankAmbientT_C, double *heatSourceAmbientT_C,
-                  DRMODES *DRstatus, double minutesPerStep);
+                  DRMODES *DRstatus);
 	/**< This function will progress the simulation forward in time by N (equal) steps
 	 * The calculated values will be summed or averaged, as appropriate, and
 	 * then stored in the usual variables to be accessed through functions
@@ -468,14 +468,14 @@ class HPWH {
 	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
 	  std::vector<double>* nodePowerExtra_W = NULL) {
 	  return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-		  externalT_C, DRstatus, member_minutesPerStep, inletVol2_L, inletT2_C,
+		  externalT_C, DRstatus, inletVol2_L, inletT2_C,
 		  nodePowerExtra_W);
 	};
 
 
 	/** Setters for the what are typically input variables  */
   void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
-  void setMinutesPerStep(double newMinutesPerStep) {member_minutesPerStep = newMinutesPerStep;};
+  void setMinutesPerStep(double newMinutesPerStep) {minutesPerStep = newMinutesPerStep;};
 
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
@@ -484,7 +484,7 @@ class HPWH {
  private:
   class HeatSource;
 
-	void updateTankTemps(double draw, double inletT, double ambientT, double minutesPerStep, double inletVol2_L, double inletT2_L);
+	void updateTankTemps(double draw, double inletT, double ambientT, double inletVol2_L, double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	bool areAllHeatSourcesOff() const;
@@ -492,7 +492,7 @@ class HPWH {
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
 
-	void addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C, double minutesPerStep);
+	void addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C);
 	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
@@ -609,7 +609,7 @@ class HPWH {
   double maxDepression_C = 2.5;
   /** a couple variables to hold values which are typically inputs  */
   double member_inletT_C;
-  double member_minutesPerStep;
+  double minutesPerStep = 1;
 
   bool doInversionMixing;
   /**<  If and only if true will model temperature inversion mixing in the tank  */
@@ -667,7 +667,7 @@ class HPWH::HeatSource {
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
-	void addHeat_temp(double externalT_C, double minutesPerStep);
+	void addHeat_temp(double externalT_C);
 	void addHeat(double externalT_C, double minutesToRun);
   /**< adds heat to the hpwh - this is the function that interprets the
       various configurations (internal/external, resistance/heat pump) to add heat */
