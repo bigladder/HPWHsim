@@ -54,10 +54,11 @@ class HPWH {
   ///specifies the various modes for the Demand Response (DR) abilities
   ///values may vary - names should be used
 	enum DRMODES {
-		DR_ALLOW = 0b000,   /**< this mode allows the water heater to run normally */
-		DR_LOC   = 0b001, /**< this mode locks out the resistance  elements  */
-		DR_LOR   = 0b010, /**< this mode locks out the compressor   */
-		DR_TOO   = 0b100, /**< this mode ignores the dead band checks and forces the compressor and bottom resistance elements. */
+		DR_ALLOW = 0b0000,   /**< this mode allows the water heater to run normally */
+		DR_LOC   = 0b0001, /**< this mode locks out the resistance  elements  */
+		DR_LOR   = 0b0010, /**< this mode locks out the compressor   */
+		DR_TOO   = 0b0100, /**< this mode engages the compressor and bottom resistance element */
+		DR_SDB	 = 0b1000, /**< this mode uses a small deadband to control the compressor and bottom resistance element */
 	};
 
   ///specifies the allowable preset HPWH models
@@ -229,8 +230,11 @@ class HPWH {
     double decisionPoint;
     bool isAbsolute;
     std::function<bool(double,double)> compare;
-    HeatingLogic(std::string desc, std::vector<NodeWeight> n, double d, bool a=false, std::function<bool(double,double)> c=std::less<double>()) :
-      description(desc), nodeWeights(n), decisionPoint(d), isAbsolute(a), compare(c) {};
+
+	bool isDRSmallDeadband;
+
+    HeatingLogic(std::string desc, std::vector<NodeWeight> n, double d, bool a=false, std::function<bool(double,double)> c=std::less<double>(), bool dr = false) :
+      description(desc), nodeWeights(n), decisionPoint(d), isAbsolute(a), compare(c), isDRSmallDeadband(dr) {};
   };
 
   HeatingLogic topThird(double d) const;
@@ -250,6 +254,13 @@ class HPWH {
   HeatingLogic bottomTwelthMaxTemp(double d) const;
   HeatingLogic largeDraw(double d) const;
   HeatingLogic largerDraw(double d) const;
+
+  int checkTurnOnLogic(HeatingLogic &tempLogic, std::string tempString, double tempDouble);
+  /**< Sets the tempLogic HeatingLogic against a list of predefined logics. Valid inputs for tempString include:
+	 * topThird, bottomThird, standby, bottomSixth, secondSixth, thirdSixth, fourthSixth, fifthSixth, topSixth (case matters).
+
+	 * The return value is 0 for successful logic assignment, HPWH_ABORT otherwise
+	 */
 
 
   ///this is the value that the public functions will return in case of a simulation
@@ -465,6 +476,48 @@ class HPWH {
   bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal);
   /**< Checks the demand response signal against the different heat source types  */
 
+  int addDRHeatingLogicToCompressor(std::string tempString = "copy", double tempDelta_C = 4.);
+  /**< Adds a DR heating logic to the compressor, specified by tempString and tempDelta_C.
+	 *
+	 * Valid inputs for tempString include:
+	 * topThird, bottomThird, standby, bottomSixth, secondSixth, thirdSixth, fourthSixth, fifthSixth, topSixth, and copy (case matters).
+	 * Fractions specify the fraction of the tank nodes used to determine the temperature the "aquastat" sees.
+	 * Using the "copy" string copies the existing heating logics for the heat source and changes the dead band to match the
+	 * tempDelta_C input, and adds the DR flags.
+	 *
+	 * tempDelta_C is the temperature difference below the setpoint the "aquastat" engages the heat source.
+	 *
+	 * The return value is 0 for successful logic assignment, HPWH_ABORT otherwise*/
+
+  int addDRHeatingLogicToLowerResistor(std::string tempString = "copy", double tempDelta_C = 4.);
+  /**< Adds a DR heating logic to the lower resistance element, specified by tempString and tempDelta_C.
+	 *
+	 * Valid inputs for tempString include:
+	 * topThird, bottomThird, standby, bottomSixth, secondSixth, thirdSixth, fourthSixth, fifthSixth, topSixth, and copy (case matters).
+	 * Fractions specify the fraction of the tank nodes used to determine the temperature the "aquastat" sees.
+	 * Using the "copy" string copies the existing heating logics for the heat source and changes the dead band to match the
+	 * tempDelta_C input, and adds the DR flags.
+	 *
+	 * tempDelta_C is the temperature difference below the setpoint the "aquastat" engages the heat source.
+	 *
+	 * The return value is 0 for successful logic assignment, HPWH_ABORT otherwise*/
+
+  int addOrCopyDRHeatingLogic(int sourceIndex, std::string tempString, double tempDelta_C);
+  /**< Adds a DR heating logic to the heat source specified by sourceIndex, specified by tempString and tempDelta_C.
+	*
+	* Valid inputs for tempString include:
+	* topThird, bottomThird, standby, bottomSixth, secondSixth, thirdSixth, fourthSixth, fifthSixth, topSixth, and copy (case matters).
+	* Fractions specify the fraction of the tank nodes used to determine the temperature the "aquastat" sees.
+	* Using the "copy" string copies the existing heating logics for the heat source and changes the dead band to match the
+	* tempDelta_C input, and adds the DR flags.
+	*
+	* tempDelta_C is the temperature difference below the setpoint the "aquastat" engages the heat source.
+	*
+	* The return value is 0 for successful logic assignment, HPWH_ABORT otherwise*/
+
+  void makeHeatingLogicDR(HeatingLogic &tempLogic);
+  /**< This function adds the DR flags to the decscription and isDRSmallDeadband bool of a HeatingLogic struct */
+
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
 	int runOneStep(double drawVolume_L, double ambientT_C,
@@ -621,8 +674,6 @@ class HPWH {
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
-  DRMODES prevDRstatus;
-  /**< the DR signal sent during the previous time step of runOneStep*/
 
 };  //end of HPWH class
 
@@ -666,7 +717,7 @@ class HPWH::HeatSource {
   /**< queries the heat source as to whether it should lock out */
   bool shouldUnlock(double heatSourceAmbientT_C) const;
   /**< queries the heat source as to whether it should unlock */
-	bool shouldHeat() const;
+  bool shouldHeat(HPWH::DRMODES DRstatus) const;
   /**< queries the heat source as to whether or not it should turn on */
 	bool shutsOff() const;
   /**< queries the heat source whether should shut off */
@@ -781,6 +832,16 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
+
+  int addDRHeatingLogic(std::string tempString = "bottomSixth", double tempDelta_C = 2);
+  /**< Adds a smaller dead band for the DR call DR_USD.
+	 * tempString controls where n the tank the logic operates. valide inputs include:
+	 * topThird, bottomThird, standby, bottomSixth, secondSixth, thirdSixth, fourthSixth, fifthSixth, topSixth.
+	 * and tempDelta_C is the temperature difference from the setpoint when the logic triggers.
+	 *
+	 * The return value is 0 for successful creation, HPWH_ABORT otherwise
+	 */
+
 
   double minT;
   /**<  minimum operating temperature of HPWH environment */

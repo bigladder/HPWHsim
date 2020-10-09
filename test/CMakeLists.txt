@@ -14,14 +14,16 @@ add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_C
 
 # Run tests
 set(testNames
+ testDr_SDB
+
  test30
- test50
- test70
- test95
- testLockout
- testSandenCombi
- testDr_LO
- testDr_IDB
+ #test50
+ #test70
+ #test95
+ #testLockout
+ #testSandenCombi
+ #testDr_LO
+ #testDr_IDB
 )
 
 set(modelNames
@@ -48,20 +50,19 @@ set(lockoutTestModels
 set(yearTestsModels                
  AOSmithHPTU80       
  Sanden80            
- GE502014            
  Rheem2020Prem40 
  Rheem2020Prem50
  Rheem2020Build50
 )                                  
 set(yearTests                                        
- testCA_3BR_CTZ15
- testCA_3BR_CTZ16
+# testCA_3BR_CTZ15
+# testCA_3BR_CTZ16
 )
 
 set(largeCompressorTests
- testLargeComp45
- testLargeComp60
- testLargeCompHot
+# testLargeComp45
+# testLargeComp60
+# testLargeCompHot
 )
 set(largeCompressorNames
   ColmacCxV_5_SP
@@ -81,17 +82,17 @@ set(largeCompressorNames
 
 set(yearLargeTestsModels   
   ColmacCxV_5_SP
-  ColmacCxA_10_SP
-  ColmacCxA_15_SP
+  #ColmacCxA_10_SP
+  #ColmacCxA_15_SP
   ColmacCxA_20_SP
-  ColmacCxA_25_SP
+  #ColmacCxA_25_SP
   ColmacCxA_30_SP
   NyleC90A_SP
   NyleC185A_SP
   NyleC250A_SP
 )                                  
 set(yearLargeTests                                        
-  testCA_36Unit_CTZ12
+ # testCA_36Unit_CTZ12
 )
 
 #Tests for successful runs

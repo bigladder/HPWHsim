@@ -47,10 +47,14 @@ int main(int argc, char *argv[])
   std::vector<schedule> allSchedules(5);
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
-  string inputVariableName, firstCol;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
+  string inputVariableName, firstCol, testVal;
+  double newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
   int i, outputCode;
   long minutesToRun;
+
+  int DR_logic_source;
+  double DR_logic_delta_C;
+  string DR_logic_place;
 
   double cumHeatIn[3] = { 0,0,0 };
   double cumHeatOut[3] = { 0,0,0 };
@@ -240,23 +244,37 @@ int main(int argc, char *argv[])
   doCondu = 1;
   doInvMix = 1;
   inletH = 0.0;
+  DR_logic_source = 0; // 1 is compressor, 2 is lower RE, 3 is both. 
+  DR_logic_delta_C = 0;
+  DR_logic_place = "";
+
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
 	if(var1 == "setpoint") { // If a setpoint was specified then override the default
-		newSetpoint = testVal;
+		newSetpoint = stod(testVal);
     }
     if(var1 == "length_of_test") {
-		minutesToRun = (int) testVal;
+		minutesToRun = stoi(testVal);
     }
 	if (var1 == "doInversionMixing") {
-		doInvMix = (testVal > 0.0) ? 1 : 0;
+		doInvMix = (stoi(testVal) > 0.0) ? 1 : 0;
 	}
 	if (var1 == "doConduction") {
-		doCondu = (testVal > 0.0) ? 1 : 0;
+		doCondu = (stoi(testVal) > 0.0) ? 1 : 0;
 	}
 	if (var1 == "inletH") {
-		inletH = testVal;
+		inletH = stod(testVal);
+	}
+	if (var1 == "DR_logic_source") {
+		cout << "DR_logic_source "<<testVal << "\n";
+		DR_logic_source = stoi(testVal);
+	}if (var1 == "DR_logic_delta_C") {
+		cout << "DR_logic_delta_C " << testVal << "\n";
+		DR_logic_delta_C = stod(testVal);
+	}if (var1 == "DR_logic_place") {
+		cout << "DR_logic_place " << testVal << "\n";
+		DR_logic_place = testVal;
 	}
   }
 
@@ -321,12 +339,13 @@ int main(int argc, char *argv[])
 
   std::vector<double> nodeExtraHeat_W;
   std::vector<double>* vectptr = NULL;
+
   // Loop over the minutes in the test
   for (i = 0; i < minutesToRun; i++) {
 
-	  //if (DEBUG) {
+	  if (DEBUG) {
 		  cout << "Now on minute: " << i << "\n";
-	//  }
+	  }
 
 	  if (HPWH_doTempDepress) {
 		  airTemp2 = F_TO_C(airTemp);
@@ -363,9 +382,6 @@ int main(int argc, char *argv[])
 			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
 			  //std::to_string(hpwh.getOutletTemp()) + ",";
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
-		  cout << "Now on minute: " << i << ", heat source 0: " << hpwh.getNthHeatSourceEnergyInput(0, HPWH::UNITS_KWH)*1000. <<
-			  ", heat source 1: " << hpwh.getNthHeatSourceEnergyInput(1, HPWH::UNITS_KWH)*1000. <<
-			  ", heat source 2: " << hpwh.getNthHeatSourceEnergyInput(2, HPWH::UNITS_KWH)*1000. << "\n";
 	  }
 	  else {
 		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {

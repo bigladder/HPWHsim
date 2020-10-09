@@ -318,7 +318,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 					if (hpwhVerbosity >= VRB_emetic) {
 						msg("\tVIP check");
 					}
-					if (setOfSources[i].shouldHeat()) {
+					if (setOfSources[i].shouldHeat(DRstatus)) {
 						if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
 							if (compressorIndex >= 0) {
 								setOfSources[compressorIndex].engageHeatSource(DRstatus);
@@ -336,7 +336,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			}
 			//if nothing is currently on, then check if something should come on
 			else /* (isHeating == false) */ {
-				if (setOfSources[i].shouldHeat()) {
+				if (setOfSources[i].shouldHeat(DRstatus)) {
 					setOfSources[i].engageHeatSource(DRstatus);
 					//engaging a heat source sets isHeating to true, so this will only trigger once
 				}
@@ -2045,7 +2045,7 @@ void HPWH::HeatSource::disengageHeatSource() {
 	isOn = false;
 }
 
-bool HPWH::HeatSource::shouldHeat() const {
+bool HPWH::HeatSource::shouldHeat(HPWH::DRMODES DRstatus) const {
 	//return true if the heat source logic tells it to come on, false if it doesn't,
 	//or if an unsepcified selector was used
 	bool shouldEngage = false;
@@ -2055,33 +2055,37 @@ bool HPWH::HeatSource::shouldHeat() const {
 			hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i].description.c_str());
 		}
 
-		double average = hpwh->tankAvg_C(turnOnLogicSet[i].nodeWeights);
-		double comparison;
+		// Only check the DR logics if the DR call is DR_SDB
+		if ( !turnOnLogicSet[i].isDRSmallDeadband ||(turnOnLogicSet[i].isDRSmallDeadband && (DRstatus & DR_SDB) != 0) ) {
 
-		if (turnOnLogicSet[i].isAbsolute) {
-			comparison = turnOnLogicSet[i].decisionPoint;
-		}
-		else {
-			comparison = hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint;
-		}
+			double average = hpwh->tankAvg_C(turnOnLogicSet[i].nodeWeights);
+			double comparison;
 
-		if (turnOnLogicSet[i].compare(average, comparison)) {
-			shouldEngage = true;
-
-			//debugging message handling
-			if (hpwh->hpwhVerbosity >= VRB_typical) {
-				hpwh->msg("engages!\n");
+			if (turnOnLogicSet[i].isAbsolute) {
+				comparison = turnOnLogicSet[i].decisionPoint;
 			}
+			else {
+				comparison = hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint;
+			}
+
+			if (turnOnLogicSet[i].compare(average, comparison)) {
+				shouldEngage = true;
+
+				//debugging message handling
+				if (hpwh->hpwhVerbosity >= VRB_typical) {
+					hpwh->msg("engages!\n");
+				}
+				if (hpwh->hpwhVerbosity >= VRB_emetic) {
+					hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
+				}
+			}
+
+			//quit searching the logics if one of them turns it on
+			if (shouldEngage) break;
+
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
-				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
+				hpwh->msg("returns: %d \t", shouldEngage);
 			}
-		}
-
-		//quit searching the logics if one of them turns it on
-		if (shouldEngage) break;
-
-		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("returns: %d \t", shouldEngage);
 		}
 	}  //end loop over set of logic conditions
 
@@ -2098,7 +2102,6 @@ bool HPWH::HeatSource::shouldHeat() const {
 	}
 	return shouldEngage;
 }
-
 
 bool HPWH::HeatSource::shutsOff() const {
 	bool shutOff = false;
@@ -2696,6 +2699,98 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 
 }
 ////////////////////////////////////////////////////////////////////////////
+int HPWH::addDRHeatingLogicToCompressor(string tempString, double tempDelta_C) {
+	// Adds a smaller dead band for the DR call DR_SDB for the compressor. 
+	// tempString controls where the logic operates in the tank.
+	if (compressorIndex >= 0) {
+		return addOrCopyDRHeatingLogic(compressorIndex, tempString, tempDelta_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No compressor present in the HPWH object in addDRHeatingLogicToCompressor \n", tempString);
+		}
+		return HPWH_ABORT;
+	}
+}
+
+int HPWH::addDRHeatingLogicToLowerResistor(string tempString, double tempDelta_C) {
+	// Adds a smaller dead band for the DR call DR_SDB for the bottom resistance element. 
+	// tempString controls where the logic operates in the tank.
+	if (lowestElementIndex >= 0) {
+		return addOrCopyDRHeatingLogic(lowestElementIndex, tempString, tempDelta_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No resistance element present in the HPWH object in addDRHeatingLogicToLowerResistor \n", tempString);
+		}
+		return HPWH_ABORT;
+	}
+}
+
+int HPWH::addOrCopyDRHeatingLogic(int sourceIndex, string tempString, double tempDelta_C) {
+
+	if (sourceIndex > numHeatSources || sourceIndex < 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds heat source index, %i, in addDRHeatingLogic \n", sourceIndex);
+		}
+		return HPWH_ABORT;
+	}
+
+	std::vector<NodeWeight> nodeWeights;
+	HPWH::HeatingLogic tempLogic("temp", nodeWeights, 0.0); // init the heating logic
+
+	// Check to see if this is copy existing logic or new logic
+	if (tempString == "copy") {
+		int logicSize = setOfSources[sourceIndex].turnOnLogicSet.size();
+		for (int i = 0; i < logicSize; i++) {
+			cout << "logicSize = "<< logicSize <<", logic set: " << i <<". ";
+			// copy the existing turn on logics
+			tempLogic = setOfSources[sourceIndex].turnOnLogicSet[i];
+			// Set the DR logic to true
+			if (tempLogic.isDRSmallDeadband == true) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Caught trying to copy a DR logic set, did the add DR logic function get put in a loop? \n");
+				}
+			}
+			else {
+				// Add the DR flags to the logic
+				makeHeatingLogicDR(tempLogic);
+			}
+		
+			// use the delta to define the decision point based on if it's aboslute or relative.
+			if (tempLogic.isAbsolute) {
+				tempLogic.decisionPoint = setpoint_C - tempDelta_C;
+			}
+			else {
+				tempLogic.decisionPoint = tempDelta_C;
+			}
+			setOfSources[sourceIndex].addTurnOnLogic(tempLogic);
+		}
+	}
+	else if (!checkTurnOnLogic(tempLogic, tempString, tempDelta_C)) {
+		// Add the DR flags to the logic
+		makeHeatingLogicDR(tempLogic);
+		// Add the new DR logic to the set
+		setOfSources[sourceIndex].addTurnOnLogic(tempLogic);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Improper logic string: %s, in addDRHeatingLogicToCompressor \n", tempString);
+		}
+		return HPWH_ABORT;
+	}
+	return 0;
+}
+
+void HPWH::makeHeatingLogicDR(HPWH::HeatingLogic &tempLogic) {
+	// Takes a heating logic and adds the appropriate DR flags for DR_SDB signals
+
+	// add a dr flag to the logic description
+	tempLogic.description = tempLogic.description + " DR";
+
+	// turn on the DR_SDB flag
+	tempLogic.isDRSmallDeadband = true;
+}
 
 void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 	this->turnOnLogicSet.push_back(logic);
@@ -2703,6 +2798,8 @@ void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
+
+////////////////////////////////////////////////////////////////////////////
 void HPWH::calcSizeConstants() {
 	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
@@ -3190,39 +3287,17 @@ int HPWH::HPWHinit_file(string configFile) {
 						}
 						return HPWH_ABORT;
 					}
-					if (tempString == "topThird") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
-					}
-					else if (tempString == "bottomThird") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
-					}
-					else if (tempString == "standby") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
-					}
-					else if (tempString == "bottomSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
-					}
-					else if (tempString == "secondSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
-					}
-					else if (tempString == "thirdSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
-					}
-					else if (tempString == "fourthSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
-					}
-					else if (tempString == "fifthSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
-					}
-					else if (tempString == "topSixth") {
-						setOfSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
-					}
-					else {
+					// Check the tempString against all the preset turn on logics
+					std::vector<NodeWeight> nodeWeights;
+					HPWH::HeatingLogic tempLogic("temp", nodeWeights, 0.0 );
+					if (HPWH::checkTurnOnLogic(tempLogic, tempString, tempDouble)) {
 						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
 						}
 						return HPWH_ABORT;
 					}
+					setOfSources[heatsource].addTurnOnLogic(tempLogic);
+
 				}
 				else if (token == "offlogic") {
 					line_ss >> tempDouble >> units;
@@ -3435,5 +3510,39 @@ int HPWH::HPWHinit_file(string configFile) {
 	}
 	simHasFailed = false;
 	return 0;
+}
+
+int HPWH::checkTurnOnLogic(HPWH::HeatingLogic &tempLogic, string tempString, double tempDouble){
+	if (tempString == "topThird") {
+		tempLogic = HPWH::topThird(tempDouble);
+	}
+	else if (tempString == "bottomThird") {
+		tempLogic = HPWH::bottomThird(tempDouble);
+	}
+	else if (tempString == "standby") {
+		tempLogic = HPWH::standby(tempDouble);
+	}
+	else if (tempString == "bottomSixth") {
+		tempLogic = HPWH::bottomSixth(tempDouble);
+	}
+	else if (tempString == "secondSixth") {
+		tempLogic = HPWH::secondSixth(tempDouble);
+	}
+	else if (tempString == "thirdSixth") {
+		tempLogic = HPWH::thirdSixth(tempDouble);
+	}
+	else if (tempString == "fourthSixth") {
+		tempLogic = HPWH::fourthSixth(tempDouble);
+	}
+	else if (tempString == "fifthSixth") {
+		tempLogic = HPWH::fifthSixth(tempDouble);
+	}
+	else if (tempString == "topSixth") {
+		tempLogic = HPWH::topSixth(tempDouble);
+	}
+	else {
+		return HPWH_ABORT; 
+	}
+	return 0;  //successful init returns 0
 }
 #endif
