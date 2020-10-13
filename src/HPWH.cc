@@ -372,7 +372,16 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 			HeatSource* heatSourcePtr;
 			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
-				heatSourcePtr = setOfSources[i].backupHeatSource;
+				// Don't turn the backup electric resistanceheat source on if the VIP resistance element is on .
+				if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+					if (hpwhVerbosity >= VRB_typical) {
+						msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+					}
+					continue;
+				}
+				else {
+					heatSourcePtr = setOfSources[i].backupHeatSource;
+				}
 			}
 			else {
 				heatSourcePtr = &setOfSources[i];
@@ -2753,12 +2762,24 @@ void HPWH::calcDerivedHeatingValues(){
 	// define condenser index and lowest resistance element index
 	compressorIndex = -1; // Default = No compressor
 	lowestElementIndex = -1; // Default = No resistance elements
+	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
 		else {
+			// Gets VIP element index
+			if (setOfSources[i].isVIP) {
+				if (VIPIndex == -1) {
+					VIPIndex = i;
+				}
+				else {
+					if (hpwhVerbosity >= VRB_minuteOut) {
+						msg("More than one resistance element is assigned to VIP");
+					};
+				}
+			}
 			for (int j = 0; j < CONDENSITY_SIZE; j++) {
 				if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
 					lowestElementIndex = i;
@@ -2774,6 +2795,9 @@ void HPWH::calcDerivedHeatingValues(){
 	}
 	if (hpwhVerbosity >= VRB_emetic) {
 		msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
+	}	
+	if (hpwhVerbosity >= VRB_emetic) {
+		msg(outputString, " VIPIndex : %d \n", VIPIndex);
 	}
 
 	//heat source ability to depress temp

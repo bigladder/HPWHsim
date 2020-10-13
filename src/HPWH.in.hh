@@ -550,6 +550,10 @@ class HPWH {
 	int lowestElementIndex;
 	/**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
 
+
+	int VIPIndex;
+	/**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance elements)*/
+
 	int numNodes;
 	/**< the number of nodes in the tank - must be >= 12, in multiples of 12  */
 
