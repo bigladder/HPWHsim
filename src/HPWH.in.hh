@@ -590,6 +590,10 @@ class HPWH {
 	double *nextTankTemps_C;
 	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
 
+	DRMODES prevDRstatus;
+	/**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
+
+
 
   // Some outputs
 	double outletTemp_C;

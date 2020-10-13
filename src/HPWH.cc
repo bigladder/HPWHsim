@@ -72,7 +72,7 @@ HPWH::HPWH() :
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true),
+	doInversionMixing(true), doConduction(true), prevDRstatus(DR_ALLOW),
 	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
 {  }
 
@@ -502,6 +502,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		return HPWH_ABORT;
 	}
 
+	prevDRstatus = DRstatus;
 
 	if (hpwhVerbosity >= VRB_typical) {
 		msg("Ending runOneStep.  \n\n\n\n");
@@ -708,10 +709,10 @@ int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, in
 
 	fprintf(outFILE, "%s", preamble);
 
-	const char* pfx = "";
+	fprintf(outFILE, "%s", "DRstatus");
+
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, "%sh_src%dIn (Wh),h_src%dOut (Wh)", pfx, iHS + 1, iHS + 1);
-		pfx = ",";
+		fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
 	}
 
 	for (int iTC = 0; iTC < nTCouples; iTC++) {
@@ -729,11 +730,11 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 
 	fprintf(outFILE, "%s", preamble);
 
-	const char* pfx = "";
+	fprintf(outFILE, "%i", prevDRstatus);
+
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		fprintf(outFILE, "%s%0.2f,%0.2f", pfx, getNthHeatSourceEnergyInput(iHS, UNITS_KWH)*1000.,
+		fprintf(outFILE, ",%0.2f,%0.2f", getNthHeatSourceEnergyInput(iHS, UNITS_KWH)*1000.,
 			getNthHeatSourceEnergyOutput(iHS, UNITS_KWH)*1000.);
-		pfx = ",";
 	}
 
 	for (int iTC = 0; iTC < nTCouples; iTC++) {
