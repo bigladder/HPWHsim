@@ -393,14 +393,15 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 				setOfSources[i].backupHeatSource->unlockHeatSource();
 				if (setOfSources[i].backupHeatSource->shouldLockOut(heatSourceAmbientT_C) ||
 					shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
-						setOfSources[i].backupHeatSource->lockHeatSource();
-						// Don't turn the backup electric resistanceheat source on if the VIP resistance element is on .
-						if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
-							if (hpwhVerbosity >= VRB_typical) {
-								msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
-							}
-						continue;
-						}
+					setOfSources[i].backupHeatSource->lockOutHeatSource();
+					continue;
+				}
+				// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
+				else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+					if (hpwhVerbosity >= VRB_typical) {
+						msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+					}
+					continue;
 				}
 				else {
 					heatSourcePtr = setOfSources[i].backupHeatSource;
