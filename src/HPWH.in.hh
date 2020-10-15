@@ -554,6 +554,10 @@ class HPWH {
 	int lowestElementIndex;
 	/**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
 
+
+	int VIPIndex;
+	/**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance elements)*/
+
 	int numNodes;
 	/**< the number of nodes in the tank - must be >= 12, in multiples of 12  */
 
@@ -589,6 +593,10 @@ class HPWH {
 	/**< an array holding the temperature of each node - 0 is the bottom node, numNodes is the top  */
 	double *nextTankTemps_C;
 	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
+
+	DRMODES prevDRstatus;
+	/**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
+
 
 
   // Some outputs
