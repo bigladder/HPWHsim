@@ -54,10 +54,12 @@ class HPWH {
   ///specifies the various modes for the Demand Response (DR) abilities
   ///values may vary - names should be used
 	enum DRMODES {
-		DR_ALLOW = 0b000,   /**< this mode allows the water heater to run normally */
-		DR_LOC   = 0b001, /**< this mode locks out the compressor */
-		DR_LOR   = 0b010, /**< this mode locks out the resistance elements */
-		DR_TOO   = 0b100, /**< this mode ignores the dead band checks and forces the compressor and bottom resistance elements. */
+		DR_ALLOW = 0b0000,   /**<Allow, this mode allows the water heater to run normally */
+		DR_LOC   = 0b0001, /**< Lock out Compressor, this mode locks out the compressor */
+		DR_LOR   = 0b0010, /**< Lock out Resistance Elements, this mode locks out the resistance elements */
+		DR_TOO   = 0b0100, /**< Top Off Once, this mode ignores the dead band checks and forces the compressor and bottom resistance elements just once. */
+		DR_TOT   = 0b1000 /**< Top Off Timer, this mode ignores the dead band checks and forces the compressor and bottom resistance elements
+						  every x minutes, where x is defined by timer_TOT. */
 	};
 
   ///specifies the allowable preset HPWH models
@@ -395,13 +397,16 @@ class HPWH {
   int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
   /**< This is a setter for the UA of just the fittings, with or without units specified - default is metric, kJperHrC */
 
-
   int setInletByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setInlet2ByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
   /**< This is a setter for the water inlet height, by fraction. */
+
+  int setTimerLimitTOT(double limit_min);
+  /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440 minutes. */
+
   int getInletHeight(int whichInlet);
   /**< returns the water inlet height node number */
 
@@ -465,6 +470,8 @@ class HPWH {
   bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal);
   /**< Checks the demand response signal against the different heat source types  */
 
+  void resetTopOffTimer();
+  /**< resets variables for timer associated with the DR_TOT call  */
 
 	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
 	int runOneStep(double drawVolume_L, double ambientT_C,
@@ -597,6 +604,10 @@ class HPWH {
 	DRMODES prevDRstatus;
 	/**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
 
+	double timerLimitTOT;
+	/**< the time limit in minutes on the timer when the compressor and resistance elements are turned back on, used with DR_TOT. */
+	double timerTOT;
+	/**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
 
 
   // Some outputs
