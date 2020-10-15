@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, tot_limit;
   int i, outputCode;
   long minutesToRun;
 
@@ -236,27 +236,34 @@ int main(int argc, char *argv[])
     exit(1);
   }
   minutesToRun = 0;
-  newSetpoint = 0.0;
+  newSetpoint = 0.;
   doCondu = 1;
   doInvMix = 1;
-  inletH = 0.0;
+  inletH = 0.;
+  tot_limit = 0.;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
 	if(var1 == "setpoint") { // If a setpoint was specified then override the default
 		newSetpoint = testVal;
     }
-    if(var1 == "length_of_test") {
+	else if(var1 == "length_of_test") {
 		minutesToRun = (int) testVal;
     }
-	if (var1 == "doInversionMixing") {
+	else if(var1 == "doInversionMixing") {
 		doInvMix = (testVal > 0.0) ? 1 : 0;
 	}
-	if (var1 == "doConduction") {
+	else if(var1 == "doConduction") {
 		doCondu = (testVal > 0.0) ? 1 : 0;
 	}
-	if (var1 == "inletH") {
+	else if(var1 == "inletH") {
 		inletH = testVal;
+	}
+	else if(var1 == "tot_limit") {
+		tot_limit = testVal;
+	}
+	else {
+		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 	}
   }
 
@@ -279,22 +286,28 @@ int main(int argc, char *argv[])
       exit(1);
     }
   }
-
+  
   if (doInvMix == 0) {
-	  hpwh.setDoInversionMixing(false);
+	  outputCode += hpwh.setDoInversionMixing(false);
   }
 
   if (doCondu == 0) {
-	  hpwh.setDoConduction(false);
+	  outputCode += hpwh.setDoConduction(false);
+  }
+  if(newSetpoint > 0) {
+	  hpwh.setSetpoint(newSetpoint); //expect this to fail sometimes
+	  hpwh.resetTankToSetpoint();
+  }
+  if (inletH > 0) {
+	  outputCode += hpwh.setInletByFraction(inletH);
+  }
+  if (tot_limit > 0) {
+	  outputCode += hpwh.setTimerLimitTOT(tot_limit);
   }
 
-  if(newSetpoint > 0) {
-	hpwh.setSetpoint(newSetpoint);
-    hpwh.resetTankToSetpoint();
-  }
- 
-  if (inletH > 0) {
- 	  hpwh.setInletByFraction(inletH);
+  if (outputCode != 0) {
+	  cout << "Control file testInfo.txt has unsettable specifics in it. \n";
+	  exit(1);
   }
 
   // ----------------------Open the Output Files and Print the Header---------------------------- //
@@ -324,9 +337,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for (i = 0; i < minutesToRun; i++) {
 
-	  //if (DEBUG) {
+	  if (DEBUG) {
 		  cout << "Now on minute: " << i << "\n";
-	//  }
+	  }
 
 	  if (HPWH_doTempDepress) {
 		  airTemp2 = F_TO_C(airTemp);
@@ -363,9 +376,6 @@ int main(int argc, char *argv[])
 			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
 			  //std::to_string(hpwh.getOutletTemp()) + ",";
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
-		  cout << "Now on minute: " << i << ", heat source 0: " << hpwh.getNthHeatSourceEnergyInput(0, HPWH::UNITS_KWH)*1000. <<
-			  ", heat source 1: " << hpwh.getNthHeatSourceEnergyInput(1, HPWH::UNITS_KWH)*1000. <<
-			  ", heat source 2: " << hpwh.getNthHeatSourceEnergyInput(2, HPWH::UNITS_KWH)*1000. << "\n";
 	  }
 	  else {
 		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {

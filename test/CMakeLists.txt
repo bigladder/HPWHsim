@@ -21,7 +21,8 @@ set(testNames
  testLockout
  testSandenCombi
  testDr_LO
- testDr_IDB
+ testDr_TOO
+ testDr_TOT
 )
 
 set(modelNames

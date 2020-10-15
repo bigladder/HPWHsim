@@ -72,8 +72,9 @@ HPWH::HPWH() :
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true), prevDRstatus(DR_ALLOW),
-	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.)
+	doInversionMixing(true), doConduction(true), 
+	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.),
+	prevDRstatus(DR_ALLOW), timerLimitTOT(60.), timerTOT(0.)
 {  }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -84,7 +85,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 	//these should actually be the same pointers
 	messageCallback = hpwh.messageCallback;
 	messageCallbackContextPtr = hpwh.messageCallbackContextPtr;
-
+	
 	isHeating = hpwh.isHeating;
 
 	numHeatSources = hpwh.numHeatSources;
@@ -124,6 +125,9 @@ HPWH::HPWH(const HPWH &hpwh) {
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 	
+	prevDRstatus = hpwh.prevDRstatus;
+	timerLimitTOT = hpwh.timerLimitTOT;
+
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
@@ -194,6 +198,9 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	locationTemperature_C = hpwh.locationTemperature_C;
 
+	prevDRstatus = hpwh.prevDRstatus;
+	timerLimitTOT = hpwh.timerLimitTOT;
+
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
 	fracAreaTop = hpwh.fracAreaTop;
@@ -230,6 +237,11 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		return HPWH_ABORT;
 	}
 
+	if ((DRstatus & (DR_TOO | DR_TOT))) {
+		if (hpwhVerbosity >= VRB_typical) {
+			msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme  \n");
+		}
+	}
 
 	if (hpwhVerbosity >= VRB_typical) {
 		msg("Beginning runOneStep.  \nTank Temps: ");
@@ -244,7 +256,6 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 		return HPWH_ABORT;
 	}
-
 
 
 	//reset the output variables
@@ -274,28 +285,33 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
 
 
-	if ((DRstatus & DR_TOO) != 0) { // if DR signal includes ignoring the deadband
-		// turn on the compressor and last resistance element. 
-		if (compressorIndex >= 0) {
-			setOfSources[compressorIndex].engageHeatSource(DRstatus);
-		}
-		if (lowestElementIndex >= 0) {
-			setOfSources[lowestElementIndex].engageHeatSource(DRstatus);
-		}
+	// First Logic DR checks //////////////////////////////////////////////////////////////////
 
-		if (hpwhVerbosity >= VRB_typical) {
-			msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i \n", DRstatus);
-		}
-	}
+	// If the DR signal includes a top off but the previous signal did not, then top it off!
 
-	if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0){
+
+	if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0) {
 		turnAllHeatSourcesOff(); // turns off isheating
-		if (hpwhVerbosity >= VRB_typical) {
+		if (hpwhVerbosity >= VRB_emetic) {
 			msg("DR_LOC | DR_LOC everything off, DRstatus = %i \n", DRstatus);
 		}
 	}
-	else { //do normal check
-		//do HeatSource choice
+	else { 	//do normal check
+		if (((DRstatus & DR_TOO) != 0 || (DRstatus & DR_TOT) != 0 ) && timerTOT == 0) { 
+
+			// turn on the compressor and last resistance element. 
+			if (compressorIndex >= 0) {
+				setOfSources[compressorIndex].engageHeatSource(DRstatus);
+			}
+			if (lowestElementIndex >= 0) {
+				setOfSources[lowestElementIndex].engageHeatSource(DRstatus);
+			}
+
+			if (hpwhVerbosity >= VRB_emetic) {
+				msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i \n", DRstatus);
+			}
+		}
+	   //do HeatSource choice
 		for (int i = 0; i < numHeatSources; i++) {
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
@@ -327,7 +343,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 						}
 						else {
 							turnAllHeatSourcesOff();
-							setOfSources[i].engageHeatSource(DRstatus);						
+							setOfSources[i].engageHeatSource(DRstatus);
 							//stop looking if the VIP needs to run
 							break;
 						}
@@ -343,112 +359,112 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 			}
 
 		}  //end loop over heat sources
-	}
 
-	if (hpwhVerbosity >= VRB_emetic) {
-		msg("after heat source choosing:  ");
-		for (int i = 0; i < numHeatSources; i++) {
-			msg("heat source %d: %d \t", i, setOfSources[i].isEngaged());
-		}
-		msg("\n");
-	}
 
-	//do heating logic
-	double minutesToRun = minutesPerStep;
-
-	for (int i = 0; i < numHeatSources; i++) {
-		// check/apply lock-outs
 		if (hpwhVerbosity >= VRB_emetic) {
-			msg("Checking lock-out logic for heat source %d:\n", i);
-		}
-		if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
-			setOfSources[i].lockOutHeatSource();
-			if (hpwhVerbosity >= VRB_typical) {
-				msg("Locked out heat source, DRstatus = %i\n", DRstatus);
+			msg("after heat source choosing:  ");
+			for (int i = 0; i < numHeatSources; i++) {
+				msg("heat source %d: %d \t", i, setOfSources[i].isEngaged());
 			}
+			msg("\n");
 		}
-		else
-		{
-			if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
+
+		//do heating logic
+		double minutesToRun = minutesPerStep;
+
+		for (int i = 0; i < numHeatSources; i++) {
+			// check/apply lock-outs
+			if (hpwhVerbosity >= VRB_emetic) {
+				msg("Checking lock-out logic for heat source %d:\n", i);
+			}
+			if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
 				setOfSources[i].lockOutHeatSource();
-			}
-			if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
-				setOfSources[i].unlockHeatSource();
-			}
-		}
-		if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL){
-			setOfSources[i].disengageHeatSource();
-			if (hpwhVerbosity >= HPWH::VRB_emetic) {
-				msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
-			}
-		}
-
-		//going through in order, check if the heat source is on
-		if (setOfSources[i].isEngaged()) {
-
-			HeatSource* heatSourcePtr;
-			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
-				
-				// Check that the backup isn't locked out too
-				setOfSources[i].backupHeatSource->unlockHeatSource();
-				if (setOfSources[i].backupHeatSource->shouldLockOut(heatSourceAmbientT_C) ||
-					shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
-					setOfSources[i].backupHeatSource->lockOutHeatSource();
-					continue;
+				if (hpwhVerbosity >= VRB_emetic) {
+					msg("Locked out heat source, DRstatus = %i\n", DRstatus);
 				}
-				// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
-				else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
-					if (hpwhVerbosity >= VRB_typical) {
-						msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+			}
+			else
+			{
+				if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
+					setOfSources[i].lockOutHeatSource();
+				}
+				if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
+					setOfSources[i].unlockHeatSource();
+				}
+			}
+			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL) {
+				setOfSources[i].disengageHeatSource();
+				if (hpwhVerbosity >= HPWH::VRB_emetic) {
+					msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
+				}
+			}
+
+			//going through in order, check if the heat source is on
+			if (setOfSources[i].isEngaged()) {
+
+				HeatSource* heatSourcePtr;
+				if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
+
+					// Check that the backup isn't locked out too
+					setOfSources[i].backupHeatSource->unlockHeatSource();
+					if (setOfSources[i].backupHeatSource->shouldLockOut(heatSourceAmbientT_C) ||
+						shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
+						setOfSources[i].backupHeatSource->lockOutHeatSource();
+						continue;
 					}
-					continue;
+					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
+					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+						if (hpwhVerbosity >= VRB_typical) {
+							msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+						}
+						continue;
+					}
+					else {
+						heatSourcePtr = setOfSources[i].backupHeatSource;
+					}
 				}
 				else {
-					heatSourcePtr = setOfSources[i].backupHeatSource;
-				}
-			}
-			else {
-				heatSourcePtr = &setOfSources[i];
-			}
-
-			double tempSetpoint_C = -273.15;
-
-			// Check the air temprature and setpoint against maxOut_at_LowT
-			if (heatSourcePtr->typeOfHeatSource == TYPE_compressor) {
-				if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C && 
-					setpoint_C			 >= heatSourcePtr->maxOut_at_LowT.outT_C )
-				{
-					tempSetpoint_C = setpoint_C; //Store setpoint
-					setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
-				}
-			}
-			//and add heat if it is
-			heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
-
-			//Change the setpoint back to what it was pre-compressor depression
-			if (tempSetpoint_C > -273.15) {
-				setSetpoint(tempSetpoint_C);
-			}
-
-			//if it finished early
-			if (heatSourcePtr->runtime_min < minutesToRun) {
-				//debugging message handling
-				if (hpwhVerbosity >= VRB_emetic) {
-					msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", heatSourcePtr->runtime_min, minutesToRun);
+					heatSourcePtr = &setOfSources[i];
 				}
 
-				//subtract time it ran and turn it off
-				minutesToRun -= heatSourcePtr->runtime_min;
-				setOfSources[i].disengageHeatSource();
-				//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
-				if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
-					//turn it on
-					setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
+				double tempSetpoint_C = -273.15;
+
+				// Check the air temprature and setpoint against maxOut_at_LowT
+				if (heatSourcePtr->typeOfHeatSource == TYPE_compressor) {
+					if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
+						setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
+					{
+						tempSetpoint_C = setpoint_C; //Store setpoint
+						setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
+					}
+				}
+				//and add heat if it is
+				heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+
+				//Change the setpoint back to what it was pre-compressor depression
+				if (tempSetpoint_C > -273.15) {
+					setSetpoint(tempSetpoint_C);
+				}
+
+				//if it finished early
+				if (heatSourcePtr->runtime_min < minutesToRun) {
+					//debugging message handling
+					if (hpwhVerbosity >= VRB_emetic) {
+						msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n", heatSourcePtr->runtime_min, minutesToRun);
+					}
+
+					//subtract time it ran and turn it off
+					minutesToRun -= heatSourcePtr->runtime_min;
+					setOfSources[i].disengageHeatSource();
+					//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
+					if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
+						//turn it on
+						setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
+					}
 				}
 			}
 		}
 	}
-
 	if (areAllHeatSourcesOff() == true) {
 		isHeating = false;
 	}
@@ -501,6 +517,19 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		}
 	}
 
+	// Handle DR timer
+	prevDRstatus = DRstatus;
+	// DR check for TOT to increase timer. 
+	timerTOT += minutesPerStep;
+	// Restart the time if we're over the limit or the command is not a top off. 
+	if ((DRstatus & DR_TOT) != 0 && timerTOT >= timerLimitTOT) {
+		resetTopOffTimer();
+	}
+	else if ((DRstatus & DR_TOO) == 0 && (DRstatus & DR_TOT) == 0) {
+		resetTopOffTimer();
+	}
+
+
 	if (simHasFailed) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("The simulation has encountered an error.  \n");
@@ -508,12 +537,10 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		return HPWH_ABORT;
 	}
 
-	prevDRstatus = DRstatus;
 
 	if (hpwhVerbosity >= VRB_typical) {
 		msg("Ending runOneStep.  \n\n\n\n");
 	}
-
 
 	return 0;  //successful completion of the step returns 0
 } //end runOneStep
@@ -1029,6 +1056,21 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum)
 
 	return 0;
 }
+
+int HPWH::setTimerLimitTOT(double limit_min) {
+	if (limit_min > 24.*60. || limit_min < 0.) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds time limit for setTimerLimitTOT \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	timerLimitTOT = limit_min;
+
+	return 0;
+}
+
+
 int HPWH::getInletHeight(int whichInlet) {
 	if (whichInlet == 1) {
 		return inletHeight;
@@ -2033,6 +2075,10 @@ bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) {
 		return true;
 	}
 	return false;
+}
+
+void HPWH::resetTopOffTimer() {
+	timerTOT = 0.;
 }
 
 void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal) {
