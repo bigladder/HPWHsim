@@ -302,16 +302,25 @@ class HPWH {
    * are taken from the GE2015_STDMode model.
    */
 
-  int runOneStep(double inletT_C, double drawVolume_L,
-                  double ambientT_C, double externalT_C,
-                  DRMODES DRstatus, 
-				  double inletVol2_L = 0., double inletT2_C = 0.,
-				  std::vector<double>* nodePowerExtra_W = NULL);
+	int runOneStep(double drawVolume_L, double ambientT_C,
+		double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+		std::vector<double>* nodePowerExtra_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
+	
+	/** An overloaded function that uses takes inletT_C  */
+	int runOneStep(double inletT_C, double drawVolume_L, double ambientT_C, 
+		double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+		std::vector<double>* nodePowerExtra_W = NULL) {
+		setInletT(inletT_C);
+		return runOneStep(drawVolume_L, ambientT_C,
+			externalT_C, DRstatus, inletVol2_L, inletT2_C,
+			nodePowerExtra_W);
+	};
+
 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L,
                   double *tankAmbientT_C, double *heatSourceAmbientT_C,
@@ -322,6 +331,10 @@ class HPWH {
 	 *
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
+
+	/** Setters for the what are typically input variables  */
+	void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
+	void setMinutesPerStep(double newMinutesPerStep) { minutesPerStep = newMinutesPerStep; };
 
 
   void setVerbosity(VERBOSITY hpwhVrb);
@@ -473,20 +486,7 @@ class HPWH {
   void resetTopOffTimer();
   /**< resets variables for timer associated with the DR_TOT call  */
 
-	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
-	int runOneStep(double drawVolume_L, double ambientT_C,
-	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
-	  std::vector<double>* nodePowerExtra_W = NULL) {
-	  return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-		  externalT_C, DRstatus, inletVol2_L, inletT2_C,
-		  nodePowerExtra_W);
-	};
-
-
-	/** Setters for the what are typically input variables  */
-  void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
-  void setMinutesPerStep(double newMinutesPerStep) {minutesPerStep = newMinutesPerStep;};
-
+	
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 

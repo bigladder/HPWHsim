@@ -223,7 +223,7 @@ string HPWH::getVersion() {
 }
 
 
-int HPWH::runOneStep(double inletT_C, double drawVolume_L,
+int HPWH::runOneStep(double drawVolume_L,
 	double tankAmbientT_C, double heatSourceAmbientT_C,
 	DRMODES DRstatus,
 	double inletVol2_L, double inletT2_C,
@@ -247,7 +247,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 		msg("Beginning runOneStep.  \nTank Temps: ");
 		printTankTemps();
 		msg("Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
-			inletT_C, drawVolume_L, tankAmbientT_C, heatSourceAmbientT_C, DRstatus, minutesPerStep);
+			member_inletT_C, drawVolume_L, tankAmbientT_C, heatSourceAmbientT_C, DRstatus, minutesPerStep);
 	}
 	//is the failure flag is set, don't run
 	if (simHasFailed) {
@@ -282,7 +282,7 @@ int HPWH::runOneStep(double inletT_C, double drawVolume_L,
 
 
 	//process draws and standby losses
-	updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
+	updateTankTemps(drawVolume_L, member_inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
 
 
 	// First Logic DR checks //////////////////////////////////////////////////////////////////
