@@ -1114,7 +1114,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 
-	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP) {
+	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP || presetNum == MODELS_Sanden120) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = 65;
@@ -1123,9 +1123,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 315;
-		//tankUA_kJperHrC = 10; //0 to turn off
-		tankUA_kJperHrC = 7;
+		if (presetNum == MODELS_Sanden120) {
+			tankVolume_L = GAL_TO_L(119);
+			tankUA_kJperHrC = 9;
+		}
+		else {
+			tankVolume_L = 315;
+			tankUA_kJperHrC = 7;
+		}
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
@@ -1180,7 +1185,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
-		if (presetNum == MODELS_Sanden80) {
+		if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden120) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
 		}
 		//lowT cutoff
