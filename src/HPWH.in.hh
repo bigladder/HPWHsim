@@ -95,6 +95,7 @@ class HPWH {
 	  MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
 	  MODELS_Sanden80 = 121,        /**<  Sanden 80 gallon CO2 external heat pump  */
 	  MODELS_Sanden_GS3_45HPA_US_SP = 122,  /**<  Sanden 80 gallon CO2 external heat pump used for MF  */
+	  MODELS_Sanden120 = 123 ,/**<  Sanden 120 gallon CO2 external heat pump  */
 
 	  // The new-ish Rheem
 	  MODELS_RheemHB50 = 140,        /**< Rheem 2014 (?) Model */
