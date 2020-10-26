@@ -682,6 +682,12 @@ class HPWH::HeatSource {
   /**< queries the heat source as to whether it should lock out */
   bool shouldUnlock(double heatSourceAmbientT_C) const;
   /**< queries the heat source as to whether it should unlock */
+
+  bool toLockOrUnlock(double heatSourceAmbientT_C);
+  /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
+
+
+
 	bool shouldHeat() const;
   /**< queries the heat source as to whether or not it should turn on */
 	bool shutsOff() const;
