@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <string> 
+#include <algorithm>    // std::max
 
 #define MAX_DIR_LENGTH 255
 #define DEBUG 0
@@ -40,8 +41,9 @@ int main(int argc, char *argv[])
   HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
   // HPWH::UNITS units = HPWH::UNITS_F;
 
-  const int nTestTCouples = 6;
+  const double EBALTHRESHOLD = 0.005;
 
+  const int nTestTCouples = 6;
   // Schedule stuff
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(5);
@@ -348,6 +350,8 @@ int main(int argc, char *argv[])
 		  airTemp2 = allSchedules[2][i];
 	  }
 
+	  double tankHCStart = hpwh.getTankHeatContent_kJ();
+
 	  // Process the dr status
 	  drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
@@ -357,9 +361,9 @@ int main(int argc, char *argv[])
 			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
 		  }
 	  }
-	  hpwh.setInletT(allSchedules[0][i]); // Inlet water temperature (C)
+
 	  // Run the step
-	  hpwh.runOneStep(
+	  hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		  GAL_TO_L(allSchedules[1][i]), // Flow in gallons
 		  airTemp2,  // Ambient Temp (C)
 		  allSchedules[3][i],  // External Temp (C)
@@ -367,22 +371,45 @@ int main(int argc, char *argv[])
 		  1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
 		  vectptr);
 
+	  // Check energy balance accounting. 
+	  double hpwhElect = 0;
+	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+		  hpwhElect += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+	  }
+	  double hpwhqHW = GAL_TO_L(allSchedules[1][i]) * (hpwh.getOutletTemp() - allSchedules[0][i]) 
+				* HPWH::DENSITYWATER_kgperL
+				* HPWH::CPWATER_kJperkgC;
+	  double hpwhqEnv = hpwh.getEnergyRemovedFromEnvironment(HPWH::UNITS_KJ);
+	  double hpwhqLoss = hpwh.getStandbyLosses(HPWH::UNITS_KJ);
+	  double deltaHC = hpwh.getTankHeatContent_kJ() - tankHCStart;
+	  double qBal = hpwhqEnv// HP energy extracted from surround
+		  - hpwhqLoss		// tank loss to environment
+		  + hpwhElect		// electricity in from heat sources
+		  - hpwhqHW			// hot water energy from flows in and out
+		  - deltaHC;		// change in tank stored energy
+
+	  double fBal = fabs(qBal) / std::max(tankHCStart, 1.);
+	  if (fBal > EBALTHRESHOLD){
+		  cout << "On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
+	  }
+
+	  // Recording
 	  if (minutesToRun < 500000.) {
-		  // Copy current status into the output file
-		  if (HPWH_doTempDepress) {
-			  airTemp2 = hpwh.getLocationTemp_C();
-		  }
-		  strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
-			  //std::to_string(hpwh.getOutletTemp()) + ",";
-		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+	  		// Copy current status into the output file
+	  		if (HPWH_doTempDepress) {
+	  			airTemp2 = hpwh.getLocationTemp_C();
+	  		}
+	  		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+	  			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+	  			//std::to_string(hpwh.getOutletTemp()) + ",";
+	  		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
 	  }
 	  else {
-		  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-			  cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
-			  cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
-			  //cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
-		  }
+	  		for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+	  			cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+	  			cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+	  			//cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
+	  		}
 	  }
   }
 

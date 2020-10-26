@@ -385,12 +385,8 @@ int HPWH::runOneStep(double drawVolume_L,
 			}
 			else
 			{
-				if (setOfSources[i].shouldLockOut(heatSourceAmbientT_C)) {
-					setOfSources[i].lockOutHeatSource();
-				}
-				if (setOfSources[i].shouldUnlock(heatSourceAmbientT_C)) {
-					setOfSources[i].unlockHeatSource();
-				}
+				// locks or unlocks the heat source
+				setOfSources[i].toLockOrUnlock(heatSourceAmbientT_C);
 			}
 			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL) {
 				setOfSources[i].disengageHeatSource();
@@ -405,20 +401,20 @@ int HPWH::runOneStep(double drawVolume_L,
 				HeatSource* heatSourcePtr;
 				if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
 
-					// Check that the backup isn't locked out too
-					setOfSources[i].backupHeatSource->unlockHeatSource();
-					if (setOfSources[i].backupHeatSource->shouldLockOut(heatSourceAmbientT_C) ||
-						shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus)) {
-						setOfSources[i].backupHeatSource->lockOutHeatSource();
+					// Check that the backup isn't locked out too or already engaged then it will heat on it's own.
+					if (setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
+						shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) || //){
+						setOfSources[i].backupHeatSource->isEngaged() ) {
 						continue;
 					}
 					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
-					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && 
+						setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
 						if (hpwhVerbosity >= VRB_typical) {
-							msg("Locked out back up heat source and the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
 						}
 						continue;
-					}
+					}						
 					else {
 						heatSourcePtr = setOfSources[i].backupHeatSource;
 					}
@@ -2064,6 +2060,18 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
 		}
 		return unlock;
 	}
+}
+
+bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C) {
+
+	if (shouldLockOut(heatSourceAmbientT_C)) {
+		lockOutHeatSource();
+	}
+	if (shouldUnlock(heatSourceAmbientT_C)) {
+		unlockHeatSource();
+	}
+
+	return isLockedOut();
 }
 
 bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) {

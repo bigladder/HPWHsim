@@ -23,6 +23,7 @@ set(testNames
  testDr_LO
  testDr_TOO
  testDr_TOT
+ testDr_TOO2
 )
 
 set(modelNames
