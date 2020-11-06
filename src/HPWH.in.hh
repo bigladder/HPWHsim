@@ -53,12 +53,14 @@ class HPWH {
 
   ///specifies the various modes for the Demand Response (DR) abilities
   ///values may vary - names should be used
-  enum DRMODES{
-    DR_BLOCK = 0,   /**<this mode prohibits the elements from engaging and turns
-                    off any currently running  */
-    DR_ALLOW = 1,   /**< this mode allows the water heater to run normally  */
-    DR_ENGAGE = 2  /**< this mode forces an element to turn on  */
-    };
+	enum DRMODES {
+		DR_ALLOW = 0b0000,   /**<Allow, this mode allows the water heater to run normally */
+		DR_LOC   = 0b0001, /**< Lock out Compressor, this mode locks out the compressor */
+		DR_LOR   = 0b0010, /**< Lock out Resistance Elements, this mode locks out the resistance elements */
+		DR_TOO   = 0b0100, /**< Top Off Once, this mode ignores the dead band checks and forces the compressor and bottom resistance elements just once. */
+		DR_TOT   = 0b1000 /**< Top Off Timer, this mode ignores the dead band checks and forces the compressor and bottom resistance elements
+						  every x minutes, where x is defined by timer_TOT. */
+	};
 
   ///specifies the allowable preset HPWH models
   ///values may vary - names should be used
@@ -301,16 +303,25 @@ class HPWH {
    * are taken from the GE2015_STDMode model.
    */
 
-  int runOneStep(double inletT_C, double drawVolume_L,
-                  double ambientT_C, double externalT_C,
-                  DRMODES DRstatus, 
-				  double inletVol2_L = 0., double inletT2_C = 0.,
-				  std::vector<double>* nodePowerExtra_W = NULL);
+	int runOneStep(double drawVolume_L, double ambientT_C,
+		double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+		std::vector<double>* nodePowerExtra_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
+	
+	/** An overloaded function that uses takes inletT_C  */
+	int runOneStep(double inletT_C, double drawVolume_L, double ambientT_C, 
+		double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
+		std::vector<double>* nodePowerExtra_W = NULL) {
+		setInletT(inletT_C);
+		return runOneStep(drawVolume_L, ambientT_C,
+			externalT_C, DRstatus, inletVol2_L, inletT2_C,
+			nodePowerExtra_W);
+	};
+
 
 	int runNSteps(int N,  double *inletT_C, double *drawVolume_L,
                   double *tankAmbientT_C, double *heatSourceAmbientT_C,
@@ -321,6 +332,10 @@ class HPWH {
 	 *
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
+
+	/** Setters for the what are typically input variables  */
+	void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
+	void setMinutesPerStep(double newMinutesPerStep) { minutesPerStep = newMinutesPerStep; };
 
 
   void setVerbosity(VERBOSITY hpwhVrb);
@@ -396,13 +411,16 @@ class HPWH {
   int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
   /**< This is a setter for the UA of just the fittings, with or without units specified - default is metric, kJperHrC */
 
-
   int setInletByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setInlet2ByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
   /**< This is a setter for the water inlet height, by fraction. */
+
+  int setTimerLimitTOT(double limit_min);
+  /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440 minutes. */
+
   int getInletHeight(int whichInlet);
   /**< returns the water inlet height node number */
 
@@ -463,21 +481,13 @@ class HPWH {
   int getHPWHModel()const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
+  bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal);
+  /**< Checks the demand response signal against the different heat source types  */
 
-	/** An overloaded function that uses some member variables, instead of taking them as inputs  */
-	int runOneStep(double drawVolume_L, double ambientT_C,
-	  double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
-	  std::vector<double>* nodePowerExtra_W = NULL) {
-	  return runOneStep(member_inletT_C, drawVolume_L, ambientT_C,
-		  externalT_C, DRstatus, inletVol2_L, inletT2_C,
-		  nodePowerExtra_W);
-	};
+  void resetTopOffTimer();
+  /**< resets variables for timer associated with the DR_TOT call  */
 
-
-	/** Setters for the what are typically input variables  */
-  void setInletT(double newInletT_C) {member_inletT_C = newInletT_C;};
-  void setMinutesPerStep(double newMinutesPerStep) {minutesPerStep = newMinutesPerStep;};
-
+	
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -537,6 +547,7 @@ class HPWH {
 	/**< caller context pointer for external message processing  */
 
 
+
   MODELS hpwhModel;
   /**< The hpwh should know which preset initialized it, or if it was from a file */
 
@@ -591,6 +602,14 @@ class HPWH {
 	double *nextTankTemps_C;
 	/**< an array holding the future temperature of each node for the conduction calculation - 0 is the bottom node, numNodes is the top  */
 
+	DRMODES prevDRstatus;
+	/**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
+
+	double timerLimitTOT;
+	/**< the time limit in minutes on the timer when the compressor and resistance elements are turned back on, used with DR_TOT. */
+	double timerTOT;
+	/**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
+
 
   // Some outputs
 	double outletTemp_C;
@@ -621,6 +640,7 @@ class HPWH {
 
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
+
 };  //end of HPWH class
 
 
@@ -647,7 +667,7 @@ class HPWH::HeatSource {
 
 	bool isEngaged() const;
   /**< return whether or not the heat source is engaged */
-	void engageHeatSource();
+	void engageHeatSource(DRMODES DRstatus = DR_ALLOW);
   /**< turn heat source on, i.e. set isEngaged to TRUE */
 	void disengageHeatSource();
   /**< turn heat source off, i.e. set isEngaged to FALSE */
@@ -663,6 +683,12 @@ class HPWH::HeatSource {
   /**< queries the heat source as to whether it should lock out */
   bool shouldUnlock(double heatSourceAmbientT_C) const;
   /**< queries the heat source as to whether it should unlock */
+
+  bool toLockOrUnlock(double heatSourceAmbientT_C);
+  /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
+
+
+
 	bool shouldHeat() const;
   /**< queries the heat source as to whether or not it should turn on */
 	bool shutsOff() const;
@@ -856,5 +882,10 @@ inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
+
+inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
+{
+	return static_cast<HPWH::DRMODES>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 #endif
