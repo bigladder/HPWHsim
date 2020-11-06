@@ -1,6 +1,7 @@
 .*
 !/.gitignore
 *~
+~*
 *.o
 *.x
 *.png
