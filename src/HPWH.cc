@@ -869,7 +869,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 	// as the outer dimenisions of the whole unit.
 	double radius = getTankRadius(vol, volUnits, UNITS_FT);
 
-	double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1);
+	double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
 
 	if (value >= 0.)
 	{	if (surfAUnits == UNITS_M2)
@@ -1276,7 +1276,7 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units  /*=UNITS_
 	}
 	else {
 		double weight = (double)numNodes / (double)nTCouple;
-		double start_ind = (iTCouple - 1) * weight;
+		double start_ind = (iTCouple - 1.) * weight;
 		int ind = (int)std::ceil(start_ind);
 
 		double averageTemp_C = 0.0;
@@ -2553,6 +2553,10 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 		//otherwise the target temp is the first non-equal-temp node
 		else {
 			targetTemp_C = hpwh->tankTemps_C[setPointNodeNum + 1];
+		}
+		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
+		if (targetTemp_C > hpwh->setpoint_C) {
+			targetTemp_C = hpwh->setpoint_C;
 		}
 
 		deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
