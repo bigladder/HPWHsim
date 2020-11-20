@@ -24,6 +24,7 @@ set(testNames
  testDr_TOO
  testDr_TOT
  testDr_TOO2
+ testDR_TOTLOR
 )
 
 set(modelNames
