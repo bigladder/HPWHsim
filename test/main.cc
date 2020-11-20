@@ -22,8 +22,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::ifstream;
-using std::ofstream;
-
+//using std::ofstream;
 
 #define F_TO_C(T) ((T-32.0)*5.0/9.0)
 #define GAL_TO_L(GAL) (GAL*3.78541)
@@ -46,7 +45,7 @@ int main(int argc, char *argv[])
   const int nTestTCouples = 6;
   // Schedule stuff
   std::vector<string> scheduleNames;
-  std::vector<schedule> allSchedules(5);
+  std::vector<schedule> allSchedules(6);
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
@@ -65,10 +64,8 @@ int main(int argc, char *argv[])
   ifstream controlFile;
 
   string strPreamble;
-  // string strHead = "minutes,Ta,inletT,draw,outletT,";
-  //string strHead = "minutes,Ta,inletT,draw,COP,";
-  string strHead = "minutes,Ta,inletT,draw,";
-
+  string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
+  
   if (DEBUG) {
 	 hpwh.setVerbosity(HPWH::VRB_reluctant);
   }
@@ -282,12 +279,19 @@ int main(int argc, char *argv[])
   scheduleNames.push_back("ambientT");
   scheduleNames.push_back("evaporatorT");
   scheduleNames.push_back("DR");
+  scheduleNames.push_back("setpoint");
+
   for(i = 0; (unsigned)i < scheduleNames.size(); i++) {
     fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
     outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
     if(outputCode != 0) {
-      cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
-      exit(1);
+		if (scheduleNames[i] != "setpoint") {
+			cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
+			exit(1);
+		}
+		else {
+			outputCode = 0;
+		}
     }
   }
   
@@ -298,9 +302,15 @@ int main(int argc, char *argv[])
   if (doCondu == 0) {
 	  outputCode += hpwh.setDoConduction(false);
   }
-  if(newSetpoint > 0) {
-	  hpwh.setSetpoint(newSetpoint); //expect this to fail sometimes
-	  hpwh.resetTankToSetpoint();
+  if (newSetpoint > 0) {
+	  if (!allSchedules[5].empty()) {
+		  hpwh.setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
+		  hpwh.resetTankToSetpoint();
+	  }
+	  else {
+		  hpwh.setSetpoint(newSetpoint);
+		  hpwh.resetTankToSetpoint();
+	  }
   }
   if (inletH > 0) {
 	  outputCode += hpwh.setInletByFraction(inletH);
@@ -357,6 +367,12 @@ int main(int argc, char *argv[])
 	  // Process the dr status
 	  drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
+	  // Change setpoint if there is a setpoint schedule. 
+	  if (!allSchedules[5].empty() && !hpwh.isSetpointFixed()) {
+		  hpwh.setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
+	  }
+
+	  // Mix down for yearly tests with large compressors
 	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
 		  //Do a simple mix down of the draw for the cold water temperature
 		  if (hpwh.getSetpoint() <= 125.) {
@@ -401,7 +417,7 @@ int main(int argc, char *argv[])
 	  		if (HPWH_doTempDepress) {
 	  			airTemp2 = hpwh.getLocationTemp_C();
 	  		}
-	  		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+	  		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
 	  			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
 	  			//std::to_string(hpwh.getOutletTemp()) + ",";
 	  		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
@@ -454,7 +470,6 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   cout << "Opening " << scheduleFileName << '\n';
 
   if(!inputFile.is_open()) {
-    cout << "Unable to open file" << '\n';
     return 1;
   }
 
