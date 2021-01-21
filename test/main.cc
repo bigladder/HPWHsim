@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, tot_limit;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
   int i, outputCode;
   long minutesToRun;
 
@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
   doCondu = 1;
   doInvMix = 1;
   inletH = 0.;
+  newTankSize = 0.;
   tot_limit = 0.;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
@@ -262,6 +263,9 @@ int main(int argc, char *argv[])
 	}
 	else if(var1 == "inletH") {
 		inletH = testVal;
+	}
+	else if (var1 == "tanksize") {
+		newTankSize = testVal;
 	}
 	else if(var1 == "tot_limit") {
 		tot_limit = testVal;
@@ -317,6 +321,9 @@ int main(int argc, char *argv[])
   }
   if (inletH > 0) {
 	  outputCode += hpwh.setInletByFraction(inletH);
+  }
+  if (newTankSize > 0) {
+	  hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL);
   }
   if (tot_limit > 0) {
 	  outputCode += hpwh.setTimerLimitTOT(tot_limit);
