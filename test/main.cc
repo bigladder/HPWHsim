@@ -9,6 +9,7 @@
  *
  */
 #include "HPWH.hh"
+#include "testUtilityFcts.cc"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
 
   const double EBALTHRESHOLD = 0.005;
 
-  const int nTestTCouples = 12;
+  const int nTestTCouples = 6;
   // Schedule stuff
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(6);
@@ -116,107 +117,9 @@ int main(int argc, char *argv[])
   newSetpoint = 0;
   if(input1 == "Preset") {
     inputFile = "";
-    if(input2 == "Voltex60" || input2 == "AOSmithPHPT60") {
-		model = HPWH::MODELS_AOSmithPHPT60;
-    } else if(input2 == "Voltex80" || input2 == "AOSmith80") {
-		model = HPWH::MODELS_AOSmithPHPT80;
-    } else if(input2 == "GEred" || input2 == "GE") {
-		model = HPWH::MODELS_GE2012;
-	} else if (input2 == "SandenGAU" || input2 == "Sanden80" || input2 == "SandenGen3") {
-		model = HPWH::MODELS_Sanden80;
-	} else if (input2 == "Sanden120") {
-		model = HPWH::MODELS_Sanden120;
-    } else if(input2 == "SandenGES" || input2 == "Sanden40") {
-		model = HPWH::MODELS_Sanden40;
-    } else if(input2 == "AOSmithHPTU50") {
-		model = HPWH::MODELS_AOSmithHPTU50;
-    } else if(input2 == "AOSmithHPTU66") {
-		model = HPWH::MODELS_AOSmithHPTU66;
-    } else if(input2 == "AOSmithHPTU80") {
-		model = HPWH::MODELS_AOSmithHPTU80;
-    } else if(input2 == "AOSmithHPTU80DR") {
-		model = HPWH::MODELS_AOSmithHPTU80_DR;
-    } else if(input2 == "GE502014STDMode" || input2 == "GE2014STDMode") {
-		model = HPWH::MODELS_GE2014STDMode;
-    } else if(input2 == "GE502014" || input2 == "GE2014") {
-		model = HPWH::MODELS_GE2014;
-    } else if(input2 == "GE802014") {
-		model = HPWH::MODELS_GE2014_80DR;
-    } else if(input2 == "RheemHB50") {
-		model = HPWH::MODELS_RheemHB50;
-    } else if(input2 == "Stiebel220e" || input2 == "Stiebel220E") {
-		model = HPWH::MODELS_Stiebel220E;
-    } else if(input2 == "Generic1") {
-		model = HPWH::MODELS_Generic1;
-    } else if(input2 == "Generic2") {
-		model = HPWH::MODELS_Generic2;
-    } else if(input2 == "Generic3") {
-		model = HPWH::MODELS_Generic3;
-    } else if(input2 == "custom") {
-		model = HPWH::MODELS_CustomFile;
-	} else if (input2 == "restankRealistic") {
-		model = HPWH::MODELS_restankRealistic;
-	} else if(input2 == "StorageTank") {
-		model = HPWH::MODELS_StorageTank;
-	} else if(input2 == "BWC2020_65"){
-		model = HPWH::MODELS_BWC2020_65;
-	} 
-	// New Rheems
-	else if (input2 == "Rheem2020Prem40") {
-	  model = HPWH::MODELS_Rheem2020Prem40;
-	} else if (input2 == "Rheem2020Prem50") {
-		model = HPWH::MODELS_Rheem2020Prem50;
-	} else if (input2 == "Rheem2020Prem65") {
-		model = HPWH::MODELS_Rheem2020Prem65;
-	} else if (input2 == "Rheem2020Prem80") {
-		model = HPWH::MODELS_Rheem2020Prem80;
-	} else if (input2 == "Rheem2020Build40") {
-		model = HPWH::MODELS_Rheem2020Build40;
-	} else if (input2 == "Rheem2020Build50") {
-		model = HPWH::MODELS_Rheem2020Build50;
-	} else if (input2 == "Rheem2020Build65") {
-		model = HPWH::MODELS_Rheem2020Build65;
-	} else if (input2 == "Rheem2020Build80") {
-		model = HPWH::MODELS_Rheem2020Build80;
-	}
-	// Large HPWH's
-	else if (input2 == "AOSmithCAHP120") {
-		model = HPWH::MODELS_AOSmithCAHP120;
-	}
-	else if (input2 == "ColmacCxV_5_SP") {
-		model = HPWH::MODELS_ColmacCxV_5_SP;
-	} else if (input2 == "ColmacCxA_10_SP") {
-		model = HPWH::MODELS_ColmacCxA_10_SP;
-	} else if (input2 == "ColmacCxA_15_SP") {
-		model = HPWH::MODELS_ColmacCxA_15_SP;
-	} else if (input2 == "ColmacCxA_20_SP") {
-		model = HPWH::MODELS_ColmacCxA_20_SP;
-	} else if (input2 == "ColmacCxA_25_SP") {
-		model = HPWH::MODELS_ColmacCxA_25_SP;
-	} else if (input2 == "ColmacCxA_30_SP") {
-		model = HPWH::MODELS_ColmacCxA_30_SP;
-	} else if (input2 == "NyleC25A_SP") {
-		model = HPWH::MODELS_NyleC25A_SP;
-	} else if (input2 == "NyleC90A_SP") {
-		model = HPWH::MODELS_NyleC90A_SP;
-	} else if (input2 == "NyleC185A_SP") {
-		model = HPWH::MODELS_NyleC185A_SP;
-	} else if (input2 == "NyleC250A_SP") {
-		model = HPWH::MODELS_NyleC250A_SP;
-	} else if (input2 == "NyleC90A_C_SP") {
-		model = HPWH::MODELS_NyleC90A_C_SP;
-	} else if (input2 == "NyleC185A_C_SP") {
-		model = HPWH::MODELS_NyleC185A_C_SP;
-	} else if (input2 == "NyleC250A_C_SP") {
-		model = HPWH::MODELS_NyleC250A_C_SP;
+    
+	model = mapStringToPreset(input2);
 
-	//do nothin, use custom-compiled input specified later
-
-    } else {
-      model = HPWH::MODELS_basicIntegrated;
-      cout << "Couldn't find model " << input2 << ".  Exiting...\n";
-      exit(1);
-    }
     if (hpwh.HPWHinit_presets(model) != 0) exit(1);
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
       newSetpoint = (149 - 32) / 1.8;
