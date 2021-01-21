@@ -25,6 +25,7 @@ set(testNames
  testDr_TOT
  testDr_TOO2
  testDR_TOTLOR
+ testTankSizeFixed
 )
 
 set(modelNames
@@ -65,6 +66,7 @@ set(largeCompressorTests
  testLargeComp45
  testLargeComp60
  testLargeCompHot
+ testTankSizeFixed
 )
 set(largeCompressorNames
   ColmacCxV_5_SP
