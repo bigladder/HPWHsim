@@ -23,6 +23,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	}
 
 	//use tank size setting function since it has bounds checking
+	tankSizeFixed = false;
 	int failure = this->setTankSize(tankVol_L);
 	if (failure == HPWH_ABORT) {
 		return failure;
@@ -123,6 +124,8 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
+
+	tankSizeFixed = false;
 
 	//custom settings - these are set later
 	//tankVolume_L = GAL_TO_L(45);
@@ -306,6 +309,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
+		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(50);
 		tankUA_kJperHrC = 0; //0 to turn off
 
@@ -344,6 +348,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
+		tankSizeFixed = false;
 		tankVolume_L = 120;
 		tankUA_kJperHrC = 500; //0 to turn off
 
@@ -386,6 +391,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
+		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(50);
 		tankUA_kJperHrC = 10; //0 to turn off
 
@@ -424,6 +430,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		setpoint_C = 800;
 
+		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(80);
 		tankUA_kJperHrC = 10; //0 to turn off
 
@@ -459,6 +466,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
+		tankSizeFixed = false;
 		tankVolume_L = 120;
 		tankUA_kJperHrC = 10; //0 to turn off
 		//tankUA_kJperHrC = 0; //0 to turn off
@@ -540,6 +548,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
+		tankSizeFixed = false;
 		tankVolume_L = 120;
 		//tankUA_kJperHrC = 10; //0 to turn off
 		tankUA_kJperHrC = 0; //0 to turn off
