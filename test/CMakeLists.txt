@@ -1,9 +1,11 @@
 # Build test tool
 include_directories("${PROJECT_BINARY_DIR}/src")
 
-add_executable(testTool main.cc)
+add_executable(testTool main.cc )
+add_executable(testTankSizeFixed testTankSizeFixed.cc)
 
 target_link_libraries(testTool libHPWHsim)
+target_link_libraries(testTankSizeFixed libHPWHsim)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -25,7 +27,6 @@ set(testNames
  testDr_TOT
  testDr_TOO2
  testDR_TOTLOR
- testTankSizeFixed
 )
 
 set(modelNames
@@ -66,7 +67,6 @@ set(largeCompressorTests
  testLargeComp45
  testLargeComp60
  testLargeCompHot
- testTankSizeFixed
 )
 set(largeCompressorNames
   ColmacCxV_5_SP
@@ -98,6 +98,31 @@ set(yearLargeTestsModels
 set(yearLargeTests                                        
   testCA_36Unit_CTZ12
 )
+
+# Unit tests
+function( add_TankSizeFixed_test )
+  set(options)
+  set(oneValueArgs MODEL_NAME)
+  set(multValueArgs)
+  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+  set(testArgs "${ARG_MODEL_NAME}")
+
+  set(TEST_TITLE "TankSizeFixed.${ARG_MODEL_NAME}")
+
+  add_test(NAME "${TEST_TITLE}" COMMAND  $<TARGET_FILE:testTankSizeFixed> ${testArgs}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+endfunction()
+
+foreach(model ${modelNames})
+	add_TankSizeFixed_test( MODEL_NAME "${model}")
+endforeach(model)
+foreach(model ${largeCompressorNames})
+	add_TankSizeFixed_test( MODEL_NAME "${model}")
+endforeach(model)
+
+
 
 #Tests for successful runs
 function( add_model_test )
