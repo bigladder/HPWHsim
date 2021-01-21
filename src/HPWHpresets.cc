@@ -846,7 +846,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
-		setpointFixed = false;
+		tankSizeFixed = false;
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
@@ -982,7 +982,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
-		setpointFixed = false;
+		tankSizeFixed = false;
 
 		//start tank off at setpoint
 		resetTankToSetpoint();
@@ -1130,6 +1130,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		else {
 			tankVolume_L = 315;
 			tankUA_kJperHrC = 7;
+			if (presetNum == MODELS_Sanden_GS3_45HPA_US_SP) {
+				tankSizeFixed = false;
+			}
 		}
 
 		doTempDepression = false;
@@ -1671,6 +1674,103 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].followedByHeatSource = &setOfSources[1];
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
+	}
+	else if (presetNum == MODELS_AOSmithCAHP120) {
+	numNodes = 24;
+	tankTemps_C = new double[numNodes];
+	setpoint_C = F_TO_C(150.0);
+
+	//start tank off at setpoint
+	resetTankToSetpoint();
+
+	tankVolume_L = GAL_TO_L(114);
+	tankUA_kJperHrC = UAf_TO_UAc(11.8);
+
+	doTempDepression = false;
+	tankMixesOnDraw = false; 
+
+	numHeatSources = 3;
+	setOfSources = new HeatSource[numHeatSources];
+
+	HeatSource compressor(this);
+	HeatSource resistiveElementBottom(this);
+	HeatSource resistiveElementTop(this);
+
+	//compressor values
+	compressor.isOn = false;
+	compressor.isVIP = false;
+	compressor.typeOfHeatSource = TYPE_compressor;
+
+	//double split = 1.0 / 5.0;
+	//compressor.setCondensity(0, split, split, split, split, split, 0, 0, 0, 0, 0, 0);
+	double btm = 0.0005;
+	double split = 1.0 / 6.0;
+	compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+
+	//From CAHP 120 COP Tests
+	compressor.perfMap.reserve(3);
+
+	compressor.perfMap.push_back({
+		50., // Temperature (T_F)
+		{2050.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
+		{5.91, -0.026299, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+	compressor.perfMap.push_back({
+		67.5, // Temperature (T_F)
+		{2211.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
+		{7.26272, -0.034135, 0.0} // COP Coefficients (COP_coeffs)
+		});
+	
+	compressor.perfMap.push_back({
+		95., // Temperature (T_F)
+		{2316.0625, -7.106608,0.119911}, // Input Power Coefficients (inputPower_coeffs)
+		{8.821262, -0.042059, 0.0} // COP Coefficients (COP_coeffs)
+		});
+
+	compressor.minT = F_TO_C(47.0); //Product documentation says 40F//////////////////////////////////////
+	compressor.maxT = F_TO_C(110.0);
+	compressor.hysteresis_dC = dF_TO_dC(2); // Just a guess //////////////////////////////////////
+	compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+	//top resistor values
+	resistiveElementTop.setupAsResistiveElement(10, 6000);
+	resistiveElementTop.isVIP = false; // NO VIP!//////////////////////////////////////
+
+	//bottom resistor values
+	resistiveElementBottom.setupAsResistiveElement(0, 6000);
+	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); // Just a guess //////////////////////////////////////
+	resistiveElementBottom.setCondensity(0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.); // Based of CMP test
+
+	//logic conditions
+	double compStart = dF_TO_dC(20); //Report suggests 15F K167 test kinda looks like 20
+	double standbyT = dF_TO_dC(5); //Given CMP_T test 
+	compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
+	compressor.addTurnOnLogic(HPWH::standby(standbyT)); 
+
+	//compressor.addShutOffLogic(HPWH::secondSixth(0.)); ////////////////////////////////////////////////////////////////
+
+	double resistanceStart = dF_TO_dC(5); //Given advice from report and K167_Triple Test
+	resistiveElementTop.addTurnOnLogic(HPWH::topSixth(resistanceStart)); 
+	resistiveElementBottom.addTurnOnLogic(HPWH::topSixth(resistanceStart));
+
+	resistiveElementTop.addShutOffLogic(HPWH::topSixth_absolute(F_TO_C(105))); //Given advice from report and K167_Triple Test
+	resistiveElementBottom.addShutOffLogic(HPWH::bottomSixth_absolute(F_TO_C(95))); //Given advice from report and K167_Triple Test
+
+	//set everything in its places
+	setOfSources[0] = resistiveElementTop;
+	setOfSources[1] = resistiveElementBottom;
+	setOfSources[2] = compressor;
+
+	//and you have to do this after putting them into setOfSources, otherwise
+	//you don't get the right pointers
+	setOfSources[2].backupHeatSource = &setOfSources[1];
+	setOfSources[1].backupHeatSource = &setOfSources[2];
+
+	setOfSources[0].followedByHeatSource = &setOfSources[1];
+	setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+	// CAHP has been set up without a VIP heat source and no companion heat sources.
 	}
 	else if (presetNum == MODELS_GE2014STDMode) {
 		numNodes = 12;
