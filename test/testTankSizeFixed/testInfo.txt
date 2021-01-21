@@ -1,0 +1,3 @@
+length_of_test 10
+setpoint 52
+tanksize 114

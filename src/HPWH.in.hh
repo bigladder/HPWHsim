@@ -80,6 +80,7 @@ class HPWH {
 	  MODELS_AOSmithHPTU66 = 105,    /**< 66 gallon AOSmith HPTU */
 	  MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */
 	  MODELS_AOSmithHPTU80_DR = 107,    /**< 80 gallon AOSmith HPTU */
+	  MODELS_AOSmithCAHP120 = 108, /**< 12 gallon AOSmith CAHP commercial grade */
 
 	  // GE Models
 	  MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
@@ -242,11 +243,14 @@ class HPWH {
 	HeatingLogic bottomHalf(double d) const;
 	HeatingLogic bottomTwelth(double d) const;
 	HeatingLogic bottomSixth(double d) const;
+	HeatingLogic bottomSixth_absolute(double d) const;
 	HeatingLogic secondSixth(double d) const;
 	HeatingLogic thirdSixth(double d) const;
 	HeatingLogic fourthSixth(double d) const;
 	HeatingLogic fifthSixth(double d) const;
 	HeatingLogic topSixth(double d) const;
+	HeatingLogic topSixth_absolute(double d) const;
+
   HeatingLogic standby(double d) const;
   HeatingLogic topNodeMaxTemp(double d) const;
   HeatingLogic bottomNodeMaxTemp(double d) const;
@@ -387,6 +391,7 @@ class HPWH {
   static double getTankRadius(double vol, UNITS volUnits = UNITS_L, UNITS radiusUnits = UNITS_FT);
   /**< Returns the tank surface radius based off of real storage tanks*/
 
+  bool isTankSizeFixed() const;  /**< is the tank size allowed to be changed */
   int setTankSize(double HPWH_size, UNITS units = UNITS_L);
   /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
 
@@ -537,6 +542,9 @@ class HPWH {
 
 	bool setpointFixed;
 	/**< does the HPWH allow the setpoint to vary  */
+
+	bool tankSizeFixed;
+	/**< does the HPWH have a constant tank size or can it be changed  */
 
   VERBOSITY hpwhVerbosity;
 	/**< an enum to let the sim know how much output to say  */

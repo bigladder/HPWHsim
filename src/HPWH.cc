@@ -68,7 +68,7 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-	simHasFailed(true), isHeating(false), setpointFixed(false), hpwhVerbosity(VRB_silent),
+	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
@@ -929,7 +929,18 @@ double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) {
 	return value;
 }
 
+
+bool HPWH::isTankSizeFixed() const{
+	return tankSizeFixed;
+}
+
 int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
+	if (tankSizeFixed == true) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not change the tank size for your currently selected model.  \n");
+		}
+		return HPWH_ABORT;
+	}
 	if (HPWH_size <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to set the tank volume outside of bounds.  \n");
@@ -1132,6 +1143,14 @@ HPWH::HeatingLogic HPWH::bottomSixth(double d) const {
 	return HPWH::HeatingLogic("bottom sixth", nodeWeights, d);
 }
 
+HPWH::HeatingLogic HPWH::bottomSixth_absolute(double d) const {
+	std::vector<NodeWeight> nodeWeights;
+	for (auto i : { 1,2 }) {
+		nodeWeights.emplace_back(i);
+	}
+	return HPWH::HeatingLogic("bottom sixth absolute", nodeWeights, d, true);
+}
+
 HPWH::HeatingLogic HPWH::secondSixth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 3,4 }) {
@@ -1172,6 +1191,14 @@ HPWH::HeatingLogic HPWH::topSixth(double d) const {
 	return HPWH::HeatingLogic("top sixth", nodeWeights, d);
 }
 
+HPWH::HeatingLogic HPWH::topSixth_absolute(double d) const {
+	std::vector<NodeWeight> nodeWeights;
+	for (auto i : { 11,12 }) {
+		nodeWeights.emplace_back(i);
+	}
+	return HPWH::HeatingLogic("top sixth absolute", nodeWeights, d, true);
+}
+
 HPWH::HeatingLogic HPWH::bottomHalf(double d) const {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4,5,6 }) {
@@ -1182,9 +1209,7 @@ HPWH::HeatingLogic HPWH::bottomHalf(double d) const {
 
 HPWH::HeatingLogic HPWH::bottomTwelth(double d) const {
 	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 7,8,9,10,11,12 }) {
-		nodeWeights.emplace_back(i);
-	}
+	nodeWeights.emplace_back(1);
 	return HPWH::HeatingLogic("bottom twelth", nodeWeights, d);
 }
 
