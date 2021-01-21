@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
   const double EBALTHRESHOLD = 0.005;
 
-  const int nTestTCouples = 6;
+  const int nTestTCouples = 12;
   // Schedule stuff
   std::vector<string> scheduleNames;
   std::vector<schedule> allSchedules(6);
@@ -180,6 +180,9 @@ int main(int argc, char *argv[])
 		model = HPWH::MODELS_Rheem2020Build80;
 	}
 	// Large HPWH's
+	else if (input2 == "AOSmithCAHP120") {
+		model = HPWH::MODELS_AOSmithCAHP120;
+	}
 	else if (input2 == "ColmacCxV_5_SP") {
 		model = HPWH::MODELS_ColmacCxV_5_SP;
 	} else if (input2 == "ColmacCxA_10_SP") {
