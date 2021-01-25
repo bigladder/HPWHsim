@@ -1710,10 +1710,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	compressor.isVIP = false;
 	compressor.typeOfHeatSource = TYPE_compressor;
 
-	//double split = 1.0 / 5.0;
-	//compressor.setCondensity(0, split, split, split, split, split, 0, 0, 0, 0, 0, 0);
-	double btm = 0.0005;
-	double split = 1.0 / 6.0;
+	double split = 1.0 / 5.0;
 	compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
 
 	//From CAHP 120 COP Tests
