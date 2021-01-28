@@ -380,7 +380,7 @@ class HPWH {
   int setDoTempDepression(bool doTempDepress);
   /**< This is a simple setter for the temperature depression option */
 
-  int setTankSize_adjustUA(double HPWH_size, UNITS units );
+  int setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
   /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value but a new A.
 		A is found via getTankSurfaceArea()*/
 
@@ -392,7 +392,7 @@ class HPWH {
   /**< Returns the tank surface radius based off of real storage tanks*/
 
   bool isTankSizeFixed() const;  /**< is the tank size allowed to be changed */
-  int setTankSize(double HPWH_size, UNITS units = UNITS_L);
+  int setTankSize(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
   /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
 
   double getTankSize(UNITS units = UNITS_L) const;

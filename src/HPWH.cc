@@ -850,7 +850,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/) {
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
 	double HPWH_size_L;
 	double oldA = getTankSurfaceArea(UNITS_FT2);
@@ -867,7 +867,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 		}
 		return HPWH_ABORT;
 	}
-	setTankSize(HPWH_size_L, UNITS_L);
+	setTankSize(HPWH_size_L, UNITS_L, forceChange);
 	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
 	return 0;
 }
@@ -945,8 +945,8 @@ bool HPWH::isTankSizeFixed() const{
 	return tankSizeFixed;
 }
 
-int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
-	if (tankSizeFixed == true) {
+int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/) {
+	if (isTankSizeFixed() && !forceChange) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Can not change the tank size for your currently selected model.  \n");
 		}
