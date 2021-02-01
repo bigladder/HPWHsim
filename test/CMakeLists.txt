@@ -28,7 +28,6 @@ set(testNames
  testDr_TOO2
  testDR_TOTLOR
 )
-
 set(modelNames
 #  StorageTank  
   AOSmithPHPT60
@@ -41,7 +40,6 @@ set(modelNames
   Rheem2020Prem50
   Rheem2020Build50
 )
-
 set(lockoutTestModels
   AOSmithPHPT60
   AOSmithHPTU80
@@ -57,6 +55,7 @@ set(yearTestsModels
  Rheem2020Prem40 
  Rheem2020Prem50
  Rheem2020Build50
+ AOSmithCAHP120
 )                                  
 set(yearTests                                        
  testCA_3BR_CTZ15
@@ -69,34 +68,35 @@ set(largeCompressorTests
  testLargeCompHot
 )
 set(largeCompressorNames
-  ColmacCxV_5_SP
-  ColmacCxA_10_SP
-  ColmacCxA_15_SP
-  ColmacCxA_20_SP
-  ColmacCxA_25_SP
-  ColmacCxA_30_SP
-  NyleC25A_SP
-  NyleC90A_SP 
-  NyleC185A_SP
-  NyleC250A_SP
-  NyleC90A_C_SP 
-  NyleC185A_C_SP
-  NyleC250A_C_SP
+ AOSmithCAHP120
+ ColmacCxV_5_SP
+ ColmacCxA_10_SP
+ ColmacCxA_15_SP
+ ColmacCxA_20_SP
+ ColmacCxA_25_SP
+ ColmacCxA_30_SP
+ NyleC25A_SP
+ NyleC90A_SP 
+ NyleC185A_SP
+ NyleC250A_SP
+ NyleC90A_C_SP 
+ NyleC185A_C_SP
+ NyleC250A_C_SP
 )
 
 set(yearLargeTestsModels   
-  ColmacCxV_5_SP
-  ColmacCxA_10_SP
-  ColmacCxA_15_SP
-  ColmacCxA_20_SP
-  ColmacCxA_25_SP
-  ColmacCxA_30_SP
-  NyleC90A_SP
-  NyleC185A_SP
-  NyleC250A_SP
+ ColmacCxV_5_SP
+ ColmacCxA_10_SP
+ ColmacCxA_15_SP
+ ColmacCxA_20_SP
+ ColmacCxA_25_SP
+ ColmacCxA_30_SP
+ NyleC90A_SP
+ NyleC185A_SP
+ NyleC250A_SP
 )                                  
 set(yearLargeTests                                        
-  testCA_36Unit_CTZ12
+ testCA_36Unit_CTZ12
 )
 
 # Unit tests
