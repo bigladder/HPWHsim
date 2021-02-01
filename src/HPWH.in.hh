@@ -368,11 +368,11 @@ class HPWH {
 
 
 
-  bool isSetpointFixed();  /**< is the setpoint allowed to be changed */
+  bool isSetpointFixed() const;  /**< is the setpoint allowed to be changed */
   int setSetpoint(double newSetpoint, UNITS units = UNITS_C);/**<default units C*/
   /**< a function to change the setpoint - useful for dynamically setting it
       The return value is 0 for successful setting, HPWH_ABORT for units failure  */
-  double getSetpoint();
+  double getSetpoint(UNITS units = UNITS_C) const;
   /**< a function to check the setpoint - returns setpoint in celcius  */
 
   int resetTankToSetpoint();
@@ -385,19 +385,19 @@ class HPWH {
   int setDoTempDepression(bool doTempDepress);
   /**< This is a simple setter for the temperature depression option */
 
-  int setTankSize_adjustUA(double HPWH_size, UNITS units );
+  int setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
   /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value but a new A.
 		A is found via getTankSurfaceArea()*/
 
-  double getTankSurfaceArea(UNITS units = UNITS_FT2);
+  double getTankSurfaceArea(UNITS units = UNITS_FT2) const;
   static double getTankSurfaceArea(double vol, UNITS volUnits = UNITS_L, UNITS surfAUnits = UNITS_FT2);
   /**< Returns the tank surface area based off of real storage tanks*/
-  double getTankRadius(UNITS units = UNITS_FT);
+  double getTankRadius(UNITS units = UNITS_FT) const;
   static double getTankRadius(double vol, UNITS volUnits = UNITS_L, UNITS radiusUnits = UNITS_FT);
   /**< Returns the tank surface radius based off of real storage tanks*/
 
   bool isTankSizeFixed() const;  /**< is the tank size allowed to be changed */
-  int setTankSize(double HPWH_size, UNITS units = UNITS_L);
+  int setTankSize(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
   /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
 
   double getTankSize(UNITS units = UNITS_L) const;
@@ -430,8 +430,10 @@ class HPWH {
 
   int setTimerLimitTOT(double limit_min);
   /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440 minutes. */
+  double getTimerLimitTOT_minute() const;
+  /**< Returns the timer limit in minutes for the DR_TOT call. */
 
-  int getInletHeight(int whichInlet);
+  int getInletHeight(int whichInlet) const;
   /**< returns the water inlet height node number */
 
 	int getNumNodes() const;
@@ -488,10 +490,10 @@ class HPWH {
   /**< get the heat content of the tank, relative to zero celsius
    * returns using kilojoules */
 
-  int getHPWHModel()const;
+  int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
-  bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal);
+  bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
   /**< Checks the demand response signal against the different heat source types  */
 
   void resetTopOffTimer();
@@ -868,7 +870,7 @@ class HPWH::HeatSource {
   void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
   void calcHeatDist(std::vector<double> &heatDistribution);
 
-	double getCondenserTemp();
+	double getCondenserTemp() const;
   /**< returns the temperature of the condensor - it's a weighted average of the
       tank temperature, using the condensity as weights */
 

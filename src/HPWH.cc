@@ -777,7 +777,7 @@ int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int op
 }
 
 
-bool HPWH::isSetpointFixed() {
+bool HPWH::isSetpointFixed() const{
 	return setpointFixed;
 }
 
@@ -804,8 +804,19 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	}
 	return 0;
 }
-double HPWH::getSetpoint() {
-	return setpoint_C;
+double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
+	if (units == UNITS_C) {
+		return setpoint_C;
+	}
+	else if (units == UNITS_F) {
+		return F_TO_C(setpoint_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getSetpoint.  \n");
+		}
+		return HPWH_ABORT;
+	}
 }
 
 
@@ -840,7 +851,7 @@ int HPWH::setDoTempDepression(bool doTempDepress) {
 	return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
+int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/) {
 	//Uses the UA before the function is called and adjusts the A part of the UA to match the input volume given getTankSurfaceArea().
 	double HPWH_size_L;
 	double oldA = getTankSurfaceArea(UNITS_FT2);
@@ -857,7 +868,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 		}
 		return HPWH_ABORT;
 	}
-	setTankSize(HPWH_size_L, UNITS_L);
+	setTankSize(HPWH_size_L, UNITS_L, forceChange);
 	setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
 	return 0;
 }
@@ -881,7 +892,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, UNITS units  /*=UNITS_L*/) {
 	return value;
 }
 
-double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
+double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const {
 	// returns tank surface area, old defualt was in ft2
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles. 
 	// Corresponds to the inner tank with volume tankVolume_L with the assumption that the aspect ratio is the same
@@ -915,7 +926,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) {
 	return value;
 }
 
-double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) {
+double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const{
 	// returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
 	// Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith, HTP, Rheem, and Niles, 
 	// assumes the aspect ratio for the outer measurements is the same is the actual tank.
@@ -935,8 +946,8 @@ bool HPWH::isTankSizeFixed() const{
 	return tankSizeFixed;
 }
 
-int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/) {
-	if (tankSizeFixed == true) {
+int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/) {
+	if (isTankSizeFixed() && !forceChange) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Can not change the tank size for your currently selected model.  \n");
 		}
@@ -1078,8 +1089,11 @@ int HPWH::setTimerLimitTOT(double limit_min) {
 	return 0;
 }
 
+double HPWH::getTimerLimitTOT_minute() const {
+	return timerLimitTOT;
+}
 
-int HPWH::getInletHeight(int whichInlet) {
+int HPWH::getInletHeight(int whichInlet) const {
 	if (whichInlet == 1) {
 		return inletHeight;
 	}
@@ -1460,11 +1474,17 @@ int HPWH::isNthHeatSourceRunning(int N) const {
 
 
 HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const {
+	if (N >= numHeatSources || N < 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the type of a heat source that does not exist.  \n");
+		}
+		return HEATSOURCE_TYPE(HPWH_ABORT);
+	}
 	return setOfSources[N].typeOfHeatSource;
 }
 
 
-double HPWH::getTankSize(UNITS units) const {
+double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const {
 	if (units == UNITS_L) {
 		return tankVolume_L;
 	}
@@ -1481,7 +1501,6 @@ double HPWH::getTankSize(UNITS units) const {
 
 
 double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const {
-
 	if (units == UNITS_C) {
 		return outletTemp_C;
 	}
@@ -2134,7 +2153,7 @@ bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C) {
 	return isLockedOut();
 }
 
-bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) {
+bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const {
 	
 	if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
 		return true;
@@ -2365,7 +2384,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 }
 
 
-double HPWH::HeatSource::getCondenserTemp() {
+double HPWH::HeatSource::getCondenserTemp() const{
 	double condenserTemp_C = 0.0;
 	int tempNodesPerCondensityNode = hpwh->numNodes / CONDENSITY_SIZE;
 	int j = 0;
