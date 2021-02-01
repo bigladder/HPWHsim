@@ -1692,11 +1692,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	//start tank off at setpoint
 	resetTankToSetpoint();
 
-	tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
+	tankVolume_L = GAL_TO_L(114);
 	tankUA_kJperHrC = UAf_TO_UAc(11.8);
 
 	doTempDepression = false;
-	tankMixesOnDraw = false;
+	tankMixesOnDraw = false; 
 
 	numHeatSources = 3;
 	setOfSources = new HeatSource[numHeatSources];
@@ -1710,57 +1710,61 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	compressor.isVIP = false;
 	compressor.typeOfHeatSource = TYPE_compressor;
 
+	//double split = 1.0 / 5.0;
+	//compressor.setCondensity(0, split, split, split, split, split, 0, 0, 0, 0, 0, 0);
+	double btm = 0.0005;
+	double split = 1.0 / 6.0;
+	compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+
 	//From CAHP 120 COP Tests
 	compressor.perfMap.reserve(3);
 
-	compressor.setCondensity(0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	
-	// Tuned on the multiple K167 tests
 	compressor.perfMap.push_back({
 		50., // Temperature (T_F)
-		{2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
+		{2050.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
 		{5.91, -0.026299, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
 	compressor.perfMap.push_back({
 		67.5, // Temperature (T_F)
-		{2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
+		{2211.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
 		{7.26272, -0.034135, 0.0} // COP Coefficients (COP_coeffs)
 		});
-
+	
 	compressor.perfMap.push_back({
 		95., // Temperature (T_F)
-		{2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (inputPower_coeffs)
+		{2316.0625, -7.106608,0.119911}, // Input Power Coefficients (inputPower_coeffs)
 		{8.821262, -0.042059, 0.0} // COP Coefficients (COP_coeffs)
 		});
 
-	compressor.minT = F_TO_C(47.0); //Product documentation says 45F doesn't look like it in CMP-T test//
+	compressor.minT = F_TO_C(47.0); //Product documentation says 40F//////////////////////////////////////
 	compressor.maxT = F_TO_C(110.0);
-	compressor.hysteresis_dC = dF_TO_dC(2);
+	compressor.hysteresis_dC = dF_TO_dC(2); // Just a guess //////////////////////////////////////
 	compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 	//top resistor values
-	double wattRE = 5650.;  // MUST BE CHANGED TO 6KW FOR CBECC
-	resistiveElementTop.setupAsResistiveElement(7, wattRE);
-	resistiveElementTop.isVIP = true; // VIP is the only source that turns on independently when something else is already heating.
+	resistiveElementTop.setupAsResistiveElement(10, 6000);
+	resistiveElementTop.isVIP = false; // NO VIP!//////////////////////////////////////
 
 	//bottom resistor values
-	resistiveElementBottom.setupAsResistiveElement(0, wattRE);
-	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); 
+	resistiveElementBottom.setupAsResistiveElement(0, 6000);
+	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); // Just a guess //////////////////////////////////////
 	resistiveElementBottom.setCondensity(0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.); // Based of CMP test
 
-	//logic conditions for 	
-	double compStart = dF_TO_dC(5.25); 
-	double standbyT = dF_TO_dC(5.); //Given CMP_T test 
+	//logic conditions
+	double compStart = dF_TO_dC(20); //Report suggests 15F K167 test kinda looks like 20
+	double standbyT = dF_TO_dC(5); //Given CMP_T test 
 	compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
-	compressor.addTurnOnLogic(HPWH::standby(standbyT));
+	compressor.addTurnOnLogic(HPWH::standby(standbyT)); 
 
-	double resistanceStart = 12.;
-	resistiveElementTop.addTurnOnLogic(HPWH::topThird(resistanceStart));
-	resistiveElementBottom.addTurnOnLogic(HPWH::topThird(resistanceStart));
+	//compressor.addShutOffLogic(HPWH::secondSixth(0.)); ////////////////////////////////////////////////////////////////
 
-	resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(F_TO_C(117.)));
-	resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
+	double resistanceStart = dF_TO_dC(5); //Given advice from report and K167_Triple Test
+	resistiveElementTop.addTurnOnLogic(HPWH::topSixth(resistanceStart)); 
+	resistiveElementBottom.addTurnOnLogic(HPWH::topSixth(resistanceStart));
+
+	resistiveElementTop.addShutOffLogic(HPWH::topSixth_absolute(F_TO_C(105))); //Given advice from report and K167_Triple Test
+	resistiveElementBottom.addShutOffLogic(HPWH::bottomSixth_absolute(F_TO_C(95))); //Given advice from report and K167_Triple Test
 
 	//set everything in its places
 	setOfSources[0] = resistiveElementTop;
@@ -1772,91 +1776,89 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	setOfSources[2].backupHeatSource = &setOfSources[1];
 	setOfSources[1].backupHeatSource = &setOfSources[2];
 
-	//setOfSources[0].followedByHeatSource = &setOfSources[2];
-	//setOfSources[1].followedByHeatSource = &setOfSources[2];
+	setOfSources[0].followedByHeatSource = &setOfSources[1];
+	setOfSources[1].followedByHeatSource = &setOfSources[2];
 
-	setOfSources[0].companionHeatSource = &setOfSources[1];
-	setOfSources[1].companionHeatSource = &setOfSources[2];
-
+	// CAHP has been set up without a VIP heat source and no companion heat sources.
 	}
-		else if (presetNum == MODELS_GE2014STDMode) {
-			numNodes = 12;
-			tankTemps_C = new double[numNodes];
-			setpoint_C = F_TO_C(127.0);
+	else if (presetNum == MODELS_GE2014STDMode) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
 
-			//start tank off at setpoint
-			resetTankToSetpoint();
+		//start tank off at setpoint
+		resetTankToSetpoint();
 
-			tankVolume_L = GAL_TO_L(45);
-			tankUA_kJperHrC = 6.5;
+		tankVolume_L = GAL_TO_L(45);
+		tankUA_kJperHrC = 6.5;
 
-			doTempDepression = false;
-			tankMixesOnDraw = true;
+		doTempDepression = false;
+		tankMixesOnDraw = true;
 
-			numHeatSources = 3;
-			setOfSources = new HeatSource[numHeatSources];
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
 
-			HeatSource compressor(this);
-			HeatSource resistiveElementBottom(this);
-			HeatSource resistiveElementTop(this);
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
 
-			//compressor values
-			compressor.isOn = false;
-			compressor.isVIP = false;
-			compressor.typeOfHeatSource = TYPE_compressor;
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
 
-			double split = 1.0 / 4.0;
-			compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
 
-			compressor.perfMap.reserve(2);
+		compressor.perfMap.reserve(2);
 
-			compressor.perfMap.push_back({
-				50, // Temperature (T_F)
-				{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-				{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-				});
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+			});
 
-			compressor.perfMap.push_back({
-				70, // Temperature (T_F)
-				{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-				{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-				});
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+			});
 
-			compressor.minT = F_TO_C(37.0);
-			compressor.maxT = F_TO_C(120.);
-			compressor.hysteresis_dC = dF_TO_dC(2);
-			compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.minT = F_TO_C(37.0);
+		compressor.maxT = F_TO_C(120.);
+		compressor.hysteresis_dC = dF_TO_dC(2);
+		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
-			//top resistor values
-			resistiveElementTop.setupAsResistiveElement(6, 4500);
-			resistiveElementTop.isVIP = true;
+		//top resistor values
+		resistiveElementTop.setupAsResistiveElement(6, 4500);
+		resistiveElementTop.isVIP = true;
 
-			//bottom resistor values
-			resistiveElementBottom.setupAsResistiveElement(0, 4000);
-			resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-			resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, 4000);
+		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
-			//logic conditions
-			resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+		//logic conditions
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 
-			resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
 
-			compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-			//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
+		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
+		//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
-			//set everything in its places
-			setOfSources[0] = resistiveElementTop;
-			setOfSources[1] = resistiveElementBottom;
-			setOfSources[2] = compressor;
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
 
-			//and you have to do this after putting them into setOfSources, otherwise
-			//you don't get the right pointers
-			setOfSources[2].backupHeatSource = &setOfSources[1];
-			setOfSources[1].backupHeatSource = &setOfSources[2];
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
 
-			setOfSources[0].followedByHeatSource = &setOfSources[1];
-			setOfSources[1].followedByHeatSource = &setOfSources[2];
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014STDMode_80) {

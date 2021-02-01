@@ -311,8 +311,7 @@ int HPWH::runOneStep(double drawVolume_L,
 				msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = %i \n", DRstatus);
 			}
 		}
-
-	    //do HeatSource choice
+	   //do HeatSource choice
 		for (int i = 0; i < numHeatSources; i++) {
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n", i, setOfSources[i].turnOnLogicSet.size(), setOfSources[i].shutOffLogicSet.size());
@@ -1192,6 +1191,13 @@ HPWH::HeatingLogic HPWH::topSixth(double d) const {
 	return HPWH::HeatingLogic("top sixth", nodeWeights, d);
 }
 
+HPWH::HeatingLogic HPWH::topSixth_absolute(double d) const {
+	std::vector<NodeWeight> nodeWeights;
+	for (auto i : { 11,12 }) {
+		nodeWeights.emplace_back(i);
+	}
+	return HPWH::HeatingLogic("top sixth absolute", nodeWeights, d, true);
+}
 
 HPWH::HeatingLogic HPWH::bottomHalf(double d) const {
 	std::vector<NodeWeight> nodeWeights;
@@ -1230,47 +1236,6 @@ HPWH::HeatingLogic HPWH::bottomTwelthMaxTemp(double d) const {
 	nodeWeights.emplace_back(1);
 	return HPWH::HeatingLogic("bottom twelth", nodeWeights, d, true, std::greater<double>());
 }
-
-HPWH::HeatingLogic HPWH::topThirdMaxTemp(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 9,10,11,12 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("top third", nodeWeights, d, true, std::greater<double>());
-}
-
-HPWH::HeatingLogic HPWH::bottomSixthMaxTemp(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 1,2 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("bottom sixth", nodeWeights, d, true, std::greater<double>());
-}
-
-HPWH::HeatingLogic HPWH::secondSixthMaxTemp(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 3,4 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("second sixth", nodeWeights, d, true, std::greater<double>());
-}
-
-HPWH::HeatingLogic HPWH::fifthSixthMaxTemp(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 9,10 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
-}
-
-HPWH::HeatingLogic HPWH::topSixthMaxTemp(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 11,12 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
-}
-
 
 HPWH::HeatingLogic HPWH::largeDraw(double d) const {
 	std::vector<NodeWeight> nodeWeights;
@@ -1670,9 +1635,9 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
-		if (tankMixesOnDraw == true && drawVolume_L > 0.) {
+		if (tankMixesOnDraw == true && drawVolume_L > 0) {
 			int mixedBelowNode = numNodes / 3;
-			double ave = 0.;
+			double ave = 0;
 
 			for (int i = 0; i < mixedBelowNode; i++) {
 				ave += tankTemps_C[i];
@@ -2968,18 +2933,7 @@ void HPWH::calcDerivedHeatingValues(){
 
 }
 
-bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic) {
 
-	for (auto nodeWeights : logic.nodeWeights) {
-		if (nodeWeights.nodeNum > 13 || nodeWeights.nodeNum < 0) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Node number for heatsource %d %s must be between 0 and 13. \n", logic.description);
-			}
-			return false;
-		}
-	}
-	return true;
-}
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs() {
 	int returnVal = 0;
@@ -3011,24 +2965,6 @@ int HPWH::checkInputs() {
 			msg("You must specify at least one logic to turn on the element or the element must be set as a backup for another heat source with at least one logic.");
 			returnVal = HPWH_ABORT;
 		}
-
-		// Check to make sure the node weights are between 0 and 13.
-		//for (int j = 0; j < (int)setOfSources[i].turnOnLogicSet.size(); j++) {
-		for (auto logic : setOfSources[i].turnOnLogicSet) {
-			if (!areNodeWeightsValid(logic)) {
-				returnVal = HPWH_ABORT;
-				break;
-			}
-		}
-		// Check to make sure the node weights are between 0 and 13.
-		//for (int j = 0; j < (int)setOfSources[i].shutOffLogicSet.size(); j++) {
-		for (auto logic : setOfSources[i].shutOffLogicSet) {
-			if (!areNodeWeightsValid(logic)) {
-				returnVal = HPWH_ABORT;
-				break;
-			}
-		}
-
 		//check is condensity sums to 1
 		condensitySum = 0;
 		for (int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += setOfSources[i].condensity[j];
