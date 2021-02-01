@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
 
 // this function reads the named schedule into the provided array
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
-  long minuteHrTmp;
+  int minuteHrTmp;
   bool hourInput;
   string line, snippet, s, minORhr;
   double valTmp;
@@ -413,6 +413,10 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
   // Read all the exceptions to the default value
   while (inputFile >> minuteHrTmp >> c >> valTmp) {
 
+		if (minuteHrTmp >= (int)scheduleArray.size()) {
+			cout << "In " << scheduleFileName << " the input file has more minutes than the test was defined with\n";
+			return 1;
+		}
 		// Update the value
 		if (!hourInput) {
 			scheduleArray[minuteHrTmp] = valTmp;
@@ -422,10 +426,6 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 				scheduleArray[j] = valTmp;
 				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
 			}
-		}
-		else {
-			cout << "Must specify time by minute or hour" << "\n";
-			return 1;
 		}
   }
   
