@@ -1,0 +1,2 @@
+length_of_test 1260
+setpoint 66

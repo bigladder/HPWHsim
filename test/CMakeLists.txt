@@ -16,87 +16,92 @@ add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_C
 
 # Run tests
 set(testNames
- test30
- test50
- test70
- test95
- testLockout
- testSandenCombi
- testDr_LO
- testDr_TOO
- testDr_TOT
- testDr_TOO2
- testDR_TOTLOR
+ #test30
+ #test50
+ #test70
+ #test95
+ #testLockout
+ #testSandenCombi
+ #testDr_LO
+ #testDr_TOO
+ #testDr_TOT
+ #testDr_TOO2
+ #testDR_TOTLOR
 )
 
 set(modelNames
 #  StorageTank  
-  AOSmithPHPT60
-  AOSmithHPTU80
-  Sanden80
-  RheemHB50
-  Stiebel220e
-  GE502014
-  Rheem2020Prem40
-  Rheem2020Prem50
-  Rheem2020Build50
+ # AOSmithPHPT60
+ # AOSmithHPTU80
+ # Sanden80
+ # RheemHB50
+ # Stiebel220e
+ # GE502014
+ # Rheem2020Prem40
+ # Rheem2020Prem50
+ # Rheem2020Build50
 )
 
 set(lockoutTestModels
-  AOSmithPHPT60
-  AOSmithHPTU80
-  RheemHB50
-  Stiebel220e
-  GE502014
+ # AOSmithPHPT60
+ # AOSmithHPTU80
+ # RheemHB50
+ # Stiebel220e
+ # GE502014
 )
 
 set(yearTestsModels                
- AOSmithHPTU80       
- Sanden80            
- GE502014            
- Rheem2020Prem40 
- Rheem2020Prem50
- Rheem2020Build50
+ #AOSmithHPTU80       
+ #Sanden80            
+ #GE502014            
+ #Rheem2020Prem40 
+ #Rheem2020Prem50
+ #Rheem2020Build50
 )                                  
 set(yearTests                                        
- testCA_3BR_CTZ15
- testCA_3BR_CTZ16
+# testCA_3BR_CTZ15
+# testCA_3BR_CTZ16
 )
 
 set(largeCompressorTests
- testLargeComp45
- testLargeComp60
- testLargeCompHot
+ #testLargeComp45
+ #testLargeComp60
+ #testLargeCompHot
+ testDP_AOSmithCAHP_K167
+ testDP_AOSmithCAHP_K167Double
+ testDP_AOSmithCAHP_K167Triple
+ test3_COPs
 )
 set(largeCompressorNames
-  ColmacCxV_5_SP
-  ColmacCxA_10_SP
-  ColmacCxA_15_SP
-  ColmacCxA_20_SP
-  ColmacCxA_25_SP
-  ColmacCxA_30_SP
-  NyleC25A_SP
-  NyleC90A_SP 
-  NyleC185A_SP
-  NyleC250A_SP
-  NyleC90A_C_SP 
-  NyleC185A_C_SP
-  NyleC250A_C_SP
+ AOSmithCAHP120
+ # ColmacCxV_5_SP
+ # ColmacCxA_10_SP
+ # ColmacCxA_15_SP
+ # ColmacCxA_20_SP
+ # ColmacCxA_25_SP
+ # ColmacCxA_30_SP
+ # NyleC25A_SP
+ # NyleC90A_SP 
+ # NyleC185A_SP
+ # NyleC250A_SP
+ # NyleC90A_C_SP 
+ # NyleC185A_C_SP
+ # NyleC250A_C_SP
 )
 
 set(yearLargeTestsModels   
-  ColmacCxV_5_SP
-  ColmacCxA_10_SP
-  ColmacCxA_15_SP
-  ColmacCxA_20_SP
-  ColmacCxA_25_SP
-  ColmacCxA_30_SP
-  NyleC90A_SP
-  NyleC185A_SP
-  NyleC250A_SP
+ # ColmacCxV_5_SP
+ # ColmacCxA_10_SP
+ # ColmacCxA_15_SP
+ # ColmacCxA_20_SP
+ # ColmacCxA_25_SP
+ # ColmacCxA_30_SP
+ # NyleC90A_SP
+ # NyleC185A_SP
+ # NyleC250A_SP
 )                                  
 set(yearLargeTests                                        
-  testCA_36Unit_CTZ12
+ # testCA_36Unit_CTZ12
 )
 
 # Unit tests
