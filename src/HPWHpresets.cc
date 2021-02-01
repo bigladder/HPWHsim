@@ -1709,11 +1709,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	compressor.isOn = false;
 	compressor.isVIP = false;
 	compressor.typeOfHeatSource = TYPE_compressor;
+	compressor.setCondensity(0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
 	//From CAHP 120 COP Tests
 	compressor.perfMap.reserve(3);
-
-	compressor.setCondensity(0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
 	// Tuned on the multiple K167 tests
 	compressor.perfMap.push_back({
