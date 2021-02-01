@@ -249,17 +249,12 @@ class HPWH {
 	HeatingLogic fourthSixth(double d) const;
 	HeatingLogic fifthSixth(double d) const;
 	HeatingLogic topSixth(double d) const;
+	HeatingLogic topSixth_absolute(double d) const;
 
   HeatingLogic standby(double d) const;
   HeatingLogic topNodeMaxTemp(double d) const;
   HeatingLogic bottomNodeMaxTemp(double d) const;
   HeatingLogic bottomTwelthMaxTemp(double d) const;
-  HeatingLogic topThirdMaxTemp(double d) const;
-  HeatingLogic bottomSixthMaxTemp(double d) const;
-  HeatingLogic secondSixthMaxTemp(double d) const;
-  HeatingLogic fifthSixthMaxTemp(double d) const;
-  HeatingLogic topSixthMaxTemp(double d) const;
-
   HeatingLogic largeDraw(double d) const;
   HeatingLogic largerDraw(double d) const;
 
@@ -530,9 +525,6 @@ class HPWH {
 
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
-
-  bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic);
-	 /**< a helper for the helper, checks the node weights are valid */
 
 
   void sayMessage(const std::string message) const;
