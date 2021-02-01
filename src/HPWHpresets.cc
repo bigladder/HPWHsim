@@ -1739,7 +1739,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 	//top resistor values
-	double wattRE = 5650.;  // MUST BE CHANGED TO 6KW FOR CBECC
+	double wattRE = 6000;//5650.; 
 	resistiveElementTop.setupAsResistiveElement(7, wattRE);
 	resistiveElementTop.isVIP = true; // VIP is the only source that turns on independently when something else is already heating.
 
