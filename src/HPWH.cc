@@ -68,7 +68,7 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), hpwhVerbosity(VRB_silent),
+	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), canScale(false), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
@@ -1393,6 +1393,10 @@ int HPWH::getNumHeatSources() const {
 	return numHeatSources;
 }
 
+int HPWH::getCompressorIndex() const {
+	return compressorIndex;
+}
+
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
@@ -1573,6 +1577,38 @@ double HPWH::getLocationTemp_C() const {
 
 int HPWH::getHPWHModel() const {
 	return hpwhModel;
+}
+
+bool HPWH::isHPWHScalable() const {
+	return canScale;
+}
+
+int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/) {
+	if (!isHPWHScalable()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not scale the HPWH Capacity or COP  \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (scaleCapacity <= 0 || scaleCOP <= 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0, this isn't \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	for (auto &perfP : setOfSources[compressorIndex].perfMap) {
+		if (scaleCapacity != 1.) {
+			std::transform(perfP.inputPower_coeffs.begin(), perfP.inputPower_coeffs.end(), perfP.inputPower_coeffs.begin(),
+				std::bind1st(std::multiplies<double>(), scaleCapacity));
+		}
+		if (scaleCOP != 1.) {
+			std::transform(perfP.COP_coeffs.begin(), perfP.COP_coeffs.end(), perfP.COP_coeffs.begin(),
+				std::bind1st(std::multiplies<double>(), scaleCOP));
+		}
+	}
+
+	return 0;
 }
 
 
@@ -2408,8 +2444,6 @@ double HPWH::HeatSource::getCondenserTemp() const{
 
 
 void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
-	double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
-	double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
 	double externalT_F, condenserTemp_F;
 
 	// Convert Celsius to Fahrenheit for the curve fits
@@ -2423,6 +2457,9 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	double Tout_F = C_TO_F(hpwh->getSetpoint());
 
 	if (perfMap.size() > 1) {
+		double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
+		double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
+
 		for (size_t i = 0; i < perfMap.size(); ++i) {
 			if (externalT_F < perfMap[i].T_F) {
 				if (i == 0) {

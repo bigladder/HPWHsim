@@ -132,6 +132,7 @@ class HPWH {
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
 	  MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
+	  MODELS_TamScalable_SP = 202,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -450,6 +451,12 @@ class HPWH {
 
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */
+
+	int getCompressorIndex() const;
+	/**< returns the index of the compressor in the heat source array.
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
@@ -493,6 +500,12 @@ class HPWH {
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
+  bool isHPWHScalable() const;
+  /**< returns if the HPWH is scalable or not*/
+
+  int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+  /**< Scales the heatpump water heater input capacity and COP*/
+
   bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
   /**< Checks the demand response signal against the different heat source types  */
 
@@ -533,7 +546,7 @@ class HPWH {
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
-  bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic);
+  bool areNodeWeightsValid(HeatingLogic logic);
 	 /**< a helper for the helper, checks the node weights are valid */
 
 
@@ -555,6 +568,9 @@ class HPWH {
 
 	bool tankSizeFixed;
 	/**< does the HPWH have a constant tank size or can it be changed  */
+
+	bool canScale;
+	/**< can the HPWH scale capactiy and COP or not  */
 
   VERBOSITY hpwhVerbosity;
 	/**< an enum to let the sim know how much output to say  */

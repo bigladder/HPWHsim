@@ -25,9 +25,6 @@ using std::string;
 using std::ifstream;
 //using std::ofstream;
 
-#define F_TO_C(T) ((T-32.0)*5.0/9.0)
-#define GAL_TO_L(GAL) (GAL*3.78541)
-
 typedef std::vector<double> schedule;
 
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
