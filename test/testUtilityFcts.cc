@@ -15,7 +15,14 @@
 using std::cout;
 using std::string;
 
-HPWH::MODELS mapStringToPreset(string modelName);
+#define F_TO_C(T) ((T-32.0)*5.0/9.0)
+#define GAL_TO_L(GAL) (GAL*3.78541)
+
+#define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
+
+bool cmpd(double A, double B, double epsilon = 0.0001) {
+	return (fabs(A - B) < epsilon);
+}
 
 HPWH::MODELS mapStringToPreset(string modelName) {
 
@@ -113,6 +120,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 		hpwhModel = HPWH::MODELS_Rheem2020Build80;
 	}
 	// Large HPWH's
+	else if (modelName == "Scalable_SP") {
+		hpwhModel = HPWH::MODELS_TamScalable_SP;
+	}
 	else if (modelName == "AOSmithCAHP120") {
 		hpwhModel = HPWH::MODELS_AOSmithCAHP120;
 	}

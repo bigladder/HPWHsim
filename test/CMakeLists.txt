@@ -3,9 +3,11 @@ include_directories("${PROJECT_BINARY_DIR}/src")
 
 add_executable(testTool main.cc )
 add_executable(testTankSizeFixed testTankSizeFixed.cc)
+add_executable(testScaleHPWH testScaleHPWH.cc)
 
 target_link_libraries(testTool libHPWHsim)
 target_link_libraries(testTankSizeFixed libHPWHsim)
+target_link_libraries(testScaleHPWH libHPWHsim)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -14,7 +16,10 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 #add_custom_target(do_always ALL COMMAND ${CMAKE_COMMAND} file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") )
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
 
-# Run tests
+# Run Unit tests
+add_test(NAME "testScaleHPWH" COMMAND  $<TARGET_FILE:testScaleHPWH> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Run model tests and unit tests on models
 set(testNames
  test30
  test50
@@ -111,8 +116,7 @@ function( add_TankSizeFixed_test )
   set(TEST_TITLE "TankSizeFixed.${ARG_MODEL_NAME}")
 
   add_test(NAME "${TEST_TITLE}" COMMAND  $<TARGET_FILE:testTankSizeFixed> ${testArgs}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 foreach(model ${modelNames})
