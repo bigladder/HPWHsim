@@ -87,6 +87,7 @@ set(largeCompressorNames
  NyleC90A_C_SP 
  NyleC185A_C_SP
  NyleC250A_C_SP
+ TamScalable_SP_Half
 )
 
 set(yearLargeTestsModels   
@@ -99,7 +100,8 @@ set(yearLargeTestsModels
  NyleC90A_SP
  NyleC185A_SP
  NyleC250A_SP
-)                                  
+)
+
 set(yearLargeTests                                        
  testCA_36Unit_CTZ12
 )

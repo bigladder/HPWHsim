@@ -2918,7 +2918,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	// If a Colmac single pass preset cold weather or not
+	// If a the model is the TamOMatic, HotTam... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
@@ -2951,11 +2951,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setupDefrostMap();
 
 		//Perfmap for input power and COP made from data for CxA-15 to be scalled for this model
-		std::vector<double> inputPwr_coeffs = { 13.66353179,0.00995298,-0.034178789 ,-0.013976793 ,-0.000110695,0.000260479,0.000232498,
-												0.000194561, -0.000339296,5.31754E-06,2.3653E-06 };
-
-		std::vector<double> COP_coeffs = { 1.945158936,0.041271369,-0.011142406,-0.001605424,4.92958E-05,3.48959E-05,-3.22831E-05,
-										   -0.000165898,1.12053E-05,3.92771E-05,-3.52623E-07 };
+		std::vector<double> inputPwr_coeffs = { 13.6, 0.00995, -0.0342, -0.014, -0.000110, 0.00026, 0.000232, 0.000195, -0.00034, 5.30E-06, 2.3600E-06};
+		std::vector<double> COP_coeffs = { 1.945, 0.0412, -0.0112, -0.00161, 0.0000492, 0.0000348, -0.0000323, -0.000166, 0.0000112, 0.0000392, -3.52E-07};
 
 		compressor.perfMap.push_back({
 			105, // Temperature (T_F)
