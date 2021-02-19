@@ -1397,6 +1397,44 @@ int HPWH::getCompressorIndex() const {
 	return compressorIndex;
 }
 
+double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp /*=14.444*/, double outTemp /*=57.222*/, 
+	UNITS pwrUnit /*=UNITS_KW*/, UNITS tempUnit /*=UNITS_C*/) const {
+	// calculate capacity btu/hr, input btu/hr, and cop
+	double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
+	double airTemp_C, inletTemp_C, outTemp_C;
+
+	if (tempUnit == UNITS_C) {
+		airTemp_C = airTemp;
+		inletTemp_C = inletTemp;
+		outTemp_C = outTemp;
+	}
+	else if (tempUnit == UNITS_F) {
+		airTemp_C = F_TO_C(airTemp);
+		inletTemp_C = F_TO_C(inletTemp);
+		outTemp_C = F_TO_C(outTemp);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for temperatures in getCompressorCapacity.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	setOfSources[getCompressorIndex()].getCapacity(airTemp, inletTemp, outTemp, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+
+	double outputCapacity = capTemp_BTUperHr;
+	if(pwrUnit == UNITS_KW) {
+		outputCapacity = BTU_TO_KWH(capTemp_BTUperHr); 
+	}
+	else if (pwrUnit != UNITS_BTUperHr) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for capacity in getCompressorCapacity.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	return outputCapacity;
+}
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
@@ -2443,7 +2481,7 @@ double HPWH::HeatSource::getCondenserTemp() const{
 }
 
 
-void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
+void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double setpointTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	double externalT_F, condenserTemp_F;
 
 	// Convert Celsius to Fahrenheit for the curve fits
@@ -2454,7 +2492,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	bool extrapolate = false;
 	size_t i_prev = 0;
 	size_t i_next = 1;
-	double Tout_F = C_TO_F(hpwh->getSetpoint());
+	double Tout_F = C_TO_F(setpointTemp_C);
 
 	if (perfMap.size() > 1) {
 		double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2

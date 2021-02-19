@@ -190,6 +190,8 @@ class HPWH {
     UNITS_KWH,        /**< kilowatt hours  */
     UNITS_BTU,        /**< british thermal units  */
     UNITS_KJ,         /**< kilojoules  */
+	UNITS_KW,		  /**< kilowatt  */
+	UNITS_BTUperHr,   /**< british thermal units per Hour  */
     UNITS_GAL,        /**< gallons  */
     UNITS_L,          /**< liters  */
     UNITS_kJperHrC,   /**< UA, metric units  */
@@ -454,6 +456,11 @@ class HPWH {
 
 	int getCompressorIndex() const;
 	/**< returns the index of the compressor in the heat source array.
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
+	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
+	/**Returns the heating output capacity of the compressor for the given model. 
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
 	of a compressor */
 
@@ -883,7 +890,13 @@ class HPWH::HeatSource {
       the water is drawn from and hot water is put at the top of the tank. */
 
 	/**  I wrote some methods to help with the add heat interface - MJL  */
-  void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+  void getCapacity(double externalT_C, double condenserTemp_C, double setpointTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+
+  /** An overloaded function that uses uses the setpoint temperature  */
+  void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
+	  getCapacity(externalT_C, condenserTemp_C, hpwh->getSetpoint(),  input_BTUperHr, cap_BTUperHr, cop);
+  };
+
   void calcHeatDist(std::vector<double> &heatDistribution);
 
 	double getCondenserTemp() const;

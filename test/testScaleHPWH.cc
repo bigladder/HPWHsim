@@ -10,9 +10,6 @@
 
 #include <iostream>
 #include <string> 
-//#include <assert.h>     /* assert */
-
-
 
 using std::cout;
 using std::string;
@@ -21,8 +18,7 @@ struct performance {
 	double input, output, cop;
 };
 
-
-void getCompressorCapacity(HPWH &hpwh, performance &point, double waterTempC, double airTempC, double setpointC) {
+void getCompressorPerformance(HPWH &hpwh, performance &point, double waterTempC, double airTempC, double setpointC) {
 	//Force tank cold
 	hpwh.setSetpoint(waterTempC);
 	hpwh.resetTankToSetpoint();
@@ -36,7 +32,6 @@ void getCompressorCapacity(HPWH &hpwh, performance &point, double waterTempC, do
 		HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
 	);
 	
-
 	// Check the heat in and out of the compressor
 	point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex());
 	point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex());
@@ -45,25 +40,25 @@ void getCompressorCapacity(HPWH &hpwh, performance &point, double waterTempC, do
 
 void scaleCapacityCOP(HPWH &hpwh, double scaleInput, double scaleCOP, performance &point0, performance &point1,
 	double waterTempC = F_TO_C(63), double airTempC = F_TO_C(77), double setpointC = F_TO_C(135)) {
+	// Get peformance unscalled
+	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC);
 
-	getCompressorCapacity(hpwh, point0, waterTempC, airTempC, setpointC);
-
+	// Scale the compressor
 	int val = hpwh.setScaleHPWHCapacityCOP(scaleInput, scaleCOP);
 
-	getCompressorCapacity(hpwh, point1, waterTempC, airTempC, setpointC);
+	// Get the scaled performance
+	getCompressorPerformance(hpwh, point1, waterTempC, airTempC, setpointC);
 }
 
-void testNoScaleOutOfBounds() { // Test that we can scale the scalable model <= 0
-	HPWH::MODELS presetModel;
+void testNoScaleOutOfBounds() { // Test that we can NOT scale the scalable model with scale <= 0
 	HPWH hpwh;
 
-	string input = "Scalable_SP";
+	string input = "TamScalable_SP";
 
 	double num;
 
-	// get model number
-	presetModel = mapStringToPreset(input);
-	hpwh.HPWHinit_presets(presetModel); // set preset
+	// get preset model 
+	getHPWHObject(hpwh, input);
 
 	num = 0;
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(num, 1.) == HPWH::HPWH_ABORT);
@@ -75,31 +70,26 @@ void testNoScaleOutOfBounds() { // Test that we can scale the scalable model <= 
 }
 
 void testNoneScalable() { // Test a model that is not scalable
-	HPWH::MODELS presetModel;
 	HPWH hpwh;
 
 	string input = "AOSmithCAHP120";
 
-	// get model number
-	presetModel = mapStringToPreset(input);
-	hpwh.HPWHinit_presets(presetModel); // set preset
+	// get preset model 
+	getHPWHObject(hpwh, input);
 
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 }
 
 void testScalableHPWHScales() { // Test the scalable hpwh can be put through it's passes
-
-	HPWH::MODELS presetModel;
 	HPWH hpwh;
 
-	string input = "Scalable_SP";
+	string input = "TamScalable_SP";
 
 	performance point0, point1;
 	double num, anotherNum;
 
-	// get model number
-	presetModel = mapStringToPreset(input);
-	hpwh.HPWHinit_presets(presetModel); // set preset
+	// get preset model 
+	getHPWHObject(hpwh, input);
 
 	num = 0.001; // Very low
 	scaleCapacityCOP(hpwh, num, 1., point0, point1);
@@ -176,13 +166,86 @@ void testScalableHPWHScales() { // Test the scalable hpwh can be put through it'
 	ASSERTTRUE(cmpd(point0.input, point1.input / anotherNum));
 	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
 	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 1.5;
+	anotherNum = 0.9; // real high and low
+	scaleCapacityCOP(hpwh, num, anotherNum, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / anotherNum));
+
+	scaleCapacityCOP(hpwh, anotherNum, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / anotherNum));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+}
+
+void testSPGetCompressorCapacity() {
+	HPWH hpwh;
+
+	string input = "ColmacCxA_20_SP";
+
+	performance point0;
+
+	double capacity;
+	double waterTempC = F_TO_C(63);
+	double airTempC = F_TO_C(77);
+	double setpointC = F_TO_C(135);
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC);
+	capacity = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60; // div 60 to kWh
+
+	ASSERTTRUE(cmpd(point0.output, capacity));
+
+}
+
+void testScaleGetCompressorCapacity() {
+	HPWH hpwh;
+
+	string input = "TamScalable_SP";
+
+	double capacity_kW, newCapacity_kW, num;
+	double waterTempC = F_TO_C(44);
+	double airTempC = F_TO_C(98);
+	double setpointC = F_TO_C(145);
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+	capacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC); 
+
+	//Scale output to 1 kW
+	num = 1.; 
+	hpwh.setScaleHPWHCapacityCOP(num / capacity_kW, 1.); 	// Scale the compressor
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC); 
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	//Scale output to .01 kW
+	num = .01;
+	hpwh.setScaleHPWHCapacityCOP(num / newCapacity_kW, 1.); 	// Scale the compressor
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	//Scale output to 1000 kW
+	num = 1000.;
+	hpwh.setScaleHPWHCapacityCOP(num / newCapacity_kW, 1.); 	// Scale the compressor
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
 }
 
 int main(int argc, char *argv[])
 {
 	testScalableHPWHScales();
+
 	testNoScaleOutOfBounds();
+	
 	testNoneScalable(); 
+
+	testSPGetCompressorCapacity();
+
+	testScaleGetCompressorCapacity();
 
 	//Made it through the gauntlet
 	return 0;
