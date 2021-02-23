@@ -80,6 +80,19 @@ void testNoneScalable() { // Test a model that is not scalable
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 }
 
+void testScaleRE() {
+	HPWH hpwh;
+
+	string input = "restankRealistic";
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	//Scale output to 1 kW
+	int val = hpwh.setScaleHPWHCapacityCOP(2., 2.);
+	ASSERTTRUE(val == HPWH::HPWH_ABORT);
+}
+
 void testScalableHPWHScales() { // Test the scalable hpwh can be put through it's passes
 	HPWH hpwh;
 
@@ -195,57 +208,66 @@ void testSPGetCompressorCapacity() {
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC);
-	capacity = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60; // div 60 to kWh
+	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC); // gives kWH
+	capacity = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60; // div 60 to kWh because I know above only runs 1 minute
 
 	ASSERTTRUE(cmpd(point0.output, capacity));
 
 }
 
-void testScaleGetCompressorCapacity() {
+void testSetCompressorOutputCapacity() {
 	HPWH hpwh;
 
 	string input = "TamScalable_SP";
 
-	double capacity_kW, newCapacity_kW, num;
+	double newCapacity_kW, num;
 	double waterTempC = F_TO_C(44);
 	double airTempC = F_TO_C(98);
 	double setpointC = F_TO_C(145);
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
-	capacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC); 
 
 	//Scale output to 1 kW
 	num = 1.; 
-	hpwh.setScaleHPWHCapacityCOP(num / capacity_kW, 1.); 	// Scale the compressor
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
 	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC); 
 	ASSERTTRUE(cmpd(num, newCapacity_kW));
 
 	//Scale output to .01 kW
 	num = .01;
-	hpwh.setScaleHPWHCapacityCOP(num / newCapacity_kW, 1.); 	// Scale the compressor
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
 	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
 	ASSERTTRUE(cmpd(num, newCapacity_kW));
 
 	//Scale output to 1000 kW
 	num = 1000.;
-	hpwh.setScaleHPWHCapacityCOP(num / newCapacity_kW, 1.); 	// Scale the compressor
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
 	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
 	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	//Scale output to 1000 kW but let's use do the calc in other units
+	num = KW_TO_BTUperHR(num);
+	hpwh.setCompressorOutputCapacity(num, C_TO_F(airTempC), C_TO_F(waterTempC), C_TO_F(setpointC), HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC), C_TO_F(waterTempC), C_TO_F(setpointC), HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	ASSERTTRUE(cmpd(num, newCapacity_BTUperHr));
 }
+
 
 int main(int argc, char *argv[])
 {
-	testScalableHPWHScales();
+	testScalableHPWHScales(); // Test the scalable model scales properly
 
-	testNoScaleOutOfBounds();
+	testNoScaleOutOfBounds(); // Test that models can't scale with invalid inputs 
 	
-	testNoneScalable(); 
+	testNoneScalable(); // Test that models can't scale that are non scalable presets 
+	
+	testScaleRE(); // Test the resitance tank can't scale the compressor
 
-	testSPGetCompressorCapacity();
+	testSPGetCompressorCapacity(); //Test we can get the capacity
 
-	testScaleGetCompressorCapacity();
+	testSetCompressorOutputCapacity(); //Test we can set the capacity with a specific number
+
 
 	//Made it through the gauntlet
 	return 0;

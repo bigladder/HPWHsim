@@ -1403,6 +1403,13 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 	double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
 	double airTemp_C, inletTemp_C, outTemp_C;
 
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
 	if (tempUnit == UNITS_C) {
 		airTemp_C = airTemp;
 		inletTemp_C = inletTemp;
@@ -1416,6 +1423,13 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for temperatures in getCompressorCapacity.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	if (airTemp_C < setOfSources[getCompressorIndex()].minT || airTemp_C > setOfSources[getCompressorIndex()].maxT) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The compress does not operate at the specified air temperature. \n");
 		}
 		return double(HPWH_ABORT);
 	}
@@ -1628,6 +1642,12 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 		}
 		return HPWH_ABORT;
 	}
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
 	if (scaleCapacity <= 0 || scaleCOP <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0, this isn't \n");
@@ -1647,6 +1667,19 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 	}
 
 	return 0;
+}
+
+int HPWH::setCompressorOutputCapacity(double newCapacity, double airTemp /*=19.722*/,
+	double inletTemp /*=14.444*/, double outTemp /*=57.222*/,
+	UNITS pwrUnit /*=UNITS_KW*/, UNITS tempUnit /*=UNITS_C*/) {
+
+	double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
+	if (oldCapacity == double(HPWH_ABORT)) {
+		return HPWH_ABORT;
+	}
+
+	double scale = newCapacity / oldCapacity;
+	return setScaleHPWHCapacityCOP(scale, 1.); 	// Scale the compressor capacity
 }
 
 
