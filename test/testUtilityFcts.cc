@@ -16,7 +16,9 @@ using std::cout;
 using std::string;
 
 #define F_TO_C(T) ((T-32.0)*5.0/9.0)
+#define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
 #define GAL_TO_L(GAL) (GAL*3.78541)
+#define KW_TO_BTUperHR(KW) (KW * 3412.14)
 
 #define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
 

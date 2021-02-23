@@ -459,11 +459,21 @@ class HPWH {
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
 	of a compressor */
 
-	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
-	/**Returns the heating output capacity of the compressor for the given model. 
+	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
+	/**< Returns the heating output capacity of the compressor for the current HPWH model. 
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
 	of a compressor */
 
+	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C);
+	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures.
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
+	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+	/**< Scales the heatpump water heater input capacity and COP*/
+	
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
@@ -509,9 +519,6 @@ class HPWH {
 
   bool isHPWHScalable() const;
   /**< returns if the HPWH is scalable or not*/
-
-  int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
-  /**< Scales the heatpump water heater input capacity and COP*/
 
   bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
   /**< Checks the demand response signal against the different heat source types  */
