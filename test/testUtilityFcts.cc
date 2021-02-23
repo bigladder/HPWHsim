@@ -15,7 +15,16 @@
 using std::cout;
 using std::string;
 
-HPWH::MODELS mapStringToPreset(string modelName);
+#define F_TO_C(T) ((T-32.0)*5.0/9.0)
+#define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
+#define GAL_TO_L(GAL) (GAL*3.78541)
+#define KW_TO_BTUperHR(KW) (KW * 3412.14)
+
+#define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
+
+bool cmpd(double A, double B, double epsilon = 0.0001) {
+	return (fabs(A - B) < epsilon);
+}
 
 HPWH::MODELS mapStringToPreset(string modelName) {
 
@@ -154,13 +163,38 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	}
 	else if (modelName == "NyleC250A_C_SP") {
 		hpwhModel = HPWH::MODELS_NyleC250A_C_SP;
-
-		//do nothin, use custom-compiled input specified later
 	}
-	else {
+	// Stack in a couple scalable models
+	else if (modelName == "TamScalable_SP") {
+		hpwhModel = HPWH::MODELS_TamScalable_SP;
+	}
+	else if (modelName == "TamScalable_SP_2X") {
+		hpwhModel = HPWH::MODELS_TamScalable_SP;
+	}
+	else if (modelName == "TamScalable_SP_Half") {
+		hpwhModel = HPWH::MODELS_TamScalable_SP;
+	}
+	else { 
 		hpwhModel = HPWH::MODELS_basicIntegrated;
 		cout << "Couldn't find model " << modelName << ".  Exiting...\n";
 		exit(1);
 	}
 	return hpwhModel;
+}
+
+
+void getHPWHObject(HPWH &hpwh, string modelName) {
+	/**Sets up the preset HPWH object with modelName */
+
+	HPWH::MODELS model = mapStringToPreset(modelName);
+
+	if (hpwh.HPWHinit_presets(model) != 0) exit(1);
+
+	if (modelName == "TamScalable_SP_2X") {
+		hpwh.setScaleHPWHCapacityCOP(2., 1.); 	// Scale the compressor
+	}
+	else if (modelName == "TamScalable_SP_Half") {
+		hpwh.setScaleHPWHCapacityCOP(1/2., 1.); 	// Scale the compressor
+	}
+	
 }
