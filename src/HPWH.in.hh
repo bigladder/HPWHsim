@@ -132,6 +132,7 @@ class HPWH {
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
 	  MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
+	  MODELS_TamScalable_SP = 202,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -189,6 +190,8 @@ class HPWH {
     UNITS_KWH,        /**< kilowatt hours  */
     UNITS_BTU,        /**< british thermal units  */
     UNITS_KJ,         /**< kilojoules  */
+	UNITS_KW,		  /**< kilowatt  */
+	UNITS_BTUperHr,   /**< british thermal units per Hour  */
     UNITS_GAL,        /**< gallons  */
     UNITS_L,          /**< liters  */
     UNITS_kJperHrC,   /**< UA, metric units  */
@@ -450,6 +453,27 @@ class HPWH {
 
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */
+
+	int getCompressorIndex() const;
+	/**< returns the index of the compressor in the heat source array.
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
+	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
+	/**< Returns the heating output capacity of the compressor for the current HPWH model. 
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
+	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C);
+	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures.
+	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	of a compressor */
+
+	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+	/**< Scales the heatpump water heater input capacity and COP*/
+	
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
@@ -493,6 +517,9 @@ class HPWH {
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
+  bool isHPWHScalable() const;
+  /**< returns if the HPWH is scalable or not*/
+
   bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
   /**< Checks the demand response signal against the different heat source types  */
 
@@ -533,7 +560,7 @@ class HPWH {
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
-  bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic);
+  bool areNodeWeightsValid(HeatingLogic logic);
 	 /**< a helper for the helper, checks the node weights are valid */
 
 
@@ -555,6 +582,9 @@ class HPWH {
 
 	bool tankSizeFixed;
 	/**< does the HPWH have a constant tank size or can it be changed  */
+
+	bool canScale;
+	/**< can the HPWH scale capactiy and COP or not  */
 
   VERBOSITY hpwhVerbosity;
 	/**< an enum to let the sim know how much output to say  */
@@ -867,7 +897,13 @@ class HPWH::HeatSource {
       the water is drawn from and hot water is put at the top of the tank. */
 
 	/**  I wrote some methods to help with the add heat interface - MJL  */
-  void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+  void getCapacity(double externalT_C, double condenserTemp_C, double setpointTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+
+  /** An overloaded function that uses uses the setpoint temperature  */
+  void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
+	  getCapacity(externalT_C, condenserTemp_C, hpwh->getSetpoint(),  input_BTUperHr, cap_BTUperHr, cop);
+  };
+
   void calcHeatDist(std::vector<double> &heatDistribution);
 
 	double getCondenserTemp() const;

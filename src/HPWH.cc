@@ -68,7 +68,7 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //the HPWH functions
 //the publics
 HPWH::HPWH() :
-	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), hpwhVerbosity(VRB_silent),
+	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), canScale(false), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
 	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
@@ -1393,6 +1393,62 @@ int HPWH::getNumHeatSources() const {
 	return numHeatSources;
 }
 
+int HPWH::getCompressorIndex() const {
+	return compressorIndex;
+}
+
+double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp /*=14.444*/, double outTemp /*=57.222*/, 
+	UNITS pwrUnit /*=UNITS_KW*/, UNITS tempUnit /*=UNITS_C*/) const {
+	// calculate capacity btu/hr, input btu/hr, and cop
+	double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
+	double airTemp_C, inletTemp_C, outTemp_C;
+
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	if (tempUnit == UNITS_C) {
+		airTemp_C = airTemp;
+		inletTemp_C = inletTemp;
+		outTemp_C = outTemp;
+	}
+	else if (tempUnit == UNITS_F) {
+		airTemp_C = F_TO_C(airTemp);
+		inletTemp_C = F_TO_C(inletTemp);
+		outTemp_C = F_TO_C(outTemp);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for temperatures in getCompressorCapacity.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	if (airTemp_C < setOfSources[getCompressorIndex()].minT || airTemp_C > setOfSources[getCompressorIndex()].maxT) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The compress does not operate at the specified air temperature. \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	setOfSources[getCompressorIndex()].getCapacity(airTemp, inletTemp, outTemp, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+
+	double outputCapacity = capTemp_BTUperHr;
+	if(pwrUnit == UNITS_KW) {
+		outputCapacity = BTU_TO_KWH(capTemp_BTUperHr); 
+	}
+	else if (pwrUnit != UNITS_BTUperHr) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for capacity in getCompressorCapacity.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	return outputCapacity;
+}
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
@@ -1573,6 +1629,57 @@ double HPWH::getLocationTemp_C() const {
 
 int HPWH::getHPWHModel() const {
 	return hpwhModel;
+}
+
+bool HPWH::isHPWHScalable() const {
+	return canScale;
+}
+
+int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/) {
+	if (!isHPWHScalable()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not scale the HPWH Capacity or COP  \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (scaleCapacity <= 0 || scaleCOP <= 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0, this isn't \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	for (auto &perfP : setOfSources[compressorIndex].perfMap) {
+		if (scaleCapacity != 1.) {
+			std::transform(perfP.inputPower_coeffs.begin(), perfP.inputPower_coeffs.end(), perfP.inputPower_coeffs.begin(),
+				std::bind1st(std::multiplies<double>(), scaleCapacity));
+		}
+		if (scaleCOP != 1.) {
+			std::transform(perfP.COP_coeffs.begin(), perfP.COP_coeffs.end(), perfP.COP_coeffs.begin(),
+				std::bind1st(std::multiplies<double>(), scaleCOP));
+		}
+	}
+
+	return 0;
+}
+
+int HPWH::setCompressorOutputCapacity(double newCapacity, double airTemp /*=19.722*/,
+	double inletTemp /*=14.444*/, double outTemp /*=57.222*/,
+	UNITS pwrUnit /*=UNITS_KW*/, UNITS tempUnit /*=UNITS_C*/) {
+
+	double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
+	if (oldCapacity == double(HPWH_ABORT)) {
+		return HPWH_ABORT;
+	}
+
+	double scale = newCapacity / oldCapacity;
+	return setScaleHPWHCapacityCOP(scale, 1.); 	// Scale the compressor capacity
 }
 
 
@@ -2407,9 +2514,7 @@ double HPWH::HeatSource::getCondenserTemp() const{
 }
 
 
-void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
-	double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
-	double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
+void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double setpointTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	double externalT_F, condenserTemp_F;
 
 	// Convert Celsius to Fahrenheit for the curve fits
@@ -2420,9 +2525,12 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	bool extrapolate = false;
 	size_t i_prev = 0;
 	size_t i_next = 1;
-	double Tout_F = C_TO_F(hpwh->getSetpoint());
+	double Tout_F = C_TO_F(setpointTemp_C);
 
 	if (perfMap.size() > 1) {
+		double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
+		double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
+
 		for (size_t i = 0; i < perfMap.size(); ++i) {
 			if (externalT_F < perfMap[i].T_F) {
 				if (i == 0) {

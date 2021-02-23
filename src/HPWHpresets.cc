@@ -2918,6 +2918,65 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
+	// If a the model is the TamOMatic, HotTam... This model is scalable. 
+	else if (presetNum == MODELS_TamScalable_SP) {
+		numNodes = 96;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		tankSizeFixed = false;
+		canScale = true; // the one fully scallable model
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+		//start tank off at setpoint
+		resetTankToSetpoint();
+
+		tankVolume_L = 315; // Stolen from Sanden, will adjust 
+		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to tank size
+		setTankSize_adjustUA(600., UNITS_GAL);
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.perfMap.reserve(1);
+		compressor.hysteresis_dC = 0;
+	
+		//Defrost Derate 
+		compressor.setupDefrostMap();
+
+		//Perfmap for input power and COP made from data for CxA-15 to be scalled for this model
+		std::vector<double> inputPwr_coeffs = { 13.6, 0.00995, -0.0342, -0.014, -0.000110, 0.00026, 0.000232, 0.000195, -0.00034, 5.30E-06, 2.3600E-06};
+		std::vector<double> COP_coeffs = { 1.945, 0.0412, -0.0112, -0.00161, 0.0000492, 0.0000348, -0.0000323, -0.000166, 0.0000112, 0.0000392, -3.52E-07};
+
+		compressor.perfMap.push_back({
+			105, // Temperature (T_F)
+			inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs
+			COP_coeffs // COP Coefficients (COP_coeffs)
+		});
+
+		
+		//logic conditions
+		compressor.minT = F_TO_C(40.);
+
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
+
+		//lowT cutoff
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(1);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+	}
 
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {

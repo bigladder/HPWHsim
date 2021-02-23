@@ -25,9 +25,6 @@ using std::string;
 using std::ifstream;
 //using std::ofstream;
 
-#define F_TO_C(T) ((T-32.0)*5.0/9.0)
-#define GAL_TO_L(GAL) (GAL*3.78541)
-
 typedef std::vector<double> schedule;
 
 int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesOfTest);
@@ -118,9 +115,9 @@ int main(int argc, char *argv[])
   if(input1 == "Preset") {
     inputFile = "";
     
-	model = mapStringToPreset(input2);
+	getHPWHObject(hpwh, input2);
+	model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
 
-    if (hpwh.HPWHinit_presets(model) != 0) exit(1);
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
       newSetpoint = (149 - 32) / 1.8;
     }
