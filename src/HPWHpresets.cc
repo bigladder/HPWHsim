@@ -8,9 +8,6 @@ int HPWH::HPWHinit_resTank() {
 	return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
 int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W) {
-	//clear out old stuff if you're re-initializing
-	//delete[] tankTemps_C;
-	//delete[] setOfSources;
 
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
@@ -295,10 +292,6 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
-
-	//clear out old stuff if you're re-initializing
-	//delete[] tankTemps_C;
-	//delete[] setOfSources;
 
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
