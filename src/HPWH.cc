@@ -67,9 +67,13 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 
 //the HPWH functions
 //the publics
-HPWH::HPWH() { setAllDefaults(); };
+HPWH::HPWH() : setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL) { setAllDefaults(); };
 
 void HPWH::setAllDefaults() {
+	delete[] tankTemps_C;
+	delete[] nextTankTemps_C;
+	delete[] setOfSources;
+
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false; hpwhVerbosity = VRB_silent;
 	messageCallback = NULL; messageCallbackContextPtr = NULL; numHeatSources = 0;
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
