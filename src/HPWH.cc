@@ -67,15 +67,17 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 
 //the HPWH functions
 //the publics
-HPWH::HPWH() :
-	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), canScale(false), hpwhVerbosity(VRB_silent),
-	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
-	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true), 
-	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.),
-	prevDRstatus(DR_ALLOW), timerLimitTOT(60.), timerTOT(0.)
-{  }
+HPWH::HPWH() { setAllDefaults(); };
+
+void HPWH::setAllDefaults() {
+	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false; hpwhVerbosity = VRB_silent;
+	messageCallback = NULL; messageCallbackContextPtr = NULL; numHeatSources = 0;
+	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
+	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
+	doInversionMixing = true; doConduction = true;
+	inletHeight = 0; inlet2Height = 0; fittingsUA_kJperHrC = 0.;
+	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
+}
 
 HPWH::HPWH(const HPWH &hpwh) {
 	simHasFailed = hpwh.simHasFailed;
@@ -3197,13 +3199,10 @@ int HPWH::checkInputs() {
 
 #ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(string configFile) {
-	simHasFailed = true;  //this gets cleared on successful completion of init
 
-	//clear out old stuff if you're re-initializing
-	delete[] tankTemps_C;
-	delete[] nextTankTemps_C;
-	delete[] setOfSources;
-
+	setAllDefaults(); // reset all defaults if you're re-initilizing
+	// sets simHasFailed = true; this gets cleared on successful completion of init
+	// return 0 on success, HPWH_ABORT for failure
 
 	//open file, check and report errors
 	std::ifstream inputFILE;
