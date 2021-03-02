@@ -1433,14 +1433,14 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 		return double(HPWH_ABORT);
 	}
 
-	if (airTemp_C < setOfSources[getCompressorIndex()].minT || airTemp_C > setOfSources[getCompressorIndex()].maxT) {
+	if (airTemp_C < setOfSources[compressorIndex].minT || airTemp_C > setOfSources[compressorIndex].maxT) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("The compress does not operate at the specified air temperature. \n");
 		}
 		return double(HPWH_ABORT);
 	}
 
-	setOfSources[getCompressorIndex()].getCapacity(airTemp, inletTemp, outTemp, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+	setOfSources[compressorIndex].getCapacity(airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 
 	double outputCapacity = capTemp_BTUperHr;
 	if(pwrUnit == UNITS_KW) {
