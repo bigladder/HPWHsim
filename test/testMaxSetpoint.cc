@@ -142,4 +142,14 @@ void testStorageTankSetpoint() {
 	double num;
 	// get preset model 
 	getHPWHObject(hpwh, input);
+
+	// Storage tanks have free reign!
+	ASSERTTRUE(hpwh.isNewSetpointPossible(101., num)); // Can go above boiling!
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling!
+	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num)); // Can go low, albiet dumb
+
+	// Check this carries over into setting the setpoint
+	ASSERTTRUE(hpwh.setSetpoint(101.) == 0); // Can't go above boiling
+	ASSERTTRUE(hpwh.setSetpoint(99.) == 0) // Can go lower than boiling though
+
 }
