@@ -54,6 +54,7 @@ class HPWH {
   HPWH & operator=(const HPWH &hpwh);  /**< assignment operator  */
 	~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors eventually?   */
 
+
   ///specifies the various modes for the Demand Response (DR) abilities
   ///values may vary - names should be used
 	enum DRMODES {
@@ -278,7 +279,8 @@ class HPWH {
   /**< This function returns a string with the current version number */
 
 	int HPWHinit_presets(MODELS presetNum);
-	/**< This function will load in a set of parameters that are hardcoded in this function -
+	/**< This function will reset all member variables to defaults and then
+	 * load in a set of parameters that are hardcoded in this function -
 	 * which particular set of parameters is selected by presetNum.
 	 * This is similar to the way the HPWHsim currently operates, as used in SEEM,
 	 * but not quite as versatile.
@@ -542,6 +544,8 @@ class HPWH {
 
  private:
   class HeatSource;
+
+  void setAllDefaults(); /**< sets all the defaults default */
 
 	void updateTankTemps(double draw, double inletT, double ambientT, double inletVol2_L, double inletT2_L);
 	void mixTankInversions();
