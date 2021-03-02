@@ -8,6 +8,11 @@ int HPWH::HPWHinit_resTank() {
 	return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
 int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W) {
+
+	setAllDefaults(); // reset all defaults if you're re-initilizing
+	// sets simHasFailed = true; this gets cleared on successful completion of init
+	// return 0 on success, HPWH_ABORT for failure
+
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -105,15 +110,10 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 }
 
 int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C) {
-	//return 0 on success, HPWH_ABORT for failure
-	simHasFailed = true;  //this gets cleared on successful completion of init
 
-	//clear out old stuff if you're re-initializing
-	delete[] tankTemps_C;
-	delete[] setOfSources;
-
-
-
+	setAllDefaults(); // reset all defaults if you're re-initilizing
+	// sets simHasFailed = true; this gets cleared on successful completion of init
+	// return 0 on success, HPWH_ABORT for failure
 
 	//except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
 	numNodes = 12;
@@ -293,13 +293,10 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 
 int HPWH::HPWHinit_presets(MODELS presetNum) {
-	//return 0 on success, HPWH_ABORT for failure
-	simHasFailed = true;  //this gets cleared on successful completion of init
 
-	//clear out old stuff if you're re-initializing
-	delete[] tankTemps_C;
-	delete[] setOfSources;
-
+	setAllDefaults(); // reset all defaults if you're re-initilizing
+	// sets simHasFailed = true; this gets cleared on successful completion of init
+	// return 0 on success, HPWH_ABORT for failure
 
 	//resistive with no UA losses for testing
 	if (presetNum == MODELS_restankNoUA) {
