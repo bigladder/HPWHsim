@@ -45,6 +45,9 @@ class HPWH {
 								  find the surface area. It is derived from the median value of 88 
 								  insulated storage tanks currently available on the market from
 								  Sanden, AOSmith, HTP, Rheem, and Niles,  */
+  static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
+  static const double MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
+  static const double MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -378,6 +381,12 @@ class HPWH {
   double getSetpoint(UNITS units = UNITS_C) const;
   /**< a function to check the setpoint - returns setpoint in celcius  */
 
+  bool isNewSetpointPossible(double newSetpoint_C, double& maxAllowedSetpoint_C, UNITS units = UNITS_C) const;
+  /**< This function returns if the new setpoint is physically possible for the compressor. If there
+		is no compressor then checks that the new setpoint is less than boiling. The setpoint can be
+		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
+		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
+
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
@@ -645,6 +654,7 @@ class HPWH {
 
 	double setpoint_C;
 	/**< the setpoint of the tank  */
+
 	double *tankTemps_C;
 	/**< an array holding the temperature of each node - 0 is the bottom node, numNodes is the top  */
 	double *nextTankTemps_C;
@@ -859,6 +869,8 @@ class HPWH::HeatSource {
   double maxT;
   /**<  maximum operating temperature of HPWH environment */
 
+  double maxSetpoint_C;
+  /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
 	double hysteresis_dC;
 	/**< a hysteresis term that prevents short cycling due to heat pump self-interaction

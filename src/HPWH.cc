@@ -58,6 +58,10 @@ const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const float HPWH::ASPECTRATIO = 4.75f;
 
+const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
+const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
+const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
 
@@ -70,9 +74,9 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 HPWH::HPWH() :
 	simHasFailed(true), isHeating(false), setpointFixed(false), tankSizeFixed(true), canScale(false), hpwhVerbosity(VRB_silent),
 	messageCallback(NULL), messageCallbackContextPtr(NULL), numHeatSources(0),
-	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false), 
+	setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), doTempDepression(false),
 	locationTemperature_C(UNINITIALIZED_LOCATIONTEMP),
-	doInversionMixing(true), doConduction(true), 
+	doInversionMixing(true), doConduction(true),
 	inletHeight(0), inlet2Height(0), fittingsUA_kJperHrC(0.),
 	prevDRstatus(DR_ALLOW), timerLimitTOT(60.), timerTOT(0.)
 {  }
@@ -782,6 +786,7 @@ bool HPWH::isSetpointFixed() const{
 }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
+	double temp;
 	if (setpointFixed == true) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Unwilling to set setpoint for your currently selected model.  \n");
@@ -789,11 +794,12 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 		return HPWH_ABORT;
 	}
 	else {
+		double newSetpoint_C;
 		if (units == UNITS_C) {
-			setpoint_C = newSetpoint;
+			newSetpoint_C = newSetpoint;
 		}
 		else if (units == UNITS_F) {
-			setpoint_C = (F_TO_C(newSetpoint));
+			newSetpoint_C = (F_TO_C(newSetpoint));
 		}
 		else {
 			if (hpwhVerbosity >= VRB_reluctant) {
@@ -801,6 +807,14 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 			}
 			return HPWH_ABORT;
 		}
+		if (!isNewSetpointPossible(newSetpoint_C, temp)) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C.\n", temp);
+			}
+			return HPWH_ABORT;
+		}
+
+		setpoint_C = newSetpoint_C;
 	}
 	return 0;
 }
@@ -819,6 +833,66 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 }
 
+bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, UNITS units /*=UNITS_C*/) const {
+	double newSetpoint_C;
+	double maxAllowedSetpoint_C = -273.15;
+	if (units == UNITS_C) {
+		newSetpoint_C = newSetpoint;
+	}
+	else if (units == UNITS_F) {
+		newSetpoint_C = F_TO_C(setpoint_C);
+	}
+
+	bool returnVal = false;
+
+	if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
+		
+		maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
+		
+		if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
+			}
+			returnVal = false;
+		}
+		else {
+			returnVal = true;
+		}
+	}
+	if (lowestElementIndex >= 0) {  // If there's a resistance element lets check the new setpoint against the its max setpoint
+		maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
+
+		if (newSetpoint_C > maxAllowedSetpoint_C) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The resistance elements cannot produce water this hot \n");
+			}
+			returnVal = false;
+		} 
+		else {
+			returnVal = true;
+		}
+	}
+	else if (lowestElementIndex == -1 && compressorIndex == -1) { // There are no heat sources here!
+		if (hpwhModel == MODELS_StorageTank) {
+			returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("There aren't any heat sources to check the new setpoint against! \n");
+			}
+			returnVal = false;
+		}
+	}
+
+	if (units == UNITS_C) {
+		maxAllowedSetpoint = maxAllowedSetpoint_C;
+	}
+	else if (units == UNITS_F) {
+		maxAllowedSetpoint = F_TO_C(maxAllowedSetpoint_C);
+	}
+
+	return returnVal;
+}
 
 int HPWH::resetTankToSetpoint() {
 	for (int i = 0; i < numNodes; i++) {
@@ -2008,8 +2082,9 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
-	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15} {}
+	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}
+{}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
@@ -2047,6 +2122,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	maxT = hSource.maxT;
 	maxOut_at_LowT = hSource.maxOut_at_LowT;
 	hysteresis_dC = hSource.hysteresis_dC;
+	maxSetpoint_C = hSource.maxSetpoint_C;
 
 	depressesTemperature = hSource.depressesTemperature;
 	airflowFreedom = hSource.airflowFreedom;
@@ -2104,6 +2180,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	maxT = hSource.maxT;
 	maxOut_at_LowT = hSource.maxOut_at_LowT;
 	hysteresis_dC = hSource.hysteresis_dC;
+	maxSetpoint_C = hSource.maxSetpoint_C;
 
 	depressesTemperature = hSource.depressesTemperature;
 	airflowFreedom = hSource.airflowFreedom;
@@ -3053,7 +3130,7 @@ void HPWH::calcDerivedHeatingValues(){
 		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
-		else {
+		else if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_resistance) {
 			// Gets VIP element index
 			if (setOfSources[i].isVIP) {
 				if (VIPIndex == -1) {
@@ -3188,6 +3265,13 @@ int HPWH::checkInputs() {
 	//Check if the UA is out of bounds
 	if (tankUA_kJperHrC < 0.0) {
 		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+		returnVal = HPWH_ABORT;
+	}
+
+	double maxTemp;
+	double tempSetpoint = setpoint_C;
+	if (!isNewSetpointPossible(tempSetpoint, maxTemp)) {
+		msg("The setpoint for this tank is not possible, the max setpoint is %f", maxTemp);
 		returnVal = HPWH_ABORT;
 	}
 
@@ -3598,7 +3682,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("T(\\d+)"));
 				nTemps = std::stoi(match[1].str());
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
@@ -3644,7 +3728,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					coeff_num = 2;
 				}
 
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
