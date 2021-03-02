@@ -21,6 +21,7 @@ using std::string;
 #define KW_TO_BTUperHR(KW) (KW * 3412.14)
 
 #define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
+#define ASSERTFALSE(input, ...) if( (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
 
 bool cmpd(double A, double B, double epsilon = 0.0001) {
 	return (fabs(A - B) < epsilon);
