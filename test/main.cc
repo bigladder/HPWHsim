@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 
   string strPreamble;
   string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
+//  string strHead = "minutes,Ta,Tsetpoint,inletT,draw,condenserT,";
   
   if (DEBUG) {
 	 hpwh.setVerbosity(HPWH::VRB_reluctant);
@@ -327,8 +328,9 @@ int main(int argc, char *argv[])
 	  		if (HPWH_doTempDepress) {
 	  			airTemp2 = hpwh.getLocationTemp_C();
 	  		}
-	  		strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
-	  			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";// +
+			strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
+				std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", "; 
+				// +std::to_string(hpwh.getCondenserWaterInletTemp()) + ", ";
 	  			//std::to_string(hpwh.getOutletTemp()) + ",";
 	  		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
 	  }

@@ -120,6 +120,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
+	condenserInlet_C = hpwh.condenserInlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -193,6 +194,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
+	condenserInlet_C = hpwh.condenserInlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -266,6 +268,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//reset the output variables
 	outletTemp_C = 0;
+	condenserInlet_C = 0;
 	energyRemovedFromEnvironment_kWh = 0;
 	standbyLosses_kWh = 0;
 
@@ -416,7 +419,7 @@ int HPWH::runOneStep(double drawVolume_L,
 					}
 					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
 					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && 
-						setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+						setOfSources[i].backupHeatSource->isAResistance()) {
 						if (hpwhVerbosity >= VRB_typical) {
 							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
 						}
@@ -433,7 +436,7 @@ int HPWH::runOneStep(double drawVolume_L,
 				double tempSetpoint_C = -273.15;
 
 				// Check the air temprature and setpoint against maxOut_at_LowT
-				if (heatSourcePtr->typeOfHeatSource == TYPE_compressor) {
+				if (heatSourcePtr->isACompressor()) {
 					if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
 						setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
 					{
@@ -844,7 +847,7 @@ int HPWH::setAirFlowFreedom(double fanFraction) {
 	}
 	else {
 		for (int i = 0; i < numHeatSources; i++) {
-			if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+			if (setOfSources[i].isACompressor()) {
 				setOfSources[i].airflowFreedom = fanFraction;
 			}
 		}
@@ -1572,6 +1575,22 @@ double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const {
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for getOutletTemp.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
+
+double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const {
+	if (units == UNITS_C) {
+		return condenserInlet_C;
+	}
+	else if (units == UNITS_F) {
+		return C_TO_F(condenserInlet_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
@@ -2414,6 +2433,9 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
+		if (isACompressor()) {
+			hpwh->condenserInlet_C = getCondenserTemp();
+		}
 		// calculate capacity btu/hr, input btu/hr, and cop
 		getCapacity(externalT_C, getCondenserTemp(), input_BTUperHr, cap_BTUperHr, cop);
 
@@ -2787,7 +2809,13 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	//return the unused capacity
 	return cap_kJ;
 }
+bool HPWH::HeatSource::isACompressor() const {
+	return this->typeOfHeatSource == TYPE_compressor;
+}
 
+bool HPWH::HeatSource::isAResistance() const {
+	return this->typeOfHeatSource == TYPE_resistance;
+}
 
 double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop) {
 	double heatingCapacity_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac;
@@ -2846,6 +2874,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			timeUsed_min = timeRemaining_min;
 			timeRemaining_min = 0;
 		}
+		// Track the condenser temperature if this is a compressor before moving the nodes
+		if (isACompressor()) {
+			hpwh->condenserInlet_C += hpwh->tankTemps_C[0] * timeUsed_min;
+		}
 
 		//move all nodes down, mixing if less than a full node
 		for (int n = 0; n < hpwh->numNodes - 1; n++) {
@@ -2869,6 +2901,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	input_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cop /= (minutesToRun - timeRemaining_min);
+	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
@@ -2991,10 +3024,10 @@ void HPWH::calcDerivedValues() {
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		}
-		else if (setOfSources[i].typeOfHeatSource == TYPE_resistance) {
+		else if (setOfSources[i].isAResistance()) {
 			setOfSources[i].depressesTemperature = false;
 		}
 	}
@@ -3056,7 +3089,7 @@ void HPWH::calcDerivedHeatingValues(){
 	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
 		else {
@@ -3091,10 +3124,10 @@ void HPWH::calcDerivedHeatingValues(){
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		}
-		else if (setOfSources[i].typeOfHeatSource == TYPE_resistance) {
+		else if (setOfSources[i].isAResistance()) {
 			setOfSources[i].depressesTemperature = false;
 		}
 	}
@@ -3176,7 +3209,7 @@ int HPWH::checkInputs() {
 			returnVal = HPWH_ABORT;
 		}
 
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			if (setOfSources[i].doDefrost) {
 				if (setOfSources[i].defrostMap.size() < 3) {
 					msg("Defrost logic set to true but no valid defrost map of length 3 or greater set. \n");
