@@ -499,6 +499,9 @@ class HPWH {
   double getOutletTemp(UNITS units = UNITS_C) const;
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+  double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
+  /**< returns the condensor inlet water temperature in the specified units 
+	returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -666,6 +669,10 @@ class HPWH {
   // Some outputs
 	double outletTemp_C;
 	/**< the temperature of the outlet water - taken from top of tank, 0 if no flow  */
+
+	double condenserInlet_C;
+	/**< the temperature of the inlet water to the condensor either an average of tank nodes or taken from the bottom, 0 if no flow or no compressor  */
+
 	double energyRemovedFromEnvironment_kWh;
 	/**< the total energy removed from the environment, to heat the water  */
 	double standbyLosses_kWh;
@@ -857,6 +864,11 @@ class HPWH::HeatSource {
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
 
+  bool isACompressor() const;
+  /**< returns if the heat sources is a compressor or not */
+  bool isAResistance() const;
+  /**< returns if the heat sources is a compressor or not */
+
   double minT;
   /**<  minimum operating temperature of HPWH environment */
 
@@ -882,7 +894,7 @@ class HPWH::HeatSource {
 
 
 	COIL_CONFIG configuration; /**<  submerged, wrapped, external */
-  HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance */
+  HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
 
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
