@@ -200,7 +200,7 @@ void testSPGetCompressorCapacity() {
 
 	performance point0;
 
-	double capacity;
+	double capacity_kWH, capacity_BTU;
 	double waterTempC = F_TO_C(63);
 	double airTempC = F_TO_C(77);
 	double setpointC = F_TO_C(135);
@@ -209,10 +209,13 @@ void testSPGetCompressorCapacity() {
 	getHPWHObject(hpwh, input);
 
 	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC); // gives kWH
-	capacity = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60; // div 60 to kWh because I know above only runs 1 minute
+	capacity_kWH = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60; // div 60 to kWh because I know above only runs 1 minute
 
-	ASSERTTRUE(cmpd(point0.output, capacity));
+	ASSERTTRUE(cmpd(point0.output, capacity_kWH));
 
+	//Test with IP units
+	capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC), C_TO_F(waterTempC), C_TO_F(setpointC), HPWH::UNITS_BTUperHr, HPWH::UNITS_F) / 60; // div 60 to BTU because I know above only runs 1 minute
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output), capacity_BTU)); // relative cmp since in btu's these will be large numbers
 }
 
 void testSetCompressorOutputCapacity() {
@@ -250,9 +253,117 @@ void testSetCompressorOutputCapacity() {
 	num = KW_TO_BTUperHR(num);
 	hpwh.setCompressorOutputCapacity(num, C_TO_F(airTempC), C_TO_F(waterTempC), C_TO_F(setpointC), HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC), C_TO_F(waterTempC), C_TO_F(setpointC), HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	ASSERTTRUE(cmpd(num, newCapacity_BTUperHr));
+	ASSERTTRUE(relcmpd(num, newCapacity_BTUperHr));
 }
 
+void testCXA15MatchesData() {
+	HPWH hpwh;
+	string input = "ColmacCxA_15_SP";
+	double capacity_kW, capacity_BTUperHr;
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test hot //////////////////////////
+	double waterTempF = 100;
+	double airTempF = 90;
+	double setpointF = 135;
+	double capacityData_kW = 49.14121289;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+
+	// test middle ////////////////
+	waterTempF = 70; 
+	airTempF = 75;
+	setpointF = 140;
+	capacityData_kW = 42.66070965;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+
+
+	// test cold ////////////////
+	waterTempF = 50;
+	airTempF = 50;
+	setpointF = 120;
+	capacityData_kW = 33.28099803;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+}
+
+void testCXA30MatchesData() {
+	HPWH hpwh;
+	string input = "ColmacCxA_30_SP";
+	double capacity_kW, capacity_BTUperHr;
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test hot //////////////////////////
+	double waterTempF = 100;
+	double airTempF = 90;
+	double setpointF = 135;
+	double capacityData_kW = 97.81336856;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+
+	// test middle ////////////////
+	waterTempF = 70;
+	airTempF = 75;
+	setpointF = 140;
+	capacityData_kW = 84.54702716;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+
+
+	// test cold ////////////////
+	waterTempF = 50;
+	airTempF = 50;
+	setpointF = 120;
+	capacityData_kW = 65.76051043;
+
+	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
+
+	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
+	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
+}
+
+void testChipsCaseWithIPUnits() {
+	HPWH hpwh;
+
+	string input = "TamScalable_SP";
+
+	double waterTempF = 50;
+	double airTempF = 50;
+	double setpointF = 120;
+	double wh_heatingCap = 20000.;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	//Scale output to 20000 btu/hr but let's use do the calc in other units
+	hpwh.setCompressorOutputCapacity(wh_heatingCap, airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	double newCapacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	ASSERTTRUE(relcmpd(wh_heatingCap, newCapacity_BTUperHr));
+}
 
 int main(int argc, char *argv[])
 {
@@ -268,6 +379,11 @@ int main(int argc, char *argv[])
 
 	testSetCompressorOutputCapacity(); //Test we can set the capacity with a specific number
 
+	testCXA15MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
+
+	testCXA30MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
+
+	testChipsCaseWithIPUnits(); //Debuging Chip's case
 
 	//Made it through the gauntlet
 	return 0;
