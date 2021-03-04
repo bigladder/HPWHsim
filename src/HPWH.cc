@@ -124,6 +124,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
+	condenserInlet_C = hpwh.condenserInlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -197,6 +198,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	inlet2Height = hpwh.inlet2Height;
 
 	outletTemp_C = hpwh.outletTemp_C;
+	condenserInlet_C = hpwh.condenserInlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -270,6 +272,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//reset the output variables
 	outletTemp_C = 0;
+	condenserInlet_C = 0;
 	energyRemovedFromEnvironment_kWh = 0;
 	standbyLosses_kWh = 0;
 
@@ -420,7 +423,7 @@ int HPWH::runOneStep(double drawVolume_L,
 					}
 					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
 					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && 
-						setOfSources[i].backupHeatSource->typeOfHeatSource == TYPE_resistance) {
+						setOfSources[i].backupHeatSource->isAResistance()) {
 						if (hpwhVerbosity >= VRB_typical) {
 							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
 						}
@@ -437,7 +440,7 @@ int HPWH::runOneStep(double drawVolume_L,
 				double tempSetpoint_C = -273.15;
 
 				// Check the air temprature and setpoint against maxOut_at_LowT
-				if (heatSourcePtr->typeOfHeatSource == TYPE_compressor) {
+				if (heatSourcePtr->isACompressor()) {
 					if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
 						setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
 					{
@@ -792,7 +795,6 @@ bool HPWH::isSetpointFixed() const{
 }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
-	double temp;
 	if (setpointFixed == true) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Unwilling to set setpoint for your currently selected model.  \n");
@@ -800,7 +802,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 		return HPWH_ABORT;
 	}
 	else {
-		double newSetpoint_C;
+		double newSetpoint_C, temp;
 		if (units == UNITS_C) {
 			newSetpoint_C = newSetpoint;
 		}
@@ -824,6 +826,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	}
 	return 0;
 }
+
 double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	if (units == UNITS_C) {
 		return setpoint_C;
@@ -854,7 +857,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
 		
 		maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
-		
+
 		if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
 			if (hpwhVerbosity >= VRB_reluctant) {
 				msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
@@ -873,7 +876,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 				msg("The resistance elements cannot produce water this hot \n");
 			}
 			returnVal = false;
-		} 
+		}
 		else {
 			returnVal = true;
 		}
@@ -918,7 +921,7 @@ int HPWH::setAirFlowFreedom(double fanFraction) {
 	}
 	else {
 		for (int i = 0; i < numHeatSources; i++) {
-			if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+			if (setOfSources[i].isACompressor()) {
 				setOfSources[i].airflowFreedom = fanFraction;
 			}
 		}
@@ -1507,14 +1510,14 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 		return double(HPWH_ABORT);
 	}
 
-	if (airTemp_C < setOfSources[getCompressorIndex()].minT || airTemp_C > setOfSources[getCompressorIndex()].maxT) {
+	if (airTemp_C < setOfSources[compressorIndex].minT || airTemp_C > setOfSources[compressorIndex].maxT) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("The compress does not operate at the specified air temperature. \n");
 		}
 		return double(HPWH_ABORT);
 	}
 
-	setOfSources[getCompressorIndex()].getCapacity(airTemp, inletTemp, outTemp, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+	setOfSources[compressorIndex].getCapacity(airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 
 	double outputCapacity = capTemp_BTUperHr;
 	if(pwrUnit == UNITS_KW) {
@@ -1646,6 +1649,22 @@ double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const {
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for getOutletTemp.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
+
+double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const {
+	if (units == UNITS_C) {
+		return condenserInlet_C;
+	}
+	else if (units == UNITS_F) {
+		return C_TO_F(condenserInlet_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
@@ -2491,6 +2510,9 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
+		if (isACompressor()) {
+			hpwh->condenserInlet_C = getCondenserTemp();
+		}
 		// calculate capacity btu/hr, input btu/hr, and cop
 		getCapacity(externalT_C, getCondenserTemp(), input_BTUperHr, cap_BTUperHr, cop);
 
@@ -2864,7 +2886,13 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	//return the unused capacity
 	return cap_kJ;
 }
+bool HPWH::HeatSource::isACompressor() const {
+	return this->typeOfHeatSource == TYPE_compressor;
+}
 
+bool HPWH::HeatSource::isAResistance() const {
+	return this->typeOfHeatSource == TYPE_resistance;
+}
 
 double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop) {
 	double heatingCapacity_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac;
@@ -2923,6 +2951,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			timeUsed_min = timeRemaining_min;
 			timeRemaining_min = 0;
 		}
+		// Track the condenser temperature if this is a compressor before moving the nodes
+		if (isACompressor()) {
+			hpwh->condenserInlet_C += hpwh->tankTemps_C[0] * timeUsed_min;
+		}
 
 		//move all nodes down, mixing if less than a full node
 		for (int n = 0; n < hpwh->numNodes - 1; n++) {
@@ -2946,6 +2978,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	input_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cop /= (minutesToRun - timeRemaining_min);
+	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
@@ -3038,6 +3071,7 @@ void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
+
 void HPWH::calcSizeConstants() {
 	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
@@ -3068,10 +3102,10 @@ void HPWH::calcDerivedValues() {
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		}
-		else if (setOfSources[i].typeOfHeatSource == TYPE_resistance) {
+		else if (setOfSources[i].isAResistance()) {
 			setOfSources[i].depressesTemperature = false;
 		}
 	}
@@ -3133,10 +3167,10 @@ void HPWH::calcDerivedHeatingValues(){
 	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
-		else if (setOfSources[i].typeOfHeatSource == HPWH::TYPE_resistance) {
+		else {
 			// Gets VIP element index
 			if (setOfSources[i].isVIP) {
 				if (VIPIndex == -1) {
@@ -3148,11 +3182,13 @@ void HPWH::calcDerivedHeatingValues(){
 					};
 				}
 			}
-			for (int j = 0; j < CONDENSITY_SIZE; j++) {
-				if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
-					lowestElementIndex = i;
-					lowestElementPos = j;
-					break;
+			if (setOfSources[i].isAResistance()){
+				for (int j = 0; j < CONDENSITY_SIZE; j++) {
+					if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
+						lowestElementIndex = i;
+						lowestElementPos = j;
+						break;
+					}
 				}
 			}
 		}
@@ -3168,10 +3204,10 @@ void HPWH::calcDerivedHeatingValues(){
 
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		}
-		else if (setOfSources[i].typeOfHeatSource == TYPE_resistance) {
+		else if (setOfSources[i].isAResistance()) {
 			setOfSources[i].depressesTemperature = false;
 		}
 	}
@@ -3253,7 +3289,7 @@ int HPWH::checkInputs() {
 			returnVal = HPWH_ABORT;
 		}
 
-		if (setOfSources[i].typeOfHeatSource == TYPE_compressor) {
+		if (setOfSources[i].isACompressor()) {
 			if (setOfSources[i].doDefrost) {
 				if (setOfSources[i].defrostMap.size() < 3) {
 					msg("Defrost logic set to true but no valid defrost map of length 3 or greater set. \n");
@@ -3268,16 +3304,16 @@ int HPWH::checkInputs() {
 
 	}
 	
-	//Check if the UA is out of bounds
-	if (tankUA_kJperHrC < 0.0) {
-		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
-		returnVal = HPWH_ABORT;
-	}
-
 	double maxTemp;
 	double tempSetpoint = setpoint_C;
 	if (!isNewSetpointPossible(tempSetpoint, maxTemp)) {
 		msg("The setpoint for this tank is not possible, the max setpoint is %f", maxTemp);
+		returnVal = HPWH_ABORT;
+	}
+
+	//Check if the UA is out of bounds
+	if (tankUA_kJperHrC < 0.0) {
+		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
 		returnVal = HPWH_ABORT;
 	}
 
@@ -3685,7 +3721,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("T(\\d+)"));
 				nTemps = std::stoi(match[1].str());
-				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
+				int maxTemps = setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
@@ -3731,7 +3767,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					coeff_num = 2;
 				}
 
-				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
+				int maxTemps = setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {

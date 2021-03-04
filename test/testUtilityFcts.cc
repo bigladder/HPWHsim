@@ -184,12 +184,12 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 }
 
 
-void getHPWHObject(HPWH &hpwh, string modelName) {
+int getHPWHObject(HPWH &hpwh, string modelName) {
 	/**Sets up the preset HPWH object with modelName */
-
+	int returnVal = 1;
 	HPWH::MODELS model = mapStringToPreset(modelName);
 
-	if (hpwh.HPWHinit_presets(model) != 0) exit(1);
+	returnVal = hpwh.HPWHinit_presets(model);
 
 	if (modelName == "TamScalable_SP_2X") {
 		hpwh.setScaleHPWHCapacityCOP(2., 1.); 	// Scale the compressor
@@ -197,5 +197,5 @@ void getHPWHObject(HPWH &hpwh, string modelName) {
 	else if (modelName == "TamScalable_SP_Half") {
 		hpwh.setScaleHPWHCapacityCOP(1/2., 1.); 	// Scale the compressor
 	}
-	
+	return returnVal;
 }
