@@ -508,6 +508,9 @@ class HPWH {
   double getOutletTemp(UNITS units = UNITS_C) const;
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+  double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
+	  /**< returns the condenser temperature in the specified units
+		returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -680,7 +683,8 @@ class HPWH {
 	/**< the total energy removed from the environment, to heat the water  */
 	double standbyLosses_kWh;
 	/**< the amount of heat lost to standby  */
-
+	double condenserInlet_C;
+	/**< the temperature of the water at the condenser water - 0 if no flow  */
 
   // special variables for adding abilities
 	bool tankMixesOnDraw;
@@ -749,6 +753,9 @@ class HPWH::HeatSource {
   bool toLockOrUnlock(double heatSourceAmbientT_C);
   /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
 
+  bool isACompressor() const;
+  bool isAResistance() const;
+  /**< A couple functions to check the type of heat source */
 
 
 	bool shouldHeat() const;
