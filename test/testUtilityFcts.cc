@@ -19,12 +19,20 @@ using std::string;
 #define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
 #define GAL_TO_L(GAL) (GAL*3.78541)
 #define KW_TO_BTUperHR(KW) (KW * 3412.14)
+#define KWH_TO_BTU(KW) (KW * 3412.14)
+
 
 #define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
 #define ASSERTFALSE(input, ...) if( (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
 
+
+//Compare doubles
 bool cmpd(double A, double B, double epsilon = 0.0001) {
 	return (fabs(A - B) < epsilon);
+}
+//Relative Compare doubles
+bool relcmpd(double A, double B, double epsilon = 0.00001) {
+	return fabs(A - B) < (epsilon *(fabs(A) < fabs(B) ? fabs(B) : fabs(A)));
 }
 
 HPWH::MODELS mapStringToPreset(string modelName) {
