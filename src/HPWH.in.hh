@@ -761,6 +761,9 @@ class HPWH::HeatSource {
 	bool shutsOff() const;
   /**< queries the heat source whether should shut off */
 
+	bool maxedOut() const;
+	/**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at setpoint. */
+
   int findParent() const;
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */

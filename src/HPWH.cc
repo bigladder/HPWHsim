@@ -385,14 +385,15 @@ int HPWH::runOneStep(double drawVolume_L,
 
 		//do heating logic
 		double minutesToRun = minutesPerStep;
-
-		for (int i = 0; i < numHeatSources; i++) {
+		int iHS = 0;
+		//for (int i = 0; i < numHeatSources; i++) {
+		while (iHS < numHeatSources) {
 			// check/apply lock-outs
 			if (hpwhVerbosity >= VRB_emetic) {
-				msg("Checking lock-out logic for heat source %d:\n", i);
+				msg("Checking lock-out logic for heat source %d:\n", iHS);
 			}
-			if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
-				setOfSources[i].lockOutHeatSource();
+			if (shouldDRLockOut(setOfSources[iHS].typeOfHeatSource, DRstatus)) {
+				setOfSources[iHS].lockOutHeatSource();
 				if (hpwhVerbosity >= VRB_emetic) {
 					msg("Locked out heat source, DRstatus = %i\n", DRstatus);
 				}
@@ -400,41 +401,43 @@ int HPWH::runOneStep(double drawVolume_L,
 			else
 			{
 				// locks or unlocks the heat source
-				setOfSources[i].toLockOrUnlock(heatSourceAmbientT_C);
+				setOfSources[iHS].toLockOrUnlock(heatSourceAmbientT_C);
 			}
-			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL) {
-				setOfSources[i].disengageHeatSource();
+			if (setOfSources[iHS].isLockedOut() && setOfSources[iHS].backupHeatSource == NULL) {
+				setOfSources[iHS].disengageHeatSource();
 				if (hpwhVerbosity >= HPWH::VRB_emetic) {
 					msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
 				}
 			}
 
 			//going through in order, check if the heat source is on
-			if (setOfSources[i].isEngaged()) {
+			if (setOfSources[iHS].isEngaged()) {
 
 				HeatSource* heatSourcePtr;
-				if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
+				if (setOfSources[iHS].isLockedOut() && setOfSources[iHS].backupHeatSource != NULL) {
 
 					// Check that the backup isn't locked out too or already engaged then it will heat on it's own.
-					if (setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
-						shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) || //){
-						setOfSources[i].backupHeatSource->isEngaged() ) {
+					if (setOfSources[iHS].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
+						shouldDRLockOut(setOfSources[iHS].backupHeatSource->typeOfHeatSource, DRstatus) || //){
+						setOfSources[iHS].backupHeatSource->isEngaged() ) {
+						iHS++;
 						continue;
 					}
 					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
 					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && 
-						setOfSources[i].backupHeatSource->isAResistance()) {
+						setOfSources[iHS].backupHeatSource->isAResistance()) {
+						iHS++;
 						if (hpwhVerbosity >= VRB_typical) {
-							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
+							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", iHS, DRstatus);
 						}
 						continue;
 					}						
 					else {
-						heatSourcePtr = setOfSources[i].backupHeatSource;
+						heatSourcePtr = setOfSources[iHS].backupHeatSource;
 					}
 				}
 				else {
-					heatSourcePtr = &setOfSources[i];
+					heatSourcePtr = &setOfSources[iHS];
 				}
 
 				double tempSetpoint_C = -273.15;
@@ -456,7 +459,7 @@ int HPWH::runOneStep(double drawVolume_L,
 					setSetpoint(tempSetpoint_C);
 				}
 
-				//if it finished early
+				//if it finished early. i.e. shuts off early like if the heatsource maxed out
 				if (heatSourcePtr->runtime_min < minutesToRun) {
 					//debugging message handling
 					if (hpwhVerbosity >= VRB_emetic) {
@@ -465,15 +468,30 @@ int HPWH::runOneStep(double drawVolume_L,
 
 					//subtract time it ran and turn it off
 					minutesToRun -= heatSourcePtr->runtime_min;
-					setOfSources[i].disengageHeatSource();
+					setOfSources[iHS].disengageHeatSource();
 					//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
-					if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
+					if (setOfSources[iHS].followedByHeatSource != NULL && setOfSources[iHS].followedByHeatSource->shutsOff() == false) {
 						//turn it on
-						setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
+						setOfSources[iHS].followedByHeatSource->engageHeatSource(DRstatus);
+						iHS++;
+					}
+					// or if there heat source can't produce hotter water (i.e. it's maxed out) and the tank still isn't at setpoint.
+					// the compressor should get locked out when the maxedOut is true but have to run the resistance first during this 
+					// timestep to make sure tank is above the max temperature for the compressor.
+					else if (setOfSources[iHS].maxedOut() && setOfSources[iHS].backupHeatSource != NULL) {
+						//turn it on
+						setOfSources[iHS].backupHeatSource->engageHeatSource(DRstatus);
+						iHS = 0;
 					}
 				}
+				else { //heatSourcePtr->runtime_min >= minutesToRun
+					iHS++;
+				}
+			} 
+			else { // heat source not engaged
+				iHS++;
 			}
-		}
+		} // end while iHS heat source
 	}
 	if (areAllHeatSourcesOff() == true) {
 		isHeating = false;
@@ -2301,6 +2319,13 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const {
 				hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
 			}
 		}
+
+		if (maxedOut()) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: condenser water temperature above max: %.2f", maxSetpoint_C);
+			}
+		}
 	//	if (lock == true && backupHeatSource == NULL) {
 	//		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
 	//			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
@@ -2319,6 +2344,10 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
 	// if it's already unlocked, keep it unlocked
 	if (isLockedOut() == false) {
 		return true;
+	}
+	// if it the heat source is capped and can't produce hotter water
+	else if (maxedOut()) {
+		return false;
 	}
 	else {
 		//when the "external" temperature is no longer too cold or too warm
@@ -2491,6 +2520,17 @@ bool HPWH::HeatSource::shutsOff() const {
 	return shutOff;
 }
 
+bool HPWH::HeatSource::maxedOut() const {
+	bool maxed = false;
+
+	// If the heat source can't produce water at the setpoint and the control logics are saying to shut off
+	if (hpwh->setpoint_C > maxSetpoint_C){
+		if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff()) {
+			maxed = true;
+		}
+	}
+	return maxed;
+}
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ = 0.0;
@@ -2819,6 +2859,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	int setPointNodeNum;
 
 	double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
+	double maxTargetTemp_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("node %2d   cap_kwh %.4lf \n", node, KJ_TO_KWH(cap_kJ));
@@ -2840,7 +2881,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	while (cap_kJ > 0 && setPointNodeNum < hpwh->numNodes) {
 		// if the whole tank is at the same temp, the target temp is the setpoint
 		if (setPointNodeNum == (hpwh->numNodes - 1)) {
-			targetTemp_C = hpwh->setpoint_C;
+			targetTemp_C = maxTargetTemp_C;
 		}
 		//otherwise the target temp is the first non-equal-temp node
 		else {
@@ -2848,7 +2889,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 		}
 		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
 		if (targetTemp_C > hpwh->setpoint_C) {
-			targetTemp_C = hpwh->setpoint_C;
+			targetTemp_C = maxTargetTemp_C;
 		}
 
 		deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
@@ -2899,6 +2940,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
 	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 	double timeRemaining_min = minutesToRun;
+	double maxTargetTemp_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
 
 	input_BTUperHr = 0;
 	cap_BTUperHr = 0;
@@ -2924,7 +2966,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 		//calculate what percentage of the bottom node can be heated to setpoint
 		//with amount of heat available this timestep
-		deltaT_C = hpwh->setpoint_C - hpwh->tankTemps_C[0];
+		deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
 		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		//protect against dividing by zero - if bottom node is at (or above) setpoint,
 		//add no heat
@@ -2961,7 +3003,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
 		}
 		//add water to top node, heated to setpoint
-		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + hpwh->setpoint_C * nodeFrac;
+		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + maxTargetTemp_C * nodeFrac;
 
 
 		//track outputs - weight by the time ran

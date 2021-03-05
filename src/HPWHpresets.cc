@@ -1735,8 +1735,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	setOfSources[2].backupHeatSource = &setOfSources[1];
 	setOfSources[1].backupHeatSource = &setOfSources[2];
 
-	//setOfSources[0].followedByHeatSource = &setOfSources[2];
-	//setOfSources[1].followedByHeatSource = &setOfSources[2];
+	setOfSources[0].followedByHeatSource = &setOfSources[1];
+	setOfSources[1].followedByHeatSource = &setOfSources[2];
+	//setOfSources[2].followedByHeatSource = &setOfSources[1];;
 
 	setOfSources[0].companionHeatSource = &setOfSources[1];
 	setOfSources[1].companionHeatSource = &setOfSources[2];
