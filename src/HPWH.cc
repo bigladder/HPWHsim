@@ -822,12 +822,32 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getSetpoint.  \n");
+			msg("Incorrect unit specification for getSetpoint. \n");
 		}
 		return HPWH_ABORT;
 	}
 }
 
+double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No compressor found in this HPWH. \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (units == UNITS_C) {
+		return setOfSources[compressorIndex].minT;
+	}
+	else if (units == UNITS_F) {
+		return F_TO_C(setOfSources[compressorIndex].minT);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getMinOperatingTemp.\n");
+		}
+		return HPWH_ABORT;
+	}
+}
 
 int HPWH::resetTankToSetpoint() {
 	for (int i = 0; i < numNodes; i++) {
