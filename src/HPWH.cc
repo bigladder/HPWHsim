@@ -854,7 +854,7 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getSetpoint.  \n");
+			msg("Incorrect unit specification for getSetpoint. \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -919,6 +919,26 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	}
 
 	return returnVal;
+
+double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
+	if (compressorIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No compressor found in this HPWH. \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (units == UNITS_C) {
+		return setOfSources[compressorIndex].minT;
+	}
+	else if (units == UNITS_F) {
+		return F_TO_C(setOfSources[compressorIndex].minT);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getMinOperatingTemp.\n");
+		}
+		return HPWH_ABORT;
+	}
 }
 
 int HPWH::resetTankToSetpoint() {
@@ -1799,6 +1819,66 @@ int HPWH::setCompressorOutputCapacity(double newCapacity, double airTemp /*=19.7
 	return setScaleHPWHCapacityCOP(scale, 1.); 	// Scale the compressor capacity
 }
 
+
+int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/) {
+
+	//Input checks
+	if (!isHPWHScalable()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not scale the resistance elements \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (lowestElementIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("There are no resistance elements to change \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (power < 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not have a negative input power \n");
+		}
+		return HPWH_ABORT;
+	}
+	//Unit conversion
+	double watts;
+	if (pwrUnit == UNITS_KW) {
+		watts = power * 1000; // kW to W
+	}
+	else if (pwrUnit == UNITS_BTUperHr) {
+		watts = BTU_TO_KWH(power) * 1000; // BTU to kW then kW to W
+	} 
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for capacity in getCompressorCapacity.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	//Whew so many checks...
+	if (which == 0) {
+		for (int i = 0; i < numHeatSources; i++) {
+			if (setOfSources[i].isAResistance()) {
+				setOfSources[i].changeResistanceWatts(watts);
+			}
+		}
+	}
+	else if (which == 1) {
+		setOfSources[lowestElementIndex].changeResistanceWatts(watts);
+	}
+	else if (which == 2) {
+		setOfSources[highestElementIndex].changeResistanceWatts(watts);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The which option must be greater between 0 and 2 \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	return 0;
+}
 
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C,
@@ -3114,6 +3194,12 @@ void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
+void HPWH::HeatSource::changeResistanceWatts(double watts) {
+	for (auto &perfP : perfMap) {
+		perfP.inputPower_coeffs[0] = watts;
+	}
+}
+
 void HPWH::calcSizeConstants() {
 	// calculate conduction between the nodes AND heat loss by node with top and bottom having greater surface area.
 	// model uses explicit finite difference to find conductive heat exchange between the tank nodes with the boundary conditions
@@ -3206,13 +3292,15 @@ void HPWH::calcDerivedHeatingValues(){
 	// define condenser index and lowest resistance element index
 	compressorIndex = -1; // Default = No compressor
 	lowestElementIndex = -1; // Default = No resistance elements
+	highestElementIndex = -1; // Default = No resistance elements
 	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
+	int highestElementPos = 0;
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
-		else {
+		else if (setOfSources[i].isAResistance()){
 			// Gets VIP element index
 			if (setOfSources[i].isVIP) {
 				if (VIPIndex == -1) {
@@ -3224,13 +3312,14 @@ void HPWH::calcDerivedHeatingValues(){
 					};
 				}
 			}
-			if (setOfSources[i].isAResistance()){
-				for (int j = 0; j < CONDENSITY_SIZE; j++) {
-					if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
-						lowestElementIndex = i;
-						lowestElementPos = j;
-						break;
-					}
+			for (int j = 0; j < CONDENSITY_SIZE; j++) {
+				if (setOfSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
+					lowestElementIndex = i;
+					lowestElementPos = j;
+				}
+				if (setOfSources[i].condensity[j] > 0.0 && j > highestElementPos) {
+					highestElementIndex = i;
+					highestElementPos = j;
 				}
 			}
 		}

@@ -201,9 +201,11 @@ int getHPWHObject(HPWH &hpwh, string modelName) {
 
 	if (modelName == "TamScalable_SP_2X") {
 		hpwh.setScaleHPWHCapacityCOP(2., 1.); 	// Scale the compressor
+		hpwh.setResistanceCapacity(60.); // Reset resistance elements in kW
 	}
 	else if (modelName == "TamScalable_SP_Half") {
 		hpwh.setScaleHPWHCapacityCOP(1/2., 1.); 	// Scale the compressor
+		hpwh.setResistanceCapacity(15.); // Reset resistance elements in kW
 	}
 	return returnVal;
 }
