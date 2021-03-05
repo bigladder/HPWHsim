@@ -380,6 +380,9 @@ class HPWH {
   double getSetpoint(UNITS units = UNITS_C) const;
   /**< a function to check the setpoint - returns setpoint in celcius  */
 
+  double HPWH::getMinOperatingTemp(UNITS units = UNITS_C) const;
+  /**< a function to return the minimum operating temperature of the compressor  */
+
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
