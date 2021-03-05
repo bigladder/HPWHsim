@@ -389,6 +389,9 @@ class HPWH {
 		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
 		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
 
+  double HPWH::getMinOperatingTemp(UNITS units = UNITS_C) const;
+  /**< a function to return the minimum operating temperature of the compressor  */
+
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
@@ -485,6 +488,12 @@ class HPWH {
 	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 	/**< Scales the heatpump water heater input capacity and COP*/
 	
+	int setResistanceCapacity(double power, int which = 0, UNITS pwrUNIT = UNITS_KW);
+	// Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by which
+	// If which (0) changes all the resisistance elements in the tank.
+	// If which (1) changes the lowest resistance element
+	// If which (2) changes the highest resistance element
+
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
@@ -626,7 +635,9 @@ class HPWH {
 
 	int lowestElementIndex;
 	/**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
-
+	
+	int highestElementIndex;
+	/**< The index of the highest resistance element heat source. if only one element it equals lowestElementIndex (set to -1 if no resistance elements)*/
 
 	int VIPIndex;
 	/**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance elements)*/
@@ -874,6 +885,9 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
+  
+  void changeResistanceWatts(double watts);
+  /**< function to change the resistance wattage */
 
   bool isACompressor() const;
   /**< returns if the heat sources is a compressor or not */

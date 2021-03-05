@@ -29,7 +29,8 @@ void getCompressorPerformance(HPWH &hpwh, performance &point, double waterTempC,
 		0., // Flow in gallons
 		airTempC,  // Ambient Temp (C)
 		airTempC,  // External Temp (C)
-		HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
+		//HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
+		(HPWH::DR_TOO | HPWH::DR_LOR) // DR Status (now an enum. Fixed for now as allow)
 	);
 	
 	// Check the heat in and out of the compressor
@@ -80,18 +81,6 @@ void testNoneScalable() { // Test a model that is not scalable
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 }
 
-void testScaleRE() {
-	HPWH hpwh;
-
-	string input = "restankRealistic";
-
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-	//Scale output to 1 kW
-	int val = hpwh.setScaleHPWHCapacityCOP(2., 2.);
-	ASSERTTRUE(val == HPWH::HPWH_ABORT);
-}
 
 void testScalableHPWHScales() { // Test the scalable hpwh can be put through it's passes
 	HPWH hpwh;
@@ -365,6 +354,53 @@ void testChipsCaseWithIPUnits() {
 	ASSERTTRUE(relcmpd(wh_heatingCap, newCapacity_BTUperHr));
 }
 
+
+void testScaleRE() {
+	HPWH hpwh;
+
+	string input = "restankRealistic";
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	//Scale output to 1 kW
+	int val = hpwh.setScaleHPWHCapacityCOP(2., 2.);
+	ASSERTTRUE(val == HPWH::HPWH_ABORT);
+
+	
+}
+
+void testSetResistanceCapacityErrorChecks() {
+	HPWH hpwhHP1, hpwhR;
+	string input = "ColmacCxA_30_SP";
+
+	// get preset model 
+	getHPWHObject(hpwhHP1, input);
+
+	ASSERTTRUE(hpwhHP1.setResistanceCapacity(100.) == HPWH::HPWH_ABORT); // Need's to be scalable
+
+	input = "restankRealistic";
+	// get preset model 
+	getHPWHObject(hpwhR, input);
+	ASSERTTRUE(hpwhR.setResistanceCapacity(-100.) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 3) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 30000) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwhR.setResistanceCapacity(100., -3) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 0, HPWH::UNITS_F) == HPWH::HPWH_ABORT);
+
+}
+
+void testStorageTankErrors() {
+	HPWH hpwh;
+	string input = "StorageTank";
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	ASSERTTRUE(hpwh.setResistanceCapacity(1000.) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
+
+}
+
 int main(int argc, char *argv[])
 {
 	testScalableHPWHScales(); // Test the scalable model scales properly
@@ -384,6 +420,10 @@ int main(int argc, char *argv[])
 	testCXA30MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
 
 	testChipsCaseWithIPUnits(); //Debuging Chip's case
+
+	testSetResistanceCapacityErrorChecks(); // Check the resistance reset throws errors when expected.
+
+	testStorageTankErrors(); // Make sure we can't scale the storage tank.
 
 	//Made it through the gauntlet
 	return 0;

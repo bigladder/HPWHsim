@@ -836,8 +836,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		tankVolume_L = 315; // Stolen from Sanden, will adjust 
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to tank size
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7; 
 
 		numHeatSources = 1;
 		setOfSources = new HeatSource[numHeatSources];
@@ -969,8 +969,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
-		tankVolume_L = 315;
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7; 
+		
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
@@ -2859,7 +2860,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 	// If a the model is the TamOMatic, HotTam... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
-		numNodes = 96;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -2868,11 +2869,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		tankVolume_L = 315; // Stolen from Sanden, will adjust 
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to tank size
+		tankVolume_L = 315; 
+		tankUA_kJperHrC = 7; 
 		setTankSize_adjustUA(600., UNITS_GAL);
 
-		numHeatSources = 1;
+		numHeatSources = 3;
 		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
@@ -2897,7 +2898,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			COP_coeffs // COP Coefficients (COP_coeffs)
 		});
 
-		
 		//logic conditions
 		compressor.minT = F_TO_C(40.);
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
@@ -2912,8 +2912,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
+
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+		resistiveElementBottom.setupAsResistiveElement(0, 30000);
+		resistiveElementTop.setupAsResistiveElement(9, 30000);
+
+		//top resistor values
+		//standard logic conditions
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(15)));
+		resistiveElementTop.isVIP = true;
+
 		//set everything in its places
-		setOfSources[0] = compressor;
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
 
 	else {
