@@ -2978,7 +2978,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//top resistor values
 		//standard logic conditions
-		resistiveElementTop.addTurnOnLogic(HPWH::topThird(15));
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(15)));
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
