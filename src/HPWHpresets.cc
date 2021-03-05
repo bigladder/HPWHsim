@@ -859,8 +859,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 315; // Stolen from Sanden, will adjust 
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to tank size
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7; 
 
 		numHeatSources = 1;
 		setOfSources = new HeatSource[numHeatSources];
@@ -993,8 +993,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 315;
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to 800 gallon tank
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7; 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
@@ -2917,7 +2917,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 	// If a the model is the TamOMatic, HotTam... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
-		numNodes = 96;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -2928,8 +2928,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//start tank off at setpoint
 		resetTankToSetpoint();
 
-		tankVolume_L = 315; // Stolen from Sanden, will adjust 
-		tankUA_kJperHrC = 7; // Stolen from Sanden, will adjust to tank size
+		tankVolume_L = 315; 
+		tankUA_kJperHrC = 7; 
 		setTankSize_adjustUA(600., UNITS_GAL);
 
 		numHeatSources = 3;
