@@ -22,6 +22,12 @@ add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_C
 add_test(NAME "testScaleHPWH" COMMAND  $<TARGET_FILE:testScaleHPWH> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testMaxSetpoint" COMMAND  $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+
+add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
+"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME "testREGoesTo99CCold.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99CCold"
+"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Run model tests and unit tests on models
 set(testNames
  test30
@@ -130,8 +136,6 @@ endforeach(model)
 foreach(model ${largeCompressorNames})
 	add_TankSizeFixed_test( MODEL_NAME "${model}")
 endforeach(model)
-
-
 
 #Tests for successful runs
 function( add_model_test )
