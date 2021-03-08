@@ -818,7 +818,7 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 		return setpoint_C;
 	}
 	else if (units == UNITS_F) {
-		return F_TO_C(setpoint_C);
+		return C_TO_F(setpoint_C);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -839,7 +839,7 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 		return setOfSources[compressorIndex].minT;
 	}
 	else if (units == UNITS_F) {
-		return F_TO_C(setOfSources[compressorIndex].minT);
+		return C_TO_F(setOfSources[compressorIndex].minT);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
