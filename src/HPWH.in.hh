@@ -354,7 +354,6 @@ class HPWH {
 	void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
 	void setMinutesPerStep(double newMinutesPerStep) { minutesPerStep = newMinutesPerStep; };
 
-
   void setVerbosity(VERBOSITY hpwhVrb);
   /**< sets the verbosity to the specified level  */
   void setMessageCallback( void (*callbackFunc)(const std::string message, void* pContext), void* pContext);
@@ -389,7 +388,7 @@ class HPWH {
 		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
 		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
 
-  double HPWH::getMinOperatingTemp(UNITS units = UNITS_C) const;
+  double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
 
   int resetTankToSetpoint();
@@ -567,6 +566,8 @@ class HPWH {
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
+
+	void addHeatParent(HeatSource *heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun);
 
 	void addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C);
 	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
@@ -779,7 +780,6 @@ class HPWH::HeatSource {
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
-	void addHeat_temp(double externalT_C);
 	void addHeat(double externalT_C, double minutesToRun);
   /**< adds heat to the hpwh - this is the function that interprets the
       various configurations (internal/external, resistance/heat pump) to add heat */

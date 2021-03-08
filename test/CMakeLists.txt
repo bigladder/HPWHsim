@@ -23,10 +23,10 @@ add_test(NAME "testScaleHPWH" COMMAND  $<TARGET_FILE:testScaleHPWH> ${testArgs} 
 add_test(NAME "testMaxSetpoint" COMMAND  $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 
-add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
-"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testREGoesTo99CCold.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99CCold"
-"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+#add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
+#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+#add_test(NAME "testREGoesTo99CCold.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99CCold"
+#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Run model tests and unit tests on models
 set(testNames
@@ -74,6 +74,21 @@ set(yearTestsModels
 set(yearTests                                        
  testCA_3BR_CTZ15
  testCA_3BR_CTZ16
+)
+
+set(maxTempModels 
+ AOSmithHPTU80
+ Rheem2020Build50
+ RheemHB50
+ Stiebel220e
+ GE502014
+ TamScalable_SP
+ AOSmithCAHP120
+)
+
+set( maxTempTests
+ testREGoesTo93C
+ testREGoesTo93CCold
 )
 
 set(largeCompressorTests
@@ -176,7 +191,12 @@ foreach(test ${testNames})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
-
+#Test models follow control logic with max temperatures. 
+foreach(test ${maxTempTests})
+  foreach(model ${maxTempModels})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+  endforeach(model)
+endforeach(test)
 #Add large compressor tests to the list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
@@ -251,6 +271,16 @@ foreach(test ${testNames})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Add max temp tests to the regression list
+foreach(test ${maxTempTests})
+  foreach(model ${maxTempModels})
+    add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+	#No files for these yet
+    #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
 
 #Add large compressor tests to the regression list
 foreach(test ${largeCompressorTests})
