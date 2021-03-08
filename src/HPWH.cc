@@ -2081,7 +2081,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
 
 	// check for inverted temperature profile 
-	if (doInversionMixing) {
+	mixTankInversions();
 
 }  //end updateTankTemps
 
