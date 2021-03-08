@@ -385,15 +385,13 @@ int HPWH::runOneStep(double drawVolume_L,
 
 		//do heating logic
 		double minutesToRun = minutesPerStep;
-		int iHS = 0;
-		//for (int i = 0; i < numHeatSources; i++) {
-		while (iHS < numHeatSources) {
+		for (int i = 0; i < numHeatSources; i++) {
 			// check/apply lock-outs
 			if (hpwhVerbosity >= VRB_emetic) {
-				msg("Checking lock-out logic for heat source %d:\n", iHS);
+				msg("Checking lock-out logic for heat source %d:\n", i);
 			}
-			if (shouldDRLockOut(setOfSources[iHS].typeOfHeatSource, DRstatus)) {
-				setOfSources[iHS].lockOutHeatSource();
+			if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
+				setOfSources[i].lockOutHeatSource();
 				if (hpwhVerbosity >= VRB_emetic) {
 					msg("Locked out heat source, DRstatus = %i\n", DRstatus);
 				}
@@ -401,63 +399,44 @@ int HPWH::runOneStep(double drawVolume_L,
 			else
 			{
 				// locks or unlocks the heat source
-				setOfSources[iHS].toLockOrUnlock(heatSourceAmbientT_C);
+				setOfSources[i].toLockOrUnlock(heatSourceAmbientT_C);
 			}
-			if (setOfSources[iHS].isLockedOut() && setOfSources[iHS].backupHeatSource == NULL) {
-				setOfSources[iHS].disengageHeatSource();
+			if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource == NULL) {
+				setOfSources[i].disengageHeatSource();
 				if (hpwhVerbosity >= HPWH::VRB_emetic) {
 					msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
 				}
 			}
 
 			//going through in order, check if the heat source is on
-			if (setOfSources[iHS].isEngaged()) {
+			if (setOfSources[i].isEngaged()) {
 
 				HeatSource* heatSourcePtr;
-				if (setOfSources[iHS].isLockedOut() && setOfSources[iHS].backupHeatSource != NULL) {
+				if (setOfSources[i].isLockedOut() && setOfSources[i].backupHeatSource != NULL) {
 
 					// Check that the backup isn't locked out too or already engaged then it will heat on it's own.
-					if (setOfSources[iHS].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
-						shouldDRLockOut(setOfSources[iHS].backupHeatSource->typeOfHeatSource, DRstatus) || //){
-						setOfSources[iHS].backupHeatSource->isEngaged() ) {
-						iHS++;
+					if (setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
+						shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) || //){
+						setOfSources[i].backupHeatSource->isEngaged() ) {
 						continue;
 					}
 					// Don't turn the backup electric resistance heat source on if the VIP resistance element is on .
 					else if (VIPIndex >= 0 && setOfSources[VIPIndex].isOn && 
-						setOfSources[iHS].backupHeatSource->isAResistance()) {
-						iHS++;
+						setOfSources[i].backupHeatSource->isAResistance()) {
 						if (hpwhVerbosity >= VRB_typical) {
-							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", iHS, DRstatus);
+							msg("Locked out back up heat source AND the engaged heat source %i, DRstatus = %i\n", i, DRstatus);
 						}
 						continue;
 					}						
 					else {
-						heatSourcePtr = setOfSources[iHS].backupHeatSource;
+						heatSourcePtr = setOfSources[i].backupHeatSource;
 					}
 				}
 				else {
-					heatSourcePtr = &setOfSources[iHS];
+					heatSourcePtr = &setOfSources[i];
 				}
 
-				double tempSetpoint_C = -273.15;
-
-				// Check the air temprature and setpoint against maxOut_at_LowT
-				if (heatSourcePtr->isACompressor()) {
-					if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
-						setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
-					{
-						tempSetpoint_C = setpoint_C; //Store setpoint
-						setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
-					}
-				}
-				//and add heat if it is
-				heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
-
-				//Change the setpoint back to what it was pre-compressor depression
-				if (tempSetpoint_C > -273.15) {
-					setSetpoint(tempSetpoint_C);
-				}
+				addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
 
 				//if it finished early. i.e. shuts off early like if the heatsource maxed out
 				if (heatSourcePtr->runtime_min < minutesToRun) {
@@ -468,29 +447,33 @@ int HPWH::runOneStep(double drawVolume_L,
 
 					//subtract time it ran and turn it off
 					minutesToRun -= heatSourcePtr->runtime_min;
-					setOfSources[iHS].disengageHeatSource();
+					setOfSources[i].disengageHeatSource();
 					//and if there's a heat source that follows this heat source (regardless of lockout) that's able to come on,
-					if (setOfSources[iHS].followedByHeatSource != NULL && setOfSources[iHS].followedByHeatSource->shutsOff() == false) {
+					if (setOfSources[i].followedByHeatSource != NULL && setOfSources[i].followedByHeatSource->shutsOff() == false) {
 						//turn it on
-						setOfSources[iHS].followedByHeatSource->engageHeatSource(DRstatus);
-						iHS++;
+						setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
 					}
 					// or if there heat source can't produce hotter water (i.e. it's maxed out) and the tank still isn't at setpoint.
 					// the compressor should get locked out when the maxedOut is true but have to run the resistance first during this 
 					// timestep to make sure tank is above the max temperature for the compressor.
-					else if (setOfSources[iHS].maxedOut() && setOfSources[iHS].backupHeatSource != NULL) {
-						//turn it on
-						setOfSources[iHS].backupHeatSource->engageHeatSource(DRstatus);
-						iHS = 0;
+					else if (setOfSources[i].maxedOut() && setOfSources[i].backupHeatSource != NULL) {
+
+						// Check that the backup isn't locked out or already engaged then it will heat or already heated on it's own.
+						if (!setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) &&
+							!shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) && //){
+							!setOfSources[i].backupHeatSource->isEngaged()) {
+
+							// turn it on
+							setOfSources[i].backupHeatSource->engageHeatSource(DRstatus);
+							// add heat if it hasn't heated up this whole minute already
+							if (setOfSources[i].backupHeatSource->runtime_min >= 0.) {
+								heatSourcePtr = setOfSources[i].backupHeatSource;
+								addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun - heatSourcePtr->runtime_min);
+							}
+						}
 					}
 				}
-				else { //heatSourcePtr->runtime_min >= minutesToRun
-					iHS++;
-				}
-			} 
-			else { // heat source not engaged
-				iHS++;
-			}
+			}  // heat source not engaged
 		} // end while iHS heat source
 	}
 	if (areAllHeatSourcesOff() == true) {
@@ -653,6 +636,27 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 	return 0;
 }
 
+void HPWH::addHeatParent(HeatSource *heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun) {
+
+	double tempSetpoint_C = -273.15;
+
+	// Check the air temprature and setpoint against maxOut_at_LowT
+	if (heatSourcePtr->isACompressor()) {
+		if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
+			setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
+		{
+			tempSetpoint_C = setpoint_C; //Store setpoint
+			setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
+		}
+	}
+	//and add heat if it is
+	heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+
+	//Change the setpoint back to what it was pre-compressor depression
+	if (tempSetpoint_C > -273.15) {
+		setSetpoint(tempSetpoint_C);
+	}
+}
 
 
 void HPWH::setVerbosity(VERBOSITY hpwhVrb) {
@@ -873,7 +877,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	bool returnVal = false;
 
 	if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
-		
+
 		maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
 
 		if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
@@ -919,6 +923,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	}
 
 	return returnVal;
+}
 
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 	if (compressorIndex == -1) {
@@ -1981,9 +1986,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 			drawVolume_N -= drawFraction;
 
-			if (doInversionMixing) {
-				mixTankInversions();
-			}
+			mixTankInversions();			
 		}
 
 
@@ -2079,8 +2082,6 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 	// check for inverted temperature profile 
 	if (doInversionMixing) {
-		mixTankInversions();
-	}
 
 }  //end updateTankTemps
 
@@ -2090,35 +2091,36 @@ void HPWH::mixTankInversions() {
 	bool hasInversion;
 	const double volumePerNode_L = tankVolume_L / numNodes;
 	//int numdos = 0;
+	if(doInversionMixing) {
+		do {
+			hasInversion = false;
+			//Start from the top and check downwards
+			for (int i = numNodes - 1; i > 0; i--) {
+				if (tankTemps_C[i] < tankTemps_C[i - 1]) {
+					// Temperature inversion!
+					hasInversion = true;
 
-	do {
-		hasInversion = false;
-		//Start from the top and check downwards
-		for (int i = numNodes - 1; i > 0; i--) {
-			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
-				// Temperature inversion!
-				hasInversion = true;
-
-				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
-				double Tmixed = 0.0;
-				double massMixed = 0.0;
-				int m;
-				for (m = i; m >= 0; m--) {
-					Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
-					massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
-					if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1])) {
-						break;
+					//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
+					double Tmixed = 0.0;
+					double massMixed = 0.0;
+					int m;
+					for (m = i; m >= 0; m--) {
+						Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
+						massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
+						if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1])) {
+							break;
+						}
 					}
-				}
-				Tmixed /= massMixed;
+					Tmixed /= massMixed;
 
-				// Assign the tank temps from i to k
-				for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+					// Assign the tank temps from i to k
+					for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+				}
+
 			}
 
-		}
-
-	} while (hasInversion);
+		} while (hasInversion);
+	}
 }
 
 
@@ -2968,7 +2970,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 			targetTemp_C = hpwh->tankTemps_C[setPointNodeNum + 1];
 		}
 		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
-		if (targetTemp_C > hpwh->setpoint_C) {
+		if (targetTemp_C > maxTargetTemp_C) {
 			targetTemp_C = maxTargetTemp_C;
 		}
 
@@ -3091,6 +3093,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
 
+		hpwh->mixTankInversions();
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating

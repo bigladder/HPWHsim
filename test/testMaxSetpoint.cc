@@ -17,6 +17,7 @@ using std::string;
 
 
 void testMaxSetpointResistanceTank();
+void testScalableCompressor();
 void testJustR134ACompressor();
 void testJustR410ACompressor();
 void testJustR744Compressor();
@@ -28,6 +29,7 @@ const double REMaxShouldBe = 100.;
 int main(int argc, char *argv[])
 {
 	testMaxSetpointResistanceTank();
+	testScalableCompressor();
 	testJustR134ACompressor();
 	testJustR410ACompressor();
 	testJustR744Compressor();
@@ -55,10 +57,29 @@ void testMaxSetpointResistanceTank() {
 	ASSERTTRUE(hpwh.setSetpoint(99.) == 0)
 }
 
-void testJustR134ACompressor() {
+void testScalableCompressor() {
 	HPWH hpwh;
 
 	string input = "TamScalable_SP"; // Just a compressor with R134A
+	double num;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
+	ASSERTTRUE(hpwh.isNewSetpointPossible(100, num)); // Can go to programed max
+
+	// Check this carries over into setting the setpoint
+	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
+	ASSERTTRUE(hpwh.setSetpoint(50.) == 0)
+}
+
+void testJustR134ACompressor() {
+	HPWH hpwh;
+
+	string input = "NyleC90A_SP"; // Just a compressor with R134A
 	double num;
 
 	// get preset model 
