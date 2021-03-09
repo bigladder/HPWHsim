@@ -438,7 +438,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 				addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
 
-				//if it finished early. i.e. shuts off early like if the heatsource maxed out
+				//if it finished early. i.e. shuts off early like if the heatsource met setpoint or maxed out
 				if (heatSourcePtr->runtime_min < minutesToRun) {
 					//debugging message handling
 					if (hpwhVerbosity >= VRB_emetic) {
@@ -459,16 +459,16 @@ int HPWH::runOneStep(double drawVolume_L,
 					else if (setOfSources[i].maxedOut() && setOfSources[i].backupHeatSource != NULL) {
 
 						// Check that the backup isn't locked out or already engaged then it will heat or already heated on it's own.
-						if (!setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) &&
-							!shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) && //){
-							!setOfSources[i].backupHeatSource->isEngaged()) {
+						if (!setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) && //If not locked out
+							!shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) && // and not DR locked out
+							!setOfSources[i].backupHeatSource->isEngaged()) { // and not already engaged
 
+							HeatSource* backupHeatSourcePtr = setOfSources[i].backupHeatSource;
 							// turn it on
-							setOfSources[i].backupHeatSource->engageHeatSource(DRstatus);
+							backupHeatSourcePtr->engageHeatSource(DRstatus);
 							// add heat if it hasn't heated up this whole minute already
-							if (setOfSources[i].backupHeatSource->runtime_min >= 0.) {
-								heatSourcePtr = setOfSources[i].backupHeatSource;
-								addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun - heatSourcePtr->runtime_min);
+							if (backupHeatSourcePtr->runtime_min >= 0.) {
+								 addHeatParent(backupHeatSourcePtr, heatSourceAmbientT_C, minutesToRun - backupHeatSourcePtr->runtime_min);
 							}
 						}
 					}
@@ -1442,9 +1442,9 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 	}
 	else {
 		double result = tankTemps_C[nodeNum];
-		if (result == double(HPWH_ABORT)) {
-			return result;
-		}
+		//if (result == double(HPWH_ABORT)) { can't happen?
+		//	return result;
+		//}
 		if (units == UNITS_C) {
 			return result;
 		}
@@ -2699,11 +2699,12 @@ double HPWH::HeatSource::expitFunc(double x, double offset) {
 
 void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 	double sum_tmp = 0.0;
+	size_t N = distribution.size();
 
-	for (unsigned int i = 0; i < distribution.size(); i++) {
+	for (size_t i = 0; i < N; i++) {
 		sum_tmp += distribution[i];
 	}
-	for (unsigned int i = 0; i < distribution.size(); i++) {
+	for (size_t i = 0; i < N; i++) {
 		if (sum_tmp > 0.0) {
 			distribution[i] /= sum_tmp;
 		}
