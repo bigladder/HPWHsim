@@ -45,6 +45,9 @@ class HPWH {
 								  find the surface area. It is derived from the median value of 88 
 								  insulated storage tanks currently available on the market from
 								  Sanden, AOSmith, HTP, Rheem, and Niles,  */
+  static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
+  static const double MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
+  static const double MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -351,7 +354,6 @@ class HPWH {
 	void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
 	void setMinutesPerStep(double newMinutesPerStep) { minutesPerStep = newMinutesPerStep; };
 
-
   void setVerbosity(VERBOSITY hpwhVrb);
   /**< sets the verbosity to the specified level  */
   void setMessageCallback( void (*callbackFunc)(const std::string message, void* pContext), void* pContext);
@@ -380,7 +382,13 @@ class HPWH {
   double getSetpoint(UNITS units = UNITS_C) const;
   /**< a function to check the setpoint - returns setpoint in celcius  */
 
-  double HPWH::getMinOperatingTemp(UNITS units = UNITS_C) const;
+  bool isNewSetpointPossible(double newSetpoint_C, double& maxAllowedSetpoint_C, UNITS units = UNITS_C) const;
+  /**< This function returns if the new setpoint is physically possible for the compressor. If there
+		is no compressor then checks that the new setpoint is less than boiling. The setpoint can be
+		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
+		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
+
+  double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
 
   int resetTankToSetpoint();
@@ -509,8 +517,9 @@ class HPWH {
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
   double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-  /**< returns the condensor inlet water temperature in the specified units 
-	returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+	/**< returns the condenser temperature in the specified units
+	  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -557,6 +566,8 @@ class HPWH {
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
 	/**< disengage each heat source  */
+
+	void addHeatParent(HeatSource *heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun);
 
 	void addExtraHeat(std::vector<double>* nodePowerExtra_W, double tankAmbientT_C);
 	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
@@ -663,6 +674,7 @@ class HPWH {
 
 	double setpoint_C;
 	/**< the setpoint of the tank  */
+
 	double *tankTemps_C;
 	/**< an array holding the temperature of each node - 0 is the bottom node, numNodes is the top  */
 	double *nextTankTemps_C;
@@ -688,7 +700,6 @@ class HPWH {
 	/**< the total energy removed from the environment, to heat the water  */
 	double standbyLosses_kWh;
 	/**< the amount of heat lost to standby  */
-
 
   // special variables for adding abilities
 	bool tankMixesOnDraw;
@@ -757,18 +768,18 @@ class HPWH::HeatSource {
   bool toLockOrUnlock(double heatSourceAmbientT_C);
   /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
 
-
-
 	bool shouldHeat() const;
   /**< queries the heat source as to whether or not it should turn on */
 	bool shutsOff() const;
   /**< queries the heat source whether should shut off */
 
+	bool maxedOut() const;
+	/**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at setpoint. */
+
   int findParent() const;
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
-	void addHeat_temp(double externalT_C);
 	void addHeat(double externalT_C, double minutesToRun);
   /**< adds heat to the hpwh - this is the function that interprets the
       various configurations (internal/external, resistance/heat pump) to add heat */
@@ -889,6 +900,8 @@ class HPWH::HeatSource {
   double maxT;
   /**<  maximum operating temperature of HPWH environment */
 
+  double maxSetpoint_C;
+  /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
 	double hysteresis_dC;
 	/**< a hysteresis term that prevents short cycling due to heat pump self-interaction

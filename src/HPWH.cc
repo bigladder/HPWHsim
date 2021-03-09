@@ -58,6 +58,10 @@ const float HPWH::HEATDIST_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const float HPWH::ASPECTRATIO = 4.75f;
 
+const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
+const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
+const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
 
@@ -381,7 +385,6 @@ int HPWH::runOneStep(double drawVolume_L,
 
 		//do heating logic
 		double minutesToRun = minutesPerStep;
-
 		for (int i = 0; i < numHeatSources; i++) {
 			// check/apply lock-outs
 			if (hpwhVerbosity >= VRB_emetic) {
@@ -433,26 +436,9 @@ int HPWH::runOneStep(double drawVolume_L,
 					heatSourcePtr = &setOfSources[i];
 				}
 
-				double tempSetpoint_C = -273.15;
+				addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
 
-				// Check the air temprature and setpoint against maxOut_at_LowT
-				if (heatSourcePtr->isACompressor()) {
-					if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
-						setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
-					{
-						tempSetpoint_C = setpoint_C; //Store setpoint
-						setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
-					}
-				}
-				//and add heat if it is
-				heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
-
-				//Change the setpoint back to what it was pre-compressor depression
-				if (tempSetpoint_C > -273.15) {
-					setSetpoint(tempSetpoint_C);
-				}
-
-				//if it finished early
+				//if it finished early. i.e. shuts off early like if the heatsource met setpoint or maxed out
 				if (heatSourcePtr->runtime_min < minutesToRun) {
 					//debugging message handling
 					if (hpwhVerbosity >= VRB_emetic) {
@@ -467,9 +453,28 @@ int HPWH::runOneStep(double drawVolume_L,
 						//turn it on
 						setOfSources[i].followedByHeatSource->engageHeatSource(DRstatus);
 					}
+					// or if there heat source can't produce hotter water (i.e. it's maxed out) and the tank still isn't at setpoint.
+					// the compressor should get locked out when the maxedOut is true but have to run the resistance first during this 
+					// timestep to make sure tank is above the max temperature for the compressor.
+					else if (setOfSources[i].maxedOut() && setOfSources[i].backupHeatSource != NULL) {
+
+						// Check that the backup isn't locked out or already engaged then it will heat or already heated on it's own.
+						if (!setOfSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) && //If not locked out
+							!shouldDRLockOut(setOfSources[i].backupHeatSource->typeOfHeatSource, DRstatus) && // and not DR locked out
+							!setOfSources[i].backupHeatSource->isEngaged()) { // and not already engaged
+
+							HeatSource* backupHeatSourcePtr = setOfSources[i].backupHeatSource;
+							// turn it on
+							backupHeatSourcePtr->engageHeatSource(DRstatus);
+							// add heat if it hasn't heated up this whole minute already
+							if (backupHeatSourcePtr->runtime_min >= 0.) {
+								 addHeatParent(backupHeatSourcePtr, heatSourceAmbientT_C, minutesToRun - backupHeatSourcePtr->runtime_min);
+							}
+						}
+					}
 				}
-			}
-		}
+			}  // heat source not engaged
+		} // end while iHS heat source
 	}
 	if (areAllHeatSourcesOff() == true) {
 		isHeating = false;
@@ -631,6 +636,27 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 	return 0;
 }
 
+void HPWH::addHeatParent(HeatSource *heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun) {
+
+	double tempSetpoint_C = -273.15;
+
+	// Check the air temprature and setpoint against maxOut_at_LowT
+	if (heatSourcePtr->isACompressor()) {
+		if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
+			setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
+		{
+			tempSetpoint_C = setpoint_C; //Store setpoint
+			setSetpoint(heatSourcePtr->maxOut_at_LowT.outT_C); // Reset to new setpoint as this is used in the add heat calc
+		}
+	}
+	//and add heat if it is
+	heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+
+	//Change the setpoint back to what it was pre-compressor depression
+	if (tempSetpoint_C > -273.15) {
+		setSetpoint(tempSetpoint_C);
+	}
+}
 
 
 void HPWH::setVerbosity(VERBOSITY hpwhVrb) {
@@ -798,11 +824,12 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 		return HPWH_ABORT;
 	}
 	else {
+		double newSetpoint_C, temp;
 		if (units == UNITS_C) {
-			setpoint_C = newSetpoint;
+			newSetpoint_C = newSetpoint;
 		}
 		else if (units == UNITS_F) {
-			setpoint_C = (F_TO_C(newSetpoint));
+			newSetpoint_C = (F_TO_C(newSetpoint));
 		}
 		else {
 			if (hpwhVerbosity >= VRB_reluctant) {
@@ -810,9 +837,18 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 			}
 			return HPWH_ABORT;
 		}
+		if (!isNewSetpointPossible(newSetpoint_C, temp)) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C.\n", temp);
+			}
+			return HPWH_ABORT;
+		}
+
+		setpoint_C = newSetpoint_C;
 	}
 	return 0;
 }
+
 double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	if (units == UNITS_C) {
 		return setpoint_C;
@@ -826,6 +862,67 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 		}
 		return HPWH_ABORT;
 	}
+}
+
+bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, UNITS units /*=UNITS_C*/) const {
+	double newSetpoint_C;
+	double maxAllowedSetpoint_C = -273.15;
+	if (units == UNITS_C) {
+		newSetpoint_C = newSetpoint;
+	}
+	else if (units == UNITS_F) {
+		newSetpoint_C = F_TO_C(setpoint_C);
+	}
+
+	bool returnVal = false;
+
+	if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
+
+		maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
+
+		if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
+			}
+			returnVal = false;
+		}
+		else {
+			returnVal = true;
+		}
+	}
+	if (lowestElementIndex >= 0) {  // If there's a resistance element lets check the new setpoint against the its max setpoint
+		maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
+
+		if (newSetpoint_C > maxAllowedSetpoint_C) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The resistance elements cannot produce water this hot \n");
+			}
+			returnVal = false;
+		}
+		else {
+			returnVal = true;
+		}
+	}
+	else if (lowestElementIndex == -1 && compressorIndex == -1) { // There are no heat sources here!
+		if (hpwhModel == MODELS_StorageTank) {
+			returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("There aren't any heat sources to check the new setpoint against! \n");
+			}
+			returnVal = false;
+		}
+	}
+
+	if (units == UNITS_C) {
+		maxAllowedSetpoint = maxAllowedSetpoint_C;
+	}
+	else if (units == UNITS_F) {
+		maxAllowedSetpoint = F_TO_C(maxAllowedSetpoint_C);
+	}
+
+	return returnVal;
 }
 
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
@@ -1345,9 +1442,9 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 	}
 	else {
 		double result = tankTemps_C[nodeNum];
-		if (result == double(HPWH_ABORT)) {
-			return result;
-		}
+		//if (result == double(HPWH_ABORT)) { can't happen?
+		//	return result;
+		//}
 		if (units == UNITS_C) {
 			return result;
 		}
@@ -1889,9 +1986,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 			drawVolume_N -= drawFraction;
 
-			if (doInversionMixing) {
-				mixTankInversions();
-			}
+			mixTankInversions();			
 		}
 
 
@@ -1986,9 +2081,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	for (int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
 
 	// check for inverted temperature profile 
-	if (doInversionMixing) {
-		mixTankInversions();
-	}
+	mixTankInversions();
 
 }  //end updateTankTemps
 
@@ -1998,35 +2091,36 @@ void HPWH::mixTankInversions() {
 	bool hasInversion;
 	const double volumePerNode_L = tankVolume_L / numNodes;
 	//int numdos = 0;
+	if(doInversionMixing) {
+		do {
+			hasInversion = false;
+			//Start from the top and check downwards
+			for (int i = numNodes - 1; i > 0; i--) {
+				if (tankTemps_C[i] < tankTemps_C[i - 1]) {
+					// Temperature inversion!
+					hasInversion = true;
 
-	do {
-		hasInversion = false;
-		//Start from the top and check downwards
-		for (int i = numNodes - 1; i > 0; i--) {
-			if (tankTemps_C[i] < tankTemps_C[i - 1]) {
-				// Temperature inversion!
-				hasInversion = true;
-
-				//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
-				double Tmixed = 0.0;
-				double massMixed = 0.0;
-				int m;
-				for (m = i; m >= 0; m--) {
-					Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
-					massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
-					if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1])) {
-						break;
+					//Mix this inversion mixing temperature by averaging all of the inverted nodes together together. 
+					double Tmixed = 0.0;
+					double massMixed = 0.0;
+					int m;
+					for (m = i; m >= 0; m--) {
+						Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
+						massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
+						if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1])) {
+							break;
+						}
 					}
-				}
-				Tmixed /= massMixed;
+					Tmixed /= massMixed;
 
-				// Assign the tank temps from i to k
-				for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+					// Assign the tank temps from i to k
+					for (int k = i; k >= m; k--) tankTemps_C[k] = Tmixed;
+				}
+
 			}
 
-		}
-
-	} while (hasInversion);
+		} while (hasInversion);
+	}
 }
 
 
@@ -2113,8 +2207,9 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 //the public functions
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
-	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15} {}
+	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}
+{}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	hpwh = hSource.hpwh;
@@ -2152,6 +2247,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	maxT = hSource.maxT;
 	maxOut_at_LowT = hSource.maxOut_at_LowT;
 	hysteresis_dC = hSource.hysteresis_dC;
+	maxSetpoint_C = hSource.maxSetpoint_C;
 
 	depressesTemperature = hSource.depressesTemperature;
 	airflowFreedom = hSource.airflowFreedom;
@@ -2209,6 +2305,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	maxT = hSource.maxT;
 	maxOut_at_LowT = hSource.maxOut_at_LowT;
 	hysteresis_dC = hSource.hysteresis_dC;
+	maxSetpoint_C = hSource.maxSetpoint_C;
 
 	depressesTemperature = hSource.depressesTemperature;
 	airflowFreedom = hSource.airflowFreedom;
@@ -2304,6 +2401,13 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const {
 				hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f", heatSourceAmbientT_C, maxT);
 			}
 		}
+
+		if (maxedOut()) {
+			lock = true;
+			if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
+				hpwh->msg("\tlock-out: condenser water temperature above max: %.2f", maxSetpoint_C);
+			}
+		}
 	//	if (lock == true && backupHeatSource == NULL) {
 	//		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
 	//			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined. Simulation will continue without lock-out");
@@ -2322,6 +2426,10 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const {
 	// if it's already unlocked, keep it unlocked
 	if (isLockedOut() == false) {
 		return true;
+	}
+	// if it the heat source is capped and can't produce hotter water
+	else if (maxedOut()) {
+		return false;
 	}
 	else {
 		//when the "external" temperature is no longer too cold or too warm
@@ -2494,6 +2602,17 @@ bool HPWH::HeatSource::shutsOff() const {
 	return shutOff;
 }
 
+bool HPWH::HeatSource::maxedOut() const {
+	bool maxed = false;
+
+	// If the heat source can't produce water at the setpoint and the control logics are saying to shut off
+	if (hpwh->setpoint_C > maxSetpoint_C){
+		if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff()) {
+			maxed = true;
+		}
+	}
+	return maxed;
+}
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ = 0.0;
@@ -2580,11 +2699,12 @@ double HPWH::HeatSource::expitFunc(double x, double offset) {
 
 void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 	double sum_tmp = 0.0;
+	size_t N = distribution.size();
 
-	for (unsigned int i = 0; i < distribution.size(); i++) {
+	for (size_t i = 0; i < N; i++) {
 		sum_tmp += distribution[i];
 	}
-	for (unsigned int i = 0; i < distribution.size(); i++) {
+	for (size_t i = 0; i < N; i++) {
 		if (sum_tmp > 0.0) {
 			distribution[i] /= sum_tmp;
 		}
@@ -2822,6 +2942,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	int setPointNodeNum;
 
 	double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
+	double maxTargetTemp_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
 
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("node %2d   cap_kwh %.4lf \n", node, KJ_TO_KWH(cap_kJ));
@@ -2843,15 +2964,15 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minute
 	while (cap_kJ > 0 && setPointNodeNum < hpwh->numNodes) {
 		// if the whole tank is at the same temp, the target temp is the setpoint
 		if (setPointNodeNum == (hpwh->numNodes - 1)) {
-			targetTemp_C = hpwh->setpoint_C;
+			targetTemp_C = maxTargetTemp_C;
 		}
 		//otherwise the target temp is the first non-equal-temp node
 		else {
 			targetTemp_C = hpwh->tankTemps_C[setPointNodeNum + 1];
 		}
 		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
-		if (targetTemp_C > hpwh->setpoint_C) {
-			targetTemp_C = hpwh->setpoint_C;
+		if (targetTemp_C > maxTargetTemp_C) {
+			targetTemp_C = maxTargetTemp_C;
 		}
 
 		deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
@@ -2902,6 +3023,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
 	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 	double timeRemaining_min = minutesToRun;
+	double maxTargetTemp_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
 
 	input_BTUperHr = 0;
 	cap_BTUperHr = 0;
@@ -2927,7 +3049,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 		//calculate what percentage of the bottom node can be heated to setpoint
 		//with amount of heat available this timestep
-		deltaT_C = hpwh->setpoint_C - hpwh->tankTemps_C[0];
+		deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
 		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		//protect against dividing by zero - if bottom node is at (or above) setpoint,
 		//add no heat
@@ -2964,7 +3086,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
 		}
 		//add water to top node, heated to setpoint
-		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + hpwh->setpoint_C * nodeFrac;
+		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + maxTargetTemp_C * nodeFrac;
 
 
 		//track outputs - weight by the time ran
@@ -2972,6 +3094,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
 
+		hpwh->mixTankInversions();
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating
@@ -3074,6 +3197,7 @@ void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
+
 void HPWH::HeatSource::changeResistanceWatts(double watts) {
 	for (auto &perfP : perfMap) {
 		perfP.inputPower_coeffs[0] = watts;
@@ -3180,7 +3304,7 @@ void HPWH::calcDerivedHeatingValues(){
 		if (setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		}
-		else {
+		else if (setOfSources[i].isAResistance()){
 			// Gets VIP element index
 			if (setOfSources[i].isVIP) {
 				if (VIPIndex == -1) {
@@ -3315,6 +3439,13 @@ int HPWH::checkInputs() {
 
 	}
 	
+	double maxTemp;
+	double tempSetpoint = setpoint_C;
+	if (!isNewSetpointPossible(tempSetpoint, maxTemp)) {
+		msg("The setpoint for this tank is not possible, the max setpoint is %f", maxTemp);
+		returnVal = HPWH_ABORT;
+	}
+
 	//Check if the UA is out of bounds
 	if (tankUA_kJperHrC < 0.0) {
 		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);

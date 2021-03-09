@@ -319,9 +319,14 @@ int main(int argc, char *argv[])
 
 	  double fBal = fabs(qBal) / std::max(tankHCStart, 1.);
 	  if (fBal > EBALTHRESHOLD){
-		  cout << "On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
+		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
 	  }
-
+	  //
+	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+		  if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
+			  cout << "WARNING: On minute " << i << " heat source " << iHS << " ran for " << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
+		  }
+	  }
 	  // Recording
 	  if (minutesToRun < 500000.) {
 	  		// Copy current status into the output file
