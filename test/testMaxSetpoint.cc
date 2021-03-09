@@ -20,9 +20,10 @@ void testMaxSetpointResistanceTank();
 void testScalableCompressor();
 void testJustR134ACompressor();
 void testJustR410ACompressor();
-void testJustR744Compressor();
+//void testJustR744Compressor();
 void testHybridModel();
 void testStorageTankSetpoint();
+void testSetpointFixed();
 
 const double REMaxShouldBe = 100.;
 
@@ -32,9 +33,10 @@ int main(int argc, char *argv[])
 	testScalableCompressor();
 	testJustR134ACompressor();
 	testJustR410ACompressor();
-	testJustR744Compressor();
+//	testJustR744Compressor();
 	testHybridModel();
 	testStorageTankSetpoint();
+	testSetpointFixed();
 
 	//Made it through the gauntlet
 	return 0;
@@ -116,25 +118,25 @@ void testJustR410ACompressor() {
 	ASSERTTRUE(hpwh.setSetpoint(50.) == 0)
 }
 
-void testJustR744Compressor() {
-	HPWH hpwh;
-
-	string input = "Sanden80"; // Just a compressor with R134A
-	double num;
-
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-	// isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling
-	ASSERTTRUE(HPWH::MAXOUTLET_R744 == num); //Assert we're getting the right number
-	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
-	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R744, num)); // Can go to programed max
-
-	// Check this carries over into setting the setpoint. Sanden won't change it's setpoint though
-	ASSERTTRUE(hpwh.setSetpoint(101) == HPWH::HPWH_ABORT); // Can't go above boiling
-}
+//void testJustR744Compressor() {
+//	HPWH hpwh;
+//
+//	string input = "Sanden80"; // Sanden is fixed setpoint, tested later need a new CO2 HP to go here
+//	double num;
+//
+//	// get preset model 
+//	getHPWHObject(hpwh, input);
+//
+//	// isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
+//	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
+//	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling
+//	ASSERTTRUE(HPWH::MAXOUTLET_R744 == num); //Assert we're getting the right number
+//	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
+//	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R744, num)); // Can go to programed max
+//
+//	// Check this carries over into setting the setpoint. Sanden won't change it's setpoint though
+//	ASSERTTRUE(hpwh.setSetpoint(101) == HPWH::HPWH_ABORT); // Can't go above boiling
+//}
 
 void testHybridModel() {
 	HPWH hpwh;
@@ -173,4 +175,28 @@ void testStorageTankSetpoint() {
 	ASSERTTRUE(hpwh.setSetpoint(101.) == 0); // Can't go above boiling
 	ASSERTTRUE(hpwh.setSetpoint(99.) == 0) // Can go lower than boiling though
 
+}
+
+void testSetpointFixed() {
+	HPWH hpwh;
+
+	string input = "Sanden80"; //Fixed setpoint model
+	double num, num1;
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// Storage tanks have free reign!
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling!
+	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling!
+	ASSERTFALSE(hpwh.isNewSetpointPossible(60., num)); // Can't go to normalish
+	ASSERTFALSE(hpwh.isNewSetpointPossible(10., num)); // Can't go low, albiet dumb
+
+	ASSERTTRUE(num == hpwh.getSetpoint()); // Make sure it thinks the max is the setpoint
+	ASSERTTRUE(hpwh.isNewSetpointPossible(num, num1)) // Check that the setpoint can be set to the setpoint.
+
+	// Check this carries over into setting the setpoint
+	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
+	ASSERTTRUE(hpwh.setSetpoint(99.) == HPWH::HPWH_ABORT) // Can go lower than boiling though
+	ASSERTTRUE(hpwh.setSetpoint(60.) == HPWH::HPWH_ABORT); // Can't go to normalish
+	ASSERTTRUE(hpwh.setSetpoint(10.) == HPWH::HPWH_ABORT); // Can't go low, albiet dumb
 }
