@@ -817,35 +817,35 @@ bool HPWH::isSetpointFixed() const{
 }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
-	if (setpointFixed == true) {
+	//if (setpointFixed == true) { // checked in isNewSetpointPossible()
+	//	if (hpwhVerbosity >= VRB_reluctant) {
+	//		msg("Unwilling to set setpoint for your currently selected model.  \n");
+	//	}
+	//	return HPWH_ABORT;
+	//}
+	//else {
+	double newSetpoint_C, temp;
+	if (units == UNITS_C) {
+		newSetpoint_C = newSetpoint;
+	}
+	else if (units == UNITS_F) {
+		newSetpoint_C = F_TO_C(newSetpoint);
+	}
+	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Unwilling to set setpoint for your currently selected model.  \n");
+			msg("Incorrect unit specification for setSetpoint.  \n");
 		}
 		return HPWH_ABORT;
 	}
-	else {
-		double newSetpoint_C, temp;
-		if (units == UNITS_C) {
-			newSetpoint_C = newSetpoint;
+	if (!isNewSetpointPossible(newSetpoint_C, temp)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C.\n", temp);
 		}
-		else if (units == UNITS_F) {
-			newSetpoint_C = (F_TO_C(newSetpoint));
-		}
-		else {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Incorrect unit specification for setSetpoint.  \n");
-			}
-			return HPWH_ABORT;
-		}
-		if (!isNewSetpointPossible(newSetpoint_C, temp)) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C.\n", temp);
-			}
-			return HPWH_ABORT;
-		}
-
-		setpoint_C = newSetpoint_C;
+		return HPWH_ABORT;
 	}
+
+	setpoint_C = newSetpoint_C;
+	//}
 	return 0;
 }
 
@@ -871,47 +871,62 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 		newSetpoint_C = newSetpoint;
 	}
 	else if (units == UNITS_F) {
-		newSetpoint_C = F_TO_C(setpoint_C);
+		newSetpoint_C = F_TO_C(newSetpoint);
+	} else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getSetpoint. \n");
+		}
+		return false;
 	}
-
 	bool returnVal = false;
 
-	if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
+	if (isSetpointFixed()) {
+		returnVal = (newSetpoint == setpoint_C);
+		maxAllowedSetpoint_C = setpoint_C;
 
-		maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
-
-		if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
-			}
-			returnVal = false;
-		}
-		else {
-			returnVal = true;
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The set point is fixed for the currently selected model. \n");
 		}
 	}
-	if (lowestElementIndex >= 0) {  // If there's a resistance element lets check the new setpoint against the its max setpoint
-		maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
+	else {
 
-		if (newSetpoint_C > maxAllowedSetpoint_C) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("The resistance elements cannot produce water this hot \n");
+		if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
+
+			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
+
+			if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
+				}
+				returnVal = false;
 			}
-			returnVal = false;
-		}
-		else {
-			returnVal = true;
-		}
-	}
-	else if (lowestElementIndex == -1 && compressorIndex == -1) { // There are no heat sources here!
-		if (hpwhModel == MODELS_StorageTank) {
-			returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
-		}
-		else {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("There aren't any heat sources to check the new setpoint against! \n");
+			else {
+				returnVal = true;
 			}
-			returnVal = false;
+		}
+		if (lowestElementIndex >= 0) {  // If there's a resistance element lets check the new setpoint against the its max setpoint
+			maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
+
+			if (newSetpoint_C > maxAllowedSetpoint_C) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("The resistance elements cannot produce water this hot \n");
+				}
+				returnVal = false;
+			}
+			else {
+				returnVal = true;
+			}
+		}
+		else if (lowestElementIndex == -1 && compressorIndex == -1) { // There are no heat sources here!
+			if (hpwhModel == MODELS_StorageTank) {
+				returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
+			}
+			else {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("There aren't any heat sources to check the new setpoint against! \n");
+				}
+				returnVal = false;
+			}
 		}
 	}
 
@@ -919,7 +934,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 		maxAllowedSetpoint = maxAllowedSetpoint_C;
 	}
 	else if (units == UNITS_F) {
-		maxAllowedSetpoint = F_TO_C(maxAllowedSetpoint_C);
+		maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
 	}
 
 	return returnVal;
