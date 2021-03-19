@@ -780,6 +780,9 @@ class HPWH::HeatSource {
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
+  double fractToMeetComparisonExternal();
+  /**< calculates the distance the current state is from the shutOff logic for external configurations*/
+
 	void addHeat(double externalT_C, double minutesToRun);
   /**< adds heat to the hpwh - this is the function that interprets the
       various configurations (internal/external, resistance/heat pump) to add heat */

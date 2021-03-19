@@ -2629,6 +2629,50 @@ bool HPWH::HeatSource::maxedOut() const {
 	return maxed;
 }
 
+double HPWH::HeatSource::fractToMeetComparisonExternal(){
+	double frac, fracTemp, comparison, sum, totWeight;
+	int calcNode;
+
+	frac = 100;
+	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
+			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
+		}
+
+		if (shutOffLogicSet[i].isAbsolute) {
+			comparison = shutOffLogicSet[i].decisionPoint;
+		}
+		else {
+			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
+		}
+		comparison += HEATDIST_MINVALUE; // Make this possible so we do slightly over heat
+
+		sum = 0;
+		totWeight = 0;
+
+		for (auto nodeWeight : shutOffLogicSet[i].nodeWeights) {
+			// bottom calc node only
+			if (nodeWeight.nodeNum == 0) { // simple equation
+				calcNode = 0;
+				sum = hpwh->tankTemps_C[calcNode];
+				totWeight = nodeWeight.weight;
+			}
+			else { // have to tally up the nodes
+				// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
+				for (int n = 0; n < hpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
+					calcNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity + n;
+					sum += hpwh->tankTemps_C[calcNode] * nodeWeight.weight;
+					totWeight += nodeWeight.weight;
+				}
+			}
+		}
+		fracTemp = (totWeight * comparison - sum) / (hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[0]);
+		frac = fracTemp < frac ? fracTemp : frac;
+	}
+
+	return frac < HEATDIST_MINVALUE ? 0 : frac;
+}
+
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ = 0.0;
 
@@ -3034,7 +3078,7 @@ bool HPWH::HeatSource::isAResistance() const {
 }
 
 double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop) {
-	double heatingCapacity_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac;
+	double heatingCapacity_kJ, heatingCapacityNeeded_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac, fractToShutOff;
 	double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
 	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 	double timeRemaining_min = minutesToRun;
@@ -3061,7 +3105,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
 		}
-
+		
 		//calculate what percentage of the bottom node can be heated to setpoint
 		//with amount of heat available this timestep
 		deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
@@ -3078,15 +3122,24 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
 		}
+
+		fractToShutOff = fractToMeetComparisonExternal();
+		if (fractToShutOff < 1 && fractToShutOff < nodeFrac) {
+			nodeFrac = fractToShutOff;
+			heatingCapacityNeeded_kJ = nodeFrac * nodeHeat_kJperNode;
+
+			timeUsed_min = (heatingCapacityNeeded_kJ / heatingCapacity_kJ)*timeRemaining_min;
+			timeRemaining_min -= timeUsed_min;
+		}
 		//if more than one, round down to 1 and subtract the amount of time it would
 		//take to heat that node from the timeRemaining
-		if (nodeFrac > 1) {
+		else if (nodeFrac > 1) {
 			nodeFrac = 1;
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
 		//otherwise just the fraction available
-		//this should make heatingCapacity == 0  if nodeFrac < 1
+		//this should make heatingCapacity == 0 if nodeFrac < 1
 		else {
 			timeUsed_min = timeRemaining_min;
 			timeRemaining_min = 0;
