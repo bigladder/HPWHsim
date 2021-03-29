@@ -2223,7 +2223,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}, standbyLogic(NULL)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2257,6 +2257,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
+	standbyLogic = hSource.standbyLogic;
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
@@ -2315,6 +2316,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
+	standbyLogic = hSource.standbyLogic;
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
@@ -2541,8 +2543,26 @@ bool HPWH::HeatSource::shouldHeat() const {
 		}
 
 		if (turnOnLogicSet[i].compare(average, comparison)) {
-			shouldEngage = true;
+			if (turnOnLogicSet[i].description == "standby" && standbyLogic != NULL) {
+				double comparisonStandby;
+				double avgStandby = hpwh->tankAvg_C(standbyLogic->nodeWeights);
+				if (standbyLogic->isAbsolute) {
+					comparisonStandby = standbyLogic->decisionPoint;
+				}
+				else {
+					comparisonStandby = hpwh->setpoint_C - standbyLogic->decisionPoint;
+				}
+				if (turnOnLogicSet[i].compare(avgStandby, comparisonStandby)) {
+					shouldEngage = true;
+				}
+			}
+			else{
+				shouldEngage = true;
+			}
+		}
 
+		//quit searching the logics if one of them turns it on
+		if (shouldEngage) {
 			//debugging message handling
 			if (hpwh->hpwhVerbosity >= VRB_typical) {
 				hpwh->msg("engages!\n");
@@ -2550,10 +2570,8 @@ bool HPWH::HeatSource::shouldHeat() const {
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
 			}
+			break;
 		}
-
-		//quit searching the logics if one of them turns it on
-		if (shouldEngage) break;
 
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("returns: %d \t", shouldEngage);
@@ -2670,7 +2688,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 		frac = fracTemp < frac ? fracTemp : frac;
 	}
 
-	return frac < HEATDIST_MINVALUE ? 0 : frac;
+	return frac < HEATDIST_MINVALUE ? 0. : frac;
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
@@ -3720,7 +3738,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				setOfSources[heatsource].maxT = tempDouble;
 			}
-			else if (token == "onlogic" || token == "offlogic") {
+			else if (token == "onlogic" || token == "offlogic" || token == "standbylogic" ) {
 				line_ss >> tempString;
 				if (tempString == "nodes") {
 					std::vector<int> nodeNums;
@@ -3798,8 +3816,11 @@ int HPWH::HPWHinit_file(string configFile) {
 					if (token == "onlogic") {
 						setOfSources[heatsource].addTurnOnLogic(logic);
 					}
-					else { // "offlogic"
+					else if (token == "offlogic") {
 						setOfSources[heatsource].addShutOffLogic(logic);
+					} 
+					else { // standby logic
+						setOfSources[heatsource].standbyLogic = new HPWH::HeatingLogic("standby logic", nodeWeights, tempDouble, absolute, compare);
 					}
 				}
 				else if (token == "onlogic") {
