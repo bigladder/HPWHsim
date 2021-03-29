@@ -36,7 +36,7 @@ class HPWH {
   static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12
   //change at your own risk */
   static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-  static const float HEATDIST_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
+  static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
   //this saves on computations */
   static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
@@ -780,6 +780,9 @@ class HPWH::HeatSource {
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
+  double fractToMeetComparisonExternal();
+  /**< calculates the distance the current state is from the shutOff logic for external configurations*/
+
 	void addHeat(double externalT_C, double minutesToRun);
   /**< adds heat to the hpwh - this is the function that interprets the
       various configurations (internal/external, resistance/heat pump) to add heat */
@@ -867,6 +870,8 @@ class HPWH::HeatSource {
 	std::vector<HeatingLogic> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
 	std::vector<HeatingLogic> shutOffLogicSet;
+	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
+	HeatingLogic *standbyLogic;
 
 	struct defrostPoint {
 		double T_F;
@@ -885,7 +890,7 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
-  
+
   void changeResistanceWatts(double watts);
   /**< function to change the resistance wattage */
 
