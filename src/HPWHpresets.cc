@@ -1174,6 +1174,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
 		if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden120) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+
+			std::vector<NodeWeight> nodeWeightStandby;
+			nodeWeightStandby.emplace_back(0);
+			compressor.standbyLogic = new HPWH::HeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
 		}
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
@@ -1249,13 +1253,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
+		std::vector<NodeWeight> nodeWeightStandby;
+		nodeWeightStandby.emplace_back(0);
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(113), true));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+		compressor.standbyLogic = new HPWH::HeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
+		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom twelth absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places

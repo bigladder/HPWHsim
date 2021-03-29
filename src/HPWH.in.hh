@@ -870,6 +870,8 @@ class HPWH::HeatSource {
 	std::vector<HeatingLogic> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
 	std::vector<HeatingLogic> shutOffLogicSet;
+	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
+	HeatingLogic *standbyLogic;
 
 	struct defrostPoint {
 		double T_F;
@@ -888,7 +890,7 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
-  
+
   void changeResistanceWatts(double watts);
   /**< function to change the resistance wattage */
 

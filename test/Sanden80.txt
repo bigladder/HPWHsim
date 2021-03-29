@@ -70,3 +70,5 @@ heatsource 0 onlogic nodes 8 absolute < 113 F
 heatsource 0 onlogic standby 8.2639 F
 
 heatsource 0 offlogic nodes 1 absolute > 135 F
+
+heatsource 0 standbylogic nodes 0 absolute > 113 F
