@@ -54,7 +54,7 @@ using std::string;
 const float HPWH::DENSITYWATER_kgperL = 0.995f;
 const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.180f;
-const float HPWH::HEATDIST_MINVALUE = 0.0001f;
+const float HPWH::TOL_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const float HPWH::ASPECTRATIO = 4.75f;
 
@@ -2223,7 +2223,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}, standbyLogic(NULL)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2257,6 +2257,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
+	standbyLogic = hSource.standbyLogic;
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
@@ -2315,6 +2316,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
 	shutOffLogicSet = hSource.shutOffLogicSet;
+	standbyLogic = hSource.standbyLogic;
 
 	minT = hSource.minT;
 	maxT = hSource.maxT;
@@ -2541,8 +2543,26 @@ bool HPWH::HeatSource::shouldHeat() const {
 		}
 
 		if (turnOnLogicSet[i].compare(average, comparison)) {
-			shouldEngage = true;
+			if (turnOnLogicSet[i].description == "standby" && standbyLogic != NULL) {
+				double comparisonStandby;
+				double avgStandby = hpwh->tankAvg_C(standbyLogic->nodeWeights);
+				if (standbyLogic->isAbsolute) {
+					comparisonStandby = standbyLogic->decisionPoint;
+				}
+				else {
+					comparisonStandby = hpwh->setpoint_C - standbyLogic->decisionPoint;
+				}
+				if (turnOnLogicSet[i].compare(avgStandby, comparisonStandby)) {
+					shouldEngage = true;
+				}
+			}
+			else{
+				shouldEngage = true;
+			}
+		}
 
+		//quit searching the logics if one of them turns it on
+		if (shouldEngage) {
 			//debugging message handling
 			if (hpwh->hpwhVerbosity >= VRB_typical) {
 				hpwh->msg("engages!\n");
@@ -2550,10 +2570,8 @@ bool HPWH::HeatSource::shouldHeat() const {
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
 			}
+			break;
 		}
-
-		//quit searching the logics if one of them turns it on
-		if (shouldEngage) break;
 
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("returns: %d \t", shouldEngage);
@@ -2627,6 +2645,50 @@ bool HPWH::HeatSource::maxedOut() const {
 		}
 	}
 	return maxed;
+}
+
+double HPWH::HeatSource::fractToMeetComparisonExternal(){
+	double frac, fracTemp, comparison, sum, totWeight;
+	int calcNode;
+
+	frac = 100;
+	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
+		if (hpwh->hpwhVerbosity >= VRB_emetic) {
+			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
+		}
+
+		if (shutOffLogicSet[i].isAbsolute) {
+			comparison = shutOffLogicSet[i].decisionPoint;
+		}
+		else {
+			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
+		}
+		comparison += TOL_MINVALUE; // Make this possible so we do slightly over heat
+
+		sum = 0;
+		totWeight = 0;
+
+		for (auto nodeWeight : shutOffLogicSet[i].nodeWeights) {
+			// bottom calc node only
+			if (nodeWeight.nodeNum == 0) { // simple equation
+				calcNode = 0;
+				sum = hpwh->tankTemps_C[calcNode];
+				totWeight = nodeWeight.weight;
+			}
+			else { // have to tally up the nodes
+				// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
+				for (int n = 0; n < hpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
+					calcNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity + n;
+					sum += hpwh->tankTemps_C[calcNode] * nodeWeight.weight;
+					totWeight += nodeWeight.weight;
+				}
+			}
+		}
+		fracTemp = (totWeight * comparison - sum) / (hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[0]);
+		frac = fracTemp < frac ? fracTemp : frac;
+	}
+
+	return frac < TOL_MINVALUE ? 0. : frac;
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
@@ -2727,7 +2789,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 			distribution[i] = 0.0;
 		}
 		//this gives a very slight speed improvement (milliseconds per simulated year)
-		if (distribution[i] < HEATDIST_MINVALUE) {
+		if (distribution[i] < TOL_MINVALUE) {
 			distribution[i] = 0;
 		}
 	}
@@ -3034,7 +3096,7 @@ bool HPWH::HeatSource::isAResistance() const {
 }
 
 double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop) {
-	double heatingCapacity_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac;
+	double heatingCapacity_kJ, heatingCapacityNeeded_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac, fractToShutOff;
 	double inputTemp_BTUperHr = 0, capTemp_BTUperHr = 0, copTemp = 0;
 	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 	double timeRemaining_min = minutesToRun;
@@ -3061,7 +3123,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
 		}
-
+		
 		//calculate what percentage of the bottom node can be heated to setpoint
 		//with amount of heat available this timestep
 		deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
@@ -3078,15 +3140,24 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("nodeHeat_kJperNode: %.2lf nodeFrac: %.2lf \n\n", nodeHeat_kJperNode, nodeFrac);
 		}
+
+		fractToShutOff = fractToMeetComparisonExternal();
+		if (fractToShutOff < 1 && fractToShutOff < nodeFrac) {
+			nodeFrac = fractToShutOff;
+			heatingCapacityNeeded_kJ = nodeFrac * nodeHeat_kJperNode;
+
+			timeUsed_min = (heatingCapacityNeeded_kJ / heatingCapacity_kJ)*timeRemaining_min;
+			timeRemaining_min -= timeUsed_min;
+		}
 		//if more than one, round down to 1 and subtract the amount of time it would
 		//take to heat that node from the timeRemaining
-		if (nodeFrac > 1) {
+		else if (nodeFrac > 1) {
 			nodeFrac = 1;
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
 		//otherwise just the fraction available
-		//this should make heatingCapacity == 0  if nodeFrac < 1
+		//this should make heatingCapacity == 0 if nodeFrac < 1
 		else {
 			timeUsed_min = timeRemaining_min;
 			timeRemaining_min = 0;
@@ -3667,7 +3738,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				setOfSources[heatsource].maxT = tempDouble;
 			}
-			else if (token == "onlogic" || token == "offlogic") {
+			else if (token == "onlogic" || token == "offlogic" || token == "standbylogic" ) {
 				line_ss >> tempString;
 				if (tempString == "nodes") {
 					std::vector<int> nodeNums;
@@ -3745,8 +3816,11 @@ int HPWH::HPWHinit_file(string configFile) {
 					if (token == "onlogic") {
 						setOfSources[heatsource].addTurnOnLogic(logic);
 					}
-					else { // "offlogic"
+					else if (token == "offlogic") {
 						setOfSources[heatsource].addShutOffLogic(logic);
+					} 
+					else { // standby logic
+						setOfSources[heatsource].standbyLogic = new HPWH::HeatingLogic("standby logic", nodeWeights, tempDouble, absolute, compare);
 					}
 				}
 				else if (token == "onlogic") {
