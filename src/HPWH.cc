@@ -54,7 +54,7 @@ using std::string;
 const float HPWH::DENSITYWATER_kgperL = 0.995f;
 const float HPWH::KWATER_WpermC = 0.62f;
 const float HPWH::CPWATER_kJperkgC = 4.180f;
-const float HPWH::HEATDIST_MINVALUE = 0.0001f;
+const float HPWH::TOL_MINVALUE = 0.0001f;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const float HPWH::ASPECTRATIO = 4.75f;
 
@@ -2663,7 +2663,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 		else {
 			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
 		}
-		comparison += HEATDIST_MINVALUE; // Make this possible so we do slightly over heat
+		comparison += TOL_MINVALUE; // Make this possible so we do slightly over heat
 
 		sum = 0;
 		totWeight = 0;
@@ -2688,7 +2688,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 		frac = fracTemp < frac ? fracTemp : frac;
 	}
 
-	return frac < HEATDIST_MINVALUE ? 0. : frac;
+	return frac < TOL_MINVALUE ? 0. : frac;
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
@@ -2789,7 +2789,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 			distribution[i] = 0.0;
 		}
 		//this gives a very slight speed improvement (milliseconds per simulated year)
-		if (distribution[i] < HEATDIST_MINVALUE) {
+		if (distribution[i] < TOL_MINVALUE) {
 			distribution[i] = 0;
 		}
 	}

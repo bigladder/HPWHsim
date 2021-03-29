@@ -36,7 +36,7 @@ class HPWH {
   static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12
   //change at your own risk */
   static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-  static const float HEATDIST_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
+  static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
   //this saves on computations */
   static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
