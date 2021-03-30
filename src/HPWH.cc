@@ -1788,6 +1788,71 @@ int HPWH::getHPWHModel() const {
 	return hpwhModel;
 }
 
+
+void HPWH::getSizingFractions(double &aquafract, double &percentUseable) const {
+	double aFract = 1.;
+	double useFract = 1.;
+
+	// Every compressor must have at least one onlogic
+	for( auto onLogic : setOfSources[compressorIndex].turnOnLogicSet){ 
+		double tempA;
+
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg("\tturnon logic: %s ", onLogic.description.c_str());
+		}
+		tempA = nodeWeightAvgFract(onLogic); // if standby logic will return 1
+		aFract = tempA < aFract ? tempA: aFract;
+	}
+	aquafract = aFract;
+
+	if (size(setOfSources[compressorIndex].shutOffLogicSet) != 0) {
+		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
+			double tempUse;
+
+			if (hpwhVerbosity >= VRB_emetic) {
+				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
+			}
+			if (offLogic.description == "largeDraw" || offLogic.description == "largerDraw") {
+				tempUse = 1.; // These logics are just for checking if there's a big draw to switch to RE
+			}
+			else {
+				tempUse = 1. - nodeWeightAvgFract(offLogic);
+			}
+			useFract = tempUse < useFract ? tempUse : useFract; // Will return the smallest case of the useable fraction for multiple off logics
+		}
+		percentUseable = useFract;
+	}
+	else {
+		if (hpwhVerbosity >= VRB_emetic) {
+			msg("\no shutoff logics present");
+		}
+		percentUseable = 1.;
+	}
+}
+
+double HPWH::nodeWeightAvgFract(HPWH::HeatingLogic logic) const {
+	double logicNode;
+	double calcNodes = 0, totWeight = 0;
+
+	for (auto nodeWeight : logic.nodeWeights) {
+		// bottom calc node only
+		if (nodeWeight.nodeNum == 0) { // simple equation
+			return 1. / (double) numNodes;
+		}
+		// top calc node only
+		else if (nodeWeight.nodeNum == 13) {
+			return 1.;
+		}
+		else { // have to tally up the nodes
+			calcNodes += nodeWeight.nodeNum * nodeWeight.weight;
+			totWeight += nodeWeight.weight;
+		}
+	}
+	logicNode = calcNodes / totWeight;
+
+	return logicNode / (double)CONDENSITY_SIZE;
+}
+
 bool HPWH::isHPWHScalable() const {
 	return canScale;
 }
