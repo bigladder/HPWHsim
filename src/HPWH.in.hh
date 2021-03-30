@@ -540,6 +540,12 @@ class HPWH {
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
+  void getSizingFractions(double &aquafract, double &percentUseable) const;
+  /**< returns the fraction of total tank volume from the bottom up where the aquastat is
+  or the turn on logic for the compressor, and the USEable fraction of storage or 1 minus
+  where the shut off logic is for the compressor. If the logic spans multiple nodes it 
+  returns the weighted average of the nodes */
+
   bool isHPWHScalable() const;
   /**< returns if the HPWH is scalable or not*/
 
@@ -573,8 +579,9 @@ class HPWH {
 	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
-
 	/**< functions to calculate what the temperature in a portion of the tank is  */
+  double nodeWeightAvgFract(HeatingLogic logic) const;
+  /**< function to calculate where the average node for a logic set is. */
 
   void calcDerivedValues();
 	/**< a helper function for the inits, calculating condentropy and the lowest node  */
