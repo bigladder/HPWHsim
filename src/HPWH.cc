@@ -313,7 +313,7 @@ int HPWH::runOneStep(double drawVolume_L,
 		if (((DRstatus & DR_TOO) != 0 || (DRstatus & DR_TOT) != 0 ) && timerTOT == 0) { 
 
 			// turn on the compressor and last resistance element. 
-			if (compressorIndex >= 0) {
+			if (hasACompressor()) {
 				setOfSources[compressorIndex].engageHeatSource(DRstatus);
 			}
 			if (lowestElementIndex >= 0) {
@@ -350,7 +350,7 @@ int HPWH::runOneStep(double drawVolume_L,
 					}
 					if (setOfSources[i].shouldHeat()) {
 						if (shouldDRLockOut(setOfSources[i].typeOfHeatSource, DRstatus)) {
-							if (compressorIndex >= 0) {
+							if (hasACompressor()) {
 								setOfSources[compressorIndex].engageHeatSource(DRstatus);
 								break;
 							}
@@ -890,7 +890,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	}
 	else {
 
-		if (compressorIndex >= 0) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
+		if (hasACompressor()) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
 
 			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
 
@@ -917,7 +917,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 				returnVal = true;
 			}
 		}
-		else if (lowestElementIndex == -1 && compressorIndex == -1) { // There are no heat sources here!
+		else if (lowestElementIndex == -1 && !hasACompressor()) { // There are no heat sources here!
 			if (hpwhModel == MODELS_StorageTank) {
 				returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
 			}
@@ -941,7 +941,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 }
 
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
-	if (compressorIndex == -1) {
+	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("No compressor found in this HPWH. \n");
 		}
@@ -1544,7 +1544,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 	double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
 	double airTemp_C, inletTemp_C, outTemp_C;
 
-	if (compressorIndex == -1) {
+	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Current model does not have a compressor.  \n");
 		}
@@ -1788,26 +1788,68 @@ int HPWH::getHPWHModel() const {
 	return hpwhModel;
 }
 
+bool HPWH::hasACompressor() const {
+	return compressorIndex >= 0;
+}
 
-void HPWH::getSizingFractions(double &aquafract, double &percentUseable) const {
+double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const {
+
+	if (hasACompressor()) {
+		double min_minutes = 10.;
+
+		if (units == UNITS_MIN) {
+			return min_minutes;
+		}
+		else if (units == UNITS_SEC) {
+			return MIN_TO_SEC(min_minutes);
+		}
+		else if (units == UNITS_HR) {
+			return MIN_TO_HR(min_minutes);
+		}
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect unit specification for getCompressorMinRunTime.  \n");
+			}
+			return (double)HPWH_ABORT;
+		}
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("This HPWH has no compressor.  \n");
+		}
+		return (double)HPWH_ABORT;
+	}
+}
+
+
+int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 	double aFract = 1.;
 	double useFract = 1.;
 
-	// Every compressor must have at least one onlogic
-	for( auto onLogic : setOfSources[compressorIndex].turnOnLogicSet){ 
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	// Every compressor must have at least one on logic
+	for( auto onLogic : setOfSources[compressorIndex].turnOnLogicSet) {
 		double tempA;
 
 		if (hpwhVerbosity >= VRB_emetic) {
 			msg("\tturnon logic: %s ", onLogic.description.c_str());
 		}
 		tempA = nodeWeightAvgFract(onLogic); // if standby logic will return 1
-		aFract = tempA < aFract ? tempA: aFract;
+		aFract = tempA < aFract ? tempA : aFract;
 	}
-	aquafract = aFract;
+	aquaFract = aFract;
 
-	if (size(setOfSources[compressorIndex].shutOffLogicSet) != 0) {
+	// Compressors don't need to have an off logic
+	if (setOfSources[compressorIndex].shutOffLogicSet.size() != 0) {
 		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
-			double tempUse;
+		
+		double tempUse;
 
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
@@ -1820,14 +1862,15 @@ void HPWH::getSizingFractions(double &aquafract, double &percentUseable) const {
 			}
 			useFract = tempUse < useFract ? tempUse : useFract; // Will return the smallest case of the useable fraction for multiple off logics
 		}
-		percentUseable = useFract;
+		useableFract = useFract;
 	}
 	else {
 		if (hpwhVerbosity >= VRB_emetic) {
 			msg("\no shutoff logics present");
 		}
-		percentUseable = 1.;
+		useableFract = 1.;
 	}
+	return 0;
 }
 
 double HPWH::nodeWeightAvgFract(HPWH::HeatingLogic logic) const {
@@ -1848,6 +1891,7 @@ double HPWH::nodeWeightAvgFract(HPWH::HeatingLogic logic) const {
 			totWeight += nodeWeight.weight;
 		}
 	}
+	
 	logicNode = calcNodes / totWeight;
 
 	return logicNode / (double)CONDENSITY_SIZE;
@@ -1864,7 +1908,7 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 		}
 		return HPWH_ABORT;
 	}
-	if (compressorIndex == -1) {
+	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Current model does not have a compressor.  \n");
 		}
@@ -2716,7 +2760,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 	double frac, fracTemp, comparison, sum, totWeight;
 	int calcNode;
 
-	frac = 100;
+	frac = 1.;
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
@@ -3587,9 +3631,23 @@ int HPWH::checkInputs() {
 				}
 			}
 		}
-
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL &&
+			setOfSources[i].shutOffLogicSet.size() != 1) {
+			msg("External heat sources can only have one shut off logic");
+			returnVal = HPWH_ABORT;
+		}
 	}
-	
+
+	// Check that the on logic and off logics are ordered properly 
+	if (hasACompressor()) {
+		double aquaF = 0., useF = 1.;
+		getSizingFractions(aquaF, useF);
+		if (aquaF < (1. - useF)) {
+			msg("The realationship between the on logic and off logic is not supported. The off logic is beneath the on logic.");
+			returnVal = HPWH_ABORT;
+		}
+	}
+
 	double maxTemp;
 	double tempSetpoint = setpoint_C;
 	if (!isNewSetpointPossible(tempSetpoint, maxTemp)) {
