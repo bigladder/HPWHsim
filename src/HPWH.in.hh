@@ -204,6 +204,9 @@ class HPWH {
 	UNITS_M,		  /**< meters */
 	UNITS_FT2,		  /**< square feet  */
 	UNITS_M2,		  /**< square meters */
+	UNITS_MIN,		  /**< minutes */
+	UNITS_SEC,		  /**< seconds  */
+	UNITS_HR,		  /**< hours */
   };		  
 
   /** specifies the type of heat source  */
@@ -540,7 +543,12 @@ class HPWH {
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
-  void getSizingFractions(double &aquafract, double &percentUseable) const;
+  bool hasACompressor() const;
+/**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
+
+  double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
+
+  int getSizingFractions(double &aquafract, double &percentUseable) const;
   /**< returns the fraction of total tank volume from the bottom up where the aquastat is
   or the turn on logic for the compressor, and the USEable fraction of storage or 1 minus
   where the shut off logic is for the compressor. If the logic spans multiple nodes it 
@@ -991,6 +999,9 @@ inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
+
+inline double MIN_TO_SEC(double minute) { return minute * 60.; }
+inline double MIN_TO_HR(double minute) { return minute / 60.; }
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {
