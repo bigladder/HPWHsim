@@ -2757,10 +2757,11 @@ bool HPWH::HeatSource::maxedOut() const {
 }
 
 double HPWH::HeatSource::fractToMeetComparisonExternal(){
-	double frac, fracTemp, comparison, sum, totWeight;
+	double fracTemp, comparison, sum, totWeight, diff;
+	double frac = 1.;
 	int calcNode;
+	int firstNode = -1;
 
-	frac = 1.;
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
@@ -2781,11 +2782,20 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 			// bottom calc node only
 			if (nodeWeight.nodeNum == 0) { // simple equation
 				calcNode = 0;
-				sum = hpwh->tankTemps_C[calcNode];
+				firstNode = 0;
+				sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
+				totWeight = nodeWeight.weight;
+			}
+			// top calc node only
+			else if (nodeWeight.nodeNum == 13) {
+				calcNode = hpwh->numNodes - 1;
+				firstNode = hpwh->numNodes - 1;
+				sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
 				totWeight = nodeWeight.weight;
 			}
 			else { // have to tally up the nodes
 				// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
+				firstNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity;
 				for (int n = 0; n < hpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
 					calcNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity + n;
 					sum += hpwh->tankTemps_C[calcNode] * nodeWeight.weight;
@@ -2793,11 +2803,28 @@ double HPWH::HeatSource::fractToMeetComparisonExternal(){
 				}
 			}
 		}
-		fracTemp = (totWeight * comparison - sum) / (hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[0]);
+
+		if (calcNode == hpwh->numNodes - 1) { // top node calc
+			diff = hpwh->getSetpoint() - hpwh->tankTemps_C[firstNode];
+		}
+		else {
+			diff = hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[firstNode];
+		}
+		// if totWeight * comparison - sum < 0 then the shutoff condition is already true and you shouldn't
+		// be here. Will revaluate shut off condition at the end the do while loop of addHeatExternal, in the
+		// mean time lets not shift anything around. 
+		if (shutOffLogicSet[i].compare(sum, totWeight * comparison)) { // Then should shut off
+			fracTemp = 0.; // 0 means shift no nodes
+		}
+		else {
+			// if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care about, so 
+			// shift a whole node.
+			fracTemp = diff > 0. ? (totWeight * comparison - sum) / diff : 1.;
+		}
 		frac = fracTemp < frac ? fracTemp : frac;
 	}
 
-	return frac < TOL_MINVALUE ? 0. : frac;
+	return frac;
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
