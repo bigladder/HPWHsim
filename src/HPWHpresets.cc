@@ -1174,7 +1174,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
 		if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden120) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
-
+			// Adds a bonus standby logic so the external heater does not cycle, recommended for any external heater with standby
 			std::vector<NodeWeight> nodeWeightStandby;
 			nodeWeightStandby.emplace_back(0);
 			compressor.standbyLogic = new HPWH::HeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
