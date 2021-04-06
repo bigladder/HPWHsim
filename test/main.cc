@@ -17,7 +17,6 @@
 #include <algorithm>    // std::max
 
 #define MAX_DIR_LENGTH 255
-#define DEBUG 0
 
 using std::cout;
 using std::endl;
@@ -65,9 +64,9 @@ int main(int argc, char *argv[])
   string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
 //  string strHead = "minutes,Ta,Tsetpoint,inletT,draw,condenserT,";
   
-  if (DEBUG) {
-	 hpwh.setVerbosity(HPWH::VRB_reluctant);
-  }
+#if defined _DEBUG
+  hpwh.setVerbosity(HPWH::VRB_reluctant);
+#endif
 
   //.......................................
   //process command line arguments
@@ -116,7 +115,11 @@ int main(int argc, char *argv[])
   if(input1 == "Preset") {
     inputFile = "";
     
-	getHPWHObject(hpwh, input2);
+	if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT) {
+		cout << "Error, preset model did not initialize.\n";
+		exit(1);
+	}
+
 	model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
 
     if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
@@ -262,9 +265,9 @@ int main(int argc, char *argv[])
   // Loop over the minutes in the test
   for (i = 0; i < minutesToRun; i++) {
 
-	  if (DEBUG) {
-		  cout << "Now on minute: " << i << "\n";
-	  }
+#if defined _DEBUG && 0
+	  cout << "Now on minute: " << i << "\n";
+#endif
 
 	  if (HPWH_doTempDepress) {
 		  airTemp2 = F_TO_C(airTemp);
@@ -432,13 +435,6 @@ int readSchedule(schedule &scheduleArray, string scheduleFileName, long minutesO
 			}
 		}
   }
-  
-  //print out the whole schedule
-// if(DEBUG == 1){
-//   for(i = 0; (unsigned)i < scheduleArray.size(); i++){
-//     cout << "scheduleArray[" << i << "] = " << scheduleArray[i] << "\n";
-//   }
-// }
 
   inputFile.close();
 
