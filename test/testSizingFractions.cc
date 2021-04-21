@@ -21,6 +21,7 @@ void testSandenSizingFract();
 void testColmacSizingFract();
 void testHPTU50SizingFract();
 void test220eSizingFract();
+void testGESizingFract();
 void testResTankSizingFract();
 void testStoTankSizingFract();
 void testGetCompressorMinRuntime();
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
 	testColmacSizingFract();
 	testHPTU50SizingFract();
 	test220eSizingFract();
+	testGESizingFract();
 	testResTankSizingFract();
 	testStoTankSizingFract();
 
@@ -88,6 +90,20 @@ void testHPTU50SizingFract() {
 	double AF_answer = (1. + 2. + 3. + 4.) / 4. / SIZE;
 
 	string input = "AOSmithHPTU50"; // Just a compressor with R134A
+	getHPWHObject(hpwh, input); 	// get preset model 
+
+	int val = hpwh.getSizingFractions(AF, pU);
+	ASSERTTRUE(val == 0);
+	ASSERTTRUE(cmpd(AF, AF_answer));
+	ASSERTTRUE(cmpd(pU, 1.));
+}
+
+void testGESizingFract() {
+	HPWH hpwh;
+	double AF, pU;
+	double AF_answer = (1. + 2. + 3. + 4.) / 4. / SIZE;
+
+	string input = "GE"; // Just a compressor with R134A
 	getHPWHObject(hpwh, input); 	// get preset model 
 
 	int val = hpwh.getSizingFractions(AF, pU);
