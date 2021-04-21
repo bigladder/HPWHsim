@@ -3669,8 +3669,10 @@ int HPWH::checkInputs() {
 	if (hasACompressor()) {
 		double aquaF = 0., useF = 1.;
 		getSizingFractions(aquaF, useF);
-		if (aquaF < (1. - useF)) {
-			msg("The realationship between the on logic and off logic is not supported. The off logic is beneath the on logic.");
+		if (aquaF < (1. - useF - TOL_MINVALUE)) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The relationship between the on logic and off logic is not supported. The off logic is beneath the on logic.");
+			}
 			returnVal = HPWH_ABORT;
 		}
 	}
