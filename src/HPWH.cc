@@ -1854,7 +1854,7 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
 			}
-			if (offLogic.description == "largeDraw" || offLogic.description == "largerDraw") {
+			if (offLogic.description == "large draw" || offLogic.description == "larger draw") {
 				tempUse = 1.; // These logics are just for checking if there's a big draw to switch to RE
 			}
 			else {
@@ -1870,6 +1870,14 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 		}
 		useableFract = 1.;
 	}
+
+	// Check if double's are approximately equally and adjust the relationship so it follows the relationship we expect. 
+	// The tolerance plays with 0.1 mm in position if the tank is 1m tall...
+	double temp = 1. - useableFract;
+	if (aboutEqual(aquaFract, temp)) {
+		useableFract = 1. - aquaFract + TOL_MINVALUE;
+	}
+
 	return 0;
 }
 
@@ -3669,7 +3677,7 @@ int HPWH::checkInputs() {
 	if (hasACompressor()) {
 		double aquaF = 0., useF = 1.;
 		getSizingFractions(aquaF, useF);
-		if (aquaF < (1. - useF - TOL_MINVALUE)) {
+		if (aquaF < (1. - useF)) {
 			if (hpwhVerbosity >= VRB_reluctant) {
 				msg("The relationship between the on logic and off logic is not supported. The off logic is beneath the on logic.");
 			}

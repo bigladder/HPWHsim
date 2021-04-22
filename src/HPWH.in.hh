@@ -1008,4 +1008,6 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 	return static_cast<HPWH::DRMODES>(static_cast<int>(a) | static_cast<int>(b));
 }
 
+template< typename T> inline bool aboutEqual(T a, T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
+
 #endif
