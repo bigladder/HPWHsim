@@ -21,5 +21,11 @@ endif()
 
 find_package(Git QUIET)
 
+if (HPWHSIM_ABRIDGED)
+  add_compile_definitions( HPWH_ABRIDGED)
+endif()
+
 add_subdirectory(src)
-add_subdirectory(test)
+if (NOT HPWHSIM_OMIT_TESTTOOL)
+  add_subdirectory(test)
+endif()
