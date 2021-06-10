@@ -2865,12 +2865,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	else if (MODELS_AWHSTier3Generic50 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
+	else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_AWHSTier3Generic50) {
+		if (presetNum == MODELS_AWHSTier3Generic40) {
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 5;
+		}
+		else if (presetNum == MODELS_AWHSTier3Generic50) {
 			tankVolume_L = GAL_TO_L(45);
 			tankUA_kJperHrC = 6.5;
 		}
