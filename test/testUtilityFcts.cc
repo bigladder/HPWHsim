@@ -184,14 +184,14 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 		hpwhModel = HPWH::MODELS_TamScalable_SP;
 	}
 	// Stack in a couple scalable models
-	else if (modelName == "Tier3Generic50") {
-		hpwhModel = HPWH::MODELS_NEEATier3Generic50;
+	else if (modelName == "AWHSTier3Generic50") {
+		hpwhModel = HPWH::MODELS_AWHSTier3Generic50;
 	}
-	else if (modelName == "Tier3Generic65") {
-		hpwhModel = HPWH::MODELS_NEEATier3Generic65;
+	else if (modelName == "AWHSTier3Generic65") {
+		hpwhModel = HPWH::MODELS_AWHSTier3Generic65;
 	}
-	else if (modelName == "Tier3Generic80") {
-		hpwhModel = HPWH::MODELS_NEEATier3Generic80;
+	else if (modelName == "AWHSTier3Generic80") {
+		hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
 	}
 	else { 
 		hpwhModel = HPWH::MODELS_basicIntegrated;
