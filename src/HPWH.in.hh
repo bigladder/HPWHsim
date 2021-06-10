@@ -131,6 +131,11 @@ class HPWH {
 	  MODELS_UEF2generic = 173,   /**< UEF 2.0, modified GE2014STDMode case */
 	  MODELS_genericCustomUEF = 174,   /**< used for creating "generic" model with custom uef*/
 
+	  MODELS_AWHSTier3Generic40 = 175, /**< Generic AWHS Tier 3 50 gallons*/
+	  MODELS_AWHSTier3Generic50 = 176, /**< Generic AWHS Tier 3 50 gallons*/
+	  MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
+	  MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
+
 	  MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
 
 	  // Non-preset models

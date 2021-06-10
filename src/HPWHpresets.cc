@@ -2865,7 +2865,106 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[1].followedByHeatSource = &setOfSources[2];
 
 	}
-	// If a the model is the TamOMatic, HotTam... This model is scalable. 
+	else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		if (presetNum == MODELS_AWHSTier3Generic40) {
+			tankVolume_L = GAL_TO_L(36.1);
+			tankUA_kJperHrC = 5;
+		}
+		else if (presetNum == MODELS_AWHSTier3Generic50) {
+			tankVolume_L = GAL_TO_L(45);
+			tankUA_kJperHrC = 6.5;
+		}
+		else if (presetNum == MODELS_AWHSTier3Generic65) {
+			tankVolume_L = GAL_TO_L(64);
+			tankUA_kJperHrC = 7.6;
+		}
+		else if (presetNum == MODELS_AWHSTier3Generic80) {
+			tankVolume_L = GAL_TO_L(75.4);
+			tankUA_kJperHrC = 10.;
+		} 
+		else {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("Incorrect model specification.  \n");
+			}
+			return HPWH_ABORT;
+		}
+
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		double split = 1.0 / 4.0;
+		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+
+		//voltex60 tier 1 values
+		compressor.perfMap.reserve(2);
+
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			//{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+			{5.22288834, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			70, // Temperature (T_F)
+			{148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			//{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+			{6.84694165, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.minT = F_TO_C(42.0);
+		compressor.maxT = F_TO_C(120.);
+		compressor.hysteresis_dC = dF_TO_dC(2);
+		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+		//top resistor values
+		resistiveElementTop.setupAsResistiveElement(6, 4500);
+		resistiveElementTop.isVIP = true;
+
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, 4000);
+		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+
+		//logic conditions
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+		resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
+		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
+		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+	}
+	// If a the model is the TamOMatic, HotTam, Generic... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
 		numNodes = 24;
 		tankTemps_C = new double[numNodes];
