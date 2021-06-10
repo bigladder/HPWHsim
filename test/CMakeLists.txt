@@ -66,14 +66,14 @@ set(lockoutTestModels
 )
 
 set(yearTestsModels          
- AOSmithHPTU80       
- Sanden80            
- GE502014            
+ AOSmithHPTU80
+ Sanden80       
+ GE502014
  Rheem2020Prem40 
  Rheem2020Prem50
  Rheem2020Build50
  AOSmithCAHP120
- Tier3Generic80
+ AWHSTier3Generic80
 )                                  
 set(yearTests                                        
  testCA_3BR_CTZ15
