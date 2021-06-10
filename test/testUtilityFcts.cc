@@ -183,7 +183,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "TamScalable_SP_Half") {
 		hpwhModel = HPWH::MODELS_TamScalable_SP;
 	}
-	// Stack in a couple scalable models
+	else if (modelName == "AWHSTier3Generic40") {
+		hpwhModel = HPWH::MODELS_AWHSTier3Generic40;
+	}
 	else if (modelName == "AWHSTier3Generic50") {
 		hpwhModel = HPWH::MODELS_AWHSTier3Generic50;
 	}
