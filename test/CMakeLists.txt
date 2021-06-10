@@ -65,7 +65,7 @@ set(lockoutTestModels
   GE502014
 )
 
-set(yearTestsModels                
+set(yearTestsModels          
  AOSmithHPTU80       
  Sanden80            
  GE502014            
@@ -73,6 +73,7 @@ set(yearTestsModels
  Rheem2020Prem50
  Rheem2020Build50
  AOSmithCAHP120
+ Tier3Generic80
 )                                  
 set(yearTests                                        
  testCA_3BR_CTZ15

@@ -183,13 +183,23 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "TamScalable_SP_Half") {
 		hpwhModel = HPWH::MODELS_TamScalable_SP;
 	}
+	// Stack in a couple scalable models
+	else if (modelName == "Tier3Generic50") {
+		hpwhModel = HPWH::MODELS_NEEATier3Generic50;
+	}
+	else if (modelName == "Tier3Generic65") {
+		hpwhModel = HPWH::MODELS_NEEATier3Generic65;
+	}
+	else if (modelName == "Tier3Generic80") {
+		hpwhModel = HPWH::MODELS_NEEATier3Generic80;
+	}
 	else { 
 		hpwhModel = HPWH::MODELS_basicIntegrated;
 		cout << "Couldn't find model " << modelName << ".  Exiting...\n";
 		exit(1);
 	}
 	return hpwhModel;
-}
+} 
 
 
 int getHPWHObject(HPWH &hpwh, string modelName) {
