@@ -1850,6 +1850,7 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 	if (setOfSources[compressorIndex].shutOffLogicSet.size() != 0) {
 		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
 		
+			double tempUse;
 
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
@@ -4117,7 +4118,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("T(\\d+)"));
 				nTemps = std::stoi(match[1].str());
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
@@ -4163,7 +4164,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					coeff_num = 2;
 				}
 
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
