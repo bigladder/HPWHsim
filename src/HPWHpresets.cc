@@ -125,7 +125,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 }
 
 int HPWH::HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C) {
-
+	double deadband_C = dF_TO_dC(8.);
 	if (tUse_C < 0. || tUse_C >(100. - deadband_C)) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Use temperature is out of bounds, must be between 0 and 100 C.\n");
@@ -138,7 +138,6 @@ int HPWH::HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double up
 		return HPWH_ABORT;
 	}
 
-	double deadband_C = dF_TO_dC(8.);
 	setpoint_C = tUse_C + deadband_C + dF_TO_dC(1);
 	//start tank off at setpoint
 	resetTankToSetpoint();
