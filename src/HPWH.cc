@@ -1850,7 +1850,6 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 	if (setOfSources[compressorIndex].shutOffLogicSet.size() != 0) {
 		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
 		
-		double tempUse;
 
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
@@ -1925,7 +1924,7 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 	}
 	if (scaleCapacity <= 0 || scaleCOP <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0, this isn't \n");
+			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0 \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -3428,6 +3427,18 @@ void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
 void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
+
+void HPWH::HeatSource::clearAllTurnOnLogic() {
+	this->turnOnLogicSet.clear();
+}
+void HPWH::HeatSource::clearAllShutOffLogic() {
+	this->shutOffLogicSet.clear();
+}
+void HPWH::HeatSource::clearAllLogic() {
+	this->clearAllTurnOnLogic();
+	this->clearAllShutOffLogic();
+}
+
 
 void HPWH::HeatSource::changeResistanceWatts(double watts) {
 	for (auto &perfP : perfMap) {

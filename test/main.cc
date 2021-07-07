@@ -112,9 +112,9 @@ int main(int argc, char *argv[])
 
   // Parse the model
   newSetpoint = 0;
-  if(input1 == "Preset") {
-    inputFile = "";
-    
+ if(input1 == "Preset") {
+   inputFile = "";
+   
 	if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT) {
 		cout << "Error, preset model did not initialize.\n";
 		exit(1);
@@ -122,13 +122,15 @@ int main(int argc, char *argv[])
 
 	model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
 
-    if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
-      newSetpoint = (149 - 32) / 1.8;
-    }
-  } else {
-    inputFile = input2 + ".txt";
-    if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
-  }
+   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
+     newSetpoint = (149 - 32) / 1.8;
+   }
+ } else {
+   inputFile = input2 + ".txt";
+   if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
+ }
+
+//  hpwh.HPWHinit_resSwingTank(80., .95, 0., 10000., F_TO_C(125.));
 
   // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
   // try and trigger the lockout and hysteresis conditions
