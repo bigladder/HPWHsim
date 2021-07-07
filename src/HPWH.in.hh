@@ -140,8 +140,9 @@ class HPWH {
 
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
-	  MODELS_CustomResTank = 201,      /**< HPWH parameters were input via HPWHinit_resTank */
-	  MODELS_TamScalable_SP = 202,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
+	  MODELS_CustomResTank = 201,   /**< HPWH parameters were input via HPWHinit_resTank */
+	  MODELS_CustomResTankSwing = 202,   /**< HPWH parameters were input via HPWHinit_resTank */
+	  MODELS_TamScalable_SP = 203,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -320,6 +321,14 @@ class HPWH {
    * is at the bottom, the upper element is at the top third.  The logics are also set
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
+  int HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C);
+  /**< This function will initialize a HPWH object to be a resistance Swing tank, a specific 
+  * loop tank that is in series with the primary system and the recirculation system.
+  *
+  * Several assumptions regarding the tank configuration are assumed: the lower element
+  * is at the bottom, the upper element is at the top third.  The logics are also set
+  * to make sense for a swing tank which controls the elements off the top section of the tank.
+  */
 
   int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
   /**< This function will initialize a HPWH object to be a non-specific HPWH model
@@ -910,6 +919,12 @@ class HPWH::HeatSource {
   void addTurnOnLogic(HeatingLogic logic);
   void addShutOffLogic(HeatingLogic logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
+  void clearAllTurnOnLogic();
+  void clearAllShutOffLogic();
+  void clearAllLogic();
+  /**< these are two small functions to remove some of the cruft in initiation functions */
+
+
 
   void changeResistanceWatts(double watts);
   /**< function to change the resistance wattage */

@@ -1850,7 +1850,7 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 	if (setOfSources[compressorIndex].shutOffLogicSet.size() != 0) {
 		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
 		
-		double tempUse;
+			double tempUse;
 
 			if (hpwhVerbosity >= VRB_emetic) {
 				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
@@ -1925,7 +1925,7 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 	}
 	if (scaleCapacity <= 0 || scaleCOP <= 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0, this isn't \n");
+			msg("Can not scale the HPWH Capacity or COP to 0 or less than 0 \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -3429,6 +3429,18 @@ void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
+void HPWH::HeatSource::clearAllTurnOnLogic() {
+	this->turnOnLogicSet.clear();
+}
+void HPWH::HeatSource::clearAllShutOffLogic() {
+	this->shutOffLogicSet.clear();
+}
+void HPWH::HeatSource::clearAllLogic() {
+	this->clearAllTurnOnLogic();
+	this->clearAllShutOffLogic();
+}
+
+
 void HPWH::HeatSource::changeResistanceWatts(double watts) {
 	for (auto &perfP : perfMap) {
 		perfP.inputPower_coeffs[0] = watts;
@@ -4106,7 +4118,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				std::smatch match;
 				std::regex_match(token, match, std::regex("T(\\d+)"));
 				nTemps = std::stoi(match[1].str());
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
@@ -4152,7 +4164,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					coeff_num = 2;
 				}
 
-				int maxTemps = setOfSources[heatsource].perfMap.size();
+				int maxTemps = (int)setOfSources[heatsource].perfMap.size();
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
