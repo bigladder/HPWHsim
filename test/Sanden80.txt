@@ -14,6 +14,7 @@ numHeatSources 1
 heatsource 0 isVIP true
 heatsource 0 isOn false
 heatsource 0 type compressor
+heatsource 0 heatCycle singlepass
 heatsource 0 condensity 1 0 0 0 0 0 0 0 0 0 0 0
 heatsource 0 nTemps 5
 heatsource 0 T1 17 F

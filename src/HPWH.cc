@@ -80,7 +80,7 @@ void HPWH::setAllDefaults() {
 	delete[] setOfSources;
 
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false; hpwhVerbosity = VRB_silent;
-	numHeatSources = 0;
+	numHeatSources = 0; 
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 	doInversionMixing = true; doConduction = true;
@@ -2341,7 +2341,8 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
-	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{100, -273.15}, standbyLogic(NULL)
+	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
+	heatingCycle(CYCLE_multipass)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2388,6 +2389,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
+	heatingCycle = hSource.heatingCycle;
 
 	lowestNode = hSource.lowestNode;
 
@@ -2447,6 +2449,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
+	heatingCycle = hSource.heatingCycle;
 
 	lowestNode = hSource.lowestNode;
 	extrapolationMethod = hSource.extrapolationMethod;
@@ -3256,23 +3259,26 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
 		}
 
-		//how much heat is available this timestep
-		getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
-		heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
-		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
-		}
+		if (heatingCycle == CYCLE_singlepass) {
+			//how much heat is available this timestep
+			getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
+			if (hpwh->hpwhVerbosity >= VRB_emetic) {
+				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
+			}
 
-		//adjust capacity for how much time is left in this step
-		heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
-		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
+			//adjust capacity for how much time is left in this step
+			heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
+			if (hpwh->hpwhVerbosity >= VRB_emetic) {
+				hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
+			}
+		
+			//calculate what percentage of the bottom node can be heated to setpoint
+			//with amount of heat available this timestep
+			deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
+			nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		}
 		
-		//calculate what percentage of the bottom node can be heated to setpoint
-		//with amount of heat available this timestep
-		deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
-		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		//protect against dividing by zero - if bottom node is at (or above) setpoint,
 		//add no heat
 		if (nodeHeat_kJperNode <= 0) {
@@ -4098,6 +4104,21 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				else if (tempString == "external") {
 					setOfSources[heatsource].configuration = HeatSource::CONFIG_EXTERNAL;
+				}
+				else {
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					}
+					return HPWH_ABORT;
+				}
+			}
+			else if (token == "heatCycle") {
+				line_ss >> tempString;
+				if (tempString == "singlepass") {
+					setOfSources[heatsource].heatingCycle = CYCLE_singlepass;
+				} 
+				else if (tempString == "multipass") {
+					setOfSources[heatsource].heatingCycle = CYCLE_multipass;
 				}
 				else {
 					if (hpwhVerbosity >= VRB_reluctant) {
