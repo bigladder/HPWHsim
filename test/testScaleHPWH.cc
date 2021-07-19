@@ -359,15 +359,13 @@ void testScaleRE() {
 	HPWH hpwh;
 
 	string input = "restankRealistic";
-
+	double elementPower = 4.5; //KW
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	//Scale output to 1 kW
 	int val = hpwh.setScaleHPWHCapacityCOP(2., 2.);
 	ASSERTTRUE(val == HPWH::HPWH_ABORT);
-
-	
 }
 
 void testSetResistanceCapacityErrorChecks() {
@@ -390,6 +388,49 @@ void testSetResistanceCapacityErrorChecks() {
 
 }
 
+void testResistanceScales() {
+	HPWH hpwh;
+
+	string input = "TamScalable_SP";
+	double elementPower = 30.0; //KW
+	
+	//hpwh.HPWHinit_resTank();
+	getHPWHObject(hpwh, input);
+
+
+	double returnVal;
+	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, elementPower));
+	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, elementPower));
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower));
+
+	// check units convert
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_BTUperHr);
+	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower * 3412.14));
+
+	// Check setting one works
+	double factor = 2.0;
+	hpwh.setResistanceCapacity(factor * elementPower, 1);
+	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
+	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, elementPower));
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower + elementPower));
+
+	// Check setting both works
+	factor = 3.;
+	hpwh.setResistanceCapacity(factor * elementPower, 0);
+	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
+	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, 2.*factor * elementPower));
+}
+
 void testStorageTankErrors() {
 	HPWH hpwh;
 	string input = "StorageTank";
@@ -409,7 +450,9 @@ int main(int argc, char *argv[])
 	
 	testNoneScalable(); // Test that models can't scale that are non scalable presets 
 	
-	testScaleRE(); // Test the resitance tank can't scale the compressor
+	testScaleRE(); // Test the resistance tank can't scale the compressor
+
+	testResistanceScales(); // Test the resistance tank scales the resistance elements
 
 	testSPGetCompressorCapacity(); //Test we can get the capacity
 
