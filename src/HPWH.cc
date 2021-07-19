@@ -1986,10 +1986,10 @@ int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*
 	}
 	else if (pwrUnit == UNITS_BTUperHr) {
 		watts = BTU_TO_KWH(power) * 1000; // BTU to kW then kW to W
-	} 
+	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for capacity in getCompressorCapacity.  \n");
+			msg("Incorrect unit specification for capacity in setResistanceCapacity.  \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -2010,12 +2010,59 @@ int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("The which option must be greater between 0 and 2 \n");
+			msg("The which option must be between 0 and 2 \n");
 		}
 		return HPWH_ABORT;
 	}
 
 	return 0;
+}
+double HPWH::getResistanceCapacity(int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/) {
+
+	//Input checks
+	if (lowestElementIndex == -1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("There are no resistance elements to return \n");
+		}
+		return HPWH_ABORT;
+	}
+	
+	double returnPower = 0;
+	if (which == 0) {
+		for (int i = 0; i < numHeatSources; i++) {
+			if (setOfSources[i].isAResistance()) {
+				returnPower += setOfSources[i].perfMap[0].inputPower_coeffs[0];
+			}
+		}
+	}
+	else if (which == 1) {
+		returnPower = setOfSources[lowestElementIndex].perfMap[0].inputPower_coeffs[0];
+	}
+	else if (which == 2) {
+		returnPower = setOfSources[highestElementIndex].perfMap[0].inputPower_coeffs[0];
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The which option must be between 0 and 2 \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	//Unit conversion
+	if (pwrUnit == UNITS_KW) {
+		returnPower /= 1000.; // W to KW
+	}
+	else if (pwrUnit == UNITS_BTUperHr) {
+		returnPower = KWH_TO_BTU(returnPower/1000.); // W to BTU/hr
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for capacity in getResistanceCapacity.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	return returnPower;
 }
 
 //the privates
