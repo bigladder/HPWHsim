@@ -216,6 +216,12 @@ class HPWH {
   };		  
 
   /** specifies the type of heat source  */
+  enum HEATING_CYCLE {
+	  CYCLE_singlepass,   /**< a seperated split system in single pass operating mode  */
+	  CYCLE_multipass		  /**< a unitary or split system in multi-pass operating mode*/
+  };
+
+  /** specifies the type of heat source  */
   enum HEATSOURCE_TYPE {
     TYPE_none,        /**< a default to check to make sure it's been set  */
     TYPE_resistance,  /**< a resistance element  */
@@ -962,6 +968,7 @@ class HPWH::HeatSource {
 
 	COIL_CONFIG configuration; /**<  submerged, wrapped, external */
   HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
+  HEATING_CYCLE heatingCycle; /**< single pass or multi-pass. Anything not obviously split system single pass is multipass*/
 
 	int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
