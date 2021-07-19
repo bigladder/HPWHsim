@@ -516,6 +516,12 @@ class HPWH {
 	// If which (1) changes the lowest resistance element
 	// If which (2) changes the highest resistance element
 
+	double getResistanceCapacity(int which = 0, UNITS pwrUNIT = UNITS_KW);
+	// Returns the resistance elements capacity. Which heat source is chosen is changes is given by which
+	// If which (0) returns all the resisistance elements in the tank.
+	// If which (1) returns the lowest resistance element
+	// If which (2) returns the highest resistance element
+
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
