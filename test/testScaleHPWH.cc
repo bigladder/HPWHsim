@@ -431,6 +431,40 @@ void testResistanceScales() {
 	ASSERTTRUE(relcmpd(returnVal, 2.*factor * elementPower));
 }
 
+void testGetSetResistanceErrors() {
+	HPWH hpwh;	
+	double lowerElementPower_W = 1000;
+	double lowerElementPower = lowerElementPower_W / 1000;
+	hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
+
+	double returnVal;
+	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW); // lower
+	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW); // both, really only lower
+	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
+	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW); // error on non existant upper
+	ASSERTTRUE(returnVal == HPWH::HPWH_ABORT);
+
+	// Switch to commercial res tank here later
+	//// Check only bottom setting works
+	//double factor = 3.;
+	//// set both, but only bottom really.
+	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 0, HPWH::UNITS_KW) == 0);
+	//returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	//ASSERTTRUE(relcmpd(returnVal, factor * lowerElementPower));
+	//
+	//// set bottom
+	//factor = 4.;
+	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 1, HPWH::UNITS_KW) == 0);
+	//returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	//ASSERTTRUE(relcmpd(returnVal, factor * lowerElementPower));
+	//
+	//// set top returns error
+	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 2, HPWH::UNITS_KW) == HPWH::HPWH_ABORT);
+
+}
+
+
 void testStorageTankErrors() {
 	HPWH hpwh;
 	string input = "StorageTank";
@@ -465,6 +499,8 @@ int main(int argc, char *argv[])
 	testChipsCaseWithIPUnits(); //Debuging Chip's case
 
 	testSetResistanceCapacityErrorChecks(); // Check the resistance reset throws errors when expected.
+
+	testGetSetResistanceErrors(); // Check can make ER residential tank with one lower element, and can't set/get upper
 
 	testStorageTankErrors(); // Make sure we can't scale the storage tank.
 
