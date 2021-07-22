@@ -124,35 +124,163 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	return 0;  //successful init returns 0
 }
 
-int HPWH::HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C) {
-	double deadband_C = dF_TO_dC(8.);
-	if (tUse_C < 0. || tUse_C >(100. - deadband_C)) {
+//int HPWH::HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C) {
+//	double deadband_C = dF_TO_dC(8.);
+//	if (tUse_C < 0. || tUse_C >(100. - deadband_C)) {
+//		if (hpwhVerbosity >= VRB_reluctant) {
+//			msg("Use temperature is out of bounds, must be between 0 and 100 C.\n");
+//		}
+//		return HPWH_ABORT;
+//	}
+//
+//	// Create normal restank
+//	if (this->HPWHinit_resTank(tankVol_L, energyFactor, upperPower_W, lowerPower_W) == HPWH_ABORT) {
+//		return HPWH_ABORT;
+//	}
+//
+//	setpoint_C = tUse_C + deadband_C + dF_TO_dC(1);
+//	//start tank off at setpoint
+//	resetTankToSetpoint();
+//	hpwhModel = MODELS_CustomResTankSwing;
+//
+//	//Have to change control logic though. 
+//	for (int i = 0; i < numHeatSources; i++) {
+//		setOfSources[i].clearAllLogic(); // clear logic conditions for heat source
+//		setOfSources[i].addTurnOnLogic(HPWH::topThird(deadband_C)); // replace with swing tank logic 
+//	}
+//	if (upperPower_W > 0.) {
+//		setOfSources[0].companionHeatSource = &setOfSources[1];
+//	}
+//	// Recheck the heater is still valid
+//	// calculate oft-used derived values
+//	calcDerivedValues();
+//
+//	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
+//
+//	isHeating = false;
+//	for (int i = 0; i < numHeatSources; i++) {
+//		if (setOfSources[i].isOn) {
+//			isHeating = true;
+//		}
+//		setOfSources[i].sortPerformanceMap();
+//	}
+//
+//	if (hpwhVerbosity >= VRB_emetic) {
+//		for (int i = 0; i < numHeatSources; i++) {
+//			msg("heat source %d: %p \n", i, &setOfSources[i]);
+//		}
+//		msg("\n\n");
+//	}
+//
+//	simHasFailed = false;
+//	return 0;  //successful init returns 0
+//}
+
+
+int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, double lowerPower_W, MODELS resTankType) {
+
+	setAllDefaults(); // reset all defaults if you're re-initilizing
+	// sets simHasFailed = true; this gets cleared on successful completion of init
+	// return 0 on success, HPWH_ABORT for failure
+
+	//low power element will cause divide by zero/negative UA in EF -> UA conversion
+	if (lowerPower_W < 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Use temperature is out of bounds, must be between 0 and 100 C.\n");
+			msg("Lower resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
+		}
+		return HPWH_ABORT;
+	}
+	if (upperPower_W < 0.) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
+		}
+		return HPWH_ABORT;
+	}
+	if (resTankType < MODELS_CustomResTank || resTankType > MODELS_CustomResTankSwing) {// if resTankType not supported here
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Resistance Tank Type not supported here");
 		}
 		return HPWH_ABORT;
 	}
 
-	// Create normal restank
-	if (this->HPWHinit_resTank(tankVol_L, energyFactor, upperPower_W, lowerPower_W) == HPWH_ABORT) {
+	//set tank size function has bounds checking
+	tankSizeFixed = false;
+	if (this->setTankSize(tankVol_L) == HPWH_ABORT) {
 		return HPWH_ABORT;
 	}
+	canScale = true;
 
-	setpoint_C = tUse_C + deadband_C + dF_TO_dC(1);
-	//start tank off at setpoint
-	resetTankToSetpoint();
-	hpwhModel = MODELS_CustomResTankSwing;
+	numNodes = 12;
+	tankTemps_C = new double[numNodes];
+	setpoint_C = F_TO_C(127.0);
+	resetTankToSetpoint(); //start tank off at setpoint
 
-	//Have to change control logic though. 
-	for (int i = 0; i < numHeatSources; i++) {
-		setOfSources[i].clearAllLogic(); // clear logic conditions for heat source
-		setOfSources[i].addTurnOnLogic(HPWH::topThird(deadband_C)); // replace with swing tank logic 
-	}
+	nextTankTemps_C = new double[numNodes];
+	doTempDepression = false;
+	tankMixesOnDraw = true;
+
+	// Count up heat sources
+	numHeatSources = 0;
+	numHeatSources += upperPower_W > 0. ? 1 : 0;
+	numHeatSources += lowerPower_W > 0. ? 1 : 0;
+	setOfSources = new HeatSource[numHeatSources];
+
+	// Deal with upper element
 	if (upperPower_W > 0.) {
-		setOfSources[0].companionHeatSource = &setOfSources[1];
+		// Only add an upper element when the upperPower_W > 0 otherwise ignore this.
+		// If the element is added this can mess with the intended logic.
+		HeatSource resistiveElementTop(this);
+		resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+		resistiveElementTop.isVIP = true;
+
+		// Upper should always be first in setOfSources if it exists.
+		setOfSources[0] = resistiveElementTop; 
 	}
-	// Recheck the heater is still valid
-	// calculate oft-used derived values
+	
+	// Deal with bottom element
+	if (lowerPower_W > 0.) {
+		HeatSource resistiveElementBottom(this);
+		resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
+
+		if (resTankType == MODELS_CustomResTank) {
+			//standard logic conditions
+			resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
+			resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
+		}
+		else if (resTankType == MODELS_CustomResTankSwing) {
+			//swing tank logic
+			resistiveElementBottom.addTurnOnLogic(HPWH::topThird(8.)); // replace with swing tank logic
+		}
+
+		// set everything in it's correct place
+		if (numHeatSources == 1) {// if one only one slot
+			setOfSources[0] = resistiveElementBottom;
+		}
+		else if (numHeatSources == 2) { // if two upper already exists
+			setOfSources[1] = resistiveElementBottom;
+			setOfSources[0].followedByHeatSource = &setOfSources[1];
+		}
+	}
+
+	// Calc UA
+	// S <= .3 + 27/ Vm (%/hr) 
+	// SL = S(%/h)/100 * 8.25 (BTU/galF) * Vm (gal) * (140 – 75) (F)
+	// SL = UA deltaT. So deltaT actually cancels. 
+	// UA (BTU/hr/F) = 8.25 (BTU/galF) * (.3 + 27/Vm)(%/hr)/100 * Vm = 8.25 * (.3*Vm + 27 [G]) / 100, where 8.25 is actually 
+	double S = (.3 + 27. / GAL_TO_L(tankVol_L));
+	tankUA_kJperHrC = CPWATER_kJperkgC * DENSITYWATER_kgperL * S / 100. * tankVol_L; // Note (.3+27./GAL_TO_L(tankVol_L)) is unitless
+
+	if (tankUA_kJperHrC < 0.) {
+		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
+			msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+		}
+		tankUA_kJperHrC = 0.0;
+	}
+
+	hpwhModel = resTankType;
+
+	//calculate oft-used derived values
 	calcDerivedValues();
 
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
