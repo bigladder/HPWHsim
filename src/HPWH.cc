@@ -71,7 +71,7 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 
 //the HPWH functions
 //the publics
-HPWH::HPWH() : setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), messageCallback(NULL), messageCallbackContextPtr(NULL)
+HPWH::HPWH() : setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), messageCallback(NULL), messageCallbackContextPtr(NULL), hpwhVerbosity(VRB_silent)
 { setAllDefaults(); };
 
 void HPWH::setAllDefaults() {
@@ -79,7 +79,7 @@ void HPWH::setAllDefaults() {
 	delete[] nextTankTemps_C;
 	delete[] setOfSources;
 
-	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false; hpwhVerbosity = VRB_silent;
+	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false;
 	numHeatSources = 0; 
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
@@ -2006,6 +2006,12 @@ int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*
 		setOfSources[lowestElementIndex].changeResistanceWatts(watts);
 	}
 	else if (which == 2) {
+		if (highestElementIndex == -1) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("There is no upper resistance element to set \n");
+			}
+			return HPWH_ABORT;
+		}
 		setOfSources[highestElementIndex].changeResistanceWatts(watts);
 	}
 	else {
@@ -2039,6 +2045,12 @@ double HPWH::getResistanceCapacity(int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/
 		returnPower = setOfSources[lowestElementIndex].perfMap[0].inputPower_coeffs[0];
 	}
 	else if (which == 2) {
+		if (highestElementIndex == -1) {
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("There is no upper resistance element to get \n");
+			}
+			return HPWH_ABORT;
+		}
 		returnPower = setOfSources[highestElementIndex].perfMap[0].inputPower_coeffs[0];
 	}
 	else {

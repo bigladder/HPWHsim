@@ -16,7 +16,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Resistance tank wattage below 550 W.  DOES NOT COMPUTE\n");
+			msg("Resistance tank lower element wattage below 550 W.  DOES NOT COMPUTE\n");
 		}
 		return HPWH_ABORT;
 	}
