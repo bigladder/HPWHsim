@@ -835,7 +835,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 	}
 	if (!isNewSetpointPossible(newSetpoint_C, temp, why)) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C. %s\n", temp, why);
+			msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C. %s\n", temp, why.c_str());
 		}
 		return HPWH_ABORT;
 	}
@@ -880,7 +880,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 		returnVal = (newSetpoint == setpoint_C);
 		maxAllowedSetpoint_C = setpoint_C;
 		if (!returnVal) {
-			why = "The set point is fixed for the currently selected model. \n";
+			why = "The set point is fixed for the currently selected model.";
 		}
 	}
 	else {
@@ -890,7 +890,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
 
 			if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
-				why = "The compressor cannot meet the setpoint temperature and there is no resistance backup \n";
+				why = "The compressor cannot meet the setpoint temperature and there is no resistance backup.";
 				returnVal = false;
 			}
 			else {
@@ -901,7 +901,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 			maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
 
 			if (newSetpoint_C > maxAllowedSetpoint_C) {
-				why = "The resistance elements cannot produce water this hot \n";
+				why = "The resistance elements cannot produce water this hot.";
 				returnVal = false;
 			}
 			else {
@@ -913,7 +913,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 				returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
 			}
 			else {
-				why = "There aren't any heat sources to check the new setpoint against! \n";
+				why = "There aren't any heat sources to check the new setpoint against!";
 				returnVal = false;
 			}
 		}
@@ -3770,7 +3770,7 @@ int HPWH::checkInputs() {
 	double tempSetpoint = setpoint_C;
 	if (!isNewSetpointPossible(tempSetpoint, maxTemp, why)) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Cannot set new setpoint. %s", why);
+			msg("Cannot set new setpoint. %s", why.c_str());
 		}
 		returnVal = HPWH_ABORT;
 	}
