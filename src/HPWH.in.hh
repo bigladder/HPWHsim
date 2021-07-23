@@ -492,6 +492,9 @@ class HPWH {
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */
 
+	int getNumResistanceElements() const;
+	/**< returns the number of resistance elements  */
+
 	int getCompressorIndex() const;
 	/**< returns the index of the compressor in the heat source array.
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
@@ -512,17 +515,29 @@ class HPWH {
 	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 	/**< Scales the heatpump water heater input capacity and COP*/
 	
-	int setResistanceCapacity(double power, int which = 0, UNITS pwrUNIT = UNITS_KW);
-	// Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by which
-	// If which (0) changes all the resisistance elements in the tank.
-	// If which (1) changes the lowest resistance element
-	// If which (2) changes the highest resistance element
+	int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
+	/**< Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by "which"
+	- If which (-1) sets all the resisistance elements in the tank.
+	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
 
-	double getResistanceCapacity(int which = 0, UNITS pwrUNIT = UNITS_KW);
-	// Returns the resistance elements capacity. Which heat source is chosen is changes is given by which
-	// If which (0) returns all the resisistance elements in the tank.
-	// If which (1) returns the lowest resistance element
-	// If which (2) returns the highest resistance element
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	by the ordered height of the resistance elements it cannot refer to a compressor.
+	*/
+
+	double getResistanceCapacity(int which = -1, UNITS pwrUNIT = UNITS_KW);
+	/**< Returns the resistance elements capacity. Which heat source is chosen is changes is given by "which"
+	- If which (-1) gets all the resisistance elements in the tank.
+	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
+
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	by the ordered height of the resistance elements it cannot refer to a compressor.
+	*/
+
+	int getResistancePosition(int elementIndex) const;
 
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
@@ -625,6 +640,9 @@ class HPWH {
   /**< a helper function to set constants for the UA and tank size*/
   void calcDerivedHeatingValues(); 
   /**< a helper for the helper, calculating condentropy and the lowest node*/
+  void mapResRelativePosToSetOfSources();
+  /**< a helper function for the inits, creating a mapping function for the position of the resistance elements
+  to their indexes in setOfSources. */
 
 
   int checkInputs();
@@ -764,6 +782,15 @@ class HPWH {
 
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
+
+  struct resPoint {
+	  int index;
+	  int position;
+  };
+  std::vector<resPoint> resistanceHeightMap;
+  /**< A map from index of an resistance element in setOfSources to position in the tank, its
+  is sorted by height from lowest to highest*/
+
 
 };  //end of HPWH class
 
