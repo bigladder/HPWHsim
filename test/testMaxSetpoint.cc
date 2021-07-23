@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
 void testMaxSetpointResistanceTank() {
 	HPWH hpwh;
 	double num;
-
+	string why;
 	hpwh.HPWHinit_resTank();
 
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(100., num)); // Can go to boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num)); // Can go low, albiet dumb
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num, why)); // Can go to near boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(100., num, why)); // Can go to boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num, why)); // Can go low, albiet dumb
 	ASSERTTRUE(REMaxShouldBe == num);
 
 	// Check this carries over into setting the setpoint
@@ -64,14 +64,15 @@ void testScalableCompressor() {
 
 	string input = "TamScalable_SP"; // Just a compressor with R134A
 	double num;
+	string why;
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
-	ASSERTTRUE(hpwh.isNewSetpointPossible(100, num)); // Can go to programed max
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num, why)); // Can go to near boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
+	ASSERTTRUE(hpwh.isNewSetpointPossible(100, num, why)); // Can go to programed max
 
 	// Check this carries over into setting the setpoint
 	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
@@ -83,15 +84,16 @@ void testJustR134ACompressor() {
 
 	string input = "NyleC90A_SP"; // Just a compressor with R134A
 	double num;
+	string why;
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num, why)); // Can't go to near boiling
 	ASSERTTRUE(HPWH::MAXOUTLET_R134A == num); //Assert we're getting the right number
-	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
-	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num)); // Can go to programed max
+	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
+	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
 
 	// Check this carries over into setting the setpoint
 	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
@@ -103,15 +105,16 @@ void testJustR410ACompressor() {
 
 	string input = "ColmacCxV_5_SP"; // Just a compressor with R410A
 	double num;
+	string why;
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num, why)); // Can't go to near boiling
 	ASSERTTRUE(HPWH::MAXOUTLET_R410A == num); //Assert we're getting the right number
-	ASSERTTRUE(hpwh.isNewSetpointPossible(50., num)); // Can go to normal
-	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A, num)); // Can go to programed max
+	ASSERTTRUE(hpwh.isNewSetpointPossible(50., num, why)); // Can go to normal
+	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
 
 	// Check this carries over into setting the setpoint
 	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
@@ -143,14 +146,15 @@ void testHybridModel() {
 
 	string input = "AOSmithCAHP120"; //Hybrid unit with a compressor with R134A
 	double num;
+	string why;
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(100., num)); // Can go to boiling
-	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num)); // Can go low, albiet dumb
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num, why)); // Can go to near boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(100., num, why)); // Can go to boiling
+	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num, why)); // Can go low, albiet dumb
 	ASSERTTRUE(REMaxShouldBe == num); // Max is boiling
 
 	// Check this carries over into setting the setpoint
@@ -163,13 +167,14 @@ void testStorageTankSetpoint() {
 
 	string input = "StorageTank"; //Hybrid unit with a compressor with R134A
 	double num;
+	string why;
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	// Storage tanks have free reign!
-	ASSERTTRUE(hpwh.isNewSetpointPossible(101., num)); // Can go above boiling!
-	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num)); // Can go to near boiling!
-	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num)); // Can go low, albiet dumb
+	ASSERTTRUE(hpwh.isNewSetpointPossible(101., num, why)); // Can go above boiling!
+	ASSERTTRUE(hpwh.isNewSetpointPossible(99., num, why)); // Can go to near boiling!
+	ASSERTTRUE(hpwh.isNewSetpointPossible(10., num, why)); // Can go low, albiet dumb
 
 	// Check this carries over into setting the setpoint
 	ASSERTTRUE(hpwh.setSetpoint(101.) == 0); // Can't go above boiling
@@ -182,17 +187,18 @@ void testSetpointFixed() {
 
 	string input = "Sanden80"; //Fixed setpoint model
 	double num, num1;
+	string why;
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	// Storage tanks have free reign!
-	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling!
-	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling!
-	ASSERTFALSE(hpwh.isNewSetpointPossible(60., num)); // Can't go to normalish
-	ASSERTFALSE(hpwh.isNewSetpointPossible(10., num)); // Can't go low, albiet dumb
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling!
+	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num, why)); // Can't go to near boiling!
+	ASSERTFALSE(hpwh.isNewSetpointPossible(60., num, why)); // Can't go to normalish
+	ASSERTFALSE(hpwh.isNewSetpointPossible(10., num, why)); // Can't go low, albiet dumb
 
 	ASSERTTRUE(num == hpwh.getSetpoint()); // Make sure it thinks the max is the setpoint
-	ASSERTTRUE(hpwh.isNewSetpointPossible(num, num1)) // Check that the setpoint can be set to the setpoint.
+	ASSERTTRUE(hpwh.isNewSetpointPossible(num, num1, why)) // Check that the setpoint can be set to the setpoint.
 
 	// Check this carries over into setting the setpoint
 	ASSERTTRUE(hpwh.setSetpoint(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
