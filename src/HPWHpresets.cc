@@ -124,58 +124,6 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	return 0;  //successful init returns 0
 }
 
-//int HPWH::HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C) {
-//	double deadband_C = dF_TO_dC(8.);
-//	if (tUse_C < 0. || tUse_C >(100. - deadband_C)) {
-//		if (hpwhVerbosity >= VRB_reluctant) {
-//			msg("Use temperature is out of bounds, must be between 0 and 100 C.\n");
-//		}
-//		return HPWH_ABORT;
-//	}
-//
-//	// Create normal restank
-//	if (this->HPWHinit_resTank(tankVol_L, energyFactor, upperPower_W, lowerPower_W) == HPWH_ABORT) {
-//		return HPWH_ABORT;
-//	}
-//
-//	setpoint_C = tUse_C + deadband_C + dF_TO_dC(1);
-//	//start tank off at setpoint
-//	resetTankToSetpoint();
-//	hpwhModel = MODELS_CustomResTankSwing;
-//
-//	//Have to change control logic though. 
-//	for (int i = 0; i < numHeatSources; i++) {
-//		setOfSources[i].clearAllLogic(); // clear logic conditions for heat source
-//		setOfSources[i].addTurnOnLogic(HPWH::topThird(deadband_C)); // replace with swing tank logic 
-//	}
-//	if (upperPower_W > 0.) {
-//		setOfSources[0].companionHeatSource = &setOfSources[1];
-//	}
-//	// Recheck the heater is still valid
-//	// calculate oft-used derived values
-//	calcDerivedValues();
-//
-//	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
-//
-//	isHeating = false;
-//	for (int i = 0; i < numHeatSources; i++) {
-//		if (setOfSources[i].isOn) {
-//			isHeating = true;
-//		}
-//		setOfSources[i].sortPerformanceMap();
-//	}
-//
-//	if (hpwhVerbosity >= VRB_emetic) {
-//		for (int i = 0; i < numHeatSources; i++) {
-//			msg("heat source %d: %p \n", i, &setOfSources[i]);
-//		}
-//		msg("\n\n");
-//	}
-//
-//	simHasFailed = false;
-//	return 0;  //successful init returns 0
-//}
-
 
 int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, double lowerPower_W, MODELS resTankType) {
 
@@ -268,8 +216,8 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 	// SL = S(%/h)/100 * 8.25 (BTU/galF) * Vm (gal) * (140 – 75) (F)
 	// SL = UA deltaT. So deltaT actually cancels. 
 	// UA (BTU/hr/F) = 8.25 (BTU/galF) * (.3 + 27/Vm)(%/hr)/100 * Vm = 8.25 * (.3*Vm + 27 [G]) / 100, where 8.25 is actually 
-	double S = (.3 + 27. / GAL_TO_L(tankVol_L));
-	tankUA_kJperHrC = CPWATER_kJperkgC * DENSITYWATER_kgperL * S / 100. * tankVol_L; // Note (.3+27./GAL_TO_L(tankVol_L)) is unitless
+	double S_PercperHr= (.3 + 27. / GAL_TO_L(tankVol_L));
+	tankUA_kJperHrC = CPWATER_kJperkgC * DENSITYWATER_kgperL * S_PercperHr / 100. * tankVol_L; // Note (.3+27./GAL_TO_L(tankVol_L)) is unitless
 
 	if (tankUA_kJperHrC < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
