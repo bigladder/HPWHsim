@@ -368,24 +368,6 @@ void testScaleRE() {
 	ASSERTTRUE(val == HPWH::HPWH_ABORT);
 }
 
-void testSetResistanceCapacityErrorChecks() {
-	HPWH hpwhHP1, hpwhR;
-	string input = "ColmacCxA_30_SP";
-
-	// get preset model 
-	getHPWHObject(hpwhHP1, input);
-
-	ASSERTTRUE(hpwhHP1.setResistanceCapacity(100.) == HPWH::HPWH_ABORT); // Need's to be scalable
-
-	input = "restankRealistic";
-	// get preset model 
-	getHPWHObject(hpwhR, input);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(-100.) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 3) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 30000) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., -3) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 0, HPWH::UNITS_F) == HPWH::HPWH_ABORT);
-}
 
 void testResistanceScales() {
 	HPWH hpwh;
@@ -405,12 +387,12 @@ void testResistanceScales() {
 	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower));
 
 	// check units convert
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_BTUperHr);
+	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr);
 	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower * 3412.14));
 
-	// Check setting one works
+	// Check setting bottom works
 	double factor = 2.0;
-	hpwh.setResistanceCapacity(factor * elementPower, 1);
+	hpwh.setResistanceCapacity(factor * elementPower, 0);
 	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
 	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
@@ -420,30 +402,13 @@ void testResistanceScales() {
 
 	// Check setting both works
 	factor = 3.;
-	hpwh.setResistanceCapacity(factor * elementPower, 0);
+	hpwh.setResistanceCapacity(factor * elementPower, -1);
 	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
 	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
 	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, 2.*factor * elementPower));
-}
-
-void testGetSetResistanceErrors() {
-	HPWH hpwh;	
-	double lowerElementPower_W = 1000;
-	double lowerElementPower = lowerElementPower_W / 1000;
-	hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
-
-	hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
-
-	double returnVal;
-	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW); // lower
-	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW); // both,
-	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW); // highest is lowest
-	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
 }
 
 void testStorageTankErrors() {
@@ -456,137 +421,9 @@ void testStorageTankErrors() {
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 
 }
-//////////////////////////////////////////////////////////////////////////////////////////
-// should move these tests to seperate test script.
-void testCommercialTankInitErrors() {
-	HPWH hpwh;
-	// init model 
-
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(-800., 100., 100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative volume
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., -100., 100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative element
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., -100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative element
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., 100., HPWH::MODELS_restankRealistic) == HPWH::HPWH_ABORT); // non custom restank
-}
-
-void testGetNumResistanceElements() {
-	HPWH hpwh;
-
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // Check needs one element
-
-	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getNumResistanceElements() == 1); // Check 1 elements
-	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getNumResistanceElements() == 1); // Check 1 elements
-	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getNumResistanceElements() == 2); // Check 2 elements
-}
-
-void testGetResistancePositionInRETank() {
-	HPWH hpwh;
-
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // Check needs one element
-
-	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getResistancePosition(0) == 0); // Check lower element is there 
-	ASSERTTRUE(hpwh.getResistancePosition(1) == HPWH::HPWH_ABORT); // Check no element
-	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check no element
-
-	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getResistancePosition(0) == 8); // Check upper element there
-	ASSERTTRUE(hpwh.getResistancePosition(1) == HPWH::HPWH_ABORT); // Check no elements
-	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check no elements
-
-	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomResTank);
-	ASSERTTRUE(hpwh.getResistancePosition(0) == 8); // Check upper element there
-	ASSERTTRUE(hpwh.getResistancePosition(1) == 0); // Check lower element is there 
-	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check 0 elements}
-}
-
-void testGetResistancePositionInCompressorTank() {
-	HPWH hpwh;
-
-	string input = "TamScalable_SP";
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-	ASSERTTRUE(hpwh.getResistancePosition(0) == 9); // Check top elements
-	ASSERTTRUE(hpwh.getResistancePosition(1) == 0); // Check bottom elements
-	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check compressor isn't RE
-	ASSERTTRUE(hpwh.getResistancePosition(-1) == HPWH::HPWH_ABORT); // Check out of bounds
-	ASSERTTRUE(hpwh.getResistancePosition(1000) == HPWH::HPWH_ABORT); // Check out of bounds
-}
-
-void testCommercialTankErrorsWithBottomElement() {
-	HPWH hpwh;
-	double elementPower_kW = 10.; //KW
-	// init model 
-	hpwh.HPWHinit_commercialResTank(800., 0., elementPower_kW * 1000., HPWH::MODELS_CustomResTank);
-
-	// Check only lowest setting works
-	double factor = 3.;
-	// set both, but really only one
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::UNITS_KW) == 0); // Check sets
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets just bottom with both
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets bottom with bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW), factor * elementPower_kW)); // highest is lowest
-
-	ASSERTTRUE(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW) == HPWH::HPWH_ABORT); // error on non existant upper
-
-	// set lowest
-	factor = 4.;
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 1, HPWH::UNITS_KW) == 0); // Set just bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets just bottom with both
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets bottom with bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW), factor * elementPower_kW)); // highest is lowest
-
-	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::UNITS_KW) == HPWH::HPWH_ABORT); // set top returns error
-	// set highest
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::UNITS_KW) == 0);  // highest is lowest
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets just bottom with both
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets bottom with bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW), factor * elementPower_kW)); // highest is lowest
-}
-void testCommercialTankErrorsWithTopElement() {
-	HPWH hpwh;
-	double elementPower_kW = 10.; //KW
-	// init model 
-	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., 0., HPWH::MODELS_CustomResTank);
-
-	// Check only bottom setting works
-	double factor = 3.;
-	// set both, but only bottom really.
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::UNITS_KW) == 0); // Check sets
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets just bottom with both
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets bottom with bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW), factor * elementPower_kW)); // highest is lowest
-
-	// set top
-	factor = 4.;
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::UNITS_KW) == 0); // Set just bottom
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets just top with both
-	ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(2, HPWH::UNITS_KW), factor * elementPower_kW)); // Check gets top with top
-	ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW) == HPWH::HPWH_ABORT); // error on non existant bottom
-
-	// set bottom returns error
-	ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::UNITS_KW) == HPWH::HPWH_ABORT);
-}
-
-void testCommercialTankInit() {
-	HPWH hpwh;
-	double elementPower_kW = 10.; //KW
-	// init model 
-	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomResTank);
-
-}
 
 int main(int argc, char *argv[])
 {
-	// Should move these to a seperate build later.
-	testCommercialTankInitErrors(); // test it inits as expected
-	testGetNumResistanceElements(); // unit test on getNumResistanceElements()
-	testGetResistancePositionInRETank(); // unit test on getResistancePosition() for an RE tank
-	testGetResistancePositionInCompressorTank(); // unit test on getResistancePosition() for a compressor
-
 
 	testScalableHPWHScales(); // Test the scalable model scales properly
 
@@ -608,21 +445,7 @@ int main(int argc, char *argv[])
 
 	testChipsCaseWithIPUnits(); //Debuging Chip's case
 
-	testSetResistanceCapacityErrorChecks(); // Check the resistance reset throws errors when expected.
-
-	testGetSetResistanceErrors(); // Check can make ER residential tank with one lower element, and can't set/get upper
-
 	testStorageTankErrors(); // Make sure we can't scale the storage tank.
-
-	// Should move these to a seperate build later.
-	testCommercialTankInitErrors(); // test it inits as expected
-	testGetNumResistanceElements(); // unit test on getNumResistanceElements()
-	testGetResistancePositionInRETank(); // unit test on getResistancePosition() for an RE tank
-	testGetResistancePositionInCompressorTank(); // unit test on getResistancePosition() for a compressor
-
-	testCommercialTankErrorsWithBottomElement(); // 
-	testCommercialTankErrorsWithTopElement();
-	testCommercialTankInit(); // 
 
 	//Made it through the gauntlet
 	return 0;

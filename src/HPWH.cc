@@ -2023,7 +2023,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /
 		// Then check for repeats in the position
 		int pos = resistanceHeightMap[which].position;
 		for (int i = 0; i < getNumResistanceElements(); i++) {
-			if (resistanceHeightMap[i].position == pos) {
+			if (which != i && resistanceHeightMap[i].position == pos) {
 				setOfSources[resistanceHeightMap[i].index].changeResistanceWatts(watts);
 			}
 		}
@@ -2064,7 +2064,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
 		// Then check for repeats in the position
 		int pos = resistanceHeightMap[which].position;
 		for (int i = 0; i < getNumResistanceElements(); i++) {
-			if (resistanceHeightMap[i].position == pos) {
+			if (which != i && resistanceHeightMap[i].position == pos) {
 				returnPower += setOfSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
 			}
 		}
