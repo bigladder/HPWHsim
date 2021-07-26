@@ -52,41 +52,42 @@ void testGetSetResistanceErrors() {
 void testCommercialTankInitErrors() {
 	HPWH hpwh;
 	// init model 
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(-800., 100., 100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative volume
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., -100., 100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative element
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., -100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // negative element
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(-800., 100., 100., HPWH::MODELS_CustomComResTank) == HPWH::HPWH_ABORT); // negative volume
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., -100., 100., HPWH::MODELS_CustomComResTank) == HPWH::HPWH_ABORT); // negative element
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., -100., HPWH::MODELS_CustomComResTank) == HPWH::HPWH_ABORT); // negative element
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., 100., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // non commercial restank
 	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 100., 100., HPWH::MODELS_restankRealistic) == HPWH::HPWH_ABORT); // non custom restank
 }
 
 void testGetNumResistanceElements() {
 	HPWH hpwh;
 
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // Check needs one element
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomComResTank) == HPWH::HPWH_ABORT); // Check needs one element
 
-	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getNumResistanceElements() == 1); // Check 1 elements
-	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getNumResistanceElements() == 1); // Check 1 elements
-	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getNumResistanceElements() == 2); // Check 2 elements
 }
 
 void testGetResistancePositionInRETank() {
 	HPWH hpwh;
 
-	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomResTank) == HPWH::HPWH_ABORT); // Check needs one element
+	ASSERTTRUE(hpwh.HPWHinit_commercialResTank(800., 0., 0., HPWH::MODELS_CustomComResTank) == HPWH::HPWH_ABORT); // Check needs one element
 
-	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 0., 1000., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getResistancePosition(0) == 0); // Check lower element is there 
 	ASSERTTRUE(hpwh.getResistancePosition(1) == HPWH::HPWH_ABORT); // Check no element
 	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check no element
 
-	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 1000., 0., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getResistancePosition(0) == 8); // Check upper element there
 	ASSERTTRUE(hpwh.getResistancePosition(1) == HPWH::HPWH_ABORT); // Check no elements
 	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check no elements
 
-	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 1000., 1000., HPWH::MODELS_CustomComResTank);
 	ASSERTTRUE(hpwh.getResistancePosition(0) == 8); // Check upper element there
 	ASSERTTRUE(hpwh.getResistancePosition(1) == 0); // Check lower element is there 
 	ASSERTTRUE(hpwh.getResistancePosition(2) == HPWH::HPWH_ABORT); // Check 0 elements}
@@ -110,7 +111,7 @@ void testCommercialTankErrorsWithBottomElement() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
 	// init model 
-	hpwh.HPWHinit_commercialResTank(800., 0., elementPower_kW * 1000., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., 0., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
 
 	// Check only lowest setting works
 	double factor = 3.;
@@ -133,7 +134,7 @@ void testCommercialTankErrorsWithTopElement() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
 	// init model 
-	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., 0., HPWH::MODELS_CustomResTank);
+	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., 0., HPWH::MODELS_CustomComResTank);
 
 	// Check only bottom setting works
 	double factor = 3.;
@@ -156,9 +157,48 @@ void testCommercialTankErrorsWithTopElement() {
 void testCommercialTankInit() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
-	// init model 
-	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomResTank);
+	double UA;
+	double UA800 = 14.232692;
+	double UA2 = 4.275807;
+	double UA50 = 4.874717;
+	double UA200 = 6.7463127;
+	double UA2000 = 29.2054531;
+	double UA20000 = 253.7968561;
 
+	// Check UA is as expected at 800 gal
+	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA800));
+	// Check UA independent of elements
+	hpwh.HPWHinit_commercialResTank(800., elementPower_kW, elementPower_kW, HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA800));
+	// Check UA independent of model
+	hpwh.HPWHinit_commercialResTank(800., elementPower_kW, elementPower_kW, HPWH::MODELS_CustomComResTankSwing);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA800));
+
+
+	// Check UA is as expected at 2 gal
+	hpwh.HPWHinit_commercialResTank(2., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA2));
+	// Check UA is as expected at 50 gal
+	hpwh.HPWHinit_commercialResTank(50., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA50));
+	// Check UA is as expected at 200 gal
+	hpwh.HPWHinit_commercialResTank(200., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA200));
+	// Check UA is as expected at 2000 gal
+	hpwh.HPWHinit_commercialResTank(2000., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA2000));
+	// Check UA is as expected at 20000 gal
+	hpwh.HPWHinit_commercialResTank(20000., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
+	hpwh.getUA(UA);
+	ASSERTTRUE(relcmpd(UA, UA20000));
 }
 
 int main(int argc, char *argv[])

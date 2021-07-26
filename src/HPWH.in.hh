@@ -142,7 +142,8 @@ class HPWH {
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
 	  MODELS_CustomResTank = 201,   /**< HPWH parameters were input via HPWHinit_resTank */
-	  MODELS_CustomResTankSwing = 202,   /**< HPWH parameters were input via HPWHinit_resTank */
+	  MODELS_CustomComResTank = 202,   /**< HPWH parameters were input via HPWHinit_commercialResTank */
+	  MODELS_CustomComResTankSwing = 203,   /**< HPWH parameters were input via HPWHinit_commercialResTank, specific swing tank controls */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -335,7 +336,7 @@ class HPWH {
   * Several assumptions regarding the tank configuration are assumed: the lower element
   * is at the bottom, the upper element is at the top third.
   * 
-  * resTankType's types support thus far are swingtank. 
+  * resTankType's types support thus far are MODELS_CustomComResTank, MODELS_CustomComResSwingTank. 
   */
 
   int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
