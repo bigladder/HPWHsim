@@ -818,14 +818,9 @@ bool HPWH::isSetpointFixed() const{
 }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
-	//if (setpointFixed == true) { // checked in isNewSetpointPossible()
-	//	if (hpwhVerbosity >= VRB_reluctant) {
-	//		msg("Unwilling to set setpoint for your currently selected model.  \n");
-	//	}
-	//	return HPWH_ABORT;
-	//}
-	//else {
-	double newSetpoint_C, temp;
+
+	double newSetpoint_C, temp; 
+	string why;
 	if (units == UNITS_C) {
 		newSetpoint_C = newSetpoint;
 	}
@@ -838,15 +833,15 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/) {
 		}
 		return HPWH_ABORT;
 	}
-	if (!isNewSetpointPossible(newSetpoint_C, temp)) {
+	if (!isNewSetpointPossible(newSetpoint_C, temp, why)) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C.\n", temp);
+			msg("Unwilling to set this setpoint for the currently selected model, max setpoint is %f C. %s\n", temp, why.c_str());
 		}
 		return HPWH_ABORT;
 	}
 
 	setpoint_C = newSetpoint_C;
-	//}
+	
 	return 0;
 }
 
@@ -865,7 +860,7 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 }
 
-bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, UNITS units /*=UNITS_C*/) const {
+bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, string& why, UNITS units /*=UNITS_C*/) const {
 	double newSetpoint_C;
 	double maxAllowedSetpoint_C = -273.15;
 	if (units == UNITS_C) {
@@ -875,7 +870,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 		newSetpoint_C = F_TO_C(newSetpoint);
 	} else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getSetpoint. \n");
+			msg("Incorrect unit specification for isNewSetpointPossible. \n");
 		}
 		return false;
 	}
@@ -884,9 +879,8 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	if (isSetpointFixed()) {
 		returnVal = (newSetpoint == setpoint_C);
 		maxAllowedSetpoint_C = setpoint_C;
-
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("The set point is fixed for the currently selected model. \n");
+		if (!returnVal) {
+			why = "The set point is fixed for the currently selected model.";
 		}
 	}
 	else {
@@ -896,9 +890,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
 
 			if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
-				if (hpwhVerbosity >= VRB_reluctant) {
-					msg("The compressor cannot meet the setpoint temperature and there is no resistance backup \n");
-				}
+				why = "The compressor cannot meet the setpoint temperature and there is no resistance backup.";
 				returnVal = false;
 			}
 			else {
@@ -909,9 +901,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 			maxAllowedSetpoint_C = setOfSources[lowestElementIndex].maxSetpoint_C;
 
 			if (newSetpoint_C > maxAllowedSetpoint_C) {
-				if (hpwhVerbosity >= VRB_reluctant) {
-					msg("The resistance elements cannot produce water this hot \n");
-				}
+				why = "The resistance elements cannot produce water this hot.";
 				returnVal = false;
 			}
 			else {
@@ -923,9 +913,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 				returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
 			}
 			else {
-				if (hpwhVerbosity >= VRB_reluctant) {
-					msg("There aren't any heat sources to check the new setpoint against! \n");
-				}
+				why = "There aren't any heat sources to check the new setpoint against!";
 				returnVal = false;
 			}
 		}
@@ -937,7 +925,6 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	else if (units == UNITS_F) {
 		maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
 	}
-
 	return returnVal;
 }
 
@@ -3675,11 +3662,15 @@ int HPWH::checkInputs() {
 	//use a returnVal so that all checks are processed and error messages written
 
 	if (numHeatSources <= 0 && hpwhModel != MODELS_StorageTank) {
-		msg("You must have at least one HeatSource.\n");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You must have at least one HeatSource.\n");
+		}
 		returnVal = HPWH_ABORT;
 	}
 	if ((numNodes % 12) != 0) {
-		msg("The number of nodes must be a multiple of 12");
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The number of nodes must be a multiple of 12");
+		}
 		returnVal = HPWH_ABORT;
 	}
 
@@ -3697,7 +3688,9 @@ int HPWH::checkInputs() {
 		//check to make sure there is at least one onlogic or parent with onlogic
 		int parent = setOfSources[i].findParent();
 		if (setOfSources[i].turnOnLogicSet.size() == 0 && (parent == -1 || setOfSources[parent].turnOnLogicSet.size() == 0)) {
-			msg("You must specify at least one logic to turn on the element or the element must be set as a backup for another heat source with at least one logic.");
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("You must specify at least one logic to turn on the element or the element must be set as a backup for another heat source with at least one logic.");
+			}
 			returnVal = HPWH_ABORT;
 		}
 
@@ -3722,31 +3715,41 @@ int HPWH::checkInputs() {
 		condensitySum = 0;
 		for (int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += setOfSources[i].condensity[j];
 		if (fabs(condensitySum - 1.0) > 1e-6) {
-			msg("The condensity for heatsource %d does not sum to 1.  \n", i);
-			msg("It sums to %f \n", condensitySum);
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The condensity for heatsource %d does not sum to 1.  \n", i);
+				msg("It sums to %f \n", condensitySum);
+			}
 			returnVal = HPWH_ABORT;
 		}
 		//check that air flows are all set properly
 		if (setOfSources[i].airflowFreedom > 1.0 || setOfSources[i].airflowFreedom <= 0.0) {
-			msg("The airflowFreedom must be between 0 and 1 for heatsource %d.  \n", i);
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("The airflowFreedom must be between 0 and 1 for heatsource %d.  \n", i);
+			}
 			returnVal = HPWH_ABORT;
 		}
 
 		if (setOfSources[i].isACompressor()) {
 			if (setOfSources[i].doDefrost) {
 				if (setOfSources[i].defrostMap.size() < 3) {
-					msg("Defrost logic set to true but no valid defrost map of length 3 or greater set. \n");
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Defrost logic set to true but no valid defrost map of length 3 or greater set. \n");
+					}
 					returnVal = HPWH_ABORT;
 				}
 				if (setOfSources[i].configuration != HeatSource::CONFIG_EXTERNAL) {
-					msg("Defrost is only simulated for external compressors. \n");
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Defrost is only simulated for external compressors. \n");
+					}
 					returnVal = HPWH_ABORT;
 				}
 			}
 		}
 		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL &&
 			setOfSources[i].shutOffLogicSet.size() != 1) {
-			msg("External heat sources can only have one shut off logic");
+			if (hpwhVerbosity >= VRB_reluctant) {
+				msg("External heat sources can only have one shut off logic");
+			}
 			returnVal = HPWH_ABORT;
 		}
 	}
@@ -3763,16 +3766,20 @@ int HPWH::checkInputs() {
 		}
 	}
 
-	double maxTemp;
+	double maxTemp; string why;
 	double tempSetpoint = setpoint_C;
-	if (!isNewSetpointPossible(tempSetpoint, maxTemp)) {
-		msg("The setpoint for this tank is not possible, the max setpoint is %f", maxTemp);
+	if (!isNewSetpointPossible(tempSetpoint, maxTemp, why)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Cannot set new setpoint. %s", why.c_str());
+		}
 		returnVal = HPWH_ABORT;
 	}
 
 	//Check if the UA is out of bounds
 	if (tankUA_kJperHrC < 0.0) {
-		msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n", tankUA_kJperHrC);
+		}
 		returnVal = HPWH_ABORT;
 	}
 
