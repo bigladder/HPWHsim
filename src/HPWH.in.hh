@@ -407,7 +407,7 @@ class HPWH {
   double getSetpoint(UNITS units = UNITS_C) const;
   /**< a function to check the setpoint - returns setpoint in celcius  */
 
-  bool isNewSetpointPossible(double newSetpoint_C, double& maxAllowedSetpoint_C, UNITS units = UNITS_C) const;
+  bool isNewSetpointPossible(double newSetpoint_C, double& maxAllowedSetpoint_C, std::string& why, UNITS units = UNITS_C) const;
   /**< This function returns if the new setpoint is physically possible for the compressor. If there
 		is no compressor then checks that the new setpoint is less than boiling. The setpoint can be
 		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
