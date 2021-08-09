@@ -368,25 +368,6 @@ void testScaleRE() {
 	ASSERTTRUE(val == HPWH::HPWH_ABORT);
 }
 
-void testSetResistanceCapacityErrorChecks() {
-	HPWH hpwhHP1, hpwhR;
-	string input = "ColmacCxA_30_SP";
-
-	// get preset model 
-	getHPWHObject(hpwhHP1, input);
-
-	ASSERTTRUE(hpwhHP1.setResistanceCapacity(100.) == HPWH::HPWH_ABORT); // Need's to be scalable
-
-	input = "restankRealistic";
-	// get preset model 
-	getHPWHObject(hpwhR, input);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(-100.) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 3) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 30000) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., -3) == HPWH::HPWH_ABORT);
-	ASSERTTRUE(hpwhR.setResistanceCapacity(100., 0, HPWH::UNITS_F) == HPWH::HPWH_ABORT);
-
-}
 
 void testResistanceScales() {
 	HPWH hpwh;
@@ -397,73 +378,38 @@ void testResistanceScales() {
 	//hpwh.HPWHinit_resTank();
 	getHPWHObject(hpwh, input);
 
-
 	double returnVal;
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, elementPower));
 	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, elementPower));
-	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
-	ASSERTTRUE(relcmpd(returnVal, elementPower));
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower));
 
 	// check units convert
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_BTUperHr);
+	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr);
 	ASSERTTRUE(relcmpd(returnVal, 2.*elementPower * 3412.14));
 
-	// Check setting one works
+	// Check setting bottom works
 	double factor = 2.0;
-	hpwh.setResistanceCapacity(factor * elementPower, 1);
-	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
-	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
-	ASSERTTRUE(relcmpd(returnVal, elementPower));
+	hpwh.setResistanceCapacity(factor * elementPower, 0);
 	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
+	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, elementPower));
+	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, factor * elementPower + elementPower));
 
 	// Check setting both works
 	factor = 3.;
-	hpwh.setResistanceCapacity(factor * elementPower, 0);
+	hpwh.setResistanceCapacity(factor * elementPower, -1);
+	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
 	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW);
-	ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+	returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
 	ASSERTTRUE(relcmpd(returnVal, 2.*factor * elementPower));
 }
-
-void testGetSetResistanceErrors() {
-	HPWH hpwh;	
-	double lowerElementPower_W = 1000;
-	double lowerElementPower = lowerElementPower_W / 1000;
-	hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
-
-	double returnVal;
-	returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW); // lower
-	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-	returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW); // both, really only lower
-	ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-	returnVal = hpwh.getResistanceCapacity(2, HPWH::UNITS_KW); // error on non existant upper
-	ASSERTTRUE(returnVal == HPWH::HPWH_ABORT);
-
-	// Switch to commercial res tank here later
-	//// Check only bottom setting works
-	//double factor = 3.;
-	//// set both, but only bottom really.
-	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 0, HPWH::UNITS_KW) == 0);
-	//returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
-	//ASSERTTRUE(relcmpd(returnVal, factor * lowerElementPower));
-	//
-	//// set bottom
-	//factor = 4.;
-	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 1, HPWH::UNITS_KW) == 0);
-	//returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
-	//ASSERTTRUE(relcmpd(returnVal, factor * lowerElementPower));
-	//
-	//// set top returns error
-	//ASSERTTRUE(hpwh.setResistanceCapacity(factor * lowerElementPower, 2, HPWH::UNITS_KW) == HPWH::HPWH_ABORT);
-
-}
-
 
 void testStorageTankErrors() {
 	HPWH hpwh;
@@ -478,6 +424,7 @@ void testStorageTankErrors() {
 
 int main(int argc, char *argv[])
 {
+
 	testScalableHPWHScales(); // Test the scalable model scales properly
 
 	testNoScaleOutOfBounds(); // Test that models can't scale with invalid inputs 
@@ -497,10 +444,6 @@ int main(int argc, char *argv[])
 	testCXA30MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
 
 	testChipsCaseWithIPUnits(); //Debuging Chip's case
-
-	testSetResistanceCapacityErrorChecks(); // Check the resistance reset throws errors when expected.
-
-	testGetSetResistanceErrors(); // Check can make ER residential tank with one lower element, and can't set/get upper
 
 	testStorageTankErrors(); // Make sure we can't scale the storage tank.
 
