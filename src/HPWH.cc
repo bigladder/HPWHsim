@@ -1526,6 +1526,14 @@ int HPWH::getCompressorIndex() const {
 	return compressorIndex;
 }
 
+int HPWH::getNumResistanceElements() const {
+	int count = 0;
+	for (int i = 0; i < numHeatSources; i++) {
+		count += setOfSources[i].isAResistance() ? 1 : 0;
+	}
+	return count;
+}
+
 double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp /*=14.444*/, double outTemp /*=57.222*/, 
 	UNITS pwrUnit /*=UNITS_KW*/, UNITS tempUnit /*=UNITS_C*/) const {
 	// calculate capacity btu/hr, input btu/hr, and cop
@@ -1945,7 +1953,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity, double airTemp /*=19.7
 }
 
 
-int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/) {
+int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/) {
 
 	//Input checks
 	if (!isHPWHScalable()) {
@@ -1954,9 +1962,15 @@ int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*
 		}
 		return HPWH_ABORT;
 	}
-	if (lowestElementIndex == -1) {
+	if (getNumResistanceElements() == 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("There are no resistance elements to change \n");
+			msg("There are no resistance elements to set capacity for \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (which < -1 || which > getNumResistanceElements() - 1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds value for which in setResistanceCapacity()\n");
 		}
 		return HPWH_ABORT;
 	}
@@ -1982,69 +1996,65 @@ int HPWH::setResistanceCapacity(double power, int which /*=0*/, UNITS pwrUnit /*
 	}
 
 	//Whew so many checks...
-	if (which == 0) {
+	if (which == -1) {
+		// Just get all the elements
 		for (int i = 0; i < numHeatSources; i++) {
 			if (setOfSources[i].isAResistance()) {
 				setOfSources[i].changeResistanceWatts(watts);
 			}
 		}
 	}
-	else if (which == 1) {
-		setOfSources[lowestElementIndex].changeResistanceWatts(watts);
-	}
-	else if (which == 2) {
-		if (highestElementIndex == -1) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("There is no upper resistance element to set \n");
-			}
-			return HPWH_ABORT;
-		}
-		setOfSources[highestElementIndex].changeResistanceWatts(watts);
-	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("The which option must be between 0 and 2 \n");
+		setOfSources[resistanceHeightMap[which].index].changeResistanceWatts(watts);
+
+		// Then check for repeats in the position
+		int pos = resistanceHeightMap[which].position;
+		for (int i = 0; i < getNumResistanceElements(); i++) {
+			if (which != i && resistanceHeightMap[i].position == pos) {
+				setOfSources[resistanceHeightMap[i].index].changeResistanceWatts(watts);
+			}
 		}
-		return HPWH_ABORT;
 	}
 
 	return 0;
 }
-double HPWH::getResistanceCapacity(int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/) {
+
+double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/) {
 
 	//Input checks
-	if (lowestElementIndex == -1) {
+	if (getNumResistanceElements() == 0) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("There are no resistance elements to return \n");
+			msg("There are no resistance elements to return capacity for \n");
 		}
 		return HPWH_ABORT;
 	}
-	
+	if (which < -1 || which > getNumResistanceElements() - 1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds value for which in getResistanceCapacity()\n");
+		}
+		return HPWH_ABORT;
+	}
+
 	double returnPower = 0;
-	if (which == 0) {
+	if (which == -1) {
+		// Just get all the elements
 		for (int i = 0; i < numHeatSources; i++) {
 			if (setOfSources[i].isAResistance()) {
 				returnPower += setOfSources[i].perfMap[0].inputPower_coeffs[0];
 			}
 		}
 	}
-	else if (which == 1) {
-		returnPower = setOfSources[lowestElementIndex].perfMap[0].inputPower_coeffs[0];
-	}
-	else if (which == 2) {
-		if (highestElementIndex == -1) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("There is no upper resistance element to get \n");
-			}
-			return HPWH_ABORT;
-		}
-		returnPower = setOfSources[highestElementIndex].perfMap[0].inputPower_coeffs[0];
-	}
 	else {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("The which option must be between 0 and 2 \n");
+		// get the power from "which" element by height
+		returnPower += setOfSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs[0];
+
+		// Then check for repeats in the position
+		int pos = resistanceHeightMap[which].position;
+		for (int i = 0; i < getNumResistanceElements(); i++) {
+			if (which != i && resistanceHeightMap[i].position == pos) {
+				returnPower += setOfSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
+			}
 		}
-		return HPWH_ABORT;
 	}
 
 	//Unit conversion
@@ -2062,6 +2072,31 @@ double HPWH::getResistanceCapacity(int which /*=0*/, UNITS pwrUnit /*=UNITS_KW*/
 	}
 
 	return returnPower;
+}
+
+int HPWH::getResistancePosition(int elementIndex) const {
+
+	if (elementIndex < 0 || elementIndex > numHeatSources - 1) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Out of bounds value for which in getResistancePosition\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if (!setOfSources[elementIndex].isAResistance()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("This index is not a resistance element\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	int elementPosition = -1;
+	for (int i = 0; i < CONDENSITY_SIZE; i++) {
+		if (setOfSources[elementIndex].condensity[i] == 1) { // res elements have a condenstiy of 1 at a specific node
+			return i;
+		}
+	}
+	return HPWH_ABORT;
 }
 
 //the privates
@@ -3527,6 +3562,8 @@ void HPWH::calcDerivedValues() {
 
 	calcSizeConstants();
 
+	mapResRelativePosToSetOfSources();
+
 	//heat source ability to depress temp
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].isACompressor()) {
@@ -3594,7 +3631,7 @@ void HPWH::calcDerivedHeatingValues(){
 	highestElementIndex = -1; // Default = No resistance elements
 	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
-	int highestElementPos = 0;
+	int highestElementPos = 0; // -1 to make sure a an element on the bottom can still be identified.
 	for (int i = 0; i < numHeatSources; i++) {
 		if (setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
@@ -3616,18 +3653,18 @@ void HPWH::calcDerivedHeatingValues(){
 					lowestElementIndex = i;
 					lowestElementPos = j;
 				}
-				if (setOfSources[i].condensity[j] > 0.0 && j > highestElementPos) {
+				if (setOfSources[i].condensity[j] > 0.0 && j >= highestElementPos) {
 					highestElementIndex = i;
 					highestElementPos = j;
 				}
 			}
 		}
 	}
-
 	if (hpwhVerbosity >= VRB_emetic) {
 		msg(outputString, " compressorIndex : %d \n", compressorIndex);
 		msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
-	}	
+		msg(outputString, " highestElementIndex : %d \n", highestElementIndex);
+	}
 	if (hpwhVerbosity >= VRB_emetic) {
 		msg(outputString, " VIPIndex : %d \n", VIPIndex);
 	}
@@ -3642,6 +3679,25 @@ void HPWH::calcDerivedHeatingValues(){
 		}
 	}
 
+}
+
+void HPWH::mapResRelativePosToSetOfSources() {
+	resistanceHeightMap.clear();
+	resistanceHeightMap.reserve(getNumResistanceElements());
+
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].isAResistance()) {
+			resistanceHeightMap.push_back({ i,
+											getResistancePosition(i)
+				});
+		}
+	}
+
+	// Sort by height, low to high
+	std::sort(resistanceHeightMap.begin(), resistanceHeightMap.end(),
+		[](const HPWH::resPoint & a, const HPWH::resPoint & b) -> bool {
+		return a.position < b.position; // (5 < 5)      // evaluates to false 
+	});
 }
 
 bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic) {

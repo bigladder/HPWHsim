@@ -137,12 +137,13 @@ class HPWH {
 	  MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
 	  MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
+	  MODELS_TamScalable_SP = 190,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
 
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
 	  MODELS_CustomResTank = 201,   /**< HPWH parameters were input via HPWHinit_resTank */
-	  MODELS_CustomResTankSwing = 202,   /**< HPWH parameters were input via HPWHinit_resTank */
-	  MODELS_TamScalable_SP = 203,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
+	  MODELS_CustomComResTank = 202,   /**< HPWH parameters were input via HPWHinit_commercialResTank */
+	  MODELS_CustomComResTankSwing = 203,   /**< HPWH parameters were input via HPWHinit_commercialResTank, specific swing tank controls */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -327,13 +328,15 @@ class HPWH {
    * is at the bottom, the upper element is at the top third.  The logics are also set
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
-  int HPWHinit_resSwingTank(double tankVol_L, double energyFactor, double upperPower_W, double lowerPower_W, double tUse_C);
-  /**< This function will initialize a HPWH object to be a resistance Swing tank, a specific 
-  * loop tank that is in series with the primary system and the recirculation system.
+ 
+  int HPWHinit_commercialResTank(double tankVol, double upperPower_W, double lowerPower_W, MODELS resTankType);
+  /**< This function will initialize a HPWH object to be a large commercial resistance storage water heater.
+  * The UA is defaulted to meet the federal minimum standby losses based on the volume. 
   *
   * Several assumptions regarding the tank configuration are assumed: the lower element
-  * is at the bottom, the upper element is at the top third.  The logics are also set
-  * to make sense for a swing tank which controls the elements off the top section of the tank.
+  * is at the bottom, the upper element is at the top third.
+  * 
+  * resTankType's types support thus far are MODELS_CustomComResTank, MODELS_CustomComResSwingTank. 
   */
 
   int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
@@ -490,6 +493,9 @@ class HPWH {
 	int getNumHeatSources() const;
 	/**< returns the number of heat sources  */
 
+	int getNumResistanceElements() const;
+	/**< returns the number of resistance elements  */
+
 	int getCompressorIndex() const;
 	/**< returns the index of the compressor in the heat source array.
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
@@ -510,17 +516,29 @@ class HPWH {
 	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 	/**< Scales the heatpump water heater input capacity and COP*/
 	
-	int setResistanceCapacity(double power, int which = 0, UNITS pwrUNIT = UNITS_KW);
-	// Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by which
-	// If which (0) changes all the resisistance elements in the tank.
-	// If which (1) changes the lowest resistance element
-	// If which (2) changes the highest resistance element
+	int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
+	/**< Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by "which"
+	- If which (-1) sets all the resisistance elements in the tank.
+	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
 
-	double getResistanceCapacity(int which = 0, UNITS pwrUNIT = UNITS_KW);
-	// Returns the resistance elements capacity. Which heat source is chosen is changes is given by which
-	// If which (0) returns all the resisistance elements in the tank.
-	// If which (1) returns the lowest resistance element
-	// If which (2) returns the highest resistance element
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	by the ordered height of the resistance elements it cannot refer to a compressor.
+	*/
+
+	double getResistanceCapacity(int which = -1, UNITS pwrUNIT = UNITS_KW);
+	/**< Returns the resistance elements capacity. Which heat source is chosen is changes is given by "which"
+	- If which (-1) gets all the resisistance elements in the tank.
+	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
+
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	by the ordered height of the resistance elements it cannot refer to a compressor.
+	*/
+
+	int getResistancePosition(int elementIndex) const;
 
 	double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 	/**< returns the energy input to the Nth heat source, with the specified units
@@ -623,6 +641,9 @@ class HPWH {
   /**< a helper function to set constants for the UA and tank size*/
   void calcDerivedHeatingValues(); 
   /**< a helper for the helper, calculating condentropy and the lowest node*/
+  void mapResRelativePosToSetOfSources();
+  /**< a helper function for the inits, creating a mapping function for the position of the resistance elements
+  to their indexes in setOfSources. */
 
 
   int checkInputs();
@@ -762,6 +783,15 @@ class HPWH {
 
   bool doConduction;
   /**<  If and only if true will model conduction between the internal nodes of the tank  */
+
+  struct resPoint {
+	  int index;
+	  int position;
+  };
+  std::vector<resPoint> resistanceHeightMap;
+  /**< A map from index of an resistance element in setOfSources to position in the tank, its
+  is sorted by height from lowest to highest*/
+
 
 };  //end of HPWH class
 
