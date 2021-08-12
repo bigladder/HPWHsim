@@ -33,11 +33,9 @@ class HPWH {
   static const float DENSITYWATER_kgperL;
   static const float KWATER_WpermC;
   static const float CPWATER_kJperkgC;
-  static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12
-  //change at your own risk */
+  static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 change at your own risk */
   static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
-  static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0
-  //this saves on computations */
+  static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0 this saves on computations */
   static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
   simulation when the location temperature has not been initialized */
   static const float ASPECTRATIO; /**< A constant to define the aspect ratio between the tank height and
@@ -137,7 +135,7 @@ class HPWH {
 	  MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
 	  MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
-	  MODELS_TamScalable_SP = 190,	/** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
+	  MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
 
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
@@ -146,7 +144,7 @@ class HPWH {
 	  MODELS_CustomComResTankSwing = 203,   /**< HPWH parameters were input via HPWHinit_commercialResTank, specific swing tank controls */
 
 	  // Larger Colmac models in single pass configuration 
-	  MODELS_ColmacCxV_5_SP  = 210,	 /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
+	  MODELS_ColmacCxV_5_SP  = 210,  /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
 	  MODELS_ColmacCxA_10_SP = 211,  /**<  Colmac CxA_10 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_15_SP = 212,  /**<  Colmac CxA_15 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_20_SP = 213,  /**<  Colmac CxA_20 external heat pump in Single Pass Mode */
@@ -162,7 +160,7 @@ class HPWH {
 	  MODELS_ColmacCxA_30_MP = 315,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
 	  
 	  // Larger Nyle models in single pass configuration
-	  MODELS_NyleC25A_SP = 230, /*< Nyle C25A external heat pump in Single Pass Mode  */
+	  MODELS_NyleC25A_SP = 230,  /*< Nyle C25A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC60A_SP = 231,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_SP = 232,  /*< Nyle C90A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC125A_SP = 233, /*< Nyle C125A external heat pump in Single Pass Mode */
@@ -171,17 +169,17 @@ class HPWH {
 	  // Larger Nyle models with the cold weather package!
 	  MODELS_NyleC60A_C_SP  = 241,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_C_SP  = 242,  /*< Nyle C90A external heat pump in Single Pass Mode  */
-	  MODELS_NyleC125A_C_SP = 243, /*< Nyle C125A external heat pump in Single Pass Mode */
-	  MODELS_NyleC185A_C_SP = 244, /*< Nyle C185A external heat pump in Single Pass Mode */
-	  MODELS_NyleC250A_C_SP = 245, /*< Nyle C250A external heat pump in Single Pass Mode */
+	  MODELS_NyleC125A_C_SP = 243,  /*< Nyle C125A external heat pump in Single Pass Mode */
+	  MODELS_NyleC185A_C_SP = 244,  /*< Nyle C185A external heat pump in Single Pass Mode */
+	  MODELS_NyleC250A_C_SP = 245,  /*< Nyle C250A external heat pump in Single Pass Mode */
 
 	  // Larger Nyle models in multi pass configuration
-	  MODELS_NyleC25A_MP  = 330, /*< Nyle C25A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC25A_MP  = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC60A_MP  = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC90A_MP  = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC125A_MP = 333, /*< Nyle C125A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC185A_MP = 334, /*< Nyle C185A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC250A_MP = 335  /*< Nyle C250A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC125A_MP = 333,  /*< Nyle C125A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC185A_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_MP = 335   /*< Nyle C250A external heat pump in Multi Pass Mode */
     };
 
   ///specifies the modes for writing output
@@ -311,8 +309,7 @@ class HPWH {
 	 * This is useful for testing new variations, and for the sort of variability
 	 * that we typically do when creating SEEM runs
 	 * Appropriate use of this function can be found in the documentation
-   *
-   *
+    
 	 * The return value is 0 for successful initialization, HPWH_ABORT otherwise
 	 */
 
@@ -413,6 +410,10 @@ class HPWH {
 		is no compressor then checks that the new setpoint is less than boiling. The setpoint can be
 		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
 		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
+
+  double getMaxCompressorSetpoint(UNITS units = UNITS_C) const;
+  /**< a function to return the max operating temperature of the compressor which can be different than 
+	  the value returned in isNewSetpointPossible() if there are resistance elements. */
 
   double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
@@ -586,6 +587,8 @@ class HPWH {
 
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
+
+  int getCoilConfig() const;
 
   bool hasACompressor() const;
 /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */

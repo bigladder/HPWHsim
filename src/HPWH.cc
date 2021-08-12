@@ -860,6 +860,31 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 }
 
+double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const {
+	
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Unit does not have a compressor \n");
+		}
+		return HPWH__ABORT;
+	}
+
+	double returnVal = setOfSources[compressorIndex].maxSetpoint_C;
+	if (units == UNITS_C) {
+		returnVal = returnVal;
+	}
+	else if (units == UNITS_F) {
+		returnVal = F_TO_C(returnVal);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getMaxCompressorSetpoint. \n");
+		}
+		return HPWH__ABORT;
+	}
+	return returnVal
+}
+
 bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, string& why, UNITS units /*=UNITS_C*/) const {
 	double newSetpoint_C;
 	double maxAllowedSetpoint_C = -273.15;
@@ -1782,6 +1807,15 @@ double HPWH::getLocationTemp_C() const {
 
 int HPWH::getHPWHModel() const {
 	return hpwhModel;
+}
+int HPWH::getCoilConfig() const {
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return setOfSources[compressorIndex].coilConfig;
 }
 
 bool HPWH::hasACompressor() const {
