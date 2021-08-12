@@ -84,7 +84,11 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		setOfSources[0] = resistiveElementBottom;
 	}
 
-	// (1/EnFac + 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr)))
+	// (1/EnFac - 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr))) 
+	// Previous comment and the equation source said (1/EnFac + 1/RecovEff) however this was
+	// determined to be a typo from the source that was kept in the comment. On 8/12/2021 
+	// the comment was changed to reflect the correct mathematical formulation which is performed 
+	// below. 
 	double recoveryEfficiency = 0.98;
 	double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
 	double temp = 1.0 / (recoveryEfficiency * lowerPower_W*3.41443);
@@ -198,7 +202,7 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 		}
 		else if (resTankType == MODELS_CustomComResTankSwing) {
 			//swing tank logic
-			resistiveElementBottom.addTurnOnLogic(HPWH::topThird(8.)); // replace with swing tank logic
+			resistiveElementBottom.addTurnOnLogic(HPWH::topThird(dF_TO_dC(8.))); // replace with swing tank logic
 		}
 
 		// set everything in it's correct place
@@ -384,9 +388,6 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	compressor.perfMap[1].inputPower_coeffs[0] /= genericFudge;
 	compressor.perfMap[1].inputPower_coeffs[1] /= genericFudge;
 	compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
-
-
-
 
 	//set everything in its places
 	setOfSources[0] = resistiveElementTop;
@@ -1494,7 +1495,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
-
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
