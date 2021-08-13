@@ -158,12 +158,12 @@ void testCommercialTankInit() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
 	double UA;
-	double UA800 = 14.232692;
-	double UA2 = 4.275807;
-	double UA50 = 4.874717;
-	double UA200 = 6.7463127;
-	double UA2000 = 29.2054531;
-	double UA20000 = 253.7968561;
+	const double UA800 = 14.16395482;
+	const double UA2 = 4.255156932;
+	const double UA50 = 4.851174851;
+	const double UA200 = 6.713730845;
+	const double UA2000 = 29.06440278;
+	const double UA20000 = 252.5711221;
 
 	// Check UA is as expected at 800 gal
 	hpwh.HPWHinit_commercialResTank(800., elementPower_kW * 1000., elementPower_kW * 1000., HPWH::MODELS_CustomComResTank);
