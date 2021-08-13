@@ -220,8 +220,10 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 	// SL = S(%/h)/100 * 8.25 (BTU/galF) * Vm (gal) * (140 – 75) (F)
 	// SL = UA deltaT. So deltaT actually cancels. 
 	// UA (BTU/hr/F) = 8.25 (BTU/galF) * (.3 + 27/Vm)(%/hr)/100 * Vm = 8.25 * (.3*Vm + 27 [G]) / 100, where 8.25 is actually 
-	double S_PercperHr= (.3 + 27. / L_TO_GAL(tankVol_L));
-	tankUA_kJperHrC = CPWATER_kJperkgC * DENSITYWATER_kgperL * S_PercperHr / 100. * tankVol_L; // Note (.3+27./L_TO_GAL(tankVol_L)) has units %/hr
+	double tankVol_GAL = L_TO_GAL(tankVol_L);
+	double S_PercperHr= (0.3 + 27. / tankVol_GAL);
+	double tankUA_BTUperHrF = 8.25 * S_PercperHr / 100. * tankVol_GAL; // Note (.3+27./L_TO_GAL(tankVol_L)) has units %/hr
+	tankUA_kJperHrC = UAf_TO_UAc(tankUA_BTUperHrF);
 
 	if (tankUA_kJperHrC < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
