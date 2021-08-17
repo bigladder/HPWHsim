@@ -7,6 +7,7 @@ add_executable(testScaleHPWH testScaleHPWH.cc)
 add_executable(testMaxSetpoint testMaxSetpoint.cc)
 add_executable(testSizingFractions testSizingFractions.cc)
 add_executable(testResistanceFcts testResistanceFcts.cc)
+add_executable(testCompressorFcts testCompressorFcts.cc)
 
 target_link_libraries(testTool libHPWHsim)
 target_link_libraries(testTankSizeFixed libHPWHsim)
@@ -14,6 +15,7 @@ target_link_libraries(testScaleHPWH libHPWHsim)
 target_link_libraries(testMaxSetpoint libHPWHsim)
 target_link_libraries(testSizingFractions libHPWHsim)
 target_link_libraries(testResistanceFcts libHPWHsim)
+target_link_libraries(testCompressorFcts libHPWHsim)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
