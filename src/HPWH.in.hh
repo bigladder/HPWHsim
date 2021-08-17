@@ -215,12 +215,6 @@ class HPWH {
   };		  
 
   /** specifies the type of heat source  */
-  enum HEATING_CYCLE {
-	  CYCLE_singlepass,   /**< a seperated split system in single pass operating mode  */
-	  CYCLE_multipass		  /**< a unitary or split system in multi-pass operating mode*/
-  };
-
-  /** specifies the type of heat source  */
   enum HEATSOURCE_TYPE {
     TYPE_none,        /**< a default to check to make sure it's been set  */
     TYPE_resistance,  /**< a resistance element  */
@@ -588,7 +582,8 @@ class HPWH {
   int getHPWHModel() const;
   /**< get the model number of the HPWHsim model number of the hpwh */
 
-  int getCoilConfig() const;
+  int getCompressorCoilConfig() const;
+  bool isCompressorMultipass() const;
 
   bool hasACompressor() const;
 /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
@@ -1005,14 +1000,14 @@ class HPWH::HeatSource {
       cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
 
-	COIL_CONFIG configuration; /**<  submerged, wrapped, external */
+  COIL_CONFIG configuration; /**<  submerged, wrapped, external */
   HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
-  HEATING_CYCLE heatingCycle; /**< single pass or multi-pass. Anything not obviously split system single pass is multipass*/
+  bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single pass is multipass*/
 
-	int lowestNode;
+  int lowestNode;
   /**< hold the number of the first non-zero condensity entry */
 
-	EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
+  EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
 
 
