@@ -860,6 +860,31 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const{
 	}
 }
 
+double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const {
+	
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Unit does not have a compressor \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double returnVal = setOfSources[compressorIndex].maxSetpoint_C;
+	if (units == UNITS_C) {
+		returnVal = returnVal;
+	}
+	else if (units == UNITS_F) {
+		returnVal = F_TO_C(returnVal);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getMaxCompressorSetpoint. \n");
+		}
+		return HPWH_ABORT;
+	}
+	return returnVal;
+}
+
 bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint, string& why, UNITS units /*=UNITS_C*/) const {
 	double newSetpoint_C;
 	double maxAllowedSetpoint_C = -273.15;
@@ -1783,6 +1808,24 @@ double HPWH::getLocationTemp_C() const {
 int HPWH::getHPWHModel() const {
 	return hpwhModel;
 }
+int HPWH::getCompressorCoilConfig() const {
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return setOfSources[compressorIndex].configuration;
+}
+bool HPWH::isCompressorMultipass() const {
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return setOfSources[compressorIndex].isMultipass;
+}
 
 bool HPWH::hasACompressor() const {
 	return compressorIndex >= 0;
@@ -2423,7 +2466,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	heatingCycle(CYCLE_multipass)
+	isMultipass(true)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2470,7 +2513,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
-	heatingCycle = hSource.heatingCycle;
+	isMultipass = hSource.isMultipass;
 
 	lowestNode = hSource.lowestNode;
 
@@ -2530,7 +2573,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
-	heatingCycle = hSource.heatingCycle;
+	isMultipass = hSource.isMultipass;
 
 	lowestNode = hSource.lowestNode;
 	extrapolationMethod = hSource.extrapolationMethod;
@@ -3340,7 +3383,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
 		}
 
-		if (heatingCycle == CYCLE_singlepass) {
+		if (!this->isMultipass) {
 			//how much heat is available this timestep
 			getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
@@ -4237,10 +4280,10 @@ int HPWH::HPWHinit_file(string configFile) {
 			else if (token == "heatCycle") {
 				line_ss >> tempString;
 				if (tempString == "singlepass") {
-					setOfSources[heatsource].heatingCycle = CYCLE_singlepass;
+					setOfSources[heatsource].isMultipass = false;
 				} 
 				else if (tempString == "multipass") {
-					setOfSources[heatsource].heatingCycle = CYCLE_multipass;
+					setOfSources[heatsource].isMultipass = true;
 				}
 				else {
 					if (hpwhVerbosity >= VRB_reluctant) {

@@ -713,7 +713,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxT = F_TO_C(120.);
 		compressor.hysteresis_dC = 0;  //no hysteresis
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(20));
@@ -996,7 +996,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 
@@ -1136,7 +1136,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 
 		//logic conditions
@@ -1277,7 +1277,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-
+		compressor.minT = F_TO_C(-25.);
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		compressor.perfMap.reserve(5);
@@ -1314,7 +1314,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.hysteresis_dC = 4;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = MAXOUTLET_R744;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//		No minT!
@@ -1360,7 +1360,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		
+		compressor.minT = F_TO_C(-25.);
+
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		compressor.perfMap.reserve(5);
@@ -1397,7 +1398,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.hysteresis_dC = 4;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = MAXOUTLET_R744;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//		No minT!
@@ -3139,7 +3140,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.heatingCycle = CYCLE_singlepass;
+		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 	
