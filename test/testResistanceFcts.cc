@@ -209,7 +209,6 @@ int main(int argc, char *argv[])
 
 	testGetSetResistanceErrors(); // Check can make ER residential tank with one lower element, and can't set/get upper
 
-	// Should move these to a seperate build later.
 	testCommercialTankInitErrors(); // test it inits as expected
 	testGetNumResistanceElements(); // unit test on getNumResistanceElements()
 	testGetResistancePositionInRETank(); // unit test on getResistancePosition() for an RE tank
