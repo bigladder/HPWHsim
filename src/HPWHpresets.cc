@@ -1111,6 +1111,93 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 	
+
+	// if colmac multipass
+	else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP) {
+		numNodes = 48;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		tankSizeFixed = false;
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.perfMap.reserve(1);
+		compressor.hysteresis_dC = 0;
+
+		//logic conditions
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15.), false));
+
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(4);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//Defrost Derate 
+		compressor.setupDefrostMap();
+
+		if (presetNum == MODELS_ColmacCxV_5_MP) {
+			setTankSize_adjustUA(200., UNITS_GAL);
+			//logic conditions
+			compressor.minT = F_TO_C(-4.0);
+			compressor.maxSetpoint_C = MAXOUTLET_R410A;
+		}
+		else {
+			//logic conditions
+			compressor.minT = F_TO_C(40.);
+			compressor.maxT = F_TO_C(105.);
+			compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+			if (presetNum == MODELS_ColmacCxA_10_MP) {
+				setTankSize_adjustUA(500., UNITS_GAL);
+
+			}
+			else if (presetNum == MODELS_ColmacCxA_15_MP) {
+				setTankSize_adjustUA(600., UNITS_GAL);
+
+			}
+			else if (presetNum == MODELS_ColmacCxA_20_MP) {
+				setTankSize_adjustUA(800., UNITS_GAL);
+				compressor.mpFlowRate_LperS = GPM_TO_LperS(38.347);
+
+				compressor.perfMap.push_back({
+					105, // Temperature (T_F)
+
+					{15.28185239, 0.029681043, -0.071248836, -0.000338831, 0.000681317, 0.000482848}, // Input Power Coefficients (inputPower_coeffs)
+					
+					{1.188288739, 0.047050722, 0.006736658, 0.000141181, -3.06795E-05, -0.000327699}// COP Coefficients (COP_coeffs)
+					});
+
+			}
+			else if (presetNum == MODELS_ColmacCxA_25_MP) {
+				setTankSize_adjustUA(1000., UNITS_GAL);
+
+			}
+			else if (presetNum == MODELS_ColmacCxA_30_MP) {
+				setTankSize_adjustUA(1200., UNITS_GAL);
+
+			}
+		}
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+	}
+
+
 	// If Nyle single pass preset
 	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
 		numNodes = 96;

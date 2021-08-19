@@ -584,6 +584,7 @@ class HPWH {
 
   int getCompressorCoilConfig() const;
   bool isCompressorMultipass() const;
+  bool isCompressoExternalMultipass() const;
 
   bool hasACompressor() const;
 /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
@@ -865,6 +866,8 @@ class HPWH::HeatSource {
 	/**< Does a simple linear interpolation between two points to the xnew point */
 	void regressedMethod(double &ynew, std::vector<double> &coefficents, double x1, double x2, double x3);
 	/**< Does a calculation based on the ten term regression equation  */
+	void regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
+	/**< Does a calculation based on the five term regression equation for MP split systems  */
 
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
@@ -973,6 +976,7 @@ class HPWH::HeatSource {
   /**< returns if the heat sources is a compressor or not */
   bool isAResistance() const;
   /**< returns if the heat sources is a compressor or not */
+  bool isExternalMultipass() const;
 
   double minT;
   /**<  minimum operating temperature of HPWH environment */
@@ -999,6 +1003,8 @@ class HPWH::HeatSource {
   /**< airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
       cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
+  double mpFlowRate_LperS;
+  /**< flow rate for a multipass external (split) HPWH */
 
   COIL_CONFIG configuration; /**<  submerged, wrapped, external */
   HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
@@ -1027,6 +1033,8 @@ class HPWH::HeatSource {
   void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	  getCapacity(externalT_C, condenserTemp_C, hpwh->getSetpoint(),  input_BTUperHr, cap_BTUperHr, cop);
   };
+  /** An equivalent getCapcity function just for multipass external (or split) HPWHs  */
+  void getCapacityMP(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
 
   void calcHeatDist(std::vector<double> &heatDistribution);
 
@@ -1051,12 +1059,14 @@ inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.
 inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
+inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
+inline double GPM_TO_LperS(double gpm) { return (gpm * 3.78541 / 60.0); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
