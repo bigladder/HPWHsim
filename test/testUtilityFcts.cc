@@ -152,6 +152,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "ColmacCxA_30_SP") {
 		hpwhModel = HPWH::MODELS_ColmacCxA_30_SP;
 	}
+	else if (modelName == "ColmacCxA_20_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxA_20_MP;
+	}
 	else if (modelName == "NyleC25A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC25A_SP;
 	}
