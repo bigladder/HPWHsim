@@ -2909,7 +2909,7 @@ bool HPWH::HeatSource::maxedOut() const {
 	return maxed;
 }
 
-double HPWH::HeatSource::fractToMeetComparisonExternal(){
+double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 	double fracTemp, comparison, sum, totWeight, diff;
 	double frac = 1.;
 	int calcNode;
@@ -3446,6 +3446,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr = 0;
 	cop = 0;
 
+	double volumeHeated_Gal = 0;
+
 	do {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
@@ -3456,7 +3458,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			getCapacityMP(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
 
-			heatingCapacity_kJ = heatingCapacity_KW * (minutesToRun * 60.0);
+			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
 
 			targetTemp_C = hpwh->tankTemps_C[0] + heatingCapacity_KW / (mpFlowRate_LperS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
 			deltaT_C = targetTemp_C - hpwh->tankTemps_C[0];
@@ -3470,7 +3472,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			}
 
 			//adjust capacity for how much time is left in this step
-			heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
+			heatingCapacity_kJ *= (timeRemaining_min / minutesToRun);
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
 			}
@@ -3485,9 +3487,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		
 		// Caclulate fraction of node to move
-		if (nodeHeat_kJperNode <= 0) { // protect against dividing by zero - if bottom node is at (or above) setpoint, add no heat
+		if (nodeHeat_kJperNode <= 0.) { // protect against dividing by zero - if bottom node is at (or above) setpoint, add no heat
 
-			nodeFrac = 0;
+			nodeFrac = 0.;
 		}
 		else {
 			nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
@@ -3498,7 +3500,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		}
 
 		fractToShutOff = fractToMeetComparisonExternal();
-		if (fractToShutOff < 1 && fractToShutOff < nodeFrac) {
+		if (fractToShutOff < 1. && fractToShutOff < nodeFrac && !this->isMultipass) { // circle back and check on this for multipass
 			nodeFrac = fractToShutOff;
 			heatingCapacityNeeded_kJ = nodeFrac * nodeHeat_kJperNode;
 
@@ -3507,8 +3509,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		}
 		//if more than one, round down to 1 and subtract the amount of time it would
 		//take to heat that node from the timeRemaining
-		else if (nodeFrac > 1) {
-			nodeFrac = 1;
+		else if (nodeFrac > 1.) {
+			nodeFrac = 1.;
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
@@ -3516,7 +3518,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//this should make heatingCapacity == 0 if nodeFrac < 1
 		else {
 			timeUsed_min = timeRemaining_min;
-			timeRemaining_min = 0;
+			timeRemaining_min = 0.;
 		}
 
 
@@ -3532,7 +3534,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
 		}
 		//add water to top node, heated to setpoint
-		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + targetTemp_C * nodeFrac;
+		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
 
 		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
@@ -3540,11 +3542,17 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
 
+		volumeHeated_Gal += nodeFrac * L_TO_GAL(volumePerNode_LperNode);
+
 		hpwh->mixTankInversions();
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating
 	} while (timeRemaining_min > 0 && shutsOff() != true);
+
+	if (timeRemaining_min == 0 && fabs(volumeHeated_Gal - L_TO_GAL(mpFlowRate_LperS)*60) > 0.000001 && isExternalMultipass()) {
+		hpwh->msg("Volumes are off! volumeHeated_Gal: %.6lf, mpFlowRate_LperS[gpm]: %.6lf \n", volumeHeated_Gal, L_TO_GAL(mpFlowRate_LperS) * 60);
+	}
 
 	//divide outputs by sum of weight - the total time ran
 	input_BTUperHr /= (minutesToRun - timeRemaining_min);
