@@ -1000,6 +1000,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = numNodes - 1;
+
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
@@ -1132,10 +1135,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = 16; // 16 = 48 / 3;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -1172,7 +1177,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_MP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				compressor.mpFlowRate_LperS = GPM_TO_LperS(38.347);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(38.347);
 
 				compressor.perfMap.push_back({
 					105, // Temperature (T_F)
@@ -1225,8 +1230,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
-
-		//logic conditions
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = numNodes - 1;
 
 		//logic conditions
 		if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {// If not cold weather package
@@ -1252,7 +1257,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		nodeWeights1.emplace_back(1);
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
-
+		
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
@@ -1366,6 +1371,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-25.);
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = numNodes - 1;
 
 		compressor.perfMap.reserve(5);
 
@@ -1403,9 +1410,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = MAXOUTLET_R744;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//		No minT!
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
@@ -1448,6 +1452,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-25.);
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = numNodes - 1;
 
 		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -1487,9 +1493,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = MAXOUTLET_R744;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//		No minT!
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
@@ -3230,7 +3233,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
-	
+
+		compressor.externalInletHeight = 0;
+		compressor.externalOutletHeight = numNodes - 1;
+
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 

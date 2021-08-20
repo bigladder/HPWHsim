@@ -206,12 +206,14 @@ class HPWH {
     UNITS_kJperHrC,   /**< UA, metric units  */
     UNITS_BTUperHrF,  /**< UA, imperial units  */
 	UNITS_FT,		  /**< feet  */
-	UNITS_M,		  /**< meters */
+	UNITS_M,		  /**< meters  */
 	UNITS_FT2,		  /**< square feet  */
-	UNITS_M2,		  /**< square meters */
-	UNITS_MIN,		  /**< minutes */
+	UNITS_M2,		  /**< square meters  */
+	UNITS_MIN,		  /**< minutes  */
 	UNITS_SEC,		  /**< seconds  */
-	UNITS_HR,		  /**< hours */
+	UNITS_HR,		  /**< hours  */
+	UNITS_GPM,		  /**< gallons per minute  */
+	UNITS_LPS		  /**< liters per second  */
   };		  
 
   /** specifies the type of heat source  */
@@ -462,6 +464,22 @@ class HPWH {
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setInlet2ByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
+
+  int setExternalInletHeightByFraction(double fractionalHeight);
+  /**< This is a setter for the height at which the split system HPWH adds heated water to the storage tank, 
+  this sets it as a fraction of the number of nodes from the bottom up*/
+  int setExternalOutletHeightByFraction(double fractionalHeight);
+  /**< This is a setter for the height at which the split system HPWH takes cold water out of the storage tank,
+  this sets it as a fraction of the number of nodes from the bottom up*/
+
+  int setExternalPortHeightByFraction(double fractionalHeight, int whichPort);
+  /**< sets the external heater port heights inlet height node number */
+
+  int getExternalInletHeight() const;
+  /**< Returns the node where the split system HPWH adds heated water to the storage tank*/
+  int getExternalOutletHeight() const;
+  /**< Returns the node where the split system HPWH takes cold water out of the storage tank*/
+
   int setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
   /**< This is a setter for the water inlet height, by fraction. */
 
@@ -587,7 +605,13 @@ class HPWH {
   bool isCompressoExternalMultipass() const;
 
   bool hasACompressor() const;
-/**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
+  /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
+  
+  bool hasExternalHeatSource() const;
+  /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or resistance element. */
+  double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
+  /**< Returns the constant flow rate for an external multipass heat sources. */
+
 
   double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 
@@ -878,9 +902,9 @@ class HPWH::HeatSource {
   //start with a few type definitions
   enum COIL_CONFIG {
     CONFIG_SUBMERGED,
-    CONFIG_WRAPPED,
-    CONFIG_EXTERNAL
-    };
+  	CONFIG_WRAPPED,
+  	CONFIG_EXTERNAL
+  };
 
 	/** the creator of the heat source, necessary to access HPWH variables */
   HPWH *hpwh;
@@ -1003,8 +1027,10 @@ class HPWH::HeatSource {
   /**< airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
       cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
-  double mpFlowRate_LperS;
-  /**< flow rate for a multipass external (split) HPWH */
+  int externalInletHeight; /**<Th node height at which the multipass or single pass HPWH adds heated water to the storage tank, defaults to top for single pass. */
+  int externalOutletHeight; /**<The node height at which the multipass or single pass HPWH adds takes cold water out of the storage tank, defaults to bottom for single pass.  */
+
+  double mpFlowRate_LPS; /**< The multipass flow rate */
 
   COIL_CONFIG configuration; /**<  submerged, wrapped, external */
   HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
@@ -1066,7 +1092,8 @@ inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
-inline double GPM_TO_LperS(double gpm) { return (gpm * 3.78541 / 60.0); }
+inline double GPM_TO_LPS(double gpm) { return (gpm * 3.78541 / 60.0); }
+inline double LPS_TO_GPM(double lps) { return (lps * 60.0 / 3.78541); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
