@@ -34,6 +34,12 @@ void testIsCompressorMultipass(string input, bool expected) {
 	ASSERTTRUE(hpwh.isCompressorMultipass() == expected);
 }
 
+void testIsCompressoExternalMultipass(string input, bool expected) {
+	HPWH hpwh;
+	getHPWHObject(hpwh, input);	// get preset model 
+	ASSERTTRUE(hpwh.isCompressoExternalMultipass() == expected);
+}
+
 void testGetMaxCompressorSetpoint(string input, double expected) {
 	HPWH hpwh;
 	getHPWHObject(hpwh, input);	// get preset model 
@@ -57,6 +63,8 @@ int main(int argc, char *argv[])
 	const int hasComp[length] = { true, true, true, true, true, true, true, false, false, true };
 	const int coilConfig[length] = { 1, 1, 1, 2, 2, 2, 2, HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, 2 };
 	const int heatCycle[length] = { true, true, true, false, false, false, false, HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, true };
+	const int isExtMP[length] = { false, false, false, false, false, false, false, HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, true };
+
 	const double maxStpt[length] = { HPWH::MAXOUTLET_R134A, HPWH::MAXOUTLET_R134A,HPWH::MAXOUTLET_R134A,
 								HPWH::MAXOUTLET_R744, HPWH::MAXOUTLET_R410A, HPWH::MAXOUTLET_R134A,
 								HPWH::MAXOUTLET_R134A, HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, HPWH::MAXOUTLET_R134A };
@@ -67,6 +75,7 @@ int main(int argc, char *argv[])
 		testHasACompressor(models[i], hasComp[i]);
 		testGetCompCoilConfig(models[i], coilConfig[i]);
 		testIsCompressorMultipass(models[i], heatCycle[i]);
+		testIsCompressoExternalMultipass(models[i], isExtMP[i]);
 
 		testGetMaxCompressorSetpoint(models[i], maxStpt[i]);
 		testGetMinOperatingTemp(models[i], minTemp[i]);
