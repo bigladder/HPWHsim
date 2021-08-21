@@ -577,9 +577,13 @@ class HPWH {
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
   double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-	/**< returns the condenser temperature in the specified units
-	  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
+  /**< returns the condenser inlet temperature in the specified units
+  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */  
+  
+  double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
+  /**< returns the condenser outlet temperature in the specified units
+  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+ 
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -780,6 +784,8 @@ class HPWH {
 
 	double condenserInlet_C;
 	/**< the temperature of the inlet water to the condensor either an average of tank nodes or taken from the bottom, 0 if no flow or no compressor  */
+	double condenserOutlet_C;
+	/**< the temperature of the outlet water from the condensor either, 0 if no flow or no compressor  */
 
 	double energyRemovedFromEnvironment_kWh;
 	/**< the total energy removed from the environment, to heat the water  */
@@ -1027,8 +1033,8 @@ class HPWH::HeatSource {
   /**< airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
       cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
-  int externalInletHeight; /**<Th node height at which the multipass or single pass HPWH adds heated water to the storage tank, defaults to top for single pass. */
-  int externalOutletHeight; /**<The node height at which the multipass or single pass HPWH adds takes cold water out of the storage tank, defaults to bottom for single pass.  */
+  int externalInletHeight; /**<The node height at which the external multipass or single pass HPWH adds heated water to the storage tank, defaults to top for single pass. */
+  int externalOutletHeight; /**<The node height at which the external multipass or single pass HPWH adds takes cold water out of the storage tank, defaults to bottom for single pass.  */
 
   double mpFlowRate_LPS; /**< The multipass flow rate */
 
