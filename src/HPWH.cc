@@ -126,6 +126,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
+	condenserOutlet_C = hpwh.condenserOutlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -200,6 +201,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
+	condenserOutlet_C = hpwh.condenserOutlet_C;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -272,15 +274,16 @@ int HPWH::runOneStep(double drawVolume_L,
 
 
 	//reset the output variables
-	outletTemp_C = 0;
-	condenserInlet_C = 0;
-	energyRemovedFromEnvironment_kWh = 0;
-	standbyLosses_kWh = 0;
+	outletTemp_C = 0.;
+	condenserInlet_C = 0.;
+	condenserOutlet_C = 0.;
+	energyRemovedFromEnvironment_kWh = 0.;
+	standbyLosses_kWh = 0.;
 
 	for (int i = 0; i < numHeatSources; i++) {
 		setOfSources[i].runtime_min = 0;
-		setOfSources[i].energyInput_kWh = 0;
-		setOfSources[i].energyOutput_kWh = 0;
+		setOfSources[i].energyInput_kWh = 0.;
+		setOfSources[i].energyOutput_kWh = 0.;
 	}
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
@@ -1818,6 +1821,21 @@ double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const {
 	}
 }
 
+double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const {
+	if (units == UNITS_C) {
+		return condenserOutlet_C;
+	}
+	else if (units == UNITS_F) {
+		return C_TO_F(condenserOutlet_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
 double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the space to the water is the positive direction
 	if (units == UNITS_KWH) {
@@ -3123,7 +3141,11 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
 			}
 		}
-
+		
+		if (isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
+			hpwh->condenserOutlet_C = getCondenserTemp();
+		}
+		
 		//after you've done everything, any leftover capacity is time that didn't run
 		this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
 #if 1	// error check, 1-22-2017
@@ -3554,22 +3576,19 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
 		}
 
-		//	externalInletHeight = 0; externalOutletHeight = numNodes - 1;
-
-
 		if (this->isMultipass) {
 			//how much heat is added this timestep
-			getCapacityMP(externalT_C, hpwh->tankTemps_C[externalInletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+			getCapacityMP(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
 
 			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
 
-			targetTemp_C = hpwh->tankTemps_C[externalInletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
-			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalInletHeight];
+			targetTemp_C = hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
+			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 		}
 		else {
 			//how much heat is available this timestep
-			getCapacity(externalT_C, hpwh->tankTemps_C[externalInletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+			getCapacity(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
@@ -3584,7 +3603,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			//calculate what percentage of the bottom node can be heated to setpoint
 			//with amount of heat available this timestep
 			targetTemp_C = maxTargetTemp_C;
-			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalInletHeight];
+			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 			
 		}
 
@@ -3592,7 +3611,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		
 		// Caclulate fraction of node to move
 		if (nodeHeat_kJperNode <= 0.) { // protect against dividing by zero - if bottom node is at (or above) setpoint, add no heat
-
 			nodeFrac = 0.;
 		}
 		else {
@@ -3628,17 +3646,18 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 		// Track the condenser temperature if this is a compressor before moving the nodes //////////////////////////////////////////
 		if (isACompressor()) {
-			hpwh->condenserInlet_C += hpwh->tankTemps_C[externalInletHeight] * timeUsed_min;
+			hpwh->condenserInlet_C += hpwh->tankTemps_C[externalOutletHeight] * timeUsed_min;
+			hpwh->condenserOutlet_C += targetTemp_C * timeUsed_min;
 		}
 
 
 		// Moving the nodes down ////////////////////////////////////////////////////////////////////////////////////////////////////
 		// move all nodes down, mixing if less than a full node
-		for (int n = externalInletHeight; n < externalOutletHeight; n++) {
+		for (int n = externalOutletHeight; n < externalInletHeight; n++) {
 			hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
 		}
 		//add water to top node, heated to setpoint
-		hpwh->tankTemps_C[externalOutletHeight] = hpwh->tankTemps_C[externalOutletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
+		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
 
 		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
@@ -3663,7 +3682,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cop /= (minutesToRun - timeRemaining_min);
 	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
-
+	hpwh->condenserOutlet_C /= (minutesToRun - timeRemaining_min);
+	
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
 	}
