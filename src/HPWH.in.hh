@@ -584,6 +584,9 @@ class HPWH {
   /**< returns the condenser outlet temperature in the specified units
   returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
  
+  double getExternalVolumeHeated(UNITS units = UNITS_L) const;
+  /**< returns the volume of water heated in an external in the specified units
+	returns 0 when no external heat source is running  */
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -786,6 +789,8 @@ class HPWH {
 	/**< the temperature of the inlet water to the condensor either an average of tank nodes or taken from the bottom, 0 if no flow or no compressor  */
 	double condenserOutlet_C;
 	/**< the temperature of the outlet water from the condensor either, 0 if no flow or no compressor  */
+	double externalVolumeHeated_L;
+	/**< the volume of water heated by an external source, 0 if no flow or no external heat source  */
 
 	double energyRemovedFromEnvironment_kWh;
 	/**< the total energy removed from the environment, to heat the water  */

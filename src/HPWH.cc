@@ -127,6 +127,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
 	condenserOutlet_C = hpwh.condenserOutlet_C;
+	externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -202,6 +203,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
 	condenserOutlet_C = hpwh.condenserOutlet_C;
+	externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -277,6 +279,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	outletTemp_C = 0.;
 	condenserInlet_C = 0.;
 	condenserOutlet_C = 0.;
+	externalVolumeHeated_L = 0.;
 	energyRemovedFromEnvironment_kWh = 0.;
 	standbyLosses_kWh = 0.;
 
@@ -1831,6 +1834,21 @@ double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const {
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
+double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const {
+	if (units == UNITS_L) {
+		return externalVolumeHeated_L;
+	}
+	else if (units == UNITS_GAL) {
+		return L_TO_GAL(externalVolumeHeated_L);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getExternalVolumeHeated.  \n");
 		}
 		return double(HPWH_ABORT);
 	}
@@ -3569,8 +3587,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr = 0;
 	cop = 0;
 
-	double volumeHeated_Gal = 0;
-
 	do {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
@@ -3665,17 +3681,13 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
 
-		volumeHeated_Gal += nodeFrac * L_TO_GAL(volumePerNode_LperNode);
+		hpwh->externalVolumeHeated_L += nodeFrac * volumePerNode_LperNode;
 
 		hpwh->mixTankInversions();
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating
 	} while (timeRemaining_min > 0 && shutsOff() != true);
-
-	if (timeRemaining_min == 0 && fabs(volumeHeated_Gal - L_TO_GAL(mpFlowRate_LPS)*60) > 0.000001 && isExternalMultipass()) {
-		hpwh->msg("Volumes are off! volumeHeated_Gal: %.6lf, mpFlowRate_LPS[gpm]: %.6lf \n", volumeHeated_Gal, L_TO_GAL(mpFlowRate_LPS) * 60);
-	}
 
 	//divide outputs by sum of weight - the total time ran
 	input_BTUperHr /= (minutesToRun - timeRemaining_min);
