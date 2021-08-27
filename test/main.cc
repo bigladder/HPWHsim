@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
 	  // Check timing
 	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
 		  if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
-			  cout << "WARNING: On minute " << i << " heat source " << iHS << " ran for " << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
+			  cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for " << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
 			  exit(1); 
 		  }
 	  }
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 		  double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
 		  double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(0);
 		  if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
-			  cout << "Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
+			  cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
 				  << mpFlowVolume_Gal << "\n";
 			  exit(1);
 		  }
