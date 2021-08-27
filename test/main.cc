@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
   string strPreamble;
   string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
-//  string strHead = "minutes,Ta,Tsetpoint,inletT,draw,condenserT,";
+  string strHeadMP = "minutes,Ta,Tsetpoint,inletT,draw,condenserInletT,condenserOutletT,externalVolGPM,";
   
 #if defined _DEBUG
   hpwh.setVerbosity(HPWH::VRB_reluctant);
@@ -257,7 +257,12 @@ int main(int argc, char *argv[])
 		  cout << "Could not open output file " << fileToOpen << "\n";
 		  exit(1);
 	  }
-	  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
+	  if (hpwh.isCompressoExternalMultipass()) {
+		  hpwh.WriteCSVHeading(outputFile, strHeadMP.c_str(), nTestTCouples, 0);
+	  }
+	  else {
+		  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
+	  }
   }
   // ------------------------------------- Simulate --------------------------------------- //
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
@@ -326,29 +331,42 @@ int main(int argc, char *argv[])
 	  if (fBal > EBALTHRESHOLD){
 		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
 	  }
-	  //
+	  // Check timing
 	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
 		  if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
 			  cout << "WARNING: On minute " << i << " heat source " << iHS << " ran for " << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
+			  exit(1); 
+		  }
+	  }
+	  // Check flow for external MP
+	  if (hpwh.isCompressoExternalMultipass()) {
+		  double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
+		  double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(0);
+		  if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
+			  cout << "Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
+				  << mpFlowVolume_Gal << "\n";
+			  exit(1);
 		  }
 	  }
 	  // Recording
 	  if (minutesToRun < 500000.) {
-	  		// Copy current status into the output file
-	  		if (HPWH_doTempDepress) {
-	  			airTemp2 = hpwh.getLocationTemp_C();
-	  		}
-			strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
-				std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", "; 
-				// +std::to_string(hpwh.getCondenserWaterInletTemp()) + ", ";
-	  			//std::to_string(hpwh.getOutletTemp()) + ",";
-	  		hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+		  // Copy current status into the output file
+		  if (HPWH_doTempDepress) {
+			  airTemp2 = hpwh.getLocationTemp_C();
+		  }
+		  strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
+			  std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
+		  // Add some more outputs for mp tests
+		  if (hpwh.isCompressoExternalMultipass()) {
+			  strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " + std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
+				  std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+		  }
+		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
 	  }
 	  else {
 	  		for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
 	  			cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
 	  			cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
-	  			//cout << "Now on minute: " << i << ", heat source" << iHS << ", cumulative input:"<< cumHeatIn[iHS] << "\n";
 	  		}
 	  }
   }

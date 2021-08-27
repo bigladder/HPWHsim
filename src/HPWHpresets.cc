@@ -1117,7 +1117,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	// if colmac multipass
 	else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP) {
-		numNodes = 48;
+		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -1140,8 +1140,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int) 0; // 16 = 48 / 3;
-
+		compressor.externalInletHeight = (int)numNodes / 2 - 1; // middle
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
@@ -1177,7 +1176,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_MP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				compressor.mpFlowRate_LPS = GPM_TO_LPS(38.347);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(40.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
 				compressor.perfMap.push_back({
 					105, // Temperature (T_F)
