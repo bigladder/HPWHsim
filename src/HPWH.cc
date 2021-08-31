@@ -3603,6 +3603,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
 
+			targetTemp_C = calcMPOutletTemperature(heatingCapacity_KW);
 			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 		}
 		else {
