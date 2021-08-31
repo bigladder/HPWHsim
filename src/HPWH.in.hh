@@ -1073,6 +1073,9 @@ class HPWH::HeatSource {
   /** An equivalent getCapcity function just for multipass external (or split) HPWHs  */
   void getCapacityMP(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
 
+  double calcMPOutletTemperature(double heatingCapacity_KW);
+  /**< returns the temperature of outlet of a external multipass hpwh */
+
   void calcHeatDist(std::vector<double> &heatDistribution);
 
 	double getCondenserTemp() const;

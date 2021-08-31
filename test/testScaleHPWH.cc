@@ -231,153 +231,6 @@ void testMPGetCompressorCapacity() {
 	ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output), capacity_BTU, 0.0001)); // relative cmp since in btu's these will be large numbers
 }
 
-void testCXA20MPMatchesDataMap() {
-	HPWH hpwh;
-	string input = "ColmacCxA_20_MP";
-	double capacity_kW, capacity_BTUperHr;
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-
-	// test ////////////////
-	double waterTempF = 130.;
-	double airTempF = 83.3;
-	double setpointF = 130.;
-	double capacityData_kW = 66.26891199;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-	// test ////////////////
-	waterTempF = 60.;
-	airTempF = 61.7;
-	setpointF = 60.;
-	capacityData_kW = 58.5660529;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-
-	// test ////////////////
-	waterTempF = 102.;
-	airTempF = 105;
-	setpointF = 102.;
-	capacityData_kW = 89.301476;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-	// test //////////////////////////
-	waterTempF = 88.;
-	airTempF = 60;
-	setpointF = 88.;
-	capacityData_kW = 54.711173;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-}
-
-void testCXA15MatchesData() {
-	HPWH hpwh;
-	string input = "ColmacCxA_15_SP";
-	double capacity_kW, capacity_BTUperHr;
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 49.14121289;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-	// test middle ////////////////
-	waterTempF = 70; 
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 42.66070965;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-
-	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 33.28099803;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-}
-
-void testCXA30MatchesData() {
-	HPWH hpwh;
-	string input = "ColmacCxA_30_SP";
-	double capacity_kW, capacity_BTUperHr;
-	// get preset model 
-	getHPWHObject(hpwh, input);
-
-	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 97.81336856;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-	// test middle ////////////////
-	waterTempF = 70;
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 84.54702716;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-
-
-	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 65.76051043;
-
-	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
-
-	ASSERTTRUE(relcmpd(KWH_TO_BTU(capacityData_kW), capacity_BTUperHr));
-	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
-}
 
 void testSetCompressorOutputCapacity() {
 	HPWH hpwh;
@@ -519,17 +372,11 @@ int main(int argc, char *argv[])
 
 	testSetCompressorOutputCapacity(); //Test we can set the capacity with a specific number
 
-	testCXA15MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
-
-	testCXA30MatchesData();  //Test we can set the correct capacity for specific equipement that matches the data
-
 	testChipsCaseWithIPUnits(); //Debuging Chip's case
 
 	testStorageTankErrors(); // Make sure we can't scale the storage tank.
 
 	testMPGetCompressorCapacity(); // Test MP capacity in and out correct.
-
-	testCXA20MPMatchesDataMap();
 
 	//Made it through the gauntlet
 	return 0;
