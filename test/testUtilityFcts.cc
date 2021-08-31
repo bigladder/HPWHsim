@@ -152,9 +152,26 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "ColmacCxA_30_SP") {
 		hpwhModel = HPWH::MODELS_ColmacCxA_30_SP;
 	}
+
+	else if (modelName == "ColmacCxV_5_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxV_5_MP;
+	}
+	else if (modelName == "ColmacCxA_10_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxA_10_MP;
+	}
+	else if (modelName == "ColmacCxA_15_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxA_15_MP;
+	}
 	else if (modelName == "ColmacCxA_20_MP") {
 		hpwhModel = HPWH::MODELS_ColmacCxA_20_MP;
 	}
+	else if (modelName == "ColmacCxA_25_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxA_25_MP;
+	}
+	else if (modelName == "ColmacCxA_30_MP") {
+		hpwhModel = HPWH::MODELS_ColmacCxA_30_MP;
+	}
+
 	else if (modelName == "NyleC25A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC25A_SP;
 	}

@@ -3406,6 +3406,10 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 	}
 }
 
+double HPWH::HeatSource::calcMPOutletTemperature(double heatingCapacity_KW) {
+	return hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
+}
+
 void HPWH::HeatSource::setupDefrostMap(double  derate35/*=0.8865*/) {
 	doDefrost = true;
 	defrostMap.reserve(3);
@@ -3599,7 +3603,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 
 			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
 
-			targetTemp_C = hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
 			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 		}
 		else {

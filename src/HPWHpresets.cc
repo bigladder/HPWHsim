@@ -1140,7 +1140,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)numNodes / 2 - 1; // middle
+		compressor.externalInletHeight = (int)numNodes / 3 - 1; // middle
+
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
@@ -1156,9 +1157,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		if (presetNum == MODELS_ColmacCxV_5_MP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
+			compressor.mpFlowRate_LPS = GPM_TO_LPS(9.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
+
 			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
 			compressor.maxSetpoint_C = MAXOUTLET_R410A;
+			compressor.perfMap.push_back({
+				105, // Temperature (T_F)
+				
+				{ 4.9564018324, -0.0042290770, -0.0269658825, -0.0000776634, 0.0003020404, 0.0001473805 }, // Input Power Coefficients (inputPower_coeffs)
+				
+				{ 1.4052212284, 0.0536114087, 0.0068801619, 0.0000971759, -0.0000450813, -0.0003588531 } // COP Coefficients (COP_coeffs)
+				});
 		}
 		else {
 			//logic conditions
@@ -1168,31 +1178,63 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			if (presetNum == MODELS_ColmacCxA_10_MP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
+				compressor.perfMap.push_back({
+					105, // Temperature (T_F)
+					
+					{ 9.1922067724, 0.0122487244, -0.0646381689, 0.0000072313, 0.0005832581, -0.0000473039 }, // Input Power Coefficients (inputPower_coeffs)
+					
+					{ 0.6578643551, 0.0460438786, 0.0206468926, 0.0001092671, -0.0001325407, -0.0002449980 } // COP Coefficients (COP_coeffs)",
+					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_15_MP) {
 				setTankSize_adjustUA(600., UNITS_GAL);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
+				compressor.perfMap.push_back({ 
+					105, // Temperature (T_F)
+					
+					{ 13.5637545590, 0.0027697485, -0.0602602842, 0.0000287108, 0.0006814271, 0.0000616754 }, // Input Power Coefficients (inputPower_coeffs)
+					
+					{ 0.9185600973, 0.0391506903, 0.0076758114, 0.0000416127, -0.0000575076, -0.0001881335 } // COP Coefficients (COP_coeffs)
+					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_20_MP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
-				compressor.mpFlowRate_LPS = GPM_TO_LPS(40.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(36.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
-				compressor.perfMap.push_back({
+				compressor.perfMap.push_back({ 
 					105, // Temperature (T_F)
 
-					{15.28185239, 0.029681043, -0.071248836, -0.000338831, 0.000681317, 0.000482848}, // Input Power Coefficients (inputPower_coeffs)
-					
-					{1.188288739, 0.047050722, 0.006736658, 0.000141181, -3.06795E-05, -0.000327699}// COP Coefficients (COP_coeffs)
+					{ 15.2818523949, 0.0296810430, -0.0712488361, -0.0003388306, 0.0006813170, 0.0004828481}, // Input Power Coefficients (inputPower_coeffs)\
+
+					{ 1.1882887394, 0.0470507216, 0.0067366575, 0.0001411806, -0.0000306795, -0.0003276989} // COP Coefficients (COP_coeffs)
 					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_25_MP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
+				compressor.perfMap.push_back({ 105, // Temperature (T_F)
+					
+					{ 14.6143516303, 0.0035231796, -0.0292641028, -0.0002592554, 0.0007264778, 0.0006180297 }, // Input Power Coefficients (inputPower_coeffs)
+					
+					{ 2.1714787432, 0.0579609004, -0.0148230960, 0.0000984009, 0.0000699650, -0.0003849247 } // COP Coefficients (COP_coeffs)
+					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_30_MP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
+				compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
+				compressor.perfMap.push_back({
+					105, // Temperature (T_F)
+					
+					{ 15.3650764518, -0.0010936538, -0.0517899307, -0.0002034883, 0.0010440239, 0.0007308276 }, // Input Power Coefficients (inputPower_coeffs)
+					
+					{ 3.1271319348, 0.0616048846, -0.0293382372, 0.0000877710, 0.0001416252, -0.0004344211 } // COP Coefficients (COP_coeffs)
+					});
+
 
 			}
 		}
