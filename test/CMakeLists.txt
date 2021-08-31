@@ -118,6 +118,10 @@ set(largeCompressorNames
  ColmacCxA_20_SP
  ColmacCxA_25_SP
  ColmacCxA_30_SP
+
+ ColmacCxV_5_MP
+ ColmacCxA_20_MP
+
  NyleC25A_SP
  NyleC90A_SP 
  NyleC185A_SP
