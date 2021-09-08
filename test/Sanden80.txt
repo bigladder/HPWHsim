@@ -23,6 +23,9 @@ heatsource 0 T3 50 F
 heatsource 0 T4 67 F
 heatsource 0 T5 95 F
 
+heatsource 0 externalOutlet 0
+heatsource 0 externalInlet 95
+
 # 17F coefficients
 heatsource 0 inPowT1const 1650
 heatsource 0 inPowT1lin 5.5

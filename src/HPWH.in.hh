@@ -206,12 +206,14 @@ class HPWH {
     UNITS_kJperHrC,   /**< UA, metric units  */
     UNITS_BTUperHrF,  /**< UA, imperial units  */
 	UNITS_FT,		  /**< feet  */
-	UNITS_M,		  /**< meters */
+	UNITS_M,		  /**< meters  */
 	UNITS_FT2,		  /**< square feet  */
-	UNITS_M2,		  /**< square meters */
-	UNITS_MIN,		  /**< minutes */
+	UNITS_M2,		  /**< square meters  */
+	UNITS_MIN,		  /**< minutes  */
 	UNITS_SEC,		  /**< seconds  */
-	UNITS_HR,		  /**< hours */
+	UNITS_HR,		  /**< hours  */
+	UNITS_GPM,		  /**< gallons per minute  */
+	UNITS_LPS		  /**< liters per second  */
   };		  
 
   /** specifies the type of heat source  */
@@ -462,6 +464,22 @@ class HPWH {
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
   int setInlet2ByFraction(double fractionalHeight);
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
+
+  int setExternalInletHeightByFraction(double fractionalHeight);
+  /**< This is a setter for the height at which the split system HPWH adds heated water to the storage tank, 
+  this sets it as a fraction of the number of nodes from the bottom up*/
+  int setExternalOutletHeightByFraction(double fractionalHeight);
+  /**< This is a setter for the height at which the split system HPWH takes cold water out of the storage tank,
+  this sets it as a fraction of the number of nodes from the bottom up*/
+
+  int setExternalPortHeightByFraction(double fractionalHeight, int whichPort);
+  /**< sets the external heater port heights inlet height node number */
+
+  int getExternalInletHeight() const;
+  /**< Returns the node where the split system HPWH adds heated water to the storage tank*/
+  int getExternalOutletHeight() const;
+  /**< Returns the node where the split system HPWH takes cold water out of the storage tank*/
+
   int setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum);
   /**< This is a setter for the water inlet height, by fraction. */
 
@@ -559,9 +577,16 @@ class HPWH {
 	/**< returns the outlet temperature in the specified units
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
   double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-	/**< returns the condenser temperature in the specified units
-	  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
+  /**< returns the condenser inlet temperature in the specified units
+  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */  
+  
+  double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
+  /**< returns the condenser outlet temperature in the specified units
+  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+ 
+  double getExternalVolumeHeated(UNITS units = UNITS_L) const;
+  /**< returns the volume of water heated in an external in the specified units
+	returns 0 when no external heat source is running  */
 
   double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 	/**< get the total energy removed from the environment by all heat sources in specified units
@@ -584,9 +609,16 @@ class HPWH {
 
   int getCompressorCoilConfig() const;
   bool isCompressorMultipass() const;
+  bool isCompressoExternalMultipass() const;
 
   bool hasACompressor() const;
-/**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
+  /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
+  
+  bool hasExternalHeatSource() const;
+  /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or resistance element. */
+  double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
+  /**< Returns the constant flow rate for an external multipass heat sources. */
+
 
   double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 
@@ -755,6 +787,10 @@ class HPWH {
 
 	double condenserInlet_C;
 	/**< the temperature of the inlet water to the condensor either an average of tank nodes or taken from the bottom, 0 if no flow or no compressor  */
+	double condenserOutlet_C;
+	/**< the temperature of the outlet water from the condensor either, 0 if no flow or no compressor  */
+	double externalVolumeHeated_L;
+	/**< the volume of water heated by an external source, 0 if no flow or no external heat source  */
 
 	double energyRemovedFromEnvironment_kWh;
 	/**< the total energy removed from the environment, to heat the water  */
@@ -849,7 +885,7 @@ class HPWH::HeatSource {
   /**< returns the index of the heat source where this heat source is a backup.
       returns -1 if none found. */
 
-  double fractToMeetComparisonExternal();
+  double fractToMeetComparisonExternal() const;
   /**< calculates the distance the current state is from the shutOff logic for external configurations*/
 
 	void addHeat(double externalT_C, double minutesToRun);
@@ -865,6 +901,8 @@ class HPWH::HeatSource {
 	/**< Does a simple linear interpolation between two points to the xnew point */
 	void regressedMethod(double &ynew, std::vector<double> &coefficents, double x1, double x2, double x3);
 	/**< Does a calculation based on the ten term regression equation  */
+	void regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
+	/**< Does a calculation based on the five term regression equation for MP split systems  */
 
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
@@ -875,9 +913,9 @@ class HPWH::HeatSource {
   //start with a few type definitions
   enum COIL_CONFIG {
     CONFIG_SUBMERGED,
-    CONFIG_WRAPPED,
-    CONFIG_EXTERNAL
-    };
+  	CONFIG_WRAPPED,
+  	CONFIG_EXTERNAL
+  };
 
 	/** the creator of the heat source, necessary to access HPWH variables */
   HPWH *hpwh;
@@ -973,6 +1011,7 @@ class HPWH::HeatSource {
   /**< returns if the heat sources is a compressor or not */
   bool isAResistance() const;
   /**< returns if the heat sources is a compressor or not */
+  bool isExternalMultipass() const;
 
   double minT;
   /**<  minimum operating temperature of HPWH environment */
@@ -999,6 +1038,10 @@ class HPWH::HeatSource {
   /**< airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
       cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
+  int externalInletHeight; /**<The node height at which the external multipass or single pass HPWH adds heated water to the storage tank, defaults to top for single pass. */
+  int externalOutletHeight; /**<The node height at which the external multipass or single pass HPWH adds takes cold water out of the storage tank, defaults to bottom for single pass.  */
+
+  double mpFlowRate_LPS; /**< The multipass flow rate */
 
   COIL_CONFIG configuration; /**<  submerged, wrapped, external */
   HEATSOURCE_TYPE typeOfHeatSource;  /**< compressor, resistance, extra, none */
@@ -1027,6 +1070,11 @@ class HPWH::HeatSource {
   void getCapacity(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	  getCapacity(externalT_C, condenserTemp_C, hpwh->getSetpoint(),  input_BTUperHr, cap_BTUperHr, cop);
   };
+  /** An equivalent getCapcity function just for multipass external (or split) HPWHs  */
+  void getCapacityMP(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop);
+
+  double calcMPOutletTemperature(double heatingCapacity_KW);
+  /**< returns the temperature of outlet of a external multipass hpwh */
 
   void calcHeatDist(std::vector<double> &heatDistribution);
 
@@ -1051,12 +1099,15 @@ inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.
 inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
+inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
+inline double GPM_TO_LPS(double gpm) { return (gpm * 3.78541 / 60.0); }
+inline double LPS_TO_GPM(double lps) { return (lps * 60.0 / 3.78541); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
