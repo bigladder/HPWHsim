@@ -8,6 +8,7 @@ add_executable(testMaxSetpoint testMaxSetpoint.cc)
 add_executable(testSizingFractions testSizingFractions.cc)
 add_executable(testResistanceFcts testResistanceFcts.cc)
 add_executable(testCompressorFcts testCompressorFcts.cc)
+add_executable(testPerformanceMaps testPerformanceMaps.cc)
 
 target_link_libraries(testTool libHPWHsim)
 target_link_libraries(testTankSizeFixed libHPWHsim)
@@ -16,6 +17,8 @@ target_link_libraries(testMaxSetpoint libHPWHsim)
 target_link_libraries(testSizingFractions libHPWHsim)
 target_link_libraries(testResistanceFcts libHPWHsim)
 target_link_libraries(testCompressorFcts libHPWHsim)
+target_link_libraries(testPerformanceMaps libHPWHsim)
+
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -29,6 +32,8 @@ add_test(NAME "testScaleHPWH" COMMAND  $<TARGET_FILE:testScaleHPWH> ${testArgs} 
 add_test(NAME "testMaxSetpoint" COMMAND  $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testSizingFractions" COMMAND  $<TARGET_FILE:testSizingFractions> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testResistanceFcts" COMMAND  $<TARGET_FILE:testResistanceFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME "testCompressorFcts" COMMAND  $<TARGET_FILE:testCompressorFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME "testPerformanceMaps" COMMAND  $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 #add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
@@ -113,6 +118,10 @@ set(largeCompressorNames
  ColmacCxA_20_SP
  ColmacCxA_25_SP
  ColmacCxA_30_SP
+
+ ColmacCxV_5_MP
+ ColmacCxA_20_MP
+
  NyleC25A_SP
  NyleC90A_SP 
  NyleC185A_SP

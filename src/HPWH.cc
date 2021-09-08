@@ -126,6 +126,8 @@ HPWH::HPWH(const HPWH &hpwh) {
 
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
+	condenserOutlet_C = hpwh.condenserOutlet_C;
+	externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -200,6 +202,8 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	outletTemp_C = hpwh.outletTemp_C;
 	condenserInlet_C = hpwh.condenserInlet_C;
+	condenserOutlet_C = hpwh.condenserOutlet_C;
+	externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
 	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
@@ -272,15 +276,17 @@ int HPWH::runOneStep(double drawVolume_L,
 
 
 	//reset the output variables
-	outletTemp_C = 0;
-	condenserInlet_C = 0;
-	energyRemovedFromEnvironment_kWh = 0;
-	standbyLosses_kWh = 0;
+	outletTemp_C = 0.;
+	condenserInlet_C = 0.;
+	condenserOutlet_C = 0.;
+	externalVolumeHeated_L = 0.;
+	energyRemovedFromEnvironment_kWh = 0.;
+	standbyLosses_kWh = 0.;
 
 	for (int i = 0; i < numHeatSources; i++) {
 		setOfSources[i].runtime_min = 0;
-		setOfSources[i].energyInput_kWh = 0;
-		setOfSources[i].energyOutput_kWh = 0;
+		setOfSources[i].energyInput_kWh = 0.;
+		setOfSources[i].energyOutput_kWh = 0.;
 	}
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
@@ -1216,6 +1222,39 @@ int HPWH::setInlet2ByFraction(double fractionalHeight) {
 	return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
 }
 
+int HPWH::setExternalInletHeightByFraction(double fractionalHeight) {
+	return setExternalPortHeightByFraction(fractionalHeight, 1);
+}
+int HPWH::setExternalOutletHeightByFraction(double fractionalHeight) {
+	return setExternalPortHeightByFraction(fractionalHeight, 2);
+}
+
+int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExternalPort) {
+	if (!hasExternalHeatSource()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Does not have an external heat source \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	int returnVal = 0;
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+			if (whichExternalPort == 1) {
+				returnVal =  setNodeNumFromFractionalHeight(fractionalHeight, setOfSources[i].externalInletHeight);
+			}
+			else {
+				returnVal = setNodeNumFromFractionalHeight(fractionalHeight, setOfSources[i].externalOutletHeight);
+			}
+
+			if (returnVal == HPWH_ABORT) {
+				return returnVal;
+			}
+		}
+	}
+	return returnVal;
+}
+
 int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum) {
 	if (fractionalHeight > 1. || fractionalHeight < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -1229,6 +1268,36 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int &inletNum)
 
 	return 0;
 }
+
+int HPWH::getExternalInletHeight() const {
+	if (!hasExternalHeatSource()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Does not have an external heat source \n");
+		}
+		return HPWH_ABORT;
+	}
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+			return setOfSources[i].externalInletHeight; // Return the first one since all external sources have some ports
+		}
+	}
+	return HPWH_ABORT;
+}
+int HPWH::getExternalOutletHeight() const {
+	if (!hasExternalHeatSource()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Does not have an external heat source \n");
+		}
+		return HPWH_ABORT;
+	}
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+			return setOfSources[i].externalOutletHeight; // Return the first one since all external sources have some ports
+		}
+	}
+	return HPWH_ABORT;
+}
+
 
 int HPWH::setTimerLimitTOT(double limit_min) {
 	if (limit_min > 24.*60. || limit_min < 0.) {
@@ -1596,7 +1665,13 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 		return double(HPWH_ABORT);
 	}
 
-	setOfSources[compressorIndex].getCapacity(airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+	if (setOfSources[compressorIndex].isExternalMultipass()) {
+		double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
+		setOfSources[compressorIndex].getCapacityMP(airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+	}
+	else {
+		setOfSources[compressorIndex].getCapacity(airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+	}
 
 	double outputCapacity = capTemp_BTUperHr;
 	if(pwrUnit == UNITS_KW) {
@@ -1749,6 +1824,36 @@ double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const {
 	}
 }
 
+double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const {
+	if (units == UNITS_C) {
+		return condenserOutlet_C;
+	}
+	else if (units == UNITS_F) {
+		return C_TO_F(condenserOutlet_C);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
+double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const {
+	if (units == UNITS_L) {
+		return externalVolumeHeated_L;
+	}
+	else if (units == UNITS_GAL) {
+		return L_TO_GAL(externalVolumeHeated_L);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getExternalVolumeHeated.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
 double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const {
 	//moving heat from the space to the water is the positive direction
 	if (units == UNITS_KWH) {
@@ -1826,9 +1931,50 @@ bool HPWH::isCompressorMultipass() const {
 	}
 	return setOfSources[compressorIndex].isMultipass;
 }
+bool HPWH::isCompressoExternalMultipass() const {
+	if (!hasACompressor()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model does not have a compressor.  \n");
+		}
+		return HPWH_ABORT;
+	}
+	return setOfSources[compressorIndex].isExternalMultipass();
+}
 
 bool HPWH::hasACompressor() const {
 	return compressorIndex >= 0;
+}
+
+
+bool HPWH::hasExternalHeatSource() const {
+	for (int i = 0; i < numHeatSources; i++) {
+		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+			return true;
+		}
+	}
+	return false;
+}
+
+double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const {
+	if (!isCompressoExternalMultipass()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Does not have an external multipass heat source \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if (units == HPWH::UNITS_LPS) {
+		return setOfSources[compressorIndex].mpFlowRate_LPS;
+	}
+	else if (units == HPWH::UNITS_GPM) {
+		return LPS_TO_GPM(setOfSources[compressorIndex].mpFlowRate_LPS);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getExternalMPFlowRate.  \n");
+		}
+		return (double)HPWH_ABORT;
+	}
 }
 
 double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const {
@@ -2466,7 +2612,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	isMultipass(true)
+	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2514,6 +2660,10 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
+	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
+
+	externalInletHeight = hSource.externalInletHeight;
+	externalOutletHeight = hSource.externalOutletHeight;
 
 	lowestNode = hSource.lowestNode;
 
@@ -2574,6 +2724,10 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	configuration = hSource.configuration;
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
+	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
+
+	externalInletHeight = hSource.externalInletHeight;
+	externalOutletHeight = hSource.externalOutletHeight;
 
 	lowestNode = hSource.lowestNode;
 	extrapolationMethod = hSource.extrapolationMethod;
@@ -2892,7 +3046,7 @@ bool HPWH::HeatSource::maxedOut() const {
 	return maxed;
 }
 
-double HPWH::HeatSource::fractToMeetComparisonExternal(){
+double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 	double fracTemp, comparison, sum, totWeight, diff;
 	double frac = 1.;
 	int calcNode;
@@ -3005,7 +3159,11 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
 			}
 		}
-
+		
+		if (isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
+			hpwh->condenserOutlet_C = getCondenserTemp();
+		}
+		
 		//after you've done everything, any leftover capacity is time that didn't run
 		this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
 #if 1	// error check, 1-22-2017
@@ -3210,6 +3368,48 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 }
 
+
+
+void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
+	double externalT_F, condenserTemp_F;
+
+	// Convert Celsius to Fahrenheit for the curve fits
+	condenserTemp_F = C_TO_F(condenserTemp_C);
+	externalT_F = C_TO_F(externalT_C);
+
+	// Get bounding performance map points for interpolation/extrapolation
+	bool extrapolate = false;
+
+	if (externalT_F > perfMap[0].T_F) {
+		extrapolate = true;
+		if (extrapolationMethod == EXTRAP_NEAREST) {
+			externalT_F = perfMap[0].T_F;
+		}
+	}
+	//Const Tair Tin Tair2 Tin2 TairTin
+	regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
+
+	regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+	
+
+	if (doDefrost) {
+		//adjust COP by the defrost factor
+		defrostDerate(cop, externalT_F);
+	}
+
+	cap_BTUperHr = cop * input_BTUperHr;
+
+	if (hpwh->hpwhVerbosity >= VRB_emetic) {
+		hpwh->msg("externalT_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, condenserTemp_F);
+		hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n", input_BTUperHr, cop, cap_BTUperHr);
+	}
+}
+
+double HPWH::HeatSource::calcMPOutletTemperature(double heatingCapacity_KW) {
+	return hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
+}
+
 void HPWH::HeatSource::setupDefrostMap(double  derate35/*=0.8865*/) {
 	doDefrost = true;
 	defrostMap.reserve(3);
@@ -3252,6 +3452,16 @@ void HPWH::HeatSource::regressedMethod(double &ynew, std::vector<double> &coeffi
 				coefficents[8] * x1 * x3 +
 				coefficents[9] * x2 * x3 +
 				coefficents[10] * x1 * x2 * x3;
+}
+
+void HPWH::HeatSource::regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2) {
+	//Const Tair Tin Tair2 Tin2 TairTin
+	ynew = coefficents[0] +
+		coefficents[1] * x1 +
+		coefficents[2] * x2 +
+		coefficents[3] * x1 * x1 +
+		coefficents[4] * x2 * x2 +
+		coefficents[5] * x1 * x2;
 }
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
@@ -3366,6 +3576,9 @@ bool HPWH::HeatSource::isACompressor() const {
 bool HPWH::HeatSource::isAResistance() const {
 	return this->typeOfHeatSource == TYPE_resistance;
 }
+bool  HPWH::HeatSource::isExternalMultipass() const {
+	return isMultipass && configuration == HeatSource::CONFIG_EXTERNAL;
+}
 
 double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop) {
 	double heatingCapacity_kJ, heatingCapacityNeeded_kJ, deltaT_C, timeUsed_min, nodeHeat_kJperNode, nodeFrac, fractToShutOff;
@@ -3373,7 +3586,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
 	double timeRemaining_min = minutesToRun;
 	double maxTargetTemp_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
-
+	double targetTemp_C = 0.;
 	input_BTUperHr = 0;
 	cap_BTUperHr = 0;
 	cop = 0;
@@ -3383,30 +3596,42 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			hpwh->msg("bottom tank temp: %.2lf \n", hpwh->tankTemps_C[0]);
 		}
 
-		if (!this->isMultipass) {
+		if (this->isMultipass) {
+			//how much heat is added this timestep
+			getCapacityMP(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
+
+			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
+
+			targetTemp_C = calcMPOutletTemperature(heatingCapacity_KW);
+			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
+		}
+		else {
 			//how much heat is available this timestep
-			getCapacity(externalT_C, hpwh->tankTemps_C[0], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+			getCapacity(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n", heatingCapacity_kJ);
 			}
 
 			//adjust capacity for how much time is left in this step
-			heatingCapacity_kJ = heatingCapacity_kJ * (timeRemaining_min / minutesToRun);
+			heatingCapacity_kJ *= (timeRemaining_min / minutesToRun);
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ remaining this node: %.2lf \n", heatingCapacity_kJ);
 			}
 		
 			//calculate what percentage of the bottom node can be heated to setpoint
 			//with amount of heat available this timestep
-			deltaT_C = maxTargetTemp_C - hpwh->tankTemps_C[0];
-			nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
+			targetTemp_C = maxTargetTemp_C;
+			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
+			
 		}
+
+		nodeHeat_kJperNode = volumePerNode_LperNode * DENSITYWATER_kgperL * CPWATER_kJperkgC * deltaT_C;
 		
-		//protect against dividing by zero - if bottom node is at (or above) setpoint,
-		//add no heat
-		if (nodeHeat_kJperNode <= 0) {
-			nodeFrac = 0;
+		// Caclulate fraction of node to move
+		if (nodeHeat_kJperNode <= 0.) { // protect against dividing by zero - if bottom node is at (or above) setpoint, add no heat
+			nodeFrac = 0.;
 		}
 		else {
 			nodeFrac = heatingCapacity_kJ / nodeHeat_kJperNode;
@@ -3417,17 +3642,17 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		}
 
 		fractToShutOff = fractToMeetComparisonExternal();
-		if (fractToShutOff < 1 && fractToShutOff < nodeFrac) {
+		if (fractToShutOff < 1. && fractToShutOff < nodeFrac && !this->isMultipass) { // circle back and check on this for multipass
 			nodeFrac = fractToShutOff;
 			heatingCapacityNeeded_kJ = nodeFrac * nodeHeat_kJperNode;
 
-			timeUsed_min = (heatingCapacityNeeded_kJ / heatingCapacity_kJ)*timeRemaining_min;
+			timeUsed_min = (heatingCapacityNeeded_kJ / heatingCapacity_kJ) * timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
 		//if more than one, round down to 1 and subtract the amount of time it would
 		//take to heat that node from the timeRemaining
-		else if (nodeFrac > 1) {
-			nodeFrac = 1;
+		else if (nodeFrac > 1.) {
+			nodeFrac = 1.;
 			timeUsed_min = (nodeHeat_kJperNode / heatingCapacity_kJ)*timeRemaining_min;
 			timeRemaining_min -= timeUsed_min;
 		}
@@ -3435,25 +3660,32 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//this should make heatingCapacity == 0 if nodeFrac < 1
 		else {
 			timeUsed_min = timeRemaining_min;
-			timeRemaining_min = 0;
-		}
-		// Track the condenser temperature if this is a compressor before moving the nodes
-		if (isACompressor()) {
-			hpwh->condenserInlet_C += hpwh->tankTemps_C[0] * timeUsed_min;
+			timeRemaining_min = 0.;
 		}
 
-		//move all nodes down, mixing if less than a full node
-		for (int n = 0; n < hpwh->numNodes - 1; n++) {
+
+		// Track the condenser temperature if this is a compressor before moving the nodes //////////////////////////////////////////
+		if (isACompressor()) {
+			hpwh->condenserInlet_C += hpwh->tankTemps_C[externalOutletHeight] * timeUsed_min;
+			hpwh->condenserOutlet_C += targetTemp_C * timeUsed_min;
+		}
+
+
+		// Moving the nodes down ////////////////////////////////////////////////////////////////////////////////////////////////////
+		// move all nodes down, mixing if less than a full node
+		for (int n = externalOutletHeight; n < externalInletHeight; n++) {
 			hpwh->tankTemps_C[n] = hpwh->tankTemps_C[n] * (1 - nodeFrac) + hpwh->tankTemps_C[n + 1] * nodeFrac;
 		}
 		//add water to top node, heated to setpoint
-		hpwh->tankTemps_C[hpwh->numNodes - 1] = hpwh->tankTemps_C[hpwh->numNodes - 1] * (1 - nodeFrac) + maxTargetTemp_C * nodeFrac;
+		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
 
-		//track outputs - weight by the time ran
+		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
 		input_BTUperHr += inputTemp_BTUperHr * timeUsed_min;
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
+
+		hpwh->externalVolumeHeated_L += nodeFrac * volumePerNode_LperNode;
 
 		hpwh->mixTankInversions();
 
@@ -3466,7 +3698,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
 	cop /= (minutesToRun - timeRemaining_min);
 	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
-
+	hpwh->condenserOutlet_C /= (minutesToRun - timeRemaining_min);
+	
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
 	}
@@ -3844,10 +4077,32 @@ int HPWH::checkInputs() {
 				}
 			}
 		}
-		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL &&
-			setOfSources[i].shutOffLogicSet.size() != 1) {
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
+
+			if (setOfSources[i].shutOffLogicSet.size() != 1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("External heat sources can only have one shut off logic. \n ");
+				}
+				returnVal = HPWH_ABORT;
+			}
+			if (0 > setOfSources[i].externalOutletHeight || setOfSources[i].externalOutletHeight > numNodes-1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("External heat sources need an external outlet height within the bounds from from 0 to numNodes-1. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
+			if (0 > setOfSources[i].externalInletHeight || setOfSources[i].externalInletHeight > numNodes-1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("External heat sources need an external inlet height within the bounds from from 0 to numNodes-1. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
+		}
+
+		// Check that perfmap only has 1 point if config_external and multipass
+		if (setOfSources[i].isExternalMultipass() && setOfSources[i].perfMap.size() != 1) {
 			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("External heat sources can only have one shut off logic");
+				msg("External multipass heat sources must have a perfMap of only one point with regression equations. \n");
 			}
 			returnVal = HPWH_ABORT;
 		}
@@ -3904,7 +4159,7 @@ int HPWH::HPWHinit_file(string configFile) {
 	}
 
 	//some variables that will be handy
-	int heatsource, sourceNum, nTemps;
+	int heatsource, sourceNum, nTemps, tempInt;
 	string tempString, units;
 	double tempDouble, dblArray[12];
 
@@ -4292,6 +4547,32 @@ int HPWH::HPWHinit_file(string configFile) {
 					return HPWH_ABORT;
 				}
 			}
+
+			else if (token == "externalInlet") {
+				line_ss >> tempInt;
+				if(tempInt < numNodes && tempInt >= 0) {
+					setOfSources[heatsource].externalInletHeight = tempInt;
+				}
+				else {
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					}
+					return HPWH_ABORT;
+				}
+			}
+			else if (token == "externalOutlet") {
+				line_ss >> tempInt;
+				if (tempInt < numNodes && tempInt >= 0) {
+					setOfSources[heatsource].externalOutletHeight = tempInt;
+				}
+				else {
+					if (hpwhVerbosity >= VRB_reluctant) {
+						msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
+					}
+					return HPWH_ABORT;
+				}
+			}
+
 			else if (token == "condensity") {
 				line_ss >> dblArray[0] >> dblArray[1] >> dblArray[2] >> dblArray[3] >> dblArray[4] >> dblArray[5] >> dblArray[6] >> dblArray[7] >> dblArray[8] >> dblArray[9] >> dblArray[10] >> dblArray[11];
 				setOfSources[heatsource].setCondensity(dblArray[0], dblArray[1], dblArray[2], dblArray[3], dblArray[4], dblArray[5], dblArray[6], dblArray[7], dblArray[8], dblArray[9], dblArray[10], dblArray[11]);
