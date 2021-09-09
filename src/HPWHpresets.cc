@@ -129,7 +129,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 }
 
 
-int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, double lowerPower_W, MODELS resTankType) {
+int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, double upperPower_W, double lowerPower_W) {
 
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
@@ -148,9 +148,9 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 		}
 		return HPWH_ABORT;
 	}
-	if (resTankType < MODELS_CustomComResTank || resTankType > MODELS_CustomComResTankSwing) {// if resTankType not supported here
+	if (rValue_M2KperW <= 0.) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Resistance Tank Type not supported here");
+			msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
 		}
 		return HPWH_ABORT;
 	}
@@ -195,15 +195,8 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 		HeatSource resistiveElementBottom(this);
 		resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
 
-		if (resTankType == MODELS_CustomComResTank) {
-			//standard logic conditions
-			resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
-			resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
-		}
-		else if (resTankType == MODELS_CustomComResTankSwing) {
-			//swing tank logic
-			resistiveElementBottom.addTurnOnLogic(HPWH::topThird(dF_TO_dC(8.))); // replace with swing tank logic
-		}
+		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
+		resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
 
 		// set everything in it's correct place
 		if (numHeatSources == 1) {// if one only one slot
@@ -216,15 +209,9 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 	}
 
 	// Calc UA
-	// S <= .3 + 27/ Vm (%/hr) 
-	// SL = S(%/h)/100 * 8.25 (BTU/galF) * Vm (gal) * (140 – 75) (F)
-	// SL = UA deltaT. So deltaT actually cancels. 
-	// UA (BTU/hr/F) = 8.25 (BTU/galF) * (.3 + 27/Vm)(%/hr)/100 * Vm = 8.25 * (.3*Vm + 27 [G]) / 100,
-	// where 8.25 is actually density times heat capacity
-	double tankVol_GAL = L_TO_GAL(tankVol_L);
-	double S_PercperHr= (0.3 + 27. / tankVol_GAL);
-	double tankUA_BTUperHrF = 8.25 * S_PercperHr / 100. * tankVol_GAL; // Note (0.3+27.tankVol_GAL) has units %/hr
-	tankUA_kJperHrC = UAf_TO_UAc(tankUA_BTUperHrF);
+	double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
+	double tankUA_WperK = SA_M2 / rValue_M2KperW;
+	tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
 
 	if (tankUA_kJperHrC < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
@@ -233,7 +220,7 @@ int HPWH::HPWHinit_commercialResTank(double tankVol_L, double upperPower_W, doub
 		tankUA_kJperHrC = 0.0;
 	}
 
-	hpwhModel = resTankType;
+	hpwhModel = HPWH::MODELS_CustomResTankGeneric;
 
 	//calculate oft-used derived values
 	calcDerivedValues();

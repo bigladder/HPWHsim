@@ -140,8 +140,7 @@ class HPWH {
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
 	  MODELS_CustomResTank = 201,   /**< HPWH parameters were input via HPWHinit_resTank */
-	  MODELS_CustomComResTank = 202,   /**< HPWH parameters were input via HPWHinit_commercialResTank */
-	  MODELS_CustomComResTankSwing = 203,   /**< HPWH parameters were input via HPWHinit_commercialResTank, specific swing tank controls */
+	  MODELS_CustomResTankGeneric = 202,   /**< HPWH parameters were input via HPWHinit_commercialResTank */
 
 	  // Larger Colmac models in single pass configuration 
 	  MODELS_ColmacCxV_5_SP  = 210,  /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
@@ -322,14 +321,13 @@ class HPWH {
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
  
-  int HPWHinit_commercialResTank(double tankVol, double upperPower_W, double lowerPower_W, MODELS resTankType);
-  /**< This function will initialize a HPWH object to be a large commercial resistance storage water heater.
-  * The UA is defaulted to meet the federal minimum standby losses based on the volume. 
+  int HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, double upperPower_W, double lowerPower_W);
+  /**< This function will initialize a HPWH object to be a generic resistance storage water heater,
+  * with a specific R-Value defined at initalization.
   *
   * Several assumptions regarding the tank configuration are assumed: the lower element
-  * is at the bottom, the upper element is at the top third.
-  * 
-  * resTankType's types support thus far are MODELS_CustomComResTank, MODELS_CustomComResSwingTank. 
+  * is at the bottom, the upper element is at the top third. The controls are the same standard controls for 
+  * the HPWHinit_resTank()
   */
 
   int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
