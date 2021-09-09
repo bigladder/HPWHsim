@@ -321,7 +321,7 @@ class HPWH {
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
  
-  int HPWHinit_resTankGeneric(double tankVol, double rValue, double upperPower_W, double lowerPower_W);
+  int HPWHinit_resTankGeneric(double tankVol, double rValue_FT2HrFperBTU, double upperPower_W, double lowerPower_W);
   /**< This function will initialize a HPWH object to be a generic resistance storage water heater,
   * with a specific R-Value defined at initalization. 
   *
