@@ -157,8 +157,8 @@ struct InsulationPoint {
 	double expectedUA_SI;
 };
 
-#define INITGEN(point) 	hpwh.HPWHinit_resTankGeneric(point.volume_L, point.rValue_IP, elementPower_kW * 1000., elementPower_kW * 1000.);
-
+#define R_TO_RSI(rvalue) rvalue * 0.176110
+#define INITGEN(point) 	hpwh.HPWHinit_resTankGeneric(point.volume_L, R_TO_RSI(point.rValue_IP), elementPower_kW * 1000., elementPower_kW * 1000.)
 void testCommercialTankInit() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
@@ -176,41 +176,43 @@ void testCommercialTankInit() {
 	// Check UA is as expected at 800 gal
 	INITGEN(testPoint800);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint800.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint800.expectedUA_SI, 0.0001));
 	// Check UA independent of elements
-	hpwh.HPWHinit_resTankGeneric(testPoint800.volume_L, testPoint800.rValue_IP, elementPower_kW, elementPower_kW);
+	hpwh.HPWHinit_resTankGeneric(testPoint800.volume_L, R_TO_RSI(testPoint800.rValue_IP), elementPower_kW, elementPower_kW);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint800.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint800.expectedUA_SI, 0.0001));
 
 	// Check UA is as expected at 2 gal
 	INITGEN(testPoint2);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint2.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint2.expectedUA_SI, 0.0001));
 
 	// Check UA is as expected at 50 gal
 	INITGEN(testPoint50);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint50.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint50.expectedUA_SI, 0.0001));
 
 	// Check UA is as expected at 200 gal
 	INITGEN(testPoint200);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint200.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint200.expectedUA_SI, 0.0001));
 
 	INITGEN(testPoint200B);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint200B.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint200B.expectedUA_SI, 0.0001));
 
 	// Check UA is as expected at 2000 gal
 	INITGEN(testPoint2000);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint2000.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint2000.expectedUA_SI, 0.0001));
 
 	// Check UA is as expected at 20000 gal
 	INITGEN(testPoint20000);
 	hpwh.getUA(UA);
-	ASSERTTRUE(relcmpd(UA, testPoint20000.expectedUA_SI));
+	ASSERTTRUE(relcmpd(UA, testPoint20000.expectedUA_SI, 0.0001));
 }
+#undef INITGEN
+#undef R_TO_RSI
 
 int main(int argc, char *argv[])
 {

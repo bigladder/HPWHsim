@@ -129,7 +129,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 }
 
 
-int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_FT2HrFperBTU, double upperPower_W, double lowerPower_W) {
+int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, double upperPower_W, double lowerPower_W) {
 
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
@@ -148,7 +148,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_FT2HrFperBTU, 
 		}
 		return HPWH_ABORT;
 	}
-	if (rValue_FT2HrFperBTU <= 0.) {
+	if (rValue_M2KperW <= 0.) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
 		}
@@ -209,9 +209,9 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_FT2HrFperBTU, 
 	}
 
 	// Calc UA
-	double SA_FT2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_FT2);
-	double tankUA_BTUperHrF = SA_FT2 / rValue_FT2HrFperBTU;
-	tankUA_kJperHrC = UAf_TO_UAc(tankUA_BTUperHrF);
+	double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
+	double tankUA_WperK = SA_M2 / rValue_M2KperW;
+	tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
 
 	if (tankUA_kJperHrC < 0.) {
 		if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
