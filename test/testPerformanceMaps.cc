@@ -277,6 +277,48 @@ void testCXA30MPMatchesDataMap() {
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
+void testRheemHPHD60() {
+	//MODELS_RHEEM_HPHD60HNU_201_MP
+	//MODELS_RHEEM_HPHD60VNU_201_MP
+	HPWH hpwh;
+	string input = "RheemHPHD60";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 66.6666666, 60.0, 16.785535996 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 66.6666666, 120.0, 16.76198953 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 88.3333333, 80.0, 20.8571194294 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 110.0, 100.0, 24.287512 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+
+void testRheemHPHD135() {
+	//MODELS_RHEEM_HPHD135HNU_483_MP
+	//MODELS_RHEEM_HPHD135VNU_483_MP
+	HPWH hpwh;
+	string input = "RheemHPHD135";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 66.6666666, 80.0, 41.1145560911 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 66.6666666, 140.0, 34.592823756 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 88.3333333, 120.0, 45.01246245 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 110.0, 100.0, 58.269940 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+
 int main(int argc, char *argv[])
 {
 	testCXA15MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
@@ -290,6 +332,8 @@ int main(int argc, char *argv[])
 	testCXA25MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
 	testCXA30MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
 
+
+	
 	//Made it through the gauntlet
 	return 0;
 }
