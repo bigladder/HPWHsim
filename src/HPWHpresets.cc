@@ -1430,12 +1430,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			compressor.perfMap.push_back({
 				110, // Temperature (T_F)
 				
-				{ -8.7369956164, 0.2023933746, 0.1605032885, -0.0010366062, -0.0003089861, -0.0001871806}, // Input Power Coefficients (inputPower_coeffs)
+				{ 5.1838201136, 0.0247312962, -0.0120766440, 0.0000493862, 0.0005422089, -0.0001385078}, // Input Power Coefficients (inputPower_coeffs)
 				
-				{ 8.1309102320, 0.0045592732, -0.0803863396, 0.0003219858, 0.0003034163, -0.0002382818} // COP Coefficients (COP_coeffs)
+				{ 5.0207181209, 0.0442525790, -0.0418284882, 0.0000793531, 0.0001132421, -0.0002491563} // COP Coefficients (COP_coeffs)
 				});
-
 		}
+
+		//set everything in its places
+		setOfSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP || presetNum == MODELS_Sanden120) {
