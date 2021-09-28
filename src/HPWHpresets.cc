@@ -1368,6 +1368,76 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 
+	// if colmac multipass
+	else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
+		numNodes = 24;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		tankSizeFixed = false;
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.perfMap.reserve(1);
+		compressor.hysteresis_dC = 0;
+		compressor.externalOutletHeight = 0;
+		compressor.externalInletHeight = (int)numNodes / 3 - 1;
+
+		//logic conditions
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15.), false));
+
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(4);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//Defrost Derate 
+		compressor.setupDefrostMap();
+
+		//logic conditions
+		compressor.minT = F_TO_C(45.);
+		compressor.maxT = F_TO_C(110.);
+		compressor.maxSetpoint_C = MAXOUTLET_R134A; // data says 150...
+
+		if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP || presetNum == MODELS_RHEEM_HPHD60VNU_201_MP) {
+			setTankSize_adjustUA(250., UNITS_GAL);
+			compressor.mpFlowRate_LPS = GPM_TO_LPS(17.4);
+			compressor.perfMap.push_back({
+				110, // Temperature (T_F)
+
+				{ 1.8558438453, 0.0120796155, -0.0135443327, 0.0000059621, 0.0003010506, -0.0000463525}, // Input Power Coefficients (inputPower_coeffs)
+				
+				{ 3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814} // COP Coefficients (COP_coeffs)
+				});
+		}
+		else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP || presetNum == MODELS_RHEEM_HPHD135VNU_483_MP) {
+			setTankSize_adjustUA(500., UNITS_GAL);
+			compressor.mpFlowRate_LPS = GPM_TO_LPS(34.87);
+			compressor.perfMap.push_back({
+				110, // Temperature (T_F)
+				
+				{ -8.7369956164, 0.2023933746, 0.1605032885, -0.0010366062, -0.0003089861, -0.0001871806}, // Input Power Coefficients (inputPower_coeffs)
+				
+				{ 8.1309102320, 0.0045592732, -0.0803863396, 0.0003219858, 0.0003034163, -0.0002382818} // COP Coefficients (COP_coeffs)
+				});
+
+		}
+	}
+
 	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP || presetNum == MODELS_Sanden120) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
