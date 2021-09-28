@@ -309,13 +309,13 @@ void testRheemHPHD135() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 66.6666666, 80.0, 41.1145560911 };
+	checkPoint = { 66.6666666, 80.0, 38.560161199 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 66.6666666, 140.0, 34.592823756 };
+	checkPoint = { 66.6666666, 140.0, 34.70681846 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 88.3333333, 120.0, 45.01246245 };
+	checkPoint = { 88.3333333, 140.0, 42.40407101 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 110.0, 100.0, 58.269940 };
+	checkPoint = { 110.0, 120.0, 54.3580927 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
@@ -332,8 +332,9 @@ int main(int argc, char *argv[])
 	testCXA25MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
 	testCXA30MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
 
+	testRheemHPHD135();
+	testRheemHPHD60();
 
-	
 	//Made it through the gauntlet
 	return 0;
 }
