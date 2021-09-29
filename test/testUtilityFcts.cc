@@ -172,6 +172,13 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 		hpwhModel = HPWH::MODELS_ColmacCxA_30_MP;
 	}
 
+	else if (modelName == "RheemHPHD60") {
+		hpwhModel = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
+	}
+	else if (modelName == "RheemHPHD135") {
+		hpwhModel = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
+	}
+
 	else if (modelName == "NyleC25A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC25A_SP;
 	}

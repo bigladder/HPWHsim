@@ -178,7 +178,13 @@ class HPWH {
 	  MODELS_NyleC90A_MP  = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC125A_MP = 333,  /*< Nyle C125A external heat pump in Multi Pass Mode */
 	  MODELS_NyleC185A_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC250A_MP = 335   /*< Nyle C250A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_MP = 335,  /*< Nyle C250A external heat pump in Multi Pass Mode */
+
+	  // Large Rheem multi pass models
+	  MODELS_RHEEM_HPHD60HNU_201_MP = 350,
+	  MODELS_RHEEM_HPHD60VNU_201_MP = 351,
+	  MODELS_RHEEM_HPHD135HNU_483_MP = 352, // really bad fit to data due to inconsistency in data
+	  MODELS_RHEEM_HPHD135VNU_483_MP = 353  // really bad fit to data due to inconsistency in data
     };
 
   ///specifies the modes for writing output
