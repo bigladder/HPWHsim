@@ -1148,13 +1148,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
+			compressor.maxT = F_TO_C(105.);
 			compressor.maxSetpoint_C = MAXOUTLET_R410A;
 			compressor.perfMap.push_back({
-				105, // Temperature (T_F)
+				100, // Temperature (T_F)
 				
-				{ 4.9564018324, -0.0042290770, -0.0269658825, -0.0000776634, 0.0003020404, 0.0001473805 }, // Input Power Coefficients (inputPower_coeffs)
+				{ 5.8438525529, 0.0003288231, -0.0494255840, -0.0000386642, 0.0004385362, 0.0000647268}, // Input Power Coefficients (inputPower_coeffs)
 				
-				{ 1.4052212284, 0.0536114087, 0.0068801619, 0.0000971759, -0.0000450813, -0.0003588531 } // COP Coefficients (COP_coeffs)
+				{ 0.6679056901, 0.0499777846, 0.0251828292, 0.0000699764, -0.0001552229, -0.0002911167} // COP Coefficients (COP_coeffs)
 				});
 		}
 		else {
@@ -1167,11 +1168,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(500., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
 				compressor.perfMap.push_back({
-					105, // Temperature (T_F)
+					100, // Temperature (T_F) 
 					
-					{ 9.1922067724, 0.0122487244, -0.0646381689, 0.0000072313, 0.0005832581, -0.0000473039 }, // Input Power Coefficients (inputPower_coeffs)
+					{ 8.6918824405, 0.0136666667, -0.0548348214, -0.0000208333, 0.0005301339, -0.0000250000}, // Input Power Coefficients (inputPower_coeffs)
 					
-					{ 0.6578643551, 0.0460438786, 0.0206468926, 0.0001092671, -0.0001325407, -0.0002449980 } // COP Coefficients (COP_coeffs)",
+					{ 0.6944181117, 0.0445926666, 0.0213188804, 0.0001172913, -0.0001387694, -0.0002365885} // COP Coefficients (COP_coeffs)
 					});
 
 			}
@@ -1179,11 +1180,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(600., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
 				compressor.perfMap.push_back({ 
-					105, // Temperature (T_F)
+					100, // Temperature (T_F)
 					
-					{ 13.5637545590, 0.0027697485, -0.0602602842, 0.0000287108, 0.0006814271, 0.0000616754 }, // Input Power Coefficients (inputPower_coeffs)
+					{ 12.4908723958, 0.0073988095, -0.0411417411, 0.0000000000, 0.0005789621, 0.0000696429}, // Input Power Coefficients (inputPower_coeffs)
 					
-					{ 0.9185600973, 0.0391506903, 0.0076758114, 0.0000416127, -0.0000575076, -0.0001881335 } // COP Coefficients (COP_coeffs)
+					{ 1.2846349520, 0.0334658309, 0.0019121906, 0.0002840970, 0.0000497136, -0.0004401737} // COP Coefficients (COP_coeffs)
+
 					});
 
 			}
@@ -1192,22 +1194,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(36.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
 				compressor.perfMap.push_back({ 
-					105, // Temperature (T_F)
-
-					{ 15.2818523949, 0.0296810430, -0.0712488361, -0.0003388306, 0.0006813170, 0.0004828481}, // Input Power Coefficients (inputPower_coeffs)\
-
-					{ 1.1882887394, 0.0470507216, 0.0067366575, 0.0001411806, -0.0000306795, -0.0003276989} // COP Coefficients (COP_coeffs)
+					100, // Temperature (T_F)
+					
+					{ 14.4893345424, 0.0355357143, -0.0476593192, -0.0002916667, 0.0006120954, 0.0003607143}, // Input Power Coefficients (inputPower_coeffs)
+					
+					{ 1.2421582831, 0.0450256569, 0.0051234755, 0.0001271296, -0.0000299981, -0.0002910606} // COP Coefficients (COP_coeffs)
 					});
 
 			}
 			else if (presetNum == MODELS_ColmacCxA_25_MP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
-				compressor.perfMap.push_back({ 105, // Temperature (T_F)
-					
-					{ 14.6143516303, 0.0035231796, -0.0292641028, -0.0002592554, 0.0007264778, 0.0006180297 }, // Input Power Coefficients (inputPower_coeffs)
-					
-					{ 2.1714787432, 0.0579609004, -0.0148230960, 0.0000984009, 0.0000699650, -0.0003849247 } // COP Coefficients (COP_coeffs)
+				compressor.perfMap.push_back({ 
+					100, // Temperature (T_F)
+				
+					{ 14.5805808222, 0.0081934524, -0.0216169085, -0.0001979167, 0.0007376535, 0.0004955357}, // Input Power Coefficients (inputPower_coeffs)
+																											  
+					{ 2.0013175767, 0.0576617432, -0.0130480870, 0.0000856818, 0.0000610760, -0.0003684106} // COP Coefficients (COP_coeffs)
 					});
 
 			}
@@ -1215,22 +1218,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
 				compressor.perfMap.push_back({
-					105, // Temperature (T_F)
+					100, // Temperature (T_F)
 					
-					{ 15.3650764518, -0.0010936538, -0.0517899307, -0.0002034883, 0.0010440239, 0.0007308276 }, // Input Power Coefficients (inputPower_coeffs)
+					{ 14.5824911644, 0.0072083333, -0.0278055246, -0.0002916667, 0.0008841378, 0.0008125000}, // Input Power Coefficients (inputPower_coeffs)
 					
-					{ 3.1271319348, 0.0616048846, -0.0293382372, 0.0000877710, 0.0001416252, -0.0004344211 } // COP Coefficients (COP_coeffs)
+					{ 2.6996807527, 0.0617507969, -0.0220966420, 0.0000336149, 0.0000890989, -0.0003682431} // COP Coefficients (COP_coeffs)
 					});
-
-
 			}
 		}
 
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
-
-
 	// If Nyle single pass preset
 	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
 		numNodes = 96;
@@ -1367,8 +1366,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
-
-	// if colmac multipass
+	// if rheem multipass
 	else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
 		numNodes = 24;
 		tankTemps_C = new double[numNodes];
@@ -1439,7 +1437,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
-
 	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP || presetNum == MODELS_Sanden120) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
