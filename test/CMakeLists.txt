@@ -121,6 +121,8 @@ set(largeCompressorNames
 
  ColmacCxV_5_MP
  ColmacCxA_20_MP
+ RheemHPHD60
+ RheemHPHD135
 
  NyleC25A_SP
  NyleC90A_SP 
