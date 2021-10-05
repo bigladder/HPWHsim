@@ -31,10 +31,10 @@ void testCXA15MatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 49.14121289;
+	double airTempF = 100.;
+	double waterTempF = 125.;
+	double setpointF = 150.;
+	double capacityData_kW = 52.779317;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -43,10 +43,10 @@ void testCXA15MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test middle ////////////////
-	waterTempF = 70;
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 42.66070965;
+	airTempF = 80.;
+	waterTempF = 40.;
+	setpointF = 150.;
+	capacityData_kW = 44.962957379;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -55,10 +55,10 @@ void testCXA15MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 33.28099803;
+	airTempF = 60.;
+	waterTempF = 40.;
+	setpointF = 125.;
+	capacityData_kW = 37.5978306881;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -75,10 +75,10 @@ void testCXA30MatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 97.81336856;
+	double airTempF = 100.;
+	double waterTempF = 125.;
+	double setpointF = 150.;
+	double capacityData_kW = 105.12836804;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -87,10 +87,10 @@ void testCXA30MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test middle ////////////////
-	waterTempF = 70;
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 84.54702716;
+	airTempF = 80.;
+	waterTempF = 40.;
+	setpointF = 150.;
+	capacityData_kW = 89.186101453;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -99,10 +99,10 @@ void testCXA30MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 65.76051043;
+	airTempF = 60.;
+	waterTempF = 40.;
+	setpointF = 125.;
+	capacityData_kW = 74.2437689948;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
