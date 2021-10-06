@@ -31,10 +31,10 @@ void testCXA15MatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 49.14121289;
+	double airTempF = 100.;
+	double waterTempF = 125.;
+	double setpointF = 150.;
+	double capacityData_kW = 52.779317;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -43,10 +43,10 @@ void testCXA15MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test middle ////////////////
-	waterTempF = 70;
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 42.66070965;
+	airTempF = 80.;
+	waterTempF = 40.;
+	setpointF = 150.;
+	capacityData_kW = 44.962957379;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -55,10 +55,10 @@ void testCXA15MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 33.28099803;
+	airTempF = 60.;
+	waterTempF = 40.;
+	setpointF = 125.;
+	capacityData_kW = 37.5978306881;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -75,10 +75,10 @@ void testCXA30MatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test hot //////////////////////////
-	double waterTempF = 100;
-	double airTempF = 90;
-	double setpointF = 135;
-	double capacityData_kW = 97.81336856;
+	double airTempF = 100.;
+	double waterTempF = 125.;
+	double setpointF = 150.;
+	double capacityData_kW = 105.12836804;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -87,10 +87,10 @@ void testCXA30MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test middle ////////////////
-	waterTempF = 70;
-	airTempF = 75;
-	setpointF = 140;
-	capacityData_kW = 84.54702716;
+	airTempF = 80.;
+	waterTempF = 40.;
+	setpointF = 150.;
+	capacityData_kW = 89.186101453;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -99,10 +99,10 @@ void testCXA30MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 
 	// test cold ////////////////
-	waterTempF = 50;
-	airTempF = 50;
-	setpointF = 120;
-	capacityData_kW = 65.76051043;
+	airTempF = 60.;
+	waterTempF = 40.;
+	setpointF = 125.;
+	capacityData_kW = 74.2437689948;
 
 	capacity_BTUperHr = hpwh.getCompressorCapacity(airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 	capacity_kW = hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
@@ -122,19 +122,19 @@ void testCXV5MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 10.0, 60.0, 8.8669850 };
+	checkPoint = { 10.0, 60.0, 8.7756391 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 10.0, 102.0, 9.9042871 };
+	checkPoint = { 10.0, 102.0, 9.945545 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 73.3333333, 88.0, 19.55298778 };
+	checkPoint = { 70.0, 74.0, 19.09682784 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 73.3333333, 130.0, 18.5934312 };
+	checkPoint = { 70.0, 116.0, 18.97090763 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 116.0, 25.079793448 };
+	checkPoint = { 100.0, 116.0, 24.48703111 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
@@ -147,22 +147,22 @@ void testCXA10MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 61.66666667, 74.0, 29.38562077 };
+	checkPoint = { 60.0, 66.0, 29.36581754 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 61.66666667, 116.0, 27.6816012 };
+	checkPoint = { 60.0, 114.0, 27.7407144 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 74.0, 38.0960750 };
+	checkPoint = { 80.0, 66.0, 37.4860496 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 116.0, 35.5152451 };
+	checkPoint = { 80.0, 114.0, 35.03416199 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 88.0, 46.7514889 };
+	checkPoint = { 100.0, 66.0, 46.63144 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 130.0, 43.159291 };
+	checkPoint = { 100.0, 114.0, 43.4308219 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 void testCXA15MPMatchesDataMap() {
@@ -174,22 +174,22 @@ void testCXA15MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 61.66666667, 74.0, 38.66064456 };
+	checkPoint = { 60.0, 66.0, 37.94515042 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 61.66666667, 116.0, 37.23973833 };
+	checkPoint = { 60.0, 114.0, 35.2295393 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 74.0, 48.6230256 };
+	checkPoint = { 80.0, 66.0, 50.360549115 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 116.0, 46.417962 };
+	checkPoint = { 80.0, 114.0, 43.528417017 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 74.0, 59.58111748 };
+	checkPoint = { 100.0, 66.0, 66.2675493 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 116.0, 56.66157 };
+	checkPoint = { 100.0, 114.0, 55.941855 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
@@ -202,22 +202,22 @@ void testCXA20MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 61.66666667, 74.0, 57.068742 };
+	checkPoint = { 60.0, 66.0, 57.0994624 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 61.66666667, 116.0, 53.5011483 };
+	checkPoint = { 60.0, 114.0, 53.554293 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 74.0, 74.07692454 };
+	checkPoint = { 80.0, 66.0, 73.11242842 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 116.0, 69.0103440 };
+	checkPoint = { 80.0, 114.0, 68.034677 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 	
-	checkPoint = { 105.0, 88.0, 90.8779510 };
+	checkPoint = { 100.0, 66.0, 90.289474295 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 	
-	checkPoint = { 105.0, 130.0, 83.8988727 };
+	checkPoint = { 100.0, 114.0, 84.69323 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
@@ -230,22 +230,22 @@ void testCXA25MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 61.66666667, 74.0, 67.43986302 };
+	checkPoint = { 60.0, 66.0, 67.28116620 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 61.66666667, 116.0, 63.79784501 };
+	checkPoint = { 60.0, 114.0, 63.5665037 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 74.0, 86.115911008 };
+	checkPoint = { 80.0, 66.0, 84.9221285742 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 116.0, 81.122226086 };
+	checkPoint = { 80.0, 114.0, 79.6237088 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 88.0, 104.91458956 };
+	checkPoint = { 100.0, 66.0, 103.43268186 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 	
-	checkPoint = { 105.0, 130.0, 97.07718310 };
+	checkPoint = { 100.0, 114.0, 97.71458413 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
@@ -258,22 +258,22 @@ void testCXA30MPMatchesDataMap() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 61.66666667, 74.0, 76.6435478 };
+	checkPoint = { 60.0, 66.0, 76.741462845 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 	
-	checkPoint = { 61.66666667, 116.0, 73.78295058 };
+	checkPoint = { 60.0, 114.0, 73.66879620 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 74.0, 97.12906673 };
+	checkPoint = { 80.0, 66.0, 94.863116775 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 83.3333333, 116.0, 91.9232593 };
+	checkPoint = { 80.0, 114.0, 90.998904269 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 74.0, 119.1488223395 };
+	checkPoint = { 100.0, 66.0, 112.864628 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 
-	checkPoint = { 105.0, 116.0, 113.043855398 };
+	checkPoint = { 100.0, 114.0, 109.444451 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
