@@ -1109,7 +1109,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankSizeFixed = false;
 
 		doTempDepression = false;
-		tankMixesOnDraw = false;
+		tankMixesOnDraw = true;
 
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
