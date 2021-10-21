@@ -1109,7 +1109,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankSizeFixed = false;
 
 		doTempDepression = false;
-		tankMixesOnDraw = true;
+		tankMixesOnDraw = false;
 
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
@@ -1126,12 +1126,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)numNodes / 3 - 1; // middle
+		compressor.externalInletHeight = (int)numNodes / 3. - 1; // middle
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15.), false));
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
 
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(4);
