@@ -3602,6 +3602,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		}
 
 		if (this->isMultipass) {
+			// if multipass evenly mix the tank up
+			hpwh->mixTankNodes(0, hpwh->numNodes, 1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
+			
 			//how much heat is added this timestep
 			getCapacityMP(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
@@ -3684,10 +3687,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//add water to top node, heated to setpoint
 		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
-		// if multipass evenly mix the tank up
-		if (this->isMultipass) {
-			hpwh->mixTankNodes(0, externalInletHeight, 1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
-		}
+		
 
 		hpwh->mixTankInversions();
 
