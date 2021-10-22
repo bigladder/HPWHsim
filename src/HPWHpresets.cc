@@ -1126,7 +1126,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)numNodes / 3. - 1; // middle
+		compressor.externalInletHeight = (int)(numNodes / 3.) - 1; // middle
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -1390,7 +1390,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)numNodes / 3 - 1;
+		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
