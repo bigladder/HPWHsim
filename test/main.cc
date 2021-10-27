@@ -125,9 +125,13 @@ int main(int argc, char *argv[])
    if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
      newSetpoint = (149 - 32) / 1.8;
    }
- } else {
+ } else if (input1 == "File") {
    inputFile = input2 + ".txt";
    if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
+ }
+ else {
+	 cout << "Invalid argument, received '"<< input1 << "', expected 'Preset' or 'File'.\n";
+	 exit(1);
  }
 
 //  hpwh.HPWHinit_resSwingTank(80., .95, 0., 10000., F_TO_C(125.));
