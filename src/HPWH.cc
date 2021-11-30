@@ -2117,11 +2117,11 @@ int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP
 	for (auto &perfP : setOfSources[compressorIndex].perfMap) {
 		if (scaleCapacity != 1.) {
 			std::transform(perfP.inputPower_coeffs.begin(), perfP.inputPower_coeffs.end(), perfP.inputPower_coeffs.begin(),
-				std::bind1st(std::multiplies<double>(), scaleCapacity));
+				std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCapacity));
 		}
 		if (scaleCOP != 1.) {
 			std::transform(perfP.COP_coeffs.begin(), perfP.COP_coeffs.end(), perfP.COP_coeffs.begin(),
-				std::bind1st(std::multiplies<double>(), scaleCOP));
+				std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCOP));
 		}
 	}
 
