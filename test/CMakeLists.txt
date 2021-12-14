@@ -144,6 +144,11 @@ set(yearLargeTestsModels
  NyleC90A_SP
  NyleC185A_SP
  NyleC250A_SP
+ 
+ ColmacCxV_5_MP
+ ColmacCxA_20_MP
+ RheemHPHD60
+ RheemHPHD135
 )
 
 set(yearLargeTests                                        
