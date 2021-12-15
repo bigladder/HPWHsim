@@ -669,6 +669,9 @@ class HPWH {
   double nodeWeightAvgFract(HeatingLogic logic) const;
   /**< function to calculate where the average node for a logic set is. */
 
+  void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
+  /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed below node. */
+
   void calcDerivedValues();
 	/**< a helper function for the inits, calculating condentropy and the lowest node  */
   void calcSizeConstants();
