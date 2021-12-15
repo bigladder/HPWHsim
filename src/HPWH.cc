@@ -2401,16 +2401,7 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		//Account for mixing at the bottom of the tank
 		if (tankMixesOnDraw == true && drawVolume_L > 0.) {
 			int mixedBelowNode = numNodes / 3;
-			double ave = 0.;
-
-			for (int i = 0; i < mixedBelowNode; i++) {
-				ave += tankTemps_C[i];
-			}
-			ave /= mixedBelowNode;
-
-			for (int i = 0; i < mixedBelowNode; i++) {
-				tankTemps_C[i] += ((ave - tankTemps_C[i]) / 3.0);
-			}
+			mixTankNodes(0, mixedBelowNode, 3.0);
 		}
 
 	} //end if(draw_volume_L > 0)
@@ -2604,6 +2595,20 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 		}
 	}
 	return sum / totWeight;
+}
+
+void HPWH::mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor ) {
+	double ave = 0.;
+	double numAvgNodes = (double) (mixedBelowNode - mixedAboveNode);
+	for (int i = mixedAboveNode; i < mixedBelowNode; i++) {
+		ave += tankTemps_C[i];
+	}
+	ave /= numAvgNodes;
+
+	for (int i = mixedAboveNode; i < mixedBelowNode; i++) {
+		tankTemps_C[i] += ((ave - tankTemps_C[i]) / mixFactor);
+		//tankTemps_C[i] = tankTemps_C[i] * (1.0 - 1.0 / mixFactor) + ave / mixFactor;
+	}
 }
 
 //these are the HeatSource functions
@@ -3597,6 +3602,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		}
 
 		if (this->isMultipass) {
+			// if multipass evenly mix the tank up
+			hpwh->mixTankNodes(0, hpwh->numNodes, 1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
+			
 			//how much heat is added this timestep
 			getCapacityMP(externalT_C, hpwh->tankTemps_C[externalOutletHeight], inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
@@ -3679,6 +3687,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//add water to top node, heated to setpoint
 		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
+		
+
+		hpwh->mixTankInversions();
 
 		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
 		input_BTUperHr += inputTemp_BTUperHr * timeUsed_min;
@@ -3686,8 +3697,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		cop += copTemp * timeUsed_min;
 
 		hpwh->externalVolumeHeated_L += nodeFrac * volumePerNode_LperNode;
-
-		hpwh->mixTankInversions();
 
 		//if there's still time remaining and you haven't heated to the cutoff
 		//specified in shutsOff logic, keep heating
