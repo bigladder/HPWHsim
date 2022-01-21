@@ -3308,7 +3308,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
-		canScale = true; // the one fully scallable model
+		canScale = true; // a fully scallable model
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
@@ -3336,7 +3336,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
-		//Perfmap for input power and COP made from data for CxA-15 to be scalled for this model
+		//Perfmap for input power and COP made from data for poor preforming modeled to be scalled for this model
 		std::vector<double> inputPwr_coeffs = { 13.6, 0.00995, -0.0342, -0.014, -0.000110, 0.00026, 0.000232, 0.000195, -0.00034, 5.30E-06, 2.3600E-06};
 		std::vector<double> COP_coeffs = { 1.945, 0.0412, -0.0112, -0.00161, 0.0000492, 0.0000348, -0.0000323, -0.000166, 0.0000112, 0.0000392, -3.52E-07};
 
@@ -3369,6 +3369,88 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//top resistor values
 		//standard logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(15)));
+		resistiveElementTop.isVIP = true;
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+		setOfSources[0].companionHeatSource = &setOfSources[2];
+	}
+	else if (presetNum == MODELS_Scalable_MP) {
+	// compare to nyle c60A later to make sure it's beating it.
+		numNodes = 24;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(135.0);
+		tankSizeFixed = false;
+		canScale = true; // a fully scallable model
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
+		tankUA_kJperHrC = 7;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
+		compressor.perfMap.reserve(1);
+		compressor.hysteresis_dC = 0;
+		compressor.externalOutletHeight = 0;
+		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
+
+		//logic conditions
+		std::vector<NodeWeight> nodeWeights;
+		nodeWeights.emplace_back(4);
+		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
+
+		std::vector<NodeWeight> nodeWeights1;
+		nodeWeights1.emplace_back(4);
+		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.depressesTemperature = false;  //no temp depression
+
+		//Defrost Derate 
+		compressor.setupDefrostMap();
+
+		//logic conditions
+		compressor.minT = F_TO_C(40.);
+		compressor.maxT = F_TO_C(105.);
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+		setTankSize_adjustUA(600., UNITS_GAL);
+		compressor.mpFlowRate_LPS = GPM_TO_LPS(25.);
+		compressor.perfMap.push_back({
+			100, // Temperature (T_F)
+
+			{ 12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coefficients (inputPower_coeffs)
+
+			{ 1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440} // COP Coefficients (COP_coeffs)
+
+			});
+
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
+		resistiveElementBottom.setupAsResistiveElement(0, 30000);
+		resistiveElementTop.setupAsResistiveElement(9, 30000);
+
+		//top resistor values
+		//standard logic conditions
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(30)));
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
