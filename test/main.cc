@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
 	  // Check flow for external MP
 	  if (hpwh.isCompressoExternalMultipass()) {
 		  double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
-		  double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(0);
+		  double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
 		  if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
 			  cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
 				  << mpFlowVolume_Gal << "\n";

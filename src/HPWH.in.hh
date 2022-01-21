@@ -136,6 +136,7 @@ class HPWH {
 
 	  MODELS_StorageTank = 180,  /**< Generic Tank without heaters */
 	  MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that has scalable input capacity and COP  */
+	  MODELS_Scalable_MP = 191, /** < Lower performance MP model that has scalable input capacity and COP  */
 
 	  // Non-preset models
 	  MODELS_CustomFile = 200,      /**< HPWH parameters were input via file */
