@@ -527,7 +527,10 @@ class HPWH {
 
 	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
 		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C);
-	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures.
+	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures. 
+	For multi-pass models the capacity is set as the average between the inletTemp and outTemp since multi-pass models will increase
+	the water temperature only a few degrees at a time (i.e. maybe 10 degF) until the tank reaches the outTemp, the capacity at
+	inletTemp might not be accurate for the entire heating cycle.
 	Note only supports HPWHs with one compressor, if multiple will return the last index 
 	of a compressor */
 
