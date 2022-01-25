@@ -132,7 +132,7 @@ set(largeCompressorNames
  NyleC185A_C_SP
  NyleC250A_C_SP
  TamScalable_SP_Half
- Scalable_MP
+ #Scalable_MP
 )
 
 set(yearLargeTestsModels   
