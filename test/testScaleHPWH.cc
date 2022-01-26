@@ -19,9 +19,13 @@ struct performance {
 };
 
 void getCompressorPerformance(HPWH &hpwh, performance &point, double waterTempC, double airTempC, double setpointC) {
-	//Force tank cold
-	hpwh.setSetpoint(waterTempC);
-	hpwh.resetTankToSetpoint();
+	if (hpwh.isCompressorMultipass()) { // Multipass capacity looks at the average of the temperature of the lift
+		hpwh.setSetpoint((waterTempC + setpointC) / 2.);
+	}
+	else {
+		hpwh.setSetpoint(waterTempC);
+	}
+	hpwh.resetTankToSetpoint(); //Force tank cold
 	hpwh.setSetpoint(setpointC);
 
 	// Run the step
@@ -32,7 +36,7 @@ void getCompressorPerformance(HPWH &hpwh, performance &point, double waterTempC,
 		//HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
 		(HPWH::DR_TOO | HPWH::DR_LOR) // DR Status (now an enum. Fixed for now as allow)
 	);
-	
+
 	// Check the heat in and out of the compressor
 	point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex());
 	point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex());
@@ -81,10 +85,110 @@ void testNoneScalable() { // Test a model that is not scalable
 	ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 }
 
-void testScalableHPWHScales() { // Test the scalable hpwh can be put through it's passes
+void testScalableHPWHScales() { // Test the scalable hpwh can scale
 	HPWH hpwh;
 
 	string input = "TamScalable_SP";
+
+	performance point0, point1;
+	double num, anotherNum;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	num = 0.001; // Very low
+	scaleCapacityCOP(hpwh, num, 1., point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop));
+
+	scaleCapacityCOP(hpwh, 1., num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	scaleCapacityCOP(hpwh, num, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 0.2; // normal but bad low
+	scaleCapacityCOP(hpwh, num, 1., point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop));
+
+	scaleCapacityCOP(hpwh, 1., num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	scaleCapacityCOP(hpwh, num, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 3.; // normal but pretty high
+	scaleCapacityCOP(hpwh, num, 1., point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop));
+
+	scaleCapacityCOP(hpwh, 1., num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	scaleCapacityCOP(hpwh, num, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 1000; // really high
+	scaleCapacityCOP(hpwh, num, 1., point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop));
+
+	scaleCapacityCOP(hpwh, 1., num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	scaleCapacityCOP(hpwh, num, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / num));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 10;
+	anotherNum = 0.1; // weird high and low
+	scaleCapacityCOP(hpwh, num, anotherNum, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / anotherNum));
+
+	scaleCapacityCOP(hpwh, anotherNum, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / anotherNum));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+
+	num = 1.5;
+	anotherNum = 0.9; // real high and low
+	scaleCapacityCOP(hpwh, num, anotherNum, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / num));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / anotherNum));
+
+	scaleCapacityCOP(hpwh, anotherNum, num, point0, point1);
+	ASSERTTRUE(cmpd(point0.input, point1.input / anotherNum));
+	ASSERTTRUE(cmpd(point0.output, point1.output / num / anotherNum));
+	ASSERTTRUE(cmpd(point0.cop, point1.cop / num));
+}
+
+void testScalableMPHPWHScales() { // Test the scalable MP hpwh can scale
+	HPWH hpwh;
+
+	string input = "Scalable_MP";
 
 	performance point0, point1;
 	double num, anotherNum;
@@ -220,10 +324,8 @@ void testMPGetCompressorCapacity() {
 
 	// get preset model 
 	getHPWHObject(hpwh, input);
-
 	capacity_kWH = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) / 60.; // div 60 to kWh because I know above only runs 1 minute
-	getCompressorPerformance(hpwh, point0, (waterTempC+setpointC)/2., airTempC, setpointC); // gives kWH
-
+	getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC); // gives kWH
 	ASSERTTRUE(cmpd(point0.output, capacity_kWH));
 
 	//Test with IP units
@@ -231,6 +333,43 @@ void testMPGetCompressorCapacity() {
 	ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output), capacity_BTU, 0.0001)); // relative cmp since in btu's these will be large numbers
 }
 
+
+void testSetMPCompressorOutputCapacity() {
+	HPWH hpwh;
+
+	string input = "Scalable_MP";
+
+	double newCapacity_kW, num;
+	double waterTempC = F_TO_C(44);
+	double airTempC = F_TO_C(98);
+	double setpointC = F_TO_C(150);
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	//Scale output to 1 kW
+	num = 1.;
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	//Scale output to .01 kW
+	num = .01;
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	//Scale output to 1000 kW
+	num = 1000.;
+	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTTRUE(cmpd(num, newCapacity_kW));
+
+	// Check again with changed setpoint, for MP it should affect output capacity since it looks at the mean temperature for the cycle.
+	setpointC = F_TO_C(100);
+	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	ASSERTFALSE(cmpd(num, newCapacity_kW));
+}
 
 void testSetCompressorOutputCapacity() {
 	HPWH hpwh;
@@ -376,7 +515,11 @@ int main(int argc, char *argv[])
 
 	testStorageTankErrors(); // Make sure we can't scale the storage tank.
 
+	testScalableMPHPWHScales(); // Test for proper scaling in the MP scalable model
+
 	testMPGetCompressorCapacity(); // Test MP capacity in and out correct.
+
+	testSetMPCompressorOutputCapacity(); // Tets MP capacity can be set correctly. 
 
 	//Made it through the gauntlet
 	return 0;

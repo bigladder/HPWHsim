@@ -132,6 +132,7 @@ set(largeCompressorNames
  NyleC185A_C_SP
  NyleC250A_C_SP
  TamScalable_SP_Half
+ #Scalable_MP
 )
 
 set(yearLargeTestsModels   
@@ -146,9 +147,12 @@ set(yearLargeTestsModels
  NyleC250A_SP
  
  ColmacCxV_5_MP
+ ColmacCxA_15_MP
  ColmacCxA_20_MP
  RheemHPHD60
  RheemHPHD135
+ TamScalable_SP
+ Scalable_MP
 )
 
 set(yearLargeTests                                        
