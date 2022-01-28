@@ -174,13 +174,19 @@ class HPWH {
 	  MODELS_NyleC250A_C_SP = 245,  /*< Nyle C250A external heat pump in Single Pass Mode */
 
 	  // Larger Nyle models in multi pass configuration
-	  MODELS_NyleC25A_MP  = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
+	  //MODELS_NyleC25A_MP  = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC60A_MP  = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC90A_MP  = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC125A_MP = 333,  /*< Nyle C125A external heat pump in Multi Pass Mode */
 	  MODELS_NyleC185A_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
 	  MODELS_NyleC250A_MP = 335,  /*< Nyle C250A external heat pump in Multi Pass Mode */
 
+	  //MODELS_NyleC25A_MP = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC60A_C_MP = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC90A_C_MP = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC125A_C_MP = 333,  /*< Nyle C125A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC185A_C_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_C_MP = 335,  /*< Nyle C250A external heat pump in Multi Pass Mode */
 	  // Large Rheem multi pass models
 	  MODELS_RHEEM_HPHD60HNU_201_MP = 350,
 	  MODELS_RHEEM_HPHD60VNU_201_MP = 351,
@@ -914,7 +920,9 @@ class HPWH::HeatSource {
 	/**< Does a calculation based on the ten term regression equation  */
 	void regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
 	/**< Does a calculation based on the five term regression equation for MP split systems  */
-
+	void regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
+	/**< Does a calculation based on the five term exponential regression equation for MP split systems  */
+	
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
 	void defrostDerate(double &to_derate, double airT_C);
@@ -990,6 +998,9 @@ class HPWH::HeatSource {
 	std::vector<HeatingLogic> shutOffLogicSet;
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
 	HeatingLogic *standbyLogic;
+
+	/** some compressors have a resistance element for defrost this is the element size */
+	double defrostResElm_KW;
 
 	struct defrostPoint {
 		double T_F;

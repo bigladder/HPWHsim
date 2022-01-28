@@ -3469,6 +3469,17 @@ void HPWH::HeatSource::regressedMethodMP(double &ynew, std::vector<double> &coef
 		coefficents[5] * x1 * x2;
 }
 
+void HPWH::HeatSource::regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2) {
+	//Const Tair Tin Tair2 Tin2 TairTin
+	ynew = exp( coefficents[0] +
+				coefficents[1] * x1 +
+				coefficents[2] * x2 +
+				coefficents[3] * log(x1) +
+				coefficents[4] * log(x2) +
+				coefficents[5] * log(x1 + x2)
+				);
+}
+
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
