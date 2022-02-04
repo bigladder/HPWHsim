@@ -319,6 +319,87 @@ void testRheemHPHD135() {
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
+void testNyleC60AMP() {
+	HPWH hpwh;
+	string input = "NyleC60A_MP";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 60.0, 60.0, 16.258724494530256 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 80.0, 60.0, 21.073600659726043 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 90.0, 130.0, 20.128785625310147 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+
+void testNyleC90AMP() {
+	HPWH hpwh;
+	string input = "NyleC90A_MP";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 60.0, 60.0, 28.391312547894692 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 80.0, 60.0, 37.76629798021198 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 90.0, 130.0, 36.588687630737226 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+void testNyleC125AMP() {
+	HPWH hpwh;
+	string input = "NyleC125A_MP";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 60.0, 60.0, 36.450663648640635 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 80.0, 60.0, 47.60348009159024 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 90.0, 130.0, 44.89242490188696 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+void testNyleC185AMP() {
+	HPWH hpwh;
+	string input = "NyleC185A_MP";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 60.0, 60.0, 56.42805061073486 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 80.0, 60.0, 72.02025074279416 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 90.0, 130.0, 69.83381084066781 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
+void testNyleC250AMP() {
+	HPWH hpwh;
+	string input = "NyleC250A_MP";
+	performancePointMP checkPoint;
+
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test some points outside of defrost ////////////////
+	checkPoint = { 60.0, 60.0, 80.22629566828897 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 80.0, 60.0, 104.4274354892963 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+	checkPoint = { 90.0, 130.0, 82.3921175498482 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
+}
 int main(int argc, char *argv[])
 {
 	testCXA15MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
@@ -334,6 +415,12 @@ int main(int argc, char *argv[])
 
 	testRheemHPHD135();
 	testRheemHPHD60();
+
+	testNyleC60AMP();
+	testNyleC90AMP();
+	testNyleC125AMP();
+	testNyleC185AMP();
+	testNyleC250AMP();
 
 	//Made it through the gauntlet
 	return 0;

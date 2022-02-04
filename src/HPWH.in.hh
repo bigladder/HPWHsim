@@ -181,12 +181,12 @@ class HPWH {
 	  MODELS_NyleC185A_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
 	  MODELS_NyleC250A_MP = 335,  /*< Nyle C250A external heat pump in Multi Pass Mode */
 
-	  //MODELS_NyleC25A_MP = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC60A_C_MP = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC90A_C_MP = 332,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
-	  MODELS_NyleC125A_C_MP = 333,  /*< Nyle C125A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC185A_C_MP = 334,  /*< Nyle C185A external heat pump in Multi Pass Mode */
-	  MODELS_NyleC250A_C_MP = 335,  /*< Nyle C250A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC60A_C_MP = 341,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC90A_C_MP = 342,  /*< Nyle C90A external heat pump in Multi Pass Mode  */
+	  MODELS_NyleC125A_C_MP = 343,  /*< Nyle C125A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC185A_C_MP = 344,  /*< Nyle C185A external heat pump in Multi Pass Mode */
+	  MODELS_NyleC250A_C_MP = 345,  /*< Nyle C250A external heat pump in Multi Pass Mode */
+
 	  // Large Rheem multi pass models
 	  MODELS_RHEEM_HPHD60HNU_201_MP = 350,
 	  MODELS_RHEEM_HPHD60VNU_201_MP = 351,
@@ -999,8 +999,16 @@ class HPWH::HeatSource {
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
 	HeatingLogic *standbyLogic;
 
-	/** some compressors have a resistance element for defrost this is the element size */
-	double defrostResElm_KW;
+	/** some compressors have a resistance element for defrost*/
+	struct resistanceElementDefrost
+	{
+		double inputPwr_kW;
+		double constTempLift_dF;
+		double onBelowT_F;
+	};
+	resistanceElementDefrost resDefrost;
+	/** use the expontential curve fit not the standard quadratic */
+	bool expCurveFit;
 
 	struct defrostPoint {
 		double T_F;
@@ -1122,6 +1130,7 @@ inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
+inline double KW_TO_BTUperH(double kw) { return (kw * 3412.14); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }

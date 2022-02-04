@@ -1366,7 +1366,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0] = compressor;
 	}
 	// If Nyle multipass presets
-	else if (MODELS_NyleC25A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
+	else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
 		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
@@ -1393,6 +1393,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.externalOutletHeight = 0;
 		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
 
+		compressor.expCurveFit = true;
+
 		//logic conditions//logic conditions
 		if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP) {// If not cold weather package
 			compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
@@ -1412,8 +1414,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
-
-		// CHECK IF THIS IS RIGHT!!!!
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
@@ -1421,29 +1421,40 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			setTankSize_adjustUA(360., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(13.);
 			if (presetNum == MODELS_NyleC60A_C_MP) {
-				compressor.defrostResElm_KW = 4.5;
+				compressor.resDefrost = {
+								4.5,  // inputPwr_kW;
+								5.0,  // constTempLift_dF;
+								40.0  // onBelowT_F
+							 };
 			}
 			compressor.perfMap.push_back({
+
 					90, // Temperature (T_F)
-					
-					{ 0.3793881173, 0.0095624019, 0.0013646930, -0.5721938277, -0.3747118461, 0.8975984433}, // Input Power Coefficients (inputPower_coeffs)
 				
-					{ -1.0502345395, -0.0139946437, 0.0034695832, 0.4563525324, 0.6109688447, -0.2830113509} // COP Coefficients (COP_coeffs),
+					{ 0.3793881173, 0.0013646930, 0.0095624019, -0.3747118461, -0.5721938277, 0.8975984433 }, // Input Power Coefficients (inputPower_coeffs)
+				
+					{ -1.0502345395, 0.0034695832, -0.0139946437, 0.6109688447, 0.4563525324, -0.2830113509 } // COP Coefficients (COP_coeffs),
 
 				});
+
+
 		}
 		else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP) {
 			setTankSize_adjustUA(480., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(20.);
 			if (presetNum == MODELS_NyleC90A_C_MP) {
-				compressor.defrostResElm_KW = 5.4;
+				compressor.resDefrost = {
+								5.4,  // inputPwr_kW;
+								5.0,  // constTempLift_dF;
+								40.0  // onBelowT_F
+							};
 			}
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
+
+					{-3.2646433947, -0.0016202230, 0.0013361350, -0.4032034153, -0.2371026265, 1.6199379267}, // Input Power Coefficients (inputPower_coeffs)
 				
-					{ -3.2646433947, 0.0013361350, -0.0016202230, -0.2371026265, -0.4032034153, 1.6199379267}, // Input Power Coefficients (inputPower_coeffs)
-				
-					{ 3.6779857228, -0.0053994954, 0.0099026252, 0.0774214624, 0.4824806407, -0.9914669117} // COP Coefficients (COP_coeffs)
+					{3.6779857228, 0.0099026252, -0.0053994954, 0.4824806407, 0.0774214624, -0.9914669117} // COP Coefficients (COP_coeffs)
 				});
 
 		}
@@ -1451,42 +1462,54 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			setTankSize_adjustUA(600., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(28.);
 			if (presetNum == MODELS_NyleC125A_C_MP) {
-				compressor.defrostResElm_KW = 90;
+				compressor.resDefrost = {
+								9.0,  // inputPwr_kW;
+								5.0,  // constTempLift_dF;
+								40.0  // onBelowT_F
+							};
 			}
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
+
+					{-0.6913111752, -0.0007913536, 0.0100379459, -0.4680839149, -0.7589682016, 1.5200297482}, // Input Power Coefficients (inputPower_coeffs)
 				
-					{ -0.6913111752, 0.0100379459, -0.0007913536, -0.7589682016, -0.4680839149, 1.5200297482}, // Input Power Coefficients (inputPower_coeffs)
-				
-					{ 0.2303698770, -0.0148484983, 0.0044194375, 0.4960884618, 0.6401560061, -0.5801541079} // COP Coefficients (COP_coeffs)
+					{0.2303698770, 0.0044194375, -0.0148484983, 0.6401560061, 0.4960884618, -0.5801541079} // COP Coefficients (COP_coeffs)
 				});
 		}
 		else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP) {
 			setTankSize_adjustUA(960., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(40.);
 			if (presetNum == MODELS_NyleC185A_C_MP) {
-				compressor.defrostResElm_KW = 7.2;
+				compressor.resDefrost = {
+								7.2,  // inputPwr_kW;
+								5.0,  // constTempLift_dF;
+								40.0  // onBelowTemp_F
+							};
 			}
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
-				
-					{ 0.0149026968, 0.0039475952, 0.0067961831, 0.6172132575, -0.4259970757, 0.1962783222}, // Input Power Coefficients (inputPower_coeffs)
+
+					{0.0149026968, 0.0067961831, 0.0039475952, -0.4259970757, 0.6172132575, 0.1962783222}, // Input Power Coefficients (inputPower_coeffs)
 					
-					{-0.1866072355, -0.0075831393, -0.0064299798, -0.8164105581, 0.8667773161, 0.5163511206} // COP Coefficients (COP_coeffs)
+					{-0.1866072355, -0.0064299798, -0.0075831393, 0.8667773161, -0.8164105581, 0.5163511206} // COP Coefficients (COP_coeffs)
 				});
 		}
 		else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP) {
 			setTankSize_adjustUA(960., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(50.);
 			if (presetNum == MODELS_NyleC250A_C_MP) {
-				compressor.defrostResElm_KW = 18.;
+				compressor.resDefrost = {
+								18.0,  // inputPwr_kW;
+								5.0,  // constTempLift_dF;
+								40.0  // onBelowT_F
+							};
 			}
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
-				
-					{ 3.7566636881, 0.0072192476, 0.0038624982, 1.6566360285, 1.4050392489, -2.9904530044}, // Input Power Coefficients (inputPower_coeffs)
+
+					{3.7566636881, 0.0038624982, 0.0072192476, 1.4050392489, 1.6566360285, -2.9904530044}, // Input Power Coefficients (inputPower_coeffs)
 			
-					{ -2.7485898141, -0.0134007606, -0.0024921296, -1.4067847665, -0.4351961253, 2.7129793247} // COP Coefficients (COP_coeffs)
+					{-2.7485898141, -0.0024921296, -0.0134007606, -0.4351961253, -1.4067847665, 2.7129793247} // COP Coefficients (COP_coeffs)
 				});
 		}
 
@@ -3517,7 +3540,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
 	else if (presetNum == MODELS_Scalable_MP) {
-	// compare to nyle c60A later to make sure it's beating it.
 		numNodes = 24;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = F_TO_C(135.0);
