@@ -214,7 +214,7 @@ void testCommercialTankInit() {
 #undef INITGEN
 #undef R_TO_RSI
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 	testSetResistanceCapacityErrorChecks(); // Check the resistance reset throws errors when expected.
 

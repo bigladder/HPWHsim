@@ -26,7 +26,7 @@ void testResTankSizingFract();
 void testStoTankSizingFract();
 void testGetCompressorMinRuntime();
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 	testScalableSizingFract();
 	testSandenSizingFract();
