@@ -1067,7 +1067,7 @@ class HPWH::HeatSource {
 
   // some private functions, mostly used for heating the water with the addHeat function
 
- 	double addHeatAboveNode(double cap_kJ, int node, double minutesToRun);
+ 	double addHeatAboveNode(double cap_kJ, int node);
   /**< adds heat to the set of nodes that are at the same temperature, above the
       specified node number */
   double addHeatExternal(double externalT_C, double minutesToRun, double &cap_BTUperHr, double &input_BTUperHr, double &cop);

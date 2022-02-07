@@ -319,7 +319,7 @@ void testRheemHPHD135() {
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 	testCXA15MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
 	testCXA30MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
