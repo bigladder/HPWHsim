@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
   HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
   HPWH::MODELS model;
-  HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
+  //HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
   // HPWH::UNITS units = HPWH::UNITS_F;
 
   const double EBALTHRESHOLD = 0.005;
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
   bool HPWH_doTempDepress;
   int doInvMix, doCondu;
 
-  FILE * outputFile;
-  FILE * yearOutFile;
+  FILE * outputFile = NULL;
+  FILE * yearOutFile = NULL;
   ifstream controlFile;
 
   string strPreamble;
@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
     cout << "Could not open control file " << fileToOpen << "\n";
     exit(1);
   }
+  outputCode = 0;
   minutesToRun = 0;
   newSetpoint = 0.;
   doCondu = 1;

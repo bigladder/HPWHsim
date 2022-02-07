@@ -50,6 +50,7 @@ void scaleCapacityCOP(HPWH &hpwh, double scaleInput, double scaleCOP, performanc
 
 	// Scale the compressor
 	int val = hpwh.setScaleHPWHCapacityCOP(scaleInput, scaleCOP);
+	ASSERTTRUE(val == 0);
 
 	// Get the scaled performance
 	getCompressorPerformance(hpwh, point1, waterTempC, airTempC, setpointC);
@@ -432,11 +433,10 @@ void testScaleRestank() {
 	HPWH hpwh;
 
 	string input = "restankRealistic";
-	double elementPower = 4.5; //KW
 	// get preset model 
 	getHPWHObject(hpwh, input);
 
-	//Scale output to 1 kW
+	//Scale COP for restank fails.
 	int val = hpwh.setScaleHPWHCapacityCOP(2., 2.);
 	ASSERTTRUE(val == HPWH::HPWH_ABORT);
 }
@@ -494,7 +494,7 @@ void testStorageTankErrors() {
 
 }
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 
 	testScalableHPWHScales(); // Test the scalable model scales properly
