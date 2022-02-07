@@ -27,7 +27,7 @@ void testSetpointFixed();
 
 const double REMaxShouldBe = 100.;
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 	testMaxSetpointResistanceTank();
 	testScalableCompressor();
