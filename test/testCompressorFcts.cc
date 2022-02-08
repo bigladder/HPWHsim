@@ -52,7 +52,7 @@ void testGetMinOperatingTemp(string input, double expected) {
 	ASSERTTRUE(hpwh.getMinOperatingTemp(HPWH::UNITS_F) == expected);
 }
 
-int main(int argc, char *argv[])
+int main(int, char*)
 {
 
 	const int length = 13;

@@ -1239,7 +1239,7 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
 
 	int returnVal = 0;
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			if (whichExternalPort == 1) {
 				returnVal =  setNodeNumFromFractionalHeight(fractionalHeight, setOfSources[i].externalInletHeight);
 			}
@@ -1277,7 +1277,7 @@ int HPWH::getExternalInletHeight() const {
 		return HPWH_ABORT;
 	}
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return setOfSources[i].externalInletHeight; // Return the first one since all external sources have some ports
 		}
 	}
@@ -1291,7 +1291,7 @@ int HPWH::getExternalOutletHeight() const {
 		return HPWH_ABORT;
 	}
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return setOfSources[i].externalOutletHeight; // Return the first one since all external sources have some ports
 		}
 	}
@@ -1948,7 +1948,7 @@ bool HPWH::hasACompressor() const {
 
 bool HPWH::hasExternalHeatSource() const {
 	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].configuration = HeatSource::CONFIG_EXTERNAL) {
+		if (setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return true;
 		}
 	}
@@ -2279,7 +2279,6 @@ int HPWH::getResistancePosition(int elementIndex) const {
 		return HPWH_ABORT;
 	}
 
-	int elementPosition = -1;
 	for (int i = 0; i < CONDENSITY_SIZE; i++) {
 		if (setOfSources[elementIndex].condensity[i] == 1) { // res elements have a condenstiy of 1 at a specific node
 			return i;
@@ -2293,10 +2292,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 	double inletVol2_L, double inletT2_C) {
 	//set up some useful variables for calculations
 	double drawFraction;
-	this->outletTemp_C = 0;
-	double nodeInletFraction, cumInletFraction, drawVolume_N, nodeInletTV;
+	this->outletTemp_C = 0.;
+	double nodeInletFraction, cumInletFraction, drawVolume_N;
+	double nodeInletTV = 0.;
 
-	if (drawVolume_L > 0) {
+	if (drawVolume_L > 0.) {
 
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
 		if (inletVol2_L > drawVolume_L) {
@@ -3058,7 +3058,7 @@ bool HPWH::HeatSource::maxedOut() const {
 double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 	double fracTemp, comparison, sum, totWeight, diff;
 	double frac = 1.;
-	int calcNode;
+	int calcNode = 0;
 	int firstNode = -1;
 
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
@@ -3127,11 +3127,10 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
-	double input_BTUperHr, cap_BTUperHr, cop, captmp_kJ, leftoverCap_kJ = 0.0;
-
+	double input_BTUperHr = 0., cap_BTUperHr = 0., cop = 0., captmp_kJ = 0.;
+	double leftoverCap_kJ = 0.0;
 	// set the leftover capacity of the Heat Source to 0, so the first round of
 	// passing it on works
-	leftoverCap_kJ = 0.0;
 
 	switch (configuration) {
 	case CONFIG_SUBMERGED:
@@ -3165,7 +3164,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 			captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
 			if (captmp_kJ != 0) {
 				//add leftoverCap to the next run, and keep passing it on
-				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i, minutesToRun);
+				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ, i);
 			}
 		}
 		
@@ -3532,7 +3531,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 }
 
 
-double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node, double minutesToRun) {
+double HPWH::HeatSource::addHeatAboveNode(double cap_kJ, int node) {
 	double Q_kJ, deltaT_C, targetTemp_C;
 	int setPointNodeNum;
 
@@ -4021,7 +4020,7 @@ bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic) {
 	for (auto nodeWeights : logic.nodeWeights) {
 		if (nodeWeights.nodeNum > 13 || nodeWeights.nodeNum < 0) {
 			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Node number for heatsource %d %s must be between 0 and 13. \n", logic.description);
+				msg("Node number for heatsource %s must be between 0 and 13. \n", logic.description.c_str());
 			}
 			return false;
 		}
@@ -4629,13 +4628,13 @@ int HPWH::HPWHinit_file(string configFile) {
 
 				if (maxTemps < nTemps) {
 					if (maxTemps == 0) {
-						if (true || hpwhVerbosity >= VRB_reluctant) {
+						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("%s specified for heatsource %d before definition of nTemps.  \n", token.c_str(), heatsource);
 						}
 						return HPWH_ABORT;
 					}
 					else {
-						if (true || hpwhVerbosity >= VRB_reluctant) {
+						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("Incorrect specification for %s from heatsource %d. nTemps, %d, is less than %d.  \n", token.c_str(), heatsource, maxTemps, nTemps);
 						}
 						return HPWH_ABORT;
