@@ -178,9 +178,12 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "RheemHPHD135") {
 		hpwhModel = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
 	}
-
+	//Nyle Single pass models
 	else if (modelName == "NyleC25A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC25A_SP;
+	}
+	else if (modelName == "NyleC60A_SP") {
+		hpwhModel = HPWH::MODELS_NyleC60A_SP;
 	}
 	else if (modelName == "NyleC90A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC90A_SP;
@@ -191,6 +194,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "NyleC250A_SP") {
 		hpwhModel = HPWH::MODELS_NyleC250A_SP;
 	}
+	else if (modelName == "NyleC60A_C_SP") {
+		hpwhModel = HPWH::MODELS_NyleC60A_C_SP;
+	}
 	else if (modelName == "NyleC90A_C_SP") {
 		hpwhModel = HPWH::MODELS_NyleC90A_C_SP;
 	}
@@ -199,6 +205,37 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	}
 	else if (modelName == "NyleC250A_C_SP") {
 		hpwhModel = HPWH::MODELS_NyleC250A_C_SP;
+	}
+	// Nyle MP models
+	else if (modelName == "NyleC60A_MP") {
+		hpwhModel = HPWH::MODELS_NyleC60A_MP;
+	}
+	else if (modelName == "NyleC90A_MP") {
+		hpwhModel = HPWH::MODELS_NyleC90A_MP;
+	}
+	else if (modelName == "NyleC125A_MP") {
+		hpwhModel = HPWH::MODELS_NyleC125A_MP;
+	}
+	else if (modelName == "NyleC185A_MP") {
+		hpwhModel = HPWH::MODELS_NyleC185A_MP;
+	}
+	else if (modelName == "NyleC250A_MP") {
+		hpwhModel = HPWH::MODELS_NyleC250A_MP;
+	}
+	else if (modelName == "NyleC60A_C_MP") {
+		hpwhModel = HPWH::MODELS_NyleC60A_C_MP;
+	}
+	else if (modelName == "NyleC90A_C_MP") {
+		hpwhModel = HPWH::MODELS_NyleC90A_C_MP;
+	}
+	else if (modelName == "NyleC125A_C_MP") {
+		hpwhModel = HPWH::MODELS_NyleC125A_C_MP;
+	}
+	else if (modelName == "NyleC185A_C_MP") {
+		hpwhModel = HPWH::MODELS_NyleC185A_C_MP;
+	}
+	else if (modelName == "NyleC250A_C_MP") {
+		hpwhModel = HPWH::MODELS_NyleC250A_C_MP;
 	}
 	// Stack in a couple scalable models
 	else if (modelName == "TamScalable_SP") {

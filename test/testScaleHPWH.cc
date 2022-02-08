@@ -349,9 +349,12 @@ void testSetMPCompressorOutputCapacity() {
 	getHPWHObject(hpwh, input);
 
 	//Scale output to 1 kW
+	cout << "SCALABLE MP \n";
 	num = 1.;
 	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
 	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+	cout << num << ", " << airTempC << ", " << waterTempC << ", " << setpointC << ", " << newCapacity_kW << "\n";
+	cout << "\n";
 	ASSERTTRUE(cmpd(num, newCapacity_kW));
 
 	//Scale output to .01 kW
@@ -497,6 +500,10 @@ void testStorageTankErrors() {
 int main(int, char*)
 {
 
+	testSetMPCompressorOutputCapacity();
+
+
+
 	testScalableHPWHScales(); // Test the scalable model scales properly
 
 	testNoScaleOutOfBounds(); // Test that models can't scale with invalid inputs 
@@ -519,7 +526,7 @@ int main(int, char*)
 
 	testMPGetCompressorCapacity(); // Test MP capacity in and out correct.
 
-	testSetMPCompressorOutputCapacity(); // Tets MP capacity can be set correctly. 
+	//testSetMPCompressorOutputCapacity(); // Tets MP capacity can be set correctly. 
 
 	//Made it through the gauntlet
 	return 0;

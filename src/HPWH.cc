@@ -1667,7 +1667,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 
 	if (setOfSources[compressorIndex].isExternalMultipass()) {
 		double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-		setOfSources[compressorIndex].getCapacityMP(airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+		setOfSources[compressorIndex].getCapacityMP(airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp); 
 	}
 	else {
 		setOfSources[compressorIndex].getCapacity(airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
@@ -2617,7 +2617,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1)
+	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), expCurveFit(false)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2647,6 +2647,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	perfMap = hSource.perfMap;
 	
 	defrostMap = hSource.defrostMap;
+	resDefrost = hSource.resDefrost;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -2666,6 +2667,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
 	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
+	expCurveFit = hSource.expCurveFit;
 
 	externalInletHeight = hSource.externalInletHeight;
 	externalOutletHeight = hSource.externalOutletHeight;
@@ -2711,6 +2713,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	perfMap = hSource.perfMap;
 
 	defrostMap = hSource.defrostMap;
+	resDefrost = hSource.resDefrost;
 
 	//i think vector assignment works correctly here
 	turnOnLogicSet = hSource.turnOnLogicSet;
@@ -2730,6 +2733,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
 	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
+	expCurveFit = hSource.expCurveFit;
 
 	externalInletHeight = hSource.externalInletHeight;
 	externalOutletHeight = hSource.externalOutletHeight;
@@ -3286,9 +3290,9 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 			else {
 				if (i == perfMap.size() - 1) {
 					extrapolate = true;
-					i_prev = i - 1;
-					i_next = i;
-					break;
+i_prev = i - 1;
+i_next = i;
+break;
 				}
 			}
 		}
@@ -3328,17 +3332,17 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 
 	}
 	else { //perfMap.size() == 1 or we've got an issue.
-		if (externalT_F > perfMap[0].T_F) {
-			extrapolate = true;
-			if (extrapolationMethod == EXTRAP_NEAREST) {
-				externalT_F = perfMap[0].T_F;
-			}
+	if (externalT_F > perfMap[0].T_F) {
+		extrapolate = true;
+		if (extrapolationMethod == EXTRAP_NEAREST) {
+			externalT_F = perfMap[0].T_F;
 		}
+	}
 
-		regressedMethod(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserTemp_F);
-		input_BTUperHr = KWH_TO_BTU(input_BTUperHr); 
+	regressedMethod(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserTemp_F);
+	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
-		regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserTemp_F);
+	regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserTemp_F);
 	}
 
 	if (doDefrost) {
@@ -3372,30 +3376,42 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	}
 }
 
-
-
 void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	double externalT_F, condenserTemp_F;
-
+	bool resDefrostHeatingOn = false;
 	// Convert Celsius to Fahrenheit for the curve fits
 	condenserTemp_F = C_TO_F(condenserTemp_C);
 	externalT_F = C_TO_F(externalT_C);
+	
+	// Check if we have resistance elements to turn on for defrost and add the constant lift.
+	if (resDefrost.inputPwr_kW > 0) {
+		if (externalT_F < resDefrost.onBelowT_F) {
+			externalT_F += resDefrost.constTempLift_dF;
+			resDefrostHeatingOn = true;
+		}
+	}
 
 	// Get bounding performance map points for interpolation/extrapolation
 	bool extrapolate = false;
-
 	if (externalT_F > perfMap[0].T_F) {
 		extrapolate = true;
 		if (extrapolationMethod == EXTRAP_NEAREST) {
 			externalT_F = perfMap[0].T_F;
 		}
 	}
-	//Const Tair Tin Tair2 Tin2 TairTin
-	regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+
+	if (expCurveFit) {
+		regressedExpMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+		regressedExpMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+	}
+	else {
+		//Const Tair Tin Tair2 Tin2 TairTin
+		regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+		regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+	}
 	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
-	regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
-	
+	cout << condenserTemp_F << ", " << externalT_F << ", input_BTUperHr " << input_BTUperHr << ", cop " << cop << "\n";
 
 	if (doDefrost) {
 		//adjust COP by the defrost factor
@@ -3404,6 +3420,10 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 
 	cap_BTUperHr = cop * input_BTUperHr;
 
+	//For accounting add the resistance defrost to the input energy
+	if (resDefrostHeatingOn){
+		input_BTUperHr += KW_TO_BTUperH(resDefrost.inputPwr_kW);
+	}
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("externalT_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, condenserTemp_F);
 		hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n", input_BTUperHr, cop, cap_BTUperHr);
@@ -3466,6 +3486,17 @@ void HPWH::HeatSource::regressedMethodMP(double &ynew, std::vector<double> &coef
 		coefficents[3] * x1 * x1 +
 		coefficents[4] * x2 * x2 +
 		coefficents[5] * x1 * x2;
+}
+
+void HPWH::HeatSource::regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2) {
+	//Const Tair Tin Tair2 Tin2 TairTin
+	ynew = exp( coefficents[0] +
+				coefficents[1] * x1 +
+				coefficents[2] * x2 +
+				coefficents[3] * log(x1) +
+				coefficents[4] * log(x2) +
+				coefficents[5] * log(x1 + x2)
+				);
 }
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
