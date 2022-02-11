@@ -3411,8 +3411,6 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 	}
 	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
-	cout << condenserTemp_F << ", " << externalT_F << ", input_BTUperHr " << input_BTUperHr << ", cop " << cop << "\n";
-
 	if (doDefrost) {
 		//adjust COP by the defrost factor
 		defrostDerate(cop, externalT_F);
