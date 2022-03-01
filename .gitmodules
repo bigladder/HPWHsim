@@ -1,0 +1,3 @@
+[submodule "vendor/btwxt"]
+	path = vendor/btwxt
+	url = https://github.com/bigladder/btwxt.git

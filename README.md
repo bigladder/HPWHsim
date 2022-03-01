@@ -13,6 +13,7 @@ HPWHsim is configured as a CMake project. Currently, CMake is only configured to
 - Microsoft Visual Studio 2017 with Visual C++ (which can be installed after from the Microsoft Visual Studio Installer)
 - CMake 3.5 or later
 - Git
+- Btwxt 0.2.0
 
 ### Building HPWHsim from source
 
