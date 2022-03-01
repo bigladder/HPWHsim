@@ -9,15 +9,21 @@ add_executable(testSizingFractions testSizingFractions.cc)
 add_executable(testResistanceFcts testResistanceFcts.cc)
 add_executable(testCompressorFcts testCompressorFcts.cc)
 add_executable(testPerformanceMaps testPerformanceMaps.cc)
+add_executable(testPerfMapLookup testPerfMapLookup.cc)
 
-target_link_libraries(testTool libHPWHsim)
-target_link_libraries(testTankSizeFixed libHPWHsim)
-target_link_libraries(testScaleHPWH libHPWHsim)
-target_link_libraries(testMaxSetpoint libHPWHsim)
-target_link_libraries(testSizingFractions libHPWHsim)
-target_link_libraries(testResistanceFcts libHPWHsim)
-target_link_libraries(testCompressorFcts libHPWHsim)
-target_link_libraries(testPerformanceMaps libHPWHsim)
+set(libs
+ libHPWHsim 
+ btwxt
+)
+target_link_libraries(testTool ${libs})
+target_link_libraries(testTankSizeFixed ${libs})
+target_link_libraries(testScaleHPWH ${libs})
+target_link_libraries(testMaxSetpoint ${libs})
+target_link_libraries(testSizingFractions ${libs})
+target_link_libraries(testResistanceFcts ${libs})
+target_link_libraries(testCompressorFcts ${libs})
+target_link_libraries(testPerformanceMaps ${libs})
+target_link_libraries(testPerfMapLookup ${libs})
 
 
 # Add output directory for test results
@@ -35,6 +41,7 @@ add_test(NAME "testResistanceFcts" COMMAND  $<TARGET_FILE:testResistanceFcts> ${
 add_test(NAME "testCompressorFcts" COMMAND  $<TARGET_FILE:testCompressorFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testPerformanceMaps" COMMAND  $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_test(NAME "testPerfMapLookup" COMMAND  $<TARGET_FILE:testPerfMapLookup> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
 #"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

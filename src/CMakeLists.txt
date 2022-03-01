@@ -19,3 +19,5 @@ add_dependencies(libHPWHsim ${PROJECT_NAME}_version_header)
 set_target_properties(libHPWHsim PROPERTIES OUTPUT_NAME HPWHsim)
 set_target_properties(libHPWHsim PROPERTIES PDB_NAME libHPWHsim)
 target_compile_features(libHPWHsim PUBLIC cxx_std_17)
+
+target_include_directories(libHPWHsim PUBLIC ${PROJECT_SOURCE_DIR}/vendor/btwxt/src)

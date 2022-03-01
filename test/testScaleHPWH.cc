@@ -349,12 +349,9 @@ void testSetMPCompressorOutputCapacity() {
 	getHPWHObject(hpwh, input);
 
 	//Scale output to 1 kW
-	cout << "SCALABLE MP \n";
 	num = 1.;
 	hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
 	newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
-	cout << num << ", " << airTempC << ", " << waterTempC << ", " << setpointC << ", " << newCapacity_kW << "\n";
-	cout << "\n";
 	ASSERTTRUE(cmpd(num, newCapacity_kW));
 
 	//Scale output to .01 kW
