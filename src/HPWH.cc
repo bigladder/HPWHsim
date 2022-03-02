@@ -2618,7 +2618,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), expCurveFit(false), useBtwxtGrid(false)
+	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), useBtwxtGrid(false)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2673,7 +2673,6 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
 	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
-	expCurveFit = hSource.expCurveFit;
 
 	externalInletHeight = hSource.externalInletHeight;
 	externalOutletHeight = hSource.externalOutletHeight;
@@ -2744,7 +2743,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	typeOfHeatSource = hSource.typeOfHeatSource;
 	isMultipass = hSource.isMultipass;
 	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
-	expCurveFit = hSource.expCurveFit;
 
 	externalInletHeight = hSource.externalInletHeight;
 	externalOutletHeight = hSource.externalOutletHeight;
@@ -3417,16 +3415,10 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 			}
 		}
 
-		if (expCurveFit) {
-			regressedExpMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
-			regressedExpMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
-		}
-		else {
-
-			//Const Tair Tin Tair2 Tin2 TairTin
-			regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
-			regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
-		}
+		//Const Tair Tin Tair2 Tin2 TairTin
+		regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+		regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+		
 	}
 	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
@@ -3505,16 +3497,6 @@ void HPWH::HeatSource::regressedMethodMP(double &ynew, std::vector<double> &coef
 		coefficents[5] * x1 * x2;
 }
 
-void HPWH::HeatSource::regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2) {
-	//Const Tair Tin Tair2 Tin2 TairTin
-	ynew = exp( coefficents[0] +
-				coefficents[1] * x1 +
-				coefficents[2] * x2 +
-				coefficents[3] * log(x1) +
-				coefficents[4] * log(x2) +
-				coefficents[5] * log(x1 + x2)
-				);
-}
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F) {
 

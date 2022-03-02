@@ -918,13 +918,13 @@ class HPWH::HeatSource {
 	
 	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
+	
 	void regressedMethod(double &ynew, std::vector<double> &coefficents, double x1, double x2, double x3);
 	/**< Does a calculation based on the ten term regression equation  */
+	
 	void regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
 	/**< Does a calculation based on the five term regression equation for MP split systems  */
-	void regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
-	/**< Does a calculation based on the five term exponential regression equation for MP split systems  */
-	
+
 	void btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F);
 	/**< Does a simple linear interpolation between two points to the xnew point */
 
@@ -1025,8 +1025,6 @@ class HPWH::HeatSource {
 		double onBelowT_F;
 	};
 	resistanceElementDefrost resDefrost;
-	/** use the expontential curve fit not the standard quadratic */
-	bool expCurveFit;
 
 	struct defrostPoint {
 		double T_F;
