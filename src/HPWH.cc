@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include "HPWHpresets.cc"
+
 #include <stdarg.h>
 #include <fstream>
 #include <iostream>
@@ -2617,7 +2618,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), expCurveFit(false)
+	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), expCurveFit(false), useBtwxtGrid(false)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2645,7 +2646,12 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
-	
+
+	perfGrid = hSource.perfGrid;
+	perfGridValues = hSource.perfGridValues;
+	perfRGI = hSource.perfRGI;
+	useBtwxtGrid = hSource.useBtwxtGrid;
+
 	defrostMap = hSource.defrostMap;
 	resDefrost = hSource.resDefrost;
 
@@ -2711,6 +2717,11 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
+
+	perfGrid = hSource.perfGrid;
+	perfGridValues = hSource.perfGridValues;
+	perfRGI = hSource.perfRGI;
+	useBtwxtGrid = hSource.useBtwxtGrid;
 
 	defrostMap = hSource.defrostMap;
 	resDefrost = hSource.resDefrost;
@@ -3391,23 +3402,31 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 		}
 	}
 
-	// Get bounding performance map points for interpolation/extrapolation
-	bool extrapolate = false;
-	if (externalT_F > perfMap[0].T_F) {
-		extrapolate = true;
-		if (extrapolationMethod == EXTRAP_NEAREST) {
-			externalT_F = perfMap[0].T_F;
-		}
-	}
 
-	if (expCurveFit) {
-		regressedExpMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
-		regressedExpMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+
+	if (useBtwxtGrid) {
+		btwxtInterp(input_BTUperHr, cop, externalT_F, condenserTemp_F);
 	}
 	else {
-		//Const Tair Tin Tair2 Tin2 TairTin
-		regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
-		regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+		// Get bounding performance map points for interpolation/extrapolation
+		bool extrapolate = false;
+		if (externalT_F > perfMap[0].T_F) {
+			extrapolate = true;
+			if (extrapolationMethod == EXTRAP_NEAREST) {
+				externalT_F = perfMap[0].T_F;
+			}
+		}
+
+		if (expCurveFit) {
+			regressedExpMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+			regressedExpMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+		}
+		else {
+
+			//Const Tair Tin Tair2 Tin2 TairTin
+			regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
+			regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+		}
 	}
 	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
@@ -3496,6 +3515,16 @@ void HPWH::HeatSource::regressedExpMP(double &ynew, std::vector<double> &coeffic
 				coefficents[5] * log(x1 + x2)
 				);
 }
+
+void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F) {
+
+	std::vector<double> target{ externalT_F, condenserTemp_F };
+	std::vector<double> result = perfRGI->get_values_at_target(target);
+
+	input_BTUperHr = result[0];
+	cop = result[1];
+}
+
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
@@ -4136,12 +4165,48 @@ int HPWH::checkInputs() {
 			}
 		}
 
-		// Check that perfmap only has 1 point if config_external and multipass
-		if (setOfSources[i].isExternalMultipass() && setOfSources[i].perfMap.size() != 1) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("External multipass heat sources must have a perfMap of only one point with regression equations. \n");
+		
+		// Check performance map
+		// perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and that ;
+		if (setOfSources[i].useBtwxtGrid) {
+			// If useBtwxtGrid is true that the perfMap is empty
+			if (setOfSources[i].perfMap.size() != 0) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Using the grid lookups but a regression based perforamnce map is given \n");
+				}
+				returnVal = HPWH_ABORT;
 			}
-			returnVal = HPWH_ABORT;
+
+			// Check length of vectors in perfGridValue are equal
+			if (setOfSources[i].perfGridValues[0].size() != setOfSources[i].perfGridValues[1].size()
+				&& setOfSources[i].perfGridValues[0].size() != 0) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("When using grid lookups for perfmance the vectors in perfGridValues must be the same length. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
+
+			// Check perfGrid's vectors lengths multiplied together == the perfGridValues vector lengths
+			size_t expLength = 1;
+			for (const auto& v : setOfSources[i].perfGrid)
+			{
+				expLength *= v.size();
+			}
+			if (expLength != setOfSources[i].perfGridValues[0].size()) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("When using grid lookups for perfmance the vectors in perfGridValues must be the same length. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
+		}
+		else {
+			// Check that perfmap only has 1 point if config_external and multipass
+			if (setOfSources[i].isExternalMultipass() && setOfSources[i].perfMap.size() != 1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("External multipass heat sources must have a perfMap of only one point with regression equations. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
 		}
 	}
 

@@ -12,6 +12,8 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
+#include "btwxt.h"
+
 //#define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
  *  excluded from compiling.  This is done in order to reduce the size of the
@@ -923,6 +925,10 @@ class HPWH::HeatSource {
 	void regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
 	/**< Does a calculation based on the five term exponential regression equation for MP split systems  */
 	
+	void btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F);
+	/**< Does a simple linear interpolation between two points to the xnew point */
+
+
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
 	void defrostDerate(double &to_derate, double airT_C);
@@ -991,6 +997,18 @@ class HPWH::HeatSource {
 
   std::vector<perfPoint> perfMap;
   /**< A map with input/COP quadratic curve coefficients at a given external temperature */
+
+  std::vector< std::vector<double> > perfGrid;
+  /**< The axis values defining the regular grid for the performance data.
+  SP would have 3 axis, MP would have 2 axis*/
+  
+  std::vector< std::vector<double> > perfGridValues;
+  /**< The values for input power and cop use matching to the grid. Should be long format with { { inputPower_W }, { COP } }. */
+
+  Btwxt::RegularGridInterpolator *perfRGI;
+  /**< The grid interpolator used for mapping performance*/
+  
+  bool useBtwxtGrid;
 
 	/** a vector to hold the set of logical choices for turning this element on */
 	std::vector<HeatingLogic> turnOnLogicSet;
