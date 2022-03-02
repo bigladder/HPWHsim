@@ -3281,79 +3281,85 @@ void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, d
 	size_t i_next = 1;
 	double Tout_F = C_TO_F(setpointTemp_C);
 
-	if (perfMap.size() > 1) {
-		double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
-		double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
 
-		for (size_t i = 0; i < perfMap.size(); ++i) {
-			if (externalT_F < perfMap[i].T_F) {
-				if (i == 0) {
-					extrapolate = true;
-					i_prev = 0;
-					i_next = 1;
+	if (useBtwxtGrid) {
+		std::vector<double> target{ externalT_F, Tout_F, condenserTemp_F };
+		btwxtInterp(input_BTUperHr, cop, target);
+	}
+	else {
+		if (perfMap.size() > 1) {
+			double COP_T1, COP_T2;    			   //cop at ambient temperatures T1 and T2
+			double inputPower_T1_Watts, inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
+
+			for (size_t i = 0; i < perfMap.size(); ++i) {
+				if (externalT_F < perfMap[i].T_F) {
+					if (i == 0) {
+						extrapolate = true;
+						i_prev = 0;
+						i_next = 1;
+					}
+					else {
+						i_prev = i - 1;
+						i_next = i;
+					}
+					break;
 				}
 				else {
-					i_prev = i - 1;
-					i_next = i;
-				}
-				break;
-			}
-			else {
-				if (i == perfMap.size() - 1) {
-					extrapolate = true;
-i_prev = i - 1;
-i_next = i;
-break;
+					if (i == perfMap.size() - 1) {
+						extrapolate = true;
+						i_prev = i - 1;
+						i_next = i;
+						break;
+					}
 				}
 			}
-		}
 
-		// Calculate COP and Input Power at each of the two reference temepratures
-		COP_T1 = perfMap[i_prev].COP_coeffs[0];
-		COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
-		COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+			// Calculate COP and Input Power at each of the two reference temepratures
+			COP_T1 = perfMap[i_prev].COP_coeffs[0];
+			COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
+			COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-		COP_T2 = perfMap[i_next].COP_coeffs[0];
-		COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
-		COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+			COP_T2 = perfMap[i_next].COP_coeffs[0];
+			COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
+			COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-		inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
-		inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
-		inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+			inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
+			inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
+			inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-		inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
-		inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
-		inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+			inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
+			inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
+			inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
-			hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
-			hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
+			if (hpwh->hpwhVerbosity >= VRB_emetic) {
+				hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[0].inputPower_coeffs[0], perfMap[0].inputPower_coeffs[1], perfMap[0].inputPower_coeffs[2]);
+				hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  %.2lf  %.2lf \n", perfMap[1].inputPower_coeffs[0], perfMap[1].inputPower_coeffs[1], perfMap[1].inputPower_coeffs[2]);
+				hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n", inputPower_T1_Watts, inputPower_T2_Watts);
 
-			if (extrapolate) {
-				hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: %.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n", externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F);
+				if (extrapolate) {
+					hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: %.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n", externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F);
+				}
 			}
 
+			// Interpolate to get COP and input power at the current ambient temperature
+			linearInterp(cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
+			linearInterp(input_BTUperHr, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, inputPower_T1_Watts, inputPower_T2_Watts);
+			input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0);//1000 converts w to kw);
+
 		}
+		else { //perfMap.size() == 1 or we've got an issue.
+			if (externalT_F > perfMap[0].T_F) {
+				extrapolate = true;
+				if (extrapolationMethod == EXTRAP_NEAREST) {
+					externalT_F = perfMap[0].T_F;
+				}
+			}
 
-		// Interpolate to get COP and input power at the current ambient temperature
-		linearInterp(cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
-		linearInterp(input_BTUperHr, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, inputPower_T1_Watts, inputPower_T2_Watts);
-		input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0);//1000 converts w to kw);
+			regressedMethod(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserTemp_F);
+			input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
-	}
-	else { //perfMap.size() == 1 or we've got an issue.
-	if (externalT_F > perfMap[0].T_F) {
-		extrapolate = true;
-		if (extrapolationMethod == EXTRAP_NEAREST) {
-			externalT_F = perfMap[0].T_F;
+			regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserTemp_F);
 		}
-	}
-
-	regressedMethod(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserTemp_F);
-	input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
-
-	regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserTemp_F);
 	}
 
 	if (doDefrost) {
@@ -3405,7 +3411,8 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 
 
 	if (useBtwxtGrid) {
-		btwxtInterp(input_BTUperHr, cop, externalT_F, condenserTemp_F);
+		std::vector<double> target{ externalT_F, condenserTemp_F };
+		btwxtInterp(input_BTUperHr, cop, target);
 	}
 	else {
 		// Get bounding performance map points for interpolation/extrapolation
@@ -3516,15 +3523,13 @@ void HPWH::HeatSource::regressedExpMP(double &ynew, std::vector<double> &coeffic
 				);
 }
 
-void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F) {
+void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double> &target) {
 
-	std::vector<double> target{ externalT_F, condenserTemp_F };
 	std::vector<double> result = perfRGI->get_values_at_target(target);
 
 	input_BTUperHr = result[0];
 	cop = result[1];
 }
-
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 

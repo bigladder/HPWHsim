@@ -925,8 +925,8 @@ class HPWH::HeatSource {
 	void regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
 	/**< Does a calculation based on the five term exponential regression equation for MP split systems  */
 	
-	void btwxtInterp(double& input_BTUperHr, double& cop, double externalT_F, double condenserTemp_F);
-	/**< Does a simple linear interpolation between two points to the xnew point */
+	void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
+	/**< Does a linear interpolation in btwxt to the target point*/
 
 
 	void setupDefrostMap(double derate35 = 0.8865);
