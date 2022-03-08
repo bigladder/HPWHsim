@@ -237,6 +237,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "NyleC250A_C_MP") {
 		hpwhModel = HPWH::MODELS_NyleC250A_C_MP;
 	}
+	else if (modelName == "QAHV_N136TAU_HPB_SP") {
+		hpwhModel = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
+	}
 	// Stack in a couple scalable models
 	else if (modelName == "TamScalable_SP") {
 		hpwhModel = HPWH::MODELS_TamScalable_SP;
