@@ -19,8 +19,18 @@ struct performancePointMP {
 	double tinF;
 	double outputBTUH;
 };
-double getCapacityMP_F_KW(HPWH &hpwh, performancePointMP &point) {
-	return hpwh.getCompressorCapacity(point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::UNITS_F); 
+double getCapacityMP_F_KW(HPWH& hpwh, performancePointMP& point) {
+	return hpwh.getCompressorCapacity(point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::UNITS_F);
+}
+
+struct performancePointSP {
+	double tairF;
+	double toutF;
+	double tinF;
+	double outputBTUH;
+};
+double getCapacitySP_F_BTUHR(HPWH& hpwh, performancePointSP& point) {
+	return hpwh.getCompressorCapacity(point.tairF, point.tinF, point.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 }
 
 void testCXA15MatchesDataMap() {
@@ -297,7 +307,6 @@ void testRheemHPHD60() {
 	checkPoint = { 110.0, 100.0, 24.287512 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
-
 void testRheemHPHD135() {
 	//MODELS_RHEEM_HPHD135HNU_483_MP
 	//MODELS_RHEEM_HPHD135VNU_483_MP
@@ -335,7 +344,6 @@ void testNyleC60AMP() {
 	checkPoint = { 90.0, 130.0, 20.128785625310147 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
-
 void testNyleC90AMP() {
 	HPWH hpwh;
 	string input = "NyleC90A_MP";
@@ -400,8 +408,118 @@ void testNyleC250AMP() {
 	checkPoint = { 90.0, 130.0, 82.3921175498482 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
+
+void testQAHVMatchesDataMap() {
+	HPWH hpwh;
+	string input = "QAHV_N136TAU_HPB_SP";
+	performancePointSP checkPoint; // tairF, toutF, tinF, outputW
+	double outputBTUH;
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test
+	checkPoint = { -13.0, 140.0, 41.0, 66529.49616 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
+	// test
+	checkPoint = { -13.0, 176.0, 41.0, 65872.597448 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { -13.0, 176.0, 84.2, 55913.249232 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { -11.2, 140.0, 41.0, 69590.397948 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { -07.6, 176.0, 48.2, 72951.552324 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { -04.0, 140.0, 41.0, 81293.824084 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { -00.4, 176.0, 84.2, 73181.70196 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 06.8, 158.0, 84.2, 84174.67122 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 14.0, 176.0, 84.2, 92933.01932 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 50.0, 140.0, 41.0, 136425.98804 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 50.0, 176.0, 84.2, 136564.470884 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 64.4, 140.0, 62.6, 136480 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 71.6, 158.0, 48.2, 136498.001712 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 82.4, 176.0, 41.0, 136557.496756 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 104.0, 140.0, 62.6, 136480 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 104.0, 158.0, 62.6, 136480 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	// test
+	checkPoint = { 104.0, 176.0, 84.2, 136564.470884 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+}
+// Also test QAHV constant extrpolation at high air temperatures AND linear extrapolation to hot water temperatures!
+void testQAHVExtrapolates() {
+	HPWH hpwh;
+	string input = "QAHV_N136TAU_HPB_SP";
+	performancePointSP checkPoint; // tairF, toutF, tinF, outputW
+	double outputBTUH;
+	// get preset model 
+	getHPWHObject(hpwh, input);
+
+	// test linear along Tin
+	checkPoint = { -13.0, 140.0, 36.0, 66529.49616 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(checkPoint.outputBTUH < outputBTUH); // Check output has increased
+
+	// test linear along Tin
+	checkPoint = { -13.0, 140.0, 100.0, 66529.49616 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(checkPoint.outputBTUH > outputBTUH); // Check output has decreased
+
+	// test linear along Tin
+	checkPoint = { -13.0, 176.0, 36.0, 65872.597448 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(checkPoint.outputBTUH < outputBTUH); // Check output has increased
+	
+	// test linear along Tin
+	checkPoint = { -13.0, 176.0, 100.0, 55913.249232 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(checkPoint.outputBTUH > outputBTUH); // Check output has decreased
+
+	// test linear along Tin
+	checkPoint = { 104.0, 176.0, 100., 136564.470884 };
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));  // Check output is relativly constant at the high airtemp range.
+
+	// test const along Tair
+	checkPoint = { 110.0, 140.0, 62.6, 136480 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+
+	// test const along Tair
+	checkPoint = { 114.0, 176.0, 84.2, 136564.470884 };
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+}
+
+
 int main(int, char*)
 {
+	testQAHVMatchesDataMap(); // Test QAHV grid data input correctly
+	testQAHVExtrapolates(); // Test QAHV grid data input correctly
+
 	testCXA15MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
 	testCXA30MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
 

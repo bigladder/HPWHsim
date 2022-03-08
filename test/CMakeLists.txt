@@ -114,6 +114,8 @@ set(largeCompressorTests
  testLargeCompHot
 )
 set(largeCompressorNames
+ QAHV_N136TAU_HPB_SP
+
  AOSmithCAHP120
  ColmacCxV_5_SP
  ColmacCxA_10_SP
@@ -146,6 +148,8 @@ set(largeCompressorNames
 )
 
 set(yearLargeTestsModels   
+ QAHV_N136TAU_HPB_SP
+
  ColmacCxV_5_SP
  ColmacCxA_10_SP
  ColmacCxA_15_SP

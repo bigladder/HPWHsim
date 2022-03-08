@@ -175,6 +175,9 @@ class HPWH {
 	  MODELS_NyleC185A_C_SP = 244,  /*< Nyle C185A external heat pump in Single Pass Mode */
 	  MODELS_NyleC250A_C_SP = 245,  /*< Nyle C250A external heat pump in Single Pass Mode */
 
+	  // Mitsubishi Electric Trane
+	  MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP = 250,  /*< Mitsubishi Electric Trane QAHV external CO2 heat pump  */
+
 	  // Larger Nyle models in multi pass configuration
 	  //MODELS_NyleC25A_MP  = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
 	  MODELS_NyleC60A_MP  = 331,  /*< Nyle C60A external heat pump in Multi Pass Mode  */
