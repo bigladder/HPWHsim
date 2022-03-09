@@ -71,7 +71,7 @@ int main(int, char*)
 									 HPWH::MAXOUTLET_R134A, HPWH::HPWH_ABORT, HPWH::HPWH_ABORT,
 									 HPWH::MAXOUTLET_R134A, HPWH::MAXOUTLET_R134A, F_TO_C(160.), F_TO_C(160.), F_TO_C(176.1) }; // deg C
 
-	const double minTemp[length] = { 42., 32., 47., -25, -4., 40., 40., HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, 40., 40., 40., 35. };
+	const double minTemp[length] = { 42., 32., 47., -25, -4., 40., 40., HPWH::HPWH_ABORT, HPWH::HPWH_ABORT, 40., 40., 40., 35., -13.};  //deg F
 
 	for (int i = 0; i < length; i++) {
 		testHasACompressor(models[i], hasComp[i]);
