@@ -1633,8 +1633,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
-		//Defrost Derate 
-		compressor.setupDefrostMap();
+		// Set up defrost for mimic humidity correction. 
+		compressor.doDefrost = true;
+		compressor.defrostMap.reserve(3);
+		compressor.defrostMap.push_back({ 35.6, 1. });
+		compressor.defrostMap.push_back({ 41., 0.921 });
+		compressor.defrostMap.push_back({ 62.6, 1. });
 
 		// Performance grid: externalT_F, Tout_F, condenserTemp_F
 		compressor.perfGrid.reserve(2);
@@ -1722,13 +1726,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
 		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gridded_data);
 		compressor.useBtwxtGrid = true;
-
-		// Set up defrost for mimic humidity correction. 
-		compressor.doDefrost = true;
-		compressor.defrostMap.reserve(3);
-		compressor.defrostMap.push_back({ 35.6, 1. });
-		compressor.defrostMap.push_back({ 41., 0.921 });
-		compressor.defrostMap.push_back({ 62.6, 1. });
 
 		//set everything in its places
 		setOfSources[0] = compressor;
