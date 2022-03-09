@@ -880,7 +880,7 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const {
 		returnVal = returnVal;
 	}
 	else if (units == UNITS_F) {
-		returnVal = F_TO_C(returnVal);
+		returnVal = C_TO_F(returnVal);
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {

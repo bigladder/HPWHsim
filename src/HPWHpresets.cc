@@ -1403,7 +1403,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			compressor.minT = F_TO_C(35.);// Min air temperature WITH Cold Weather Package
 		}
 		compressor.maxT = F_TO_C(130.0); // Max air temperature
-		compressor.maxSetpoint_C = 160.;
+		compressor.maxSetpoint_C = F_TO_C(160.);
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
