@@ -1723,6 +1723,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gridded_data);
 		compressor.useBtwxtGrid = true;
 
+		// Set up defrost for mimic humidity correction. 
+		compressor.doDefrost = true;
+		compressor.defrostMap.reserve(3);
+		compressor.defrostMap.push_back({ 35.6, 1. });
+		compressor.defrostMap.push_back({ 41., 0.921 });
+		compressor.defrostMap.push_back({ 62.6, 1. });
+
 		//set everything in its places
 		setOfSources[0] = compressor;
 

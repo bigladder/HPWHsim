@@ -3458,13 +3458,14 @@ double HPWH::HeatSource::calcMPOutletTemperature(double heatingCapacity_KW) {
 	return hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
 }
 
-void HPWH::HeatSource::setupDefrostMap(double  derate35/*=0.8865*/) {
+void HPWH::HeatSource::setupDefrostMap(double derate35/*=0.8865*/) {
 	doDefrost = true;
 	defrostMap.reserve(3);
 	defrostMap.push_back({ 17., 1. });
 	defrostMap.push_back({ 35., derate35 });
 	defrostMap.push_back({ 47., 1. });
 }
+
 
 void HPWH::HeatSource::defrostDerate(double &to_derate, double airT_F) {
 	if (airT_F <= defrostMap[0].T_F || airT_F >= defrostMap[defrostMap.size() - 1].T_F) {
