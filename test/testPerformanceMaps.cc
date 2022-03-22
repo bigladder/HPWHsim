@@ -432,16 +432,16 @@ void testQAHVMatchesDataMap() {
 	checkPoint = { 14.0, 176.0, 84.2, 92933.01932 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
 	// test
-	checkPoint = { 42.8, 140.0, 41.0, 136425.98804 * 0.927583333};  // humidity correction
+	checkPoint = { 42.8, 140.0, 41.0, 136425.98804}; 
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
 	// test
-	checkPoint = { 50.0, 140.0, 41.0, 136425.98804 * 0.953916667 };  // humidity correction at 50F
+	checkPoint = { 50.0, 140.0, 41.0, 136425.98804 }; 
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
 	// test
-	checkPoint = { 50.0, 176.0, 84.2, 136564.470884 * 0.953916667};  // humidity correction at 50F
+	checkPoint = { 50.0, 176.0, 84.2, 136564.470884}; 
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
 	// test
-	checkPoint = { 60.8, 158.0, 84.2, 136461.998288 * 0.993416667};  // humidity correction
+	checkPoint = { 60.8, 158.0, 84.2, 136461.998288 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
 	// test
 	checkPoint = { 71.6, 158.0, 48.2, 136498.001712 };

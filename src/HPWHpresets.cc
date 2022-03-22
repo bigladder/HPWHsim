@@ -1633,13 +1633,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
-		// Set up defrost for mimic humidity correction. 
-		compressor.doDefrost = true;
-		compressor.defrostMap.reserve(3);
-		compressor.defrostMap.push_back({ 35.6, 1. });
-		compressor.defrostMap.push_back({ 41., 0.921 });
-		compressor.defrostMap.push_back({ 62.6, 1. });
-
 		// Performance grid: externalT_F, Tout_F, condenserTemp_F
 		compressor.perfGrid.reserve(2);
 		compressor.perfGridValues.reserve(2);
