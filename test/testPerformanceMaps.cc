@@ -337,11 +337,11 @@ void testNyleC60AMP() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 60.0, 60.0, 16.258724494530256 };
+	checkPoint = { 60.0, 60.0, 16.11 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 80.0, 60.0, 21.073600659726043 };
+	checkPoint = { 80.0, 60.0, 21.33 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 90.0, 130.0, 20.128785625310147 };
+	checkPoint = { 90.0, 130.0, 19.52 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 void testNyleC90AMP() {
@@ -353,11 +353,11 @@ void testNyleC90AMP() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 60.0, 60.0, 28.391312547894692 };
+	checkPoint = { 60.0, 60.0, 28.19 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 80.0, 60.0, 37.76629798021198 };
+	checkPoint = { 80.0, 60.0, 37.69 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 90.0, 130.0, 36.588687630737226 };
+	checkPoint = { 90.0, 130.0, 36.27 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 void testNyleC125AMP() {
@@ -369,11 +369,11 @@ void testNyleC125AMP() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 60.0, 60.0, 36.450663648640635 };
+	checkPoint = { 60.0, 60.0, 36.04};
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 80.0, 60.0, 47.60348009159024 };
+	checkPoint = { 80.0, 60.0, 47.86 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 90.0, 130.0, 44.89242490188696 };
+	checkPoint = { 90.0, 130.0, 43.80};
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 void testNyleC185AMP() {
@@ -385,11 +385,11 @@ void testNyleC185AMP() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 60.0, 60.0, 56.42805061073486 };
+	checkPoint = { 60.0, 60.0, 55.00};
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 80.0, 60.0, 72.02025074279416 };
+	checkPoint = { 80.0, 60.0, 74.65 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 90.0, 130.0, 69.83381084066781 };
+	checkPoint = { 90.0, 130.0, 67.52 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 void testNyleC250AMP() {
@@ -401,11 +401,11 @@ void testNyleC250AMP() {
 	getHPWHObject(hpwh, input);
 
 	// test some points outside of defrost ////////////////
-	checkPoint = { 60.0, 60.0, 80.22629566828897 };
+	checkPoint = { 60.0, 60.0, 75.70 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 80.0, 60.0, 104.4274354892963 };
+	checkPoint = { 80.0, 60.0, 103.40 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
-	checkPoint = { 90.0, 130.0, 82.3921175498482 };
+	checkPoint = { 90.0, 130.0, 77.89 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 

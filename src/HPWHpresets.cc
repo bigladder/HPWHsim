@@ -1365,6 +1365,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
+
 	// If Nyle multipass presets
 	else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
 		numNodes = 24;
@@ -1388,12 +1389,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
 		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
-
-		compressor.expCurveFit = true;
 
 		//logic conditions//logic conditions
 		if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP) {// If not cold weather package
@@ -1417,8 +1415,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
+		// Performance grid
+		compressor.perfGrid.reserve(2);
+		compressor.perfGridValues.reserve(2);
+
+		// Nyle MP models are all on the same grid axes
+		compressor.perfGrid.push_back({ 40., 60., 80., 90. }); // Grid Axis 1 Tair (F)
+		compressor.perfGrid.push_back({ 40., 60., 80., 100., 130., 150. }); // Grid Axis 2 Tin (F)
+
 		if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP) {
-			setTankSize_adjustUA(360., UNITS_GAL);
+			setTankSize_adjustUA(360., UNITS_GAL); 
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(13.);
 			if (presetNum == MODELS_NyleC60A_C_MP) {
 				compressor.resDefrost = {
@@ -1427,17 +1433,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 								40.0  // onBelowT_F
 							 };
 			}
-			compressor.perfMap.push_back({
-
-					90, // Temperature (T_F)
-				
-					{ 0.3793881173, 0.0013646930, 0.0095624019, -0.3747118461, -0.5721938277, 0.8975984433 }, // Input Power Coefficients (inputPower_coeffs)
-				
-					{ -1.0502345395, 0.0034695832, -0.0139946437, 0.6109688447, 0.4563525324, -0.2830113509 } // COP Coefficients (COP_coeffs),
-
+			// Grid values in long format, table 1, input power (W)
+			compressor.perfGridValues.push_back({ 3.64, 4.11, 4.86, 5.97, 8.68, 9.95, 3.72, 4.27, 4.99, 6.03, 8.55, 10.02, 3.98, 4.53,
+				5.24, 6.24, 8.54, 9.55, 4.45, 4.68, 5.37, 6.34, 8.59, 9.55
 				});
-
-
+			// Grid values in long format, table 2, COP
+			compressor.perfGridValues.push_back({ 3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387, 4.438172043,
+				3.772833724, 3.132264529, 2.505804312, 1.678362573, 1.386227545, 5.467336683, 4.708609272, 3.921755725, 3.169871795, 2.165105386,
+				1.860732984, 5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691 
+				});
 		}
 		else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP) {
 			setTankSize_adjustUA(480., UNITS_GAL);
@@ -1449,12 +1453,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 								40.0  // onBelowT_F
 							};
 			}
-			compressor.perfMap.push_back({
-					90, // Temperature (T_F)
-
-					{-3.2646433947, -0.0016202230, 0.0013361350, -0.4032034153, -0.2371026265, 1.6199379267}, // Input Power Coefficients (inputPower_coeffs)
-				
-					{3.6779857228, 0.0099026252, -0.0053994954, 0.4824806407, 0.0774214624, -0.9914669117} // COP Coefficients (COP_coeffs)
+			// Grid values in long format, table 1, input power (W)
+			compressor.perfGridValues.push_back({ 4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40, 12.47, 14.75,
+				5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35 
+				});
+			// Grid values in long format, table 2, COP
+			compressor.perfGridValues.push_back({ 4.79138322, 3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537, 6.071129707, 
+				4.264750378, 3.536175711, 2.827659574, 2.036086608, 1.666440678, 7.150635209, 5.659159159, 4.305687204, 3.493467337, 
+				2.487748851, 2.018241042, 6.750737463, 5.604621309, 4.734392736, 3.94005994, 3.04534005, 2.558801498
 				});
 
 		}
@@ -1468,12 +1474,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 								40.0  // onBelowT_F
 							};
 			}
-			compressor.perfMap.push_back({
-					90, // Temperature (T_F)
-
-					{-0.6913111752, -0.0007913536, 0.0100379459, -0.4680839149, -0.7589682016, 1.5200297482}, // Input Power Coefficients (inputPower_coeffs)
-				
-					{0.2303698770, 0.0044194375, -0.0148484983, 0.6401560061, 0.4960884618, -0.5801541079} // COP Coefficients (COP_coeffs)
+			// Grid values in long format, table 1, input power (W)
+			compressor.perfGridValues.push_back({ 6.4, 7.72, 9.65, 12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39, 
+				7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5, 11.27, 13.69, 19.72, 22.4
+				});
+			// Grid values in long format, table 2, COP
+			compressor.perfGridValues.push_back({ 4.2390625, 3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913, 
+				5.374455733, 4.352657005, 3.453109576, 2.645136187, 1.66278481, 1.307093071, 6.503250975, 5.276736494, 4.229070837, 
+				3.27827381, 2.113821138, 1.770469799, 6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286
 				});
 		}
 		else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP) {
@@ -1486,12 +1494,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 								40.0  // onBelowTemp_F
 							};
 			}
-			compressor.perfMap.push_back({
-					90, // Temperature (T_F)
-
-					{0.0149026968, 0.0067961831, 0.0039475952, -0.4259970757, 0.6172132575, 0.1962783222}, // Input Power Coefficients (inputPower_coeffs)
-					
-					{-0.1866072355, -0.0064299798, -0.0075831393, 0.8667773161, -0.8164105581, 0.5163511206} // COP Coefficients (COP_coeffs)
+			// Grid values in long format, table 1, input power (W)
+			compressor.perfGridValues.push_back({ 7.57, 11.66, 14.05, 18.3, 25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
+				7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62
+				});
+			// Grid values in long format, table 2, COP
+			compressor.perfGridValues.push_back({ 5.531043593, 3.556603774, 2.918149466, 2.214754098, 1.590255591, 1.291010499, 
+				8.010014306, 5.258126195, 3.778711485, 2.916437603, 1.964176829, 1.56404703, 9.65819568, 6.200166113, 4.792276964, 
+				3.705475811, 2.561369758, 2.05950096, 10.26993865, 6.350722311, 5.04218853, 3.841688654, 2.574151735, 2.025616698
 				});
 		}
 		else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP) {
@@ -1504,16 +1514,22 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 								40.0  // onBelowT_F
 							};
 			}
-			compressor.perfMap.push_back({
-					90, // Temperature (T_F)
-
-					{3.7566636881, 0.0038624982, 0.0072192476, 1.4050392489, 1.6566360285, -2.9904530044}, // Input Power Coefficients (inputPower_coeffs)
-			
-					{-2.7485898141, -0.0024921296, -0.0134007606, -0.4351961253, -1.4067847665, 2.7129793247} // COP Coefficients (COP_coeffs)
+			// Grid values in long format, table 1, input power (W)
+			compressor.perfGridValues.push_back({ 10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76, 15.97, 17.79, 
+				20.56, 22.50, 10.36, 14.66, 18.07, 21.23, 25.81, 29.01, 8.67, 15.05, 18.76, 21.87, 26.63, 30.02 
 				});
+
+			// Grid values in long format, table 2, COP
+			compressor.perfGridValues.push_back({ 5.81818181, 4.50040883, 3.69667896, 3.12414266, 2.38500635, 1.93540669, 
+				7.24520069, 5.50145348, 4.39323732, 3.67734682, 2.73249027, 2.23911111, 10.6196911, 7.05320600, 5.41228555, 
+				4.28638718, 3.04804339, 2.46053085, 14.7831603, 7.77903268, 5.71801705, 4.40237768, 2.92489673, 2.21419054 
+				});
+
 		}
 
-
+		// Set up regular grid interpolator. 
+		compressor.perfRGI = new Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues);
+		compressor.useBtwxtGrid = true;
 
 		//set everything in its places
 		setOfSources[0] = compressor;
