@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "HPWH.hh"
+#include "btwxt.h"
 #include "HPWHpresets.cc"
 
 #include <stdarg.h>

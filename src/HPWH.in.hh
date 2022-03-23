@@ -12,7 +12,7 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-#include "btwxt.h"
+namespace Btwxt { class RegularGridInterpolator; };
 
 //#define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
@@ -1007,7 +1007,7 @@ class HPWH::HeatSource {
   std::vector< std::vector<double> > perfGridValues;
   /**< The values for input power and cop use matching to the grid. Should be long format with { { inputPower_W }, { COP } }. */
 
-  Btwxt::RegularGridInterpolator *perfRGI;
+  class Btwxt::RegularGridInterpolator *perfRGI;
   /**< The grid interpolator used for mapping performance*/
 
   bool useBtwxtGrid;
