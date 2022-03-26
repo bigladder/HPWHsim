@@ -27,7 +27,9 @@ if (HPWHSIM_ABRIDGED)
   add_compile_definitions( HPWH_ABRIDGED)
 endif()
 
+add_subdirectory(vendor)
 add_subdirectory(src)
+
 if (NOT HPWHSIM_OMIT_TESTTOOL)
   add_subdirectory(test)
 endif()

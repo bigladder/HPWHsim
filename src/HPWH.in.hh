@@ -12,6 +12,8 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
+namespace Btwxt { class RegularGridInterpolator; };
+
 //#define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
  *  excluded from compiling.  This is done in order to reduce the size of the
@@ -40,7 +42,7 @@ class HPWH {
   simulation when the location temperature has not been initialized */
   static const float ASPECTRATIO; /**< A constant to define the aspect ratio between the tank height and
 								  radius (H/R). Used to find the radius and tank height from the volume and then
-								  find the surface area. It is derived from the median value of 88 
+								  find the surface area. It is derived from the median value of 88
 								  insulated storage tanks currently available on the market from
 								  Sanden, AOSmith, HTP, Rheem, and Niles,  */
   static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
@@ -108,7 +110,7 @@ class HPWH {
 	  MODELS_RheemHBDR4565 = 144,    /**< 65 gallon, 4500 W resistance Rheem HB Duct Ready */
 	  MODELS_RheemHBDR2280 = 145,    /**< 80 gallon, 2250 W resistance Rheem HB Duct Ready */
 	  MODELS_RheemHBDR4580 = 146,    /**< 80 gallon, 4500 W resistance Rheem HB Duct Ready */
-	  
+
 	  // The new new Rheem
 	  MODELS_Rheem2020Prem40  = 151,   /**< 40 gallon, Rheem 2020 Premium */
 	  MODELS_Rheem2020Prem50  = 152,   /**< 50 gallon, Rheem 2020 Premium */
@@ -143,7 +145,7 @@ class HPWH {
 	  MODELS_CustomResTank = 201,   /**< HPWH parameters were input via HPWHinit_resTank */
 	  MODELS_CustomResTankGeneric = 202,   /**< HPWH parameters were input via HPWHinit_commercialResTank */
 
-	  // Larger Colmac models in single pass configuration 
+	  // Larger Colmac models in single pass configuration
 	  MODELS_ColmacCxV_5_SP  = 210,  /**<  Colmac CxA_5 external heat pump in Single Pass Mode  */
 	  MODELS_ColmacCxA_10_SP = 211,  /**<  Colmac CxA_10 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_15_SP = 212,  /**<  Colmac CxA_15 external heat pump in Single Pass Mode */
@@ -151,27 +153,30 @@ class HPWH {
 	  MODELS_ColmacCxA_25_SP = 214,  /**<  Colmac CxA_25 external heat pump in Single Pass Mode */
 	  MODELS_ColmacCxA_30_SP = 215,  /**<  Colmac CxA_30 external heat pump in Single Pass Mode */
 
-	  // Larger Colmac models in multi pass configuration 
+	  // Larger Colmac models in multi pass configuration
 	  MODELS_ColmacCxV_5_MP  = 310,	 /**<  Colmac CxA_5 external heat pump in Multi Pass Mode  */
 	  MODELS_ColmacCxA_10_MP = 311,  /**<  Colmac CxA_10 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_15_MP = 312,  /**<  Colmac CxA_15 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_20_MP = 313,  /**<  Colmac CxA_20 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_25_MP = 314,  /**<  Colmac CxA_25 external heat pump in Multi Pass Mode */
 	  MODELS_ColmacCxA_30_MP = 315,  /**<  Colmac CxA_30 external heat pump in Multi Pass Mode */
-	  
+
 	  // Larger Nyle models in single pass configuration
 	  MODELS_NyleC25A_SP = 230,  /*< Nyle C25A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC60A_SP = 231,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_SP = 232,  /*< Nyle C90A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC125A_SP = 233, /*< Nyle C125A external heat pump in Single Pass Mode */
 	  MODELS_NyleC185A_SP = 234, /*< Nyle C185A external heat pump in Single Pass Mode */
-	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */	 
+	  MODELS_NyleC250A_SP = 235, /*< Nyle C250A external heat pump in Single Pass Mode */
 	  // Larger Nyle models with the cold weather package!
 	  MODELS_NyleC60A_C_SP  = 241,  /*< Nyle C60A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC90A_C_SP  = 242,  /*< Nyle C90A external heat pump in Single Pass Mode  */
 	  MODELS_NyleC125A_C_SP = 243,  /*< Nyle C125A external heat pump in Single Pass Mode */
 	  MODELS_NyleC185A_C_SP = 244,  /*< Nyle C185A external heat pump in Single Pass Mode */
 	  MODELS_NyleC250A_C_SP = 245,  /*< Nyle C250A external heat pump in Single Pass Mode */
+
+	  // Mitsubishi Electric Trane
+	  MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP = 250,  /*< Mitsubishi Electric Trane QAHV external CO2 heat pump  */
 
 	  // Larger Nyle models in multi pass configuration
 	  //MODELS_NyleC25A_MP  = 330,  /*< Nyle C25A external heat pump in Multi Pass Mode  */
@@ -226,7 +231,7 @@ class HPWH {
 	UNITS_HR,		  /**< hours  */
 	UNITS_GPM,		  /**< gallons per minute  */
 	UNITS_LPS		  /**< liters per second  */
-  };		  
+  };
 
   /** specifies the type of heat source  */
   enum HEATSOURCE_TYPE {
@@ -317,7 +322,7 @@ class HPWH {
 	 * This is useful for testing new variations, and for the sort of variability
 	 * that we typically do when creating SEEM runs
 	 * Appropriate use of this function can be found in the documentation
-    
+
 	 * The return value is 0 for successful initialization, HPWH_ABORT otherwise
 	 */
 
@@ -333,13 +338,13 @@ class HPWH {
    * is at the bottom, the upper element is at the top third.  The logics are also set
    * to standard setting, with upper as VIP activating when the top third is too cold.
    */
- 
+
   int HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, double upperPower_W, double lowerPower_W);
   /**< This function will initialize a HPWH object to be a generic resistance storage water heater,
   * with a specific R-Value defined at initalization.
   *
   * Several assumptions regarding the tank configuration are assumed: the lower element
-  * is at the bottom, the upper element is at the top third. The controls are the same standard controls for 
+  * is at the bottom, the upper element is at the top third. The controls are the same standard controls for
   * the HPWHinit_resTank()
   */
 
@@ -358,9 +363,9 @@ class HPWH {
 	 *
 	 * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
 	 */
-	
+
 	/** An overloaded function that uses takes inletT_C  */
-	int runOneStep(double inletT_C, double drawVolume_L, double ambientT_C, 
+	int runOneStep(double inletT_C, double drawVolume_L, double ambientT_C,
 		double externalT_C, DRMODES DRstatus, double inletVol2_L = 0., double inletT2_C = 0.,
 		std::vector<double>* nodePowerExtra_W = NULL) {
 		setInletT(inletT_C);
@@ -415,11 +420,11 @@ class HPWH {
   bool isNewSetpointPossible(double newSetpoint_C, double& maxAllowedSetpoint_C, std::string& why, UNITS units = UNITS_C) const;
   /**< This function returns if the new setpoint is physically possible for the compressor. If there
 		is no compressor then checks that the new setpoint is less than boiling. The setpoint can be
-		set higher than the compressor max outlet temperature if there is a  backup resistance element, 
+		set higher than the compressor max outlet temperature if there is a  backup resistance element,
 		but the compressor will not operate above this temperature. maxAllowedSetpoint_C returns the */
 
   double getMaxCompressorSetpoint(UNITS units = UNITS_C) const;
-  /**< a function to return the max operating temperature of the compressor which can be different than 
+  /**< a function to return the max operating temperature of the compressor which can be different than
 	  the value returned in isNewSetpointPossible() if there are resistance elements. */
 
   double getMinOperatingTemp(UNITS units = UNITS_C) const;
@@ -477,7 +482,7 @@ class HPWH {
   /**< This is a setter for the water inlet height which sets it as a fraction of the number of nodes from the bottom up*/
 
   int setExternalInletHeightByFraction(double fractionalHeight);
-  /**< This is a setter for the height at which the split system HPWH adds heated water to the storage tank, 
+  /**< This is a setter for the height at which the split system HPWH adds heated water to the storage tank,
   this sets it as a fraction of the number of nodes from the bottom up*/
   int setExternalOutletHeightByFraction(double fractionalHeight);
   /**< This is a setter for the height at which the split system HPWH takes cold water out of the storage tank,
@@ -510,7 +515,7 @@ class HPWH {
 
 	double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
   /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-	  which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple, 
+	  which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
 	  1 at the bottom using specified units
       returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
 
@@ -522,46 +527,46 @@ class HPWH {
 
 	int getCompressorIndex() const;
 	/**< returns the index of the compressor in the heat source array.
-	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	Note only supports HPWHs with one compressor, if multiple will return the last index
 	of a compressor */
 
-	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+	double getCompressorCapacity(double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222,
 		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
-	/**< Returns the heating output capacity of the compressor for the current HPWH model. 
-	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	/**< Returns the heating output capacity of the compressor for the current HPWH model.
+	Note only supports HPWHs with one compressor, if multiple will return the last index
 	of a compressor */
 
-	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222, 
+	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222,
 		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C);
-	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures. 
+	/**< Sets the heating output capacity of the compressor at the defined air, inlet water, and outlet temperatures.
 	For multi-pass models the capacity is set as the average between the inletTemp and outTemp since multi-pass models will increase
 	the water temperature only a few degrees at a time (i.e. maybe 10 degF) until the tank reaches the outTemp, the capacity at
 	inletTemp might not be accurate for the entire heating cycle.
-	Note only supports HPWHs with one compressor, if multiple will return the last index 
+	Note only supports HPWHs with one compressor, if multiple will return the last index
 	of a compressor */
 
 	int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 	/**< Scales the heatpump water heater input capacity and COP*/
-	
+
 	int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
 	/**< Scale the resistance elements in the heat source list. Which heat source is chosen is changes is given by "which"
 	- If which (-1) sets all the resisistance elements in the tank.
-	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
-	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	- If which (0, 1, 2...) sets the resistance element in a low to high order.
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order
 	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
 
-	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the
 	by the ordered height of the resistance elements it cannot refer to a compressor.
 	*/
 
 	double getResistanceCapacity(int which = -1, UNITS pwrUNIT = UNITS_KW);
 	/**< Returns the resistance elements capacity. Which heat source is chosen is changes is given by "which"
 	- If which (-1) gets all the resisistance elements in the tank.
-	- If which (0, 1, 2...) sets the resistance element in a low to high order. 
-	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order 
+	- If which (0, 1, 2...) sets the resistance element in a low to high order.
+	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order
 	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
 
-	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the 
+	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the
 	by the ordered height of the resistance elements it cannot refer to a compressor.
 	*/
 
@@ -592,12 +597,12 @@ class HPWH {
       returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
   double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
   /**< returns the condenser inlet temperature in the specified units
-  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */  
-  
+  returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
   double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
   /**< returns the condenser outlet temperature in the specified units
   returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
- 
+
   double getExternalVolumeHeated(UNITS units = UNITS_L) const;
   /**< returns the volume of water heated in an external in the specified units
 	returns 0 when no external heat source is running  */
@@ -627,7 +632,7 @@ class HPWH {
 
   bool hasACompressor() const;
   /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank. */
-  
+
   bool hasExternalHeatSource() const;
   /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or resistance element. */
   double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
@@ -639,7 +644,7 @@ class HPWH {
   int getSizingFractions(double &aquafract, double &percentUseable) const;
   /**< returns the fraction of total tank volume from the bottom up where the aquastat is
   or the turn on logic for the compressor, and the USEable fraction of storage or 1 minus
-  where the shut off logic is for the compressor. If the logic spans multiple nodes it 
+  where the shut off logic is for the compressor. If the logic spans multiple nodes it
   returns the weighted average of the nodes */
 
   bool isHPWHScalable() const;
@@ -651,7 +656,7 @@ class HPWH {
   void resetTopOffTimer();
   /**< resets variables for timer associated with the DR_TOT call  */
 
-	
+
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -686,7 +691,7 @@ class HPWH {
 	/**< a helper function for the inits, calculating condentropy and the lowest node  */
   void calcSizeConstants();
   /**< a helper function to set constants for the UA and tank size*/
-  void calcDerivedHeatingValues(); 
+  void calcDerivedHeatingValues();
   /**< a helper for the helper, calculating condentropy and the lowest node*/
   void mapResRelativePosToSetOfSources();
   /**< a helper function for the inits, creating a mapping function for the position of the resistance elements
@@ -745,7 +750,7 @@ class HPWH {
 
 	int lowestElementIndex;
 	/**< The index of the lowest resistance element heat source (set to -1 if no resistance elements)*/
-	
+
 	int highestElementIndex;
 	/**< The index of the highest resistance element heat source. if only one element it equals lowestElementIndex (set to -1 if no resistance elements)*/
 
@@ -760,7 +765,7 @@ class HPWH {
 
 	int inletHeight;
 	/**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
-  
+
 	 int inlet2Height;
 	/**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be between 0 and numNodes-1  */
 
@@ -773,11 +778,11 @@ class HPWH {
 
 	double volPerNode_LperNode;
 	/**< the volume in liters of a single node  */
-	double node_height;	
+	double node_height;
 	/**< the height in meters of the one node  */
-	double fracAreaTop;	
+	double fracAreaTop;
 	/**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
-	double fracAreaSide;	
+	double fracAreaSide;
 	/**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
 
 
@@ -865,7 +870,7 @@ class HPWH::HeatSource {
   /**< configure the heat source to be a resisive element, positioned at the
       specified node, with the specified power in watts */
   void setupExtraHeat(std::vector<double>* nodePowerExtra_W);
-  /**< Configure a user defined heat source added as extra, based off using 
+  /**< Configure a user defined heat source added as extra, based off using
 		nodePowerExtra_W as the total watt input and the condensity*/
 
 	bool isEngaged() const;
@@ -913,16 +918,19 @@ class HPWH::HeatSource {
                      double cnd5, double cnd6, double cnd7, double cnd8,
                      double cnd9, double cnd10, double cnd11, double cnd12);
   /**< a function to set the condensity values, it pretties up the init funcs. */
-	
+
 	void linearInterp(double &ynew, double xnew, double x0, double x1, double y0, double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
+
 	void regressedMethod(double &ynew, std::vector<double> &coefficents, double x1, double x2, double x3);
 	/**< Does a calculation based on the ten term regression equation  */
+
 	void regressedMethodMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
 	/**< Does a calculation based on the five term regression equation for MP split systems  */
-	void regressedExpMP(double &ynew, std::vector<double> &coefficents, double x1, double x2);
-	/**< Does a calculation based on the five term exponential regression equation for MP split systems  */
-	
+
+	void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
+	/**< Does a linear interpolation in btwxt to the target point*/
+
 	void setupDefrostMap(double derate35 = 0.8865);
 	/**< configure the heat source with a default for the defrost derating */
 	void defrostDerate(double &to_derate, double airT_C);
@@ -992,6 +1000,18 @@ class HPWH::HeatSource {
   std::vector<perfPoint> perfMap;
   /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
+  std::vector< std::vector<double> > perfGrid;
+  /**< The axis values defining the regular grid for the performance data.
+  SP would have 3 axis, MP would have 2 axis*/
+
+  std::vector< std::vector<double> > perfGridValues;
+  /**< The values for input power and cop use matching to the grid. Should be long format with { { inputPower_W }, { COP } }. */
+
+  class Btwxt::RegularGridInterpolator *perfRGI;
+  /**< The grid interpolator used for mapping performance*/
+
+  bool useBtwxtGrid;
+
 	/** a vector to hold the set of logical choices for turning this element on */
 	std::vector<HeatingLogic> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
@@ -1007,8 +1027,6 @@ class HPWH::HeatSource {
 		double onBelowT_F;
 	};
 	resistanceElementDefrost resDefrost;
-	/** use the expontential curve fit not the standard quadratic */
-	bool expCurveFit;
 
 	struct defrostPoint {
 		double T_F;
