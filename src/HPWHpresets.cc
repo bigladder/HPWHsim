@@ -2307,7 +2307,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	setpoint_C = F_TO_C(150.0);
 
 	tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-	tankUA_kJperHrC = UAf_TO_UAc(11.8);
+	tankUA_kJperHrC = UAf_TO_UAc(3.94);
 
 	doTempDepression = false;
 	tankMixesOnDraw = false;
