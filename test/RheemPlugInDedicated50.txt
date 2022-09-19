@@ -1,0 +1,78 @@
+verbosity reluctant
+numNodes 12 #number of nodes
+setpoint 127 F
+volume 45.0 gal
+UA 6.33 kJperHrC
+depressTemp false
+mixOnDraw true
+mixBelowFractionOnDraw .3333333
+mixFactor 3
+numHeatSources 1
+
+heatsource 0 isVIP false
+heatsource 0 isOn false
+heatsource 0 type compressor
+#heatsource 0 condensity  0 .2 .2 .2 .2 .2 0 0 0 0 0 0 0 
+#heatsource 0 condensity  0 .25 .25 .25 .25  0 0 0 0 0 00 0
+heatsource 0 condensity 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0 0 0 0
+heatsource 0 nTemps 3
+heatsource 0 T1 50 F
+heatsource 0 T2 68 F
+heatsource 0 T3 95 F
+
+########################################################################################################
+# Bottom 3 temp sensors regression ####################################################
+#heatsource 0 inPowT1const 620
+#heatsource 0 inPowT1lin   5.57
+#heatsource 0 inPowT1quad  0.0
+#heatsource 0 inPowT2const 536
+#heatsource 0 inPowT2lin   7.66
+#heatsource 0 inPowT2quad  0.0
+#heatsource 0 inPowT3const 537
+#heatsource 0 inPowT3lin   9.13
+#heatsource 0 inPowT3quad  0.0
+#
+#heatsource 0 copT1const 4.76
+#heatsource 0 copT1lin  -0.0164
+#heatsource 0 copT1quad  0.0
+#heatsource 0 copT2const 4.94
+#heatsource 0 copT2lin  -0.0134
+#heatsource 0 copT2quad  0.0
+#heatsource 0 copT3const 6.38
+#heatsource 0 copT3lin  -0.0221
+#heatsource 0 copT3quad  0.0
+
+# For messing with regression ####################################################
+heatsource 0 inPowT1const 10.42
+heatsource 0 inPowT1lin   9.015
+heatsource 0 inPowT1quad  0
+heatsource 0 inPowT2const 510.07
+heatsource 0 inPowT2lin   7.0124
+heatsource 0 inPowT2quad  0
+heatsource 0 inPowT3const 15.66
+heatsource 0 inPowT3lin   10.59
+heatsource 0 inPowT3quad  0
+
+heatsource 0 copT1const 4.7469
+heatsource 0 copT1lin   -0.014442
+heatsource 0 copT1quad  0
+heatsource 0 copT2const 5.1057
+heatsource 0 copT2lin   -0.013303
+heatsource 0 copT2quad  0
+heatsource 0 copT3const 6.25290
+heatsource 0 copT3lin   -0.01873
+heatsource 0 copT3quad  0
+
+########################################################################################################
+heatsource 0 minT 37 F
+heatsource 0 maxT 120 F
+heatsource 0 hysteresis 1 F
+heatsource 0 coilConfig wrapped
+
+#heatsource 0 onlogic bottomThird 26 F
+#heatsource 0 onlogic bottomHalf 25 F
+heatsource 0 onlogic bottomThird 20 F
+#heatsource 0 onlogic standby 9 F
+
+#heatsource 0 offlogic bottomTwelthMaxTemp 105 F
+#heatsource 0 offlogic bottomSixthMaxTemp 102 F

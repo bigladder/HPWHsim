@@ -821,7 +821,12 @@ class HPWH {
 
   // special variables for adding abilities
 	bool tankMixesOnDraw;
-	/**<  whether or not the bottom third of the tank should mix during draws  */
+	/**<  whether or not the bottom fraction (defined by mixBelowFraction)
+	of the tank should mix during draws  */
+	double mixBelowFractionOnDraw; 
+	/**<  mixes the tank below this fraction on draws iff tankMixesOnDraw  */
+	double 	mixFactor;
+
 	bool doTempDepression;
 	/**<  whether the HPWH should use the alternate ambient temperature that
         gets depressed when a compressor is running

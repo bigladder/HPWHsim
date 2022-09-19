@@ -85,6 +85,8 @@ void HPWH::setAllDefaults() {
 	numHeatSources = 0; 
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
+	mixBelowFractionOnDraw = 1. / 3.;
+	mixFactor = 3.;
 	doInversionMixing = true; doConduction = true;
 	inletHeight = 0; inlet2Height = 0; fittingsUA_kJperHrC = 0.;
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
@@ -134,6 +136,8 @@ HPWH::HPWH(const HPWH &hpwh) {
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
+	mixBelowFractionOnDraw = hpwh.mixBelowFractionOnDraw;
+	mixFactor = hpwh.mixFactor;
 	doTempDepression = hpwh.doTempDepression;
 
 	doInversionMixing = hpwh.doInversionMixing;
@@ -210,6 +214,9 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	standbyLosses_kWh = hpwh.standbyLosses_kWh;
 
 	tankMixesOnDraw = hpwh.tankMixesOnDraw;
+	mixBelowFractionOnDraw = hpwh.mixBelowFractionOnDraw;
+		mixFactor = hpwh.mixFactor;
+
 	doTempDepression = hpwh.doTempDepression;
 
 	doInversionMixing = hpwh.doInversionMixing;
@@ -2401,9 +2408,9 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
-		if (tankMixesOnDraw == true && drawVolume_L > 0.) {
-			int mixedBelowNode = numNodes / 3;
-			mixTankNodes(0, mixedBelowNode, 3.0);
+		if (tankMixesOnDraw && drawVolume_L > 0.) {
+			int mixedBelowNode = numNodes * mixBelowFractionOnDraw;
+			mixTankNodes(0, mixedBelowNode, mixFactor);
 		}
 
 	} //end if(draw_volume_L > 0)
@@ -4323,6 +4330,20 @@ int HPWH::HPWHinit_file(string configFile) {
 				return HPWH_ABORT;
 			}
 		}
+		else if (token == "mixBelowFractionOnDraw") {
+			line_ss >> tempDouble;
+			if (tempDouble < 0 || tempDouble > 1) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Out of bounds value for %s. Should be between 0 and 1. \n", token.c_str());
+				}
+				return HPWH_ABORT;
+			}
+			mixBelowFractionOnDraw = tempDouble;
+		}
+		else if (token == "mixFactor") {
+			line_ss >> tempDouble;
+			mixFactor = tempDouble;
+		}
 		else if (token == "setpoint") {
 			line_ss >> tempDouble >> units;
 			if (units == "F")  tempDouble = F_TO_C(tempDouble);
@@ -4550,6 +4571,9 @@ int HPWH::HPWHinit_file(string configFile) {
 					else if (tempString == "topSixth") {
 						setOfSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
 					}
+					else if (tempString == "bottomHalf") {
+						setOfSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(tempDouble));
+					}
 					else {
 						if (hpwhVerbosity >= VRB_reluctant) {
 							msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
@@ -4575,6 +4599,9 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					else if (tempString == "bottomTwelthMaxTemp") {
 						setOfSources[heatsource].addShutOffLogic(HPWH::bottomTwelthMaxTemp(tempDouble));
+					}
+					else if (tempString == "bottomSixthMaxTemp") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::bottomSixthMaxTemp(tempDouble));
 					}
 					else if (tempString == "largeDraw") {
 						setOfSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
