@@ -85,6 +85,8 @@ set(yearTestsModels
  Rheem2020Prem40 
  Rheem2020Prem50
  Rheem2020Build50
+ RheemPlugInShared40
+ RheemPlugInShared50
  AOSmithCAHP120
  AWHSTier3Generic80
 )                                  

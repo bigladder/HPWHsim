@@ -130,6 +130,18 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "Rheem2020Build80") {
 		hpwhModel = HPWH::MODELS_Rheem2020Build80;
 	}
+	else if (modelName == "RheemPlugInShared40") {
+		hpwhModel = HPWH::MODELS_RheemPlugInShared40;
+	}
+	else if (modelName == "RheemPlugInShared50") {
+		hpwhModel = HPWH::MODELS_RheemPlugInShared50;
+	}
+	else if (modelName == "RheemPlugInShared65") {
+		hpwhModel = HPWH::MODELS_RheemPlugInShared65;
+	}
+	else if (modelName == "RheemPlugInShared80") {
+		hpwhModel = HPWH::MODELS_RheemPlugInShared80;
+	}
 	// Large HPWH's
 	else if (modelName == "AOSmithCAHP120") {
 		hpwhModel = HPWH::MODELS_AOSmithCAHP120;
