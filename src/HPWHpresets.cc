@@ -3060,6 +3060,78 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
 
+		
+	else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+
+		if (presetNum == MODELS_RheemPlugInShared40) {
+			tankVolume_L = GAL_TO_L(36.0);
+			tankUA_kJperHrC = 9.5;
+			setpoint_C = F_TO_C(140.0);
+		}
+		else if (presetNum == MODELS_RheemPlugInShared50) {
+			tankVolume_L = GAL_TO_L(45.0);
+			tankUA_kJperHrC = 8.55;
+			setpoint_C = F_TO_C(140.0);
+		}
+		else if (presetNum == MODELS_RheemPlugInShared65) {
+			tankVolume_L = GAL_TO_L(58.5);
+			tankUA_kJperHrC = 10.64;
+			setpoint_C = F_TO_C(127.0);
+		}
+		else if (presetNum == MODELS_RheemPlugInShared80) {
+			tankVolume_L = GAL_TO_L(72.0);
+			tankUA_kJperHrC = 10.83;
+			setpoint_C = F_TO_C(127.0);
+		}
+
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+
+		compressor.perfMap.reserve(2);
+
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
+			{6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
+			{7.0, -0.0168, -0.0001} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.minT = F_TO_C(37.0);
+		compressor.maxT = F_TO_C(120.0);
+		compressor.hysteresis_dC = dF_TO_dC(1);
+		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+
+		//logic conditions
+		double compStart = dF_TO_dC(32);
+		double standbyT = dF_TO_dC(9);
+		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+	}
+
 	else if (presetNum == MODELS_RheemHB50) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
