@@ -121,6 +121,12 @@ class HPWH {
 	  MODELS_Rheem2020Build65 = 157,   /**< 65 gallon, Rheem 2020 Builder */
 	  MODELS_Rheem2020Build80 = 158,   /**< 80 gallon, Rheem 2020 Builder */
 
+	  // Rheem 120V shared-circuit products, no resistance elements. 
+	  MODELS_RheemPlugInShared40 = 1150,	 /**< 40 gallon, Rheem 120V shared-circuit */
+	  MODELS_RheemPlugInShared50 = 1151,	 /**< 50 gallon, Rheem 120V shared-circuit */
+	  MODELS_RheemPlugInShared65 = 1152,	 /**< 65 gallon, Rheem 120V shared-circuit */
+	  MODELS_RheemPlugInShared80 = 1153,	 /**< 80 gallon, Rheem 120V shared-circuit */
+
 	  // The new-ish Stiebel
 	  MODELS_Stiebel220E = 160,      /**< Stiebel Eltron (2014 model?) */
 
