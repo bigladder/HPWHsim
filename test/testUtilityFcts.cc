@@ -130,6 +130,12 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "Rheem2020Build80") {
 		hpwhModel = HPWH::MODELS_Rheem2020Build80;
 	}
+	else if (modelName == "RheemPlugInDedicated40") {
+		hpwhModel = HPWH::MODELS_RheemPlugInDedicated40;
+	}
+	else if (modelName == "RheemPlugInDedicated50") {
+		hpwhModel = HPWH::MODELS_RheemPlugInDedicated50;
+	}
 	// Large HPWH's
 	else if (modelName == "AOSmithCAHP120") {
 		hpwhModel = HPWH::MODELS_AOSmithCAHP120;

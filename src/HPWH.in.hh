@@ -121,6 +121,12 @@ class HPWH {
 	  MODELS_Rheem2020Build65 = 157,   /**< 65 gallon, Rheem 2020 Builder */
 	  MODELS_Rheem2020Build80 = 158,   /**< 80 gallon, Rheem 2020 Builder */
 
+
+
+	  // Rheem 120V dedicated-circuit product, no resistance elements
+	  MODELS_RheemPlugInDedicated40 = 1160, /**< 40 gallon, Rheem 120V dedicated-circuit */
+	  MODELS_RheemPlugInDedicated50 = 1161, /**< 50 gallon, Rheem 120V dedicated-circuit */
+
 	  // The new-ish Stiebel
 	  MODELS_Stiebel220E = 160,      /**< Stiebel Eltron (2014 model?) */
 
@@ -825,7 +831,6 @@ class HPWH {
 	of the tank should mix during draws  */
 	double mixBelowFractionOnDraw; 
 	/**<  mixes the tank below this fraction on draws iff tankMixesOnDraw  */
-	double 	mixFactor;
 
 	bool doTempDepression;
 	/**<  whether the HPWH should use the alternate ambient temperature that

@@ -3060,6 +3060,65 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setOfSources[0].companionHeatSource = &setOfSources[2];
 	}
 
+
+	else if (presetNum == MODELS_RheemPlugInDedicated40 || presetNum == MODELS_RheemPlugInDedicated50) {
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+		if (presetNum == MODELS_RheemPlugInDedicated40) {
+			tankVolume_L = GAL_TO_L(36);
+			tankUA_kJperHrC = 5.5;
+		}
+		else if (presetNum == MODELS_RheemPlugInDedicated50) {
+			tankVolume_L = GAL_TO_L(45);
+			tankUA_kJperHrC = 6.33;
+		}
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+		HeatSource compressor(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		compressor.setCondensity(0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0., 0., 0., 0.);
+
+		compressor.perfMap.reserve(2);
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{528.91, 4.8988, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{ 4.3943, -0.012443, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{494.03, 7.7266, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{5.48189, -0.01604, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.hysteresis_dC = dF_TO_dC(1);
+		compressor.minT = F_TO_C(37.0);
+		compressor.maxT = F_TO_C(120.0);
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+
+
+		//logic conditions
+		double compStart = dF_TO_dC(20);
+		double standbyT = dF_TO_dC(9);
+		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
+
+		//set everything in its places
+		setOfSources[0] = compressor;
+
+	}
 	else if (presetNum == MODELS_RheemHB50) {
 		numNodes = 12;
 		tankTemps_C = new double[numNodes];
