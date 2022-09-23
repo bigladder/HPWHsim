@@ -3117,7 +3117,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-
 		//logic conditions
 		double compStart = dF_TO_dC(32);
 		double standbyT = dF_TO_dC(9);
@@ -3138,7 +3137,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			tankVolume_L = GAL_TO_L(45);
 			tankUA_kJperHrC = 6.33;
 		}
+		doTempDepression = false;
+		tankMixesOnDraw = true;
 
+		numHeatSources = 1;
+		setOfSources = new HeatSource[numHeatSources];
+		HeatSource compressor(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = true;
+		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.setCondensity(0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0., 0., 0., 0.);
 
 		compressor.perfMap.reserve(2);
