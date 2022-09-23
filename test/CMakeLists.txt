@@ -46,28 +46,37 @@ add_test(NAME "testPerformanceMaps" COMMAND  $<TARGET_FILE:testPerformanceMaps> 
 
 # Run model tests and unit tests on models
 set(testNames
- test24hr50
- test24hr95
+ test30
+ test50
+ test70
+ test95
+ testLockout
+ testSandenCombi
+ testDr_LO
+ testDr_TOO
+ testDr_TOT
+ testDr_TOO2
+ testDR_TOTLOR
 )
 set(modelNames
 #  StorageTank  
-#  AOSmithPHPT60
-#  AOSmithHPTU80
-#  Sanden80
-#  RheemHB50
-#  Stiebel220e
-#  GE502014
-#  Rheem2020Prem40
-#  Rheem2020Prem50
-#  Rheem2020Build50
-  RheemPlugInDedicated50
+  AOSmithPHPT60
+  AOSmithHPTU80
+  Sanden80
+  RheemHB50
+  Stiebel220e
+  GE502014
+  Rheem2020Prem40
+  Rheem2020Prem50
+  Rheem2020Build50
+#  RheemPlugInDedicated50
 )
 set(lockoutTestModels
-#  AOSmithPHPT60
-#  AOSmithHPTU80
-#  RheemHB50
-#  Stiebel220e
-#  GE502014
+  AOSmithPHPT60
+  AOSmithHPTU80
+  RheemHB50
+  Stiebel220e
+  GE502014
 )
 
 set(yearTestsModels          
@@ -81,8 +90,8 @@ set(yearTestsModels
  AWHSTier3Generic80
 )                                  
 set(yearTests                                        
-# testCA_3BR_CTZ15
-# testCA_3BR_CTZ16
+ testCA_3BR_CTZ15
+ testCA_3BR_CTZ16
 )
 
 set(maxTempModels 
@@ -96,14 +105,14 @@ set(maxTempModels
 )
 
 set( maxTempTests
-# testREGoesTo93C
-# testREGoesTo93CCold
+ testREGoesTo93C
+ testREGoesTo93CCold
 )
 
 set(largeCompressorTests
-# testLargeComp45
-# testLargeComp60
-# testLargeCompHot
+ testLargeComp45
+ testLargeComp60
+ testLargeCompHot
 )
 set(largeCompressorNames
  QAHV_N136TAU_HPB_SP
@@ -168,7 +177,7 @@ set(yearLargeTestsModels
 )
 
 set(yearLargeTests                                        
-# testCA_36Unit_CTZ12
+ testCA_36Unit_CTZ12
 )
 
 # Unit tests
