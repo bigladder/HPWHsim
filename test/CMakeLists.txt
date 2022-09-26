@@ -69,6 +69,7 @@ set(modelNames
   Rheem2020Prem40
   Rheem2020Prem50
   Rheem2020Build50
+#  RheemPlugInDedicated50
 )
 set(lockoutTestModels
   AOSmithPHPT60
@@ -85,6 +86,7 @@ set(yearTestsModels
  Rheem2020Prem40 
  Rheem2020Prem50
  Rheem2020Build50
+ RheemPlugInDedicated50
  RheemPlugInShared40
  RheemPlugInShared50
  AOSmithCAHP120
