@@ -437,6 +437,15 @@ class HPWH {
   /**< a function to return the max operating temperature of the compressor which can be different than
 	  the value returned in isNewSetpointPossible() if there are resistance elements. */
 
+  /** Returns State of Charge where
+	 tMains = current mains (cold) water temp,
+	 tMinUseful = minimum useful temp,
+	 tMax = nominal maximum temp.*/
+  double getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C);
+  double getSoCFraction(double tMains_C, double tMinUseful_C) {
+	  return getSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
+  };
+
   double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
 
