@@ -9,6 +9,7 @@ add_executable(testSizingFractions testSizingFractions.cc)
 add_executable(testResistanceFcts testResistanceFcts.cc)
 add_executable(testCompressorFcts testCompressorFcts.cc)
 add_executable(testPerformanceMaps testPerformanceMaps.cc)
+add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 
 set(libs
  libHPWHsim 
@@ -22,7 +23,7 @@ target_link_libraries(testSizingFractions ${libs})
 target_link_libraries(testResistanceFcts ${libs})
 target_link_libraries(testCompressorFcts ${libs})
 target_link_libraries(testPerformanceMaps ${libs})
-
+target_link_libraries(testStateOfChargeFcts ${libs})
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -38,6 +39,7 @@ add_test(NAME "testSizingFractions" COMMAND  $<TARGET_FILE:testSizingFractions> 
 add_test(NAME "testResistanceFcts" COMMAND  $<TARGET_FILE:testResistanceFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testCompressorFcts" COMMAND  $<TARGET_FILE:testCompressorFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testPerformanceMaps" COMMAND  $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME "testStateOfChargeFcts" COMMAND  $<TARGET_FILE:testStateOfChargeFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
 #"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

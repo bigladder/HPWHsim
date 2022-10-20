@@ -965,6 +965,31 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	return returnVal;
 }
 
+double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) {
+	// Note that volume is ignored in here since with even nodes it cancels out of the SoC fractional equation
+	if (tMains_C >= tMinUseful_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("tMains_C is greater than or equal tMinUseful_C. \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (tMinUseful_C > tMax_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("tMinUseful_C is greater tMax_C. \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double chargeEquivalent = 0.;
+	const double chargeMax = numNodes * (tMax_C - tMains_C) / (tMinUseful_C - tMains_C);
+	for (int i = 0; i < numNodes; i++) {
+		if (tankTemps_C[i] >= tMinUseful_C) {
+			chargeEquivalent += (tankTemps_C[i] - tMains_C) / (tMinUseful_C - tMains_C);;
+		}
+	}
+	return chargeEquivalent / chargeMax;
+}
+
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
