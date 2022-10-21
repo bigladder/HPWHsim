@@ -68,7 +68,7 @@ void testChargeBelowSetpoint() {
 	chargeFraction = hpwh.getSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
 	ASSERTTRUE(cmpd(chargeFraction, 0.));
 
-	// Check some lower values with tank set at constant values
+	// Check some lower values with tank set at constant temperatures
 	setTankToTemperature(hpwh, 110.);
 	chargeFraction = hpwh.getSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
 	ASSERTTRUE(cmpd(chargeFraction, 0.625));
