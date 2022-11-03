@@ -993,12 +993,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(15)));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -1131,11 +1131,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.)));
 
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(4);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -1276,12 +1277,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 		
 		//Defrost Derate 
@@ -1405,11 +1406,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.)));
 
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(4);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -1564,11 +1565,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.)));
 
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(4);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
@@ -1641,12 +1642,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// Turn on
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(110.), true));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("eighth node absolute", nodeWeights, F_TO_C(110.), true));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		// Performance grid: externalT_F, Tout_F, condenserTemp_F
@@ -1814,18 +1815,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("eighth node absolute", nodeWeights, F_TO_C(113), true));
 		if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden120) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
 			// Adds a bonus standby logic so the external heater does not cycle, recommended for any external heater with standby
 			std::vector<NodeWeight> nodeWeightStandby;
 			nodeWeightStandby.emplace_back(0);
-			compressor.standbyLogic = new HPWH::HeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
+			compressor.standbyLogic = new HPWH::TempBasedHeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
 		}
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom node absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places
@@ -1899,14 +1900,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		nodeWeights.emplace_back(4);
 		std::vector<NodeWeight> nodeWeightStandby;
 		nodeWeightStandby.emplace_back(0);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node absolute", nodeWeights, F_TO_C(113), true));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node absolute", nodeWeights, F_TO_C(113), true));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
-		compressor.standbyLogic = new HPWH::HeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
+		compressor.standbyLogic = new HPWH::TempBasedHeatingLogic("bottom node absolute", nodeWeightStandby, F_TO_C(113), true, std::greater<double>());
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom twelth absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom twelth absolute", nodeWeights1, F_TO_C(135), true, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places
@@ -1993,7 +1994,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
-		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+		resistiveElementTop.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
 		//set everything in its places
@@ -2099,7 +2100,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
-		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+		resistiveElementTop.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
 
 
@@ -2200,7 +2201,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		//		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
-		resistiveElementTop.addTurnOnLogic(HPWH::HeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
+		resistiveElementTop.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("top sixth absolute", nodeWeights, F_TO_C(105), true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 
@@ -3776,12 +3777,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(15), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(15)));
 
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights1, dF_TO_dC(15.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 
@@ -3840,11 +3841,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
-		compressor.addTurnOnLogic(HPWH::HeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
+		compressor.addTurnOnLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights, dF_TO_dC(5.), false));
 
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(4);
-		compressor.addShutOffLogic(HPWH::HeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
+		compressor.addShutOffLogic(new HPWH::TempBasedHeatingLogic("fourth node", nodeWeights1, dF_TO_dC(0.), false, std::greater<double>()));
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//Defrost Derate 
