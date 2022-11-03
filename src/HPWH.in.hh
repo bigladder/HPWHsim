@@ -270,42 +270,97 @@ class HPWH {
 
     NodeWeight(int n) : nodeNum(n), weight(1.0) {};
   };
-
+  
   struct HeatingLogic {
-    std::string description;  // for debug purposes
-    std::vector<NodeWeight> nodeWeights;
-    double decisionPoint;
-    bool isAbsolute;
-    std::function<bool(double,double)> compare;
-    HeatingLogic(std::string desc, std::vector<NodeWeight> n, double d, bool a=false, std::function<bool(double,double)> c=std::less<double>()) :
-      description(desc), nodeWeights(n), decisionPoint(d), isAbsolute(a), compare(c) {};
+	  std::string description;  // for debug purposes
+	  double decisionPoint;
+	  std::function<bool(double, double)> compare;
+
+	  HeatingLogic(std::string desc, double d,
+		  std::function<bool(double, double)> c = std::less<double>()) :
+		  description(desc), decisionPoint(d), compare(c)
+	  {};
+
+	  virtual const bool isValid() = 0;
+	  virtual const double getComparisonValue(HPWH* phpwh) = 0;
+	  virtual const double getTankValue(HPWH* phpwh) = 0;
+	  virtual const double nodeWeightAvgFract(int numberOfNodes, int condensity_size) = 0;
+	  virtual const double getFractToMeetComparisonExternal(HPWH* phpwh) = 0;
   };
 
-  HeatingLogic topThird(double d) const;
-  HeatingLogic topThird_absolute(double d) const;
-	HeatingLogic bottomThird(double d) const;
-	HeatingLogic bottomHalf(double d) const;
-	HeatingLogic bottomTwelth(double d) const;
-	HeatingLogic bottomSixth(double d) const;
-	HeatingLogic bottomSixth_absolute(double d) const;
-	HeatingLogic secondSixth(double d) const;
-	HeatingLogic thirdSixth(double d) const;
-	HeatingLogic fourthSixth(double d) const;
-	HeatingLogic fifthSixth(double d) const;
-	HeatingLogic topSixth(double d) const;
+  // switching to SOC, I need to know:
+  // the desciionpoint aka target SOC
+  // What is TminUseful
+  // hysteresis fraction default = 0.05
+  // using a constant cold water temperature or variable? will have tmains if not
+  struct SOCBasedHeatingLogic : HeatingLogic {
+	  double tempMinUseful_C;
+	  double hysteresisFraction;
+	  bool useCostantMains;
+	  double constantMains_C;
+	  SOCBasedHeatingLogic(std::string desc, double d,
+						   double tM_C = 43.333333, double hF = -0.05,
+						   std::function<bool(double, double)> c = std::less<double>()) :
+			HeatingLogic(desc, d, c), 
+			tempMinUseful_C(tM_C), hysteresisFraction(hF),
+			useCostantMains(false), constantMains_C(18.333)
+	  {};
+	  const bool isValid();
+	  const bool isValidSOCTarget(double target);
 
-  HeatingLogic standby(double d) const;
-  HeatingLogic topNodeMaxTemp(double d) const;
-  HeatingLogic bottomNodeMaxTemp(double d) const;
-  HeatingLogic bottomTwelthMaxTemp(double d) const;
-  HeatingLogic topThirdMaxTemp(double d) const;
-  HeatingLogic bottomSixthMaxTemp(double d) const;
-  HeatingLogic secondSixthMaxTemp(double d) const;
-  HeatingLogic fifthSixthMaxTemp(double d) const;
-  HeatingLogic topSixthMaxTemp(double d) const;
+	  const double getComparisonValue(HPWH* phpwh);
+	  const double getTankValue(HPWH* phpwh);
+	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
+	  const double getFractToMeetComparisonExternal(HPWH* phpwh);
 
-  HeatingLogic largeDraw(double d) const;
-  HeatingLogic largerDraw(double d) const;
+	  int setTargetSOCFraction(double target);
+	  int setConstantMainsTemperature(double mains_C);
+  };
+
+  struct TempBasedHeatingLogic : HeatingLogic {
+	  std::vector<NodeWeight> nodeWeights;
+	  bool isAbsolute;
+	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n, 
+		  double d, bool a = false,
+		  std::function<bool(double, double)> c = std::less<double>()) :
+		  HeatingLogic(desc, d, c), nodeWeights(n), isAbsolute(a)
+	  {};
+	  const bool isValid();
+	  const bool areNodeWeightsValid();
+
+	  const double getComparisonValue(HPWH* phpwh);
+	  const double getTankValue(HPWH* phpwh);
+	  
+	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
+	  const double getFractToMeetComparisonExternal(HPWH* phpwh);
+
+  };
+
+  TempBasedHeatingLogic* topThird(double d) const;
+  TempBasedHeatingLogic* topThird_absolute(double d) const;
+  TempBasedHeatingLogic* bottomThird(double d) const;
+  TempBasedHeatingLogic* bottomHalf(double d) const;
+  TempBasedHeatingLogic* bottomTwelth(double d) const;
+  TempBasedHeatingLogic* bottomSixth(double d) const;
+  TempBasedHeatingLogic* bottomSixth_absolute(double d) const;
+  TempBasedHeatingLogic* secondSixth(double d) const;
+  TempBasedHeatingLogic* thirdSixth(double d) const;
+  TempBasedHeatingLogic* fourthSixth(double d) const;
+  TempBasedHeatingLogic* fifthSixth(double d) const;
+  TempBasedHeatingLogic* topSixth(double d) const;
+  					   
+  TempBasedHeatingLogic* standby(double d) const;
+  TempBasedHeatingLogic* topNodeMaxTemp(double d) const;
+  TempBasedHeatingLogic* bottomNodeMaxTemp(double d) const;
+  TempBasedHeatingLogic* bottomTwelthMaxTemp(double d) const;
+  TempBasedHeatingLogic* topThirdMaxTemp(double d) const;
+  TempBasedHeatingLogic* bottomSixthMaxTemp(double d) const;
+  TempBasedHeatingLogic* secondSixthMaxTemp(double d) const;
+  TempBasedHeatingLogic* fifthSixthMaxTemp(double d) const;
+  TempBasedHeatingLogic* topSixthMaxTemp(double d) const;
+  					   
+  TempBasedHeatingLogic* largeDraw(double d) const;
+  TempBasedHeatingLogic* largerDraw(double d) const;
 
 
   ///this is the value that the public functions will return in case of a simulation
@@ -528,6 +583,7 @@ class HPWH {
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
+
 	double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
 	/**< returns the temperature of the water at the specified node - with specified units
       or HPWH_ABORT for incorrect node number or unit failure  */
@@ -700,8 +756,8 @@ class HPWH {
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
-  double nodeWeightAvgFract(HeatingLogic logic) const;
-  /**< function to calculate where the average node for a logic set is. */
+//  double nodeWeightAvgFract(TempBasedHeatingLogic* logic) const; //Todo
+//  /**< function to calculate where the average node for a logic set is. */
 
   void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
   /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed below node. */
@@ -720,7 +776,7 @@ class HPWH {
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
-  bool areNodeWeightsValid(HeatingLogic logic);
+  bool areNodeWeightsValid(TempBasedHeatingLogic logic);
 	 /**< a helper for the helper, checks the node weights are valid */
 
 
@@ -821,6 +877,7 @@ class HPWH {
 	double timerTOT;
 	/**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
 
+	bool usesSOCLogic;
 
   // Some outputs
 	double outletTemp_C;
@@ -1036,11 +1093,11 @@ class HPWH::HeatSource {
   bool useBtwxtGrid;
 
 	/** a vector to hold the set of logical choices for turning this element on */
-	std::vector<HeatingLogic> turnOnLogicSet;
+	std::vector<HeatingLogic*> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
-	std::vector<HeatingLogic> shutOffLogicSet;
+	std::vector<HeatingLogic*> shutOffLogicSet;
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
-	HeatingLogic *standbyLogic;
+	TempBasedHeatingLogic *standbyLogic;
 
 	/** some compressors have a resistance element for defrost*/
 	struct resistanceElementDefrost
@@ -1065,8 +1122,8 @@ class HPWH::HeatSource {
 	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
-  void addTurnOnLogic(HeatingLogic logic);
-  void addShutOffLogic(HeatingLogic logic);
+  void addTurnOnLogic(HeatingLogic* logic);
+  void addShutOffLogic(HeatingLogic* logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
   void clearAllTurnOnLogic();
   void clearAllShutOffLogic();
