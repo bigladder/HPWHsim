@@ -1385,179 +1385,179 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
 	return 0;
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topThird(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topThird(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (int i : { 9, 10, 11, 12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top third", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("top third", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topThird_absolute(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topThird_absolute(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10,11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top third absolute", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("top third absolute", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomThird(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomThird(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("bottom third", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("bottom third", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("bottom sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("bottom sixth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomSixth_absolute(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomSixth_absolute(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("bottom sixth absolute", nodeWeights, d, true);
+	return new HPWH::TempBasedHeatingLogic("bottom sixth absolute", nodeWeights, d, this, true);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::secondSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::secondSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("second sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("second sixth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::thirdSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::thirdSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("third sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("third sixth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::fourthSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::fourthSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 7,8 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("fourth sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("fourth sixth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::fifthSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::fifthSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("fifth sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("fifth sixth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topSixth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d, this);
 }
 
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomHalf(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomHalf(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4,5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("bottom half", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("bottom half", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomTwelth(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomTwelth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return new HPWH::TempBasedHeatingLogic("bottom twelth", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("bottom twelth", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::standby(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::standby(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(13); // uses very top computation node
-	return new HPWH::TempBasedHeatingLogic("standby", nodeWeights, d);
+	return new HPWH::TempBasedHeatingLogic("standby", nodeWeights, d, this);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topNodeMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topNodeMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(13); // uses very top computation node
-	return new HPWH::TempBasedHeatingLogic("top node", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("top node", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomNodeMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomNodeMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(0); // uses very bottom computation node
-	return new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomTwelthMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomTwelthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return new HPWH::TempBasedHeatingLogic("bottom twelth", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("bottom twelth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topThirdMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topThirdMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10,11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top third", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("top third", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomSixthMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::bottomSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("bottom sixth", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("bottom sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::secondSixthMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::secondSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("second sixth", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("second sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::fifthSixthMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::fifthSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::topSixthMaxTemp(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::topSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("top sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::largeDraw(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::largeDraw(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("large draw", nodeWeights, d, true);
+	return new HPWH::TempBasedHeatingLogic("large draw", nodeWeights, d, this, true);
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::largerDraw(double d) const {
+HPWH::TempBasedHeatingLogic* HPWH::largerDraw(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4,5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return new HPWH::TempBasedHeatingLogic("larger draw", nodeWeights, d, true);
+	return new HPWH::TempBasedHeatingLogic("larger draw", nodeWeights, d, this, true);
 }
 
 int HPWH::getNumNodes() const {
@@ -2963,8 +2963,8 @@ bool HPWH::HeatSource::shouldHeat() const {
 			hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i]->description.c_str());
 		}
 
-		double average = turnOnLogicSet[i]->getTankValue(hpwh);
-		double comparison = turnOnLogicSet[i]->getComparisonValue(hpwh);
+		double average = turnOnLogicSet[i]->getTankValue();
+		double comparison = turnOnLogicSet[i]->getComparisonValue();
 
 		
 		if (turnOnLogicSet[i]->compare(average, comparison)) {
@@ -3035,8 +3035,8 @@ bool HPWH::HeatSource::shutsOff() const {
 			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
 		}
 
-		double average = shutOffLogicSet[i]->getTankValue(hpwh);
-		double comparison = shutOffLogicSet[i]->getComparisonValue(hpwh);
+		double average = shutOffLogicSet[i]->getTankValue();
+		double comparison = shutOffLogicSet[i]->getComparisonValue();
 
 		if (shutOffLogicSet[i]->compare(average, comparison)) {
 			shutOff = true;
@@ -3075,7 +3075,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const { //TODO
 			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
 		}
 		
-		fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal(hpwh);
+		fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
 		
 		frac = fracTemp < frac ? fracTemp : frac;
 	}
@@ -4452,7 +4452,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					for (size_t i = 0; i < nodeNums.size(); i++) {
 						nodeWeights.emplace_back(nodeNums[i], weights[i]);
 					}
-					HPWH::TempBasedHeatingLogic* logic = new HPWH::TempBasedHeatingLogic("custom", nodeWeights, tempDouble, absolute, compare);
+					HPWH::TempBasedHeatingLogic* logic =  new HPWH::TempBasedHeatingLogic("custom", nodeWeights, tempDouble, this, absolute, compare);
 					if (token == "onlogic") {
 						setOfSources[heatsource].addTurnOnLogic(logic);
 					}
@@ -4460,7 +4460,7 @@ int HPWH::HPWHinit_file(string configFile) {
 						setOfSources[heatsource].addShutOffLogic(logic);
 					}
 					else { // standby logic
-						setOfSources[heatsource].standbyLogic = new HPWH::TempBasedHeatingLogic("standby logic", nodeWeights, tempDouble, absolute, compare);
+						setOfSources[heatsource].standbyLogic =  new HPWH::TempBasedHeatingLogic("standby logic", nodeWeights, tempDouble, this, absolute, compare);
 					}
 				}
 				else if (token == "onlogic") {

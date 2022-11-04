@@ -272,20 +272,22 @@ class HPWH {
   };
   
   struct HeatingLogic {
-	  std::string description;  // for debug purposes
+	  std::string description;
 	  double decisionPoint;
+	  HPWH *parentHPWH;
 	  std::function<bool(double, double)> compare;
 
-	  HeatingLogic(std::string desc, double d,
+	  HeatingLogic(std::string desc, double d, HPWH *pHPWH,
 		  std::function<bool(double, double)> c = std::less<double>()) :
-		  description(desc), decisionPoint(d), compare(c)
+		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c)
 	  {};
 
+
 	  virtual const bool isValid() = 0;
-	  virtual const double getComparisonValue(HPWH* phpwh) = 0;
-	  virtual const double getTankValue(HPWH* phpwh) = 0;
+	  virtual const double getComparisonValue() = 0;
+	  virtual const double getTankValue() = 0;
 	  virtual const double nodeWeightAvgFract(int numberOfNodes, int condensity_size) = 0;
-	  virtual const double getFractToMeetComparisonExternal(HPWH* phpwh) = 0;
+	  virtual const double getFractToMeetComparisonExternal() = 0;
   };
 
   // switching to SOC, I need to know:
@@ -298,20 +300,20 @@ class HPWH {
 	  double hysteresisFraction;
 	  bool useCostantMains;
 	  double constantMains_C;
-	  SOCBasedHeatingLogic(std::string desc, double d,
-						   double tM_C = 43.333333, double hF = -0.05,
-						   std::function<bool(double, double)> c = std::less<double>()) :
-			HeatingLogic(desc, d, c), 
+	  SOCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
+			double tM_C = 43.333333, double hF = -0.05,
+			std::function<bool(double, double)> c = std::less<double>()) :
+			HeatingLogic(desc, d, pHPWH, c),
 			tempMinUseful_C(tM_C), hysteresisFraction(hF),
 			useCostantMains(false), constantMains_C(18.333)
 	  {};
 	  const bool isValid();
 	  const bool isValidSOCTarget(double target);
 
-	  const double getComparisonValue(HPWH* phpwh);
-	  const double getTankValue(HPWH* phpwh);
+	  const double getComparisonValue();
+	  const double getTankValue();
 	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
-	  const double getFractToMeetComparisonExternal(HPWH* phpwh);
+	  const double getFractToMeetComparisonExternal();
 
 	  int setTargetSOCFraction(double target);
 	  int setConstantMainsTemperature(double mains_C);
@@ -320,47 +322,48 @@ class HPWH {
   struct TempBasedHeatingLogic : HeatingLogic {
 	  std::vector<NodeWeight> nodeWeights;
 	  bool isAbsolute;
-	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n, 
-		  double d, bool a = false,
+	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n,
+		  double d, HPWH *phpwh, bool a = false,
 		  std::function<bool(double, double)> c = std::less<double>()) :
-		  HeatingLogic(desc, d, c), nodeWeights(n), isAbsolute(a)
+		  HeatingLogic(desc, d, phpwh, c),
+		  nodeWeights(n), isAbsolute(a)
 	  {};
+
 	  const bool isValid();
 	  const bool areNodeWeightsValid();
 
-	  const double getComparisonValue(HPWH* phpwh);
-	  const double getTankValue(HPWH* phpwh);
-	  
+	  const double getComparisonValue();
+	  const double getTankValue();
 	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
-	  const double getFractToMeetComparisonExternal(HPWH* phpwh);
+	  const double getFractToMeetComparisonExternal();
 
   };
 
-  TempBasedHeatingLogic* topThird(double d) const;
-  TempBasedHeatingLogic* topThird_absolute(double d) const;
-  TempBasedHeatingLogic* bottomThird(double d) const;
-  TempBasedHeatingLogic* bottomHalf(double d) const;
-  TempBasedHeatingLogic* bottomTwelth(double d) const;
-  TempBasedHeatingLogic* bottomSixth(double d) const;
-  TempBasedHeatingLogic* bottomSixth_absolute(double d) const;
-  TempBasedHeatingLogic* secondSixth(double d) const;
-  TempBasedHeatingLogic* thirdSixth(double d) const;
-  TempBasedHeatingLogic* fourthSixth(double d) const;
-  TempBasedHeatingLogic* fifthSixth(double d) const;
-  TempBasedHeatingLogic* topSixth(double d) const;
+  TempBasedHeatingLogic* topThird(double d);
+  TempBasedHeatingLogic* topThird_absolute(double d);
+  TempBasedHeatingLogic* bottomThird(double d);
+  TempBasedHeatingLogic* bottomHalf(double d) ;
+  TempBasedHeatingLogic* bottomTwelth(double d);
+  TempBasedHeatingLogic* bottomSixth(double d);
+  TempBasedHeatingLogic* bottomSixth_absolute(double d);
+  TempBasedHeatingLogic* secondSixth(double d);
+  TempBasedHeatingLogic* thirdSixth(double d);
+  TempBasedHeatingLogic* fourthSixth(double d);
+  TempBasedHeatingLogic* fifthSixth(double d);
+  TempBasedHeatingLogic* topSixth(double d);
   					   
-  TempBasedHeatingLogic* standby(double d) const;
-  TempBasedHeatingLogic* topNodeMaxTemp(double d) const;
-  TempBasedHeatingLogic* bottomNodeMaxTemp(double d) const;
-  TempBasedHeatingLogic* bottomTwelthMaxTemp(double d) const;
-  TempBasedHeatingLogic* topThirdMaxTemp(double d) const;
-  TempBasedHeatingLogic* bottomSixthMaxTemp(double d) const;
-  TempBasedHeatingLogic* secondSixthMaxTemp(double d) const;
-  TempBasedHeatingLogic* fifthSixthMaxTemp(double d) const;
-  TempBasedHeatingLogic* topSixthMaxTemp(double d) const;
+  TempBasedHeatingLogic* standby(double d);
+  TempBasedHeatingLogic* topNodeMaxTemp(double d);
+  TempBasedHeatingLogic* bottomNodeMaxTemp(double d);
+  TempBasedHeatingLogic* bottomTwelthMaxTemp(double d);
+  TempBasedHeatingLogic* topThirdMaxTemp(double d);
+  TempBasedHeatingLogic* bottomSixthMaxTemp(double d);
+  TempBasedHeatingLogic* secondSixthMaxTemp(double d);
+  TempBasedHeatingLogic* fifthSixthMaxTemp(double d);
+  TempBasedHeatingLogic* topSixthMaxTemp(double d);
   					   
-  TempBasedHeatingLogic* largeDraw(double d) const;
-  TempBasedHeatingLogic* largerDraw(double d) const;
+  TempBasedHeatingLogic* largeDraw(double d);
+  TempBasedHeatingLogic* largerDraw(double d);
 
 
   ///this is the value that the public functions will return in case of a simulation
