@@ -30,17 +30,17 @@ const bool HPWH::SOCBasedHeatingLogic::isValidSOCTarget(double target) {
 	return isValid;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getComparisonValue(HPWH* phpwh) {
+const double HPWH::SOCBasedHeatingLogic::getComparisonValue() {
 	return decisionPoint + hysteresisFraction;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getTankValue(HPWH* phpwh) {
+const double HPWH::SOCBasedHeatingLogic::getTankValue() {
 	double socFraction;
 	if (useCostantMains) {
-		socFraction = phpwh->getSoCFraction(constantMains_C, tempMinUseful_C);
+		socFraction = parentHPWH->getSoCFraction(constantMains_C, tempMinUseful_C);
 	}
 	else {
-		socFraction = phpwh->getSoCFraction(phpwh->member_inletT_C, tempMinUseful_C);
+		socFraction = parentHPWH->getSoCFraction(parentHPWH->member_inletT_C, tempMinUseful_C);
 	}
 	return socFraction;
 }
@@ -65,8 +65,8 @@ const double HPWH::SOCBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, i
 	return decisionPoint * numberOfNodes / condensity_size;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getFractToMeetComparisonExternal(HPWH* phpwh) {
-	phpwh->numNodes; //TODO
+const double HPWH::SOCBasedHeatingLogic::getFractToMeetComparisonExternal() {
+	parentHPWH->numNodes; //TODO
 	return 1.;
 }
 
@@ -90,18 +90,18 @@ const bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid() {
 	return true;
 }
 
-const double HPWH::TempBasedHeatingLogic::getComparisonValue(HPWH* phpwh) {
+const double HPWH::TempBasedHeatingLogic::getComparisonValue() {
 	double value = decisionPoint;
 	if (isAbsolute) {
 		return value;
 	}
 	else {
-		return phpwh->getSetpoint() - value;
+		return parentHPWH->getSetpoint() - value;
 	}
 }
 
-const double HPWH::TempBasedHeatingLogic::getTankValue(HPWH* phpwh) {
-	return phpwh->tankAvg_C(nodeWeights);
+const double HPWH::TempBasedHeatingLogic::getTankValue() {
+	return parentHPWH->tankAvg_C(nodeWeights);
 }
 
 const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
@@ -128,14 +128,14 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, 
 	return logicNode / (double)condensity_size;
 }
 
-const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal(HPWH* phpwh) {
+const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	double fracTemp, diff;
 	int calcNode = 0;
 	int firstNode = -1;
 	double sum = 0;
 	double totWeight = 0;
 
-	double comparison = getComparisonValue(phpwh);
+	double comparison = getComparisonValue();
 	comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
 
 	for (auto nodeWeight : nodeWeights) {
@@ -144,32 +144,32 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal(HPWH*
 		if (nodeWeight.nodeNum == 0) { // simple equation
 			calcNode = 0;
 			firstNode = 0;
-			sum = phpwh->tankTemps_C[firstNode] * nodeWeight.weight;
+			sum = parentHPWH->tankTemps_C[firstNode] * nodeWeight.weight;
 			totWeight = nodeWeight.weight;
 		}
 		// top calc node only
 		else if (nodeWeight.nodeNum == 13) {
-			calcNode = phpwh->getNumNodes() - 1;
-			firstNode = phpwh->getNumNodes() - 1;
-			sum = phpwh->tankTemps_C[firstNode] * nodeWeight.weight;
+			calcNode = parentHPWH->getNumNodes() - 1;
+			firstNode = parentHPWH->getNumNodes() - 1;
+			sum = parentHPWH->tankTemps_C[firstNode] * nodeWeight.weight;
 			totWeight = nodeWeight.weight;
 		}
 		else { // have to tally up the nodes
 			// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
-			firstNode = (nodeWeight.nodeNum - 1) * phpwh->nodeDensity;
-			for (int n = 0; n < phpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
-				calcNode = (nodeWeight.nodeNum - 1) * phpwh->nodeDensity + n;
-				sum += phpwh->tankTemps_C[calcNode] * nodeWeight.weight;
+			firstNode = (nodeWeight.nodeNum - 1) * parentHPWH->nodeDensity;
+			for (int n = 0; n < parentHPWH->nodeDensity; ++n) { // Loop on the nodes in the logics 
+				calcNode = (nodeWeight.nodeNum - 1) * parentHPWH->nodeDensity + n;
+				sum += parentHPWH->tankTemps_C[calcNode] * nodeWeight.weight;
 				totWeight += nodeWeight.weight;
 			}
 		}
 	}
 
-	if (calcNode == phpwh->numNodes - 1) { // top node calc
-		diff = phpwh->getSetpoint() - phpwh->tankTemps_C[firstNode];
+	if (calcNode == parentHPWH->numNodes - 1) { // top node calc
+		diff = parentHPWH->getSetpoint() - parentHPWH->tankTemps_C[firstNode];
 	}
 	else {
-		diff = phpwh->tankTemps_C[calcNode + 1] - phpwh->tankTemps_C[firstNode];
+		diff = parentHPWH->tankTemps_C[calcNode + 1] - parentHPWH->tankTemps_C[firstNode];
 	}
 	// if totWeight * comparison - sum < 0 then the shutoff condition is already true and you shouldn't
 	// be here. Will revaluate shut off condition at the end the do while loop of addHeatExternal, in the
