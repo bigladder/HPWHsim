@@ -629,7 +629,6 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[4 * numNodes / 12], tankTemps_C[5 * numNodes / 12],
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
-				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
 				getNthSimTcouple(1, 6), getNthSimTcouple(2, 6), getNthSimTcouple(3, 6),
 				getNthSimTcouple(4, 6), getNthSimTcouple(5, 6), getNthSimTcouple(6, 6));
 		}
@@ -2966,17 +2965,11 @@ bool HPWH::HeatSource::shouldHeat() const {
 		double average = turnOnLogicSet[i]->getTankValue();
 		double comparison = turnOnLogicSet[i]->getComparisonValue();
 
-		
 		if (turnOnLogicSet[i]->compare(average, comparison)) {
 			if (turnOnLogicSet[i]->description == "standby" && standbyLogic != NULL) {
-				double comparisonStandby;
-				double avgStandby = hpwh->tankAvg_C(standbyLogic->nodeWeights);
-				if (standbyLogic->isAbsolute) {
-					comparisonStandby = standbyLogic->decisionPoint;
-				}
-				else {
-					comparisonStandby = hpwh->setpoint_C - standbyLogic->decisionPoint;
-				}
+				double comparisonStandby = standbyLogic->getComparisonValue();
+				double avgStandby = standbyLogic->getTankValue();
+				
 				if (turnOnLogicSet[i]->compare(avgStandby, comparisonStandby)) {
 					shouldEngage = true;
 				}
@@ -2994,7 +2987,7 @@ bool HPWH::HeatSource::shouldHeat() const {
 			}
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, 
-					hpwh->setpoint_C, turnOnLogicSet[i]->decisionPoint, comparison);
+					hpwh->setpoint_C, turnOnLogicSet[i]->getDecisionPoint(), comparison);
 			}
 			break;
 		}
