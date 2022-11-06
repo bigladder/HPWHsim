@@ -272,9 +272,8 @@ class HPWH {
   };
   
   struct HeatingLogic {
+	public:
 	  std::string description;
-	  double decisionPoint;
-	  HPWH *parentHPWH;
 	  std::function<bool(double, double)> compare;
 
 	  HeatingLogic(std::string desc, double d, HPWH *pHPWH,
@@ -290,6 +289,11 @@ class HPWH {
 	  virtual const double getFractToMeetComparisonExternal() = 0;
 
 	  virtual int setDecisionPoint(double value) = 0;
+	  double getDecisionPoint() { return decisionPoint; }
+
+	protected:
+		  double decisionPoint;
+		  HPWH* parentHPWH;
   };
 
   // switching to SOC, I need to know:
@@ -298,10 +302,7 @@ class HPWH {
   // hysteresis fraction default = 0.05
   // using a constant cold water temperature or variable? will have tmains if not
   struct SOCBasedHeatingLogic : HeatingLogic {
-	  double tempMinUseful_C;
-	  double hysteresisFraction;
-	  bool useCostantMains;
-	  double constantMains_C;
+	public:
 	  SOCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
 			double tM_C = 43.333333, double hF = -0.05,
 			std::function<bool(double, double)> c = std::less<double>()) :
@@ -317,13 +318,17 @@ class HPWH {
 	  const double getFractToMeetComparisonExternal();
 	  
 	  int setDecisionPoint(double value);
-
 	  int setConstantMainsTemperature(double mains_C);
+
+	private:
+	  double tempMinUseful_C;
+	  double hysteresisFraction;
+	  bool useCostantMains;
+	  double constantMains_C;
   };
 
   struct TempBasedHeatingLogic : HeatingLogic {
-	  std::vector<NodeWeight> nodeWeights;
-	  bool isAbsolute;
+	public:
 	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n,
 		  double d, HPWH *phpwh, bool a = false,
 		  std::function<bool(double, double)> c = std::less<double>()) :
@@ -332,7 +337,6 @@ class HPWH {
 	  {};
 
 	  const bool isValid();
-	  const bool areNodeWeightsValid();
 
 	  const double getComparisonValue();
 	  const double getTankValue();
@@ -340,6 +344,13 @@ class HPWH {
 	  const double getFractToMeetComparisonExternal();
 
 	  int setDecisionPoint(double value);
+	 
+	private:
+		const bool areNodeWeightsValid();
+
+		bool isAbsolute;
+		std::vector<NodeWeight> nodeWeights;
+
   };
 
   TempBasedHeatingLogic* topThird(double d);
