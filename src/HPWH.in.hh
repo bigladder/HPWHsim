@@ -48,6 +48,7 @@ class HPWH {
   static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
   static const double MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
   static const double MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
+  static const double MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -277,8 +278,9 @@ class HPWH {
 	  std::function<bool(double, double)> compare;
 
 	  HeatingLogic(std::string desc, double d, HPWH *pHPWH,
-		  std::function<bool(double, double)> c = std::less<double>()) :
-		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c)
+		  std::function<bool(double, double)> c, bool isHTS) :
+		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c),
+		  isEnteringWaterHighTempShutoff(isHTS)
 	  {};
 
 	  virtual const bool isValid() = 0;
@@ -290,23 +292,25 @@ class HPWH {
 
 	  virtual int setDecisionPoint(double value) = 0;
 	  double getDecisionPoint() { return decisionPoint; }
+	  bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
 	protected:
 		  double decisionPoint;
 		  HPWH* parentHPWH;
+		  bool isEnteringWaterHighTempShutoff;
   };
 
   // switching to SOC, I need to know:
   // the desciionpoint aka target SOC
   // What is TminUseful
-  // hysteresis fraction default = 0.05
+  // hysteresis fraction default = 0.05, turn on vs turn off should have this define -/+
   // using a constant cold water temperature or variable? will have tmains if not
   struct SOCBasedHeatingLogic : HeatingLogic {
 	public:
 	  SOCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
 			double tM_C = 43.333333, double hF = -0.05,
 			std::function<bool(double, double)> c = std::less<double>()) :
-			HeatingLogic(desc, d, pHPWH, c),
+			HeatingLogic(desc, d, pHPWH, c, false),
 			tempMinUseful_C(tM_C), hysteresisFraction(hF),
 			useCostantMains(false), constantMains_C(18.333)
 	  {};
@@ -331,8 +335,9 @@ class HPWH {
 	public:
 	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n,
 		  double d, HPWH *phpwh, bool a = false,
-		  std::function<bool(double, double)> c = std::less<double>()) :
-		  HeatingLogic(desc, d, phpwh, c),
+		  std::function<bool(double, double)> c = std::less<double>(),
+		  bool isHTS = false) :
+		  HeatingLogic(desc, d, phpwh, c, isHTS),
 		  nodeWeights(n), isAbsolute(a)
 	  {};
 
@@ -344,13 +349,13 @@ class HPWH {
 	  const double getFractToMeetComparisonExternal();
 
 	  int setDecisionPoint(double value);
-	 
+	  int setDecisionPoint(double value, bool absolute);
+
 	private:
 		const bool areNodeWeightsValid();
 
 		bool isAbsolute;
 		std::vector<NodeWeight> nodeWeights;
-
   };
 
   TempBasedHeatingLogic* topThird(double d);
@@ -368,7 +373,7 @@ class HPWH {
   					   
   TempBasedHeatingLogic* standby(double d);
   TempBasedHeatingLogic* topNodeMaxTemp(double d);
-  TempBasedHeatingLogic* bottomNodeMaxTemp(double d);
+  TempBasedHeatingLogic* bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff = false);
   TempBasedHeatingLogic* bottomTwelthMaxTemp(double d);
   TempBasedHeatingLogic* topThirdMaxTemp(double d);
   TempBasedHeatingLogic* bottomSixthMaxTemp(double d);
@@ -524,6 +529,9 @@ class HPWH {
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
+
+  int setTankToTemperature(double temp_C);
+  /**< helper function for testing */
 
   int setAirFlowFreedom(double fanFraction);
   /**< This is a simple setter for the AirFlowFreedom */
@@ -752,6 +760,10 @@ class HPWH {
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
+  bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
+  int setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS units = UNITS_C);
+  /**< functions to check for and set specific high temperature shut off logics.
+  HPWHs can only have one of these, which is at least typical */
 
  private:
   class HeatSource;

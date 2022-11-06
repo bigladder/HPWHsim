@@ -64,6 +64,7 @@ const float HPWH::ASPECTRATIO = 4.75f;
 const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
 const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
@@ -1017,8 +1018,12 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 }
 
 int HPWH::resetTankToSetpoint() {
+	return setTankToTemperature(setpoint_C);
+}
+
+int HPWH::setTankToTemperature(double temp_C) {
 	for (int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = setpoint_C;
+		tankTemps_C[i] = temp_C;
 	}
 	return 0;
 }
@@ -1384,6 +1389,75 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
 	return 0;
 }
 
+bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex) {
+	bool retVal = false;
+	if (heatSourceIndex >= numHeatSources || heatSourceIndex < 0) {
+		return retVal;
+	}
+	if (setOfSources[heatSourceIndex].shutOffLogicSet.size() == 0) {
+		return retVal;
+	}
+
+	for (HeatingLogic* shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			retVal = true;
+			break;
+		}
+	}
+	return retVal;
+}
+
+int HPWH::setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS unit /*=UNITS_C*/) {
+	if (!hasEnteringWaterHighTempShutOff(heatSourceIndex)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to acess a heating logic that does not exist.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double highTemp_C;
+	if (unit == UNITS_C) {
+		highTemp_C = highTemp;
+	}
+	else if (unit == UNITS_F) {
+		highTemp_C = F_TO_C(highTemp);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	bool highTempIsNotValid = false;
+	if (tempIsAbsolute) {
+		// check differnce with setpoint
+		if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	else {
+		if (highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	if (highTempIsNotValid) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("High temperature shut off is too close to the setpoint, excpected a minimum difference of %.2lf.\n",
+				MINSINGLEPASSLIFT);
+		}
+		return HPWH_ABORT;
+	}
+
+	for (HeatingLogic* shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			dynamic_cast<TempBasedHeatingLogic*>(shutOffLogic)->setDecisionPoint(highTemp_C, tempIsAbsolute);
+			break;
+		}
+	}
+	return 0;
+}
+
 HPWH::TempBasedHeatingLogic* HPWH::topThird(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (int i : { 9, 10, 11, 12 }) {
@@ -1491,10 +1565,10 @@ HPWH::TempBasedHeatingLogic* HPWH::topNodeMaxTemp(double d) {
 	return new HPWH::TempBasedHeatingLogic("top node", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::TempBasedHeatingLogic* HPWH::bottomNodeMaxTemp(double d) {
+HPWH::TempBasedHeatingLogic* HPWH::bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff /*=false*/) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(0); // uses very bottom computation node
-	return new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights, d, this, true, std::greater<double>());
+	return new HPWH::TempBasedHeatingLogic("bottom node", nodeWeights, d, this, true, std::greater<double>(), isEnteringWaterHighTempShutoff);
 }
 
 HPWH::TempBasedHeatingLogic* HPWH::bottomTwelthMaxTemp(double d) {

@@ -94,6 +94,10 @@ int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) {
 	decisionPoint = value;
 	return 0;
 }
+int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute) {
+	isAbsolute = absolute;
+	return setDecisionPoint(value);
+}
 
 const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
 	double logicNode;
