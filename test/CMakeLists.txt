@@ -48,17 +48,17 @@ add_test(NAME "testStateOfChargeFcts" COMMAND  $<TARGET_FILE:testStateOfChargeFc
 
 # Run model tests and unit tests on models
 set(testNames
- #test30
- #test50
- #test70
- #test95
- #testLockout
- #testSandenCombi
- #testDr_LO
- #testDr_TOO
- #testDr_TOT
- #testDr_TOO2
- #testDR_TOTLOR
+  test30
+  test50
+  test70
+  test95
+  testLockout
+  testSandenCombi
+  testDr_LO
+  testDr_TOO
+  testDr_TOT
+  testDr_TOO2
+  testDR_TOTLOR
 )
 set(modelNames
 #  StorageTank  
