@@ -282,12 +282,14 @@ class HPWH {
 		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c)
 	  {};
 
-
 	  virtual const bool isValid() = 0;
+
 	  virtual const double getComparisonValue() = 0;
 	  virtual const double getTankValue() = 0;
 	  virtual const double nodeWeightAvgFract(int numberOfNodes, int condensity_size) = 0;
 	  virtual const double getFractToMeetComparisonExternal() = 0;
+
+	  virtual int setDecisionPoint(double value) = 0;
   };
 
   // switching to SOC, I need to know:
@@ -308,14 +310,14 @@ class HPWH {
 			useCostantMains(false), constantMains_C(18.333)
 	  {};
 	  const bool isValid();
-	  const bool isValidSOCTarget(double target);
 
 	  const double getComparisonValue();
 	  const double getTankValue();
 	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
 	  const double getFractToMeetComparisonExternal();
+	  
+	  int setDecisionPoint(double value);
 
-	  int setTargetSOCFraction(double target);
 	  int setConstantMainsTemperature(double mains_C);
   };
 
@@ -337,6 +339,7 @@ class HPWH {
 	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
 	  const double getFractToMeetComparisonExternal();
 
+	  int setDecisionPoint(double value);
   };
 
   TempBasedHeatingLogic* topThird(double d);

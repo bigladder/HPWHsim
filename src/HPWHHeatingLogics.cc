@@ -16,15 +16,7 @@ File of the presets heating logics available HPWHsim
 /* State of Charge Based Logic*/
 const bool HPWH::SOCBasedHeatingLogic::isValid() {
 	bool isValid = true;
-	if (!isValidSOCTarget(decisionPoint)) {
-		isValid = false;
-	}
-	return isValid;
-}
-
-const bool HPWH::SOCBasedHeatingLogic::isValidSOCTarget(double target) {
-	bool isValid = true;
-	if (target < 0) {
+	if (decisionPoint < 0) {
 		isValid = false;
 	}
 	return isValid;
@@ -45,14 +37,9 @@ const double HPWH::SOCBasedHeatingLogic::getTankValue() {
 	return socFraction;
 }
 
-int HPWH::SOCBasedHeatingLogic::setTargetSOCFraction(double target) {
-	if (isValidSOCTarget(target)) {
-		decisionPoint = target;
-		return 0;
-	}
-	else {
-		return HPWH::HPWH_ABORT;
-	}
+int HPWH::SOCBasedHeatingLogic::setDecisionPoint(double value) {
+	decisionPoint = value;
+	return 0;
 }
 
 int HPWH::SOCBasedHeatingLogic::setConstantMainsTemperature(double mains_C) {
@@ -71,7 +58,6 @@ const double HPWH::SOCBasedHeatingLogic::getFractToMeetComparisonExternal() {
 }
 
 
-
 /* Temperature Based Heating Logic*/
 const bool HPWH::TempBasedHeatingLogic::isValid() {
 	bool isValid = true;
@@ -82,8 +68,8 @@ const bool HPWH::TempBasedHeatingLogic::isValid() {
 }
 
 const bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid() {
-	for (auto nodeWeights : nodeWeights) {
-		if (nodeWeights.nodeNum > 13 || nodeWeights.nodeNum < 0) {
+	for (auto nodeWeight : nodeWeights) {
+		if (nodeWeight.nodeNum > 13 || nodeWeight.nodeNum < 0) {
 			return false;
 		}
 	}
@@ -102,6 +88,11 @@ const double HPWH::TempBasedHeatingLogic::getComparisonValue() {
 
 const double HPWH::TempBasedHeatingLogic::getTankValue() {
 	return parentHPWH->tankAvg_C(nodeWeights);
+}
+
+int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) {
+	decisionPoint = value;
+	return 0;
 }
 
 const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
