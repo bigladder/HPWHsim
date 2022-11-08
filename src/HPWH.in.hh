@@ -354,31 +354,31 @@ class HPWH {
 
   };
 
-  std::shared_ptr<HeatingLogic> topThird(double d);
-  std::shared_ptr<HeatingLogic> topThird_absolute(double d);
-  std::shared_ptr<HeatingLogic> bottomThird(double d);
-  std::shared_ptr<HeatingLogic> bottomHalf(double d) ;
-  std::shared_ptr<HeatingLogic> bottomTwelth(double d);
-  std::shared_ptr<HeatingLogic> bottomSixth(double d);
-  std::shared_ptr<HeatingLogic> bottomSixth_absolute(double d);
-  std::shared_ptr<HeatingLogic> secondSixth(double d);
-  std::shared_ptr<HeatingLogic> thirdSixth(double d);
-  std::shared_ptr<HeatingLogic> fourthSixth(double d);
-  std::shared_ptr<HeatingLogic> fifthSixth(double d);
-  std::shared_ptr<HeatingLogic> topSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double d) ;
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixth(double d);
 
-  std::shared_ptr<HeatingLogic> standby(double d);
-  std::shared_ptr<HeatingLogic> topNodeMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> bottomNodeMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> bottomTwelthMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> topThirdMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> bottomSixthMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> secondSixthMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> fifthSixthMaxTemp(double d);
-  std::shared_ptr<HeatingLogic> topSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> standby(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double d);
 
-  std::shared_ptr<HeatingLogic> largeDraw(double d);
-  std::shared_ptr<HeatingLogic> largerDraw(double d);
+  std::shared_ptr<TempBasedHeatingLogic> largeDraw(double d);
+  std::shared_ptr<TempBasedHeatingLogic> largerDraw(double d);
 
 
   ///this is the value that the public functions will return in case of a simulation
