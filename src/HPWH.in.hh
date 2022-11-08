@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <functional>
+#include <memory>
 
 #include <cstdio>
 #include <cstdlib>   //for exit
@@ -358,32 +359,31 @@ class HPWH {
 		std::vector<NodeWeight> nodeWeights;
   };
 
-  TempBasedHeatingLogic* topThird(double d);
-  TempBasedHeatingLogic* topThird_absolute(double d);
-  TempBasedHeatingLogic* bottomThird(double d);
-  TempBasedHeatingLogic* bottomHalf(double d) ;
-  TempBasedHeatingLogic* bottomTwelth(double d);
-  TempBasedHeatingLogic* bottomSixth(double d);
-  TempBasedHeatingLogic* bottomSixth_absolute(double d);
-  TempBasedHeatingLogic* secondSixth(double d);
-  TempBasedHeatingLogic* thirdSixth(double d);
-  TempBasedHeatingLogic* fourthSixth(double d);
-  TempBasedHeatingLogic* fifthSixth(double d);
-  TempBasedHeatingLogic* topSixth(double d);
-  					   
-  TempBasedHeatingLogic* standby(double d);
-  TempBasedHeatingLogic* topNodeMaxTemp(double d);
-  TempBasedHeatingLogic* bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff = false);
-  TempBasedHeatingLogic* bottomTwelthMaxTemp(double d);
-  TempBasedHeatingLogic* topThirdMaxTemp(double d);
-  TempBasedHeatingLogic* bottomSixthMaxTemp(double d);
-  TempBasedHeatingLogic* secondSixthMaxTemp(double d);
-  TempBasedHeatingLogic* fifthSixthMaxTemp(double d);
-  TempBasedHeatingLogic* topSixthMaxTemp(double d);
-  					   
-  TempBasedHeatingLogic* largeDraw(double d);
-  TempBasedHeatingLogic* largerDraw(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double d) ;
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixth(double d);
 
+  std::shared_ptr<TempBasedHeatingLogic> standby(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff = false);
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double d);
+
+  std::shared_ptr<TempBasedHeatingLogic> largeDraw(double d);
+  std::shared_ptr<TempBasedHeatingLogic> largerDraw(double d);
 
   ///this is the value that the public functions will return in case of a simulation
   ///destroying error
@@ -1122,11 +1122,11 @@ class HPWH::HeatSource {
   bool useBtwxtGrid;
 
 	/** a vector to hold the set of logical choices for turning this element on */
-	std::vector<HeatingLogic*> turnOnLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
-	std::vector<HeatingLogic*> shutOffLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> shutOffLogicSet;
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
-	TempBasedHeatingLogic *standbyLogic;
+	std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
 	/** some compressors have a resistance element for defrost*/
 	struct resistanceElementDefrost
@@ -1151,8 +1151,8 @@ class HPWH::HeatSource {
 	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
-  void addTurnOnLogic(HeatingLogic* logic);
-  void addShutOffLogic(HeatingLogic* logic);
+  void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
+  void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
   void clearAllTurnOnLogic();
   void clearAllShutOffLogic();
