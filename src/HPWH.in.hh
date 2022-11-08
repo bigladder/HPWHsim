@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <functional>
+#include <memory>
 
 #include <cstdio>
 #include <cstdlib>   //for exit
@@ -353,31 +354,31 @@ class HPWH {
 
   };
 
-  TempBasedHeatingLogic* topThird(double d);
-  TempBasedHeatingLogic* topThird_absolute(double d);
-  TempBasedHeatingLogic* bottomThird(double d);
-  TempBasedHeatingLogic* bottomHalf(double d) ;
-  TempBasedHeatingLogic* bottomTwelth(double d);
-  TempBasedHeatingLogic* bottomSixth(double d);
-  TempBasedHeatingLogic* bottomSixth_absolute(double d);
-  TempBasedHeatingLogic* secondSixth(double d);
-  TempBasedHeatingLogic* thirdSixth(double d);
-  TempBasedHeatingLogic* fourthSixth(double d);
-  TempBasedHeatingLogic* fifthSixth(double d);
-  TempBasedHeatingLogic* topSixth(double d);
-  					   
-  TempBasedHeatingLogic* standby(double d);
-  TempBasedHeatingLogic* topNodeMaxTemp(double d);
-  TempBasedHeatingLogic* bottomNodeMaxTemp(double d);
-  TempBasedHeatingLogic* bottomTwelthMaxTemp(double d);
-  TempBasedHeatingLogic* topThirdMaxTemp(double d);
-  TempBasedHeatingLogic* bottomSixthMaxTemp(double d);
-  TempBasedHeatingLogic* secondSixthMaxTemp(double d);
-  TempBasedHeatingLogic* fifthSixthMaxTemp(double d);
-  TempBasedHeatingLogic* topSixthMaxTemp(double d);
-  					   
-  TempBasedHeatingLogic* largeDraw(double d);
-  TempBasedHeatingLogic* largerDraw(double d);
+  std::shared_ptr<HeatingLogic> topThird(double d);
+  std::shared_ptr<HeatingLogic> topThird_absolute(double d);
+  std::shared_ptr<HeatingLogic> bottomThird(double d);
+  std::shared_ptr<HeatingLogic> bottomHalf(double d) ;
+  std::shared_ptr<HeatingLogic> bottomTwelth(double d);
+  std::shared_ptr<HeatingLogic> bottomSixth(double d);
+  std::shared_ptr<HeatingLogic> bottomSixth_absolute(double d);
+  std::shared_ptr<HeatingLogic> secondSixth(double d);
+  std::shared_ptr<HeatingLogic> thirdSixth(double d);
+  std::shared_ptr<HeatingLogic> fourthSixth(double d);
+  std::shared_ptr<HeatingLogic> fifthSixth(double d);
+  std::shared_ptr<HeatingLogic> topSixth(double d);
+
+  std::shared_ptr<HeatingLogic> standby(double d);
+  std::shared_ptr<HeatingLogic> topNodeMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> bottomNodeMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> bottomTwelthMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> topThirdMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> bottomSixthMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> secondSixthMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> fifthSixthMaxTemp(double d);
+  std::shared_ptr<HeatingLogic> topSixthMaxTemp(double d);
+
+  std::shared_ptr<HeatingLogic> largeDraw(double d);
+  std::shared_ptr<HeatingLogic> largerDraw(double d);
 
 
   ///this is the value that the public functions will return in case of a simulation
@@ -1110,11 +1111,11 @@ class HPWH::HeatSource {
   bool useBtwxtGrid;
 
 	/** a vector to hold the set of logical choices for turning this element on */
-	std::vector<HeatingLogic*> turnOnLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
-	std::vector<HeatingLogic*> shutOffLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> shutOffLogicSet;
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
-	TempBasedHeatingLogic *standbyLogic;
+	std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
 	/** some compressors have a resistance element for defrost*/
 	struct resistanceElementDefrost
@@ -1139,8 +1140,8 @@ class HPWH::HeatSource {
 	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
-  void addTurnOnLogic(HeatingLogic* logic);
-  void addShutOffLogic(HeatingLogic* logic);
+  void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
+  void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
   void clearAllTurnOnLogic();
   void clearAllShutOffLogic();
