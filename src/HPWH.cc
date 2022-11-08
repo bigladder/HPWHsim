@@ -1398,7 +1398,7 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex) {
 		return retVal;
 	}
 
-	for (HeatingLogic* shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
 		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
 			retVal = true;
 			break;
@@ -1449,9 +1449,9 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, 
 		return HPWH_ABORT;
 	}
 
-	for (HeatingLogic* shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
 		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
-			dynamic_cast<TempBasedHeatingLogic*>(shutOffLogic)->setDecisionPoint(highTemp_C, tempIsAbsolute);
+			std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)->setDecisionPoint(highTemp_C, tempIsAbsolute);
 			break;
 		}
 	}
