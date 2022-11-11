@@ -291,7 +291,7 @@ class HPWH {
 	  /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
 	  virtual const double getTankValue() = 0;
 	  /**< function to calculate where the average node for a logic set is. */
-	  virtual const double nodeWeightAvgFract(int numberOfNodes, int condensity_size) = 0;
+	  virtual const double nodeWeightAvgFract() = 0;
 	  /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
 	  virtual const double getFractToMeetComparisonExternal() = 0;
 
@@ -318,7 +318,7 @@ class HPWH {
 
 	  const double getComparisonValue();
 	  const double getTankValue();
-	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
+	  const double nodeWeightAvgFract();
 	  const double getFractToMeetComparisonExternal();
 	  
 	  int setDecisionPoint(double value);
@@ -345,7 +345,7 @@ class HPWH {
 
 	  const double getComparisonValue();
 	  const double getTankValue();
-	  const double nodeWeightAvgFract(int numberOfNodes, int condensity_size);
+	  const double nodeWeightAvgFract();
 	  const double getFractToMeetComparisonExternal();
 
 	  int setDecisionPoint(double value);
