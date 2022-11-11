@@ -2230,7 +2230,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const {
 		if (hpwhVerbosity >= VRB_emetic) {
 			msg("\tturnon logic: %s ", onLogic->description.c_str());
 		}
-		tempA = onLogic->nodeWeightAvgFract(numNodes, CONDENSITY_SIZE); // if standby logic will return 1
+		tempA = onLogic->nodeWeightAvgFract(); // if standby logic will return 1
 		aFract = tempA < aFract ? tempA : aFract;
 	}
 	aquaFract = aFract;
@@ -2248,7 +2248,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const {
 				tempUse = 1.; // These logics are just for checking if there's a big draw to switch to RE
 			}
 			else {
-				tempUse = 1. - offLogic->nodeWeightAvgFract(numNodes, CONDENSITY_SIZE);
+				tempUse = 1. - offLogic->nodeWeightAvgFract();
 			}
 			useFract = tempUse < useFract ? tempUse : useFract; // Will return the smallest case of the useable fraction for multiple off logics
 		}
