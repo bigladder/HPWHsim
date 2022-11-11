@@ -2,19 +2,8 @@
 File of the presets heating logics available HPWHsim
 */
 
-
-/*TODO test SOC
-* 
-* getComparisonValue -> make sure hystersis value works. 
-*  test error on init with negative decision point.
-* Test nodeWeightAvgFract is correct!
-* Test getFractToMeetComparisonExternal when written. 
-*
-* Will use integration tests largely on a hpwh with soc. 
-*/
-
 /* State of Charge Based Logic*/
-const bool HPWH::SOCBasedHeatingLogic::isValid() {
+const bool HPWH::SoCBasedHeatingLogic::isValid() {
 	bool isValid = true;
 	if (decisionPoint < 0) {
 		isValid = false;
@@ -22,11 +11,11 @@ const bool HPWH::SOCBasedHeatingLogic::isValid() {
 	return isValid;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getComparisonValue() {
+const double HPWH::SoCBasedHeatingLogic::getComparisonValue() {
 	return decisionPoint + hysteresisFraction;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getTankValue() {
+const double HPWH::SoCBasedHeatingLogic::getTankValue() {
 	double socFraction;
 	if (useCostantMains) {
 		socFraction = parentHPWH->getSoCFraction(constantMains_C, tempMinUseful_C);
@@ -37,22 +26,22 @@ const double HPWH::SOCBasedHeatingLogic::getTankValue() {
 	return socFraction;
 }
 
-int HPWH::SOCBasedHeatingLogic::setDecisionPoint(double value) {
+int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value) {
 	decisionPoint = value;
 	return 0;
 }
 
-int HPWH::SOCBasedHeatingLogic::setConstantMainsTemperature(double mains_C) {
+int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C) {
 	constantMains_C = mains_C;
 	useCostantMains = true;
 	return 0;
 }
 
-const double HPWH::SOCBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
+const double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
 	return decisionPoint * numberOfNodes / condensity_size;
 }
 
-const double HPWH::SOCBasedHeatingLogic::getFractToMeetComparisonExternal() {
+const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	parentHPWH->numNodes; //TODO
 	return 1.;
 }

@@ -90,7 +90,7 @@ void HPWH::setAllDefaults() {
 	doInversionMixing = true; doConduction = true;
 	inletHeight = 0; inlet2Height = 0; fittingsUA_kJperHrC = 0.;
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
-	usesSOCLogic = false;
+	usesSoCLogic = false;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -148,7 +148,7 @@ HPWH::HPWH(const HPWH &hpwh) {
 	prevDRstatus = hpwh.prevDRstatus;
 	timerLimitTOT = hpwh.timerLimitTOT;
 
-	usesSOCLogic = hpwh.usesSOCLogic;
+	usesSoCLogic = hpwh.usesSoCLogic;
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
@@ -228,7 +228,7 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	prevDRstatus = hpwh.prevDRstatus;
 	timerLimitTOT = hpwh.timerLimitTOT;
 
-	usesSOCLogic = hpwh.usesSOCLogic;
+	usesSoCLogic = hpwh.usesSoCLogic;
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
@@ -1384,6 +1384,168 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
 	return 0;
 }
 
+bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex) {
+	bool retVal = false;
+	if (heatSourceIndex >= numHeatSources || heatSourceIndex < 0) {
+		return retVal;
+	}
+	if (setOfSources[heatSourceIndex].shutOffLogicSet.size() == 0) {
+		return retVal;
+	}
+
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			retVal = true;
+			break;
+		}
+	}
+	return retVal;
+}
+
+int HPWH::setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS unit /*=UNITS_C*/) {
+	if (!hasEnteringWaterHighTempShutOff(heatSourceIndex)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to acess a heating logic that does not exist.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double highTemp_C;
+	if (unit == UNITS_C) {
+		highTemp_C = highTemp;
+	}
+	else if (unit == UNITS_F) {
+		highTemp_C = F_TO_C(highTemp);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	bool highTempIsNotValid = false;
+	if (tempIsAbsolute) {
+		// check differnce with setpoint
+		if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	else {
+		if (highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	if (highTempIsNotValid) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("High temperature shut off is too close to the setpoint, excpected a minimum difference of %.2lf.\n",
+				MINSINGLEPASSLIFT);
+		}
+		return HPWH_ABORT;
+	}
+
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)->setDecisionPoint(highTemp_C, tempIsAbsolute);
+			break;
+		}
+	}
+	return 0;
+}
+
+int HPWH::setTargetSoCFraction(double target) {
+	if (!isSoCControlled()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set target state of charge if HPWH is not using state of charge controls.");
+		}
+		return HPWH_ABORT;
+	}
+	if (target < 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set a negative target state of charge.");
+		}
+		return HPWH_ABORT;
+	}
+
+	for (int i = 0; i < numHeatSources; i++) {
+		for (auto logic : setOfSources[i].shutOffLogicSet) {
+			if (!logic->getIsEnteringWaterHighTempShutoff()) {
+				logic->setDecisionPoint(target);
+			}
+		}
+		for (auto logic : setOfSources[i].turnOnLogicSet) {
+			logic->setDecisionPoint(target);
+		}
+	}
+	return 0;
+}
+
+bool HPWH::isSoCControlled() const {
+	return usesSoCLogic;
+}
+
+int HPWH::switchToSoCControls(double targetSoC, double hysteresisFraction /*= 0.05*/, double tempMinUseful /*= 43.333*/, bool constantMainsT /*= false*/,
+	double mainsT /*= 18.333*/, UNITS tempUnit /*= UNITS_C*/) {
+	if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set up state of charge controls for integrated or wrapped HPWHs.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double tempMinUseful_C, mainsT_C;
+	if (tempUnit == UNITS_C) {
+		tempMinUseful_C = tempMinUseful;
+		mainsT_C = mainsT;
+	}
+	else if (tempUnit == UNITS_F) {
+		tempMinUseful_C = F_TO_C(tempMinUseful);
+		mainsT_C = F_TO_C(mainsT);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if (mainsT_C >= tempMinUseful_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The mains temperature can't be equal to or greater than the minimum useful temperature.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+
+
+	for (int i = 0; i < numHeatSources; i++) {
+		setOfSources[i].clearAllTurnOnLogic();
+
+		setOfSources[i].shutOffLogicSet.erase(std::remove_if(setOfSources[i].shutOffLogicSet.begin(),
+			setOfSources[i].shutOffLogicSet.end(),
+			[&](const auto logic)-> bool
+			{ return !logic->getIsEnteringWaterHighTempShutoff(); }),
+			setOfSources[i].shutOffLogicSet.end());
+
+		setOfSources[i].shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off", targetSoC, hysteresisFraction, tempMinUseful_C, constantMainsT, mainsT_C));
+		setOfSources[i].turnOnLogicSet.push_back(turnOnSoC("SoC Turn On", targetSoC, hysteresisFraction, tempMinUseful_C, constantMainsT, mainsT_C));
+	}
+
+	usesSoCLogic = true;
+
+	return 0;
+}
+
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	bool constantMainsT, double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, -hystFract, tempMinUseful_C, constantMainsT, mainsT_C);
+}
+
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	bool constantMainsT, double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, hystFract, tempMinUseful_C, constantMainsT, mainsT_C, std::greater<double>());
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (int i : { 9, 10, 11, 12 }) {
@@ -2049,7 +2211,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const {
 		}
 		return HPWH_ABORT;
 	}
-	else if (usesSOCLogic) {
+	else if (usesSoCLogic) {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Current model uses SOC control logic and does not have a definition for sizing fractions. \n");
 		}
@@ -3059,7 +3221,7 @@ bool HPWH::HeatSource::maxedOut() const {
 	return maxed;
 }
 
-double HPWH::HeatSource::fractToMeetComparisonExternal() const { //TODO
+double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 	double fracTemp;
 	double frac = 1.;
 
@@ -4009,21 +4171,21 @@ int HPWH::checkInputs() {
 			returnVal = HPWH_ABORT;
 		}
 
-		// Check to make sure the node weights are between 0 and 13.
+		// Validate on logics
 		for (auto logic : setOfSources[i].turnOnLogicSet) {
 			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
 				if (hpwhVerbosity >= VRB_reluctant) {
-					msg(""); //TODO
+					msg("On logic at index %i is invalid", i);
 				}
 			}
 		}
-		// Check to make sure the node weights are between 0 and 13.
+		// Validate off logics
 		for (auto logic : setOfSources[i].shutOffLogicSet) {
 			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
 				if (hpwhVerbosity >= VRB_reluctant) {
-					msg(""); //TODO
+					msg("Off logic at index %i is invalid", i);
 				}
 			}
 		}

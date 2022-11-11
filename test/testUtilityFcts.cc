@@ -35,6 +35,10 @@ bool relcmpd(double A, double B, double epsilon = 0.00001) {
 	return fabs(A - B) < (epsilon *(fabs(A) < fabs(B) ? fabs(B) : fabs(A)));
 }
 
+bool compressorIsRunning(HPWH& hpwh) {
+	return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
+}
+
 HPWH::MODELS mapStringToPreset(string modelName) {
 
 	HPWH::MODELS hpwhModel;
