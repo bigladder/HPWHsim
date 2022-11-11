@@ -282,11 +282,15 @@ class HPWH {
 		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c)
 	  {};
 
+	  /**< checks that the input is all valid. */
 	  virtual const bool isValid() = 0;
-
+	  /**< gets the value for comparing the tank value to, i.e. the target SoC */
 	  virtual const double getComparisonValue() = 0;
+	  /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
 	  virtual const double getTankValue() = 0;
+	  /**< function to calculate where the average node for a logic set is. */
 	  virtual const double nodeWeightAvgFract(int numberOfNodes, int condensity_size) = 0;
+	  /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
 	  virtual const double getFractToMeetComparisonExternal() = 0;
 
 	  virtual int setDecisionPoint(double value) = 0;
@@ -297,19 +301,14 @@ class HPWH {
 		  HPWH* parentHPWH;
   };
 
-  // switching to SOC, I need to know:
-  // the desciionpoint aka target SOC
-  // What is TminUseful
-  // hysteresis fraction default = 0.05
-  // using a constant cold water temperature or variable? will have tmains if not
-  struct SOCBasedHeatingLogic : HeatingLogic {
+  struct SoCBasedHeatingLogic : HeatingLogic {
 	public:
-	  SOCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
-			double tM_C = 43.333333, double hF = -0.05,
+	  SoCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
+			double hF = -0.05, double tM_C = 43.333, bool constMains = false, double mains_C = 18.333,
 			std::function<bool(double, double)> c = std::less<double>()) :
-			HeatingLogic(desc, d, pHPWH, c),
-			tempMinUseful_C(tM_C), hysteresisFraction(hF),
-			useCostantMains(false), constantMains_C(18.333)
+			HeatingLogic(desc, d, pHPWH, c, false),
+		    hysteresisFraction(hF), tempMinUseful_C(tM_C),
+			useCostantMains(constMains), constantMains_C(mains_C)
 	  {};
 	  const bool isValid();
 
@@ -353,6 +352,11 @@ class HPWH {
 		std::vector<NodeWeight> nodeWeights;
 
   };
+
+  std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	  bool constMains, double mains_C);
+  std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	  bool constMains, double mains_C);
 
   std::shared_ptr<TempBasedHeatingLogic> topThird(double d);
   std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
@@ -749,11 +753,15 @@ class HPWH {
   void resetTopOffTimer();
   /**< resets variables for timer associated with the DR_TOT call  */
 
-
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
 
+  int setTargetSoCFraction(double target);
+  int switchToSoCControls(double targetSoC, double hysteresisFraction = 0.05, double tempMinUseful = 43.333, bool constantMainsT = false,
+	  double mainsT = 18.333, UNITS tempUnit = UNITS_C);
+  bool isSoCControlled() const;
+  
  private:
   class HeatSource;
 
@@ -774,8 +782,6 @@ class HPWH {
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
-//  double nodeWeightAvgFract(TempBasedHeatingLogic* logic) const; //Todo
-//  /**< function to calculate where the average node for a logic set is. */
 
   void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
   /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed below node. */
@@ -895,7 +901,7 @@ class HPWH {
 	double timerTOT;
 	/**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
 
-	bool usesSOCLogic;
+	bool usesSoCLogic;
 
   // Some outputs
 	double outletTemp_C;
@@ -1154,9 +1160,9 @@ class HPWH::HeatSource {
   /**< function to change the resistance wattage */
 
   bool isACompressor() const;
-  /**< returns if the heat sources is a compressor or not */
+  /**< returns if the heat source uses a compressor or not */
   bool isAResistance() const;
-  /**< returns if the heat sources is a compressor or not */
+  /**< returns if the heat source uses a resistance element or not */
   bool isExternalMultipass() const;
 
   double minT;

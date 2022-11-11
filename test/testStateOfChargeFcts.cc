@@ -81,3 +81,11 @@ void testChargeBelowSetpoint() {
 	chargeFraction = hpwh.getSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
 	ASSERTTRUE(cmpd(chargeFraction, 0.875));
 }
+
+
+/*TODO test SOC
+*
+* Test getFractToMeetComparisonExternal when written.
+*
+* Will use integration tests largely on a hpwh with soc.
+*/
