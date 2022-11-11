@@ -49,6 +49,7 @@ class HPWH {
   static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
   static const double MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
   static const double MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
+  static const double MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -278,8 +279,9 @@ class HPWH {
 	  std::function<bool(double, double)> compare;
 
 	  HeatingLogic(std::string desc, double d, HPWH *pHPWH,
-		  std::function<bool(double, double)> c = std::less<double>()) :
-		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c)
+		  std::function<bool(double, double)> c, bool isHTS) :
+		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c),
+		  isEnteringWaterHighTempShutoff(isHTS)
 	  {};
 
 	  /**< checks that the input is all valid. */
@@ -295,10 +297,12 @@ class HPWH {
 
 	  virtual int setDecisionPoint(double value) = 0;
 	  double getDecisionPoint() { return decisionPoint; }
+	  bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
 	protected:
 		  double decisionPoint;
 		  HPWH* parentHPWH;
+		  bool isEnteringWaterHighTempShutoff;
   };
 
   struct SoCBasedHeatingLogic : HeatingLogic {
@@ -331,8 +335,9 @@ class HPWH {
 	public:
 	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n,
 		  double d, HPWH *phpwh, bool a = false,
-		  std::function<bool(double, double)> c = std::less<double>()) :
-		  HeatingLogic(desc, d, phpwh, c),
+		  std::function<bool(double, double)> c = std::less<double>(),
+		  bool isHTS = false) :
+		  HeatingLogic(desc, d, phpwh, c, isHTS),
 		  nodeWeights(n), isAbsolute(a)
 	  {};
 
@@ -344,13 +349,13 @@ class HPWH {
 	  const double getFractToMeetComparisonExternal();
 
 	  int setDecisionPoint(double value);
-	 
+	  int setDecisionPoint(double value, bool absolute);
+
 	private:
 		const bool areNodeWeightsValid();
 
 		bool isAbsolute;
 		std::vector<NodeWeight> nodeWeights;
-
   };
 
   std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc, double targetSoC, double hystFract, double tempMinUseful_C,
@@ -373,7 +378,7 @@ class HPWH {
 
   std::shared_ptr<TempBasedHeatingLogic> standby(double d);
   std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
-  std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff = false);
   std::shared_ptr<TempBasedHeatingLogic> bottomTwelthMaxTemp(double d);
   std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
   std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
@@ -383,7 +388,6 @@ class HPWH {
 
   std::shared_ptr<TempBasedHeatingLogic> largeDraw(double d);
   std::shared_ptr<TempBasedHeatingLogic> largerDraw(double d);
-
 
   ///this is the value that the public functions will return in case of a simulation
   ///destroying error
@@ -529,6 +533,9 @@ class HPWH {
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
+
+  int setTankToTemperature(double temp_C);
+  /**< helper function for testing */
 
   int setAirFlowFreedom(double fanFraction);
   /**< This is a simple setter for the AirFlowFreedom */
@@ -756,6 +763,10 @@ class HPWH {
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
+  bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
+  int setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS units = UNITS_C);
+  /**< functions to check for and set specific high temperature shut off logics.
+  HPWHs can only have one of these, which is at least typical */
 
   int setTargetSoCFraction(double target);
   int switchToSoCControls(double targetSoC, double hysteresisFraction = 0.05, double tempMinUseful = 43.333, bool constantMainsT = false,
