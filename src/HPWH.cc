@@ -64,6 +64,7 @@ const float HPWH::ASPECTRATIO = 4.75f;
 const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
 const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
@@ -1017,8 +1018,12 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 }
 
 int HPWH::resetTankToSetpoint() {
+	return setTankToTemperature(setpoint_C);
+}
+
+int HPWH::setTankToTemperature(double temp_C) {
 	for (int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = setpoint_C;
+		tankTemps_C[i] = temp_C;
 	}
 	return 0;
 }
@@ -1653,10 +1658,10 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double d) {
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top node", nodeWeights, d, this, true, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomNodeMaxTemp(double d) {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff /*=false*/) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(0); // uses very bottom computation node
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node", nodeWeights, d, this, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node", nodeWeights, d, this, true, std::greater<double>(), isEnteringWaterHighTempShutoff);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelthMaxTemp(double d) {

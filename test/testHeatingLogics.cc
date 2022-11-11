@@ -104,7 +104,6 @@ void testSetEnteringWaterShuffOffDeadbandToSmall(string& input) {
 	ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()) == 0);
 }
 
-
 /* Tests we can set the entering water high temp shutt off with aboslute values and it works turns off and on as expected. */
 void testSetEnteringWaterHighTempShutOffAbsolute(string& input) {
 	const double drawVolume_L = 0.;
