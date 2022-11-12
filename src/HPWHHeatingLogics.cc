@@ -37,8 +37,8 @@ int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C) {
 	return 0;
 }
 
-const double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
-	return decisionPoint * numberOfNodes / condensity_size;
+const double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() {
+	return getComparisonValue();
 }
 
 const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
@@ -88,14 +88,14 @@ int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute) {
 	return setDecisionPoint(value);
 }
 
-const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, int condensity_size) {
+const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract() {
 	double logicNode;
 	double calcNodes = 0, totWeight = 0;
 
 	for (auto nodeWeight : nodeWeights) {
 		// bottom calc node only
 		if (nodeWeight.nodeNum == 0) { // simple equation
-			return 1. / (double)numberOfNodes;
+			return 1. / (double)parentHPWH->getNumNodes();
 		}
 		// top calc node only
 		else if (nodeWeight.nodeNum == 13) {
@@ -109,7 +109,7 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract(int numberOfNodes, 
 
 	logicNode = calcNodes / totWeight;
 
-	return logicNode / (double)condensity_size;
+	return logicNode / (double)CONDENSITY_SIZE;
 }
 
 const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
