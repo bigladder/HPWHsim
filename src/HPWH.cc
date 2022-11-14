@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HPWH.hh"
 #include "btwxt.h"
 #include "HPWHpresets.cc"
+#include "HPWHHeatingLogics.cc"
 
 #include <stdarg.h>
 #include <fstream>
@@ -63,6 +64,7 @@ const float HPWH::ASPECTRATIO = 4.75f;
 const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
 const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
@@ -89,6 +91,7 @@ void HPWH::setAllDefaults() {
 	doInversionMixing = true; doConduction = true;
 	inletHeight = 0; inlet2Height = 0; fittingsUA_kJperHrC = 0.;
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
+	usesSoCLogic = false;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -145,6 +148,8 @@ HPWH::HPWH(const HPWH &hpwh) {
 	
 	prevDRstatus = hpwh.prevDRstatus;
 	timerLimitTOT = hpwh.timerLimitTOT;
+
+	usesSoCLogic = hpwh.usesSoCLogic;
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
@@ -223,6 +228,8 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	prevDRstatus = hpwh.prevDRstatus;
 	timerLimitTOT = hpwh.timerLimitTOT;
+
+	usesSoCLogic = hpwh.usesSoCLogic;
 
 	volPerNode_LperNode = hpwh.volPerNode_LperNode;
 	node_height = hpwh.node_height;
@@ -623,7 +630,6 @@ int HPWH::runNSteps(int N, double *inletT_C, double *drawVolume_L,
 				tankTemps_C[4 * numNodes / 12], tankTemps_C[5 * numNodes / 12],
 				tankTemps_C[6 * numNodes / 12], tankTemps_C[7 * numNodes / 12],
 				tankTemps_C[8 * numNodes / 12], tankTemps_C[9 * numNodes / 12],
-				tankTemps_C[10 * numNodes / 12], tankTemps_C[11 * numNodes / 12],
 				getNthSimTcouple(1, 6), getNthSimTcouple(2, 6), getNthSimTcouple(3, 6),
 				getNthSimTcouple(4, 6), getNthSimTcouple(5, 6), getNthSimTcouple(6, 6));
 		}
@@ -965,6 +971,36 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	return returnVal;
 }
 
+double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) {
+	// Note that volume is ignored in here since with even nodes it cancels out of the SoC fractional equation
+	if (tMains_C >= tMinUseful_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("tMains_C is greater than or equal tMinUseful_C. \n");
+		}
+		return HPWH_ABORT;
+	}
+	if (tMinUseful_C > tMax_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("tMinUseful_C is greater tMax_C. \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double chargeEquivalent = 0.;
+	const double chargeMax = numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
+	for (int i = 0; i < numNodes; i++) {
+		chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, tankTemps_C[i]);
+	}
+	return chargeEquivalent / chargeMax;
+}
+
+double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const {
+	if (tHot < tMix) {
+		return 0.;
+	}
+	return (tHot - tCold) / (tMix - tCold);
+}
+
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -987,8 +1023,12 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {
 }
 
 int HPWH::resetTankToSetpoint() {
+	return setTankToTemperature(setpoint_C);
+}
+
+int HPWH::setTankToTemperature(double temp_C) {
 	for (int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = setpoint_C;
+		tankTemps_C[i] = temp_C;
 	}
 	return 0;
 }
@@ -1354,187 +1394,346 @@ int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/) {
 	return 0;
 }
 
-HPWH::HeatingLogic HPWH::topThird(double d) const {
+bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex) {
+	bool retVal = false;
+	if (heatSourceIndex >= numHeatSources || heatSourceIndex < 0) {
+		return retVal;
+	}
+	if (setOfSources[heatSourceIndex].shutOffLogicSet.size() == 0) {
+		return retVal;
+	}
+
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			retVal = true;
+			break;
+		}
+	}
+	return retVal;
+}
+
+int HPWH::setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS unit /*=UNITS_C*/) {
+	if (!hasEnteringWaterHighTempShutOff(heatSourceIndex)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to acess a heating logic that does not exist.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double highTemp_C;
+	if (unit == UNITS_C) {
+		highTemp_C = highTemp;
+	}
+	else if (unit == UNITS_F) {
+		highTemp_C = F_TO_C(highTemp);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	bool highTempIsNotValid = false;
+	if (tempIsAbsolute) {
+		// check differnce with setpoint
+		if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	else {
+		if (highTemp_C < MINSINGLEPASSLIFT) {
+			highTempIsNotValid = true;
+		}
+	}
+	if (highTempIsNotValid) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("High temperature shut off is too close to the setpoint, excpected a minimum difference of %.2lf.\n",
+				MINSINGLEPASSLIFT);
+		}
+		return HPWH_ABORT;
+	}
+
+	for (std::shared_ptr<HeatingLogic> shutOffLogic : setOfSources[heatSourceIndex].shutOffLogicSet) {
+		if (shutOffLogic->getIsEnteringWaterHighTempShutoff()) {
+			std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)->setDecisionPoint(highTemp_C, tempIsAbsolute);
+			break;
+		}
+	}
+	return 0;
+}
+
+int HPWH::setTargetSoCFraction(double target) {
+	if (!isSoCControlled()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set target state of charge if HPWH is not using state of charge controls.");
+		}
+		return HPWH_ABORT;
+	}
+	if (target < 0) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set a negative target state of charge.");
+		}
+		return HPWH_ABORT;
+	}
+
+	for (int i = 0; i < numHeatSources; i++) {
+		for (auto logic : setOfSources[i].shutOffLogicSet) {
+			if (!logic->getIsEnteringWaterHighTempShutoff()) {
+				logic->setDecisionPoint(target);
+			}
+		}
+		for (auto logic : setOfSources[i].turnOnLogicSet) {
+			logic->setDecisionPoint(target);
+		}
+	}
+	return 0;
+}
+
+bool HPWH::isSoCControlled() const {
+	return usesSoCLogic;
+}
+
+int HPWH::switchToSoCControls(double targetSoC, double hysteresisFraction /*= 0.05*/, double tempMinUseful /*= 43.333*/, bool constantMainsT /*= false*/,
+	double mainsT /*= 18.333*/, UNITS tempUnit /*= UNITS_C*/) {
+	if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Can not set up state of charge controls for integrated or wrapped HPWHs.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double tempMinUseful_C, mainsT_C;
+	if (tempUnit == UNITS_C) {
+		tempMinUseful_C = tempMinUseful;
+		mainsT_C = mainsT;
+	}
+	else if (tempUnit == UNITS_F) {
+		tempMinUseful_C = F_TO_C(tempMinUseful);
+		mainsT_C = F_TO_C(mainsT);
+	}
+	else {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if (mainsT_C >= tempMinUseful_C) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("The mains temperature can't be equal to or greater than the minimum useful temperature.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+
+
+	for (int i = 0; i < numHeatSources; i++) {
+		setOfSources[i].clearAllTurnOnLogic();
+
+		setOfSources[i].shutOffLogicSet.erase(std::remove_if(setOfSources[i].shutOffLogicSet.begin(),
+			setOfSources[i].shutOffLogicSet.end(),
+			[&](const auto logic)-> bool
+			{ return !logic->getIsEnteringWaterHighTempShutoff(); }),
+			setOfSources[i].shutOffLogicSet.end());
+
+		setOfSources[i].shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off", targetSoC, hysteresisFraction, tempMinUseful_C, constantMainsT, mainsT_C));
+		setOfSources[i].turnOnLogicSet.push_back(turnOnSoC("SoC Turn On", targetSoC, hysteresisFraction, tempMinUseful_C, constantMainsT, mainsT_C));
+	}
+
+	usesSoCLogic = true;
+
+	return 0;
+}
+
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	bool constantMainsT, double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, -hystFract, tempMinUseful_C, constantMainsT, mainsT_C);
+}
+
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	bool constantMainsT, double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, hystFract, tempMinUseful_C, constantMainsT, mainsT_C, std::greater<double>());
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double d) {
+	std::vector<NodeWeight> nodeWeights;
+	for (int i : { 9, 10, 11, 12 }) {
+		nodeWeights.emplace_back(i);
+	}
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third", nodeWeights, d, this);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10,11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("top third", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::topThird_absolute(double d) const {
-	std::vector<NodeWeight> nodeWeights;
-	for (auto i : { 9,10,11,12 }) {
-		nodeWeights.emplace_back(i);
-	}
-	return HPWH::HeatingLogic("top third absolute", nodeWeights, d, true);
-}
-
-
-HPWH::HeatingLogic HPWH::bottomThird(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("bottom third", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom third", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::bottomSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("bottom sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom sixth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::bottomSixth_absolute(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth_absolute(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("bottom sixth absolute", nodeWeights, d, true);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom sixth absolute", nodeWeights, d, this, true);
 }
 
-HPWH::HeatingLogic HPWH::secondSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("second sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("second sixth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::thirdSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::thirdSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("third sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("third sixth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::fourthSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fourthSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 7,8 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("fourth sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("fourth sixth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::fifthSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("fifth sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("fifth sixth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::topSixth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("top sixth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth", nodeWeights, d, this);
 }
 
 
-HPWH::HeatingLogic HPWH::bottomHalf(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4,5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("bottom half", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom half", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::bottomTwelth(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return HPWH::HeatingLogic("bottom twelth", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelth", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::standby(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(13); // uses very top computation node
-	return HPWH::HeatingLogic("standby", nodeWeights, d);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("standby", nodeWeights, d, this);
 }
 
-HPWH::HeatingLogic HPWH::topNodeMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(13); // uses very top computation node
-	return HPWH::HeatingLogic("top node", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top node", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::bottomNodeMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff /*=false*/) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(0); // uses very bottom computation node
-	return HPWH::HeatingLogic("bottom node", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node", nodeWeights, d, this, true, std::greater<double>(), isEnteringWaterHighTempShutoff);
 }
 
-HPWH::HeatingLogic HPWH::bottomTwelthMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return HPWH::HeatingLogic("bottom twelth", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::topThirdMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10,11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("top third", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::bottomSixthMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("bottom sixth", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::secondSixthMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("second sixth", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("second sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::fifthSixthMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 9,10 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-HPWH::HeatingLogic HPWH::topSixthMaxTemp(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 11,12 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("top sixth", nodeWeights, d, true, std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth", nodeWeights, d, this, true, std::greater<double>());
 }
 
-
-HPWH::HeatingLogic HPWH::largeDraw(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("large draw", nodeWeights, d, true);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("large draw", nodeWeights, d, this, true);
 }
 
-HPWH::HeatingLogic HPWH::largerDraw(double d) const {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	for (auto i : { 1,2,3,4,5,6 }) {
 		nodeWeights.emplace_back(i);
 	}
-	return HPWH::HeatingLogic("larger draw", nodeWeights, d, true);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("larger draw", nodeWeights, d, this, true);
 }
 
 int HPWH::getNumNodes() const {
 	return numNodes;
 }
-
 
 double HPWH::getTankNodeTemp(int nodeNum, UNITS units  /*=UNITS_C*/) const {
 	if (nodeNum >= numNodes || nodeNum < 0) {
@@ -2012,44 +2211,49 @@ double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const {
 	}
 }
 
-
-int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
+int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const { 
 	double aFract = 1.;
 	double useFract = 1.;
 
 	if (!hasACompressor()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Current model does not have a compressor.  \n");
+			msg("Current model does not have a compressor. \n");
+		}
+		return HPWH_ABORT;
+	}
+	else if (usesSoCLogic) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Current model uses SOC control logic and does not have a definition for sizing fractions. \n");
 		}
 		return HPWH_ABORT;
 	}
 
 	// Every compressor must have at least one on logic
-	for( auto onLogic : setOfSources[compressorIndex].turnOnLogicSet) {
+	for(std::shared_ptr<HeatingLogic> onLogic : setOfSources[compressorIndex].turnOnLogicSet) {
 		double tempA;
 
 		if (hpwhVerbosity >= VRB_emetic) {
-			msg("\tturnon logic: %s ", onLogic.description.c_str());
+			msg("\tturnon logic: %s ", onLogic->description.c_str());
 		}
-		tempA = nodeWeightAvgFract(onLogic); // if standby logic will return 1
+		tempA = onLogic->nodeWeightAvgFract(); // if standby logic will return 1
 		aFract = tempA < aFract ? tempA : aFract;
 	}
 	aquaFract = aFract;
 
 	// Compressors don't need to have an off logic
 	if (setOfSources[compressorIndex].shutOffLogicSet.size() != 0) {
-		for (auto offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
+		for(std::shared_ptr<HeatingLogic> offLogic : setOfSources[compressorIndex].shutOffLogicSet) {
 		
 			double tempUse;
 
 			if (hpwhVerbosity >= VRB_emetic) {
-				msg("\tshutsOff logic: %s ", offLogic.description.c_str());
+				msg("\tshutsOff logic: %s ", offLogic->description.c_str());
 			}
-			if (offLogic.description == "large draw" || offLogic.description == "larger draw") {
+			if (offLogic->description == "large draw" || offLogic->description == "larger draw") {
 				tempUse = 1.; // These logics are just for checking if there's a big draw to switch to RE
 			}
 			else {
-				tempUse = 1. - nodeWeightAvgFract(offLogic);
+				tempUse = 1. - offLogic->nodeWeightAvgFract();
 			}
 			useFract = tempUse < useFract ? tempUse : useFract; // Will return the smallest case of the useable fraction for multiple off logics
 		}
@@ -2070,30 +2274,6 @@ int HPWH::getSizingFractions(double &aquaFract, double &useableFract) const {
 	}
 
 	return 0;
-}
-
-double HPWH::nodeWeightAvgFract(HPWH::HeatingLogic logic) const {
-	double logicNode;
-	double calcNodes = 0, totWeight = 0;
-
-	for (auto nodeWeight : logic.nodeWeights) {
-		// bottom calc node only
-		if (nodeWeight.nodeNum == 0) { // simple equation
-			return 1. / (double) numNodes;
-		}
-		// top calc node only
-		else if (nodeWeight.nodeNum == 13) {
-			return 1.;
-		}
-		else { // have to tally up the nodes
-			calcNodes += nodeWeight.nodeNum * nodeWeight.weight;
-			totWeight += nodeWeight.weight;
-		}
-	}
-	
-	logicNode = calcNodes / totWeight;
-
-	return logicNode / (double)CONDENSITY_SIZE;
 }
 
 bool HPWH::isHPWHScalable() const {
@@ -2951,30 +3131,18 @@ bool HPWH::HeatSource::shouldHeat() const {
 
 	for (int i = 0; i < (int)turnOnLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i].description.c_str());
+			hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i]->description.c_str());
 		}
 
-		double average = hpwh->tankAvg_C(turnOnLogicSet[i].nodeWeights);
-		double comparison;
+		double average = turnOnLogicSet[i]->getTankValue();
+		double comparison = turnOnLogicSet[i]->getComparisonValue();
 
-		if (turnOnLogicSet[i].isAbsolute) {
-			comparison = turnOnLogicSet[i].decisionPoint;
-		}
-		else {
-			comparison = hpwh->setpoint_C - turnOnLogicSet[i].decisionPoint;
-		}
-
-		if (turnOnLogicSet[i].compare(average, comparison)) {
-			if (turnOnLogicSet[i].description == "standby" && standbyLogic != NULL) {
-				double comparisonStandby;
-				double avgStandby = hpwh->tankAvg_C(standbyLogic->nodeWeights);
-				if (standbyLogic->isAbsolute) {
-					comparisonStandby = standbyLogic->decisionPoint;
-				}
-				else {
-					comparisonStandby = hpwh->setpoint_C - standbyLogic->decisionPoint;
-				}
-				if (turnOnLogicSet[i].compare(avgStandby, comparisonStandby)) {
+		if (turnOnLogicSet[i]->compare(average, comparison)) {
+			if (turnOnLogicSet[i]->description == "standby" && standbyLogic != NULL) {
+				double comparisonStandby = standbyLogic->getComparisonValue();
+				double avgStandby = standbyLogic->getTankValue();
+				
+				if (turnOnLogicSet[i]->compare(avgStandby, comparisonStandby)) {
 					shouldEngage = true;
 				}
 			}
@@ -2990,7 +3158,8 @@ bool HPWH::HeatSource::shouldHeat() const {
 				hpwh->msg("engages!\n");
 			}
 			if (hpwh->hpwhVerbosity >= VRB_emetic) {
-				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, hpwh->setpoint_C, turnOnLogicSet[i].decisionPoint, comparison);
+				hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t comparison: %2.1f\n", average, 
+					hpwh->setpoint_C, turnOnLogicSet[i]->getDecisionPoint(), comparison);
 			}
 			break;
 		}
@@ -3028,25 +3197,18 @@ bool HPWH::HeatSource::shutsOff() const {
 
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
+			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
 		}
 
-		double average = hpwh->tankAvg_C(shutOffLogicSet[i].nodeWeights);
-		double comparison;
+		double average = shutOffLogicSet[i]->getTankValue();
+		double comparison = shutOffLogicSet[i]->getComparisonValue();
 
-		if (shutOffLogicSet[i].isAbsolute) {
-			comparison = shutOffLogicSet[i].decisionPoint;
-		}
-		else {
-			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
-		}
-
-		if (shutOffLogicSet[i].compare(average, comparison)) {
+		if (shutOffLogicSet[i]->compare(average, comparison)) {
 			shutOff = true;
 
 			//debugging message handling
 			if (hpwh->hpwhVerbosity >= VRB_typical) {
-				hpwh->msg("shuts down %s\n", shutOffLogicSet[i].description.c_str());
+				hpwh->msg("shuts down %s\n", shutOffLogicSet[i]->description.c_str());
 			}
 		}
 	}
@@ -3070,70 +3232,16 @@ bool HPWH::HeatSource::maxedOut() const {
 }
 
 double HPWH::HeatSource::fractToMeetComparisonExternal() const {
-	double fracTemp, comparison, sum, totWeight, diff;
+	double fracTemp;
 	double frac = 1.;
-	int calcNode = 0;
-	int firstNode = -1;
 
 	for (int i = 0; i < (int)shutOffLogicSet.size(); i++) {
 		if (hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i].description.c_str());
+			hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
 		}
-
-		if (shutOffLogicSet[i].isAbsolute) {
-			comparison = shutOffLogicSet[i].decisionPoint;
-		}
-		else {
-			comparison = hpwh->setpoint_C - shutOffLogicSet[i].decisionPoint;
-		}
-		comparison += TOL_MINVALUE; // Make this possible so we do slightly over heat
-
-		sum = 0;
-		totWeight = 0;
-
-		for (auto nodeWeight : shutOffLogicSet[i].nodeWeights) {
-			// bottom calc node only
-			if (nodeWeight.nodeNum == 0) { // simple equation
-				calcNode = 0;
-				firstNode = 0;
-				sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
-				totWeight = nodeWeight.weight;
-			}
-			// top calc node only
-			else if (nodeWeight.nodeNum == 13) {
-				calcNode = hpwh->numNodes - 1;
-				firstNode = hpwh->numNodes - 1;
-				sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
-				totWeight = nodeWeight.weight;
-			}
-			else { // have to tally up the nodes
-				// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
-				firstNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity;
-				for (int n = 0; n < hpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
-					calcNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity + n;
-					sum += hpwh->tankTemps_C[calcNode] * nodeWeight.weight;
-					totWeight += nodeWeight.weight;
-				}
-			}
-		}
-
-		if (calcNode == hpwh->numNodes - 1) { // top node calc
-			diff = hpwh->getSetpoint() - hpwh->tankTemps_C[firstNode];
-		}
-		else {
-			diff = hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[firstNode];
-		}
-		// if totWeight * comparison - sum < 0 then the shutoff condition is already true and you shouldn't
-		// be here. Will revaluate shut off condition at the end the do while loop of addHeatExternal, in the
-		// mean time lets not shift anything around. 
-		if (shutOffLogicSet[i].compare(sum, totWeight * comparison)) { // Then should shut off
-			fracTemp = 0.; // 0 means shift no nodes
-		}
-		else {
-			// if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care about, so 
-			// shift a whole node.
-			fracTemp = diff > 0. ? (totWeight * comparison - sum) / diff : 1.;
-		}
+		
+		fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
+		
 		frac = fracTemp < frac ? fracTemp : frac;
 	}
 
@@ -3844,10 +3952,10 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 }
 ////////////////////////////////////////////////////////////////////////////
 
-void HPWH::HeatSource::addTurnOnLogic(HeatingLogic logic) {
+void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {
 	this->turnOnLogicSet.push_back(logic);
 }
-void HPWH::HeatSource::addShutOffLogic(HeatingLogic logic) {
+void HPWH::HeatSource::addShutOffLogic(std::shared_ptr<HeatingLogic> logic) {
 	this->shutOffLogicSet.push_back(logic);
 }
 
@@ -3861,7 +3969,6 @@ void HPWH::HeatSource::clearAllLogic() {
 	this->clearAllTurnOnLogic();
 	this->clearAllShutOffLogic();
 }
-
 
 void HPWH::HeatSource::changeResistanceWatts(double watts) {
 	for (auto &perfP : perfMap) {
@@ -4035,18 +4142,7 @@ void HPWH::mapResRelativePosToSetOfSources() {
 	});
 }
 
-bool HPWH::areNodeWeightsValid(HPWH::HeatingLogic logic) {
 
-	for (auto nodeWeights : logic.nodeWeights) {
-		if (nodeWeights.nodeNum > 13 || nodeWeights.nodeNum < 0) {
-			if (hpwhVerbosity >= VRB_reluctant) {
-				msg("Node number for heatsource %s must be between 0 and 13. \n", logic.description.c_str());
-			}
-			return false;
-		}
-	}
-	return true;
-}
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs() {
 	int returnVal = 0;
@@ -4085,20 +4181,22 @@ int HPWH::checkInputs() {
 			returnVal = HPWH_ABORT;
 		}
 
-		// Check to make sure the node weights are between 0 and 13.
-		//for (int j = 0; j < (int)setOfSources[i].turnOnLogicSet.size(); j++) {
+		// Validate on logics
 		for (auto logic : setOfSources[i].turnOnLogicSet) {
-			if (!areNodeWeightsValid(logic)) {
+			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
-				break;
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("On logic at index %i is invalid", i);
+				}
 			}
 		}
-		// Check to make sure the node weights are between 0 and 13.
-		//for (int j = 0; j < (int)setOfSources[i].shutOffLogicSet.size(); j++) {
+		// Validate off logics
 		for (auto logic : setOfSources[i].shutOffLogicSet) {
-			if (!areNodeWeightsValid(logic)) {
+			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
-				break;
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Off logic at index %i is invalid", i);
+				}
 			}
 		}
 
@@ -4235,6 +4333,8 @@ int HPWH::checkInputs() {
 	//if there's no failures, return 0
 	return returnVal;
 }
+
+
 
 #ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(string configFile) {
@@ -4516,15 +4616,15 @@ int HPWH::HPWHinit_file(string configFile) {
 					for (size_t i = 0; i < nodeNums.size(); i++) {
 						nodeWeights.emplace_back(nodeNums[i], weights[i]);
 					}
-					HPWH::HeatingLogic logic("custom", nodeWeights, tempDouble, absolute, compare);
+					std::shared_ptr<HPWH::TempBasedHeatingLogic> logic = std::make_shared<HPWH::TempBasedHeatingLogic>("custom", nodeWeights, tempDouble, this, absolute, compare);
 					if (token == "onlogic") {
 						setOfSources[heatsource].addTurnOnLogic(logic);
 					}
 					else if (token == "offlogic") {
-						setOfSources[heatsource].addShutOffLogic(logic);
-					} 
+						setOfSources[heatsource].addShutOffLogic(std::move(logic));
+					}
 					else { // standby logic
-						setOfSources[heatsource].standbyLogic = new HPWH::HeatingLogic("standby logic", nodeWeights, tempDouble, absolute, compare);
+						setOfSources[heatsource].standbyLogic = std::make_shared<HPWH::TempBasedHeatingLogic>("standby logic", nodeWeights, tempDouble, this, absolute, compare);
 					}
 				}
 				else if (token == "onlogic") {

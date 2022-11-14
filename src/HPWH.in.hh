@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <functional>
+#include <memory>
 
 #include <cstdio>
 #include <cstdlib>   //for exit
@@ -48,6 +49,7 @@ class HPWH {
   static const double MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
   static const double MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
   static const double MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
+  static const double MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
   HPWH();  /**< default constructor */
   HPWH(const HPWH &hpwh);  /**< copy constructor  */
@@ -270,43 +272,123 @@ class HPWH {
 
     NodeWeight(int n) : nodeNum(n), weight(1.0) {};
   };
-
+  
   struct HeatingLogic {
-    std::string description;  // for debug purposes
-    std::vector<NodeWeight> nodeWeights;
-    double decisionPoint;
-    bool isAbsolute;
-    std::function<bool(double,double)> compare;
-    HeatingLogic(std::string desc, std::vector<NodeWeight> n, double d, bool a=false, std::function<bool(double,double)> c=std::less<double>()) :
-      description(desc), nodeWeights(n), decisionPoint(d), isAbsolute(a), compare(c) {};
+	public:
+	  std::string description;
+	  std::function<bool(double, double)> compare;
+
+	  HeatingLogic(std::string desc, double d, HPWH *pHPWH,
+		  std::function<bool(double, double)> c, bool isHTS) :
+		  description(desc), decisionPoint(d), parentHPWH(pHPWH), compare(c),
+		  isEnteringWaterHighTempShutoff(isHTS)
+	  {};
+
+	  /**< checks that the input is all valid. */
+	  virtual const bool isValid() = 0;
+	  /**< gets the value for comparing the tank value to, i.e. the target SoC */
+	  virtual const double getComparisonValue() = 0;
+	  /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
+	  virtual const double getTankValue() = 0;
+	  /**< function to calculate where the average node for a logic set is. */
+	  virtual const double nodeWeightAvgFract() = 0;
+	  /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
+	  virtual const double getFractToMeetComparisonExternal() = 0;
+
+	  virtual int setDecisionPoint(double value) = 0;
+	  double getDecisionPoint() { return decisionPoint; }
+	  bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
+
+	protected:
+		  double decisionPoint;
+		  HPWH* parentHPWH;
+		  bool isEnteringWaterHighTempShutoff;
   };
 
-  HeatingLogic topThird(double d) const;
-  HeatingLogic topThird_absolute(double d) const;
-	HeatingLogic bottomThird(double d) const;
-	HeatingLogic bottomHalf(double d) const;
-	HeatingLogic bottomTwelth(double d) const;
-	HeatingLogic bottomSixth(double d) const;
-	HeatingLogic bottomSixth_absolute(double d) const;
-	HeatingLogic secondSixth(double d) const;
-	HeatingLogic thirdSixth(double d) const;
-	HeatingLogic fourthSixth(double d) const;
-	HeatingLogic fifthSixth(double d) const;
-	HeatingLogic topSixth(double d) const;
+  struct SoCBasedHeatingLogic : HeatingLogic {
+	public:
+	  SoCBasedHeatingLogic(std::string desc, double d, HPWH *pHPWH,
+			double hF = -0.05, double tM_C = 43.333, bool constMains = false, double mains_C = 18.333,
+			std::function<bool(double, double)> c = std::less<double>()) :
+			HeatingLogic(desc, d, pHPWH, c, false),
+		    hysteresisFraction(hF), tempMinUseful_C(tM_C),
+			useCostantMains(constMains), constantMains_C(mains_C)
+	  {};
+	  const bool isValid();
 
-  HeatingLogic standby(double d) const;
-  HeatingLogic topNodeMaxTemp(double d) const;
-  HeatingLogic bottomNodeMaxTemp(double d) const;
-  HeatingLogic bottomTwelthMaxTemp(double d) const;
-  HeatingLogic topThirdMaxTemp(double d) const;
-  HeatingLogic bottomSixthMaxTemp(double d) const;
-  HeatingLogic secondSixthMaxTemp(double d) const;
-  HeatingLogic fifthSixthMaxTemp(double d) const;
-  HeatingLogic topSixthMaxTemp(double d) const;
+	  const double getComparisonValue();
+	  const double getTankValue();
+	  const double nodeWeightAvgFract();
+	  const double getFractToMeetComparisonExternal();
+	  const double getMainsT_C();
 
-  HeatingLogic largeDraw(double d) const;
-  HeatingLogic largerDraw(double d) const;
+	  int setDecisionPoint(double value);
+	  int setConstantMainsTemperature(double mains_C);
 
+	private:
+	  double tempMinUseful_C;
+	  double hysteresisFraction;
+	  bool useCostantMains;
+	  double constantMains_C;
+  };
+
+  struct TempBasedHeatingLogic : HeatingLogic {
+	public:
+	  TempBasedHeatingLogic(std::string desc, std::vector<NodeWeight> n,
+		  double d, HPWH *phpwh, bool a = false,
+		  std::function<bool(double, double)> c = std::less<double>(),
+		  bool isHTS = false) :
+		  HeatingLogic(desc, d, phpwh, c, isHTS),
+		  nodeWeights(n), isAbsolute(a)
+	  {};
+
+	  const bool isValid();
+
+	  const double getComparisonValue();
+	  const double getTankValue();
+	  const double nodeWeightAvgFract();
+	  const double getFractToMeetComparisonExternal();
+
+	  int setDecisionPoint(double value);
+	  int setDecisionPoint(double value, bool absolute);
+
+	private:
+		const bool areNodeWeightsValid();
+
+		bool isAbsolute;
+		std::vector<NodeWeight> nodeWeights;
+  };
+
+  std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	  bool constMains, double mains_C);
+  std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc, double targetSoC, double hystFract, double tempMinUseful_C,
+	  bool constMains, double mains_C);
+
+  std::shared_ptr<TempBasedHeatingLogic> topThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomThird(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double d) ;
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixth(double d);
+
+  std::shared_ptr<TempBasedHeatingLogic> standby(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d, bool isEnteringWaterHighTempShutoff = false);
+  std::shared_ptr<TempBasedHeatingLogic> bottomTwelthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double d);
+  std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double d);
+
+  std::shared_ptr<TempBasedHeatingLogic> largeDraw(double d);
+  std::shared_ptr<TempBasedHeatingLogic> largerDraw(double d);
 
   ///this is the value that the public functions will return in case of a simulation
   ///destroying error
@@ -437,12 +519,24 @@ class HPWH {
   /**< a function to return the max operating temperature of the compressor which can be different than
 	  the value returned in isNewSetpointPossible() if there are resistance elements. */
 
+  /** Returns State of Charge where
+	 tMains = current mains (cold) water temp,
+	 tMinUseful = minimum useful temp,
+	 tMax = nominal maximum temp.*/
+  double getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C);
+  double getSoCFraction(double tMains_C, double tMinUseful_C) {
+	  return getSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
+  };
+
   double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
 
   int resetTankToSetpoint();
   /**< this function resets the tank temperature profile to be completely at setpoint
       The return value is 0 for successful completion  */
+
+  int setTankToTemperature(double temp_C);
+  /**< helper function for testing */
 
   int setAirFlowFreedom(double fanFraction);
   /**< This is a simple setter for the AirFlowFreedom */
@@ -519,6 +613,7 @@ class HPWH {
 
 	int getNumNodes() const;
 	/**< returns the number of nodes  */
+
 	double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
 	/**< returns the temperature of the water at the specified node - with specified units
       or HPWH_ABORT for incorrect node number or unit failure  */
@@ -666,11 +761,19 @@ class HPWH {
   void resetTopOffTimer();
   /**< resets variables for timer associated with the DR_TOT call  */
 
-
   double getLocationTemp_C() const;
   int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
+  bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
+  int setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, int heatSourceIndex, UNITS units = UNITS_C);
+  /**< functions to check for and set specific high temperature shut off logics.
+  HPWHs can only have one of these, which is at least typical */
 
+  int setTargetSoCFraction(double target);
+  int switchToSoCControls(double targetSoC, double hysteresisFraction = 0.05, double tempMinUseful = 43.333, bool constantMainsT = false,
+	  double mainsT = 18.333, UNITS tempUnit = UNITS_C);
+  bool isSoCControlled() const;
+  
  private:
   class HeatSource;
 
@@ -691,8 +794,6 @@ class HPWH {
 
   double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
-  double nodeWeightAvgFract(HeatingLogic logic) const;
-  /**< function to calculate where the average node for a logic set is. */
 
   void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
   /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed below node. */
@@ -711,9 +812,10 @@ class HPWH {
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
-  bool areNodeWeightsValid(HeatingLogic logic);
+  bool areNodeWeightsValid(TempBasedHeatingLogic logic);
 	 /**< a helper for the helper, checks the node weights are valid */
 
+  double getChargePerNode(double tCold, double tMix, double tHot) const;
 
   void sayMessage(const std::string message) const;
 	/**< if the messagePriority is >= the hpwh verbosity,
@@ -812,6 +914,7 @@ class HPWH {
 	double timerTOT;
 	/**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
 
+	bool usesSoCLogic;
 
   // Some outputs
 	double outletTemp_C;
@@ -1027,11 +1130,11 @@ class HPWH::HeatSource {
   bool useBtwxtGrid;
 
 	/** a vector to hold the set of logical choices for turning this element on */
-	std::vector<HeatingLogic> turnOnLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> turnOnLogicSet;
 	/** a vector to hold the set of logical choices that can cause an element to turn off */
-	std::vector<HeatingLogic> shutOffLogicSet;
+	std::vector<std::shared_ptr<HeatingLogic>> shutOffLogicSet;
 	/** a single logic that checks the bottom point is below a temperature so the system doesn't short cycle*/
-	HeatingLogic *standbyLogic;
+	std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
 	/** some compressors have a resistance element for defrost*/
 	struct resistanceElementDefrost
@@ -1056,8 +1159,8 @@ class HPWH::HeatSource {
 	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
-  void addTurnOnLogic(HeatingLogic logic);
-  void addShutOffLogic(HeatingLogic logic);
+  void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
+  void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
   void clearAllTurnOnLogic();
   void clearAllShutOffLogic();
@@ -1070,9 +1173,9 @@ class HPWH::HeatSource {
   /**< function to change the resistance wattage */
 
   bool isACompressor() const;
-  /**< returns if the heat sources is a compressor or not */
+  /**< returns if the heat source uses a compressor or not */
   bool isAResistance() const;
-  /**< returns if the heat sources is a compressor or not */
+  /**< returns if the heat source uses a resistance element or not */
   bool isExternalMultipass() const;
 
   double minT;
