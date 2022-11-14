@@ -320,7 +320,8 @@ class HPWH {
 	  const double getTankValue();
 	  const double nodeWeightAvgFract();
 	  const double getFractToMeetComparisonExternal();
-	  
+	  const double getMainsT_C();
+
 	  int setDecisionPoint(double value);
 	  int setConstantMainsTemperature(double mains_C);
 
@@ -814,6 +815,7 @@ class HPWH {
   bool areNodeWeightsValid(TempBasedHeatingLogic logic);
 	 /**< a helper for the helper, checks the node weights are valid */
 
+  double getChargePerNode(double tCold, double tMix, double tHot) const;
 
   void sayMessage(const std::string message) const;
 	/**< if the messagePriority is >= the hpwh verbosity,

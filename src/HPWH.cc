@@ -987,13 +987,18 @@ double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C)
 	}
 
 	double chargeEquivalent = 0.;
-	const double chargeMax = numNodes * (tMax_C - tMains_C) / (tMinUseful_C - tMains_C);
+	const double chargeMax = numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
 	for (int i = 0; i < numNodes; i++) {
-		if (tankTemps_C[i] >= tMinUseful_C) {
-			chargeEquivalent += (tankTemps_C[i] - tMains_C) / (tMinUseful_C - tMains_C);;
-		}
+		chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, tankTemps_C[i]);
 	}
 	return chargeEquivalent / chargeMax;
+}
+
+double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const {
+	if (tHot < tMix) {
+		return 0.;
+	}
+	return (tHot - tCold) / (tMix - tCold);
 }
 
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const {

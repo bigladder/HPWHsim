@@ -19,6 +19,8 @@ void testSetEnteringWaterHighTempShutOffRelative(string& input);
 void testChangeToStateofChargeControlled(string& input);
 void testSetStateOfCharge(string& input);
 
+void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, double tankTAt76SoC);
+
 const std::vector<string> hasHighShuttOffVectSP = { "Sanden80", "QAHV_N136TAU_HPB_SP", \
 	"ColmacCxA_20_SP", "ColmacCxV_5_SP", "NyleC60A_SP", "NyleC60A_C_SP", "NyleC185A_C_SP", "TamScalable_SP" };
 
@@ -30,6 +32,8 @@ const std::vector<string> noHighShuttOffVectIntegrated = { "AOSmithHPTU80", "Rhe
 	"RheemPlugInShared65", "restankRealistic", "StorageTank"};
 
 int main(int, char*) {
+	double tempsForSetSoC[5][3] = { {49, 99, 125}, {65, 110, 129}, {32, 120, 121}, {32, 33, 121}, {80, 81, 132.5} };
+
 	for (string hpwhStr : hasHighShuttOffVectSP) {
 		testHasEnteringWaterShutOff(hpwhStr);
 		testSetEnteringWaterShuffOffOutOfBoundsIndex(hpwhStr);
@@ -38,7 +42,9 @@ int main(int, char*) {
 		testSetEnteringWaterHighTempShutOffRelative(hpwhStr);
 
 		testChangeToStateofChargeControlled(hpwhStr);
-		testSetStateOfCharge(hpwhStr);
+		for (int i = 0; i < 5; i++) {
+			testSetStateOfCharge(hpwhStr, tempsForSetSoC[i][0], tempsForSetSoC[i][1], tempsForSetSoC[i][2]);
+		}
 	}
 
 	for (string hpwhStr : noHighShuttOffVectMPExternal) {
@@ -46,7 +52,9 @@ int main(int, char*) {
 		testCanNotSetEnteringWaterShutOff(hpwhStr);
 
 		testChangeToStateofChargeControlled(hpwhStr);
-		testSetStateOfCharge(hpwhStr);
+		for (int i = 0; i < 5; i++) {
+			testSetStateOfCharge(hpwhStr, tempsForSetSoC[i][0], tempsForSetSoC[i][1], tempsForSetSoC[i][2]);
+		}
 	}
 
 	for (string hpwhStr : noHighShuttOffVectIntegrated) {
@@ -217,7 +225,7 @@ void testChangeToStateofChargeControlled(string& input) {
 }
 
 /*Test we can change the target and turn off and on*/
-void testSetStateOfCharge(string& input) {
+void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, double tankTAt76SoC) {
 	HPWH hpwh;
 	const double externalT_C = 20.;
 	const double setpointT_C = F_TO_C(149.);
@@ -233,11 +241,11 @@ void testSetStateOfCharge(string& input) {
 	}
 
 	// change to SOC control;
-	hpwh.switchToSoCControls(.85, .05, 99, true, 49, HPWH::UNITS_F);
+	hpwh.switchToSoCControls(.85, .05, minTUse_F, true, coldWater_F, HPWH::UNITS_F);
 	ASSERTTRUE(hpwh.isSoCControlled());
 
 	// Test if we're on and in band stay on
-	hpwh.setTankToTemperature(F_TO_C(125)); // .76 
+	hpwh.setTankToTemperature(F_TO_C(tankTAt76SoC)); // .76 
 	hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
 	ASSERTTRUE(compressorIsRunning(hpwh));
 
