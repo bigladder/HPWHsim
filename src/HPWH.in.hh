@@ -770,8 +770,12 @@ class HPWH {
   HPWHs can only have one of these, which is at least typical */
 
   int setTargetSoCFraction(double target);
+
+  bool canUseSoCControls();
+
   int switchToSoCControls(double targetSoC, double hysteresisFraction = 0.05, double tempMinUseful = 43.333, bool constantMainsT = false,
 	  double mainsT = 18.333, UNITS tempUnit = UNITS_C);
+  
   bool isSoCControlled() const;
   
  private:
