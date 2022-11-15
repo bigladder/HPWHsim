@@ -163,7 +163,6 @@ void testCommercialTankInit() {
 	HPWH hpwh;
 	double elementPower_kW = 10.; //KW
 	double UA;
-	const double UA800 = 14.16395482;
 	const InsulationPoint testPoint800 = { 800., 10., 10.500366 };
 	const InsulationPoint testPoint2 = { 2., 6., 0.322364 };
 	const InsulationPoint testPoint50 = { 50., 12., 1.37808 };
