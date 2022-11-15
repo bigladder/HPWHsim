@@ -40,13 +40,18 @@ int main(int argc, char *argv[])
   const double EBALTHRESHOLD = 0.005;
 
   const int nTestTCouples = 6;
+
+  const double soCMinTUse_C = F_TO_C(110.);
+  const double soCMains_C = F_TO_C(65.);
+
   // Schedule stuff
   std::vector<string> scheduleNames;
-  std::vector<schedule> allSchedules(6);
+  std::vector<schedule> allSchedules(7);
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
   double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
+  bool useSoC;
   int i, outputCode;
   long minutesToRun;
 
@@ -62,8 +67,8 @@ int main(int argc, char *argv[])
 
   string strPreamble;
   string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
-  string strHeadMP = "minutes,Ta,Tsetpoint,inletT,draw,condenserInletT,condenserOutletT,externalVolGPM,";
-  
+  string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
+  string strHeadSoC = "targetSoCFract,soCFract,";
 #if defined _DEBUG
   hpwh.setVerbosity(HPWH::VRB_reluctant);
 #endif
@@ -157,6 +162,7 @@ int main(int argc, char *argv[])
   inletH = 0.;
   newTankSize = 0.;
   tot_limit = 0.;
+  useSoC = false;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -175,11 +181,14 @@ int main(int argc, char *argv[])
 	else if(var1 == "inletH") {
 		inletH = testVal;
 	}
-	else if (var1 == "tanksize") {
+	else if(var1 == "tanksize") {
 		newTankSize = testVal;
 	}
 	else if(var1 == "tot_limit") {
 		tot_limit = testVal;
+	}
+	else if(var1 == "useSoC") {
+		useSoC = (bool)testVal;
 	}
 	else {
 		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
@@ -198,12 +207,13 @@ int main(int argc, char *argv[])
   scheduleNames.push_back("evaporatorT");
   scheduleNames.push_back("DR");
   scheduleNames.push_back("setpoint");
+  scheduleNames.push_back("SoC");
 
   for(i = 0; (unsigned)i < scheduleNames.size(); i++) {
     fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
     outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
     if(outputCode != 0) {
-		if (scheduleNames[i] != "setpoint") {
+		if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC") {
 			cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
 			exit(1);
 		}
@@ -239,7 +249,13 @@ int main(int argc, char *argv[])
   if (tot_limit > 0) {
 	  outputCode += hpwh.setTimerLimitTOT(tot_limit);
   }
-
+  if (useSoC) {
+	  if (allSchedules[6].empty()) {
+		  cout << "If useSoC is true need an SoCschedule.csv file \n";
+	  }
+	  outputCode += hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
+  }
+	
   if (outputCode != 0) {
 	  cout << "Control file testInfo.txt has unsettable specifics in it. \n";
 	  exit(1);
@@ -262,13 +278,17 @@ int main(int argc, char *argv[])
 		  cout << "Could not open output file " << fileToOpen << "\n";
 		  exit(1);
 	  }
+	  
+	  string header = strHead;
 	  if (hpwh.isCompressoExternalMultipass()) {
-		  hpwh.WriteCSVHeading(outputFile, strHeadMP.c_str(), nTestTCouples, 0);
+		  header += strHeadMP;
 	  }
-	  else {
-		  hpwh.WriteCSVHeading(outputFile, strHead.c_str(), nTestTCouples, 0);
+	  if(useSoC){ 
+		  header += strHeadSoC;
 	  }
+	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, 0);
   }
+
   // ------------------------------------- Simulate --------------------------------------- //
   cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
@@ -298,6 +318,14 @@ int main(int argc, char *argv[])
 		  hpwh.setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
 	  }
 
+	  // Change SoC schedule
+	  if (useSoC) {
+		  if (hpwh.setTargetSoCFraction(allSchedules[6][i]) != 0) {
+			  cout << "ERROR: Can not set the target state of charge fraction. \n";
+			  exit(1);
+		  }
+	  }
+
 	  // Mix down for yearly tests with large compressors
 	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
 		  //Do a simple mix down of the draw for the cold water temperature
@@ -305,7 +333,7 @@ int main(int argc, char *argv[])
 			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
 		  }
 	  }
-
+	  cout << i << std::endl;
 	  // Run the step
 	  hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		  GAL_TO_L(allSchedules[1][i]), // Flow in gallons
@@ -365,6 +393,9 @@ int main(int argc, char *argv[])
 		  if (hpwh.isCompressoExternalMultipass()) {
 			  strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " + std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
 				  std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+		  }
+		  if (useSoC) {
+			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction(soCMains_C, soCMinTUse_C)) + ", ";
 		  }
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
 	  }
