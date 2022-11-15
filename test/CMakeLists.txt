@@ -51,17 +51,17 @@ add_test(NAME "testHeatingLogics" COMMAND  $<TARGET_FILE:testHeatingLogics> ${te
 
 # Run model tests and unit tests on models
 set(testNames
-  test30
-  test50
-  test70
-  test95
-  testLockout
-  testSandenCombi
-  testDr_LO
-  testDr_TOO
-  testDr_TOT
-  testDr_TOO2
-  testDR_TOTLOR
+ test30
+ test50
+ test70
+ test95
+ testLockout
+ testSandenCombi
+ testDr_LO
+ testDr_TOO
+ testDr_TOT
+ testDr_TOO2
+ testDR_TOTLOR
 )
 set(modelNames
 #  StorageTank  
@@ -112,7 +112,7 @@ set(maxTempModels
  AOSmithCAHP120
 )
 
-set( maxTempTests
+set(maxTempTests
  testREGoesTo93C
  testREGoesTo93CCold
 )
@@ -183,9 +183,19 @@ set(yearLargeTestsModels
  TamScalable_SP
  Scalable_MP
 )
-
 set(yearLargeTests                                        
  testCA_36Unit_CTZ12
+)
+
+set(stateOfChargeTests
+ testSoC70
+ testSoCLockout
+ testSoCHighEnteringWater
+ testSoCSetpointChange
+)
+set(stateOfChargeCompressorNames
+ Sanden120
+ NyleC25A_SP
 )
 
 # Unit tests
@@ -263,6 +273,14 @@ foreach(test ${largeCompressorTests})
     #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+#Add State of Charge tests to the list
+foreach(test ${stateOfChargeTests})
+  foreach(model ${stateOfChargeCompressorNames})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+	#No files for these yet
+    #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
 
 #Add small compressor yearly tests to the list
 foreach(test ${yearTests})
@@ -334,18 +352,20 @@ endforeach(test)
 foreach(test ${maxTempTests})
   foreach(model ${maxTempModels})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-	#No files for these yet
-    #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
-
 
 #Add large compressor tests to the regression list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
     add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-	#No files for these yet
-    #add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
+#Add State of Charge tests to the list
+foreach(test ${stateOfChargeTests})
+  foreach(model ${stateOfChargeCompressorNames})
+    add_regression_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
   endforeach(model)
 endforeach(test)
 
