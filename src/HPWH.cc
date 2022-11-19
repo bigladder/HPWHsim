@@ -1429,7 +1429,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp, bool tempIsAbsolute, 
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.  \n");
+			msg("Incorrect unit specification for set Entering Water High Temp Shut Off.  \n");
 		}
 		return HPWH_ABORT;
 	}
@@ -1494,11 +1494,19 @@ bool HPWH::isSoCControlled() const {
 	return usesSoCLogic;
 }
 
+bool HPWH::canUseSoCControls() {
+	bool retVal = true;
+	if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL) {
+		retVal = false;
+	}
+	return retVal;
+}
+
 int HPWH::switchToSoCControls(double targetSoC, double hysteresisFraction /*= 0.05*/, double tempMinUseful /*= 43.333*/, bool constantMainsT /*= false*/,
 	double mainsT /*= 18.333*/, UNITS tempUnit /*= UNITS_C*/) {
-	if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL) {
+	if (!canUseSoCControls()) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Can not set up state of charge controls for integrated or wrapped HPWHs.\n");
+			msg("Cannot set up state of charge controls for integrated or wrapped HPWHs.\n");
 		}
 		return HPWH_ABORT;
 	}
@@ -1525,8 +1533,6 @@ int HPWH::switchToSoCControls(double targetSoC, double hysteresisFraction /*= 0.
 		}
 		return HPWH_ABORT;
 	}
-
-
 
 	for (int i = 0; i < numHeatSources; i++) {
 		setOfSources[i].clearAllTurnOnLogic();
