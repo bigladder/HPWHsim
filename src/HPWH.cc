@@ -971,7 +971,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	return returnVal;
 }
 
-double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) {
+double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const {
 	// Note that volume is ignored in here since with even nodes it cancels out of the SoC fractional equation
 	if (tMains_C >= tMinUseful_C) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -987,11 +987,10 @@ double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C)
 	}
 
 	double chargeEquivalent = 0.;
-	const double chargeMax = numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
 	for (int i = 0; i < numNodes; i++) {
 		chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, tankTemps_C[i]);
 	}
-	return chargeEquivalent / chargeMax;
+	return chargeEquivalent / (numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C));
 }
 
 double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const {
