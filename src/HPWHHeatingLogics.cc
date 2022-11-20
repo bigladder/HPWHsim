@@ -44,8 +44,57 @@ const double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() {
 }
 
 const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
-	parentHPWH->numNodes; //TODO
-	return 1.;
+	double deltaSoCFraction = (getComparisonValue() + HPWH::TOL_MINVALUE) - getTankValue();
+
+	// Check how much of a change in the SoC fraction occurs if one full node at set point is added. If this is less than the change needed move on. 
+	double fullNodeSoC = 1. / parentHPWH->numNodes;
+	if (deltaSoCFraction >= fullNodeSoC) {
+		return 1.;
+	}
+
+	// Find the last node greater the min use temp
+	int calcNode = 0;
+	for (int i = parentHPWH->numNodes - 1; i >= 0; i--) {
+		if (parentHPWH->tankTemps_C[i] < tempMinUseful_C) {
+			calcNode = i + 1;
+			break;
+		}
+	}
+	if (calcNode == parentHPWH->numNodes) { // if the whole tank is cold
+		return 1.;
+	}
+
+	// Find the fraction to heat the calc node to meet the target SoC fraction without heating the node below up to tempMinUseful. 
+	double maxSoC = parentHPWH->numNodes * parentHPWH->getChargePerNode(getMainsT_C(), tempMinUseful_C, parentHPWH->setpoint_C);
+	double targetTemp = deltaSoCFraction * maxSoC + (parentHPWH->tankTemps_C[calcNode] - getMainsT_C()) / (tempMinUseful_C - getMainsT_C());
+	targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
+
+	//Catch case where node temperature == setpoint
+	double fractCalcNode;
+	if (parentHPWH->tankTemps_C[calcNode] >= parentHPWH->setpoint_C) {
+		fractCalcNode = 1;
+	}
+	else {
+		fractCalcNode = (targetTemp - parentHPWH->tankTemps_C[calcNode]) / (parentHPWH->setpoint_C - parentHPWH->tankTemps_C[calcNode]);
+	}
+
+	// If we're at the bottom node there's not another node to heat so case 2 doesn't apply. 
+	if (calcNode == 0) {
+		return fractCalcNode;
+	}
+
+	// Fraction to heat next node, where the step change occurs
+	double fractNextNode = (tempMinUseful_C - parentHPWH->tankTemps_C[calcNode - 1]) / (parentHPWH->tankTemps_C[calcNode] - parentHPWH->tankTemps_C[calcNode - 1]);
+	
+	if (parentHPWH->hpwhVerbosity >= VRB_emetic) {
+		double smallestSoCChangeWhenHeatingNextNode = 1. / maxSoC * (1. + fractNextNode * (parentHPWH->setpoint_C - parentHPWH->tankTemps_C[calcNode]) / 
+			(tempMinUseful_C - getMainsT_C()));
+		parentHPWH->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, deltaSoCFraction: %.6f\n", 
+			fractCalcNode, fractNextNode, smallestSoCChangeWhenHeatingNextNode, deltaSoCFraction);
+	}
+
+	// if the fraction is enough to heat up the next node, do that minimum and handle the heating of the next node next iteration.
+	return std::min(fractCalcNode, fractNextNode);
 }
 
 
