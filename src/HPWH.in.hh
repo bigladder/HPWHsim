@@ -523,8 +523,8 @@ class HPWH {
 	 tMains = current mains (cold) water temp,
 	 tMinUseful = minimum useful temp,
 	 tMax = nominal maximum temp.*/
-  double getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C);
-  double getSoCFraction(double tMains_C, double tMinUseful_C) {
+  double getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
+  double getSoCFraction(double tMains_C, double tMinUseful_C) const {
 	  return getSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
   };
 

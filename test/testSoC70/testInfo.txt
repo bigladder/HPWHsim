@@ -1,0 +1,3 @@
+length_of_test 600
+setpoint 65 
+useSoC 1
