@@ -527,6 +527,8 @@ class HPWH {
   double getSoCFraction(double tMains_C, double tMinUseful_C) const {
 	  return getSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
   };
+  /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
+  double getSoCFraction() const;
 
   double getMinOperatingTemp(UNITS units = UNITS_C) const;
   /**< a function to return the minimum operating temperature of the compressor  */
@@ -812,12 +814,8 @@ class HPWH {
   /**< a helper function for the inits, creating a mapping function for the position of the resistance elements
   to their indexes in setOfSources. */
 
-
   int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
-
-  bool areNodeWeightsValid(TempBasedHeatingLogic logic);
-	 /**< a helper for the helper, checks the node weights are valid */
 
   double getChargePerNode(double tCold, double tMix, double tHot) const;
 
