@@ -23,7 +23,7 @@ const double HPWH::SoCBasedHeatingLogic::getTankValue() {
 		soCFraction = HPWH_ABORT;
 	} 
 	else {
-		soCFraction = parentHPWH->getSoCFraction(getMainsT_C(), tempMinUseful_C);
+		soCFraction = parentHPWH->getSoCFraction();
 	}
 	return soCFraction;
 }
@@ -35,6 +35,10 @@ const double HPWH::SoCBasedHeatingLogic::getMainsT_C() {
 	else {
 		return parentHPWH->member_inletT_C;
 	}
+}
+
+const double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() {
+	return tempMinUseful_C;
 }
 
 int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value) {
