@@ -321,7 +321,7 @@ class HPWH {
 	  const double nodeWeightAvgFract();
 	  const double getFractToMeetComparisonExternal();
 	  const double getMainsT_C();
-
+	  const double getTempMinUseful_C();
 	  int setDecisionPoint(double value);
 	  int setConstantMainsTemperature(double mains_C);
 
@@ -523,9 +523,9 @@ class HPWH {
 	 tMains = current mains (cold) water temp,
 	 tMinUseful = minimum useful temp,
 	 tMax = nominal maximum temp.*/
-  double getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
-  double getSoCFraction(double tMains_C, double tMinUseful_C) const {
-	  return getSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
+  double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
+  double calcSoCFraction(double tMains_C, double tMinUseful_C) const {
+	  return calcSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
   };
   /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
   double getSoCFraction() const;
@@ -788,6 +788,8 @@ class HPWH {
 	void updateTankTemps(double draw, double inletT, double ambientT, double inletVol2_L, double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
+	void updateSoCIfNecessary();
+
 	bool areAllHeatSourcesOff() const;
 	/**< test if all the heat sources are off  */
 	void turnAllHeatSourcesOff();
@@ -818,6 +820,8 @@ class HPWH {
 	/**< a helper function to run a few checks on the HPWH input parameters  */
 
   double getChargePerNode(double tCold, double tMix, double tHot) const;
+
+  void calcAndSetSoCFraction();
 
   void sayMessage(const std::string message) const;
 	/**< if the messagePriority is >= the hpwh verbosity,
@@ -899,6 +903,8 @@ class HPWH {
 	double fracAreaSide;
 	/**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
 
+	double currentSoCFraction;
+	/**< the current state of charge according to the logic */
 
 	double setpoint_C;
 	/**< the setpoint of the tank  */

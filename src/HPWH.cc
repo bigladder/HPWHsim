@@ -84,6 +84,7 @@ void HPWH::setAllDefaults() {
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false;
 	numHeatSources = 0;
 	member_inletT_C = HPWH_ABORT;
+	currentSoCFraction = 1.;
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 	mixBelowFractionOnDraw = 1. / 3.;
@@ -312,16 +313,14 @@ int HPWH::runOneStep(double drawVolume_L,
 		heatSourceAmbientT_C = locationTemperature_C;
 	}
 
-
 	//process draws and standby losses
 	updateTankTemps(drawVolume_L, member_inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
 
+	updateSoCIfNecessary();
 
 	// First Logic DR checks //////////////////////////////////////////////////////////////////
 
 	// If the DR signal includes a top off but the previous signal did not, then top it off!
-
-
 	if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0) {
 		turnAllHeatSourcesOff(); // turns off isheating
 		if (hpwhVerbosity >= VRB_emetic) {
@@ -499,13 +498,11 @@ int HPWH::runOneStep(double drawVolume_L,
 		isHeating = false;
 	}
 
-
 	//If theres extra user defined heat to add -> Add extra heat!
 	if (nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
 		addExtraHeat(nodePowerExtra_W, tankAmbientT_C);
+		updateSoCIfNecessary();
 	}
-
-
 
 	//track the depressed local temperature
 	if (doTempDepression) {
@@ -971,7 +968,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 	return returnVal;
 }
 
-double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const {
+double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const {
 	// Note that volume is ignored in here since with even nodes it cancels out of the SoC fractional equation
 	if (tMains_C >= tMinUseful_C) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -995,26 +992,19 @@ double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C)
 }
 
 double HPWH::getSoCFraction() const {
-	if (!isSoCControlled()) {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("getSoCFraction() depends on the HPWH using SoC logic, try another overload version of getSoCFraction instead \n");
-		}
-		return HPWH_ABORT;
-	}
+	return currentSoCFraction;
+}
 
-	double soCFraction = -1.;
+void HPWH::calcAndSetSoCFraction() {
+	double newSoCFraction = -1.;
 	for (int i = 0; i < numHeatSources; i++) {
 		for (auto logic : setOfSources[i].turnOnLogicSet) {
-			soCFraction = logic->getTankValue();
+			auto logicSoC = std::dynamic_pointer_cast<SoCBasedHeatingLogic>(logic);
+			newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
+			break;
 		}
 	}
-
-	if (soCFraction == HPWH_ABORT) {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("SoC logic is not using using a constant mains temperature and not value has been given to HPWH yet, set it or call runOneStep first.\n");
-		}
-	}
-	return soCFraction;
+	currentSoCFraction = newSoCFraction;
 }
 
 double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const {
@@ -2703,6 +2693,11 @@ void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbi
 
 }  //end updateTankTemps
 
+void HPWH::updateSoCIfNecessary() {
+	if (usesSoCLogic) {
+		calcAndSetSoCFraction();
+	}
+}
 
 // Inversion mixing modeled after bigladder EnergyPlus code PK
 void HPWH::mixTankInversions() {
@@ -3885,6 +3880,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
 		hpwh->mixTankInversions();
+		hpwh->updateSoCIfNecessary();
 
 		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
 		// Add in pump power to approximate a secondary heat exchange in line with the compressor
