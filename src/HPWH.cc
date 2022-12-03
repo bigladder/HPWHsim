@@ -84,7 +84,8 @@ void HPWH::setAllDefaults() {
 	delete[] setOfSources;
 
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false;
-	numHeatSources = 0; 
+	numHeatSources = 0;
+	member_inletT_C = HPWH_ABORT;
 	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 	mixBelowFractionOnDraw = 1. / 3.;
@@ -990,7 +991,31 @@ double HPWH::getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C)
 	for (int i = 0; i < numNodes; i++) {
 		chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, tankTemps_C[i]);
 	}
-	return chargeEquivalent / (numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C));
+	double maxSoC = numNodes * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
+	return chargeEquivalent / maxSoC;
+}
+
+double HPWH::getSoCFraction() const {
+	if (!isSoCControlled()) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("getSoCFraction() depends on the HPWH using SoC logic, try another overload version of getSoCFraction instead \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double soCFraction = -1.;
+	for (int i = 0; i < numHeatSources; i++) {
+		for (auto logic : setOfSources[i].turnOnLogicSet) {
+			soCFraction = logic->getTankValue();
+		}
+	}
+
+	if (soCFraction == HPWH_ABORT) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("SoC logic is not using using a constant mains temperature and not value has been given to HPWH yet, set it or call runOneStep first.\n");
+		}
+	}
+	return soCFraction;
 }
 
 double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const {

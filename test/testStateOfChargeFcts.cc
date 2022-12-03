@@ -6,15 +6,16 @@
 
 void testGetStateOfCharge();
 void testChargeBelowSetpoint();
-void setTankToTemperature(HPWH& hpwh, double tempF) {
-	hpwh.setSetpoint(tempF, HPWH::UNITS_F);
-	hpwh.resetTankToSetpoint();
-}
+void testGetStateOfChargeFromLogic();
+void testGetStateOfChargeFailure();
+
 
 int main()
 {
 	testGetStateOfCharge();
 	testChargeBelowSetpoint();
+	testGetStateOfChargeFromLogic();
+	testGetStateOfChargeFailure();
 }
 
 void testGetStateOfCharge() {
@@ -24,7 +25,6 @@ void testGetStateOfCharge() {
 	double tMains_C = F_TO_C(55.);
 	double tMinUseful_C = F_TO_C(110.);
 	double chargeFraction;
-	//getSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C)
 
 	// Check for errors	
 	chargeFraction = hpwh.getSoCFraction(F_TO_C(125.), tMinUseful_C);
@@ -80,4 +80,59 @@ void testChargeBelowSetpoint() {
 	hpwh.setTankToTemperature(F_TO_C(130.));
 	chargeFraction = hpwh.getSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
 	ASSERTTRUE(cmpd(chargeFraction, 0.875));
+}
+
+void testGetStateOfChargeFromLogic() {
+	HPWH hpwh;
+	string input = "Sanden80";
+	getHPWHObject(hpwh, input);
+	double tMains_C = F_TO_C(55.);
+	double tMinUseful_C = F_TO_C(110.);
+	double chargeFraction;
+
+	// change to SOC control;
+	hpwh.switchToSoCControls(.76, .05, tMinUseful_C, true, tMains_C);
+	ASSERTTRUE(hpwh.isSoCControlled());
+
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 1.));
+
+	hpwh.setTankToTemperature(F_TO_C(110.));
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 0.5851064));
+
+	hpwh.setTankToTemperature(F_TO_C(121.));
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 0.702123));
+
+	hpwh.setTankToTemperature(F_TO_C(134.));
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 0.8404255));
+
+	hpwh.setTankToTemperature(F_TO_C(145.));
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 0.957447));
+}
+
+
+void testGetStateOfChargeFailure() {
+	HPWH hpwh;
+	string input = "Sanden80";
+	getHPWHObject(hpwh, input);
+	double tMains_C = F_TO_C(55.);
+	double tMinUseful_C = F_TO_C(110.);
+	double chargeFraction;
+
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(chargeFraction == HPWH::HPWH_ABORT);
+
+	hpwh.switchToSoCControls(.76, .05, tMinUseful_C, false, tMains_C);
+	ASSERTTRUE(hpwh.isSoCControlled());
+
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(chargeFraction == HPWH::HPWH_ABORT);
+
+	hpwh.setInletT(tMains_C);
+	chargeFraction = hpwh.getSoCFraction();
+	ASSERTTRUE(cmpd(chargeFraction, 1.));
 }
