@@ -41,8 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include "btwxt.h"
-#include "HPWHpresets.cc"
-#include "HPWHHeatingLogics.cc"
 
 #include <stdarg.h>
 #include <fstream>
@@ -931,7 +929,8 @@ bool HPWH::isNewSetpointPossible(double newSetpoint, double& maxAllowedSetpoint,
 
 		if (hasACompressor()) { // If there's a compressor lets check the new setpoint against the compressor's max setpoint
 
-			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C;
+			maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C - 
+				setOfSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
 			if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1) {
 				why = "The compressor cannot meet the setpoint temperature and there is no resistance backup.";
@@ -1900,6 +1899,15 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 		return double(HPWH_ABORT);
 	}
 
+	double maxSetpoint; 
+	string answerWhy;
+	if(!isNewSetpointPossible(outTemp_C, maxSetpoint, answerWhy)) {
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg(answerWhy.c_str());
+		}
+		return double(HPWH_ABORT);
+	}
+
 	if (setOfSources[compressorIndex].isExternalMultipass()) {
 		double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
 		setOfSources[compressorIndex].getCapacityMP(airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp); 
@@ -2833,7 +2841,8 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	:hpwh(parentInput), isOn(false), lockedOut(false), doDefrost(false), backupHeatSource(NULL), companionHeatSource(NULL),
 	followedByHeatSource(NULL), minT(-273.15), maxT(100), hysteresis_dC(0), airflowFreedom(1.0), maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none), extrapolationMethod(EXTRAP_LINEAR), maxOut_at_LowT{ 100, -273.15 }, standbyLogic(NULL),
-	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), useBtwxtGrid(false)
+	isMultipass(true), mpFlowRate_LPS(0.), externalInletHeight(-1), externalOutletHeight(-1), useBtwxtGrid(false),
+	secondaryHeatExchanger{ 0., 0., 0. }
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -2895,6 +2904,7 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 	lowestNode = hSource.lowestNode;
 
 	extrapolationMethod = hSource.extrapolationMethod;
+	secondaryHeatExchanger = hSource.secondaryHeatExchanger;
 }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
@@ -2964,6 +2974,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	lowestNode = hSource.lowestNode;
 	extrapolationMethod = hSource.extrapolationMethod;
+	secondaryHeatExchanger = hSource.secondaryHeatExchanger;
+
 	return *this;
 }
 
@@ -3412,16 +3424,15 @@ double HPWH::HeatSource::getCondenserTemp() const{
 void HPWH::HeatSource::getCapacity(double externalT_C, double condenserTemp_C, double setpointTemp_C, double &input_BTUperHr, double &cap_BTUperHr, double &cop) {
 	double externalT_F, condenserTemp_F;
 
-	// Convert Celsius to Fahrenheit for the curve fits
-	condenserTemp_F = C_TO_F(condenserTemp_C);
+	// Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate a secondary heat exchange in line with the compressor
+	condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
 	externalT_F = C_TO_F(externalT_C);
 
 	// Get bounding performance map points for interpolation/extrapolation
 	bool extrapolate = false;
 	size_t i_prev = 0;
 	size_t i_next = 1;
-	double Tout_F = C_TO_F(setpointTemp_C);
-
+	double Tout_F = C_TO_F(setpointTemp_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
 
 	if (useBtwxtGrid) {
 		std::vector<double> target{ externalT_F, Tout_F, condenserTemp_F };
@@ -3538,7 +3549,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C, double condenserTemp_C,
 	double externalT_F, condenserTemp_F;
 	bool resDefrostHeatingOn = false;
 	// Convert Celsius to Fahrenheit for the curve fits
-	condenserTemp_F = C_TO_F(condenserTemp_C);
+	condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
 	externalT_F = C_TO_F(externalT_C);
 	
 	// Check if we have resistance elements to turn on for defrost and add the constant lift.
@@ -3859,13 +3870,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 			timeRemaining_min = 0.;
 		}
 
-
 		// Track the condenser temperature if this is a compressor before moving the nodes //////////////////////////////////////////
 		if (isACompressor()) {
 			hpwh->condenserInlet_C += hpwh->tankTemps_C[externalOutletHeight] * timeUsed_min;
 			hpwh->condenserOutlet_C += targetTemp_C * timeUsed_min;
 		}
-
 
 		// Moving the nodes down ////////////////////////////////////////////////////////////////////////////////////////////////////
 		// move all nodes down, mixing if less than a full node
@@ -3875,12 +3884,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//add water to top node, heated to setpoint
 		hpwh->tankTemps_C[externalInletHeight] = hpwh->tankTemps_C[externalInletHeight] * (1. - nodeFrac) + targetTemp_C * nodeFrac;
 
-		
-
 		hpwh->mixTankInversions();
 
 		// track outputs - weight by the time ran //////////////////////////////////////////////////////////////////////////////////
-		input_BTUperHr += inputTemp_BTUperHr * timeUsed_min;
+		// Add in pump power to approximate a secondary heat exchange in line with the compressor
+		input_BTUperHr += (inputTemp_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) * timeUsed_min;
 		cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
 		cop += copTemp * timeUsed_min;
 
@@ -4272,15 +4280,23 @@ int HPWH::checkInputs() {
 				}
 				returnVal = HPWH_ABORT;
 			}
-			if (0 > setOfSources[i].externalOutletHeight || setOfSources[i].externalOutletHeight > numNodes-1) {
+			if (0 > setOfSources[i].externalOutletHeight || setOfSources[i].externalOutletHeight > numNodes - 1) {
 				if (hpwhVerbosity >= VRB_reluctant) {
 					msg("External heat sources need an external outlet height within the bounds from from 0 to numNodes-1. \n");
 				}
 				returnVal = HPWH_ABORT;
 			}
-			if (0 > setOfSources[i].externalInletHeight || setOfSources[i].externalInletHeight > numNodes-1) {
+			if (0 > setOfSources[i].externalInletHeight || setOfSources[i].externalInletHeight > numNodes - 1) {
 				if (hpwhVerbosity >= VRB_reluctant) {
 					msg("External heat sources need an external inlet height within the bounds from from 0 to numNodes-1. \n");
+				}
+				returnVal = HPWH_ABORT;
+			}
+		}
+		else {
+			if (setOfSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 || setOfSources[i].secondaryHeatExchanger.extraPumpPower_W) {
+				if (hpwhVerbosity >= VRB_reluctant) {
+					msg("Heatsource %d is not an external heat source but has an external secondary heat exchanger. \n", i);
 				}
 				returnVal = HPWH_ABORT;
 			}

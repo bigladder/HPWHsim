@@ -12,7 +12,16 @@ add_custom_target(${PROJECT_NAME}_version_header
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 include_directories("${PROJECT_BINARY_DIR}/src")
 
-add_library(libHPWHsim HPWH.cc HPWH.in.hh)
+set(headers
+  HPWH.in.hh
+)
+
+set(source
+  HPWH.cc
+  HPWHHeatingLogics.cc
+  HPWHpresets.cc
+)
+add_library(libHPWHsim ${source} ${headers})
 
 add_dependencies(libHPWHsim ${PROJECT_NAME}_version_header)
 

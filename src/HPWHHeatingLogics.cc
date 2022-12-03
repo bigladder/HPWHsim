@@ -2,6 +2,8 @@
 File of the presets heating logics available HPWHsim
 */
 
+#include "HPWH.hh"
+
 /* State of Charge Based Logic*/
 const bool HPWH::SoCBasedHeatingLogic::isValid() {
 	bool isValid = true;
