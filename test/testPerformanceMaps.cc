@@ -1,6 +1,3 @@
-
-
-
 /*
   unit test to check data input and performance maps are correct
 */
@@ -14,11 +11,15 @@
 using std::cout;
 using std::string;
 
+const double tInOffsetQAHV_dF = 10.;
+const double tOutOffsetQAHV_dF = 15.;
+
 struct performancePointMP {
 	double tairF;
 	double tinF;
 	double outputBTUH;
 };
+
 double getCapacityMP_F_KW(HPWH& hpwh, performancePointMP& point) {
 	return hpwh.getCompressorCapacity(point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::UNITS_F);
 }
@@ -29,8 +30,13 @@ struct performancePointSP {
 	double tinF;
 	double outputBTUH;
 };
+
 double getCapacitySP_F_BTUHR(HPWH& hpwh, performancePointSP& point) {
 	return hpwh.getCompressorCapacity(point.tairF, point.tinF, point.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+}
+
+double getCapacitySP_F_BTUHR(HPWH& hpwh, performancePointSP& point, double tInOffSet_dF, double tOutOffSet_dF) {
+	return hpwh.getCompressorCapacity(point.tairF, point.tinF-tInOffSet_dF, point.toutF-tOutOffSet_dF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 }
 
 void testCXA15MatchesDataMap() {
@@ -121,7 +127,6 @@ void testCXA30MatchesDataMap() {
 	ASSERTTRUE(relcmpd(capacityData_kW, capacity_kW));
 }
 
-
 // Colmac MP perfmaps tests
 void testCXV5MPMatchesDataMap() {
 	HPWH hpwh;
@@ -175,6 +180,7 @@ void testCXA10MPMatchesDataMap() {
 	checkPoint = { 100.0, 114.0, 43.4308219 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testCXA15MPMatchesDataMap() {
 	HPWH hpwh;
 	string input = "ColmacCxA_15_MP";
@@ -307,6 +313,7 @@ void testRheemHPHD60() {
 	checkPoint = { 110.0, 100.0, 24.287512 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testRheemHPHD135() {
 	//MODELS_RHEEM_HPHD135HNU_483_MP
 	//MODELS_RHEEM_HPHD135VNU_483_MP
@@ -344,6 +351,7 @@ void testNyleC60AMP() {
 	checkPoint = { 90.0, 130.0, 19.52 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testNyleC90AMP() {
 	HPWH hpwh;
 	string input = "NyleC90A_MP";
@@ -360,6 +368,7 @@ void testNyleC90AMP() {
 	checkPoint = { 90.0, 130.0, 36.27 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testNyleC125AMP() {
 	HPWH hpwh;
 	string input = "NyleC125A_MP";
@@ -376,6 +385,7 @@ void testNyleC125AMP() {
 	checkPoint = { 90.0, 130.0, 43.80};
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testNyleC185AMP() {
 	HPWH hpwh;
 	string input = "NyleC185A_MP";
@@ -392,6 +402,7 @@ void testNyleC185AMP() {
 	checkPoint = { 90.0, 130.0, 67.52 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
+
 void testNyleC250AMP() {
 	HPWH hpwh;
 	string input = "NyleC250A_MP";
@@ -409,100 +420,100 @@ void testNyleC250AMP() {
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint)));
 }
 
-
 void testQAHVMatchesDataMap() {
 	HPWH hpwh;
 	string input = "QAHV_N136TAU_HPB_SP";
 	performancePointSP checkPoint; // tairF, toutF, tinF, outputW
 	double outputBTUH;
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	// test
 	checkPoint = { -13.0, 140.0, 41.0, 66529.49616 };
-	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint);
+	outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF);
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
 	// test
 	checkPoint = { -13.0, 176.0, 41.0, 65872.597448 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(getCapacitySP_F_BTUHR(hpwh, checkPoint) == HPWH::HPWH_ABORT); // max setpoint without adjustment forces error
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { -13.0, 176.0, 84.2, 55913.249232 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 14.0, 176.0, 84.2, 92933.01932 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 42.8, 140.0, 41.0, 136425.98804}; 
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 50.0, 140.0, 41.0, 136425.98804 }; 
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 50.0, 176.0, 84.2, 136564.470884}; 
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 60.8, 158.0, 84.2, 136461.998288 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 71.6, 158.0, 48.2, 136498.001712 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
+
 	// test constant with setpoint between 140 and 158
 	checkPoint = { 71.6, 149.0, 48.2, 136498.001712 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 82.4, 176.0, 41.0, 136557.496756 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 104.0, 140.0, 62.6, 136480 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 104.0, 158.0, 62.6, 136480 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 	// test
 	checkPoint = { 104.0, 176.0, 84.2, 136564.470884 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 }
+
 // Also test QAHV constant extrpolation at high air temperatures AND linear extrapolation to hot water temperatures!
 void testQAHVExtrapolates() {
 	HPWH hpwh;
 	string input = "QAHV_N136TAU_HPB_SP";
 	performancePointSP checkPoint;  // tairF, toutF, tinF, outputW
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	// test linear along Tin
 	checkPoint = { -13.0, 140.0, 36.0, 66529.49616 };
-	ASSERTTRUE(checkPoint.outputBTUH < getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has increased
+	ASSERTTRUE(checkPoint.outputBTUH < getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has increased
 	// test linear along Tin
 	checkPoint = { -13.0, 140.0, 100.0, 66529.49616 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased
 	// test linear along Tin
 	checkPoint = { -13.0, 176.0, 36.0, 65872.597448 };
-	ASSERTTRUE(checkPoint.outputBTUH < getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has increased
+	ASSERTTRUE(checkPoint.outputBTUH < getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has increased
 	// test linear along Tin
 	checkPoint = { -13.0, 176.0, 100.0, 55913.249232 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased at high Tin
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased at high Tin
 	// test linear along Tin
 	checkPoint = { 10.4, 140.0, 111., 89000.085396 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased at high Tin
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased at high Tin
 	// test linear along Tin
 	checkPoint = { 64.4, 158.0, 100, 136461.998288 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased at high Tin
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased at high Tin
 	// test linear along Tin
 	checkPoint = { 86.0, 158.0, 100, 136461.998288 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased at high Tin
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased at high Tin
 	// test linear along Tin
 	checkPoint = { 104.0, 176.0, 100., 136564.470884 };
-	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint));  // Check output has decreased at high Tin
+	ASSERTTRUE(checkPoint.outputBTUH > getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));  // Check output has decreased at high Tin
 
 	// test const along Tair
 	checkPoint = { 110.0, 140.0, 62.6, 136480 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
+
 	// test const along Tair
 	checkPoint = { 114.0, 176.0, 84.2, 136564.470884 };
-	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint)));
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
 }
-
 
 int main(int, char*)
 {
