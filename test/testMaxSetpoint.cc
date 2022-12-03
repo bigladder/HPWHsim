@@ -20,7 +20,7 @@ void testMaxSetpointResistanceTank();
 void testScalableCompressor();
 void testJustR134ACompressor();
 void testJustR410ACompressor();
-//void testJustR744Compressor();
+void testJustQAHVCompressor();
 void testHybridModel();
 void testStorageTankSetpoint();
 void testSetpointFixed();
@@ -33,7 +33,7 @@ int main(int, char*)
 	testScalableCompressor();
 	testJustR134ACompressor();
 	testJustR410ACompressor();
-//	testJustR744Compressor();
+	testJustQAHVCompressor();
 	testHybridModel();
 	testStorageTankSetpoint();
 	testSetpointFixed();
@@ -66,7 +66,6 @@ void testScalableCompressor() {
 	double num;
 	string why;
 
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
@@ -86,7 +85,6 @@ void testJustR134ACompressor() {
 	double num;
 	string why;
 
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
@@ -102,12 +100,10 @@ void testJustR134ACompressor() {
 
 void testJustR410ACompressor() {
 	HPWH hpwh;
-
 	string input = "ColmacCxV_5_SP"; // Just a compressor with R410A
 	double num;
 	string why;
 
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
@@ -121,34 +117,38 @@ void testJustR410ACompressor() {
 	ASSERTTRUE(hpwh.setSetpoint(50.) == 0)
 }
 
-//void testJustR744Compressor() {
-//	HPWH hpwh;
-//
-//	string input = "Sanden80"; // Sanden is fixed setpoint, tested later need a new CO2 HP to go here
-//	double num;
-//
-//	// get preset model 
-//	getHPWHObject(hpwh, input);
-//
-//	// isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
-//	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num)); // Can't go above boiling
-//	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num)); // Can't go to near boiling
-//	ASSERTTRUE(HPWH::MAXOUTLET_R744 == num); //Assert we're getting the right number
-//	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num)); // Can go to normal
-//	ASSERTTRUE(hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R744, num)); // Can go to programed max
-//
-//	// Check this carries over into setting the setpoint. Sanden won't change it's setpoint though
-//	ASSERTTRUE(hpwh.setSetpoint(101) == HPWH::HPWH_ABORT); // Can't go above boiling
-//}
+void testJustQAHVCompressor() {
+	HPWH hpwh;
+	string input = "QAHV_N136TAU_HPB_SP";
+	double num;
+	string why;
+
+	getHPWHObject(hpwh, input);
+
+	const double maxQAHVSetpoint = F_TO_C(176.1);
+	const double qAHVHotSideTemepratureOffset = dF_TO_dC(15.);
+
+	// isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
+	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
+	ASSERTFALSE(hpwh.isNewSetpointPossible(99., num, why)); // Can't go to near boiling
+
+	ASSERTTRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
+
+	ASSERTFALSE(hpwh.isNewSetpointPossible(maxQAHVSetpoint, num, why));
+	ASSERTTRUE(hpwh.isNewSetpointPossible(maxQAHVSetpoint-qAHVHotSideTemepratureOffset, num, why));
+
+	// Check this carries over into setting the setpoint.
+	ASSERTTRUE(hpwh.setSetpoint(101) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwh.setSetpoint(maxQAHVSetpoint) == HPWH::HPWH_ABORT);
+	ASSERTTRUE(hpwh.setSetpoint(maxQAHVSetpoint - qAHVHotSideTemepratureOffset) == 0);
+}
 
 void testHybridModel() {
 	HPWH hpwh;
-
 	string input = "AOSmithCAHP120"; //Hybrid unit with a compressor with R134A
 	double num;
 	string why;
 
-	// get preset model 
 	getHPWHObject(hpwh, input);
 
 	ASSERTFALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
@@ -164,11 +164,10 @@ void testHybridModel() {
 
 void testStorageTankSetpoint() {
 	HPWH hpwh;
-
 	string input = "StorageTank"; //Hybrid unit with a compressor with R134A
 	double num;
 	string why;
-	// get preset model 
+
 	getHPWHObject(hpwh, input);
 
 	// Storage tanks have free reign!
@@ -184,11 +183,10 @@ void testStorageTankSetpoint() {
 
 void testSetpointFixed() {
 	HPWH hpwh;
-
 	string input = "Sanden80"; //Fixed setpoint model
 	double num, num1;
 	string why;
-	// get preset model 
+
 	getHPWHObject(hpwh, input);
 
 	// Storage tanks have free reign!

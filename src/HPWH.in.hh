@@ -1163,6 +1163,15 @@ class HPWH::HeatSource {
 	maxOut_minAir maxOut_at_LowT;
 	/**<  maximum output temperature at the minimum operating temperature of HPWH environment (minT)*/
 
+	struct SecondaryHeatExchanger {
+		double coldSideTemperatureOffest_dC;
+		double hotSideTemperatureOffset_dC;
+		double extraPumpPower_W;
+	};
+
+	SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary heat exchanger by adding extra input energy for the pump and
+	  an increaes in the water to the incoming waater temperature to the heatpump*/
+
   void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
   void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
   /**< these are two small functions to remove some of the cruft in initiation functions */
@@ -1221,8 +1230,6 @@ class HPWH::HeatSource {
 
   EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
-
-
   // some private functions, mostly used for heating the water with the addHeat function
 
  	double addHeatAboveNode(double cap_kJ, int node);
@@ -1270,6 +1277,7 @@ inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
 inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
 inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
 inline double KW_TO_BTUperH(double kw) { return (kw * 3412.14); }
+inline double W_TO_BTUperH(double w) { return (w * 3.41214); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
 inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
