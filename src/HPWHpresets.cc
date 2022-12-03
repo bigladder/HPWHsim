@@ -1640,7 +1640,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isMultipass = false;
 		compressor.maxSetpoint_C = F_TO_C(176.1);
 
-
 		// Turn on
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(4);
@@ -1651,7 +1650,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		nodeWeights1.emplace_back(1);
 		compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node", nodeWeights1, dF_TO_dC(15.), this, false, 
 			std::greater<double>(), true));
-		compressor.depressesTemperature = false;  //no temp depression
+		compressor.depressesTemperature = false;
 
 		// Performance grid: externalT_F, Tout_F, condenserTemp_F
 		compressor.perfGrid.reserve(2);
@@ -1739,6 +1738,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
 		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gridded_data);
 		compressor.useBtwxtGrid = true;
+
+		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
 
 		//set everything in its places
 		setOfSources[0] = compressor;
