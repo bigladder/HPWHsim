@@ -98,7 +98,8 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
 
 	// Fraction to heat next node, where the step change occurs
 	double fractNextNode = (tempMinUseful_C - parentHPWH->tankTemps_C[calcNode - 1]) / (parentHPWH->tankTemps_C[calcNode] - parentHPWH->tankTemps_C[calcNode - 1]);
-	
+	fractNextNode += HPWH::TOL_MINVALUE;
+
 	if (parentHPWH->hpwhVerbosity >= VRB_emetic) {
 		double smallestSoCChangeWhenHeatingNextNode = 1. / maxSoC * (1. + fractNextNode * (parentHPWH->setpoint_C - parentHPWH->tankTemps_C[calcNode]) / 
 			(tempMinUseful_C - getMainsT_C()));
