@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
 				  std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
 		  }
 		  if (useSoC) {
-			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction(soCMains_C, soCMinTUse_C)) + ", ";
+			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction()) + ", ";
 		  }
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
 	  }
