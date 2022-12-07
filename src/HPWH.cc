@@ -1889,11 +1889,11 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/, double inletTemp 
 		return double(HPWH_ABORT);
 	}
 
-	double maxSetpoint; 
-	string answerWhy;
-	if(!isNewSetpointPossible(outTemp_C, maxSetpoint, answerWhy)) {
+	double maxAllowedSetpoint_C = setOfSources[compressorIndex].maxSetpoint_C -
+		setOfSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+	if (outTemp_C > maxAllowedSetpoint_C) {
 		if (hpwhVerbosity >= VRB_reluctant) {
-			msg(answerWhy.c_str());
+			msg("Inputted outlet temperature of the compressor is higher than can be produced.");
 		}
 		return double(HPWH_ABORT);
 	}
