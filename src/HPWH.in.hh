@@ -641,7 +641,8 @@ class HPWH {
 		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C) const;
 	/**< Returns the heating output capacity of the compressor for the current HPWH model.
 	Note only supports HPWHs with one compressor, if multiple will return the last index
-	of a compressor */
+	of a compressor. Outlet temperatures greater than the max allowable setpoints will return an error, but
+	for compressors with a fixed setpoint the */
 
 	int setCompressorOutputCapacity(double newCapacity, double airTemp = 19.722, double inletTemp = 14.444, double outTemp = 57.222,
 		UNITS pwrUnit = UNITS_KW, UNITS tempUnit = UNITS_C);
