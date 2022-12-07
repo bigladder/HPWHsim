@@ -513,23 +513,53 @@ void testQAHVExtrapolates() {
 	// test const along Tair
 	checkPoint = { 114.0, 176.0, 84.2, 136564.470884 };
 	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF)));
+
+	checkPoint = { 114.0, 200.0, 84.2, 136564.470884 };
+	double output = getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF);
+	ASSERTTRUE(output == HPWH::HPWH_ABORT);
+}
+
+void testSanden()
+{
+	HPWH hpwh;
+	string input = "Sanden120";
+	performancePointSP checkPoint; // tairF, toutF, tinF, outputW
+	double outputBTUH;
+	getHPWHObject(hpwh, input);
+
+	// nominal
+	checkPoint = { 60, 149.0, 41.0, 15059.59167 };
+	outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
+
+	// Cold outlet temperature
+	checkPoint = { 60, 125.0, 41.0, 15059.59167 };
+	outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
+
+	// tests fails when output high
+	checkPoint = { 60, 200, 41.0, 15059.59167 };
+	outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+	ASSERTTRUE(outputBTUH == HPWH::HPWH_ABORT);
 }
 
 int main(int, char*)
 {
+	testSanden(); // check can still work with HPWH::getCapacity() as expected
+
 	testQAHVMatchesDataMap(); // Test QAHV grid data input correctly
 	testQAHVExtrapolates(); // Test QAHV grid data extrapolate correctly
 
-	testCXA15MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA30MatchesDataMap();  //Test we can set the correct capacity for specific equipement that matches the data
+	// Tests that the correct capacity is returned for specific equipement that matches the data set
+	testCXA15MatchesDataMap();
+	testCXA30MatchesDataMap();
 
-	// MP tests
-	testCXV5MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA10MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA15MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA20MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA25MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
-	testCXA30MPMatchesDataMap(); //Test we can set the correct capacity for specific equipement that matches the data
+	testCXV5MPMatchesDataMap();
+	testCXA10MPMatchesDataMap(); 
+	testCXA15MPMatchesDataMap(); 
+	testCXA20MPMatchesDataMap(); 
+	testCXA25MPMatchesDataMap(); 
+	testCXA30MPMatchesDataMap(); 
 
 	testRheemHPHD135();
 	testRheemHPHD60();
