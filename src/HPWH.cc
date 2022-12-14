@@ -997,13 +997,10 @@ double HPWH::getSoCFraction() const {
 
 void HPWH::calcAndSetSoCFraction() {
 	double newSoCFraction = -1.;
-	for (int i = 0; i < numHeatSources; i++) {
-		for (auto logic : setOfSources[i].turnOnLogicSet) {
-			auto logicSoC = std::dynamic_pointer_cast<SoCBasedHeatingLogic>(logic);
-			newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
-			break;
-		}
-	}
+
+	std::shared_ptr<SoCBasedHeatingLogic> logicSoC = std::dynamic_pointer_cast<SoCBasedHeatingLogic>(setOfSources[compressorIndex].turnOnLogicSet[0]);
+	newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
+
 	currentSoCFraction = newSoCFraction;
 }
 
@@ -1491,12 +1488,12 @@ int HPWH::setTargetSoCFraction(double target) {
 	}
 
 	for (int i = 0; i < numHeatSources; i++) {
-		for (auto logic : setOfSources[i].shutOffLogicSet) {
+		for (std::shared_ptr<HeatingLogic> logic : setOfSources[i].shutOffLogicSet) {
 			if (!logic->getIsEnteringWaterHighTempShutoff()) {
 				logic->setDecisionPoint(target);
 			}
 		}
-		for (auto logic : setOfSources[i].turnOnLogicSet) {
+		for (std::shared_ptr<HeatingLogic> logic : setOfSources[i].turnOnLogicSet) {
 			logic->setDecisionPoint(target);
 		}
 	}
@@ -2794,7 +2791,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 	double sum = 0;
 	double totWeight = 0;
 
-	for (auto nodeWeight : nodeWeights) {
+	for (NodeWeight nodeWeight : nodeWeights) {
 		// bottom calc node only
 		if (nodeWeight.nodeNum == 0) {
 			sum += tankTemps_C[0] * nodeWeight.weight;
@@ -4216,7 +4213,7 @@ int HPWH::checkInputs() {
 		}
 
 		// Validate on logics
-		for (auto logic : setOfSources[i].turnOnLogicSet) {
+		for (std::shared_ptr<HeatingLogic> logic : setOfSources[i].turnOnLogicSet) {
 			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
 				if (hpwhVerbosity >= VRB_reluctant) {
@@ -4225,7 +4222,7 @@ int HPWH::checkInputs() {
 			}
 		}
 		// Validate off logics
-		for (auto logic : setOfSources[i].shutOffLogicSet) {
+		for (std::shared_ptr<HeatingLogic> logic : setOfSources[i].shutOffLogicSet) {
 			if (!logic->isValid()) {
 				returnVal = HPWH_ABORT;
 				if (hpwhVerbosity >= VRB_reluctant) {
