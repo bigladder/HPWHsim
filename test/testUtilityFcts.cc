@@ -71,6 +71,15 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "AOSmithHPTU80") {
 		hpwhModel = HPWH::MODELS_AOSmithHPTU80;
 	}
+	else if (modelName == "AOSmithHPTS50") {
+		hpwhModel = HPWH::MODELS_AOSmithHPTS50;
+	}
+	else if (modelName == "AOSmithHPTS66") {
+		hpwhModel = HPWH::MODELS_AOSmithHPTS66;
+	}
+	else if (modelName == "AOSmithHPTS80") {
+		hpwhModel = HPWH::MODELS_AOSmithHPTS80;
+	}
 	else if (modelName == "AOSmithHPTU80DR") {
 		hpwhModel = HPWH::MODELS_AOSmithHPTU80_DR;
 	}
