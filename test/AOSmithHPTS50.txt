@@ -16,18 +16,23 @@ heatsource 2 condensity 0 0.2 0.2 0.2 0.2 0.2 0 0 0 0 0
 heatsource 2 nTemps 2
 heatsource 2 T1 50 F
 heatsource 2 T2 95 F
-heatsource 2 inPowT1const -8.41
-heatsource 2 inPowT1lin 3.074
+
+heatsource 2 inPowT1const 66.82
+heatsource 2 inPowT1lin 2.49
 heatsource 2 inPowT1quad 0
-heatsource 2 inPowT2const -186.3
-heatsource 2 inPowT2lin 4.962
+
+heatsource 2 inPowT2const -13.21
+heatsource 2 inPowT2lin 3.45
 heatsource 2 inPowT2quad 0
-heatsource 2 copT1const 20.3
-heatsource 2 copT1lin -0.246
-heatsource 2 copT1quad 0.000867
-heatsource 2 copT2const 8.88
-heatsource 2 copT2lin -0.0215
+
+heatsource 2 copT1const 8.64
+heatsource 2 copT1lin -0.0436
+heatsource 2 copT1quad 0
+
+heatsource 2 copT2const 12.52
+heatsource 2 copT2lin -0.0534
 heatsource 2 copT2quad 0.0
+
 heatsource 2 minT 37 F
 heatsource 2 maxT 120 F
 heatsource 2 hysteresis 1 F
