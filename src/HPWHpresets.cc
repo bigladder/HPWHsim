@@ -2439,7 +2439,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setCondensity(0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0);
 
 		// performance map
-		compressor.perfMap.reserve(2);
+		compressor.perfMap.reserve(3);
 
 		compressor.perfMap.push_back({
 			50, // Temperature (T_F)
@@ -2448,8 +2448,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		compressor.perfMap.push_back({
+			67.5, // Temperature (T_F)
+			{85.1, 2.38, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{10.82, -0.0551, 0.0} // COP Coefficients (COP_coeffs)
+			});
+		
+		compressor.perfMap.push_back({
 			95, // Temperature (T_F)
-			{-13.21, 3.45, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{89, 2.62, 0.0}, // Input Power Coefficients (inputPower_coeffs)
 			{12.52, -0.0534, 0.0} // COP Coefficients (COP_coeffs)
 			});
 
