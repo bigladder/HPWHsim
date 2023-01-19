@@ -88,6 +88,10 @@ class HPWH {
 	  MODELS_AOSmithHPTU80_DR = 107,    /**< 80 gallon AOSmith HPTU */
 	  MODELS_AOSmithCAHP120 = 108, /**< 12 gallon AOSmith CAHP commercial grade */
 
+	  MODELS_AOSmithHPTS50 = 1101,	 /**< 50 gallon, AOSmith HPTS */
+	  MODELS_AOSmithHPTS66 = 1102,	 /**< 66 gallon, AOSmith HPTS */
+	  MODELS_AOSmithHPTS80 = 1103,	 /**< 80 gallon, AOSmith HPTS */
+
 	  // GE Models
 	  MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
 	  MODELS_GE2014STDMode = 111,    /**< 2014 GE model run in standard mode */

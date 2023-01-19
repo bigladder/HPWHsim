@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
 		  }
 	  }
-	  cout << i << std::endl;
+
 	  // Run the step
 	  hpwh.runOneStep(allSchedules[0][i], // Inlet water temperature (C)
 		  GAL_TO_L(allSchedules[1][i]), // Flow in gallons
