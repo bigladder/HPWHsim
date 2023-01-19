@@ -2405,7 +2405,97 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	setOfSources[1].companionHeatSource = &setOfSources[2];
 
 	}
-		else if (presetNum == MODELS_GE2014STDMode) {
+	else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+	{
+		numNodes = 12;
+		tankTemps_C = new double[numNodes];
+		setpoint_C = F_TO_C(127.0);
+
+		if (presetNum == MODELS_AOSmithHPTS50) {
+			tankVolume_L = GAL_TO_L(45.6);
+			tankUA_kJperHrC = 6.403;
+		}
+		else if (presetNum == MODELS_AOSmithHPTS66) {
+			tankVolume_L = GAL_TO_L(67.63);
+			tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
+		}
+		else if (presetNum == MODELS_AOSmithHPTS80) {
+			tankVolume_L = GAL_TO_L(81.94);
+			tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
+		}
+		doTempDepression = false;
+		tankMixesOnDraw = true;
+
+		numHeatSources = 3;
+		setOfSources = new HeatSource[numHeatSources];
+
+		HeatSource compressor(this);
+		HeatSource resistiveElementTop(this);
+		HeatSource resistiveElementBottom(this);
+
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity(0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0);
+
+		// performance map
+		compressor.perfMap.reserve(3);
+
+		compressor.perfMap.push_back({
+			50, // Temperature (T_F)
+			{66.82, 2.49, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{8.64, -0.0436, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			67.5, // Temperature (T_F)
+			{85.1, 2.38, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{10.82, -0.0551, 0.0} // COP Coefficients (COP_coeffs)
+			});
+		
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{89, 2.62, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+			{12.52, -0.0534, 0.0} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.minT = F_TO_C(37.);
+		compressor.maxT = F_TO_C(120.);
+		compressor.hysteresis_dC = dF_TO_dC(1.);
+		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+		resistiveElementTop.setupAsResistiveElement(8, 4500);
+		resistiveElementTop.isVIP = true;
+
+		resistiveElementBottom.setupAsResistiveElement(0, 4500);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+
+		//logic conditions
+		double compStart = dF_TO_dC(30.2);
+		double standbyT = dF_TO_dC(9);
+		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(11.87)));
+
+		//set everything in its places
+		setOfSources[0] = resistiveElementTop;
+		setOfSources[1] = resistiveElementBottom;
+		setOfSources[2] = compressor;
+
+		//and you have to do this after putting them into setOfSources, otherwise
+		//you don't get the right pointers
+		setOfSources[2].backupHeatSource = &setOfSources[1];
+		setOfSources[1].backupHeatSource = &setOfSources[2];
+
+		setOfSources[0].followedByHeatSource = &setOfSources[2];
+		setOfSources[1].followedByHeatSource = &setOfSources[2];
+
+		setOfSources[0].companionHeatSource = &setOfSources[2];
+	}
+
+	else if (presetNum == MODELS_GE2014STDMode) {
 			numNodes = 12;
 			tankTemps_C = new double[numNodes];
 			setpoint_C = F_TO_C(127.0);
