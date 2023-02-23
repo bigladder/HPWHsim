@@ -15,6 +15,7 @@ add_executable(testHeatingLogics testHeatingLogics.cc)
 set(libs
  libHPWHsim 
  btwxt
+ hpwhsim_interface_library
 )
 target_link_libraries(testTool ${libs})
 target_link_libraries(testTankSizeFixed ${libs})
