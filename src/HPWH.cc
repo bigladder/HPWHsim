@@ -3892,10 +3892,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 	} while (timeRemaining_min > 0 && shutsOff() != true);
 
 	// divide outputs by sum of weight - the total time ran
-#if 1
-	// bug fix (patch?) 4-11-2023
-	// timeRemaining_min == minutesToRun is possible
-	//   prevent divide by 0
+	// not timeRemaining_min == minutesToRun is possible
+	//   must prevent divide by 0 (added 4-11-2023)
 	double timeRun = minutesToRun - timeRemaining_min;
 	if (timeRun > 0.)
 	{	input_BTUperHr /= timeRun;
@@ -3904,19 +3902,12 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		hpwh->condenserInlet_C /= timeRun;
 		hpwh->condenserOutlet_C /= timeRun;
 	}
-#else
-	input_BTUperHr /= (minutesToRun - timeRemaining_min);
-	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
-	cop /= (minutesToRun - timeRemaining_min);
-	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
-	hpwh->condenserOutlet_C /= (minutesToRun - timeRemaining_min);
-#endif
 	
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
 	}
-	//return the time left
-	return minutesToRun - timeRemaining_min;
+	// return the time left
+	return timeRun;
 }
 
 
