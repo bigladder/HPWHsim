@@ -3339,7 +3339,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	break;
 
 	case CONFIG_EXTERNAL:
-		//Else the heat source is external. Sanden system is only current example
+		//Else the heat source is external. SANCO2 system is only current example
 		//capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
 		this->runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
 		break;
