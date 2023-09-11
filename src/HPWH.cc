@@ -2498,7 +2498,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 	return HPWH_ABORT;
 }
 
-int HPWH::assignTankTemperature(const std::vector<double> &assignTankTemp, const UNITS units)
+int HPWH::assignTankTemperatures(const std::vector<double> &assignTankTemp, const UNITS units)
 {
 	if ((units != UNITS_C) && (units != UNITS_F))
 	{
@@ -2536,7 +2536,7 @@ int HPWH::assignTankTemperature(const std::vector<double> &assignTankTemp, const
 
 int HPWH::assignTankTemperature(const double assignTankTemp, const UNITS units)
 {
-	return assignTankTemperature({assignTankTemp}, units);
+	return assignTankTemperatures({assignTankTemp}, units);
 }
 
 //the privates
