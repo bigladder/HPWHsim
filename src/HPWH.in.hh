@@ -506,7 +506,7 @@ class HPWH {
 
   /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the 
 		existing nodes, regardless of numNodes. */
-  int assignTankTemperature(const std::vector<double> &assignTankTemp, const UNITS units = UNITS_C);
+  int assignTankTemperatures(const std::vector<double> &assignTankTemp, const UNITS units = UNITS_C);
 
   /**< Sets all nodes to the specified temp. */
   int assignTankTemperature(const double assignTankTemp, const UNITS units = UNITS_C);
