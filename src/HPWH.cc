@@ -2498,6 +2498,47 @@ int HPWH::getResistancePosition(int elementIndex) const {
 	return HPWH_ABORT;
 }
 
+int HPWH::assignTankTemperature(const std::vector<double> &assignTankTemp, const UNITS units)
+{
+	if ((units != UNITS_C) && (units != UNITS_F))
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setSetpoint.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	std::size_t nAssignNodes = assignTankTemp.size();
+	if (nAssignNodes == 0)
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No temperatures provided.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if ((numNodes < 1) || (tankTemps_C == nullptr))
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No tank nodes allocated.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double rat = static_cast<double>(nAssignNodes) / static_cast<double>(numNodes);
+	for (int i = 0; i < numNodes; ++i) {
+		std::size_t ip = static_cast<std::size_t>(floor(rat * i));
+		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(assignTankTemp[ip]) : assignTankTemp[ip];
+	}
+
+	return 0;
+}
+
+int HPWH::assignTankTemperature(const double assignTankTemp, const UNITS units)
+{
+	return assignTankTemperature({assignTankTemp}, units);
+}
+
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L, double inletT_C, double tankAmbientT_C,
 	double inletVol2_L, double inletT2_C) {
