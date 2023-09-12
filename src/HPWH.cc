@@ -2498,7 +2498,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 	return HPWH_ABORT;
 }
 
-int HPWH::assignTankTemperatures(const std::vector<double> &assignTankTemp, const UNITS units)
+int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units)
 {
 	if ((units != UNITS_C) && (units != UNITS_F))
 	{
@@ -2508,7 +2508,7 @@ int HPWH::assignTankTemperatures(const std::vector<double> &assignTankTemp, cons
 		return HPWH_ABORT;
 	}
 
-	std::size_t nAssignNodes = assignTankTemp.size();
+	std::size_t nAssignNodes = setTemps.size();
 	if (nAssignNodes == 0)
 	{
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -2528,15 +2528,15 @@ int HPWH::assignTankTemperatures(const std::vector<double> &assignTankTemp, cons
 	double rat = static_cast<double>(nAssignNodes) / static_cast<double>(numNodes);
 	for (int i = 0; i < numNodes; ++i) {
 		std::size_t ip = static_cast<std::size_t>(floor(rat * i));
-		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(assignTankTemp[ip]) : assignTankTemp[ip];
+		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(setTemps[ip]) : setTemps[ip];
 	}
 
 	return 0;
 }
 
-int HPWH::assignTankTemperature(const double assignTankTemp, const UNITS units)
+int HPWH::setTankLayerTemperature(const double setTemp, const UNITS units)
 {
-	return assignTankTemperatures({assignTankTemp}, units);
+	return setTankLayerTemperatures({setTemp}, units);
 }
 
 //the privates
