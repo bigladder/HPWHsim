@@ -3380,7 +3380,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun) {
 	break;
 
 	case CONFIG_EXTERNAL:
-		//Else the heat source is external. Sanden system is only current example
+		//Else the heat source is external. SANCO2 system is only current example
 		//capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
 		this->runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
 		break;
@@ -3932,18 +3932,23 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C, double minutesToRun
 		//specified in shutsOff logic, keep heating
 	} while (timeRemaining_min > 0 && shutsOff() != true);
 
-	//divide outputs by sum of weight - the total time ran
-	input_BTUperHr /= (minutesToRun - timeRemaining_min);
-	cap_BTUperHr /= (minutesToRun - timeRemaining_min);
-	cop /= (minutesToRun - timeRemaining_min);
-	hpwh->condenserInlet_C /= (minutesToRun - timeRemaining_min);
-	hpwh->condenserOutlet_C /= (minutesToRun - timeRemaining_min);
+	// divide outputs by sum of weight - the total time ran
+	// not timeRemaining_min == minutesToRun is possible
+	//   must prevent divide by 0 (added 4-11-2023)
+	double timeRun = minutesToRun - timeRemaining_min;
+	if (timeRun > 0.)
+	{	input_BTUperHr /= timeRun;
+		cap_BTUperHr /= timeRun;
+		cop /= timeRun;
+		hpwh->condenserInlet_C /= timeRun;
+		hpwh->condenserOutlet_C /= timeRun;
+	}
 	
 	if (hpwh->hpwhVerbosity >= VRB_emetic) {
 		hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
 	}
-	//return the time left
-	return minutesToRun - timeRemaining_min;
+	// return the time left
+	return timeRun;
 }
 
 
