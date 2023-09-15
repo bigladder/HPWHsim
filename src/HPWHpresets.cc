@@ -1750,20 +1750,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	}
 
-	else if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden_GS3_45HPA_US_SP || presetNum == MODELS_Sanden120) {
+	else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP || presetNum == MODELS_SANCO2_119) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = 65;
 		setpointFixed = true;
 
-		if (presetNum == MODELS_Sanden120) {
+		if (presetNum == MODELS_SANCO2_119) {
 			tankVolume_L = GAL_TO_L(119);
 			tankUA_kJperHrC = 9;
 		}
 		else {
 			tankVolume_L = 315;
 			tankUA_kJperHrC = 7;
-			if (presetNum == MODELS_Sanden_GS3_45HPA_US_SP) {
+			if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP) {
 				tankSizeFixed = false;
 			}
 		}
@@ -1824,7 +1824,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
 		compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("eighth node absolute", nodeWeights, F_TO_C(113), this, true));
-		if (presetNum == MODELS_Sanden80 || presetNum == MODELS_Sanden120) {
+		if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
 			// Adds a bonus standby logic so the external heater does not cycle, recommended for any external heater with standby
 			std::vector<NodeWeight> nodeWeightStandby;
@@ -1841,7 +1841,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		setOfSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_Sanden40) {
+	else if (presetNum == MODELS_SANCO2_43) {
 		numNodes = 96;
 		tankTemps_C = new double[numNodes];
 		setpoint_C = 65;
