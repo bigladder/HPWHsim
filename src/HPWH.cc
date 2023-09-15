@@ -1037,12 +1037,44 @@ int HPWH::resetTankToSetpoint() {
 }
 
 int HPWH::setTankToTemperature(double temp_C) {
-	for (int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = temp_C;
-	}
-	return 0;
+	return setTankLayerTemperatures({temp_C});
 }
 
+int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units)
+{
+	if ((units != UNITS_C) && (units != UNITS_F))
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setSetpoint.  \n");
+		}
+		return HPWH_ABORT;
+	}
+
+	std::size_t nAssignNodes = setTemps.size();
+	if (nAssignNodes == 0)
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No temperatures provided.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	if ((numNodes < 1) || (tankTemps_C == nullptr))
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No tank nodes allocated.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	double rat = static_cast<double>(nAssignNodes) / static_cast<double>(numNodes);
+	for (int i = 0; i < numNodes; ++i) {
+		std::size_t ip = static_cast<std::size_t>(floor(rat * i));
+		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(setTemps[ip]) : setTemps[ip];
+	}
+
+	return 0;
+}
 
 int HPWH::setAirFlowFreedom(double fanFraction) {
 	if (fanFraction < 0 || fanFraction > 1) {
@@ -2496,47 +2528,6 @@ int HPWH::getResistancePosition(int elementIndex) const {
 		}
 	}
 	return HPWH_ABORT;
-}
-
-int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units)
-{
-	if ((units != UNITS_C) && (units != UNITS_F))
-	{
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for setSetpoint.  \n");
-		}
-		return HPWH_ABORT;
-	}
-
-	std::size_t nAssignNodes = setTemps.size();
-	if (nAssignNodes == 0)
-	{
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("No temperatures provided.\n");
-		}
-		return HPWH_ABORT;
-	}
-
-	if ((numNodes < 1) || (tankTemps_C == nullptr))
-	{
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("No tank nodes allocated.\n");
-		}
-		return HPWH_ABORT;
-	}
-
-	double rat = static_cast<double>(nAssignNodes) / static_cast<double>(numNodes);
-	for (int i = 0; i < numNodes; ++i) {
-		std::size_t ip = static_cast<std::size_t>(floor(rat * i));
-		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(setTemps[ip]) : setTemps[ip];
-	}
-
-	return 0;
-}
-
-int HPWH::setTankLayerTemperature(const double setTemp, const UNITS units)
-{
-	return setTankLayerTemperatures({setTemp}, units);
 }
 
 //the privates

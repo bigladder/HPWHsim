@@ -508,9 +508,6 @@ class HPWH {
 		existing nodes, regardless of numNodes. */
   int setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units = UNITS_C);
 
-  /**< Sets all nodes to the specified temp. */
-  int setTankLayerTemperature(const double setTemp, const UNITS units = UNITS_C);
-
   bool isSetpointFixed() const;  /**< is the setpoint allowed to be changed */
   int setSetpoint(double newSetpoint, UNITS units = UNITS_C);/**<default units C*/
   /**< a function to change the setpoint - useful for dynamically setting it
