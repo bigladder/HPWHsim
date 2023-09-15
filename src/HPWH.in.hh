@@ -70,43 +70,51 @@ class HPWH {
 
   ///specifies the allowable preset HPWH models
   ///values may vary - names should be used
-  enum MODELS {
-	  // these models are used for testing purposes
-	  MODELS_restankNoUA = 1,       /**< a simple resistance tank, but with no tank losses  */
-	  MODELS_restankHugeUA = 2,     /**< a simple resistance tank, but with very large tank losses  */
-	  MODELS_restankRealistic = 3,  /**< a more-or-less realistic resistance tank  */
-	  MODELS_basicIntegrated = 4,   /**< a standard integrated HPWH  */
-	  MODELS_externalTest = 5,      /**< a single compressor tank, using "external" topology  */
+	enum MODELS {
+		// these models are used for testing purposes
+		MODELS_restankNoUA = 1,       /**< a simple resistance tank, but with no tank losses  */
+		MODELS_restankHugeUA = 2,     /**< a simple resistance tank, but with very large tank losses  */
+		MODELS_restankRealistic = 3,  /**< a more-or-less realistic resistance tank  */
+		MODELS_basicIntegrated = 4,   /**< a standard integrated HPWH  */
+		MODELS_externalTest = 5,      /**< a single compressor tank, using "external" topology  */
 
-	  // these models are based on real tanks and measured lab data
-	  // AO Smith models
-	  MODELS_AOSmithPHPT60 = 102,         /**< this is the Ecotope model for the 60 gallon Voltex HPWH  */
-	  MODELS_AOSmithPHPT80 = 103,         /**<  Voltex 80 gallon tank  */
-	  MODELS_AOSmithHPTU50 = 104,    /**< 50 gallon AOSmith HPTU */
-	  MODELS_AOSmithHPTU66 = 105,    /**< 66 gallon AOSmith HPTU */
-	  MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */
-	  MODELS_AOSmithHPTU80_DR = 107,    /**< 80 gallon AOSmith HPTU */
-	  MODELS_AOSmithCAHP120 = 108, /**< 12 gallon AOSmith CAHP commercial grade */
+		// these models are based on real tanks and measured lab data
+		// AO Smith models
+		MODELS_AOSmithPHPT60 = 102,         /**< this is the Ecotope model for the 60 gallon Voltex HPWH  */
+		MODELS_AOSmithPHPT80 = 103,         /**<  Voltex 80 gallon tank  */
+		MODELS_AOSmithHPTU50 = 104,    /**< 50 gallon AOSmith HPTU */
+		MODELS_AOSmithHPTU66 = 105,    /**< 66 gallon AOSmith HPTU */
+		MODELS_AOSmithHPTU80 = 106,    /**< 80 gallon AOSmith HPTU */
+		MODELS_AOSmithHPTU80_DR = 107,    /**< 80 gallon AOSmith HPTU */
+		MODELS_AOSmithCAHP120 = 108, /**< 12 gallon AOSmith CAHP commercial grade */
 
-	  MODELS_AOSmithHPTS50 = 1101,	 /**< 50 gallon, AOSmith HPTS */
-	  MODELS_AOSmithHPTS66 = 1102,	 /**< 66 gallon, AOSmith HPTS */
-	  MODELS_AOSmithHPTS80 = 1103,	 /**< 80 gallon, AOSmith HPTS */
+		MODELS_AOSmithHPTS50 = 1101,	 /**< 50 gallon, AOSmith HPTS */
+		MODELS_AOSmithHPTS66 = 1102,	 /**< 66 gallon, AOSmith HPTS */
+		MODELS_AOSmithHPTS80 = 1103,	 /**< 80 gallon, AOSmith HPTS */
 
-	  // GE Models
-	  MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
-	  MODELS_GE2014STDMode = 111,    /**< 2014 GE model run in standard mode */
-	  MODELS_GE2014STDMode_80 = 113,    /**< 2014 GE model run in standard mode, 80 gallon unit */
-	  MODELS_GE2014 = 112,           /**< 2014 GE model run in the efficiency mode */
-	  MODELS_GE2014_80 = 114,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
-	  MODELS_GE2014_80DR = 115,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
-	  MODELS_BWC2020_65 = 116,    /**<  The 2020 Bradford White 65 gallon unit  */
+		// GE Models
+		MODELS_GE2012 = 110,      /**<  The 2012 era GeoSpring  */
+		MODELS_GE2014STDMode = 111,    /**< 2014 GE model run in standard mode */
+		MODELS_GE2014STDMode_80 = 113,    /**< 2014 GE model run in standard mode, 80 gallon unit */
+		MODELS_GE2014 = 112,           /**< 2014 GE model run in the efficiency mode */
+		MODELS_GE2014_80 = 114,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
+		MODELS_GE2014_80DR = 115,           /**< 2014 GE model run in the efficiency mode, 80 gallon unit */
+		MODELS_BWC2020_65 = 116,    /**<  The 2020 Bradford White 65 gallon unit  */
 
 
-	  // Sanden CO2 transcritical heat pump water heaters
-	  MODELS_Sanden40 = 120,        /**<  Sanden 40 gallon CO2 external heat pump  */
-	  MODELS_Sanden80 = 121,        /**<  Sanden 80 gallon CO2 external heat pump  */
-	  MODELS_Sanden_GS3_45HPA_US_SP = 122,  /**<  Sanden 80 gallon CO2 external heat pump used for MF  */
-	  MODELS_Sanden120 = 123 ,/**<  Sanden 120 gallon CO2 external heat pump  */
+		// SANCO2 CO2 transcritical heat pump water heaters
+		//   Rebranding Sanden -> SANCO2 5-23
+		MODELS_SANCO2_43 = 120,        /**<  SANCO2 43 gallon CO2 external heat pump  */
+		MODELS_SANCO2_83 = 121,        /**<  SANCO2 83 gallon CO2 external heat pump  */
+		MODELS_SANCO2_GS3_45HPA_US_SP = 122,  /**<  SANCO2 80 gallon CO2 external heat pump used for MF  */
+		MODELS_SANCO2_119 = 123,		/**<  SANCO2 120 gallon CO2 external heat pump  */
+
+		// Sanden synomyms for backward compatability
+		//  allow unmodified code using HPWHsim to build
+		MODELS_Sanden40 = MODELS_SANCO2_43,
+		MODELS_Sanden80 = MODELS_SANCO2_83,
+		MODELS_Sanden_GS3_45HPA_US_SP = MODELS_SANCO2_GS3_45HPA_US_SP,
+		MODELS_Sanden120 = MODELS_SANCO2_119,
 
 	  // The new-ish Rheem
 	  MODELS_RheemHB50 = 140,        /**< Rheem 2014 (?) Model */
