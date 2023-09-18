@@ -1050,8 +1050,8 @@ int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UN
 		return HPWH_ABORT;
 	}
 
-	std::size_t nAssignNodes = setTemps.size();
-	if (nAssignNodes == 0)
+	std::size_t nSetNodes = setTemps.size();
+	if (nSetNodes == 0)
 	{
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("No temperatures provided.\n");
@@ -1067,12 +1067,42 @@ int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UN
 		return HPWH_ABORT;
 	}
 
-	double rat = static_cast<double>(nAssignNodes) / static_cast<double>(numNodes);
+	// Distribute setTemps over nodes.
+	double rat = static_cast<double>(numNodes) / static_cast<double>(nSetNodes);
+    std::size_t j(0);
+    double wj(rat);
+	double Tset(0.);
+	bool get_next_temp(true);
 	for (int i = 0; i < numNodes; ++i) {
-		std::size_t ip = static_cast<std::size_t>(floor(rat * i));
-		tankTemps_C[i] = (units == UNITS_F) ? F_TO_C(setTemps[ip]) : setTemps[ip];
+        double wi_tot(0.);
+        double wTi(0.);
+        while (wi_tot < 1.0)
+        {
+			if (get_next_temp)
+            {
+				if (j < nSetNodes)
+					Tset = (units == UNITS_F) ? F_TO_C(setTemps[j]) : setTemps[j];
+				else
+					break;
+				get_next_temp = false;
+			}
+            double wi = 1.0;
+            if (wj < wi)
+                wi = wj;
+            if (wi_tot + wi >= 1.0)
+                wi = 1.0 - wi_tot;
+            wi_tot += wi;
+            wTi += wi * Tset;
+            wj -= wi;
+            if (wj <= 0.)
+            {
+                j++;
+                wj = rat;
+				get_next_temp = true;
+			}
+		}
+		tankTemps_C[i] = (wi_tot > 0.) ? wTi / wi_tot : Tset;
 	}
-
 	return 0;
 }
 
