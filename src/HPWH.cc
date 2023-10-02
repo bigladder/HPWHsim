@@ -92,14 +92,14 @@ int setValues(std::vector<double> &Y,const std::vector<double> &Yp)
 
 	// We have nY element-bins over which we will distribute the values of nYp element-bins.
 	double rat = static_cast<double>(nY) / static_cast<double>(nYp);
-	double wp(1.0); // initialize weight of Yp element-bin;
+	double wp(1.); // initialize weight of Yp element-bin;
 	auto iterYp = Yp.begin();
 	for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY) {
 		double w_tot(0.); // total weight of contributions to Y element-bin; ideally 1.0 when full
 		double wY_tot(0.); // total of weight*value products to Y element-bin
 		while(w_tot < 1.0) // continue combining inputs until Y element-bin is full
 		{
-			double w = 1.0; // Assume Yp element-bin will fill Y element-bin
+			double w = 1.; // Assume Yp element-bin will fill Y element-bin
 			if(wp * rat < w) // contents of Yp element-bin will not completely fill Y element-bin
 				w = wp * rat; // scale the weight of Yp element-bin contribution
 			if(w_tot + w > 1.0) // Yp element-bin will overfill Y element-bin
@@ -111,7 +111,7 @@ int setValues(std::vector<double> &Y,const std::vector<double> &Yp)
 			{
 				if(++iterYp == Yp.end())
 					break; // end of vector Yp
-				wp = 1.0; // initialize weight of next Yp element-bin
+				wp = 1.; // initialize weight of next Yp element-bin
 			}
 		}
 		(*iterY) = (w_tot > 0.) ? wY_tot / w_tot : (*iterYp); // strictly avoid div-by-0 
