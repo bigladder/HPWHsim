@@ -243,9 +243,9 @@ void testSetTankTemps() {
 	ASSERTTRUE(fabs(newTemps[8] - 67.6) < 0.1); //
 
 // test 4
-	const int nSet = 24;
+	int nSet = 24;
 	setTemps.resize(nSet);
-	const double Ti = 20., Tf = 66.;
+	double Ti = 20., Tf = 66.;
 	for (std::size_t i = 0; i < nSet; ++i)
 		setTemps[i] = Ti + (Tf - Ti) * i / (nSet - 1);
 	hpwh.setTankLayerTemperatures(setTemps);
@@ -254,5 +254,18 @@ void testSetTankTemps() {
 	// Check some expected values.
 	ASSERTTRUE(fabs(newTemps[4] - 37.) < 0.1); //
 	ASSERTTRUE(fabs(newTemps[10] - 61.) < 0.1); //
+
+// test 5
+	nSet = 12;
+	setTemps.resize(nSet);
+	Ti = 20.; Tf = 64.;
+	for (std::size_t i = 0; i < nSet; ++i)
+		setTemps[i] = Ti + (Tf - Ti) * i / (nSet - 1);
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(fabs(newTemps[3] - 32.) < 0.1); //
+	ASSERTTRUE(fabs(newTemps[11] - 64.) < 0.1); //
 
 }
