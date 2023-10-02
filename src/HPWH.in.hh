@@ -514,7 +514,8 @@ class HPWH {
 
   /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the 
 		existing nodes, regardless of numNodes. */
-  int setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units = UNITS_C);
+  int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
+  void getTankTemps(std::vector<double> &tankTemps);
 
   bool isSetpointFixed() const;  /**< is the setpoint allowed to be changed */
   int setSetpoint(double newSetpoint, UNITS units = UNITS_C);/**<default units C*/

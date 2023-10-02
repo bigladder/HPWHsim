@@ -24,6 +24,7 @@ void testJustQAHVCompressor();
 void testHybridModel();
 void testStorageTankSetpoint();
 void testSetpointFixed();
+void testSetTankTemps();
 
 const double REMaxShouldBe = 100.;
 
@@ -37,6 +38,7 @@ int main(int, char*)
 	testHybridModel();
 	testStorageTankSetpoint();
 	testSetpointFixed();
+	testSetTankTemps();
 
 	//Made it through the gauntlet
 	return 0;
@@ -203,4 +205,27 @@ void testSetpointFixed() {
 	ASSERTTRUE(hpwh.setSetpoint(99.) == HPWH::HPWH_ABORT) // Can go lower than boiling though
 	ASSERTTRUE(hpwh.setSetpoint(60.) == HPWH::HPWH_ABORT); // Can't go to normalish
 	ASSERTTRUE(hpwh.setSetpoint(10.) == HPWH::HPWH_ABORT); // Can't go low, albiet dumb
+}
+
+void testSetTankTemps() {
+	HPWH hpwh;
+	getHPWHObject(hpwh, "Rheem2020Prem50"); // 12-node model
+
+	std::vector<double> newTemps;
+
+	hpwh.setTankLayerTemperatures({10., 60.});
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(newTemps[0] == 10.0); //
+	ASSERTTRUE(newTemps[11] == 60.0); //
+
+	hpwh.setTankLayerTemperatures({10., 20., 30., 40., 50., 60.});
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(newTemps[0] == 10.); //
+	ASSERTTRUE(newTemps[5] == 30.); //
+	ASSERTTRUE(newTemps[6] == 40.); //
+	ASSERTTRUE(newTemps[11] == 60.); //
 }
