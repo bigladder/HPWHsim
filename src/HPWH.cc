@@ -71,6 +71,47 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 // setpoint-below-water-temp issues
 //   1-22-2017
 
+/*
+ *	Assign values in vector Yp to vector Y
+ */
+int setValues(std::vector<double> &Y, const std::vector<double> &Yp)
+{
+	const std::size_t nY(Y.size());
+	const std::size_t nYp(Yp.size());
+	if ((nY == 0) || (nYp == 0))
+	{
+		return -1;
+	}
+
+	// We have nY element-bins over which we will distribute the values of nYp element-bins.
+	double rat = static_cast<double>(nY) / static_cast<double>(nYp);
+    double wp(1.0); // initialize weight of Yp vaue;
+	std::vector<double>::const_iterator iter_yp = Yp.begin();
+	for (auto &y : Y) {
+        double w_tot(0.); // total weight of contributions to y; ideally 1.0 when element-bin is full
+        double wy_tot(0.); // total of weight*value products to y
+        while (w_tot < 1.0) // continue combining inputs until element-bin is full
+        {
+            double w = 1.0; // Assume bin yp will fill bin y
+            if (wp * rat < w) // contents of element-bin yp will not completely fill element-bin y 
+                w = wp * rat; // scale the weight of element yp contribution
+            if (w_tot + w > 1.0) // element bin yp will overfill element bin y
+                w = 1.0 - w_tot; // retain portion of element bin yp needed to fill element-bin y
+            w_tot += w; // combine this contribution to element-bin y
+            wy_tot += w * (*iter_yp);
+            wp -= w / rat; // reduce remaining weight of element-bin yp
+            if (wp <= 0.) // should be precisely zero when element-bin yp is depleted 
+            {
+                if (++iter_yp == Yp.end())
+					break; // end of data
+                wp = 1.0; // initialize weight of next element
+			}
+		}
+		y = (w_tot > 0.) ? wy_tot / w_tot : (*iter_yp); // strictly avoid div-by-0 
+	}
+	return 0;
+}
+
 //the HPWH functions
 //the publics
 HPWH::HPWH() : setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), messageCallback(NULL), messageCallbackContextPtr(NULL), hpwhVerbosity(VRB_silent)
@@ -1040,7 +1081,7 @@ int HPWH::setTankToTemperature(double temp_C) {
 	return setTankLayerTemperatures({temp_C});
 }
 
-int HPWH::setTankLayerTemperatures(const std::vector<double> &setTankTemps, const UNITS units)
+int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
 {
 	if ((units != UNITS_C) && (units != UNITS_F))
 	{
@@ -1067,45 +1108,26 @@ int HPWH::setTankLayerTemperatures(const std::vector<double> &setTankTemps, cons
 		return HPWH_ABORT;
 	}
 
-	// Distribute setTankTemps over nodes.
-	// We have numNodes nodes (elements) of tankTemps_C[i] and
-	// numSetNodes elements of setTankTemps[j], (which may be in F).
-	double rat = static_cast<double>(numNodes) / static_cast<double>(numSetNodes);
-    std::size_t j(0); // index of element j, having temp setTankTemps[j]
-    double wj(1.0); // initialize weight of element j contribution;
-	double Tj(0.); // retain each setTankTemps[j] until j is incremented
-	bool get_next_temp(true); // track when the next setTemp[j] is needed
-	for (int i = 0; i < numNodes; ++i) {
-        double wi_tot(0.); // total weight of contributions to node i; ideally 1.0 when full
-        double wTi_tot(0.); // total of weight * temp products to node i
-        while (wi_tot < 1.0) // continue combining input Ts until node is full
-        {
-			if (get_next_temp)
-            {	// retrieve (and convert) setTankTemps[j] when needed.
-				if (j < numSetNodes)
-					Tj = (units == UNITS_F) ? F_TO_C(setTankTemps[j]) : setTankTemps[j];
-				else
-					break;
-				get_next_temp = false;
-			}
-            double wi = 1.0; // Assume element j will fill node i
-            if (wj * rat < wi) // contents of element j will not completely fill node i 
-                wi = wj * rat; // scale the weight of element j and combine
-            if (wi_tot + wi >= 1.0) // element j will overfill node i
-                wi = 1.0 - wi_tot;
-            wi_tot += wi; // combine this contribution to node i
-            wTi_tot += wi * Tj;
-            wj -= wi / rat; // reduce remaining weight of element j
-            if (wj <= 0.) // should be precisely zero when element j is depleted 
-            {
-                j++; // proceed to next element
-                wj = 1.0; // initialize weight of next element
-				get_next_temp = true;
-			}
-		}
-		tankTemps_C[i] = (wi_tot > 0.) ? wTi_tot / wi_tot : Tj; // strictly avoid div-by-0 
-	}
+	// assign node temps to a std::vector
+	std::vector<double> tankTemps;
+	tankTemps.assign(tankTemps_C, tankTemps_C + numNodes);
+
+	// convert set temps to C, if necessary
+	if (units == UNITS_F)
+		for (auto &T: setTankTemps)
+			T = F_TO_C(T);
+
+	// set node temps and copy back to array, if successful
+	if (setValues(tankTemps, setTankTemps) == 0)
+		std::copy(tankTemps.begin(), tankTemps.end(), tankTemps_C);
+	else
+		return HPWH_ABORT;
+
 	return 0;
+}
+
+void HPWH::getTankTemps(std::vector<double> &tankTemps) {
+	tankTemps.assign(tankTemps_C, tankTemps_C + numNodes);
 }
 
 int HPWH::setAirFlowFreedom(double fanFraction) {
