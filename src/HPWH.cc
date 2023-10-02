@@ -1040,21 +1040,12 @@ int HPWH::setTankToTemperature(double temp_C) {
 	return setTankLayerTemperatures({temp_C});
 }
 
-int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UNITS units)
+int HPWH::setTankLayerTemperatures(const std::vector<double> &setTankTemps, const UNITS units)
 {
 	if ((units != UNITS_C) && (units != UNITS_F))
 	{
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for setSetpoint.  \n");
-		}
-		return HPWH_ABORT;
-	}
-
-	std::size_t nSetNodes = setTemps.size();
-	if (nSetNodes == 0)
-	{
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("No temperatures provided.\n");
 		}
 		return HPWH_ABORT;
 	}
@@ -1067,41 +1058,52 @@ int HPWH::setTankLayerTemperatures(const std::vector<double> &setTemps, const UN
 		return HPWH_ABORT;
 	}
 
-	// Distribute setTemps over nodes.
-	double rat = static_cast<double>(numNodes) / static_cast<double>(nSetNodes);
-    std::size_t j(0);
-    double wj(rat);
-	double Tset(0.);
-	bool get_next_temp(true);
+	std::size_t numSetNodes = setTankTemps.size();
+	if (numSetNodes == 0)
+	{
+		if (hpwhVerbosity >= VRB_reluctant) {
+			msg("No temperatures provided.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	// Distribute setTankTemps over nodes.
+	// We have numNodes nodes (elements) of tankTemps_C[i] and
+	// numSetNodes elements of setTankTemps[j], (which may be in F).
+	double rat = static_cast<double>(numNodes) / static_cast<double>(numSetNodes);
+    std::size_t j(0); // index of element j, having temp setTankTemps[j]
+    double wj(1.0); // initialize weight of element j contribution;
+	double Tj(0.); // retain each setTankTemps[j] until j is incremented
+	bool get_next_temp(true); // track when the next setTemp[j] is needed
 	for (int i = 0; i < numNodes; ++i) {
-        double wi_tot(0.);
-        double wTi(0.);
-        while (wi_tot < 1.0)
+        double wi_tot(0.); // total weight of contributions to node i; ideally 1.0 when full
+        double wTi_tot(0.); // total of weight * temp products to node i
+        while (wi_tot < 1.0) // continue combining input Ts until node is full
         {
 			if (get_next_temp)
-            {
-				if (j < nSetNodes)
-					Tset = (units == UNITS_F) ? F_TO_C(setTemps[j]) : setTemps[j];
+            {	// retrieve (and convert) setTankTemps[j] when needed.
+				if (j < numSetNodes)
+					Tj = (units == UNITS_F) ? F_TO_C(setTankTemps[j]) : setTankTemps[j];
 				else
 					break;
 				get_next_temp = false;
 			}
-            double wi = 1.0;
-            if (wj < wi)
-                wi = wj;
-            if (wi_tot + wi >= 1.0)
+            double wi = 1.0; // Assume element j will fill node i
+            if (wj * rat < wi) // contents of element j will not completely fill node i 
+                wi = wj * rat; // scale the weight of element j and combine
+            if (wi_tot + wi >= 1.0) // element j will overfill node i
                 wi = 1.0 - wi_tot;
-            wi_tot += wi;
-            wTi += wi * Tset;
-            wj -= wi;
-            if (wj <= 0.)
+            wi_tot += wi; // combine this contribution to node i
+            wTi_tot += wi * Tj;
+            wj -= wi / rat; // reduce remaining weight of element j
+            if (wj <= 0.) // should be precisely zero when element j is depleted 
             {
-                j++;
-                wj = rat;
+                j++; // proceed to next element
+                wj = 1.0; // initialize weight of next element
 				get_next_temp = true;
 			}
 		}
-		tankTemps_C[i] = (wi_tot > 0.) ? wTi / wi_tot : Tset;
+		tankTemps_C[i] = (wi_tot > 0.) ? wTi_tot / wi_tot : Tj; // strictly avoid div-by-0 
 	}
 	return 0;
 }
