@@ -83,10 +83,37 @@ int setValues(std::vector<double> &Y,const std::vector<double> &Yp)
 		return -1;
 	}
 
-	// Simplify handling of identical-size case 
+	// Handle rational-fraction cases, nY  nYp
+	if((nY > nYp) && (nY % nYp == 0))
+	{
+		std::size_t n_bin = nY / nYp;
+		auto iterY = Y.begin();
+		for(auto iterYp = Yp.begin(); iterYp != Yp.end(); iterY += n_bin,++iterYp)
+		{
+			std::fill(iterY,iterY + n_bin,*iterYp);
+		}
+		return 0;
+	}
+
+	// nY == nYp case
 	if(nY == nYp)
 	{
 		Y = Yp;
+		return 0;
+	}
+
+	// Handle rational-fraction cases, nY < nYp
+	if((nY < nYp) && (nYp % nY == 0))
+	{
+		std::size_t n_avg = nYp / nY;
+		auto iterYp = Yp.begin();
+		for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY, iterYp += n_avg)
+		{
+			double sum = 0.;
+			for(std::size_t i = 0; i< n_avg; ++i)
+				sum += *(iterYp + i);
+			*iterY = sum / static_cast<double>(n_avg);
+		}
 		return 0;
 	}
 
@@ -3741,9 +3768,9 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
 			}
 			setPointNodeNum++;
 			cap_kJ -= Q_kJ;
-	}
+		}
 #endif
-}
+	}
 
 	//return the unused capacity
 	return cap_kJ;
