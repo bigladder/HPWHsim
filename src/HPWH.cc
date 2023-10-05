@@ -67,12 +67,7 @@ const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
 
-#define SETPOINT_FIX	// #define to include fixes for
-// setpoint-below-water-temp issues
-//   1-22-2017
-
-//the HPWH functions
-//the publics
+// public HPWH functions
 HPWH::HPWH() : setOfSources(NULL), tankTemps_C(NULL), nextTankTemps_C(NULL), messageCallback(NULL), messageCallbackContextPtr(NULL), hpwhVerbosity(VRB_silent)
 { setAllDefaults(); };
 
@@ -2825,21 +2820,6 @@ void HPWH::mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor
 		tankTemps_C[i] += ((ave - tankTemps_C[i]) / mixFactor);
 		//tankTemps_C[i] = tankTemps_C[i] * (1.0 - 1.0 / mixFactor) + ave / mixFactor;
 	}
-}
-
-bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const {
-	
-	if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
-		return true;
-	}
-	else if (hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
-		return true;
-	}
-	return false;
-}
-
-void HPWH::resetTopOffTimer() {
-	timerTOT = 0.;
 }
 
 void HPWH::calcSizeConstants() {
