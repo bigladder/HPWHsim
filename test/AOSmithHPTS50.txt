@@ -10,7 +10,7 @@ numHeatSources 3
 heatsource 2 isVIP false
 heatsource 2 isOn false
 heatsource 2 type compressor
-heatsource 2 condensity 0 0.2 0.2 0.2 0.2 0.2 0 0 0 0 0
+heatsource 2 condensity 0 0.2 0.2 0.2 0.2 0.2 0 0 0 0 0 0
 
 
 heatsource 2 nTemps 3

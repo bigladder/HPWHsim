@@ -152,8 +152,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	return *this;
 }
 
-
-
 void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
 	double cnd5,double cnd6,double cnd7,double cnd8,
 	double cnd9,double cnd10,double cnd11,double cnd12) {
@@ -467,7 +465,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
-		static std::vector<double> heatDistribution(hpwh->numNodes);
+		static std::vector<double> heatDistribution(hpwh->getNumNodes());
 		//clear the heatDistribution vector, since it's static it is still holding the
 		//distribution from the last go around
 		heatDistribution.clear();
@@ -490,7 +488,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		//the loop over nodes here is intentional - essentially each node that has
 		//some amount of heatDistribution acts as a separate resistive element
 		//maybe start from the top and go down?  test this with graphs
-		for(int i = hpwh->numNodes - 1; i >= 0; i--) {
+		for(int i = hpwh->getNumNodes() - 1; i >= 0; i--) {
 			//for(int i = 0; i < hpwh->numNodes; i++){
 			captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
 			if(captmp_kJ != 0) {
@@ -561,10 +559,10 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 
 double HPWH::HeatSource::getCondenserTemp() const{
 	double condenserTemp_C = 0.0;
-	int tempNodesPerCondensityNode = hpwh->numNodes / CONDENSITY_SIZE;
+	int tempNodesPerCondensityNode = hpwh->getNumNodes() / CONDENSITY_SIZE;
 	int j = 0;
 
-	for(int i = 0; i < hpwh->numNodes; i++) {
+	for(int i = 0; i < hpwh->getNumNodes(); i++) {
 		j = i / tempNodesPerCondensityNode;
 		if(condensity[j] != 0) {
 			condenserTemp_C += (condensity[j] / tempNodesPerCondensityNode) * hpwh->tankTemps_C[i];
@@ -822,14 +820,14 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	for(int i = 0; i < hpwh->numNodes; i++) {
+	for(int i = 0; i < hpwh->getNumNodes(); i++) {
 		if(i < lowestNode) {
 			heatDistribution.push_back(0);
 		} else {
 			int k;
 			if(configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
 				//intentional integer division
-				k = i / int(hpwh->numNodes / CONDENSITY_SIZE);
+				k = i / int(hpwh->getNumNodes() / CONDENSITY_SIZE);
 				heatDistribution.push_back(condensity[k]);
 			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
 				double temp = 0;  //temp for temporary not temperature
@@ -849,7 +847,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
 	double Q_kJ,deltaT_C,targetTemp_C;
 	int setPointNodeNum;
 
-	double volumePerNode_L = hpwh->tankVolume_L / hpwh->numNodes;
+	double volumePerNode_L = hpwh->tankVolume_L / hpwh->getNumNodes();
 	double maxTargetTemp_C = std::min(maxSetpoint_C,hpwh->setpoint_C);
 
 	if(hpwh->hpwhVerbosity >= VRB_emetic) {
@@ -859,7 +857,7 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
 	// find the first node (from the bottom) that does not have the same temperature as the one above it
 	// if they all have the same temp., use the top node, hpwh->numNodes-1
 	setPointNodeNum = node;
-	for(int i = node; i < hpwh->numNodes - 1; i++) {
+	for(int i = node; i < hpwh->getNumNodes() - 1; i++) {
 		if(hpwh->tankTemps_C[i] != hpwh->tankTemps_C[i + 1]) {
 			break;
 		} else {
@@ -868,9 +866,9 @@ double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
 	}
 
 	// maximum heat deliverable in this timestep
-	while(cap_kJ > 0 && setPointNodeNum < hpwh->numNodes) {
+	while(cap_kJ > 0 && setPointNodeNum < hpwh->getNumNodes()) {
 		// if the whole tank is at the same temp, the target temp is the setpoint
-		if(setPointNodeNum == (hpwh->numNodes - 1)) {
+		if(setPointNodeNum == (hpwh->getNumNodes() - 1)) {
 			targetTemp_C = maxTargetTemp_C;
 		}
 		//otherwise the target temp is the first non-equal-temp node
@@ -920,7 +918,7 @@ bool  HPWH::HeatSource::isExternalMultipass() const {
 double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,double &cap_BTUperHr,double &input_BTUperHr,double &cop) {
 	double heatingCapacity_kJ,heatingCapacityNeeded_kJ,deltaT_C,timeUsed_min,nodeHeat_kJperNode,nodeFrac,fractToShutOff;
 	double inputTemp_BTUperHr = 0,capTemp_BTUperHr = 0,copTemp = 0;
-	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->numNodes;
+	double volumePerNode_LperNode = hpwh->tankVolume_L / hpwh->getNumNodes();
 	double timeRemaining_min = minutesToRun;
 	double maxTargetTemp_C = std::min(maxSetpoint_C,hpwh->setpoint_C);
 	double targetTemp_C = 0.;
@@ -935,7 +933,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 
 		if(this->isMultipass) {
 			// if multipass evenly mix the tank up
-			hpwh->mixTankNodes(0,hpwh->numNodes,1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
+			hpwh->mixTankNodes(0,hpwh->getNumNodes(),1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
 
 			//how much heat is added this timestep
 			getCapacityMP(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);

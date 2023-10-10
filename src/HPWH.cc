@@ -38,7 +38,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include "HPWH.hh"
 #include "btwxt.h"
 
@@ -64,6 +63,13 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+void HPWH::setMinutesPerStep(const double minutesPerStep_in)
+{
+	minutesPerStep = minutesPerStep_in;
+	secondsPerStep = 60.0 * minutesPerStep;
+	hoursPerStep = minutesPerStep / 60.0;
+};
+
 //ugh, this should be in the header
 const std::string HPWH::version_maint = HPWHVRSN_META;
 
@@ -74,21 +80,22 @@ HPWH::HPWH(): setOfSources(NULL),tankTemps_C(NULL),nextTankTemps_C(NULL),message
 };
 
 void HPWH::setAllDefaults() {
-	delete[] tankTemps_C;
-	delete[] nextTankTemps_C;
+	tankTemps_C.clear();
+	nextTankTemps_C.clear();
 	delete[] setOfSources;
 
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false;
 	numHeatSources = 0;
 	member_inletT_C = HPWH_ABORT;
 	currentSoCFraction = 1.;
-	setOfSources = NULL; tankTemps_C = NULL; nextTankTemps_C = NULL; doTempDepression = false;
+	setOfSources = NULL; doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 	mixBelowFractionOnDraw = 1. / 3.;
 	doInversionMixing = true; doConduction = true;
 	inletHeight = 0; inlet2Height = 0; fittingsUA_kJperHrC = 0.;
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
 	usesSoCLogic = false;
+	setMinutesPerStep(1.0);
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -109,21 +116,15 @@ HPWH::HPWH(const HPWH &hpwh) {
 		setOfSources[i].hpwh = this;
 	}
 
-
-
 	tankVolume_L = hpwh.tankVolume_L;
 	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
 	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
-	numNodes = hpwh.numNodes;
 	nodeDensity = hpwh.nodeDensity;
-	tankTemps_C = new double[numNodes];
-	nextTankTemps_C = new double[numNodes];
-	for(int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = hpwh.tankTemps_C[i];
-		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
-	}
+	tankTemps_C = hpwh.tankTemps_C;
+	nextTankTemps_C = hpwh.nextTankTemps_C;
+
 	inletHeight = hpwh.inletHeight;
 	inlet2Height = hpwh.inlet2Height;
 
@@ -148,8 +149,8 @@ HPWH::HPWH(const HPWH &hpwh) {
 
 	usesSoCLogic = hpwh.usesSoCLogic;
 
-	volPerNode_LperNode = hpwh.volPerNode_LperNode;
-	node_height = hpwh.node_height;
+	nodeVolume_L = hpwh.nodeVolume_L;
+	nodeHeight_m = hpwh.nodeHeight_m;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
 
@@ -159,7 +160,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	if(this == &hpwh) {
 		return *this;
 	}
-
 
 	simHasFailed = hpwh.simHasFailed;
 
@@ -186,23 +186,16 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 		//I prefer it to fail.  -NDK  1/2016
 	}
 
-
 	tankVolume_L = hpwh.tankVolume_L;
 	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
 	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
-	numNodes = hpwh.numNodes;
 	nodeDensity = hpwh.nodeDensity;
 
-	delete[] tankTemps_C;
-	delete[] nextTankTemps_C;
-	tankTemps_C = new double[numNodes];
-	nextTankTemps_C = new double[numNodes];
-	for(int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = hpwh.tankTemps_C[i];
-		nextTankTemps_C[i] = hpwh.nextTankTemps_C[i];
-	}
+	tankTemps_C = hpwh.tankTemps_C;
+	nextTankTemps_C = hpwh.nextTankTemps_C;
+
 	inletHeight = hpwh.inletHeight;
 	inlet2Height = hpwh.inlet2Height;
 
@@ -228,16 +221,14 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	usesSoCLogic = hpwh.usesSoCLogic;
 
-	volPerNode_LperNode = hpwh.volPerNode_LperNode;
-	node_height = hpwh.node_height;
+	nodeVolume_L = hpwh.nodeVolume_L;
+	nodeHeight_m = hpwh.nodeHeight_m;
 	fracAreaTop = hpwh.fracAreaTop;
 	fracAreaSide = hpwh.fracAreaSide;
 	return *this;
 }
 
 HPWH::~HPWH() {
-	delete[] tankTemps_C;
-	delete[] nextTankTemps_C;
 	delete[] setOfSources;
 }
 
@@ -248,7 +239,6 @@ string HPWH::getVersion() {
 
 	return version.str();
 }
-
 
 int HPWH::runOneStep(double drawVolume_L,
 	double tankAmbientT_C,double heatSourceAmbientT_C,
@@ -529,7 +519,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	}
 
 	//cursory check for inverted temperature profile
-	if(tankTemps_C[numNodes - 1] < tankTemps_C[0]) {
+	if(tankTemps_C[getNumNodes() - 1] < tankTemps_C[0]) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("The top of the tank is cooler than the bottom.  \n");
 		}
@@ -604,20 +594,36 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 			heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
 		}
 
-		//print minutely output
+				//print minutely output
 		if(hpwhVerbosity == VRB_minuteOut) {
 			msg("%f,%f,%f,",tankAmbientT_C[i],drawVolume_L[i],inletT_C[i]);
 			for(int j = 0; j < numHeatSources; j++) {
 				msg("%f,%f,",getNthHeatSourceEnergyInput(j),getNthHeatSourceEnergyOutput(j));
 			}
-			msg("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-				tankTemps_C[0 * numNodes / 12],tankTemps_C[1 * numNodes / 12],
-				tankTemps_C[2 * numNodes / 12],tankTemps_C[3 * numNodes / 12],
-				tankTemps_C[4 * numNodes / 12],tankTemps_C[5 * numNodes / 12],
-				tankTemps_C[6 * numNodes / 12],tankTemps_C[7 * numNodes / 12],
-				tankTemps_C[8 * numNodes / 12],tankTemps_C[9 * numNodes / 12],
-				getNthSimTcouple(1,6),getNthSimTcouple(2,6),getNthSimTcouple(3,6),
-				getNthSimTcouple(4,6),getNthSimTcouple(5,6),getNthSimTcouple(6,6));
+
+			bool first = true;
+			for (int i = 0; i < 10; ++i)
+			{
+				if (first)
+					first = false;
+				else
+					msg(",");
+
+				int j = nodeDensity * i;
+				msg("%f", tankTemps_C[j]);
+			}
+
+			for (int i = 1; i < 7; ++i)
+			{
+				if (first)
+					first = false;
+				else
+					msg(",");
+
+				msg("%f", getNthSimTcouple(i,6));
+			}
+
+			msg("\n");
 		}
 
 	}
@@ -956,10 +962,10 @@ double HPWH::calcSoCFraction(double tMains_C,double tMinUseful_C,double tMax_C) 
 	}
 
 	double chargeEquivalent = 0.;
-	for(int i = 0; i < numNodes; i++) {
-		chargeEquivalent += getChargePerNode(tMains_C,tMinUseful_C,tankTemps_C[i]);
+	for(auto &T: tankTemps_C) {
+		chargeEquivalent += getChargePerNode(tMains_C,tMinUseful_C,T);
 	}
-	double maxSoC = numNodes * getChargePerNode(tMains_C,tMinUseful_C,tMax_C);
+	double maxSoC = getNumNodes() * getChargePerNode(tMains_C,tMinUseful_C,tMax_C);
 	return chargeEquivalent / maxSoC;
 }
 
@@ -1007,8 +1013,8 @@ int HPWH::resetTankToSetpoint() {
 }
 
 int HPWH::setTankToTemperature(double temp_C) {
-	for(int i = 0; i < numNodes; i++) {
-		tankTemps_C[i] = temp_C;
+	for(auto &T : tankTemps_C) {
+		T = temp_C;
 	}
 	return 0;
 }
@@ -1278,8 +1284,8 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight,int &inletNum) 
 		return HPWH_ABORT;
 	}
 
-	int node = (int)std::floor(numNodes*fractionalHeight);
-	inletNum = (node == numNodes) ? numNodes - 1 : node;
+	int node = (int)std::floor(getNumNodes() * fractionalHeight);
+	inletNum = (node == getNumNodes()) ? getIndexTopNode() : node;
 
 	return 0;
 }
@@ -1312,7 +1318,6 @@ int HPWH::getExternalOutletHeight() const {
 	}
 	return HPWH_ABORT;
 }
-
 
 int HPWH::setTimerLimitTOT(double limit_min) {
 	if(limit_min > 24.*60. || limit_min < 0.) {
@@ -1697,12 +1702,24 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double d) {
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("larger draw",nodeWeights,d,this,true);
 }
 
-int HPWH::getNumNodes() const {
-	return numNodes;
+void HPWH::setNumNodes(const std::size_t num_nodes)
+{
+	tankTemps_C.resize(num_nodes);
+	nextTankTemps_C.resize(num_nodes);
+}
+
+int HPWH::getNumNodes() const
+{
+	return tankTemps_C.size();
+}
+
+int HPWH::getIndexTopNode() const
+{
+	return tankTemps_C.size() - 1;
 }
 
 double HPWH::getTankNodeTemp(int nodeNum,UNITS units  /*=UNITS_C*/) const {
-	if(nodeNum >= numNodes || nodeNum < 0) {
+	if(tankTemps_C.empty()) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the temperature of a tank node that does not exist.  \n");
 		}
@@ -1732,13 +1749,13 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
-	} else if(nTCouple > numNodes) {
+	} else if(nTCouple > getNumNodes()) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have more simulated thermocouples than nodes.  \n");
 		}
 		return double(HPWH_ABORT);
 	} else {
-		double weight = (double)numNodes / (double)nTCouple;
+		double weight = getNumNodes() / static_cast<double>(nTCouple);
 		double start_ind = (iTCouple - 1.) * weight;
 		int ind = (int)std::ceil(start_ind);
 
@@ -1760,7 +1777,7 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 			averageTemp_C += getTankNodeTemp(ind,UNITS_C) * weight;
 		}
 		// Divide by the original weight to get the true average
-		averageTemp_C /= ((double)numNodes / (double)nTCouple);
+		averageTemp_C /= ((double)getNumNodes() / (double)nTCouple);
 
 		if(units == UNITS_C) {
 			return averageTemp_C;
@@ -2043,10 +2060,10 @@ double HPWH::getTankHeatContent_kJ() const {
 
 	//get average tank temperature
 	double avgTemp = 0.0;
-	for(int i = 0; i < numNodes; i++) {
+	for(int i = 0; i < getNumNodes(); i++) {
 		avgTemp += tankTemps_C[i];
 	}
-	avgTemp /= numNodes;
+	avgTemp /= getNumNodes();
 
 	double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
 	return totalHeat;
@@ -2440,7 +2457,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
 		//calculate how many nodes to draw (drawVolume_N)
-		drawVolume_N = drawVolume_L / volPerNode_LperNode;
+		drawVolume_N = drawVolume_L / nodeVolume_L;
 		if(drawVolume_L > tankVolume_L) {
 			//if (hpwhVerbosity >= VRB_reluctant) {
 			//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
@@ -2448,11 +2465,12 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			//}
 			//simHasFailed = true;
 			//return;
-			for(int i = 0; i < numNodes; i++){
+			for(int i = 0; i < getNumNodes(); i++){
 				outletTemp_C += tankTemps_C[i];
 				tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
 			}
-			outletTemp_C = (outletTemp_C / numNodes * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))/drawVolume_L * (drawVolume_L / volPerNode_LperNode);
+			outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))
+				/ drawVolume_L * drawVolume_N;
 
 			drawVolume_N = 0.;
 		}
@@ -2465,10 +2483,10 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
 
 			//add temperature for outletT average
-			outletTemp_C += drawFraction * tankTemps_C[numNodes - 1];
+			outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
 
 			cumInletFraction = 0.;
-			for(int i = numNodes - 1; i >= lowInletH; i--) {
+			for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
 
 				// Reset inlet inputs at this node. 
 				nodeInletFraction = 0.;
@@ -2505,13 +2523,13 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 
 		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
-		this->outletTemp_C /= (drawVolume_L / volPerNode_LperNode);
+		this->outletTemp_C /= (drawVolume_L / nodeVolume_L);
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
 		if(tankMixesOnDraw && drawVolume_L > 0.) {
-			int mixedBelowNode = (int)(numNodes * mixBelowFractionOnDraw);
+			int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
 			mixTankNodes(0,mixedBelowNode,3.0);
 		}
 
@@ -2521,7 +2539,8 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 	if(doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
-		const double tau = KWATER_WpermC / (CPWATER_kJperkgC * 1000.0 * DENSITYWATER_kgperL * 1000.0 * (node_height * node_height)) * minutesPerStep * 60.0;
+		const double tau = KWATER_WpermC / ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) 
+			* (nodeHeight_m * nodeHeight_m)) * secondsPerStep;
 		if(tau > 0.5) {
 			if(hpwhVerbosity >= VRB_reluctant) {
 				msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
@@ -2531,58 +2550,62 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		}
 
 		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * node_height / KWATER_WpermC;
+		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
 
 		// Boundary nodes for finite difference
 		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-		nextTankTemps_C[numNodes - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[numNodes - 1] + 2.0 * tau * tankTemps_C[numNodes - 2] + bc * tankAmbientT_C;
+		nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
 
 		// Internal nodes for the finite difference
-		for(int i = 1; i < numNodes - 1; i++) {
+		for(int i = 1; i < getNumNodes() - 1; i++) {
 			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
-		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
+		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 	} else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
 
-		for(int i = 0; i < numNodes; i++) {
+		for(int i = 0; i < getNumNodes(); i++) {
 			nextTankTemps_C[i] = tankTemps_C[i];
 		}
 
 		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
-		nextTankTemps_C[0] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		nextTankTemps_C.front() -= standbyLosses_kJ / nodeCp_kJperC;
 
 		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[numNodes - 1] - tankAmbientT_C) * (minutesPerStep / 60.0));
+		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
 		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
-		nextTankTemps_C[numNodes - 1] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+		nextTankTemps_C.back() -= standbyLosses_kJ / nodeCp_kJperC;
 		// UA loss from the sides are found at the bottom of the function.
 
 	}
 
 
 	//calculate standby losses from the sides of the tank
-	for(int i = 0; i < numNodes; i++) {
-		//faction of tank area on the sides
-		//kJ's lost as standby in the current time step for each node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / numNodes * (tankTemps_C[i] - tankAmbientT_C) * (minutesPerStep / 60.0);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
+	{
+		auto rat = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
+		auto nextT = nextTankTemps_C.begin();
+		for(auto T: tankTemps_C) {
+			//faction of tank area on the sides
+			//kJ's lost as standby in the current time step for each node.
+			double standbyLosses_kJ = rat * (T - tankAmbientT_C) * hoursPerStep;
+			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
 
-		//The effect of standby loss on temperature in each node
-		nextTankTemps_C[i] -= standbyLosses_kJ / ((volPerNode_LperNode * DENSITYWATER_kgperL) * CPWATER_kJperkgC);
+			//The effect of standby loss on temperature in each node
+			*nextT -= standbyLosses_kJ / nodeCp_kJperC;
+			++nextT;
+		}
 	}
 
-
 	// Assign the new temporary tank temps to the real tank temps.
-	for(int i = 0; i < numNodes; i++) 	tankTemps_C[i] = nextTankTemps_C[i];
+	for(int i = 0; i < getNumNodes(); i++) 	tankTemps_C[i] = nextTankTemps_C[i];
 
 	// check for inverted temperature profile 
 	mixTankInversions();
@@ -2598,13 +2621,13 @@ void HPWH::updateSoCIfNecessary() {
 // Inversion mixing modeled after bigladder EnergyPlus code PK
 void HPWH::mixTankInversions() {
 	bool hasInversion;
-	const double volumePerNode_L = tankVolume_L / numNodes;
+	const double volumePerNode_L = tankVolume_L / getNumNodes();
 	//int numdos = 0;
 	if(doInversionMixing) {
 		do {
 			hasInversion = false;
 			//Start from the top and check downwards
-			for(int i = numNodes - 1; i > 0; i--) {
+			for(int i = getNumNodes() - 1; i > 0; i--) {
 				if(tankTemps_C[i] < tankTemps_C[i - 1]) {
 					// Temperature inversion!
 					hasInversion = true;
@@ -2698,7 +2721,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 		}
 		// top calc node only
 		else if(nodeWeight.nodeNum == 13) {
-			sum += tankTemps_C[numNodes - 1] * nodeWeight.weight;
+			sum += tankTemps_C[getNumNodes() - 1] * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		} else {
 			for(int n = 0; n < nodeDensity; ++n) {
@@ -2731,22 +2754,24 @@ void HPWH::calcSizeConstants() {
 	// on the top and bottom node being the fraction of UA that corresponds to the top and bottom of the tank.  
 	// The assumption is that the aspect ratio is the same for all tanks and is the same for the outside measurements of the unit 
 	// and the inner water tank. 
-	const double tank_rad = getTankRadius(UNITS_M);
-	const double tank_height = ASPECTRATIO * tank_rad;
-	volPerNode_LperNode = tankVolume_L / numNodes;
+	const double tankRad_m = getTankRadius(UNITS_M);
+	const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
-	node_height = tank_height / numNodes;
+	nodeVolume_L = tankVolume_L / getNumNodes();
+	nodeMass_kg = nodeVolume_L * DENSITYWATER_kgperL;
+	nodeCp_kJperC = nodeMass_kg * CPWATER_kJperkgC;
+	nodeHeight_m = tankHeight_m / getNumNodes();
 
 	// The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop + fracAreaSide is the total tank area.
-	fracAreaTop = tank_rad / (2.0 * (tank_height + tank_rad));
+	fracAreaTop = tankRad_m / (2.0 * (tankHeight_m + tankRad_m));
 
 	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
-	fracAreaSide = tank_height / (tank_height + tank_rad);
+	fracAreaSide = tankHeight_m / (tankHeight_m + tankRad_m);
 }
 
 void HPWH::calcDerivedValues() {
 	// tank node density (number of calculation nodes per regular node)
-	nodeDensity = numNodes / 12;
+	nodeDensity = getNumNodes() / 12;
 
 	// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
 	calcDerivedHeatingValues();
@@ -2798,12 +2823,12 @@ void HPWH::calcDerivedHeatingValues(){
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
-		for(int j = 0; j < numNodes; j++) {
+		for(int j = 0; j < getNumNodes(); j++) {
 			if(hpwhVerbosity >= VRB_emetic) {
-				msg(outputString,"j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n",j,j / (numNodes / CONDENSITY_SIZE));
+				msg(outputString,"j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n",j,j / (getNumNodes() / CONDENSITY_SIZE));
 			}
 
-			if(setOfSources[i].condensity[(j / (numNodes / CONDENSITY_SIZE))] > 0) {
+			if(setOfSources[i].condensity[(j / (getNumNodes() / CONDENSITY_SIZE))] > 0) {
 				lowest = j;
 				break;
 			}
@@ -2899,7 +2924,7 @@ int HPWH::checkInputs() {
 		}
 		returnVal = HPWH_ABORT;
 	}
-	if((numNodes % 12) != 0) {
+	if((getNumNodes() % 12) != 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("The number of nodes must be a multiple of 12");
 		}
@@ -2987,13 +3012,13 @@ int HPWH::checkInputs() {
 				}
 				returnVal = HPWH_ABORT;
 			}
-			if(0 > setOfSources[i].externalOutletHeight || setOfSources[i].externalOutletHeight > numNodes - 1) {
+			if(0 > setOfSources[i].externalOutletHeight || setOfSources[i].externalOutletHeight > getNumNodes() - 1) {
 				if(hpwhVerbosity >= VRB_reluctant) {
 					msg("External heat sources need an external outlet height within the bounds from from 0 to numNodes-1. \n");
 				}
 				returnVal = HPWH_ABORT;
 			}
-			if(0 > setOfSources[i].externalInletHeight || setOfSources[i].externalInletHeight > numNodes - 1) {
+			if(0 > setOfSources[i].externalInletHeight || setOfSources[i].externalInletHeight > getNumNodes() - 1) {
 				if(hpwhVerbosity >= VRB_reluctant) {
 					msg("External heat sources need an external inlet height within the bounds from from 0 to numNodes-1. \n");
 				}
@@ -3085,8 +3110,6 @@ int HPWH::checkInputs() {
 	return returnVal;
 }
 
-
-
 #ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(string configFile) {
 
@@ -3106,6 +3129,8 @@ int HPWH::HPWHinit_file(string configFile) {
 
 	//some variables that will be handy
 	int heatsource,sourceNum,nTemps,tempInt;
+	std::size_t num_nodes = 0;
+
 	string tempString,units;
 	double tempDouble,dblArray[12];
 
@@ -3123,7 +3148,7 @@ int HPWH::HPWHinit_file(string configFile) {
 			//if you hit a comment, skip to next line
 			continue;
 		} else if(token == "numNodes") {
-			line_ss >> numNodes;
+			line_ss >> num_nodes;
 		} else if(token == "volume") {
 			line_ss >> tempDouble >> units;
 			if(units == "gal")  tempDouble = GAL_TO_L(tempDouble);
@@ -3457,7 +3482,7 @@ int HPWH::HPWHinit_file(string configFile) {
 
 			else if(token == "externalInlet") {
 				line_ss >> tempInt;
-				if(tempInt < numNodes && tempInt >= 0) {
+				if(tempInt < num_nodes && tempInt >= 0) {
 					setOfSources[heatsource].externalInletHeight = tempInt;
 				} else {
 					if(hpwhVerbosity >= VRB_reluctant) {
@@ -3467,7 +3492,7 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 			} else if(token == "externalOutlet") {
 				line_ss >> tempInt;
-				if(tempInt < numNodes && tempInt >= 0) {
+				if(tempInt < num_nodes && tempInt >= 0) {
 					setOfSources[heatsource].externalOutletHeight = tempInt;
 				} else {
 					if(hpwhVerbosity >= VRB_reluctant) {
@@ -3589,10 +3614,10 @@ int HPWH::HPWHinit_file(string configFile) {
 	//take care of the non-input processing
 	hpwhModel = MODELS_CustomFile;
 
-	tankTemps_C = new double[numNodes];
+	tankTemps_C.resize(num_nodes);
 	resetTankToSetpoint();
 
-	nextTankTemps_C = new double[numNodes];
+	nextTankTemps_C.resize(num_nodes);
 
 	isHeating = false;
 	for(int i = 0; i < numHeatSources; i++) {
