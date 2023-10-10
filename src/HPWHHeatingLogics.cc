@@ -60,25 +60,25 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	double deltaSoCFraction = (getComparisonValue() + HPWH::TOL_MINVALUE) - getTankValue();
 
 	// Check how much of a change in the SoC fraction occurs if one full node at set point is added. If this is less than the change needed move on. 
-	double fullNodeSoC = 1. / parentHPWH->numNodes;
+	double fullNodeSoC = 1. / parentHPWH->getNumNodes();
 	if (deltaSoCFraction >= fullNodeSoC) {
 		return 1.;
 	}
 
 	// Find the last node greater the min use temp
 	int calcNode = 0;
-	for (int i = parentHPWH->numNodes - 1; i >= 0; i--) {
+	for (int i = parentHPWH->getNumNodes() - 1; i >= 0; i--) {
 		if (parentHPWH->tankTemps_C[i] < tempMinUseful_C) {
 			calcNode = i + 1;
 			break;
 		}
 	}
-	if (calcNode == parentHPWH->numNodes) { // if the whole tank is cold
+	if (calcNode == parentHPWH->getNumNodes()) { // if the whole tank is cold
 		return 1.;
 	}
 
 	// Find the fraction to heat the calc node to meet the target SoC fraction without heating the node below up to tempMinUseful. 
-	double maxSoC = parentHPWH->numNodes * parentHPWH->getChargePerNode(getMainsT_C(), tempMinUseful_C, parentHPWH->setpoint_C);
+	double maxSoC = parentHPWH->getNumNodes() * parentHPWH->getChargePerNode(getMainsT_C(), tempMinUseful_C, parentHPWH->setpoint_C);
 	double targetTemp = deltaSoCFraction * maxSoC + (parentHPWH->tankTemps_C[calcNode] - getMainsT_C()) / (tempMinUseful_C - getMainsT_C());
 	targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
@@ -214,7 +214,7 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 		}
 	}
 
-	if (calcNode == parentHPWH->numNodes - 1) { // top node calc
+	if (calcNode == parentHPWH->getNumNodes() - 1) { // top node calc
 		diff = parentHPWH->getSetpoint() - parentHPWH->tankTemps_C[firstNode];
 	}
 	else {
