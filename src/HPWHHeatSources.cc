@@ -38,9 +38,8 @@ HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
 		}
 	}
 
-	for(int i = 0; i < CONDENSITY_SIZE; i++) {
-		condensity[i] = hSource.condensity[i];
-	}
+	condensity = hSource.condensity;
+
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
@@ -108,9 +107,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 		followedByHeatSource = NULL;
 	}
 
-	for(int i = 0; i < CONDENSITY_SIZE; i++) {
-		condensity[i] = hSource.condensity[i];
-	}
+	condensity = hSource.condensity;
+
 	shrinkage = hSource.shrinkage;
 
 	perfMap = hSource.perfMap;
@@ -155,18 +153,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
 	double cnd5,double cnd6,double cnd7,double cnd8,
 	double cnd9,double cnd10,double cnd11,double cnd12) {
-	condensity[0] = cnd1;
-	condensity[1] = cnd2;
-	condensity[2] = cnd3;
-	condensity[3] = cnd4;
-	condensity[4] = cnd5;
-	condensity[5] = cnd6;
-	condensity[6] = cnd7;
-	condensity[7] = cnd8;
-	condensity[8] = cnd9;
-	condensity[9] = cnd10;
-	condensity[10] = cnd11;
-	condensity[11] = cnd12;
+	condensity ={cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12};
 }
 
 int HPWH::HeatSource::findParent() const {
@@ -1053,9 +1040,8 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 
 	isOn = false;
 	isVIP = false;
-	for(i = 0; i < CONDENSITY_SIZE; i++) {
-		condensity[i] = 0;
-	}
+	condensity = std::vector<double>(CONDENSITY_SIZE, 0.);
+
 	condensity[node] = 1;
 
 	perfMap.reserve(2);

@@ -3981,4 +3981,3 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	simHasFailed = false;
 	return 0;  //successful init returns 0
 }  //end HPWHinit_presets
-
