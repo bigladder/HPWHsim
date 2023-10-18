@@ -63,6 +63,104 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+/*
+ *	Assign values in vector Yp (of arbitrary size) to vector Y
+ */
+int resample(std::vector<double> &Y,const std::vector<double> &Yp)
+{
+	const std::size_t nY(Y.size());
+	const std::size_t nYp(Yp.size());
+	if((nY == 0) || (nYp == 0))
+	{
+		return -1;
+	}
+
+	// Handle rational-fraction cases, nY  nYp
+	if((nY > nYp) && (nY % nYp == 0))
+	{
+		std::size_t n_bin = nY / nYp;
+		auto iterY = Y.begin();
+		for(auto iterYp = Yp.begin(); iterYp != Yp.end(); iterY += n_bin,++iterYp)
+		{
+			std::fill(iterY,iterY + n_bin,*iterYp);
+		}
+		return 0;
+	}
+
+	// nY == nYp case
+	if(nY == nYp)
+	{
+		Y = Yp;
+		return 0;
+	}
+
+	// Handle rational-fraction cases, nY < nYp
+	if((nY < nYp) && (nYp % nY == 0))
+	{
+		std::size_t n_avg = nYp / nY;
+		auto iterYp = Yp.begin();
+		for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY, iterYp += n_avg)
+		{
+			double sum = 0.;
+			for(std::size_t i = 0; i< n_avg; ++i)
+				sum += *(iterYp + i);
+			*iterY = sum / static_cast<double>(n_avg);
+		}
+		return 0;
+	}
+
+	// We have nY element-bins over which we will distribute the values of nYp element-bins.
+	double rat = static_cast<double>(nY) / static_cast<double>(nYp);
+	double wp(1.); // initialize weight of Yp element-bin;
+	auto iterYp = Yp.begin();
+	for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY) {
+		double w_tot(0.); // total weight of contributions to Y element-bin; ideally 1.0 when full
+		double wY_tot(0.); // total of weight*value products to Y element-bin
+		while(w_tot < 1.0) // continue combining inputs until Y element-bin is full
+		{
+			double w = 1.; // Assume Yp element-bin will fill Y element-bin
+			if(wp * rat < w) // contents of Yp element-bin will not completely fill Y element-bin
+				w = wp * rat; // scale the weight of Yp element-bin contribution
+			if(w_tot + w > 1.0) // Yp element-bin will overfill Y element-bin
+				w = 1.0 - w_tot; // retain portion of Yp element-bin needed to fill Y element-bin
+			w_tot += w; // weight contribution to Y element-bin
+			wY_tot += w * (*iterYp); // weight*value product contribution to Y element-bin
+			wp -= w / rat; // reduce remaining weight of Yp element-bin
+			if(wp <= 0.) // should be precisely zero when Yp element-bin is depleted 
+			{
+				if(++iterYp == Yp.end())
+					break; // end of vector Yp
+				wp = 1.; // initialize weight of next Yp element-bin
+			}
+		}
+		(*iterY) = (w_tot > 0.) ? wY_tot / w_tot : (*iterYp); // strictly avoid div-by-0 
+	}
+	return 0;
+}
+
+/*
+ *	Resample an intensive property (e.g. temperature)
+ */
+int resampleIntensive(std::vector<double> &Y,const std::vector<double> &Yp)
+{
+	return resample(Y, Yp);
+}
+
+/*
+ *	Resample an extensive property (e.g., heat)
+ */
+int resampleExtensive(std::vector<double> &Y,const std::vector<double> &Yp)
+{
+	int res = resample(Y, Yp);
+	if (res == 0)
+	{
+		double fac = static_cast<double>(Yp.size()) / static_cast<double>(Y.size());
+		for (auto &y: Y)
+			y *= fac;
+	}
+	return res;
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;

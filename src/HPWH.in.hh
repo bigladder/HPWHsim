@@ -1132,7 +1132,7 @@ private:
 	HeatSource* followedByHeatSource;
 	/**< a pointer to the heat source which will attempt to run after this one */
 
-	double condensity[CONDENSITY_SIZE];
+	std::vector<double> condensity;
 	/**< The condensity function is always composed of 12 nodes.
 	  It represents the location within the tank where heat will be distributed,
 	  and it also is used to calculate the condenser temperature for inputPower/COP calcs.
