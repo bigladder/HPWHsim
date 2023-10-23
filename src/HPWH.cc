@@ -72,78 +72,55 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //   1-22-2017
 
 /*
- *	Assign values in vector Yp (of arbitrary size) to vector Y
+ *    Samples std::vector values between fractions frac0 and frac1,
+ *    ranging from 0 to 1.
  */
-int setValues(std::vector<double> &Y,const std::vector<double> &Yp)
+double sample(const std::vector<double> &values, double frac0, double frac1)
 {
-	const std::size_t nY(Y.size());
-	const std::size_t nYp(Yp.size());
-	if((nY == 0) || (nYp == 0))
-	{
-		return -1;
-	}
+    if (frac0 > frac1)std::swap(frac0, frac1);
+    if (frac0 < 0.) frac0 = 0.;
+    if (frac1 >1.) frac1 = 1.;
 
-	// Handle rational-fraction cases, nY  nYp
-	if((nY > nYp) && (nY % nYp == 0))
-	{
-		std::size_t n_bin = nY / nYp;
-		auto iterY = Y.begin();
-		for(auto iterYp = Yp.begin(); iterYp != Yp.end(); iterY += n_bin,++iterYp)
-		{
-			std::fill(iterY,iterY + n_bin,*iterYp);
-		}
-		return 0;
-	}
+    double nNodes = static_cast<double>(values.size());
+    auto i0 = static_cast<std::size_t>(frac0 * nNodes);
+    
+    double fPrev = frac0;
+	double fNext = fPrev;
 
-	// nY == nYp case
-	if(nY == nYp)
-	{
-		Y = Yp;
-		return 0;
-	}
+    double totYweight = 0.;
+    double totWeight = 0.;
+    for (std::size_t i = i0; fNext < frac1; ++i)
+    {
+        fNext = static_cast<double>(i + 1) / nNodes;
+        if (fNext > frac1)
+        {
+            fNext = frac1;
+        }
+        double weight = fNext - fPrev;
+        totYweight += weight * values[i];
+        totWeight += weight;
+        fPrev = fNext;
+    }
+    double res = 0.;
+    if (totWeight > 0.) res = totYweight / totWeight;
+    return res;
+}
 
-	// Handle rational-fraction cases, nY < nYp
-	if((nY < nYp) && (nYp % nY == 0))
-	{
-		std::size_t n_avg = nYp / nY;
-		auto iterYp = Yp.begin();
-		for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY, iterYp += n_avg)
-		{
-			double sum = 0.;
-			for(std::size_t i = 0; i< n_avg; ++i)
-				sum += *(iterYp + i);
-			*iterY = sum / static_cast<double>(n_avg);
-		}
-		return 0;
-	}
-
-	// We have nY element-bins over which we will distribute the values of nYp element-bins.
-	double rat = static_cast<double>(nY) / static_cast<double>(nYp);
-	double wp(1.); // initialize weight of Yp element-bin;
-	auto iterYp = Yp.begin();
-	for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY) {
-		double w_tot(0.); // total weight of contributions to Y element-bin; ideally 1.0 when full
-		double wY_tot(0.); // total of weight*value products to Y element-bin
-		while(w_tot < 1.0) // continue combining inputs until Y element-bin is full
-		{
-			double w = 1.; // Assume Yp element-bin will fill Y element-bin
-			if(wp * rat < w) // contents of Yp element-bin will not completely fill Y element-bin
-				w = wp * rat; // scale the weight of Yp element-bin contribution
-			if(w_tot + w > 1.0) // Yp element-bin will overfill Y element-bin
-				w = 1.0 - w_tot; // retain portion of Yp element-bin needed to fill Y element-bin
-			w_tot += w; // weight contribution to Y element-bin
-			wY_tot += w * (*iterYp); // weight*value product contribution to Y element-bin
-			wp -= w / rat; // reduce remaining weight of Yp element-bin
-			if(wp <= 0.) // should be precisely zero when Yp element-bin is depleted 
-			{
-				if(++iterYp == Yp.end())
-					break; // end of vector Yp
-				wp = 1.; // initialize weight of next Yp element-bin
-			}
-		}
-		(*iterY) = (w_tot > 0.) ? wY_tot / w_tot : (*iterYp); // strictly avoid div-by-0 
-	}
-	return 0;
+/*
+ *    Assign values in vector Yp (of arbitrary size) to vector Y
+ */
+int resample(std::vector<double> &origValues,const std::vector<double> &newValues)
+{
+    if (newValues.empty()) return -1;
+    double origSize = static_cast<double>(origValues.size());
+    double frac0 = 0.;
+    for (std::size_t i = 0; i < origSize; ++i)
+    {
+        double frac1 = static_cast<double>(i + 1) / origSize;
+        origValues[i] = sample(newValues, frac0, frac1);
+        frac0 = frac1;
+    }
+    return 0;
 }
 
 //the HPWH functions
@@ -1119,8 +1096,8 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 	}
 
 	// assign node temps to a std::vector
-	std::vector<double> tankTemps;
-	tankTemps.assign(tankTemps_C,tankTemps_C + numNodes);
+	std::vector<double> tankTemps(numNodes);
+	//tankTemps.assign(tankTemps_C,tankTemps_C + numNodes);
 
 	// convert set temps to C, if necessary
 	if(units == UNITS_F)
@@ -1128,7 +1105,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 			T = F_TO_C(T);
 
 	// set node temps and copy back to array, if successful
-	if(setValues(tankTemps,setTankTemps) == 0)
+	if(resample(tankTemps,setTankTemps) == 0)
 		std::copy(tankTemps.begin(),tankTemps.end(),tankTemps_C);
 	else
 		return HPWH_ABORT;

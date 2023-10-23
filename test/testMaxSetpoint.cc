@@ -219,8 +219,8 @@ void testSetTankTemps() {
 	hpwh.getTankTemps(newTemps);
 
 	// Check some expected values.
-	ASSERTTRUE(newTemps[0] == 10.0); //
-	ASSERTTRUE(newTemps[11] == 60.0); //
+	ASSERTTRUE(relcmpd(newTemps[0], 10.0)); //
+	ASSERTTRUE(relcmpd(newTemps[11], 60.0)); //
 
 // test 2
 	setTemps = {10., 20., 30., 40., 50., 60.};
@@ -228,10 +228,10 @@ void testSetTankTemps() {
 	hpwh.getTankTemps(newTemps);
 
 	// Check some expected values.
-	ASSERTTRUE(newTemps[0] == 10.); //
-	ASSERTTRUE(newTemps[5] == 30.); //
-	ASSERTTRUE(newTemps[6] == 40.); //
-	ASSERTTRUE(newTemps[11] == 60.); //
+	ASSERTTRUE(relcmpd(newTemps[0], 10.)); //
+	ASSERTTRUE(relcmpd(newTemps[5], 30.)); //
+	ASSERTTRUE(relcmpd(newTemps[6], 40.)); //
+	ASSERTTRUE(relcmpd(newTemps[11], 60.)); //
 
 // test 3
 	setTemps = {10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90.};
