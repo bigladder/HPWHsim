@@ -23,20 +23,26 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     // return 0 on success, HPWH_ABORT for failure
 
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
-    if (lowerPower_W < 550) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (lowerPower_W < 550)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Resistance tank lower element wattage below 550 W.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
     }
-    if (upperPower_W < 0.) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (upperPower_W < 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
     }
-    if (energyFactor <= 0.) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (energyFactor <= 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
@@ -45,7 +51,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     // use tank size setting function since it has bounds checking
     tankSizeFixed = false;
     int failure = this->setTankSize(tankVol_L);
-    if (failure == HPWH_ABORT) {
+    if (failure == HPWH_ABORT)
+    {
         return failure;
     }
 
@@ -67,7 +74,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
     resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
 
-    if (upperPower_W > 0.) {
+    if (upperPower_W > 0.)
+    {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
         HeatSource resistiveElementTop(this);
@@ -85,7 +93,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
 
         setOfSources[0].followedByHeatSource = &setOfSources[1];
     }
-    else {
+    else
+    {
         numHeatSources = 1;
         setOfSources = new HeatSource[numHeatSources];
         setOfSources[0] = resistiveElementBottom;
@@ -102,8 +111,10 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
     tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator);
 
-    if (tankUA_kJperHrC < 0.) {
-        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
+    if (tankUA_kJperHrC < 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
+        {
             msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
         tankUA_kJperHrC = 0.0;
@@ -118,15 +129,19 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
         return HPWH_ABORT;
 
     isHeating = false;
-    for (int i = 0; i < numHeatSources; i++) {
-        if (setOfSources[i].isOn) {
+    for (int i = 0; i < numHeatSources; i++)
+    {
+        if (setOfSources[i].isOn)
+        {
             isHeating = true;
         }
         setOfSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic) {
-        for (int i = 0; i < numHeatSources; i++) {
+    if (hpwhVerbosity >= VRB_emetic)
+    {
+        for (int i = 0; i < numHeatSources; i++)
+        {
             msg("heat source %d: %p \n", i, &setOfSources[i]);
         }
         msg("\n\n");
@@ -147,20 +162,26 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     // return 0 on success, HPWH_ABORT for failure
 
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
-    if (lowerPower_W < 0) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (lowerPower_W < 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Lower resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
     }
-    if (upperPower_W < 0.) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (upperPower_W < 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
     }
-    if (rValue_M2KperW <= 0.) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (rValue_M2KperW <= 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
         }
         return HPWH_ABORT;
@@ -168,7 +189,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
 
     // set tank size function has bounds checking
     tankSizeFixed = false;
-    if (this->setTankSize(tankVol_L) == HPWH_ABORT) {
+    if (this->setTankSize(tankVol_L) == HPWH_ABORT)
+    {
         return HPWH_ABORT;
     }
     canScale = true;
@@ -189,7 +211,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     setOfSources = new HeatSource[numHeatSources];
 
     // Deal with upper element
-    if (upperPower_W > 0.) {
+    if (upperPower_W > 0.)
+    {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
         HeatSource resistiveElementTop(this);
@@ -202,7 +225,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     }
 
     // Deal with bottom element
-    if (lowerPower_W > 0.) {
+    if (lowerPower_W > 0.)
+    {
         HeatSource resistiveElementBottom(this);
         resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
 
@@ -210,10 +234,12 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
         resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
 
         // set everything in it's correct place
-        if (numHeatSources == 1) { // if one only one slot
+        if (numHeatSources == 1)
+        { // if one only one slot
             setOfSources[0] = resistiveElementBottom;
         }
-        else if (numHeatSources == 2) { // if two upper already exists
+        else if (numHeatSources == 2)
+        { // if two upper already exists
             setOfSources[1] = resistiveElementBottom;
             setOfSources[0].followedByHeatSource = &setOfSources[1];
         }
@@ -224,8 +250,10 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     double tankUA_WperK = SA_M2 / rValue_M2KperW;
     tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
 
-    if (tankUA_kJperHrC < 0.) {
-        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1) {
+    if (tankUA_kJperHrC < 0.)
+    {
+        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
+        {
             msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
         tankUA_kJperHrC = 0.0;
@@ -240,15 +268,19 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
         return HPWH_ABORT;
 
     isHeating = false;
-    for (int i = 0; i < numHeatSources; i++) {
-        if (setOfSources[i].isOn) {
+    for (int i = 0; i < numHeatSources; i++)
+    {
+        if (setOfSources[i].isOn)
+        {
             isHeating = true;
         }
         setOfSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic) {
-        for (int i = 0; i < numHeatSources; i++) {
+    if (hpwhVerbosity >= VRB_emetic)
+    {
+        for (int i = 0; i < numHeatSources; i++)
+        {
             msg("heat source %d: %p \n", i, &setOfSources[i]);
         }
         msg("\n\n");
@@ -346,8 +378,10 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     // set tank volume from input
     // use tank size setting function since it has bounds checking
     int failure = this->setTankSize(tankVol_L);
-    if (failure == HPWH_ABORT) {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    if (failure == HPWH_ABORT)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("Failure to set tank size in generic hpwh init.");
         }
         return failure;
@@ -404,20 +438,25 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT) {
+    if (checkInputs() == HPWH_ABORT)
+    {
         return HPWH_ABORT;
     }
 
     isHeating = false;
-    for (int i = 0; i < numHeatSources; i++) {
-        if (setOfSources[i].isOn) {
+    for (int i = 0; i < numHeatSources; i++)
+    {
+        if (setOfSources[i].isOn)
+        {
             isHeating = true;
         }
         setOfSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic) {
-        for (int i = 0; i < numHeatSources; i++) {
+    if (hpwhVerbosity >= VRB_emetic)
+    {
+        for (int i = 0; i < numHeatSources; i++)
+        {
             msg("heat source %d: %p \n", i, &setOfSources[i]);
         }
         msg("\n\n");
@@ -436,7 +475,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     // return 0 on success, HPWH_ABORT for failure
 
     // resistive with no UA losses for testing
-    if (presetNum == MODELS_restankNoUA) {
+    if (presetNum == MODELS_restankNoUA)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -471,7 +511,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // resistive tank with massive UA loss for testing
-    else if (presetNum == MODELS_restankHugeUA) {
+    else if (presetNum == MODELS_restankHugeUA)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = 50;
@@ -508,7 +549,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // realistic resistive tank
-    else if (presetNum == MODELS_restankRealistic) {
+    else if (presetNum == MODELS_restankRealistic)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -542,7 +584,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
     }
 
-    else if (presetNum == MODELS_StorageTank) {
+    else if (presetNum == MODELS_StorageTank)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = 52;
@@ -577,7 +620,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // basic compressor tank for testing
-    else if (presetNum == MODELS_basicIntegrated) {
+    else if (presetNum == MODELS_basicIntegrated)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = 50;
@@ -660,7 +704,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // simple external style for testing
-    else if (presetNum == MODELS_externalTest) {
+    else if (presetNum == MODELS_externalTest)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = 50;
@@ -719,7 +764,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0] = compressor;
     }
     // voltex 60 gallon
-    else if (presetNum == MODELS_AOSmithPHPT60) {
+    else if (presetNum == MODELS_AOSmithPHPT60)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -801,7 +847,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_AOSmithPHPT80) {
+    else if (presetNum == MODELS_AOSmithPHPT80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -883,7 +930,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_GE2012) {
+    else if (presetNum == MODELS_GE2012)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -971,7 +1019,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
     // If a Colmac single pass preset cold weather or not
-    else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
+    else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -1015,7 +1064,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // Defrost Derate
         compressor.setupDefrostMap();
 
-        if (presetNum == MODELS_ColmacCxV_5_SP) {
+        if (presetNum == MODELS_ColmacCxV_5_SP)
+        {
             setTankSize_adjustUA(200., UNITS_GAL);
             // logic conditions
             compressor.minT = F_TO_C(-4.0);
@@ -1049,12 +1099,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  -0.0000000606} // COP Coefficients (COP_coeffs)
             });
         }
-        else {
+        else
+        {
             // logic conditions
             compressor.minT = F_TO_C(40.);
             compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-            if (presetNum == MODELS_ColmacCxA_10_SP) {
+            if (presetNum == MODELS_ColmacCxA_10_SP)
+            {
                 setTankSize_adjustUA(500., UNITS_GAL);
 
                 compressor.perfMap.push_back({
@@ -1085,7 +1137,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      -0.0000005037} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_15_SP) {
+            else if (presetNum == MODELS_ColmacCxA_15_SP)
+            {
                 setTankSize_adjustUA(600., UNITS_GAL);
 
                 compressor.perfMap.push_back({
@@ -1116,7 +1169,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      0.0000004108} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_20_SP) {
+            else if (presetNum == MODELS_ColmacCxA_20_SP)
+            {
                 setTankSize_adjustUA(800., UNITS_GAL);
 
                 compressor.perfMap.push_back({
@@ -1147,7 +1201,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      -0.0000003135} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_25_SP) {
+            else if (presetNum == MODELS_ColmacCxA_25_SP)
+            {
                 setTankSize_adjustUA(1000., UNITS_GAL);
 
                 compressor.perfMap.push_back({
@@ -1178,7 +1233,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      0.0000006306} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_30_SP) {
+            else if (presetNum == MODELS_ColmacCxA_30_SP)
+            {
                 setTankSize_adjustUA(1200., UNITS_GAL);
 
                 compressor.perfMap.push_back({
@@ -1216,7 +1272,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // if colmac multipass
-    else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP) {
+    else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -1258,7 +1315,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // Defrost Derate
         compressor.setupDefrostMap();
 
-        if (presetNum == MODELS_ColmacCxV_5_MP) {
+        if (presetNum == MODELS_ColmacCxV_5_MP)
+        {
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(
                 9.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1285,13 +1343,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  -0.0002911167} // COP Coefficients (COP_coeffs)
             });
         }
-        else {
+        else
+        {
             // logic conditions
             compressor.minT = F_TO_C(40.);
             compressor.maxT = F_TO_C(105.);
             compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-            if (presetNum == MODELS_ColmacCxA_10_MP) {
+            if (presetNum == MODELS_ColmacCxA_10_MP)
+            {
                 setTankSize_adjustUA(500., UNITS_GAL);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
                 compressor.perfMap.push_back({
@@ -1312,7 +1372,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      -0.0002365885} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_15_MP) {
+            else if (presetNum == MODELS_ColmacCxA_15_MP)
+            {
                 setTankSize_adjustUA(600., UNITS_GAL);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
                 compressor.perfMap.push_back({
@@ -1334,7 +1395,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_20_MP) {
+            else if (presetNum == MODELS_ColmacCxA_20_MP)
+            {
                 setTankSize_adjustUA(800., UNITS_GAL);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
@@ -1357,7 +1419,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      -0.0002910606} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_25_MP) {
+            else if (presetNum == MODELS_ColmacCxA_25_MP)
+            {
                 setTankSize_adjustUA(1000., UNITS_GAL);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
                 compressor.perfMap.push_back({
@@ -1378,7 +1441,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                      -0.0003684106} // COP Coefficients (COP_coeffs)
                 });
             }
-            else if (presetNum == MODELS_ColmacCxA_30_MP) {
+            else if (presetNum == MODELS_ColmacCxA_30_MP)
+            {
                 setTankSize_adjustUA(1200., UNITS_GAL);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
                 compressor.perfMap.push_back({
@@ -1405,7 +1469,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0] = compressor;
     }
     // If Nyle single pass preset
-    else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
+    else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -1435,11 +1500,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.externalInletHeight = numNodes - 1;
 
         // logic conditions
-        if (MODELS_NyleC25A_SP <= presetNum &&
-            presetNum <= MODELS_NyleC250A_SP) { // If not cold weather package
-            compressor.minT = F_TO_C(40.);      // Min air temperature sans Cold Weather Package
+        if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
+        {                                  // If not cold weather package
+            compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
         }
-        else {
+        else
+        {
             compressor.minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
         }
         compressor.maxT = F_TO_C(120.0); // Max air temperature
@@ -1466,7 +1532,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.setupDefrostMap();
 
         // Perfmaps for each compressor size
-        if (presetNum == MODELS_NyleC25A_SP) {
+        if (presetNum == MODELS_NyleC25A_SP)
+        {
             setTankSize_adjustUA(200., UNITS_GAL);
             compressor.perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1496,7 +1563,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  0.000001900} // COP Coefficients (COP_coeffs)
             });
         }
-        else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP) {
+        else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
+        {
             setTankSize_adjustUA(300., UNITS_GAL);
             compressor.perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1526,7 +1594,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  0.0000005568} // COP Coefficients (COP_coeffs)
             });
         }
-        else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP) {
+        else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
+        {
             setTankSize_adjustUA(400., UNITS_GAL);
             compressor.perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1556,7 +1625,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  0.00000176015} // COP Coefficients (COP_coeffs)
             });
         }
-        else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP) {
+        else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
+        {
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor.perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1586,7 +1656,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  1.47884E-06} // COP Coefficients (COP_coeffs)
             });
         }
-        else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP) {
+        else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
+        {
             setTankSize_adjustUA(800., UNITS_GAL);
             compressor.perfMap.push_back({
                 90, // Temperature (T_F)
@@ -1616,7 +1687,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  5.55444E-06} // COP Coefficients (COP_coeffs)
             });
         }
-        else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP) {
+        else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
+        {
             setTankSize_adjustUA(800., UNITS_GAL);
 
             compressor.perfMap.push_back({
@@ -1653,7 +1725,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // If Nyle multipass presets
-    else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
+    else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -1680,11 +1753,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
 
         // logic conditions//logic conditions
-        if (MODELS_NyleC60A_MP <= presetNum &&
-            presetNum <= MODELS_NyleC250A_MP) { // If not cold weather package
-            compressor.minT = F_TO_C(40.);      // Min air temperature sans Cold Weather Package
+        if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
+        {                                  // If not cold weather package
+            compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
         }
-        else {
+        else
+        {
             compressor.minT = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
         }
         compressor.maxT = F_TO_C(130.0); // Max air temperature
@@ -1712,10 +1786,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.perfGrid.push_back({40., 60., 80., 90.});              // Grid Axis 1 Tair (F)
         compressor.perfGrid.push_back({40., 60., 80., 100., 130., 150.}); // Grid Axis 2 Tin (F)
 
-        if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP) {
+        if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
+        {
             setTankSize_adjustUA(360., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(13.);
-            if (presetNum == MODELS_NyleC60A_C_MP) {
+            if (presetNum == MODELS_NyleC60A_C_MP)
+            {
                 compressor.resDefrost = {
                     4.5, // inputPwr_kW;
                     5.0, // constTempLift_dF;
@@ -1733,10 +1809,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  5.467336683, 4.708609272, 3.921755725, 3.169871795, 2.165105386, 1.860732984,
                  5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691});
         }
-        else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP) {
+        else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
+        {
             setTankSize_adjustUA(480., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(20.);
-            if (presetNum == MODELS_NyleC90A_C_MP) {
+            if (presetNum == MODELS_NyleC90A_C_MP)
+            {
                 compressor.resDefrost = {
                     5.4, // inputPwr_kW;
                     5.0, // constTempLift_dF;
@@ -1754,10 +1832,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  7.150635209, 5.659159159, 4.305687204, 3.493467337, 2.487748851, 2.018241042,
                  6.750737463, 5.604621309, 4.734392736, 3.94005994,  3.04534005,  2.558801498});
         }
-        else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP) {
+        else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
+        {
             setTankSize_adjustUA(600., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(28.);
-            if (presetNum == MODELS_NyleC125A_C_MP) {
+            if (presetNum == MODELS_NyleC125A_C_MP)
+            {
                 compressor.resDefrost = {
                     9.0, // inputPwr_kW;
                     5.0, // constTempLift_dF;
@@ -1775,10 +1855,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  6.503250975, 5.276736494, 4.229070837, 3.27827381,  2.113821138, 1.770469799,
                  6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286});
         }
-        else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP) {
+        else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
+        {
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(40.);
-            if (presetNum == MODELS_NyleC185A_C_MP) {
+            if (presetNum == MODELS_NyleC185A_C_MP)
+            {
                 compressor.resDefrost = {
                     7.2, // inputPwr_kW;
                     5.0, // constTempLift_dF;
@@ -1796,10 +1878,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                  9.65819568,  6.200166113, 4.792276964, 3.705475811, 2.561369758, 2.05950096,
                  10.26993865, 6.350722311, 5.04218853,  3.841688654, 2.574151735, 2.025616698});
         }
-        else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP) {
+        else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
+        {
             setTankSize_adjustUA(960., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(50.);
-            if (presetNum == MODELS_NyleC250A_C_MP) {
+            if (presetNum == MODELS_NyleC250A_C_MP)
+            {
                 compressor.resDefrost = {
                     18.0, // inputPwr_kW;
                     5.0,  // constTempLift_dF;
@@ -1830,7 +1914,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
     // if rheem multipass
     else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
-             presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
+             presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -1877,7 +1962,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.maxSetpoint_C = MAXOUTLET_R134A; // data says 150...
 
         if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
-            presetNum == MODELS_RHEEM_HPHD60VNU_201_MP) {
+            presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
+        {
             setTankSize_adjustUA(250., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(17.4);
             compressor.perfMap.push_back({
@@ -1899,7 +1985,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             });
         }
         else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
-                 presetNum == MODELS_RHEEM_HPHD135VNU_483_MP) {
+                 presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
+        {
             setTankSize_adjustUA(500., UNITS_GAL);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(34.87);
             compressor.perfMap.push_back({
@@ -1925,7 +2012,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0] = compressor;
     }
 
-    else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) {
+    else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = 65;
@@ -2191,20 +2279,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
-             presetNum == MODELS_SANCO2_119) {
+             presetNum == MODELS_SANCO2_119)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = 65;
         setpointFixed = true;
 
-        if (presetNum == MODELS_SANCO2_119) {
+        if (presetNum == MODELS_SANCO2_119)
+        {
             tankVolume_L = GAL_TO_L(119);
             tankUA_kJperHrC = 9;
         }
-        else {
+        else
+        {
             tankVolume_L = 315;
             tankUA_kJperHrC = 7;
-            if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP) {
+            if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+            {
                 tankSizeFixed = false;
             }
         }
@@ -2266,7 +2358,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         nodeWeights.emplace_back(8);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
             "eighth node absolute", nodeWeights, F_TO_C(113), this, true));
-        if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119) {
+        if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
+        {
             compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
             // Adds a bonus standby logic so the external heater does not cycle, recommended for any
             // external heater with standby
@@ -2296,7 +2389,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // set everything in its places
         setOfSources[0] = compressor;
     }
-    else if (presetNum == MODELS_SANCO2_43) {
+    else if (presetNum == MODELS_SANCO2_43)
+    {
         numNodes = 96;
         tankTemps_C = new double[numNodes];
         setpoint_C = 65;
@@ -2392,7 +2486,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0] = compressor;
     }
     else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 ||
-             presetNum == MODELS_RheemHBDR4550) {
+             presetNum == MODELS_RheemHBDR4550)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -2446,19 +2541,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2250) {
+        if (presetNum == MODELS_RheemHBDR2250)
+        {
             resistiveElementTop.setupAsResistiveElement(8, 2250);
         }
-        else {
+        else
+        {
             resistiveElementTop.setupAsResistiveElement(8, 4500);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2250) {
+        if (presetNum == MODELS_RheemHBDR2250)
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 2250);
         }
-        else {
+        else
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -2494,15 +2593,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
     else if (presetNum == MODELS_AOSmithHPTU66 || presetNum == MODELS_RheemHBDR2265 ||
-             presetNum == MODELS_RheemHBDR4565) {
+             presetNum == MODELS_RheemHBDR4565)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTU66) {
+        if (presetNum == MODELS_AOSmithHPTU66)
+        {
             tankVolume_L = 244.6;
         }
-        else {
+        else
+        {
             tankVolume_L = 221.4;
         }
         tankUA_kJperHrC = 8;
@@ -2553,19 +2655,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2265) {
+        if (presetNum == MODELS_RheemHBDR2265)
+        {
             resistiveElementTop.setupAsResistiveElement(8, 2250);
         }
-        else {
+        else
+        {
             resistiveElementTop.setupAsResistiveElement(8, 4500);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2265) {
+        if (presetNum == MODELS_RheemHBDR2265)
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 2250);
         }
-        else {
+        else
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -2601,7 +2707,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
     else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 ||
-             presetNum == MODELS_RheemHBDR4580) {
+             presetNum == MODELS_RheemHBDR4580)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -2654,19 +2761,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.hysteresis_dC = dF_TO_dC(1);
 
         // top resistor values
-        if (presetNum == MODELS_RheemHBDR2280) {
+        if (presetNum == MODELS_RheemHBDR2280)
+        {
             resistiveElementTop.setupAsResistiveElement(8, 2250);
         }
-        else {
+        else
+        {
             resistiveElementTop.setupAsResistiveElement(8, 4500);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        if (presetNum == MODELS_RheemHBDR2280) {
+        if (presetNum == MODELS_RheemHBDR2280)
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 2250);
         }
-        else {
+        else
+        {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
@@ -2702,7 +2813,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_AOSmithHPTU80_DR) {
+    else if (presetNum == MODELS_AOSmithHPTU80_DR)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -2781,7 +2893,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_AOSmithCAHP120) {
+    else if (presetNum == MODELS_AOSmithCAHP120)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(150.0);
@@ -2876,20 +2989,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].companionHeatSource = &setOfSources[1];
         setOfSources[1].companionHeatSource = &setOfSources[2];
     }
-    else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80) {
+    else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTS50) {
+        if (presetNum == MODELS_AOSmithHPTS50)
+        {
             tankVolume_L = GAL_TO_L(45.6);
             tankUA_kJperHrC = 6.403;
         }
-        else if (presetNum == MODELS_AOSmithHPTS66) {
+        else if (presetNum == MODELS_AOSmithHPTS66)
+        {
             tankVolume_L = GAL_TO_L(67.63);
             tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
-        else if (presetNum == MODELS_AOSmithHPTS80) {
+        else if (presetNum == MODELS_AOSmithHPTS80)
+        {
             tankVolume_L = GAL_TO_L(81.94);
             tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
@@ -2965,7 +3082,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
 
-    else if (presetNum == MODELS_GE2014STDMode) {
+    else if (presetNum == MODELS_GE2014STDMode)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3042,7 +3160,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_GE2014STDMode_80) {
+    else if (presetNum == MODELS_GE2014STDMode_80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3115,7 +3234,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_GE2014) {
+    else if (presetNum == MODELS_GE2014)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3195,7 +3315,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_GE2014_80) {
+    else if (presetNum == MODELS_GE2014_80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3275,7 +3396,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_GE2014_80DR) {
+    else if (presetNum == MODELS_GE2014_80DR)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3357,7 +3479,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
     // PRESET USING GE2014 DATA
-    else if (presetNum == MODELS_BWC2020_65) {
+    else if (presetNum == MODELS_BWC2020_65)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3435,24 +3558,29 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[1].backupHeatSource = &setOfSources[2];
     }
     // If Rheem Premium
-    else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80) {
+    else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_Rheem2020Prem40) {
+        if (presetNum == MODELS_Rheem2020Prem40)
+        {
             tankVolume_L = GAL_TO_L(36.1);
             tankUA_kJperHrC = 9.5;
         }
-        else if (presetNum == MODELS_Rheem2020Prem50) {
+        else if (presetNum == MODELS_Rheem2020Prem50)
+        {
             tankVolume_L = GAL_TO_L(45.1);
             tankUA_kJperHrC = 8.55;
         }
-        else if (presetNum == MODELS_Rheem2020Prem65) {
+        else if (presetNum == MODELS_Rheem2020Prem65)
+        {
             tankVolume_L = GAL_TO_L(58.5);
             tankUA_kJperHrC = 10.64;
         }
-        else if (presetNum == MODELS_Rheem2020Prem80) {
+        else if (presetNum == MODELS_Rheem2020Prem80)
+        {
             tankVolume_L = GAL_TO_L(72.0);
             tankUA_kJperHrC = 10.83;
         }
@@ -3528,24 +3656,29 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     // If Rheem Build
-    else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
+    else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_Rheem2020Build40) {
+        if (presetNum == MODELS_Rheem2020Build40)
+        {
             tankVolume_L = GAL_TO_L(36.1);
             tankUA_kJperHrC = 9.5;
         }
-        else if (presetNum == MODELS_Rheem2020Build50) {
+        else if (presetNum == MODELS_Rheem2020Build50)
+        {
             tankVolume_L = GAL_TO_L(45.1);
             tankUA_kJperHrC = 8.55;
         }
-        else if (presetNum == MODELS_Rheem2020Build65) {
+        else if (presetNum == MODELS_Rheem2020Build65)
+        {
             tankVolume_L = GAL_TO_L(58.5);
             tankUA_kJperHrC = 10.64;
         }
-        else if (presetNum == MODELS_Rheem2020Build80) {
+        else if (presetNum == MODELS_Rheem2020Build80)
+        {
             tankVolume_L = GAL_TO_L(72.0);
             tankUA_kJperHrC = 10.83;
         }
@@ -3619,26 +3752,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
-    else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80) {
+    else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
 
-        if (presetNum == MODELS_RheemPlugInShared40) {
+        if (presetNum == MODELS_RheemPlugInShared40)
+        {
             tankVolume_L = GAL_TO_L(36.0);
             tankUA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared50) {
+        else if (presetNum == MODELS_RheemPlugInShared50)
+        {
             tankVolume_L = GAL_TO_L(45.0);
             tankUA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared65) {
+        else if (presetNum == MODELS_RheemPlugInShared65)
+        {
             tankVolume_L = GAL_TO_L(58.5);
             tankUA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
-        else if (presetNum == MODELS_RheemPlugInShared80) {
+        else if (presetNum == MODELS_RheemPlugInShared80)
+        {
             tankVolume_L = GAL_TO_L(72.0);
             tankUA_kJperHrC = 10.83;
             setpoint_C = F_TO_C(127.0);
@@ -3686,15 +3824,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0] = compressor;
     }
     else if (presetNum == MODELS_RheemPlugInDedicated40 ||
-             presetNum == MODELS_RheemPlugInDedicated50) {
+             presetNum == MODELS_RheemPlugInDedicated50)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
-        if (presetNum == MODELS_RheemPlugInDedicated40) {
+        if (presetNum == MODELS_RheemPlugInDedicated40)
+        {
             tankVolume_L = GAL_TO_L(36);
             tankUA_kJperHrC = 5.5;
         }
-        else if (presetNum == MODELS_RheemPlugInDedicated50) {
+        else if (presetNum == MODELS_RheemPlugInDedicated50)
+        {
             tankVolume_L = GAL_TO_L(45);
             tankUA_kJperHrC = 6.33;
         }
@@ -3740,7 +3881,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // set everything in its places
         setOfSources[0] = compressor;
     }
-    else if (presetNum == MODELS_RheemHB50) {
+    else if (presetNum == MODELS_RheemHB50)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3819,7 +3961,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_Stiebel220E) {
+    else if (presetNum == MODELS_Stiebel220E)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127);
@@ -3879,7 +4022,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // you don't get the right pointers
         setOfSources[0].backupHeatSource = &setOfSources[1];
     }
-    else if (presetNum == MODELS_Generic1) {
+    else if (presetNum == MODELS_Generic1)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -3951,7 +4095,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_Generic2) {
+    else if (presetNum == MODELS_Generic2)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -4027,7 +4172,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_Generic3) {
+    else if (presetNum == MODELS_Generic3)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -4105,7 +4251,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_UEF2generic) {
+    else if (presetNum == MODELS_UEF2generic)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
@@ -4181,29 +4328,36 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].followedByHeatSource = &setOfSources[1];
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
-    else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
+    else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80)
+    {
         numNodes = 12;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AWHSTier3Generic40) {
+        if (presetNum == MODELS_AWHSTier3Generic40)
+        {
             tankVolume_L = GAL_TO_L(36.1);
             tankUA_kJperHrC = 5;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic50) {
+        else if (presetNum == MODELS_AWHSTier3Generic50)
+        {
             tankVolume_L = GAL_TO_L(45);
             tankUA_kJperHrC = 6.5;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic65) {
+        else if (presetNum == MODELS_AWHSTier3Generic65)
+        {
             tankVolume_L = GAL_TO_L(64);
             tankUA_kJperHrC = 7.6;
         }
-        else if (presetNum == MODELS_AWHSTier3Generic80) {
+        else if (presetNum == MODELS_AWHSTier3Generic80)
+        {
             tankVolume_L = GAL_TO_L(75.4);
             tankUA_kJperHrC = 10.;
         }
-        else {
-            if (hpwhVerbosity >= VRB_reluctant) {
+        else
+        {
+            if (hpwhVerbosity >= VRB_reluctant)
+            {
                 msg("Incorrect model specification.  \n");
             }
             return HPWH_ABORT;
@@ -4281,7 +4435,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[1].followedByHeatSource = &setOfSources[2];
     }
     // If a the model is the TamOMatic, HotTam, Generic... This model is scalable.
-    else if (presetNum == MODELS_TamScalable_SP) {
+    else if (presetNum == MODELS_TamScalable_SP)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -4386,7 +4541,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
-    else if (presetNum == MODELS_Scalable_MP) {
+    else if (presetNum == MODELS_Scalable_MP)
+    {
         numNodes = 24;
         tankTemps_C = new double[numNodes];
         setpoint_C = F_TO_C(135.0);
@@ -4471,8 +4627,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setOfSources[0].companionHeatSource = &setOfSources[2];
     }
 
-    else {
-        if (hpwhVerbosity >= VRB_reluctant) {
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
             msg("You have tried to select a preset model which does not exist.  \n");
         }
         return HPWH_ABORT;
@@ -4489,20 +4647,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT) {
+    if (checkInputs() == HPWH_ABORT)
+    {
         return HPWH_ABORT;
     }
 
     isHeating = false;
-    for (int i = 0; i < numHeatSources; i++) {
-        if (setOfSources[i].isOn) {
+    for (int i = 0; i < numHeatSources; i++)
+    {
+        if (setOfSources[i].isOn)
+        {
             isHeating = true;
         }
         setOfSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic) {
-        for (int i = 0; i < numHeatSources; i++) {
+    if (hpwhVerbosity >= VRB_emetic)
+    {
+        for (int i = 0; i < numHeatSources; i++)
+        {
             msg("heat source %d: %p \n", i, &setOfSources[i]);
         }
         msg("\n\n");

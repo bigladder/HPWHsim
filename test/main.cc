@@ -82,26 +82,30 @@ int main(int argc, char* argv[])
     cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
     // Obvious wrong number of command line arguments
-    if ((argc > 6)) {
+    if ((argc > 6))
+    {
         cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. "
                 "Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and "
                 "output directory\n";
         exit(1);
     }
     // Help message
-    if (argc > 1) {
+    if (argc > 1)
+    {
         input1 = argv[1];
         input2 = argv[2];
         input3 = argv[3];
         outputDirectory = argv[4];
     }
-    else {
+    else
+    {
         input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
         input2 = "def";
         input3 = "ghi";
         outputDirectory = ".";
     }
-    if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
+    if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help"))
+    {
         cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] "
                 "[testName] [airtemp override F (optional)]\"\n";
         cout << "All input files should be located in the test directory, with these names:\n";
@@ -111,11 +115,13 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    if (argc == 6) {
+    if (argc == 6)
+    {
         airTemp = std::stoi(argv[5]);
         HPWH_doTempDepress = true;
     }
-    else {
+    else
+    {
         airTemp = 0;
         HPWH_doTempDepress = false;
     }
@@ -125,26 +131,31 @@ int main(int argc, char* argv[])
 
     // Parse the model
     newSetpoint = 0;
-    if (input1 == "Preset") {
+    if (input1 == "Preset")
+    {
         inputFile = "";
 
-        if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT) {
+        if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT)
+        {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
         }
 
         model = static_cast<HPWH::MODELS>(hpwh.getHPWHModel());
 
-        if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
+        if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
+        {
             newSetpoint = (149 - 32) / 1.8;
         }
     }
-    else if (input1 == "File") {
+    else if (input1 == "File")
+    {
         inputFile = input2 + ".txt";
         if (hpwh.HPWHinit_file(inputFile) != 0)
             exit(1);
     }
-    else {
+    else
+    {
         cout << "Invalid argument, received '" << input1 << "', expected 'Preset' or 'File'.\n";
         exit(1);
     }
@@ -160,7 +171,8 @@ int main(int argc, char* argv[])
     // Read the test control file
     fileToOpen = testDirectory + "/" + "testInfo.txt";
     controlFile.open(fileToOpen.c_str());
-    if (!controlFile.is_open()) {
+    if (!controlFile.is_open())
+    {
         cout << "Could not open control file " << fileToOpen << "\n";
         exit(1);
     }
@@ -175,37 +187,48 @@ int main(int argc, char* argv[])
     useSoC = false;
     cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
-    while (controlFile >> var1 >> testVal) {
-        if (var1 == "setpoint") { // If a setpoint was specified then override the default
+    while (controlFile >> var1 >> testVal)
+    {
+        if (var1 == "setpoint")
+        { // If a setpoint was specified then override the default
             newSetpoint = testVal;
         }
-        else if (var1 == "length_of_test") {
+        else if (var1 == "length_of_test")
+        {
             minutesToRun = (int)testVal;
         }
-        else if (var1 == "doInversionMixing") {
+        else if (var1 == "doInversionMixing")
+        {
             doInvMix = (testVal > 0.0) ? 1 : 0;
         }
-        else if (var1 == "doConduction") {
+        else if (var1 == "doConduction")
+        {
             doCondu = (testVal > 0.0) ? 1 : 0;
         }
-        else if (var1 == "inletH") {
+        else if (var1 == "inletH")
+        {
             inletH = testVal;
         }
-        else if (var1 == "tanksize") {
+        else if (var1 == "tanksize")
+        {
             newTankSize = testVal;
         }
-        else if (var1 == "tot_limit") {
+        else if (var1 == "tot_limit")
+        {
             tot_limit = testVal;
         }
-        else if (var1 == "useSoC") {
+        else if (var1 == "useSoC")
+        {
             useSoC = (bool)testVal;
         }
-        else {
+        else
+        {
             cout << var1 << " in testInfo.txt is an unrecogized key.\n";
         }
     }
 
-    if (minutesToRun == 0) {
+    if (minutesToRun == 0)
+    {
         cout << "Error, must record length_of_test in testInfo.txt file\n";
         exit(1);
     }
@@ -220,54 +243,69 @@ int main(int argc, char* argv[])
     scheduleNames.push_back("setpoint");
     scheduleNames.push_back("SoC");
 
-    for (i = 0; (unsigned)i < scheduleNames.size(); i++) {
+    for (i = 0; (unsigned)i < scheduleNames.size(); i++)
+    {
         fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
         outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
-        if (outputCode != 0) {
-            if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC") {
+        if (outputCode != 0)
+        {
+            if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC")
+            {
                 cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
                 exit(1);
             }
-            else {
+            else
+            {
                 outputCode = 0;
             }
         }
     }
 
-    if (doInvMix == 0) {
+    if (doInvMix == 0)
+    {
         outputCode += hpwh.setDoInversionMixing(false);
     }
 
-    if (doCondu == 0) {
+    if (doCondu == 0)
+    {
         outputCode += hpwh.setDoConduction(false);
     }
-    if (newSetpoint > 0) {
-        if (!allSchedules[5].empty()) {
+    if (newSetpoint > 0)
+    {
+        if (!allSchedules[5].empty())
+        {
             hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
             hpwh.resetTankToSetpoint();
         }
-        else {
+        else
+        {
             hpwh.setSetpoint(newSetpoint);
             hpwh.resetTankToSetpoint();
         }
     }
-    if (inletH > 0) {
+    if (inletH > 0)
+    {
         outputCode += hpwh.setInletByFraction(inletH);
     }
-    if (newTankSize > 0) {
+    if (newTankSize > 0)
+    {
         hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL);
     }
-    if (tot_limit > 0) {
+    if (tot_limit > 0)
+    {
         outputCode += hpwh.setTimerLimitTOT(tot_limit);
     }
-    if (useSoC) {
-        if (allSchedules[6].empty()) {
+    if (useSoC)
+    {
+        if (allSchedules[6].empty())
+        {
             cout << "If useSoC is true need an SoCschedule.csv file \n";
         }
         outputCode += hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
     }
 
-    if (outputCode != 0) {
+    if (outputCode != 0)
+    {
         cout << "Control file testInfo.txt has unsettable specifics in it. \n";
         exit(1);
     }
@@ -275,27 +313,33 @@ int main(int argc, char* argv[])
     // ----------------------Open the Output Files and Print the Header----------------------------
     // //
 
-    if (minutesToRun > 500000.) {
+    if (minutesToRun > 500000.)
+    {
         fileToOpen = outputDirectory + "/DHW_YRLY.csv";
 
-        if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0) {
+        if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0)
+        {
             cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
         }
     }
-    else {
+    else
+    {
         fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
 
-        if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0) {
+        if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0)
+        {
             cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
         }
 
         string header = strHead;
-        if (hpwh.isCompressoExternalMultipass()) {
+        if (hpwh.isCompressoExternalMultipass())
+        {
             header += strHeadMP;
         }
-        if (useSoC) {
+        if (useSoC)
+        {
             header += strHeadSoC;
         }
         hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, 0);
@@ -307,16 +351,19 @@ int main(int argc, char* argv[])
     std::vector<double> nodeExtraHeat_W;
     std::vector<double>* vectptr = NULL;
     // Loop over the minutes in the test
-    for (i = 0; i < minutesToRun; i++) {
+    for (i = 0; i < minutesToRun; i++)
+    {
 
 #if defined _DEBUG && 0
         cout << "Now on minute: " << i << "\n";
 #endif
 
-        if (HPWH_doTempDepress) {
+        if (HPWH_doTempDepress)
+        {
             airTemp2 = F_TO_C(airTemp);
         }
-        else {
+        else
+        {
             airTemp2 = allSchedules[2][i];
         }
 
@@ -326,22 +373,27 @@ int main(int argc, char* argv[])
         drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
         // Change setpoint if there is a setpoint schedule.
-        if (!allSchedules[5].empty() && !hpwh.isSetpointFixed()) {
+        if (!allSchedules[5].empty() && !hpwh.isSetpointFixed())
+        {
             hpwh.setSetpoint(allSchedules[5][i]); // expect this to fail sometimes
         }
 
         // Change SoC schedule
-        if (useSoC) {
-            if (hpwh.setTargetSoCFraction(allSchedules[6][i]) != 0) {
+        if (useSoC)
+        {
+            if (hpwh.setTargetSoCFraction(allSchedules[6][i]) != 0)
+            {
                 cout << "ERROR: Can not set the target state of charge fraction. \n";
                 exit(1);
             }
         }
 
         // Mix down for yearly tests with large compressors
-        if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
+        if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.)
+        {
             // Do a simple mix down of the draw for the cold water temperature
-            if (hpwh.getSetpoint() <= 125.) {
+            if (hpwh.getSetpoint() <= 125.)
+            {
                 allSchedules[1][i] *= (125. - allSchedules[0][i]) /
                                       (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) -
                                        allSchedules[0][i]);
@@ -360,7 +412,8 @@ int main(int argc, char* argv[])
 
         // Check energy balance accounting.
         double hpwhElect = 0;
-        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+        {
             hpwhElect += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
         }
         double hpwhqHW = GAL_TO_L(allSchedules[1][i]) *
@@ -376,14 +429,17 @@ int main(int argc, char* argv[])
                       - deltaHC;  // change in tank stored energy
 
         double fBal = fabs(qBal) / std::max(tankHCStart, 1.);
-        if (fBal > EBALTHRESHOLD) {
+        if (fBal > EBALTHRESHOLD)
+        {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error " << qBal
                  << "kJ, " << 100 * fBal << "%"
                  << "\n";
         }
         // Check timing
-        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-            if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
+        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+        {
+            if (hpwh.getNthHeatSourceRunTime(iHS) > 1)
+            {
                 cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
                      << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
                      << "\n";
@@ -391,11 +447,13 @@ int main(int argc, char* argv[])
             }
         }
         // Check flow for external MP
-        if (hpwh.isCompressoExternalMultipass()) {
+        if (hpwh.isCompressoExternalMultipass())
+        {
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
             double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
-            if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
+            if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
+            {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
                      << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: " << mpFlowVolume_Gal
                      << "\n";
@@ -403,9 +461,11 @@ int main(int argc, char* argv[])
             }
         }
         // Recording
-        if (minutesToRun < 500000.) {
+        if (minutesToRun < 500000.)
+        {
             // Copy current status into the output file
-            if (HPWH_doTempDepress) {
+            if (HPWH_doTempDepress)
+            {
                 airTemp2 = hpwh.getLocationTemp_C();
             }
             strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
@@ -413,43 +473,51 @@ int main(int argc, char* argv[])
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
-            if (hpwh.isCompressoExternalMultipass()) {
+            if (hpwh.isCompressoExternalMultipass())
+            {
                 strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
                                std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
                                std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
             }
-            if (useSoC) {
+            if (useSoC)
+            {
                 strPreamble += std::to_string(allSchedules[6][i]) + ", " +
                                std::to_string(hpwh.getSoCFraction()) + ", ";
             }
             hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
         }
-        else {
-            for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
+        else
+        {
+            for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
+            {
                 cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
                 cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
             }
         }
     }
 
-    if (minutesToRun > 500000.) {
+    if (minutesToRun > 500000.)
+    {
         firstCol = input3 + "," + input1 + "," + input2;
         fprintf(yearOutFile, "%s", firstCol.c_str());
         double totalIn = 0, totalOut = 0;
-        for (int iHS = 0; iHS < 3; iHS++) {
+        for (int iHS = 0; iHS < 3; iHS++)
+        {
             fprintf(yearOutFile, ",%0.0f,%0.0f", cumHeatIn[iHS], cumHeatOut[iHS]);
             totalIn += cumHeatIn[iHS];
             totalOut += cumHeatOut[iHS];
         }
         fprintf(yearOutFile, ",%0.0f,%0.0f", totalIn, totalOut);
-        for (int iHS = 0; iHS < 3; iHS++) {
+        for (int iHS = 0; iHS < 3; iHS++)
+        {
             fprintf(yearOutFile, ",%0.2f", cumHeatOut[iHS] / cumHeatIn[iHS]);
         }
         fprintf(yearOutFile, ",%0.2f", totalOut / totalIn);
         fprintf(yearOutFile, "\n");
         fclose(yearOutFile);
     }
-    else {
+    else
+    {
         fclose(outputFile);
     }
     controlFile.close();
@@ -468,14 +536,16 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
     // open the schedule file provided
     cout << "Opening " << scheduleFileName << '\n';
 
-    if (!inputFile.is_open()) {
+    if (!inputFile.is_open())
+    {
         return 1;
     }
 
     inputFile >> snippet >> valTmp;
     // cout << "snippet " << snippet << " valTmp"<< valTmp<<'\n';
 
-    if (snippet != "default") {
+    if (snippet != "default")
+    {
         cout << "First line of " << scheduleFileName << " must specify default\n";
         return 1;
     }
@@ -491,25 +561,31 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
     std::stringstream ss(line); // Will parse with a stringstream
     // Grab the first token, which is the minute or hour marker
     ss >> minORhr;
-    if (minORhr.empty()) { // If nothing left in the file
+    if (minORhr.empty())
+    { // If nothing left in the file
         return 0;
     }
     hourInput = tolower(minORhr.at(0)) == 'h';
     char c; // to eat the commas nom nom
     // Read all the exceptions to the default value
-    while (inputFile >> minuteHrTmp >> c >> valTmp) {
+    while (inputFile >> minuteHrTmp >> c >> valTmp)
+    {
 
-        if (minuteHrTmp >= (int)scheduleArray.size()) {
+        if (minuteHrTmp >= (int)scheduleArray.size())
+        {
             cout << "In " << scheduleFileName
                  << " the input file has more minutes than the test was defined with\n";
             return 1;
         }
         // Update the value
-        if (!hourInput) {
+        if (!hourInput)
+        {
             scheduleArray[minuteHrTmp] = valTmp;
         }
-        else if (hourInput) {
-            for (int j = minuteHrTmp * 60; j < (minuteHrTmp + 1) * 60; j++) {
+        else if (hourInput)
+        {
+            for (int j = minuteHrTmp * 60; j < (minuteHrTmp + 1) * 60; j++)
+            {
                 scheduleArray[j] = valTmp;
                 // cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
             }

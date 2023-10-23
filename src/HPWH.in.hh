@@ -13,7 +13,8 @@
 #include <cstdlib> //for exit
 #include <vector>
 
-namespace Btwxt {
+namespace Btwxt
+{
 class RegularGridInterpolator;
 };
 
@@ -22,12 +23,15 @@ class RegularGridInterpolator;
  *  excluded from compiling.  This is done in order to reduce the size of the
  * final compiled code.  */
 
-#define HPWHVRSN_MAJOR @HPWHsim_VRSN_MAJOR @
-#define HPWHVRSN_MINOR @HPWHsim_VRSN_MINOR @
-#define HPWHVRSN_PATCH @HPWHsim_VRSN_PATCH @
+// clang-format off
+#define HPWHVRSN_MAJOR @HPWHsim_VRSN_MAJOR@
+#define HPWHVRSN_MINOR @HPWHsim_VRSN_MINOR@
+#define HPWHVRSN_PATCH @HPWHsim_VRSN_PATCH@
 #define HPWHVRSN_META "@HPWHsim_VRSN_META@"
+// clang-format on
 
-class HPWH {
+class HPWH
+{
   public:
     static const int version_major = HPWHVRSN_MAJOR;
     static const int version_minor = HPWHVRSN_MINOR;
@@ -68,7 +72,8 @@ class HPWH {
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
-    enum DRMODES {
+    enum DRMODES
+    {
         DR_ALLOW = 0b0000, /**<Allow, this mode allows the water heater to run normally */
         DR_LOC = 0b0001,   /**< Lock out Compressor, this mode locks out the compressor */
         DR_LOR = 0b0010,   /**< Lock out Resistance Elements, this mode locks out the resistance
@@ -82,7 +87,8 @@ class HPWH {
 
     /// specifies the allowable preset HPWH models
     /// values may vary - names should be used
-    enum MODELS {
+    enum MODELS
+    {
         // these models are used for testing purposes
         MODELS_restankNoUA = 1,   /**< a simple resistance tank, but with no tank losses  */
         MODELS_restankHugeUA = 2, /**< a simple resistance tank, but with very large tank losses  */
@@ -241,7 +247,8 @@ class HPWH {
 
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
-    enum VERBOSITY {
+    enum VERBOSITY
+    {
         VRB_silent = 0,     /**< print no outputs  */
         VRB_reluctant = 10, /**< print only outputs for fatal errors  */
         VRB_minuteOut = 15, /**< print minutely output  */
@@ -249,7 +256,8 @@ class HPWH {
         VRB_emetic = 30     /**< print all the things  */
     };
 
-    enum UNITS {
+    enum UNITS
+    {
         UNITS_C,         /**< celsius  */
         UNITS_F,         /**< fahrenheit  */
         UNITS_KWH,       /**< kilowatt hours  */
@@ -273,7 +281,8 @@ class HPWH {
     };
 
     /** specifies the type of heat source  */
-    enum HEATSOURCE_TYPE {
+    enum HEATSOURCE_TYPE
+    {
         TYPE_none,       /**< a default to check to make sure it's been set  */
         TYPE_resistance, /**< a resistance element  */
         TYPE_compressor, /**< a vapor cycle compressor  */
@@ -281,19 +290,22 @@ class HPWH {
     };
 
     /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
-    enum EXTRAP_METHOD {
+    enum EXTRAP_METHOD
+    {
         EXTRAP_LINEAR, /**< the default extrapolates linearly */
         EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest
                           point  */
     };
 
     /** specifies the unit type for outputs in the CSV file-s  */
-    enum CSVOPTIONS {
+    enum CSVOPTIONS
+    {
         CSVOPT_NONE,
         CSVOPT_IPUNITS
     };
 
-    struct NodeWeight {
+    struct NodeWeight
+    {
         int nodeNum;
         double weight;
         NodeWeight(int n, double w) : nodeNum(n), weight(w) {};
@@ -301,7 +313,8 @@ class HPWH {
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
     };
 
-    struct HeatingLogic {
+    struct HeatingLogic
+    {
       public:
         std::string description;
         std::function<bool(double, double)> compare;
@@ -338,7 +351,8 @@ class HPWH {
         bool isEnteringWaterHighTempShutoff;
     };
 
-    struct SoCBasedHeatingLogic : HeatingLogic {
+    struct SoCBasedHeatingLogic : HeatingLogic
+    {
       public:
         SoCBasedHeatingLogic(std::string desc,
                              double d,
@@ -371,7 +385,8 @@ class HPWH {
         double constantMains_C;
     };
 
-    struct TempBasedHeatingLogic : HeatingLogic {
+    struct TempBasedHeatingLogic : HeatingLogic
+    {
       public:
         TempBasedHeatingLogic(std::string desc,
                               std::vector<NodeWeight> n,
@@ -1086,7 +1101,8 @@ class HPWH {
     bool doConduction;
     /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
-    struct resPoint {
+    struct resPoint
+    {
         int index;
         int position;
     };
@@ -1096,7 +1112,8 @@ class HPWH {
 
 }; // end of HPWH class
 
-class HPWH::HeatSource {
+class HPWH::HeatSource
+{
   public:
     friend class HPWH;
 
@@ -1193,7 +1210,8 @@ class HPWH::HeatSource {
 
   private:
     // start with a few type definitions
-    enum COIL_CONFIG {
+    enum COIL_CONFIG
+    {
         CONFIG_SUBMERGED,
         CONFIG_WRAPPED,
         CONFIG_EXTERNAL
@@ -1246,7 +1264,8 @@ class HPWH::HeatSource {
         alpha and beta are not intended to be settable
         see the hpwh_init functions for calculation of shrinkage */
 
-    struct perfPoint {
+    struct perfPoint
+    {
         double T_F;
         std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
         std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
@@ -1277,14 +1296,16 @@ class HPWH::HeatSource {
     std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
     /** some compressors have a resistance element for defrost*/
-    struct resistanceElementDefrost {
+    struct resistanceElementDefrost
+    {
         double inputPwr_kW;
         double constTempLift_dF;
         double onBelowT_F;
     };
     resistanceElementDefrost resDefrost;
 
-    struct defrostPoint {
+    struct defrostPoint
+    {
         double T_F;
         double derate_fraction;
     };
@@ -1292,7 +1313,8 @@ class HPWH::HeatSource {
     /**< A list of points for the defrost derate factor ordered by increasing external temperature
      */
 
-    struct maxOut_minAir {
+    struct maxOut_minAir
+    {
         double outT_C;
         double airT_C;
     };
@@ -1300,7 +1322,8 @@ class HPWH::HeatSource {
     /**<  maximum output temperature at the minimum operating temperature of HPWH environment
      * (minT)*/
 
-    struct SecondaryHeatExchanger {
+    struct SecondaryHeatExchanger
+    {
         double coldSideTemperatureOffest_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
