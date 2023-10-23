@@ -14,18 +14,21 @@
 using std::cout;
 using std::string;
 
-struct performance {
+struct performance
+{
     double input, output, cop;
 };
 
 void getCompressorPerformance(
     HPWH& hpwh, performance& point, double waterTempC, double airTempC, double setpointC)
 {
-    if (hpwh.isCompressorMultipass()) { // Multipass capacity looks at the average of the
-                                        // temperature of the lift
+    if (hpwh.isCompressorMultipass())
+    { // Multipass capacity looks at the average of the
+      // temperature of the lift
         hpwh.setSetpoint((waterTempC + setpointC) / 2.);
     }
-    else {
+    else
+    {
         hpwh.setSetpoint(waterTempC);
     }
     hpwh.resetTankToSetpoint(); // Force tank cold

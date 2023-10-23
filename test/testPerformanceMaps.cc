@@ -14,7 +14,8 @@ using std::string;
 const double tInOffsetQAHV_dF = 10.;
 const double tOutOffsetQAHV_dF = 15.;
 
-struct performancePointMP {
+struct performancePointMP
+{
     double tairF;
     double tinF;
     double outputBTUH;
@@ -26,7 +27,8 @@ double getCapacityMP_F_KW(HPWH& hpwh, performancePointMP& point)
         point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::UNITS_F);
 }
 
-struct performancePointSP {
+struct performancePointSP
+{
     double tairF;
     double toutF;
     double tinF;

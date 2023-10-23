@@ -55,7 +55,8 @@ int main(int, char*)
     double tempsForSetSoC[5][3] = {
         {49, 99, 125}, {65, 110, 129}, {32, 120, 121}, {32, 33, 121}, {80, 81, 132.5}};
 
-    for (string hpwhStr : hasHighShuttOffVectSP) {
+    for (string hpwhStr : hasHighShuttOffVectSP)
+    {
         testHasEnteringWaterShutOff(hpwhStr);
         testSetEnteringWaterShuffOffOutOfBoundsIndex(hpwhStr);
         testSetEnteringWaterShuffOffDeadbandToSmall(hpwhStr);
@@ -63,24 +64,28 @@ int main(int, char*)
         testSetEnteringWaterHighTempShutOffRelative(hpwhStr);
 
         testChangeToStateofChargeControlled(hpwhStr);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
+        {
             testSetStateOfCharge(
                 hpwhStr, tempsForSetSoC[i][0], tempsForSetSoC[i][1], tempsForSetSoC[i][2]);
         }
     }
 
-    for (string hpwhStr : noHighShuttOffVectMPExternal) {
+    for (string hpwhStr : noHighShuttOffVectMPExternal)
+    {
         testDoesNotHaveEnteringWaterShutOff(hpwhStr);
         testCanNotSetEnteringWaterShutOff(hpwhStr);
 
         testChangeToStateofChargeControlled(hpwhStr);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
+        {
             testSetStateOfCharge(
                 hpwhStr, tempsForSetSoC[i][0], tempsForSetSoC[i][1], tempsForSetSoC[i][2]);
         }
     }
 
-    for (string hpwhStr : noHighShuttOffVectIntegrated) {
+    for (string hpwhStr : noHighShuttOffVectIntegrated)
+    {
         testDoesNotHaveEnteringWaterShutOff(hpwhStr);
         testCanNotSetEnteringWaterShutOff(hpwhStr);
     }
@@ -221,10 +226,12 @@ void testChangeToStateofChargeControlled(string& input)
     getHPWHObject(hpwh, input);
     const bool originalHasHighTempShutOff =
         hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex());
-    if (!hpwh.isSetpointFixed()) {
+    if (!hpwh.isSetpointFixed())
+    {
         double temp;
         string tempStr;
-        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr)) {
+        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+        {
             return; // Numbers don't aline for this type
         }
         hpwh.setSetpoint(setpointT_C);
@@ -242,7 +249,8 @@ void testChangeToStateofChargeControlled(string& input)
                originalHasHighTempShutOff);
 
     // Test we can change the SoC and run a step and check we're heating
-    if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex())) {
+    if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()))
+    {
         ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(
                        setpointT_C - HPWH::MINSINGLEPASSLIFT, true, hpwh.getCompressorIndex()) ==
                    0); // Force to ignore this part.
@@ -275,10 +283,12 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
     const double setpointT_C = F_TO_C(149.);
 
     getHPWHObject(hpwh, input);
-    if (!hpwh.isSetpointFixed()) {
+    if (!hpwh.isSetpointFixed())
+    {
         double temp;
         string tempStr;
-        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr)) {
+        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+        {
             return; // Numbers don't aline for this type
         }
         hpwh.setSetpoint(setpointT_C);

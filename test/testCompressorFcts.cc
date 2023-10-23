@@ -138,7 +138,8 @@ int main(int, char*)
                                     35.,
                                     -13.}; // deg F
 
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++)
+    {
         testHasACompressor(models[i], hasComp[i]);
         testGetCompCoilConfig(models[i], coilConfig[i]);
         testIsCompressorMultipass(models[i], heatCycle[i]);

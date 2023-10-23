@@ -182,7 +182,8 @@ void testCommercialTankErrorsWithTopElement()
                HPWH::HPWH_ABORT);
 }
 
-struct InsulationPoint {
+struct InsulationPoint
+{
     double volume_L;
     double rValue_IP;
     double expectedUA_SI;
