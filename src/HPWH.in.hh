@@ -380,7 +380,7 @@ public:
 	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double d) ;
-	std::shared_ptr<TempBasedHeatingLogic> bottomTwelth(double d);
+	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double d);
 	std::shared_ptr<TempBasedHeatingLogic> secondSixth(double d);
@@ -392,7 +392,7 @@ public:
 	std::shared_ptr<TempBasedHeatingLogic> standby(double d);
 	std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d,bool isEnteringWaterHighTempShutoff = false);
-	std::shared_ptr<TempBasedHeatingLogic> bottomTwelthMaxTemp(double d);
+	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(double d);
 	std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
 	std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double d);
@@ -656,7 +656,7 @@ public:
 	of a compressor */
 
 	double getCompressorCapacity(double airTemp = 19.722,double inletTemp = 14.444,double outTemp = 57.222,
-		UNITS pwrUnit = UNITS_KW,UNITS tempUnit = UNITS_C) const;
+		UNITS pwrUnit = UNITS_KW,UNITS tempUnit = UNITS_C);
 	/**< Returns the heating output capacity of the compressor for the current HPWH model.
 	Note only supports HPWHs with one compressor, if multiple will return the last index
 	of a compressor. Outlet temperatures greater than the max allowable setpoints will return an error, but
@@ -875,12 +875,10 @@ private:
 
 
 	MODELS hpwhModel;
-	/**< The hpwh should know which preset initialized it, or if it was from a file */
+	/**< The hpwh should know which preset initialized it, or if it was from a fileget */
 
-	int numHeatSources;
-	/**< how many heat sources this HPWH has  */
-	HeatSource *setOfSources;
-	/**< an array containing the HeatSources, in order of priority  */
+	// a std::vector containing the HeatSources, in order of priority
+	std::vector<HeatSource> setOfSources;
 
 	int compressorIndex;
 	/**< The index of the compressor heat source (set to -1 if no compressor)*/
@@ -1068,6 +1066,10 @@ public:
 	/**< adds heat to the hpwh - this is the function that interprets the
 		various configurations (internal/external, resistance/heat pump) to add heat */
 
+	// Assign new condensity values from supplied vector. Note the input vector is currently resampled
+	// to preserve a condensity vector of size CONDENSITY_SIZE.
+	void setCondensity(const std::vector<double> &condensity_in);
+
 	void setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
 		double cnd5,double cnd6,double cnd7,double cnd8,
 		double cnd9,double cnd10,double cnd11,double cnd12);
@@ -1132,13 +1134,14 @@ private:
 	HeatSource* followedByHeatSource;
 	/**< a pointer to the heat source which will attempt to run after this one */
 
+	//	condensity is represented as a std::vector of size CONDENSITY_SIZE.
+	//  It represents the location within the tank where heat will be distributed,
+	//  and it also is used to calculate the condenser temperature for inputPower/COP calcs.
+	//  It is conceptually linked to the way condenser coils are wrapped around
+	//  (or within) the tank, however a resistance heat source can also be simulated
+	//  by specifying the entire condensity in one node. */
 	std::vector<double> condensity;
-	/**< The condensity function is always composed of 12 nodes.
-	  It represents the location within the tank where heat will be distributed,
-	  and it also is used to calculate the condenser temperature for inputPower/COP calcs.
-	  It is conceptually linked to the way condenser coils are wrapped around
-	  (or within) the tank, however a resistance heat source can also be simulated
-	  by specifying the entire condensity in one node. */
+
 	double shrinkage;
 	/**< the shrinkage is a derived value, using parameters alpha, beta,
 		and the condentropy, which is derived from the condensity
@@ -1332,5 +1335,10 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 }
 
 template< typename T> inline bool aboutEqual(T a,T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
+
+double sample(const std::vector<double> &values,double fracBegin,double fracEnd);
+int resample(std::vector<double> &origValues,const std::vector<double> &newValues);
+inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues);
+int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues);
 
 #endif

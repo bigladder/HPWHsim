@@ -150,14 +150,19 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	return *this;
 }
 
+void HPWH::HeatSource::setCondensity(const std::vector<double> &condensity_in) {
+	condensity.resize(CONDENSITY_SIZE);
+	resampleExtensive(condensity, condensity_in);
+}
+
 void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
 	double cnd5,double cnd6,double cnd7,double cnd8,
 	double cnd9,double cnd10,double cnd11,double cnd12) {
-	condensity ={cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12};
+	setCondensity({cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12});
 }
 
 int HPWH::HeatSource::findParent() const {
-	for(int i = 0; i < hpwh->numHeatSources; ++i) {
+	for(int i = 0; i < hpwh->getNumHeatSources(); ++i) {
 		if(this == hpwh->setOfSources[i].backupHeatSource) {
 			return i;
 		}
@@ -1036,12 +1041,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 }
 
 void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
-	int i;
 
 	isOn = false;
 	isVIP = false;
 	condensity = std::vector<double>(CONDENSITY_SIZE, 0.);
-
 	condensity[node] = 1;
 
 	perfMap.reserve(2);
