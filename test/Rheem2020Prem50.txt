@@ -84,7 +84,7 @@ heatsource 0 onlogic topSixth 20.4167 F
 heatsource 2 onlogic bottomThird 32 F
 heatsource 2 onlogic standby 9 F
 
-heatsource 1 offlogic bottomTwelthMaxTemp 100 F
+heatsource 1 offlogic bottomTwelfthMaxTemp 100 F
 
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1

@@ -63,100 +63,113 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-/*
- *	Assign values in vector Yp (of arbitrary size) to vector Y
- */
-int resample(std::vector<double> &Y,const std::vector<double> &Yp)
+//-----------------------------------------------------------------------------
+//	Description:
+//		Samples a std::vector to extract a single value spanning the fractional
+//		x-coordinate range from frac_begin to frac_end.
+//	Parameter(s):
+//		const std::vector<double> &values: std::vector containing values to be sampled
+//		double fracBegin: Lower (left) bounding fraction (0 to 1)
+//		double fracEnd: Upper (right) bounding fraction (0 to 1) 
+//	Note(s): Bounding fractions are clipped or swapped, if needed.
+//	Returns: double: resampled value; 0 if undefined.
+//-----------------------------------------------------------------------------
+double sample(const std::vector<double> &values,double fracBegin,double fracEnd)
 {
-	const std::size_t nY(Y.size());
-	const std::size_t nYp(Yp.size());
-	if((nY == 0) || (nYp == 0))
-	{
-		return -1;
-	}
+	if(fracBegin > fracEnd)std::swap(fracBegin,fracEnd);
+	if(fracBegin < 0.) fracBegin = 0.;
+	if(fracEnd >1.) fracEnd = 1.;
 
-	// Handle rational-fraction cases, nY  nYp
-	if((nY > nYp) && (nY % nYp == 0))
+	double nNodes = static_cast<double>(values.size());
+	auto i0 = static_cast<std::size_t>(fracBegin * nNodes);
+
+	double fracPrev = fracBegin;
+	double fracNext = fracPrev;
+
+	double totValueWeight = 0.;
+	double totWeight = 0.;
+	for(std::size_t i = i0; fracNext < fracEnd; ++i)
 	{
-		std::size_t n_bin = nY / nYp;
-		auto iterY = Y.begin();
-		for(auto iterYp = Yp.begin(); iterYp != Yp.end(); iterY += n_bin,++iterYp)
+		fracNext = static_cast<double>(i + 1) / nNodes;
+		if(fracNext > fracEnd)
 		{
-			std::fill(iterY,iterY + n_bin,*iterYp);
+			fracNext = fracEnd;
 		}
-		return 0;
+		double weight = fracNext - fracPrev;
+		totValueWeight += weight * values[i];
+		totWeight += weight;
+		fracPrev = fracNext;
 	}
-
-	// nY == nYp case
-	if(nY == nYp)
-	{
-		Y = Yp;
-		return 0;
-	}
-
-	// Handle rational-fraction cases, nY < nYp
-	if((nY < nYp) && (nYp % nY == 0))
-	{
-		std::size_t n_avg = nYp / nY;
-		auto iterYp = Yp.begin();
-		for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY, iterYp += n_avg)
-		{
-			double sum = 0.;
-			for(std::size_t i = 0; i< n_avg; ++i)
-				sum += *(iterYp + i);
-			*iterY = sum / static_cast<double>(n_avg);
-		}
-		return 0;
-	}
-
-	// We have nY element-bins over which we will distribute the values of nYp element-bins.
-	double rat = static_cast<double>(nY) / static_cast<double>(nYp);
-	double wp(1.); // initialize weight of Yp element-bin;
-	auto iterYp = Yp.begin();
-	for(auto iterY = Y.begin(); iterY != Y.end(); ++iterY) {
-		double w_tot(0.); // total weight of contributions to Y element-bin; ideally 1.0 when full
-		double wY_tot(0.); // total of weight*value products to Y element-bin
-		while(w_tot < 1.0) // continue combining inputs until Y element-bin is full
-		{
-			double w = 1.; // Assume Yp element-bin will fill Y element-bin
-			if(wp * rat < w) // contents of Yp element-bin will not completely fill Y element-bin
-				w = wp * rat; // scale the weight of Yp element-bin contribution
-			if(w_tot + w > 1.0) // Yp element-bin will overfill Y element-bin
-				w = 1.0 - w_tot; // retain portion of Yp element-bin needed to fill Y element-bin
-			w_tot += w; // weight contribution to Y element-bin
-			wY_tot += w * (*iterYp); // weight*value product contribution to Y element-bin
-			wp -= w / rat; // reduce remaining weight of Yp element-bin
-			if(wp <= 0.) // should be precisely zero when Yp element-bin is depleted 
-			{
-				if(++iterYp == Yp.end())
-					break; // end of vector Yp
-				wp = 1.; // initialize weight of next Yp element-bin
-			}
-		}
-		(*iterY) = (w_tot > 0.) ? wY_tot / w_tot : (*iterYp); // strictly avoid div-by-0 
-	}
-	return 0;
+	double res = 0.;
+	if(totWeight > 0.) res = totValueWeight / totWeight;
+	return res;
 }
 
-/*
- *	Resample an intensive property (e.g. temperature)
- */
-int resampleIntensive(std::vector<double> &Y,const std::vector<double> &Yp)
+//-----------------------------------------------------------------------------
+//    Description:
+//        Replaces the values in a std::vector by resampling another std::vector of
+//        arbitrary size.
+//    Parameter(s):
+//        std::vector<double> &origValues: contains values to be replaced
+//        const std::vector<double> &newValues: contains values to replace with
+//    Returns: int: 0: success; -1: failure.
+//-----------------------------------------------------------------------------
+int resample(std::vector<double> &origValues,const std::vector<double> &newValues)
 {
-	return resample(Y, Yp);
+    if(newValues.empty()) return -1;
+    double origSize = static_cast<double>(origValues.size());
+    double newSize = static_cast<double>(newValues.size());
+    double sizeRatio = newSize / origSize;
+    auto binSize = static_cast<std::size_t>(1. / sizeRatio);
+    double fracBegin = 0., fracEnd;
+    std::size_t i = 0;
+    while(i < origSize)
+    {
+        auto xi = static_cast<double>(i);
+        auto j = static_cast<std::size_t>(floor(xi * sizeRatio));
+        if(j + 1. < (xi + 1.) * sizeRatio) { // General case: no binning possible
+            fracEnd = static_cast<double>(i + 1) / origSize;
+            origValues[i] = sample(newValues,fracBegin,fracEnd);
+            ++i;
+        }
+        else { // Special case: direct copy to a bin
+            std::size_t iBegin = i;
+            std::size_t adjustedBinSize = binSize;
+            if(binSize > 1)
+            {
+                iBegin = static_cast<std::size_t>(ceil(j/sizeRatio));
+                adjustedBinSize  = static_cast<std::size_t>(floor((j + 1)/sizeRatio) - ceil(j/sizeRatio));
+            }
+            std::fill_n(origValues.begin() + iBegin, adjustedBinSize, newValues[j]);
+            i = iBegin + adjustedBinSize;
+            fracEnd = static_cast<double>(i) / origSize;
+        }
+        fracBegin = fracEnd;
+    }
+    return 0;
 }
 
-/*
- *	Resample an extensive property (e.g., heat)
- */
-int resampleExtensive(std::vector<double> &Y,const std::vector<double> &Yp)
+//-----------------------------------------------------------------------------
+//	Description: Resample an intensive property (e.g., temperature)
+//	Note(s): See definition of int resample.
+//-----------------------------------------------------------------------------
+inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues)
 {
-	int res = resample(Y, Yp);
-	if (res == 0)
+	return resample(origValues,newValues);
+}
+
+//-----------------------------------------------------------------------------
+//	Description: Resample an extensive property (e.g., heat)
+//	Note(s): See definition of int resample.
+//-----------------------------------------------------------------------------
+int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues)
+{
+	int res = resample(origValues,newValues);
+	if(res == 0)
 	{
-		double fac = static_cast<double>(Yp.size()) / static_cast<double>(Y.size());
-		for (auto &y: Y)
-			y *= fac;
+		double scale = static_cast<double>(newValues.size()) / static_cast<double>(origValues.size());
+		for(auto &value: origValues)
+			value *= scale;
 	}
 	return res;
 }
@@ -180,13 +193,12 @@ HPWH::HPWH(): setOfSources(NULL),tankTemps_C(NULL),nextTankTemps_C(NULL),message
 void HPWH::setAllDefaults() {
 	tankTemps_C.clear();
 	nextTankTemps_C.clear();
-	delete[] setOfSources;
+	setOfSources.clear();
 
 	simHasFailed = true; isHeating = false; setpointFixed = false; tankSizeFixed = true; canScale = false;
-	numHeatSources = 0;
 	member_inletT_C = HPWH_ABORT;
 	currentSoCFraction = 1.;
-	setOfSources = NULL; doTempDepression = false;
+	doTempDepression = false;
 	locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 	mixBelowFractionOnDraw = 1. / 3.;
 	doInversionMixing = true; doConduction = true;
@@ -197,61 +209,7 @@ void HPWH::setAllDefaults() {
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
-	simHasFailed = hpwh.simHasFailed;
-
-	hpwhVerbosity = hpwh.hpwhVerbosity;
-
-	//these should actually be the same pointers
-	messageCallback = hpwh.messageCallback;
-	messageCallbackContextPtr = hpwh.messageCallbackContextPtr;
-
-	isHeating = hpwh.isHeating;
-
-	numHeatSources = hpwh.numHeatSources;
-	setOfSources = new HeatSource[numHeatSources];
-	for(int i = 0; i < numHeatSources; i++) {
-		setOfSources[i] = hpwh.setOfSources[i];
-		setOfSources[i].hpwh = this;
-	}
-
-	tankVolume_L = hpwh.tankVolume_L;
-	tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
-	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
-
-	setpoint_C = hpwh.setpoint_C;
-	nodeDensity = hpwh.nodeDensity;
-	tankTemps_C = hpwh.tankTemps_C;
-	nextTankTemps_C = hpwh.nextTankTemps_C;
-
-	inletHeight = hpwh.inletHeight;
-	inlet2Height = hpwh.inlet2Height;
-
-	outletTemp_C = hpwh.outletTemp_C;
-	condenserInlet_C = hpwh.condenserInlet_C;
-	condenserOutlet_C = hpwh.condenserOutlet_C;
-	externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
-	energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
-	standbyLosses_kWh = hpwh.standbyLosses_kWh;
-
-	tankMixesOnDraw = hpwh.tankMixesOnDraw;
-	mixBelowFractionOnDraw = hpwh.mixBelowFractionOnDraw;
-	doTempDepression = hpwh.doTempDepression;
-
-	doInversionMixing = hpwh.doInversionMixing;
-	doConduction = hpwh.doConduction;
-
-	locationTemperature_C = hpwh.locationTemperature_C;
-
-	prevDRstatus = hpwh.prevDRstatus;
-	timerLimitTOT = hpwh.timerLimitTOT;
-
-	usesSoCLogic = hpwh.usesSoCLogic;
-
-	nodeVolume_L = hpwh.nodeVolume_L;
-	nodeHeight_m = hpwh.nodeHeight_m;
-	fracAreaTop = hpwh.fracAreaTop;
-	fracAreaSide = hpwh.fracAreaSide;
-
+	*this = hpwh;
 }
 
 HPWH & HPWH::operator=(const HPWH &hpwh) {
@@ -269,13 +227,9 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 
 	isHeating = hpwh.isHeating;
 
-	numHeatSources = hpwh.numHeatSources;
-
-	delete[] setOfSources;
-	setOfSources = new HeatSource[numHeatSources];
-	for(int i = 0; i < numHeatSources; i++) {
-		setOfSources[i] = hpwh.setOfSources[i];
-		setOfSources[i].hpwh = this;
+	setOfSources = hpwh.setOfSources;
+	for(auto &source: setOfSources) {
+		source.hpwh = this;
 		//HeatSource assignment will fail (causing the simulation to fail) if a
 		//HeatSource has backups/companions.
 		//This could be dealt with in this function (tricky), but the HeatSource
@@ -327,7 +281,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 }
 
 HPWH::~HPWH() {
-	delete[] setOfSources;
 }
 
 string HPWH::getVersion() {
@@ -381,7 +334,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	energyRemovedFromEnvironment_kWh = 0.;
 	standbyLosses_kWh = 0.;
 
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		setOfSources[i].runtime_min = 0;
 		setOfSources[i].energyInput_kWh = 0.;
 		setOfSources[i].energyOutput_kWh = 0.;
@@ -428,7 +381,7 @@ int HPWH::runOneStep(double drawVolume_L,
 		}
 
 		//do HeatSource choice
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			if(hpwhVerbosity >= VRB_emetic) {
 				msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu shut off logics\n",i,setOfSources[i].turnOnLogicSet.size(),setOfSources[i].shutOffLogicSet.size());
 			}
@@ -478,7 +431,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg("after heat source choosing:  ");
-			for(int i = 0; i < numHeatSources; i++) {
+			for(int i = 0; i < getNumHeatSources(); i++) {
 				msg("heat source %d: %d \t",i,setOfSources[i].isEngaged());
 			}
 			msg("\n");
@@ -486,7 +439,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 		//do heating logic
 		double minutesToRun = minutesPerStep;
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			// check/apply lock-outs
 			if(hpwhVerbosity >= VRB_emetic) {
 				msg("Checking lock-out logic for heat source %d:\n",i);
@@ -587,7 +540,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	//track the depressed local temperature
 	if(doTempDepression) {
 		bool compressorRan = false;
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			if(setOfSources[i].isEngaged() && !setOfSources[i].isLockedOut() && setOfSources[i].depressesTemperature) {
 				compressorRan = true;
 			}
@@ -612,7 +565,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	//outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
 
 	//sum energyRemovedFromEnvironment_kWh for each heat source;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		energyRemovedFromEnvironment_kWh += (setOfSources[i].energyOutput_kWh - setOfSources[i].energyInput_kWh);
 	}
 
@@ -661,9 +614,9 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 	double standbyLosses_kWh_SUM = 0;
 	double outletTemp_C_AVG = 0;
 	double totalDrawVolume_L = 0;
-	std::vector<double> heatSources_runTimes_SUM(numHeatSources);
-	std::vector<double> heatSources_energyInputs_SUM(numHeatSources);
-	std::vector<double> heatSources_energyOutputs_SUM(numHeatSources);
+	std::vector<double> heatSources_runTimes_SUM(getNumHeatSources());
+	std::vector<double> heatSources_energyInputs_SUM(getNumHeatSources());
+	std::vector<double> heatSources_energyOutputs_SUM(getNumHeatSources());
 
 	if(hpwhVerbosity >= VRB_typical) {
 		msg("Begin runNSteps.  \n");
@@ -686,7 +639,7 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 		outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
 		totalDrawVolume_L += drawVolume_L[i];
 
-		for(int j = 0; j < numHeatSources; j++) {
+		for(int j = 0; j < getNumHeatSources(); j++) {
 			heatSources_runTimes_SUM[j] += getNthHeatSourceRunTime(j);
 			heatSources_energyInputs_SUM[j] += getNthHeatSourceEnergyInput(j);
 			heatSources_energyOutputs_SUM[j] += getNthHeatSourceEnergyOutput(j);
@@ -695,30 +648,30 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 				//print minutely output
 		if(hpwhVerbosity == VRB_minuteOut) {
 			msg("%f,%f,%f,",tankAmbientT_C[i],drawVolume_L[i],inletT_C[i]);
-			for(int j = 0; j < numHeatSources; j++) {
+			for(int j = 0; j < getNumHeatSources(); j++) {
 				msg("%f,%f,",getNthHeatSourceEnergyInput(j),getNthHeatSourceEnergyOutput(j));
 			}
 
 			bool first = true;
-			for (int i = 0; i < 10; ++i)
+			for (int k = 0; k < 10; ++k)
 			{
 				if (first)
 					first = false;
 				else
 					msg(",");
 
-				int j = nodeDensity * i;
+				int j = nodeDensity * k;
 				msg("%f", tankTemps_C[j]);
 			}
 
-			for (int i = 1; i < 7; ++i)
+			for (int k = 1; k < 7; ++k)
 			{
 				if (first)
 					first = false;
 				else
 					msg(",");
 
-				msg("%f", getNthSimTcouple(i,6));
+				msg("%f", getNthSimTcouple(k,6));
 			}
 
 			msg("\n");
@@ -733,7 +686,7 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 	standbyLosses_kWh = standbyLosses_kWh_SUM;
 	outletTemp_C = outletTemp_C_AVG;
 
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		setOfSources[i].runtime_min = heatSources_runTimes_SUM[i];
 		setOfSources[i].energyInput_kWh = heatSources_energyInputs_SUM[i];
 		setOfSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
@@ -1126,7 +1079,7 @@ int HPWH::setAirFlowFreedom(double fanFraction) {
 		simHasFailed = true;
 		return HPWH_ABORT;
 	} else {
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			if(setOfSources[i].isACompressor()) {
 				setOfSources[i].airflowFreedom = fanFraction;
 			}
@@ -1358,7 +1311,7 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight,int whichExter
 	}
 
 	int returnVal = 0;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			if(whichExternalPort == 1) {
 				returnVal =  setNodeNumFromFractionalHeight(fractionalHeight,setOfSources[i].externalInletHeight);
@@ -1395,7 +1348,7 @@ int HPWH::getExternalInletHeight() const {
 		}
 		return HPWH_ABORT;
 	}
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return setOfSources[i].externalInletHeight; // Return the first one since all external sources have some ports
 		}
@@ -1409,7 +1362,7 @@ int HPWH::getExternalOutletHeight() const {
 		}
 		return HPWH_ABORT;
 	}
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return setOfSources[i].externalOutletHeight; // Return the first one since all external sources have some ports
 		}
@@ -1464,7 +1417,7 @@ int HPWH::setMaxTempDepression(double maxDepression,UNITS units /*=UNITS_C*/) {
 
 bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex) {
 	bool retVal = false;
-	if(heatSourceIndex >= numHeatSources || heatSourceIndex < 0) {
+	if(heatSourceIndex >= getNumHeatSources() || heatSourceIndex < 0) {
 		return retVal;
 	}
 	if(setOfSources[heatSourceIndex].shutOffLogicSet.size() == 0) {
@@ -1542,7 +1495,7 @@ int HPWH::setTargetSoCFraction(double target) {
 		return HPWH_ABORT;
 	}
 
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		for(std::shared_ptr<HeatingLogic> logic : setOfSources[i].shutOffLogicSet) {
 			if(!logic->getIsEnteringWaterHighTempShutoff()) {
 				logic->setDecisionPoint(target);
@@ -1597,7 +1550,7 @@ int HPWH::switchToSoCControls(double targetSoC,double hysteresisFraction /*= 0.0
 		return HPWH_ABORT;
 	}
 
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		setOfSources[i].clearAllTurnOnLogic();
 
 		setOfSources[i].shutOffLogicSet.erase(std::remove_if(setOfSources[i].shutOffLogicSet.begin(),
@@ -1714,10 +1667,10 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double d) {
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom half",nodeWeights,d,this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelth(double d) {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelth",nodeWeights,d,this);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,d,this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double d) {
@@ -1738,10 +1691,10 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomNodeMaxTemp(double d,bo
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node",nodeWeights,d,this,true,std::greater<double>(),isEnteringWaterHighTempShutoff);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelthMaxTemp(double d) {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfthMaxTemp(double d) {
 	std::vector<NodeWeight> nodeWeights;
 	nodeWeights.emplace_back(1);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelth",nodeWeights,d,this,true,std::greater<double>());
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,d,this,true,std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(double d) {
@@ -1808,12 +1761,12 @@ void HPWH::setNumNodes(const std::size_t num_nodes)
 
 int HPWH::getNumNodes() const
 {
-	return tankTemps_C.size();
+	return static_cast<int>(tankTemps_C.size());
 }
 
 int HPWH::getIndexTopNode() const
 {
-	return tankTemps_C.size() - 1;
+	return getNumNodes() - 1;
 }
 
 double HPWH::getTankNodeTemp(int nodeNum,UNITS units  /*=UNITS_C*/) const {
@@ -1890,9 +1843,8 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 	}
 }
 
-
 int HPWH::getNumHeatSources() const {
-	return numHeatSources;
+	return static_cast<int>(setOfSources.size());
 }
 
 int HPWH::getCompressorIndex() const {
@@ -1901,14 +1853,14 @@ int HPWH::getCompressorIndex() const {
 
 int HPWH::getNumResistanceElements() const {
 	int count = 0;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		count += setOfSources[i].isAResistance() ? 1 : 0;
 	}
 	return count;
 }
 
 double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,double inletTemp /*=14.444*/,double outTemp /*=57.222*/,
-	UNITS pwrUnit /*=UNITS_KW*/,UNITS tempUnit /*=UNITS_C*/) const {
+	UNITS pwrUnit /*=UNITS_KW*/,UNITS tempUnit /*=UNITS_C*/) {
 	// calculate capacity btu/hr, input btu/hr, and cop
 	double capTemp_BTUperHr,inputTemp_BTUperHr,copTemp; // temporary variables
 	double airTemp_C,inletTemp_C,outTemp_C;
@@ -1973,7 +1925,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,double inletTemp /
 
 double HPWH::getNthHeatSourceEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const {
 	//energy used by the heat source is positive - this should always be positive
-	if(N >= numHeatSources || N < 0) {
+	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
 		}
@@ -1995,7 +1947,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const
 }
 double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
-	if(N >= numHeatSources || N < 0) {
+	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the energy output of a heat source that does not exist.  \n");
 		}
@@ -2018,7 +1970,7 @@ double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) cons
 
 
 double HPWH::getNthHeatSourceRunTime(int N) const {
-	if(N >= numHeatSources || N < 0) {
+	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the run time of a heat source that does not exist.  \n");
 		}
@@ -2029,7 +1981,7 @@ double HPWH::getNthHeatSourceRunTime(int N) const {
 
 
 int HPWH::isNthHeatSourceRunning(int N) const {
-	if(N >= numHeatSources || N < 0) {
+	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the status of a heat source that does not exist.  \n");
 		}
@@ -2044,7 +1996,7 @@ int HPWH::isNthHeatSourceRunning(int N) const {
 
 
 HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const {
-	if(N >= numHeatSources || N < 0) {
+	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You have attempted to access the type of a heat source that does not exist.  \n");
 		}
@@ -2208,7 +2160,7 @@ bool HPWH::hasACompressor() const {
 
 
 bool HPWH::hasExternalHeatSource() const {
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].configuration == HeatSource::CONFIG_EXTERNAL) {
 			return true;
 		}
@@ -2418,7 +2370,7 @@ int HPWH::setResistanceCapacity(double power,int which /*=-1*/,UNITS pwrUnit /*=
 	//Whew so many checks...
 	if(which == -1) {
 		// Just get all the elements
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			if(setOfSources[i].isAResistance()) {
 				setOfSources[i].changeResistanceWatts(watts);
 			}
@@ -2457,7 +2409,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/,UNITS pwrUnit /*=UNITS_KW*/
 	double returnPower = 0;
 	if(which == -1) {
 		// Just get all the elements
-		for(int i = 0; i < numHeatSources; i++) {
+		for(int i = 0; i < getNumHeatSources(); i++) {
 			if(setOfSources[i].isAResistance()) {
 				returnPower += setOfSources[i].perfMap[0].inputPower_coeffs[0];
 			}
@@ -2492,7 +2444,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/,UNITS pwrUnit /*=UNITS_KW*/
 
 int HPWH::getResistancePosition(int elementIndex) const {
 
-	if(elementIndex < 0 || elementIndex > numHeatSources - 1) {
+	if(elementIndex < 0 || elementIndex > getNumHeatSources() - 1) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("Out of bounds value for which in getResistancePosition\n");
 		}
@@ -2767,7 +2719,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbient
 	//}
 	//mixTankInversions();
 
-	for(int i = 0; i < numHeatSources; i++){
+	for(int i = 0; i < getNumHeatSources(); i++){
 		if(setOfSources[i].typeOfHeatSource == TYPE_extra) {
 
 			// Set up the extra heat source
@@ -2790,7 +2742,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbient
 
 
 void HPWH::turnAllHeatSourcesOff() {
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		setOfSources[i].disengageHeatSource();
 	}
 	isHeating = false;
@@ -2799,7 +2751,7 @@ void HPWH::turnAllHeatSourcesOff() {
 
 bool HPWH::areAllHeatSourcesOff() const {
 	bool allOff = true;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isEngaged() == true) {
 			allOff = false;
 		}
@@ -2879,7 +2831,7 @@ void HPWH::calcDerivedValues() {
 	mapResRelativePosToSetOfSources();
 
 	//heat source ability to depress temp
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		} else if(setOfSources[i].isAResistance()) {
@@ -2894,7 +2846,7 @@ void HPWH::calcDerivedHeatingValues(){
 	//condentropy/shrinkage
 	double condentropy = 0;
 	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
@@ -2915,7 +2867,7 @@ void HPWH::calcDerivedHeatingValues(){
 
 	//lowest node
 	int lowest = 0;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		lowest = 0;
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
@@ -2945,7 +2897,7 @@ void HPWH::calcDerivedHeatingValues(){
 	VIPIndex = -1; // Default = No VIP element
 	int lowestElementPos = CONDENSITY_SIZE;
 	int highestElementPos = 0; // -1 to make sure a an element on the bottom can still be identified.
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
 		} else if(setOfSources[i].isAResistance()){
@@ -2981,7 +2933,7 @@ void HPWH::calcDerivedHeatingValues(){
 	}
 
 	//heat source ability to depress temp
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isACompressor()) {
 			setOfSources[i].depressesTemperature = true;
 		} else if(setOfSources[i].isAResistance()) {
@@ -2995,7 +2947,7 @@ void HPWH::mapResRelativePosToSetOfSources() {
 	resistanceHeightMap.clear();
 	resistanceHeightMap.reserve(getNumResistanceElements());
 
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isAResistance()) {
 			resistanceHeightMap.push_back({i,
 				getResistancePosition(i)
@@ -3016,7 +2968,7 @@ int HPWH::checkInputs() {
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
 
-	if(numHeatSources <= 0 && hpwhModel != MODELS_StorageTank) {
+	if(getNumHeatSources() <= 0 && hpwhModel != MODELS_StorageTank) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You must have at least one HeatSource.\n");
 		}
@@ -3032,7 +2984,7 @@ int HPWH::checkInputs() {
 
 	double condensitySum;
 	//loop through all heat sources to check each for malconfigurations
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		//check the heat source type to make sure it has been set
 		if(setOfSources[i].typeOfHeatSource == TYPE_none) {
 			if(hpwhVerbosity >= VRB_reluctant) {
@@ -3227,7 +3179,7 @@ int HPWH::HPWHinit_file(string configFile) {
 
 	//some variables that will be handy
 	int heatsource,sourceNum,nTemps,tempInt;
-	std::size_t num_nodes = 0;
+	std::size_t num_nodes = 0, numHeatSources = 0;
 
 	string tempString,units;
 	double tempDouble,dblArray[12];
@@ -3342,9 +3294,9 @@ int HPWH::HPWHinit_file(string configFile) {
 
 		else if(token == "numHeatSources") {
 			line_ss >> numHeatSources;
-			setOfSources = new HeatSource[numHeatSources];
+			setOfSources.reserve(numHeatSources);
 			for(int i = 0; i < numHeatSources; i++) {
-				setOfSources[i] = HeatSource(this);
+				setOfSources.emplace_back(this);
 			}
 		} else if(token == "heatsource") {
 			if(numHeatSources == 0) {
@@ -3523,8 +3475,8 @@ int HPWH::HPWHinit_file(string configFile) {
 						setOfSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
 					} else if(tempString == "bottomNodeMaxTemp") {
 						setOfSources[heatsource].addShutOffLogic(HPWH::bottomNodeMaxTemp(tempDouble));
-					} else if(tempString == "bottomTwelthMaxTemp") {
-						setOfSources[heatsource].addShutOffLogic(HPWH::bottomTwelthMaxTemp(tempDouble));
+					} else if(tempString == "bottomTwelfthMaxTemp") {
+						setOfSources[heatsource].addShutOffLogic(HPWH::bottomTwelfthMaxTemp(tempDouble));
 					} else if(tempString == "bottomSixthMaxTemp") {
 						setOfSources[heatsource].addShutOffLogic(HPWH::bottomSixthMaxTemp(tempDouble));
 					} else if(tempString == "largeDraw") {
@@ -3718,7 +3670,7 @@ int HPWH::HPWHinit_file(string configFile) {
 	nextTankTemps_C.resize(num_nodes);
 
 	isHeating = false;
-	for(int i = 0; i < numHeatSources; i++) {
+	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(setOfSources[i].isOn) {
 			isHeating = true;
 		}
