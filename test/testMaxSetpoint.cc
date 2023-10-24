@@ -24,6 +24,7 @@ void testJustQAHVCompressor();
 void testHybridModel();
 void testStorageTankSetpoint();
 void testSetpointFixed();
+void testResampling();
 void testSetTankTemps();
 
 const double REMaxShouldBe = 100.;
@@ -38,6 +39,7 @@ int main(int, char*)
 	testHybridModel();
 	testStorageTankSetpoint();
 	testSetpointFixed();
+	testResampling();
 	testSetTankTemps();
 
 	//Made it through the gauntlet
@@ -207,6 +209,18 @@ void testSetpointFixed() {
 	ASSERTTRUE(hpwh.setSetpoint(10.) == HPWH::HPWH_ABORT); // Can't go low, albiet dumb
 }
 
+void testResampling() {
+
+// test
+	std::vector<double> oldHeat{20., 40., 60., 40., 20.};
+	std::vector<double> newHeat(10, 0.);
+	resampleExtensive(newHeat, oldHeat);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(newHeat[1], 10.0)); //
+	ASSERTTRUE(relcmpd(newHeat[5], 30.0)); //
+}
+
 void testSetTankTemps() {
 	HPWH hpwh;
 	getHPWHObject(hpwh, "Rheem2020Prem50"); // 12-node model
@@ -239,8 +253,8 @@ void testSetTankTemps() {
 	hpwh.getTankTemps(newTemps);
 
 	// Check some expected values.
-	ASSERTTRUE(fabs(newTemps[2] - 25.3) < 0.1); //
-	ASSERTTRUE(fabs(newTemps[8] - 67.6) < 0.1); //
+	ASSERTTRUE(relcmpd(newTemps[2], 25.3, 0.1)); //
+	ASSERTTRUE(relcmpd(newTemps[8], 67.6, 0.1)); //
 
 // test 4
 	int nSet = 24;
@@ -252,8 +266,8 @@ void testSetTankTemps() {
 	hpwh.getTankTemps(newTemps);
 
 	// Check some expected values.
-	ASSERTTRUE(fabs(newTemps[4] - 37.) < 0.1); //
-	ASSERTTRUE(fabs(newTemps[10] - 61.) < 0.1); //
+	ASSERTTRUE(relcmpd(newTemps[4], 37.)); //
+	ASSERTTRUE(relcmpd(newTemps[10], 61.)); //
 
 // test 5
 	nSet = 12;
@@ -269,3 +283,4 @@ void testSetTankTemps() {
 	ASSERTTRUE(fabs(newTemps[11] - 64.) < 0.1); //
 
 }
+
