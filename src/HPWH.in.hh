@@ -1287,7 +1287,6 @@ class HPWH::HeatSource {
 
 };  // end of HeatSource class
 
-
 // a few extra functions for unit converesion
 inline double dF_TO_dC(double temperature) { return (temperature*5.0/9.0); }
 inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
@@ -1319,5 +1318,11 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 }
 
 template< typename T> inline bool aboutEqual(T a, T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
+
+// sampling and resampling utility functions
+double sample(const std::vector<double> &values,double frac_begin,double frac_end);
+int resample(std::vector<double> &origValues,const std::vector<double> &newValues);
+inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues);
+int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues);
 
 #endif
