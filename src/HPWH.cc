@@ -77,36 +77,36 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //		x-coordinate range from frac_begin to frac_end.
 //	Parameter(s):
 //		const std::vector<double> &values: std::vector containing values to be sampled
-//		double frac_begin: Lower (left) bounding fraction (0 to 1)
-//		double frac_end: Upper (right) bounding fraction (0 to 1) 
+//		double fracBegin: Lower (left) bounding fraction (0 to 1)
+//		double fracEnd: Upper (right) bounding fraction (0 to 1) 
 //	Note(s): Bounding fractions are clipped or swapped, if needed.
 //	Returns: double: resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-double sample(const std::vector<double> &values,double frac_begin,double frac_end)
+double sample(const std::vector<double> &values,double fracBegin,double fracEnd)
 {
-	if(frac_begin > frac_end)std::swap(frac_begin,frac_end);
-	if(frac_begin < 0.) frac_end = 0.;
-	if(frac_end >1.) frac_end = 1.;
+	if(fracBegin > fracEnd)std::swap(fracBegin,fracEnd);
+	if(fracBegin < 0.) fracBegin = 0.;
+	if(fracEnd >1.) fracEnd = 1.;
 
 	double nNodes = static_cast<double>(values.size());
-	auto i0 = static_cast<std::size_t>(frac_begin * nNodes);
+	auto i0 = static_cast<std::size_t>(fracBegin * nNodes);
 
-	double frac_prev = frac_begin;
-	double frac_next = frac_prev;
+	double fracPrev = fracBegin;
+	double fracNext = fracPrev;
 
 	double totValueWeight = 0.;
 	double totWeight = 0.;
-	for(std::size_t i = i0; frac_next < frac_end; ++i)
+	for(std::size_t i = i0; fracNext < fracEnd; ++i)
 	{
-		frac_next = static_cast<double>(i + 1) / nNodes;
-		if(frac_next > frac_end)
+		fracNext = static_cast<double>(i + 1) / nNodes;
+		if(fracNext > fracEnd)
 		{
-			frac_next = frac_end;
+			fracNext = fracEnd;
 		}
-		double weight = frac_next - frac_prev;
+		double weight = fracNext - fracPrev;
 		totValueWeight += weight * values[i];
 		totWeight += weight;
-		frac_prev = frac_next;
+		fracPrev = fracNext;
 	}
 	double res = 0.;
 	if(totWeight > 0.) res = totValueWeight / totWeight;
@@ -126,12 +126,12 @@ int resample(std::vector<double> &origValues,const std::vector<double> &newValue
 {
 	if(newValues.empty()) return -1;
 	double origSize = static_cast<double>(origValues.size());
-	double frac_begin = 0.;
+	double fracBegin = 0.;
 	for(std::size_t i = 0; i < origSize; ++i)
 	{
-		double frac_end = static_cast<double>(i + 1) / origSize;
-		origValues[i] = sample(newValues,frac_begin,frac_end);
-		frac_begin = frac_end;
+		double fracEnd = static_cast<double>(i + 1) / origSize;
+		origValues[i] = sample(newValues,fracBegin,fracEnd);
+		fracBegin = fracEnd;
 	}
 	return 0;
 }
