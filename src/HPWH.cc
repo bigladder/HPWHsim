@@ -71,56 +71,94 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 // setpoint-below-water-temp issues
 //   1-22-2017
 
-/*
- *    Samples std::vector values between fractions frac0 and frac1,
- *    ranging from 0 to 1.
- */
-double sample(const std::vector<double> &values, double frac0, double frac1)
+//-----------------------------------------------------------------------------
+//	Description:
+//		Samples a std::vector to extract a single value spanning the fractional
+//		x-coordinate range from frac_begin to frac_end.
+//	Parameter(s):
+//		const std::vector<double> &values: std::vector containing values to be sampled
+//		double frac_begin: Lower (left) bounding fraction (0 to 1)
+//		double frac_end: Upper (right) bounding fraction (0 to 1) 
+//	Note(s): Bounding fractions are clipped or swapped, if needed.
+//	Returns: double: resampled value; 0 if undefined.
+//-----------------------------------------------------------------------------
+double sample(const std::vector<double> &values,double frac_begin,double frac_end)
 {
-    if (frac0 > frac1)std::swap(frac0, frac1);
-    if (frac0 < 0.) frac0 = 0.;
-    if (frac1 >1.) frac1 = 1.;
+	if(frac_begin > frac_end)std::swap(frac_begin,frac_end);
+	if(frac_begin < 0.) frac_end = 0.;
+	if(frac_end >1.) frac_end = 1.;
 
-    double nNodes = static_cast<double>(values.size());
-    auto i0 = static_cast<std::size_t>(frac0 * nNodes);
-    
-    double fPrev = frac0;
-	double fNext = fPrev;
+	double nNodes = static_cast<double>(values.size());
+	auto i0 = static_cast<std::size_t>(frac_begin * nNodes);
 
-    double totYweight = 0.;
-    double totWeight = 0.;
-    for (std::size_t i = i0; fNext < frac1; ++i)
-    {
-        fNext = static_cast<double>(i + 1) / nNodes;
-        if (fNext > frac1)
-        {
-            fNext = frac1;
-        }
-        double weight = fNext - fPrev;
-        totYweight += weight * values[i];
-        totWeight += weight;
-        fPrev = fNext;
-    }
-    double res = 0.;
-    if (totWeight > 0.) res = totYweight / totWeight;
-    return res;
+	double frac_prev = frac_begin;
+	double frac_next = frac_prev;
+
+	double totValueWeight = 0.;
+	double totWeight = 0.;
+	for(std::size_t i = i0; frac_next < frac_end; ++i)
+	{
+		frac_next = static_cast<double>(i + 1) / nNodes;
+		if(frac_next > frac_end)
+		{
+			frac_next = frac_end;
+		}
+		double weight = frac_next - frac_prev;
+		totValueWeight += weight * values[i];
+		totWeight += weight;
+		frac_prev = frac_next;
+	}
+	double res = 0.;
+	if(totWeight > 0.) res = totValueWeight / totWeight;
+	return res;
 }
 
-/*
- *    Assign values in vector Yp (of arbitrary size) to vector Y
- */
+//-----------------------------------------------------------------------------
+//	Description:
+//		Replaces the values in a std::vector by resampling another std::vector of
+//		arbitrary size.
+//	Parameter(s):
+//		std::vector<double> &origValues: contains values to be replaced
+//		const std::vector<double> &newValues: contains values to replace with
+//	Returns: int: 0: success; -1: failure.
+//-----------------------------------------------------------------------------
 int resample(std::vector<double> &origValues,const std::vector<double> &newValues)
 {
-    if (newValues.empty()) return -1;
-    double origSize = static_cast<double>(origValues.size());
-    double frac0 = 0.;
-    for (std::size_t i = 0; i < origSize; ++i)
-    {
-        double frac1 = static_cast<double>(i + 1) / origSize;
-        origValues[i] = sample(newValues, frac0, frac1);
-        frac0 = frac1;
-    }
-    return 0;
+	if(newValues.empty()) return -1;
+	double origSize = static_cast<double>(origValues.size());
+	double frac_begin = 0.;
+	for(std::size_t i = 0; i < origSize; ++i)
+	{
+		double frac_end = static_cast<double>(i + 1) / origSize;
+		origValues[i] = sample(newValues,frac_begin,frac_end);
+		frac_begin = frac_end;
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+//	Description: Resample an intensive property (e.g., temperature)
+//	Note(s): See definition of int resample.
+//-----------------------------------------------------------------------------
+inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues)
+{
+	return resample(origValues,newValues);
+}
+
+//-----------------------------------------------------------------------------
+//	Description: Resample an extensive property (e.g., heat)
+//	Note(s): See definition of int resample.
+//-----------------------------------------------------------------------------
+int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues)
+{
+	int res = resample(origValues,newValues);
+	if(res == 0)
+	{
+		double scale = static_cast<double>(newValues.size()) / static_cast<double>(origValues.size());
+		for(auto &value: origValues)
+			value *= scale;
+	}
+	return res;
 }
 
 //the HPWH functions
@@ -1105,7 +1143,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 			T = F_TO_C(T);
 
 	// set node temps and copy back to array, if successful
-	if(resample(tankTemps,setTankTemps) == 0)
+	if(resampleIntensive(tankTemps,setTankTemps) == 0)
 		std::copy(tankTemps.begin(),tankTemps.end(),tankTemps_C);
 	else
 		return HPWH_ABORT;
