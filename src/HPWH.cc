@@ -1127,6 +1127,14 @@ int HPWH::setTankToTemperature(double temp_C) {
 	return setTankLayerTemperatures({temp_C});
 }
 
+//-----------------------------------------------------------------------------
+//    Description:
+//        Assigns new temps provided from a std::vector to tankTemps_C.
+//    Parameter(s):
+//        std::vector<double> setTankTemps: vector of new tank temps (arbitrary size)
+//			const UNITS units: temp units in setTankTemps (default = UNITS_C)
+//    Returns: int: 0: success; HPWH_ABORT: failure.
+//-----------------------------------------------------------------------------
 int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS units)
 {
 	if((units != UNITS_C) && (units != UNITS_F))
@@ -1154,14 +1162,13 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 		return HPWH_ABORT;
 	}
 
-	// assign node temps to a std::vector
-	std::vector<double> tankTemps(numNodes);
-	//tankTemps.assign(tankTemps_C,tankTemps_C + numNodes);
-
-	// convert set temps to C, if necessary
+	// convert setTankTemps to °C, if necessary
 	if(units == UNITS_F)
 		for(auto &T: setTankTemps)
 			T = F_TO_C(T);
+
+	// allocate a std::vector of appropriate size 
+	std::vector<double> tankTemps(numNodes);
 
 	// set node temps and copy back to array, if successful
 	if(resampleIntensive(tankTemps,setTankTemps) == 0)
