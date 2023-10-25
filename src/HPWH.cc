@@ -76,35 +76,35 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 ///			coordinate range from frac_begin to frac_end. 
 /// @note	Bounding fractions are clipped or swapped, if needed.
 /// @param[in]	sampleValues	Contains values to be sampled
-///	@param[in]	fracBegin		Lower (left) bounding fraction (0 to 1)
-///	@param[in]	fracEnd			Upper (right) bounding fraction (0 to 1) 	
+///	@param[in]	beginFraction		Lower (left) bounding fraction (0 to 1)
+///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1) 	
 /// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-double getResampledValue(const std::vector<double> &sampleValues,double fracBegin,double fracEnd)
+double getResampledValue(const std::vector<double> &sampleValues,double beginFraction,double endFraction)
 {
-	if(fracBegin > fracEnd)std::swap(fracBegin,fracEnd);
-	if(fracBegin < 0.) fracBegin = 0.;
-	if(fracEnd >1.) fracEnd = 1.;
+	if(beginFraction > endFraction)std::swap(beginFraction,endFraction);
+	if(beginFraction < 0.) beginFraction = 0.;
+	if(endFraction >1.) endFraction = 1.;
 
 	double nNodes = static_cast<double>(sampleValues.size());
-	auto i0 = static_cast<std::size_t>(fracBegin * nNodes);
+	auto beginIndex = static_cast<std::size_t>(beginFraction * nNodes);
 
-	double fracPrev = fracBegin;
-	double fracNext = fracPrev;
+	double previousFraction = beginFraction;
+	double nextFraction = previousFraction;
 
 	double totValueWeight = 0.;
 	double totWeight = 0.;
-	for(std::size_t i = i0; fracNext < fracEnd; ++i)
+	for(std::size_t index = beginIndex; nextFraction < endFraction; ++index)
 	{
-		fracNext = static_cast<double>(i + 1) / nNodes;
-		if(fracNext > fracEnd)
+		nextFraction = static_cast<double>(index + 1) / nNodes;
+		if(nextFraction > endFraction)
 		{
-			fracNext = fracEnd;
+			nextFraction = endFraction;
 		}
-		double weight = fracNext - fracPrev;
-		totValueWeight += weight *sampleValues[i];
+		double weight = nextFraction - previousFraction;
+		totValueWeight += weight *sampleValues[index];
 		totWeight += weight;
-		fracPrev = fracNext;
+		previousFraction = nextFraction;
 	}
 	double resampled_value = 0.;
 	if(totWeight > 0.) resampled_value = totValueWeight / totWeight;
@@ -116,56 +116,56 @@ double getResampledValue(const std::vector<double> &sampleValues,double fracBegi
 ///			arbitrary size.
 /// @param[in,out]	values			Contains values to be replaced
 ///	@param[in]		sampleValues	Contains values to replace with
-/// @return	Success: 0; Failure: -1
+/// @return	Success: true; Failure: false
 //-----------------------------------------------------------------------------
-int resample(std::vector<double> &values,const std::vector<double> &sampleValues)
+bool resample(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
-    if(sampleValues.empty()) return -1;
+    if(sampleValues.empty()) return false;
     double actualSize = static_cast<double>(values.size());
     double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
-    double fracBegin = 0., fracEnd;
-    std::size_t i = 0;
-    while(i < actualSize)
+    double beginFraction = 0., endFraction;
+    std::size_t index = 0;
+    while(index < actualSize)
     {
-        auto xi = static_cast<double>(i);
-        auto j = static_cast<std::size_t>(floor(xi * sizeRatio));
-        if(j + 1. < (xi + 1.) * sizeRatio) { // General case: no binning possible
-            fracEnd = static_cast<double>(i + 1) / actualSize;
-            values[i] = getResampledValue(sampleValues,fracBegin,fracEnd);
-            ++i;
+        auto value = static_cast<double>(index);
+        auto sampleIndex = static_cast<std::size_t>(floor(value * sizeRatio));
+        if(sampleIndex + 1. < (value + 1.) * sizeRatio) { // General case: no binning possible
+            endFraction = static_cast<double>(index + 1) / actualSize;
+            values[index] = getResampledValue(sampleValues,beginFraction,endFraction);
+            ++index;
         }
         else { // Special case: direct copy a single value to a bin
-            std::size_t iBegin = i;
+            std::size_t beginIndex = index;
             std::size_t adjustedBinSize = binSize;
             if(binSize > 1)
             { // Find beginning of bin and number to copy
-                iBegin = static_cast<std::size_t>(ceil(j/sizeRatio));
-                adjustedBinSize  = static_cast<std::size_t>(floor((j + 1)/sizeRatio) - ceil(j/sizeRatio));
+                beginIndex = static_cast<std::size_t>(ceil(sampleIndex/sizeRatio));
+                adjustedBinSize  = static_cast<std::size_t>(floor((sampleIndex + 1)/sizeRatio) - ceil(sampleIndex/sizeRatio));
             }
-            std::fill_n(values.begin() + iBegin, adjustedBinSize, sampleValues[j]);
-            i = iBegin + adjustedBinSize;
-            fracEnd = static_cast<double>(i) / actualSize;
+            std::fill_n(values.begin() + beginIndex, adjustedBinSize, sampleValues[sampleIndex]);
+            index = beginIndex + adjustedBinSize;
+            endFraction = static_cast<double>(index) / actualSize;
         }
-        fracBegin = fracEnd;
+        beginFraction = endFraction;
     }
-    return 0;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-int resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues)
+bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
-	int res = resample(values,sampleValues);
-	if(res == 0)
+	if(resample(values,sampleValues))
 	{
 		double scale = static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
 		for(auto &value: values)
 			value *= scale;
+		return true;
 	}
-	return res;
+	return false;
 }
 
 //the HPWH functions
@@ -1157,7 +1157,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 	std::vector<double> tankTemps(numNodes);
 
 	// set node temps and copy back to array, if successful
-	if(resampleIntensive(tankTemps,setTankTemps) == 0)
+	if(resampleIntensive(tankTemps,setTankTemps))
 		std::copy(tankTemps.begin(),tankTemps.end(),tankTemps_C);
 	else
 		return HPWH_ABORT;
