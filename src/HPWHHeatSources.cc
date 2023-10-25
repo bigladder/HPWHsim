@@ -20,64 +20,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
-	hpwh = hSource.hpwh;
-	isOn = hSource.isOn;
-	lockedOut = hSource.lockedOut;
-	doDefrost = hSource.doDefrost;
-
-	runtime_min = hSource.runtime_min;
-	energyInput_kWh = hSource.energyInput_kWh;
-	energyOutput_kWh = hSource.energyOutput_kWh;
-
-	isVIP = hSource.isVIP;
-
-	if(hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL || hSource.followedByHeatSource != NULL) {
-		hpwh->simHasFailed = true;
-		if(hpwh->hpwhVerbosity >= VRB_reluctant) {
-			hpwh->msg("HeatSources cannot be copied if they contain pointers to other HeatSources\n");
-		}
-	}
-
-	condensity = hSource.condensity;
-
-	shrinkage = hSource.shrinkage;
-
-	perfMap = hSource.perfMap;
-
-	perfGrid = hSource.perfGrid;
-	perfGridValues = hSource.perfGridValues;
-	perfRGI = hSource.perfRGI;
-	useBtwxtGrid = hSource.useBtwxtGrid;
-
-	defrostMap = hSource.defrostMap;
-	resDefrost = hSource.resDefrost;
-
-	//i think vector assignment works correctly here
-	turnOnLogicSet = hSource.turnOnLogicSet;
-	shutOffLogicSet = hSource.shutOffLogicSet;
-	standbyLogic = hSource.standbyLogic;
-
-	minT = hSource.minT;
-	maxT = hSource.maxT;
-	maxOut_at_LowT = hSource.maxOut_at_LowT;
-	hysteresis_dC = hSource.hysteresis_dC;
-	maxSetpoint_C = hSource.maxSetpoint_C;
-
-	depressesTemperature = hSource.depressesTemperature;
-	airflowFreedom = hSource.airflowFreedom;
-
-	configuration = hSource.configuration;
-	typeOfHeatSource = hSource.typeOfHeatSource;
-	isMultipass = hSource.isMultipass;
-	mpFlowRate_LPS = hSource.mpFlowRate_LPS;
-
-	externalInletHeight = hSource.externalInletHeight;
-	externalOutletHeight = hSource.externalOutletHeight;
-
-	lowestNode = hSource.lowestNode;
-
-	extrapolationMethod = hSource.extrapolationMethod;
-	secondaryHeatExchanger = hSource.secondaryHeatExchanger;
+	*this = hSource;
 }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
