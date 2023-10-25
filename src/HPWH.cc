@@ -132,7 +132,7 @@ int resample(std::vector<double> &origValues,const std::vector<double> &newValue
             origValues[i] = sample(newValues,fracBegin,fracEnd);
             ++i;
         }
-        else { // Special case: direct copy to a bin
+        else { // Special case: direct copy a single value to a bin
             std::size_t iBegin = i;
             std::size_t adjustedBinSize = binSize;
             if(binSize > 1)
