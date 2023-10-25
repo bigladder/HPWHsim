@@ -1320,9 +1320,10 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 template< typename T> inline bool aboutEqual(T a, T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
 
 // sampling and resampling utility functions
-double sample(const std::vector<double> &values,double frac_begin,double frac_end);
-int resample(std::vector<double> &origValues,const std::vector<double> &newValues);
-inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues);
-int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues);
+double getResampledValue(const std::vector<double> &values,double frac_begin,double frac_end);
+int resample(std::vector<double> &values,const std::vector<double> &sampleValues);
+inline int resampleIntensive(std::vector<double> &values,const std::vector<double> &sampleValues)
+	{return resample(values,sampleValues);}
+int resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues);
 
 #endif

@@ -211,14 +211,21 @@ void testSetpointFixed() {
 
 void testResampling() {
 
-// test
-	std::vector<double> oldHeat{20., 40., 60., 40., 20.};
-	std::vector<double> newHeat(10, 0.);
-	resampleExtensive(newHeat, oldHeat);
+// test extensive resampling
+    std::vector<double> values(10);
+    std::vector<double> sampleValues{20., 40., 60., 40., 20.};
+    resampleExtensive(values, sampleValues);
 
 	// Check some expected values.
-	ASSERTTRUE(relcmpd(newHeat[1], 10.0)); //
-	ASSERTTRUE(relcmpd(newHeat[5], 30.0)); //
+	ASSERTTRUE(relcmpd(values[1], 10.)); //
+	ASSERTTRUE(relcmpd(values[5], 30.)); //
+
+// test intensive resampling
+ 	 resampleIntensive(values, sampleValues);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(values[1], 20.)); //
+	ASSERTTRUE(relcmpd(values[5], 60.)); //
 }
 
 void testSetTankTemps() {

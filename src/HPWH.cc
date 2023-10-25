@@ -72,23 +72,21 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 //   1-22-2017
 
 //-----------------------------------------------------------------------------
-//	Description:
-//		Samples a std::vector to extract a single value spanning the fractional
-//		x-coordinate range from frac_begin to frac_end.
-//	Parameter(s):
-//		const std::vector<double> &values: std::vector containing values to be sampled
-//		double fracBegin: Lower (left) bounding fraction (0 to 1)
-//		double fracEnd: Upper (right) bounding fraction (0 to 1) 
-//	Note(s): Bounding fractions are clipped or swapped, if needed.
-//	Returns: double: resampled value; 0 if undefined.
+///	@brief	Samples a std::vector to extract a single value spanning the fractional
+///			x-coordinate range from frac_begin to frac_end. Note(s): Bounding fractions
+///			are clipped or swapped, if needed.
+/// @param	const std::vector<double> &values: std::vector containing values to be sampled
+///			double fracBegin: Lower (left) bounding fraction (0 to 1)
+///			double fracEnd: Upper (right) bounding fraction (0 to 1) 	
+/// @return	double: resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-double sample(const std::vector<double> &values,double fracBegin,double fracEnd)
+double getResampledValue(const std::vector<double> &sampleValues,double fracBegin,double fracEnd)
 {
 	if(fracBegin > fracEnd)std::swap(fracBegin,fracEnd);
 	if(fracBegin < 0.) fracBegin = 0.;
 	if(fracEnd >1.) fracEnd = 1.;
 
-	double nNodes = static_cast<double>(values.size());
+	double nNodes = static_cast<double>(sampleValues.size());
 	auto i0 = static_cast<std::size_t>(fracBegin * nNodes);
 
 	double fracPrev = fracBegin;
@@ -104,53 +102,50 @@ double sample(const std::vector<double> &values,double fracBegin,double fracEnd)
 			fracNext = fracEnd;
 		}
 		double weight = fracNext - fracPrev;
-		totValueWeight += weight * values[i];
+		totValueWeight += weight *sampleValues[i];
 		totWeight += weight;
 		fracPrev = fracNext;
 	}
-	double res = 0.;
-	if(totWeight > 0.) res = totValueWeight / totWeight;
-	return res;
+	double resampled_value = 0.;
+	if(totWeight > 0.) resampled_value = totValueWeight / totWeight;
+	return resampled_value;
 }
 
 //-----------------------------------------------------------------------------
-//    Description:
-//        Replaces the values in a std::vector by resampling another std::vector of
-//        arbitrary size.
-//    Parameter(s):
-//        std::vector<double> &origValues: contains values to be replaced
-//        const std::vector<double> &newValues: contains values to replace with
-//    Returns: int: 0: success; -1: failure.
+///	@brief	Replaces the values in a std::vector by resampling another std::vector of
+///			arbitrary size.
+/// @param	std::vector<double> &origValues: contains values to be replaced
+///			const std::vector<double> &newValues: contains values to replace with
+/// @return	int: 0: success; -1: failure.
 //-----------------------------------------------------------------------------
-int resample(std::vector<double> &origValues,const std::vector<double> &newValues)
+int resample(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
-    if(newValues.empty()) return -1;
-    double origSize = static_cast<double>(origValues.size());
-    double newSize = static_cast<double>(newValues.size());
-    double sizeRatio = newSize / origSize;
+    if(sampleValues.empty()) return -1;
+    double actualSize = static_cast<double>(values.size());
+    double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
     double fracBegin = 0., fracEnd;
     std::size_t i = 0;
-    while(i < origSize)
+    while(i < actualSize)
     {
         auto xi = static_cast<double>(i);
         auto j = static_cast<std::size_t>(floor(xi * sizeRatio));
         if(j + 1. < (xi + 1.) * sizeRatio) { // General case: no binning possible
-            fracEnd = static_cast<double>(i + 1) / origSize;
-            origValues[i] = sample(newValues,fracBegin,fracEnd);
+            fracEnd = static_cast<double>(i + 1) / actualSize;
+            values[i] = getResampledValue(sampleValues,fracBegin,fracEnd);
             ++i;
         }
-        else { // Special case: direct copy to a bin
+        else { // Special case: direct copy a single value to a bin
             std::size_t iBegin = i;
             std::size_t adjustedBinSize = binSize;
             if(binSize > 1)
-            {
+            { // Find beginning of bin and number to copy
                 iBegin = static_cast<std::size_t>(ceil(j/sizeRatio));
                 adjustedBinSize  = static_cast<std::size_t>(floor((j + 1)/sizeRatio) - ceil(j/sizeRatio));
             }
-            std::fill_n(origValues.begin() + iBegin, adjustedBinSize, newValues[j]);
+            std::fill_n(values.begin() + iBegin, adjustedBinSize, sampleValues[j]);
             i = iBegin + adjustedBinSize;
-            fracEnd = static_cast<double>(i) / origSize;
+            fracEnd = static_cast<double>(i) / actualSize;
         }
         fracBegin = fracEnd;
     }
@@ -158,25 +153,16 @@ int resample(std::vector<double> &origValues,const std::vector<double> &newValue
 }
 
 //-----------------------------------------------------------------------------
-//	Description: Resample an intensive property (e.g., temperature)
-//	Note(s): See definition of int resample.
+///	@brief	Resample an extensive property (e.g., heat)
+///			See definition of int resample.
 //-----------------------------------------------------------------------------
-inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues)
+int resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
-	return resample(origValues,newValues);
-}
-
-//-----------------------------------------------------------------------------
-//	Description: Resample an extensive property (e.g., heat)
-//	Note(s): See definition of int resample.
-//-----------------------------------------------------------------------------
-int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues)
-{
-	int res = resample(origValues,newValues);
+	int res = resample(values,sampleValues);
 	if(res == 0)
 	{
-		double scale = static_cast<double>(newValues.size()) / static_cast<double>(origValues.size());
-		for(auto &value: origValues)
+		double scale = static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
+		for(auto &value: values)
 			value *= scale;
 	}
 	return res;
