@@ -106,7 +106,7 @@ void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double 
 
 int HPWH::HeatSource::findParent() const {
 	for(int i = 0; i < hpwh->getNumHeatSources(); ++i) {
-		if(this == hpwh->setOfSources[i].backupHeatSource) {
+		if(this == hpwh->heatSources[i].backupHeatSource) {
 			return i;
 		}
 	}
