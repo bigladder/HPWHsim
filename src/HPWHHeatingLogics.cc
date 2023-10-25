@@ -111,7 +111,6 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	return std::min(fractCalcNode, fractNextNode);
 }
 
-
 /* Temperature Based Heating Logic*/
 const bool HPWH::TempBasedHeatingLogic::isValid() {
 	bool isValid = true;
@@ -177,40 +176,42 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract() {
 	return logicNode / (double)CONDENSITY_SIZE;
 }
 
+
 const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
-	double fracTemp, diff;
+	double fracTemp;
+	double diff;
 	int calcNode = 0;
 	int firstNode = -1;
 	double sum = 0;
 	double totWeight = 0;
 
+	std::vector<double> resampledTankTemps(12);
+	resample(resampledTankTemps, hpwh->tankTemps_C);
 	double comparison = getComparisonValue();
 	comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
 
 	for (auto nodeWeight : nodeWeights) {
 
 		// bottom calc node only
-		if (nodeWeight.nodeNum == 0) { // simple equation
-			calcNode = 0;
-			firstNode = 0;
-			sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
+		if (nodeWeight.nodeNum == 0) { // simple equation			
+			firstNode = calcNode = 0;
+			double nodeTemp = hpwh->tankTemps_C.front();
+			sum = nodeTemp * nodeWeight.weight;
 			totWeight = nodeWeight.weight;
 		}
 		// top calc node only
 		else if (nodeWeight.nodeNum == 13) {
-			calcNode = hpwh->getNumNodes() - 1;
-			firstNode = hpwh->getNumNodes() - 1;
-			sum = hpwh->tankTemps_C[firstNode] * nodeWeight.weight;
+			calcNode = firstNode = hpwh->getNumNodes() - 1;
+			double nodeTemp = hpwh->tankTemps_C.back();
+			sum = nodeTemp * nodeWeight.weight;
 			totWeight = nodeWeight.weight;
 		}
 		else { // have to tally up the nodes
-			// frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
 			firstNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity;
-			for (int n = 0; n < hpwh->nodeDensity; ++n) { // Loop on the nodes in the logics 
-				calcNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity + n;
-				sum += hpwh->tankTemps_C[calcNode] * nodeWeight.weight;
-				totWeight += nodeWeight.weight;
-			}
+			calcNode = (nodeWeight.nodeNum) * hpwh->nodeDensity - 1;
+			double nodeTemp = resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)];
+			sum += nodeTemp * nodeWeight.weight * hpwh->nodeDensity;
+			totWeight += nodeWeight.weight * hpwh->nodeDensity;
 		}
 	}
 
@@ -223,6 +224,7 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	// if totWeight * comparison - sum < 0 then the shutoff condition is already true and you shouldn't
 	// be here. Will revaluate shut off condition at the end the do while loop of addHeatExternal, in the
 	// mean time lets not shift anything around. 
+	std::cout << totWeight << ", " << comparison << ", " << sum << ", " << diff;
 	if (compare(sum, totWeight * comparison)) { // Then should shut off
 		fracTemp = 0.; // 0 means shift no nodes
 	}
@@ -234,5 +236,3 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 
 	return fracTemp;
 }
-
-

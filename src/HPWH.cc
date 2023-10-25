@@ -2745,22 +2745,21 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 	double sum = 0;
 	double totWeight = 0;
 
-	for(NodeWeight nodeWeight : nodeWeights) {
-		// bottom calc node only
-		if(nodeWeight.nodeNum == 0) {
-			sum += tankTemps_C[0] * nodeWeight.weight;
+	std::vector<double> resampledTankTemps(12);
+	resample(resampledTankTemps, tankTemps_C);
+
+	for (auto &nodeWeight : nodeWeights) {		
+		if (nodeWeight.nodeNum == 0) { // bottom node only
+			sum +=  tankTemps_C.front() * nodeWeight.weight;
+			totWeight += nodeWeight.weight;
+		}		
+		else if (nodeWeight.nodeNum == 13) { // top node only
+			sum += tankTemps_C.back() * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		}
-		// top calc node only
-		else if(nodeWeight.nodeNum == 13) {
-			sum += tankTemps_C[getNumNodes() - 1] * nodeWeight.weight;
+		else { // general case; sum over all weighted nodes
+			sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
-		} else {
-			for(int n = 0; n < nodeDensity; ++n) {
-				int calcNode = (nodeWeight.nodeNum - 1) * nodeDensity + n;
-				sum += tankTemps_C[calcNode] * nodeWeight.weight;
-				totWeight += nodeWeight.weight;
-			}
 		}
 	}
 	return sum / totWeight;
