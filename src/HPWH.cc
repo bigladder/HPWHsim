@@ -73,12 +73,12 @@ const std::string HPWH::version_maint = HPWHVRSN_META;
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
-///			x-coordinate range from frac_begin to frac_end. Note(s): Bounding fractions
-///			are clipped or swapped, if needed.
-/// @param	const std::vector<double> &values: std::vector containing values to be sampled
-///			double fracBegin: Lower (left) bounding fraction (0 to 1)
-///			double fracEnd: Upper (right) bounding fraction (0 to 1) 	
-/// @return	double: resampled value; 0 if undefined.
+///			coordinate range from frac_begin to frac_end. 
+/// @note	Bounding fractions are clipped or swapped, if needed.
+/// @param[in]	sampleValues	Contains values to be sampled
+///	@param[in]	fracBegin		Lower (left) bounding fraction (0 to 1)
+///	@param[in]	fracEnd			Upper (right) bounding fraction (0 to 1) 	
+/// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
 double getResampledValue(const std::vector<double> &sampleValues,double fracBegin,double fracEnd)
 {
@@ -114,9 +114,9 @@ double getResampledValue(const std::vector<double> &sampleValues,double fracBegi
 //-----------------------------------------------------------------------------
 ///	@brief	Replaces the values in a std::vector by resampling another std::vector of
 ///			arbitrary size.
-/// @param	std::vector<double> &origValues: contains values to be replaced
-///			const std::vector<double> &newValues: contains values to replace with
-/// @return	int: 0: success; -1: failure.
+/// @param[in,out]	values			Contains values to be replaced
+///	@param[in]		sampleValues	Contains values to replace with
+/// @return	Success: 0; Failure: -1
 //-----------------------------------------------------------------------------
 int resample(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
@@ -154,7 +154,7 @@ int resample(std::vector<double> &values,const std::vector<double> &sampleValues
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
-///			See definition of int resample.
+///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
 int resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues)
 {
