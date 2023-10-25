@@ -679,7 +679,7 @@ public:
 	- If which (-1) sets all the resisistance elements in the tank.
 	- If which (0, 1, 2...) sets the resistance element in a low to high order.
 	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order
-	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
+	  in heatSources. If the elements exist on at the same node then all of the elements are set.
 
 	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the
 	by the ordered height of the resistance elements it cannot refer to a compressor.
@@ -690,7 +690,7 @@ public:
 	- If which (-1) gets all the resisistance elements in the tank.
 	- If which (0, 1, 2...) sets the resistance element in a low to high order.
 	  So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element, regardless of their order
-	  in setOfSources. If the elements exist on at the same node then all of the elements are set.
+	  in heatSources. If the elements exist on at the same node then all of the elements are set.
 
 	The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is defined as the
 	by the ordered height of the resistance elements it cannot refer to a compressor.
@@ -831,9 +831,9 @@ private:
 	/**< a helper function to set constants for the UA and tank size*/
 	void calcDerivedHeatingValues();
 	/**< a helper for the helper, calculating condentropy and the lowest node*/
-	void mapResRelativePosToSetOfSources();
+	void mapResRelativePosToHeatSources();
 	/**< a helper function for the inits, creating a mapping function for the position of the resistance elements
-	to their indexes in setOfSources. */
+	to their indexes in heatSources. */
 
 	int checkInputs();
 	/**< a helper function to run a few checks on the HPWH input parameters  */
@@ -878,7 +878,7 @@ private:
 	/**< The hpwh should know which preset initialized it, or if it was from a fileget */
 
 	// a std::vector containing the HeatSources, in order of priority
-	std::vector<HeatSource> setOfSources;
+	std::vector<HeatSource> heatSources;
 
 	int compressorIndex;
 	/**< The index of the compressor heat source (set to -1 if no compressor)*/
@@ -934,10 +934,10 @@ private:
 	/**< the setpoint of the tank  */
 
 	/**< holds the temperature of each node - 0 is the bottom node  */
-	std::vector <double> tankTemps_C;
+	std::vector<double> tankTemps_C;
 
 	/**< holds the future temperature of each node for the conduction calculation - 0 is the bottom node  */
-	std::vector <double> nextTankTemps_C;
+	std::vector<double> nextTankTemps_C;
 
 	DRMODES prevDRstatus;
 	/**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
@@ -984,7 +984,7 @@ private:
 	double member_inletT_C;
 
 	double minutesPerStep = 1.;
-	double secondsPerStep, hoursPerStep;
+	double secondsPerStep,hoursPerStep;
 
 	bool doInversionMixing;
 	/**<  If and only if true will model temperature inversion mixing in the tank  */
@@ -997,7 +997,7 @@ private:
 		int position;
 	};
 	std::vector<resPoint> resistanceHeightMap;
-	/**< A map from index of an resistance element in setOfSources to position in the tank, its
+	/**< A map from index of an resistance element in heatSources to position in the tank, its
 	is sorted by height from lowest to highest*/
 
 
@@ -1066,8 +1066,8 @@ public:
 	/**< adds heat to the hpwh - this is the function that interprets the
 		various configurations (internal/external, resistance/heat pump) to add heat */
 
-	// Assign new condensity values from supplied vector. Note the input vector is currently resampled
-	// to preserve a condensity vector of size CONDENSITY_SIZE.
+		// Assign new condensity values from supplied vector. Note the input vector is currently resampled
+		// to preserve a condensity vector of size CONDENSITY_SIZE.
 	void setCondensity(const std::vector<double> &condensity_in);
 
 	void setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
@@ -1336,9 +1336,13 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 
 template< typename T> inline bool aboutEqual(T a,T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
 
-double sample(const std::vector<double> &values,double fracBegin,double fracEnd);
-int resample(std::vector<double> &origValues,const std::vector<double> &newValues);
-inline int resampleIntensive(std::vector<double> &origValues,const std::vector<double> &newValues);
-int resampleExtensive(std::vector<double> &origValues,const std::vector<double> &newValues);
+// resampling utility functions
+double getResampledValue(const std::vector<double> &values,double beginFraction,double endFraction);
+bool resample(std::vector<double> &values,const std::vector<double> &sampleValues);
+inline bool resampleIntensive(std::vector<double> &values,const std::vector<double> &sampleValues)
+{
+	return resample(values,sampleValues);
+}
+bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues);
 
 #endif

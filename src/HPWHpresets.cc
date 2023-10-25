@@ -17,7 +17,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
 
-	setOfSources.clear();
+	heatSources.clear();
 
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
@@ -72,15 +72,15 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		resistiveElementTop.isVIP = true;
 
 		// set everything in it's correct place
-		setOfSources.resize(2);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 	else {
-		setOfSources.resize(1);
-		setOfSources[0] = resistiveElementBottom;
+		heatSources.resize(1);
+		heatSources[0] = resistiveElementBottom;
 	}
 
 	// (1/EnFac - 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr))) 
@@ -110,15 +110,15 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 
 	isHeating = false;
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		if (setOfSources[i].isOn) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < getNumHeatSources(); i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -133,7 +133,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
-	setOfSources.clear();
+	heatSources.clear();
 
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 0) {
@@ -178,8 +178,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
 		resistiveElementTop.isVIP = true;
 
-		// Upper should always be first in setOfSources if it exists.
-		setOfSources.push_back(resistiveElementTop); 
+		// Upper should always be first in heatSources if it exists.
+		heatSources.push_back(resistiveElementTop); 
 	}
 	
 	// Deal with bottom element
@@ -191,11 +191,11 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
 
 		// set everything in it's correct place
-		setOfSources.push_back(resistiveElementBottom);
+		heatSources.push_back(resistiveElementBottom);
 	}
 
 	if (getNumHeatSources() == 2) {
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	// Calc UA
@@ -218,7 +218,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (auto &source: setOfSources) {
+	for (auto &source: heatSources) {
 		if (source.isOn) {
 			isHeating = true;
 		}
@@ -227,7 +227,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < getNumHeatSources(); i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -241,7 +241,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
-	setOfSources.clear();
+	heatSources.clear();
 
 	//except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
 	setNumNodes(12);
@@ -356,18 +356,18 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
 
 	//set everything in its place
-	setOfSources.resize(3);
-	setOfSources[0] = resistiveElementTop;
-	setOfSources[1] = resistiveElementBottom;
-	setOfSources[2] = compressor;
+	heatSources.resize(3);
+	heatSources[0] = resistiveElementTop;
+	heatSources[1] = resistiveElementBottom;
+	heatSources[2] = compressor;
 
-	//and you have to do this after putting them into setOfSources, otherwise
+	//and you have to do this after putting them into heatSources, otherwise
 	//you don't get the right pointers
-	setOfSources[2].backupHeatSource = &setOfSources[1];
-	setOfSources[1].backupHeatSource = &setOfSources[2];
+	heatSources[2].backupHeatSource = &heatSources[1];
+	heatSources[1].backupHeatSource = &heatSources[2];
 
-	setOfSources[0].followedByHeatSource = &setOfSources[1];
-	setOfSources[1].followedByHeatSource = &setOfSources[2];
+	heatSources[0].followedByHeatSource = &heatSources[1];
+	heatSources[1].followedByHeatSource = &heatSources[2];
 
 	//standard finishing up init, borrowed from init function
 
@@ -382,15 +382,15 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	isHeating = false;
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		if (setOfSources[i].isOn) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < getNumHeatSources(); i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -407,7 +407,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
 
-	setOfSources.clear();
+	heatSources.clear();
 
 	//resistive with no UA losses for testing
 	if (presetNum == MODELS_restankNoUA) {
@@ -436,11 +436,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//assign heat sources into array in order of priority
 		//set everything in its places
-		setOfSources.resize(2);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	//resistive tank with massive UA loss for testing
@@ -470,11 +470,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//assign heat sources into array in order of priority
-		setOfSources.resize(2);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	//realistic resistive tank
@@ -504,11 +504,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its place
-		setOfSources.resize(2);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	else if (presetNum == MODELS_StorageTank) {
@@ -538,8 +538,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = extra;
+		heatSources.resize(1);
+		heatSources[0] = extra;
 	}
 
 	//basic compressor tank for testing
@@ -603,18 +603,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(15));
 
 		//set everything in its place
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 
@@ -667,8 +667,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::bottomNodeMaxTemp(20, true));
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	//voltex 60 gallon
 	else if (presetNum == MODELS_AOSmithPHPT60) {
@@ -733,18 +733,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithPHPT80) {
@@ -810,18 +810,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2012) {
@@ -892,18 +892,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28.0)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a Colmac single pass preset cold weather or not
 	else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
@@ -1039,8 +1039,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		} //End if MODELS_ColmacCxV_5_SP
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	
 
@@ -1168,8 +1168,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	// If Nyle single pass preset
 	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
@@ -1301,8 +1301,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	// If Nyle multipass presets
@@ -1468,8 +1468,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.useBtwxtGrid = true;
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	// if rheem multipass
 	else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
@@ -1537,8 +1537,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) {
@@ -1670,8 +1670,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP || presetNum == MODELS_SANCO2_119) {
@@ -1759,8 +1759,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its place
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_SANCO2_43) {
 		setNumNodes(96);
@@ -1838,8 +1838,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its place
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 || presetNum == MODELS_RheemHBDR4550) {
 		setNumNodes(24);
@@ -1922,20 +1922,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 
 	}
@@ -2025,20 +2025,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 || presetNum == MODELS_RheemHBDR4580) {
@@ -2122,20 +2122,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
@@ -2200,18 +2200,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithCAHP120) {
@@ -2286,22 +2286,22 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
-		//setOfSources[2].followedByHeatSource = &setOfSources[1];;
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
+		//heatSources[2].followedByHeatSource = &heatSources[1];;
 
-		setOfSources[0].companionHeatSource = &setOfSources[1];
-		setOfSources[1].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[1];
+		heatSources[1].companionHeatSource = &heatSources[2];
 
 	}
 	else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
@@ -2375,20 +2375,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(11.87)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	else if (presetNum == MODELS_GE2014STDMode) {
@@ -2451,18 +2451,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 			//set everything in its places
-			setOfSources.resize(3);
-			setOfSources[0] = resistiveElementTop;
-			setOfSources[1] = resistiveElementBottom;
-			setOfSources[2] = compressor;
+			heatSources.resize(3);
+			heatSources[0] = resistiveElementTop;
+			heatSources[1] = resistiveElementBottom;
+			heatSources[2] = compressor;
 
-			//and you have to do this after putting them into setOfSources, otherwise
+			//and you have to do this after putting them into heatSources, otherwise
 			//you don't get the right pointers
-			setOfSources[2].backupHeatSource = &setOfSources[1];
-			setOfSources[1].backupHeatSource = &setOfSources[2];
+			heatSources[2].backupHeatSource = &heatSources[1];
+			heatSources[1].backupHeatSource = &heatSources[2];
 
-			setOfSources[0].followedByHeatSource = &setOfSources[1];
-			setOfSources[1].followedByHeatSource = &setOfSources[2];
+			heatSources[0].followedByHeatSource = &heatSources[1];
+			heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014STDMode_80) {
@@ -2521,18 +2521,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014) {
@@ -2598,18 +2598,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014_80) {
@@ -2675,18 +2675,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014_80DR) {
@@ -2753,18 +2753,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	// PRESET USING GE2014 DATA 
@@ -2831,15 +2831,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
 	}
 	// If Rheem Premium
@@ -2916,20 +2916,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[1].backupHeatSource = &setOfSources[2];
-		setOfSources[2].backupHeatSource = &setOfSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	// If Rheem Build
@@ -3006,20 +3006,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[1].backupHeatSource = &setOfSources[2];
-		setOfSources[2].backupHeatSource = &setOfSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}		
 	else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80) {
 		setNumNodes(12);
@@ -3083,8 +3083,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_RheemPlugInDedicated40 || presetNum == MODELS_RheemPlugInDedicated50) {
 		setNumNodes(12);
@@ -3135,8 +3135,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
 		//set everything in its places
-		setOfSources.resize(1);
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_RheemHB50) {
 		setNumNodes(12);
@@ -3200,18 +3200,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Stiebel220E) {
@@ -3263,13 +3263,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places
-		setOfSources.resize(2);
-		setOfSources[0] = compressor;
-		setOfSources[1] = resistiveElement;
+		heatSources.resize(2);
+		heatSources[0] = compressor;
+		heatSources[1] = resistiveElement;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[0].backupHeatSource = &setOfSources[1];
+		heatSources[0].backupHeatSource = &heatSources[1];
 
 	}
 	else if (presetNum == MODELS_Generic1) {
@@ -3330,16 +3330,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Generic2) {
@@ -3402,18 +3402,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Generic3) {
@@ -3478,18 +3478,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_UEF2generic) {
@@ -3551,18 +3551,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
@@ -3647,18 +3647,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a the model is the TamOMatic, HotTam, Generic... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
@@ -3727,20 +3727,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 	else if (presetNum == MODELS_Scalable_MP) {
 		setNumNodes(24);
@@ -3805,20 +3805,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
-		setOfSources.resize(3);
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	else {
@@ -3842,15 +3842,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	isHeating = false;
 	for (int i = 0; i < getNumHeatSources(); i++) {
-		if (setOfSources[i].isOn) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
 		for (int i = 0; i < getNumHeatSources(); i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
