@@ -214,14 +214,14 @@ void testResampling() {
 // test extensive resampling
     std::vector<double> values(10);
     std::vector<double> sampleValues{20., 40., 60., 40., 20.};
-    resampleExtensive(values, sampleValues);
+	ASSERTTRUE(resampleExtensive(values, sampleValues));
 
 	// Check some expected values.
 	ASSERTTRUE(relcmpd(values[1], 10.)); //
 	ASSERTTRUE(relcmpd(values[5], 30.)); //
 
 // test intensive resampling
- 	 resampleIntensive(values, sampleValues);
+ 	ASSERTTRUE(resampleIntensive(values, sampleValues));
 
 	// Check some expected values.
 	ASSERTTRUE(relcmpd(values[1], 20.)); //
