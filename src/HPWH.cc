@@ -1562,8 +1562,8 @@ std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc, double
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Builds a vector of logical node weights referred to a fixed number of
-/// nodes given by CONDENSITY_SIZE. 
+///	@brief	Builds a vector of logic node weights referred to a fixed number of
+/// nodes given by LOGIC_NODE_SIZE. 
 /// @param[in]	bottomFraction	Lower bounding fraction (0 to 1)
 ///	@param[in]	topFraction		Upper bounding fraction (0 to 1) 	
 /// @return	vector of node weights
@@ -1571,8 +1571,8 @@ std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc, double
 std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, double topFraction) {
 	std::vector<NodeWeight> nodeWeights;
 	if (topFraction < bottomFraction) std::swap(bottomFraction, topFraction);
-	auto bottomIndex = static_cast<std::size_t>(bottomFraction * CONDENSITY_SIZE);
-	auto topIndex = static_cast<std::size_t>(topFraction * CONDENSITY_SIZE);
+	auto bottomIndex = static_cast<std::size_t>(bottomFraction * LOGIC_NODE_SIZE);
+	auto topIndex = static_cast<std::size_t>(topFraction * LOGIC_NODE_SIZE);
 	for (auto index = bottomIndex; index < topIndex; ++index) {
 		nodeWeights.emplace_back(static_cast<int>(index) + 1);
 	}
