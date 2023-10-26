@@ -32,11 +32,11 @@ public:
 	static const int version_patch = HPWHVRSN_PATCH;
 	static const std::string version_maint;  // Initialized in source file (HPWH.cc)
 
-
 	static const float DENSITYWATER_kgperL;
 	static const float KWATER_WpermC;
 	static const float CPWATER_kJperkgC;
-	static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 change at your own risk */
+	static const int CONDENSITY_SIZE = 12;  /**<number of condensity nodes associated with each heat source */
+	static const int LOGIC_NODE_SIZE = 12;  /**< number of logic nodes associated with temperature-based heating logic */
 	static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
 	static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0 this saves on computations */
 	static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
@@ -55,7 +55,6 @@ public:
 	HPWH(const HPWH &hpwh);  /**< copy constructor  */
 	HPWH & operator=(const HPWH &hpwh);  /**< assignment operator  */
 	~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors eventually?   */
-
 
 	///specifies the various modes for the Demand Response (DR) abilities
 	///values may vary - names should be used
