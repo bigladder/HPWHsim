@@ -2913,13 +2913,6 @@ int HPWH::checkInputs() {
 		}
 		returnVal = HPWH_ABORT;
 	}
-	if((getNumNodes() % 12) != 0) {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("The number of nodes must be a multiple of 12");
-		}
-		returnVal = HPWH_ABORT;
-	}
-
 
 	double condensitySum;
 	//loop through all heat sources to check each for malconfigurations
@@ -3121,7 +3114,7 @@ int HPWH::HPWHinit_file(string configFile) {
 	std::size_t num_nodes = 0, numHeatSources = 0;
 
 	string tempString,units;
-	double tempDouble,dblArray[12];
+	double tempDouble;
 
 	//being file processing, line by line
 	string line_s;
@@ -3492,8 +3485,11 @@ int HPWH::HPWHinit_file(string configFile) {
 			}
 
 			else if(token == "condensity") {
-				line_ss >> dblArray[0] >> dblArray[1] >> dblArray[2] >> dblArray[3] >> dblArray[4] >> dblArray[5] >> dblArray[6] >> dblArray[7] >> dblArray[8] >> dblArray[9] >> dblArray[10] >> dblArray[11];
-				heatSources[heatsource].setCondensity(dblArray[0],dblArray[1],dblArray[2],dblArray[3],dblArray[4],dblArray[5],dblArray[6],dblArray[7],dblArray[8],dblArray[9],dblArray[10],dblArray[11]);
+				double x;
+				std::vector<double> condensity;
+				while (line_ss >> x)
+					condensity.push_back(x);
+				heatSources[heatsource].setCondensity(condensity);
 			} else if(token == "nTemps") {
 				line_ss >> nTemps;
 				heatSources[heatsource].perfMap.resize(nTemps);
