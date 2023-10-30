@@ -216,7 +216,6 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	// if totWeight * comparison - sum < 0 then the shutoff condition is already true and you shouldn't
 	// be here. Will revaluate shut off condition at the end the do while loop of addHeatExternal, in the
 	// mean time lets not shift anything around. 
-	std::cout << totWeight << ", " << comparison << ", " << sum << ", " << diff;
 	if(compare(sum,totWeight * comparison)) { // Then should shut off
 		fracTemp = 0.; // 0 means shift no nodes
 	} else {
