@@ -803,9 +803,6 @@ private:
 
 	void setAllDefaults(); /**< sets all the defaults default */
 
-	/// Perform additional heat transfer upon draw
-	void establishTankTemps(double tankAmbientT_C);
-
 	void updateTankTemps(double draw,double inletT,double ambientT,double inletVol2_L,double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */

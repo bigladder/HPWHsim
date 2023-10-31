@@ -238,20 +238,6 @@ bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C) {
 	return isLockedOut();
 }
 
-bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs,DRMODES DR_signal) const {
-
-	if(hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
-		return true;
-	} else if(hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
-		return true;
-	}
-	return false;
-}
-
-void HPWH::resetTopOffTimer() {
-	timerTOT = 0.;
-}
-
 void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal) {
 	isOn = true;
 	hpwh->isHeating = true;
@@ -409,9 +395,13 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 
 		if(isACompressor()) {
 			hpwh->condenserInlet_C = getCondenserTemp();
+			getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
+		}
+		else {
+			getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
+
 		}
 		// calculate capacity btu/hr, input btu/hr, and cop
-		getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
 
 		//some outputs for debugging
 		if(hpwh->hpwhVerbosity >= VRB_typical) {

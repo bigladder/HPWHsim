@@ -193,6 +193,7 @@ void HPWH::setAllDefaults() {
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
 	usesSoCLogic = false;
 	setMinutesPerStep(1.0);
+	hpwhVerbosity = VRB_minuteOut;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -452,7 +453,7 @@ int HPWH::runOneStep(double drawVolume_L,
 				HeatSource* heatSourcePtr;
 				if(heatSources[i].isLockedOut() && heatSources[i].backupHeatSource != NULL) {
 
-					// Check that the backup isn't locked out too or already engaged then it will heat on it's own.
+					// Check that the backup isn't locked out too or already engaged then it will heat on its own.
 					if(heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
 						shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,DRstatus) || //){
 						heatSources[i].backupHeatSource->isEngaged()) {
@@ -515,7 +516,6 @@ int HPWH::runOneStep(double drawVolume_L,
 	if(areAllHeatSourcesOff() == true) {
 		isHeating = false;
 	}
-
 	//If theres extra user defined heat to add -> Add extra heat!
 	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
 		addExtraHeat(nodePowerExtra_W,tankAmbientT_C);
@@ -2409,90 +2409,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 	return HPWH_ABORT;
 }
 
-
-//private definitions
-void HPWH::establishTankTemps(double tankAmbientT_C)
-{
-	if(doConduction) {
-
-		// Get the "constant" tau for the stability condition and the conduction calculation
-		const double tau = KWATER_WpermC / ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) 
-			* (nodeHeight_m * nodeHeight_m)) * secondsPerStep;
-		if(tau > 0.5) {
-			if(hpwhVerbosity >= VRB_reluctant) {
-				msg("The stability condition for conduction has failed, these results are going to be interesting!\n");
-			}
-			simHasFailed = true;
-			return;
-		}
-
-		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
-
-		// Outer edges first
-		nextTankTemps_C[0] = (1.0 - bc) * tankTemps_C[0] + bc * tankAmbientT_C;
-		nextTankTemps_C[getNumNodes() - 1] = (1.0 - bc) * tankTemps_C[getNumNodes() - 1] + bc * tankAmbientT_C;
-
-		// Boundary nodes for finite difference
-		if (getNumNodes() > 1) {
-			nextTankTemps_C[0] = 2. * tau * (tankTemps_C[1] - tankTemps_C[0]);
-			nextTankTemps_C[getNumNodes() - 1] = 2. * tau * (tankTemps_C[getNumNodes() - 1] - tankTemps_C[getNumNodes() - 1]);
-		}
-		// Internal nodes for the finite difference
-		for(int i = 1; i < getNumNodes() - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
-		}
-
-		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
-		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-	} else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
-
-		for(int i = 0; i < getNumNodes(); i++) {
-			nextTankTemps_C[i] = tankTemps_C[i];
-		}
-
-		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.front() -= standbyLosses_kJ / nodeCp_kJperC;
-
-		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.back() -= standbyLosses_kJ / nodeCp_kJperC;
-		// UA loss from the sides are found at the bottom of the function.
-
-	}
-
-
-	//calculate standby losses from the sides of the tank
-	{
-		auto rat = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
-		auto nextT = nextTankTemps_C.begin();
-		for(auto T: tankTemps_C) {
-			//faction of tank area on the sides
-			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = rat * (T - tankAmbientT_C) * hoursPerStep;
-			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-			//The effect of standby loss on temperature in each node
-			*nextT -= standbyLosses_kJ / nodeCp_kJperC;
-			++nextT;
-		}
-	}
-
-	// Assign the new temporary tank temps to the real tank temps.
-	for(int i = 0; i < getNumNodes(); i++) 	tankTemps_C[i] = nextTankTemps_C[i];
-
-	// check for inverted temperature profile 
-	mixTankInversions();
-}
-
+//the privates
 void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbientT_C,
 	double inletVol2_L,double inletT2_C) {
 	//set up some useful variables for calculations
@@ -2628,21 +2545,25 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		// Boundary condition for the finite difference. 
 		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
 
-		// Outer edges first
-		nextTankTemps_C[0] = (1. - bc) * tankTemps_C[0] + bc * tankAmbientT_C;
-		nextTankTemps_C[getNumNodes() - 1] = (1. - bc) * tankTemps_C[getNumNodes() - 1] + bc * tankAmbientT_C;
+		// Small truncation differences here lead to larger differences later 
+		double T0 = tankTemps_C[0];
+		double Tn0 = tankTemps_C[getNumNodes() - 1];
 
-		// Boundary nodes for finite difference
-		if (getNumNodes() > 1) {
-			nextTankTemps_C[0] += 2. * tau * (tankTemps_C[1] - tankTemps_C[0]);
-			nextTankTemps_C[getNumNodes() - 1] += 2. * tau * (tankTemps_C[getNumNodes() - 2] - tankTemps_C[getNumNodes() - 1]);
+		// Boundary nodes for finite difference; outer edge of top and bottom nodes first
+		double nextT0 = (1. - bc) * T0 + bc * tankAmbientT_C;
+		double nextTn0 = (1. - bc) * Tn0 + bc * tankAmbientT_C;
+		if (getNumNodes() > 1) { // inner edges of top and bottom nodes
+			nextT0 += 2. * tau * (tankTemps_C[1] - T0);
+			nextTn0 += 2. * tau * (tankTemps_C[getNumNodes() - 2] - Tn0);
 		}
+		nextTankTemps_C[0] = nextT0;
+		nextTankTemps_C[getNumNodes() - 1] = nextTn0;
 
 		// Internal nodes for the finite difference
 		for(int i = 1; i < getNumNodes() - 1; i++) {
 			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
-		
+
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
 		// UA loss from the sides are found at the bottom of the function.
 		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
@@ -2668,7 +2589,6 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		// UA loss from the sides are found at the bottom of the function.
 
 	}
-
 
 	//calculate standby losses from the sides of the tank
 	{
@@ -2761,6 +2681,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbient
 
 			// add heat 
 			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);
+			 
 
 			// 0 out to ignore features
 			heatSources[i].perfMap.clear();
@@ -3003,13 +2924,6 @@ int HPWH::checkInputs() {
 		returnVal = HPWH_ABORT;
 	}
 
-	if (getNumNodes() < 1) {
-		if (hpwhVerbosity >= VRB_reluctant) {
-			msg("There must be at least one node.");
-		}
-		returnVal = HPWH_ABORT;
-	}
-
 	double condensitySum;
 	//loop through all heat sources to check each for malconfigurations
 	for(int i = 0; i < getNumHeatSources(); i++) {
@@ -3186,6 +3100,20 @@ int HPWH::checkInputs() {
 
 	//if there's no failures, return 0
 	return returnVal;
+}
+
+bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs,DRMODES DR_signal) const {
+
+	if(hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
+		return true;
+	} else if(hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
+		return true;
+	}
+	return false;
+}
+
+void HPWH::resetTopOffTimer() {
+	timerTOT = 0.;
 }
 
 #ifndef HPWH_ABRIDGED
@@ -3585,13 +3513,6 @@ int HPWH::HPWHinit_file(string configFile) {
 				std::vector<double> condensity;
 				while (line_ss >> x)
 					condensity.push_back(x);
-				if(condensity.empty())
-				{
-					if(hpwhVerbosity >= VRB_reluctant) {
-						msg("Heatsource %d must have at least one condensity node.\n",heatsource);
-					}
-					return HPWH_ABORT;
-				}
 				heatSources[heatsource].setCondensity(condensity);
 			} else if(token == "nTemps") {
 				line_ss >> nTemps;
