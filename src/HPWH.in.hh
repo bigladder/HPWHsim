@@ -219,7 +219,9 @@ public:
 		MODELS_RHEEM_HPHD60HNU_201_MP = 350,
 		MODELS_RHEEM_HPHD60VNU_201_MP = 351,
 		MODELS_RHEEM_HPHD135HNU_483_MP = 352, // really bad fit to data due to inconsistency in data
-		MODELS_RHEEM_HPHD135VNU_483_MP = 353  // really bad fit to data due to inconsistency in data
+		MODELS_RHEEM_HPHD135VNU_483_MP = 353,  // really bad fit to data due to inconsistency in data
+
+		MODELS_AQUATHERMAIRE = 400 // heat exchanger model
 	};
 
 	///specifies the modes for writing output
@@ -1002,9 +1004,10 @@ private:
 	/// Generates a vector of logical nodes
 	std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction,double topFraction);
 
+	/// True: water is drawn from the tank itself; False: tank provides heat exchange only
+	bool waterIsDrawnFromTank;
+
 };  //end of HPWH class
-
-
 
 
 class HPWH::HeatSource {
