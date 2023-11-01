@@ -1291,9 +1291,8 @@ private:
 
 	void calcHeatDist(std::vector<double> &heatDistribution);
 
-	double getCondenserTemp() const;
-	/**< returns the temperature of the condensor - it's a weighted average of the
-		tank temperature, using the condensity as weights */
+	double getTankTemp() const;
+	/**< returns the tank temperature weighted by the condensity for this heat source */
 
 	void sortPerformanceMap();
 	/**< sorts the Performance Map by increasing external temperatures */
