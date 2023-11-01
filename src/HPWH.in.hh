@@ -1004,9 +1004,6 @@ private:
 
 };  //end of HPWH class
 
-
-
-
 class HPWH::HeatSource {
 public:
 	friend class HPWH;
@@ -1067,14 +1064,11 @@ public:
 	/**< adds heat to the hpwh - this is the function that interprets the
 		various configurations (internal/external, resistance/heat pump) to add heat */
 
-		// Assign new condensity values from supplied vector. Note the input vector is currently resampled
-		// to preserve a condensity vector of size CONDENSITY_SIZE.
+	/// Assign new condensity values from supplied vector. Note the input vector is currently resampled
+	/// to preserve a condensity vector of size CONDENSITY_SIZE.
 	void setCondensity(const std::vector<double> &condensity_in);
 
-	void setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
-		double cnd5,double cnd6,double cnd7,double cnd8,
-		double cnd9,double cnd10,double cnd11,double cnd12);
-	/**< a function to set the condensity values, it pretties up the init funcs. */
+	int getCondensitySize() const;
 
 	void linearInterp(double &ynew,double xnew,double x0,double x1,double y0,double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */

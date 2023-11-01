@@ -2401,7 +2401,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 		return HPWH_ABORT;
 	}
 
-	for(int i = 0; i < CONDENSITY_SIZE; i++) {
+	for(int i = 0; i < heatSources[elementIndex].getCondensitySize(); i++) {
 		if(heatSources[elementIndex].condensity[i] == 1) { // res elements have a condenstiy of 1 at a specific node
 			return i;
 		}
@@ -2657,17 +2657,6 @@ void HPWH::mixTankInversions() {
 }
 
 void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C){
-	if((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n",(*nodePowerExtra_W).size(),CONDENSITY_SIZE);
-		}
-		simHasFailed = true;
-	}
-
-	//for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++){
-	//	tankTemps_C[i] += (*nodePowerExtra_W)[i] * minutesPerStep * 60. / (CPWATER_kJperkgC * 1000. * DENSITYWATER_kgperL * tankVolume_L / numNodes);
-	//}
-	//mixTankInversions();
 
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
@@ -2679,8 +2668,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbient
 			calcDerivedHeatingValues();
 
 			// add heat 
-			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);
-			 
+			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
 
 			// 0 out to ignore features
 			heatSources[i].perfMap.clear();
@@ -2795,14 +2783,15 @@ void HPWH::calcDerivedHeatingValues(){
 	double condentropy = 0;
 	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
 	for(int i = 0; i < getNumHeatSources(); i++) {
+		const int condensitySize = heatSources[i].getCondensitySize();
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
 		// Calculate condentropy and ==> shrinkage
 		condentropy = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++) {
-			if(heatSources[i].condensity[j] > 0) {
+		for(int j = 0; j < condensitySize; ++j) {
+			if(heatSources[i].condensity[j] > 0.) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
 			}
@@ -2817,17 +2806,15 @@ void HPWH::calcDerivedHeatingValues(){
 	int lowest = 0;
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		lowest = 0;
+		const int condensitySize = heatSources[i].getCondensitySize();
+		double nodeRatio = getNumNodes() / condensitySize;
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
-		for(int j = 0; j < getNumNodes(); j++) {
-			if(hpwhVerbosity >= VRB_emetic) {
-				msg(outputString,"j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n",j,j / (getNumNodes() / CONDENSITY_SIZE));
-			}
-
-			if(heatSources[i].condensity[(j / (getNumNodes() / CONDENSITY_SIZE))] > 0) {
-				lowest = j;
+		for(auto j = 0; j < condensitySize; ++j) {
+			if(heatSources[i].condensity[j] > 0) {
+				lowest = static_cast<int>(nodeRatio * j);
 				break;
 			}
 		}
@@ -2843,8 +2830,8 @@ void HPWH::calcDerivedHeatingValues(){
 	lowestElementIndex = -1; // Default = No resistance elements
 	highestElementIndex = -1; // Default = No resistance elements
 	VIPIndex = -1; // Default = No VIP element
-	int lowestElementPos = CONDENSITY_SIZE;
-	int highestElementPos = 0; // -1 to make sure a an element on the bottom can still be identified.
+	double lowestPos = 1.;
+	double highestPos = 0.; // -1 to make sure a an element on the bottom can still be identified.
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(heatSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
@@ -2859,14 +2846,16 @@ void HPWH::calcDerivedHeatingValues(){
 					};
 				}
 			}
-			for(int j = 0; j < CONDENSITY_SIZE; j++) {
-				if(heatSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
+			int condensitySize = heatSources[i].getCondensitySize();
+			for(int j = 0; j < condensitySize; ++j) {
+				double pos = static_cast<double>(j) / condensitySize;
+				if((heatSources[i].condensity[j] > 0.) && (pos < lowestPos)) {
 					lowestElementIndex = i;
-					lowestElementPos = j;
+					lowestPos = pos;
 				}
-				if(heatSources[i].condensity[j] > 0.0 && j >= highestElementPos) {
+				if(heatSources[i].condensity[j] > 0.0 && pos >= highestPos) {
 					highestElementIndex = i;
-					highestElementPos = j;
+					highestPos = pos;
 				}
 			}
 		}
