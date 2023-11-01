@@ -394,11 +394,11 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		calcHeatDist(heatDistribution);
 
 		if(isACompressor()) {
-			hpwh->condenserInlet_C = getCondenserTemp();
-			getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
+			hpwh->condenserInlet_C = getTankTemp();
+			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
 		}
 		else {
-			getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
+			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
 
 		}
 		// calculate capacity btu/hr, input btu/hr, and cop
@@ -423,7 +423,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 
 		if(isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
-			hpwh->condenserOutlet_C = getCondenserTemp();
+			hpwh->condenserOutlet_C = getTankTemp();
 		}
 
 		//after you've done everything, any leftover capacity is time that didn't run
@@ -482,26 +482,23 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 	}
 }
 
-double HPWH::HeatSource::getCondenserTemp() const{
-	double condenserTemp_C = 0.0;
-	int tempNodesPerCondensityNode = hpwh->getNumNodes() / CONDENSITY_SIZE;
-	int j = 0;
+double HPWH::HeatSource::getTankTemp() const{
 
-	for(int i = 0; i < hpwh->getNumNodes(); i++) {
-		j = i / tempNodesPerCondensityNode;
-		if(condensity[j] != 0) {
-			condenserTemp_C += (condensity[j] / tempNodesPerCondensityNode) * hpwh->tankTemps_C[i];
-			//the weights don't need to be added to divide out later because they should always sum to 1
+	std::vector<double> resampledTankTemps(CONDENSITY_SIZE);
+	resample(resampledTankTemps, hpwh->tankTemps_C);
 
-			if(hpwh->hpwhVerbosity >= VRB_emetic) {
-				hpwh->msg("condenserTemp_C:\t %.2lf \ti:\t %d \tj\t %d \tcondensity[j]:\t %.2lf \ttankTemps_C[i]:\t %.2lf\n",condenserTemp_C,i,j,condensity[j],hpwh->tankTemps_C[i]);
-			}
-		}
+	double tankTemp_C = 0.;
+
+	std::size_t j = 0;
+	for(auto &resampledNodeTemp: resampledTankTemps) {
+		tankTemp_C += condensity[j] * resampledNodeTemp;
+		// Note that condensity is normalized.
+		++j;
 	}
 	if(hpwh->hpwhVerbosity >= VRB_typical) {
-		hpwh->msg("condenser temp %.2lf \n",condenserTemp_C);
+		hpwh->msg("tank temp %.2lf \n",tankTemp_C);
 	}
-	return condenserTemp_C;
+	return tankTemp_C;
 }
 
 void HPWH::HeatSource::getCapacity(double externalT_C,double condenserTemp_C,double setpointTemp_C,double &input_BTUperHr,double &cap_BTUperHr,double &cop) {

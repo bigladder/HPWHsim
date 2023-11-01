@@ -1641,13 +1641,13 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decision
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(13); // uses very top computation node
+	nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("standby",nodeWeights,decisionPoint,this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(13); // uses very top computation node
+	nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top node",nodeWeights,decisionPoint,this,true,std::greater<double>());
 }
 
@@ -2412,12 +2412,10 @@ int HPWH::getResistancePosition(int elementIndex) const {
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbientT_C,
 	double inletVol2_L,double inletT2_C) {
-	//set up some useful variables for calculations
-	double drawFraction;
-	this->outletTemp_C = 0.;
-	double nodeInletFraction,cumInletFraction,drawVolume_N;
-	double nodeInletTV = 0.;
 
+	outletTemp_C = 0.;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	if(drawVolume_L > 0.) {
 
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
@@ -2450,7 +2448,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
 		//calculate how many nodes to draw (drawVolume_N)
-		drawVolume_N = drawVolume_L / nodeVolume_L;
+		double drawVolume_N = drawVolume_L / nodeVolume_L;
 		if(drawVolume_L > tankVolume_L) {
 			//if (hpwhVerbosity >= VRB_reluctant) {
 			//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
@@ -2473,16 +2471,17 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		while(drawVolume_N > 0) {
 
 			// Draw one node at a time
-			drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+			double drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+			double nodeInletTV = 0.;
 
 			//add temperature for outletT average
 			outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
 
-			cumInletFraction = 0.;
+			double cumInletFraction = 0.;
 			for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
 
 				// Reset inlet inputs at this node. 
-				nodeInletFraction = 0.;
+				double nodeInletFraction = 0.;
 				nodeInletTV = 0.;
 
 				// Sum of all inlets Vi*Ti at this node
@@ -2713,7 +2712,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 	double sum = 0;
 	double totWeight = 0;
 
-	std::vector<double> resampledTankTemps(12);
+	std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
 	resample(resampledTankTemps, tankTemps_C);
 
 	for (auto &nodeWeight : nodeWeights) {		
@@ -2721,7 +2720,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 			sum +=  tankTemps_C.front() * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		}		
-		else if (nodeWeight.nodeNum == 13) { // top node only
+		else if (nodeWeight.nodeNum > LOGIC_NODE_SIZE) { // top node only
 			sum += tankTemps_C.back() * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		}
@@ -3311,9 +3310,9 @@ int HPWH::HPWHinit_file(string configFile) {
 					line_ss >> nextToken;
 					while(std::regex_match(nextToken,std::regex("\\d+"))) {
 						int nodeNum = std::stoi(nextToken);
-						if(nodeNum > 13 || nodeNum < 0) {
+						if(nodeNum > LOGIC_NODE_SIZE + 1 || nodeNum < 0) {
 							if(hpwhVerbosity >= VRB_reluctant) {
-								msg("Node number for heatsource %d %s must be between 0 and 13.  \n",heatsource,token.c_str());
+								msg("Node number for heatsource %d %s must be between 0 and %d.  \n",heatsource,token.c_str(), LOGIC_NODE_SIZE + 1);
 							}
 							return HPWH_ABORT;
 						}
@@ -3334,7 +3333,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					if(nodeNums.size() != weights.size()) {
 						if(hpwhVerbosity >= VRB_reluctant) {
-							msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
+							msg("Number of weights for heatsource %d %s (%d) does not match number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
 						}
 						return HPWH_ABORT;
 					}
