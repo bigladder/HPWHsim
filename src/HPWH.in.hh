@@ -1007,6 +1007,8 @@ private:
 	/// True: water is drawn from the tank itself; False: tank provides heat exchange only
 	bool waterIsDrawnFromTank;
 
+	double heatExchangeEfficiency;
+
 };  //end of HPWH class
 
 
