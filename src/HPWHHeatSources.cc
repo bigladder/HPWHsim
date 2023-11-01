@@ -387,9 +387,6 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_WRAPPED:
 	{
 		static std::vector<double> heatDistribution(hpwh->getNumNodes());
-		//clear the heatDistribution vector, since it's static it is still holding the
-		//distribution from the last go around
-		heatDistribution.clear();
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
@@ -742,27 +739,23 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	for(int i = 0; i < hpwh->getNumNodes(); i++) {
-		if(i < lowestNode) {
-			heatDistribution.push_back(0);
-		} else {
-			int k;
-			if(configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
-				//intentional integer division
-				k = i / int(hpwh->getNumNodes() / CONDENSITY_SIZE);
-				heatDistribution.push_back(condensity[k]);
-			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-				double temp = 0;  //temp for temporary not temperature
-				double offset = 5.0 / 1.8;
-				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / this->shrinkage,offset);
-				temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
-				if(temp < 0.) // SETPOINT_FIX
-					temp = 0.;
-				heatDistribution.push_back(temp);
-			}
-		}
+	if(configuration == CONFIG_SUBMERGED) {
+		resampleExtensive(heatDistribution, condensity);
 	}
-	normalize(heatDistribution);
+	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
+		for(int i = 0; i < hpwh->getNumNodes(); i++) {
+			double dist = 0.;
+			if(i >= lowestNode){
+				double offset = 5.0 / 1.8;
+				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / shrinkage,offset);
+				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
+				if(dist < 0.) // SETPOINT_FIX
+					dist = 0.;
+			}
+			heatDistribution[i] = dist;
+		}
+		normalize(heatDistribution);
+	}
 }
 
 double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
