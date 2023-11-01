@@ -75,6 +75,7 @@ set(modelNames
   Rheem2020Prem40
   Rheem2020Prem50
   Rheem2020Build50
+  AquaThermAire
 #  RheemPlugInDedicated50
 )
 set(lockoutTestModels

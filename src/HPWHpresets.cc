@@ -3843,7 +3843,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.setCondensity({1.});
 
-		//voltex60 tier 1 values
+		//AOSmithPHPT60 values
 		compressor.perfMap.reserve(2);
 
 		compressor.perfMap.push_back({
@@ -3858,7 +3858,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
 			});
 
-		compressor.minT = F_TO_C(45.0);
+		compressor.minT = F_TO_C(40.);
 		compressor.maxT = F_TO_C(125.);
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;

@@ -1745,35 +1745,13 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
-	} else if(nTCouple > getNumNodes()) {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("You have more simulated thermocouples than nodes.  \n");
-		}
+	} else if(nTCouple < 1) {
 		return double(HPWH_ABORT);
 	} else {
-		double weight = getNumNodes() / static_cast<double>(nTCouple);
-		double start_ind = (iTCouple - 1.) * weight;
-		int ind = (int)std::ceil(start_ind);
 
-		double averageTemp_C = 0.0;
-
-		// Check any intial fraction of nodes 
-		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind),UNITS_C) * ((double)ind - start_ind);
-		weight -= ((double)ind - start_ind);
-
-		// Check the full nodes
-		while(weight >= 1.0) {
-			averageTemp_C += getTankNodeTemp(ind,UNITS_C);
-			weight -= 1.0;
-			ind += 1;
-		}
-
-		// Check any leftover
-		if(weight > 0.) {
-			averageTemp_C += getTankNodeTemp(ind,UNITS_C) * weight;
-		}
-		// Divide by the original weight to get the true average
-		averageTemp_C /= ((double)getNumNodes() / (double)nTCouple);
+		double fracBegin = static_cast<double>(iTCouple - 1.) / nTCouple;
+		double fracEnd = static_cast<double>(iTCouple) / nTCouple;
+		double averageTemp_C = getResampledValue(tankTemps_C, fracBegin, fracEnd);
 
 		if(units == UNITS_C) {
 			return averageTemp_C;
@@ -2729,7 +2707,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 	double sum = 0;
 	double totWeight = 0;
 
-	std::vector<double> resampledTankTemps(12);
+	std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
 	resample(resampledTankTemps, tankTemps_C);
 
 	for (auto &nodeWeight : nodeWeights) {		
@@ -2737,7 +2715,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const {
 			sum +=  tankTemps_C.front() * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		}		
-		else if (nodeWeight.nodeNum == 13) { // top node only
+		else if (nodeWeight.nodeNum > LOGIC_NODE_SIZE) { // top node only
 			sum += tankTemps_C.back() * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
 		}
@@ -2832,19 +2810,16 @@ void HPWH::calcDerivedHeatingValues(){
 
 	//lowest node
 	int lowest = 0;
+	double nodeRatio = getNumNodes() / CONDENSITY_SIZE;
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		lowest = 0;
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
-		for(int j = 0; j < getNumNodes(); j++) {
-			if(hpwhVerbosity >= VRB_emetic) {
-				msg(outputString,"j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n",j,j / (getNumNodes() / CONDENSITY_SIZE));
-			}
-
-			if(heatSources[i].condensity[(j / (getNumNodes() / CONDENSITY_SIZE))] > 0) {
-				lowest = j;
+		for(auto j = 0; j < CONDENSITY_SIZE; ++j) {
+			if(heatSources[i].condensity[j] > 0) {
+				lowest = static_cast<int>(nodeRatio * j);
 				break;
 			}
 		}
