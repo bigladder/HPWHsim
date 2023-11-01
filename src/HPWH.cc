@@ -195,6 +195,7 @@ void HPWH::setAllDefaults() {
 	setMinutesPerStep(1.0);
 	hpwhVerbosity = VRB_minuteOut;
 	waterIsDrawnFromTank = true;
+	heatExchangeEfficiency = 0.9;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -2416,6 +2417,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 	outletTemp_C = 0.;
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	if(drawVolume_L > 0.) {
 
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
@@ -2468,7 +2470,6 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				drawVolume_N = 0.;
 			}
 
-			/////////////////////////////////////////////////////////////////////////////////////////////////
 
 			while(drawVolume_N > 0) {
 
@@ -2518,7 +2519,22 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 			outletTemp_C /= (drawVolume_L / nodeVolume_L);
 		}
-		/////////////////////////////////////////////////////////////////////////////////////////////////
+		else { // heat-exchange models
+			const double densityTank_kgperL = DENSITYWATER_kgperL;
+			const double CpTank_kJperkgC  = CPWATER_kJperkgC;
+
+			double C_Node_kJperC = CpTank_kJperkgC * densityTank_kgperL * nodeVolume_L;
+			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+
+			outletTemp_C = inletT_C;
+			for (auto &nodeTemp: tankTemps_C) {	
+				double maxHeatExchange_kJ = (nodeTemp - outletTemp_C) / (1. / C_Node_kJperC + 1. / C_draw_kJperC);
+				double heatExchange_kJ = heatExchangeEfficiency * maxHeatExchange_kJ;
+
+				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
+				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
+			}
+		}
 
 		//Account for mixing at the bottom of the tank
 		if(tankMixesOnDraw && drawVolume_L > 0.) {
@@ -2528,6 +2544,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 	} //end if(draw_volume_L > 0)
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	if(doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
@@ -3229,6 +3246,21 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				return HPWH_ABORT;
 			}
+		} else if(token == "waterIsDrawnFromTank") {
+			// false of this model uses heat exchange
+			line_ss >> tempString;
+			if(tempString == "true") waterIsDrawnFromTank = true;
+			else if(tempString == "false") waterIsDrawnFromTank = false;
+			else {
+				if(hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper value for %s\n",token.c_str());
+				}
+				return HPWH_ABORT;
+			}
+		} else if(token == "heatExchangeEfficiency") {
+			// applies to heat-exchange models only
+			line_ss >> tempDouble;
+			heatExchangeEfficiency = tempDouble;			
 		} else if(token == "verbosity") {
 			line_ss >> token;
 			if(token == "silent") {

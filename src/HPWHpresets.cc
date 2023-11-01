@@ -3822,13 +3822,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}	
 	else if (presetNum == MODELS_AQUATHERMAIRE) { // AquaThermAire
 		setNumNodes(1);
-		setpoint_C = F_TO_C(120.);
+		setpoint_C = F_TO_C(125.);
 
-		tankVolume_L = 50.;
-		tankUA_kJperHrC = 7.31;
+		tankVolume_L = 54.4;
+		tankUA_kJperHrC = 10.35;
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
+
+		// heat exchangers only
+		waterIsDrawnFromTank = false;
+		heatExchangeEfficiency = 0.9;
 
 		HeatSource compressor(this);
 
@@ -3855,7 +3859,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		compressor.minT = F_TO_C(45.0);
-		compressor.maxT = F_TO_C(120.);
+		compressor.maxT = F_TO_C(125.);
 		compressor.hysteresis_dC = dF_TO_dC(4);
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
@@ -3869,8 +3873,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		heatSources.resize(1);
 		heatSources[0] = compressor;
-
-		waterIsDrawnFromTank = false;
 	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {

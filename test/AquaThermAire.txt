@@ -1,11 +1,12 @@
 verbosity silent
 numNodes 1 #number of nodes
-setpoint 120 F
-volume 50 gal
-UA 7.31 kJperHrC
+setpoint 125 F
+volume 54.4 gal
+UA 10.35 kJperHrC
 depressTemp false
 mixOnDraw true
 waterIsDrawnFromTank false
+heatExchangeEfficiency 0.9
 
 #a test comment
 numHeatSources 1
