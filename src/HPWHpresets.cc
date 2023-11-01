@@ -3824,7 +3824,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setNumNodes(1);
 		setpoint_C = F_TO_C(125.);
 
-		tankVolume_L = 54.4;
+		tankVolume_L = GAL_TO_L(54.4);
 		tankUA_kJperHrC = 10.35;
 
 		doTempDepression = false;

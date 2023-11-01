@@ -75,7 +75,6 @@ set(modelNames
   Rheem2020Prem40
   Rheem2020Prem50
   Rheem2020Build50
-  AquaThermAire
 #  RheemPlugInDedicated50
 )
 set(lockoutTestModels
@@ -185,6 +184,12 @@ set(yearLargeTestsModels
  TamScalable_SP
  Scalable_MP
 )
+set(heatExchangeModelNames
+  AquaThermAire
+)
+set(heatExchangeTests
+ villara_24hr67
+)
 set(yearLargeTests                                        
  testCA_36Unit_CTZ12
 )
@@ -199,6 +204,10 @@ set(stateOfChargeCompressorNames
  Sanden120
  NyleC25A_SP
 )
+
+
+list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
+list(REMOVE_DUPLICATES extendedModelNames)
 
 # Unit tests
 function( add_TankSizeFixed_test )
@@ -215,7 +224,7 @@ function( add_TankSizeFixed_test )
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
-foreach(model ${modelNames})
+foreach(model ${extendedModelNames})
 	add_TankSizeFixed_test( MODEL_NAME "${model}")
 endforeach(model)
 foreach(model ${largeCompressorNames})
@@ -256,17 +265,27 @@ function( add_model_test )
 endfunction()
 
 foreach(test ${testNames})
-  foreach(model ${modelNames})
+  foreach(model ${extendedModelNames})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Test(s) specifically for heat-exchange models
+foreach(test ${heatExchangeTests})
+  foreach(model ${heatExchangeModelNames})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
 #Test models follow control logic with max temperatures. 
 foreach(test ${maxTempTests})
   foreach(model ${maxTempModels})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
   endforeach(model)
 endforeach(test)
+
 #Add large compressor tests to the list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
@@ -275,6 +294,7 @@ foreach(test ${largeCompressorTests})
     #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
 #Add State of Charge tests to the list
 foreach(test ${stateOfChargeTests})
   foreach(model ${stateOfChargeCompressorNames})
@@ -298,7 +318,6 @@ foreach(test ${yearLargeTests})
   endforeach(model)
 endforeach(test)
 
-
 # Tests for differences between File and Preset versions
 function( add_file_test )
   set(options)
@@ -319,7 +338,14 @@ function( add_file_test )
 endfunction()
 
 foreach(test ${testNames})
-  foreach(model ${modelNames})
+  foreach(model ${extendedModelNames})
+    add_file_test( TEST_NAME "${test}" MODEL_NAME "${model}")
+  endforeach(model)
+endforeach(test)
+
+#Test(s) specifically for heat-exchange models
+foreach(test ${heatExchangeTests})
+  foreach(model ${heatExchangeModelNames})
     add_file_test( TEST_NAME "${test}" MODEL_NAME "${model}")
   endforeach(model)
 endforeach(test)
