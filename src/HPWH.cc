@@ -516,9 +516,9 @@ int HPWH::runOneStep(double drawVolume_L,
 	if(areAllHeatSourcesOff() == true) {
 		isHeating = false;
 	}
-	//If theres extra user defined heat to add -> Add extra heat!
+	//If there's extra user defined heat to add -> Add extra heat!
 	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(nodePowerExtra_W,tankAmbientT_C);
+		addExtraHeat(*nodePowerExtra_W,tankAmbientT_C);
 		updateSoCIfNecessary();
 	}
 
@@ -2656,7 +2656,7 @@ void HPWH::mixTankInversions() {
 	}
 }
 
-void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C){
+void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
@@ -2783,14 +2783,13 @@ void HPWH::calcDerivedHeatingValues(){
 	double condentropy = 0;
 	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		const int condensitySize = heatSources[i].getCondensitySize();
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
 		// Calculate condentropy and ==> shrinkage
 		condentropy = 0;
-		for(int j = 0; j < condensitySize; ++j) {
+		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
 			if(heatSources[i].condensity[j] > 0.) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
@@ -2853,7 +2852,7 @@ void HPWH::calcDerivedHeatingValues(){
 					lowestElementIndex = i;
 					lowestPos = pos;
 				}
-				if(heatSources[i].condensity[j] > 0.0 && pos >= highestPos) {
+				if((heatSources[i].condensity[j] > 0.) && (pos >= highestPos)) {
 					highestElementIndex = i;
 					highestPos = pos;
 				}
@@ -2952,7 +2951,7 @@ int HPWH::checkInputs() {
 
 		//check is condensity sums to 1
 		condensitySum = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += heatSources[i].condensity[j];
+		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j)  condensitySum += heatSources[i].condensity[j];
 		if(fabs(condensitySum - 1.0) > 1e-6) {
 			if(hpwhVerbosity >= VRB_reluctant) {
 				msg("The condensity for heatsource %d does not sum to 1.  \n",i);

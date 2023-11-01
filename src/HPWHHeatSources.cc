@@ -987,18 +987,15 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 	typeOfHeatSource = TYPE_resistance;
 }
 
-void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
+void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 
-	std::vector<double> extraCondensity(CONDENSITY_SIZE);
+	std::vector<double> extraCondensity(getCondensitySize()); // retain original condensity size
+	resampleExtensive(extraCondensity, nodePowerExtra_W);
 	double watts = 0.0;
-	for(unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
+	for(int i = 0; i < getCondensitySize(); ++i) {
 		//get sum of vector
-		watts += (*nodePowerExtra_W)[i];
-
-		//put into vector for normalization
-		extraCondensity[i] = (*nodePowerExtra_W)[i];
+		watts += extraCondensity[i];
 	}
-
 	normalize(extraCondensity);
 
 	if(hpwh->hpwhVerbosity >= VRB_emetic){

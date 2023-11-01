@@ -815,8 +815,9 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
-	void addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C);
-	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
+	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
+	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
+	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
 
 	double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
@@ -1019,8 +1020,8 @@ public:
 	void setupAsResistiveElement(int node,double Watts);
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
-	void setupExtraHeat(std::vector<double>* nodePowerExtra_W);
-	/**< Configure a user defined heat source added as extra, based off using
+	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
+	/**< Configure a user-defined heat source added as extra, based off using
 		  nodePowerExtra_W as the total watt input and the condensity*/
 
 	bool isEngaged() const;
