@@ -52,7 +52,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	condensity = hSource.condensity;
 
-	shrinkage = hSource.shrinkage;
+	Tshrinkage_C = hSource.Tshrinkage_C;
 
 	perfMap = hSource.perfMap;
 
@@ -94,8 +94,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double> &condensity_in) {
-	condensity.resize(CONDENSITY_SIZE);
-	resampleExtensive(condensity, condensity_in);
+	condensity = condensity_in;
 }
 
 int HPWH::HeatSource::getCondensitySize() const {
@@ -744,8 +743,9 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 		for(int i = 0; i < hpwh->getNumNodes(); i++) {
 			double dist = 0.;
 			if(i >= lowestNode){
-				double offset = 5.0 / 1.8;
-				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / shrinkage,offset);
+				double Toffset_C = 5.0 / 1.8; // 5 degF
+				double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
+				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
 				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
 				if(dist < 0.) // SETPOINT_FIX
 					dist = 0.;
@@ -961,11 +961,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 	return timeRun;
 }
 
-void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
+void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condensitySize/* = CONDENSITY_SIZE*/) {
 
 	isOn = false;
 	isVIP = false;
-	condensity = std::vector<double>(CONDENSITY_SIZE, 0.);
+	condensity = std::vector<double>(condensitySize, 0.);
 	condensity[node] = 1;
 
 	perfMap.reserve(2);
@@ -989,7 +989,8 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 
 void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 
-	std::vector<double> extraCondensity(getCondensitySize()); // retain original condensity size
+	// retain original condensity size for this heat source
+	std::vector<double> extraCondensity(getCondensitySize());
 	resampleExtensive(extraCondensity, nodePowerExtra_W);
 	double watts = 0.0;
 	for(int i = 0; i < getCondensitySize(); ++i) {
@@ -998,16 +999,15 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 	}
 	normalize(extraCondensity);
 
+	// set condensity
+	setCondensity(extraCondensity);
 	if(hpwh->hpwhVerbosity >= VRB_emetic){
 		hpwh->msg("extra heat condensity: ");
-		for(unsigned int i = 0; i < extraCondensity.size(); i++) {
-			hpwh->msg("C[%d]: %f",i,extraCondensity[i]);
+		for(int i = 0; i < getCondensitySize(); i++) {
+			hpwh->msg("C[%d]: %f",i,condensity[i]);
 		}
 		hpwh->msg("\n ");
 	}
-
-	// set condensity based on normalized vector
-	setCondensity(extraCondensity);
 
 	perfMap.clear();
 	perfMap.reserve(2);
