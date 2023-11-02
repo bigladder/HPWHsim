@@ -233,7 +233,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
-	nodeDensity = hpwh.nodeDensity;
 
 	tankTemps_C = hpwh.tankTemps_C;
 	nextTankTemps_C = hpwh.nextTankTemps_C;
@@ -518,9 +517,9 @@ int HPWH::runOneStep(double drawVolume_L,
 	if(areAllHeatSourcesOff() == true) {
 		isHeating = false;
 	}
-	//If theres extra user defined heat to add -> Add extra heat!
+	//If there's extra user defined heat to add -> Add extra heat!
 	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(nodePowerExtra_W,tankAmbientT_C);
+		addExtraHeat(*nodePowerExtra_W,tankAmbientT_C);
 		updateSoCIfNecessary();
 	}
 
@@ -637,16 +636,17 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 				msg("%f,%f,",getNthHeatSourceEnergyInput(j),getNthHeatSourceEnergyOutput(j));
 			}
 
+			std::vector<double> displayTemps_C(10);
+			resampleIntensive(displayTemps_C, tankTemps_C);
 			bool first = true;
-			for (int k = 0; k < 10; ++k)
+			for (auto &displayTemp: displayTemps_C)
 			{
 				if (first)
 					first = false;
 				else
 					msg(",");
 
-				int j = nodeDensity * k;
-				msg("%f", tankTemps_C[j]);
+				msg("%f",displayTemp);
 			}
 
 			for (int k = 1; k < 7; ++k)
@@ -1643,13 +1643,13 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decision
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(13); // uses very top computation node
+	nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("standby",nodeWeights,decisionPoint,this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights;
-	nodeWeights.emplace_back(13); // uses very top computation node
+	nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top node",nodeWeights,decisionPoint,this,true,std::greater<double>());
 }
 
@@ -2381,7 +2381,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 		return HPWH_ABORT;
 	}
 
-	for(int i = 0; i < CONDENSITY_SIZE; i++) {
+	for(int i = 0; i < heatSources[elementIndex].getCondensitySize(); i++) {
 		if(heatSources[elementIndex].condensity[i] == 1) { // res elements have a condenstiy of 1 at a specific node
 			return i;
 		}
@@ -2651,18 +2651,7 @@ void HPWH::mixTankInversions() {
 	}
 }
 
-void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C){
-	if((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n",(*nodePowerExtra_W).size(),CONDENSITY_SIZE);
-		}
-		simHasFailed = true;
-	}
-
-	//for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++){
-	//	tankTemps_C[i] += (*nodePowerExtra_W)[i] * minutesPerStep * 60. / (CPWATER_kJperkgC * 1000. * DENSITYWATER_kgperL * tankVolume_L / numNodes);
-	//}
-	//mixTankInversions();
+void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
@@ -2674,8 +2663,7 @@ void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbient
 			calcDerivedHeatingValues();
 
 			// add heat 
-			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);
-			 
+			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
 
 			// 0 out to ignore features
 			heatSources[i].perfMap.clear();
@@ -2763,9 +2751,6 @@ void HPWH::calcSizeConstants() {
 }
 
 void HPWH::calcDerivedValues() {
-	// tank node density (number of calculation nodes per regular node)
-	nodeDensity = getNumNodes() / 12;
-
 	// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
 	calcDerivedHeatingValues();
 
@@ -2787,37 +2772,41 @@ void HPWH::calcDerivedHeatingValues(){
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
 	//condentropy/shrinkage
-	double condentropy = 0;
-	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
-	for(int i = 0; i < getNumHeatSources(); i++) {
+	double condentropy = 0.;
+	double Talpha_C = 1.,Tbeta_C = 2.;  // Mapping from condentropy to shrinkage
+	for(int i = 0; i < getNumHeatSources(); ++i) {
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
 		// Calculate condentropy and ==> shrinkage
-		condentropy = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++) {
-			if(heatSources[i].condensity[j] > 0) {
+		condentropy = 0.;
+		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
+			if(heatSources[i].condensity[j] > 0.) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
 			}
 		}
-		heatSources[i].shrinkage = alpha + condentropy * beta;
+		 // condentropy shifts as ln(# of condensity nodes)
+		double condensity_size_factor = static_cast<double>(heatSources[i].getCondensitySize()) / CONDENSITY_SIZE;
+		double standard_condentropy = condentropy - log(condensity_size_factor);
+		heatSources[i].Tshrinkage_C = Talpha_C + standard_condentropy * Tbeta_C;
 		if(hpwhVerbosity >= VRB_emetic) {
-			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].shrinkage);
+			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].Tshrinkage_C);
 		}
 	}
 
 	//lowest node
 	int lowest = 0;
-	double nodeRatio = getNumNodes() / CONDENSITY_SIZE;
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		lowest = 0;
+		const int condensitySize = heatSources[i].getCondensitySize();
+		double nodeRatio = getNumNodes() / condensitySize;
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
-		for(auto j = 0; j < CONDENSITY_SIZE; ++j) {
+		for(auto j = 0; j < condensitySize; ++j) {
 			if(heatSources[i].condensity[j] > 0) {
 				lowest = static_cast<int>(nodeRatio * j);
 				break;
@@ -2835,8 +2824,8 @@ void HPWH::calcDerivedHeatingValues(){
 	lowestElementIndex = -1; // Default = No resistance elements
 	highestElementIndex = -1; // Default = No resistance elements
 	VIPIndex = -1; // Default = No VIP element
-	int lowestElementPos = CONDENSITY_SIZE;
-	int highestElementPos = 0; // -1 to make sure a an element on the bottom can still be identified.
+	double lowestPos = 1.;
+	double highestPos = 0.; // -1 to make sure a an element on the bottom can still be identified.
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		if(heatSources[i].isACompressor()) {
 			compressorIndex = i;  // NOTE: Maybe won't work with multiple compressors (last compressor will be used)
@@ -2851,14 +2840,16 @@ void HPWH::calcDerivedHeatingValues(){
 					};
 				}
 			}
-			for(int j = 0; j < CONDENSITY_SIZE; j++) {
-				if(heatSources[i].condensity[j] > 0.0 && j < lowestElementPos) {
+			int condensitySize = heatSources[i].getCondensitySize();
+			for(int j = 0; j < condensitySize; ++j) {
+				double pos = static_cast<double>(j) / condensitySize;
+				if((heatSources[i].condensity[j] > 0.) && (pos < lowestPos)) {
 					lowestElementIndex = i;
-					lowestElementPos = j;
+					lowestPos = pos;
 				}
-				if(heatSources[i].condensity[j] > 0.0 && j >= highestElementPos) {
+				if((heatSources[i].condensity[j] > 0.) && (pos >= highestPos)) {
 					highestElementIndex = i;
-					highestElementPos = j;
+					highestPos = pos;
 				}
 			}
 		}
@@ -2901,7 +2892,6 @@ void HPWH::mapResRelativePosToHeatSources() {
 			return a.position < b.position; // (5 < 5)      // evaluates to false 
 		});
 }
-
 
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs() {
@@ -2955,7 +2945,7 @@ int HPWH::checkInputs() {
 
 		//check is condensity sums to 1
 		condensitySum = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += heatSources[i].condensity[j];
+		for(int j = 0; j < heatSources[i].getCondensitySize(); j++)  condensitySum += heatSources[i].condensity[j];
 		if(fabs(condensitySum - 1.0) > 1e-6) {
 			if(hpwhVerbosity >= VRB_reluctant) {
 				msg("The condensity for heatsource %d does not sum to 1.  \n",i);
@@ -3317,9 +3307,9 @@ int HPWH::HPWHinit_file(string configFile) {
 					line_ss >> nextToken;
 					while(std::regex_match(nextToken,std::regex("\\d+"))) {
 						int nodeNum = std::stoi(nextToken);
-						if(nodeNum > 13 || nodeNum < 0) {
+						if(nodeNum > LOGIC_NODE_SIZE + 1 || nodeNum < 0) {
 							if(hpwhVerbosity >= VRB_reluctant) {
-								msg("Node number for heatsource %d %s must be between 0 and 13.  \n",heatsource,token.c_str());
+								msg("Node number for heatsource %d %s must be between 0 and %d.  \n",heatsource,token.c_str(), LOGIC_NODE_SIZE + 1);
 							}
 							return HPWH_ABORT;
 						}
@@ -3340,7 +3330,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					if(nodeNums.size() != weights.size()) {
 						if(hpwhVerbosity >= VRB_reluctant) {
-							msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
+							msg("Number of weights for heatsource %d %s (%d) does not match number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
 						}
 						return HPWH_ABORT;
 					}

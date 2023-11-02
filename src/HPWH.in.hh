@@ -817,8 +817,9 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
-	void addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C);
-	/**< adds extra heat defined by the user. Where nodeExtraHeat[] is a vector of heat quantities to be added during the step.  nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
+	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
+	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
+	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
 
 	double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
@@ -893,9 +894,6 @@ private:
 	int VIPIndex;
 	/**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance elements)*/
 
-	int nodeDensity;
-	/**< the number of calculation nodes in a logical node  */
-
 	int inletHeight;
 	/**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
 
@@ -917,7 +915,7 @@ private:
 	/**< the mass of water (kg) in a single node  */
 	double nodeMass_kg;
 
-	/**< the heat capacity of the water (kJ/°C) in a single node  */
+	/**< the heat capacity of the water (kJ/ï¿½C) in a single node  */
 	double nodeCp_kJperC;
 
 	/**< the height in meters of the one node  */
@@ -1024,11 +1022,11 @@ public:
 	/**< the copy constructor and assignment operator basically just checks if there
 		are backup/companion pointers - these can't be copied */
 
-	void setupAsResistiveElement(int node,double Watts);
+	void setupAsResistiveElement(int node,double Watts,int condensitySize = CONDENSITY_SIZE);
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
-	void setupExtraHeat(std::vector<double>* nodePowerExtra_W);
-	/**< Configure a user defined heat source added as extra, based off using
+	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
+	/**< Configure a user-defined heat source added as extra, based off using
 		  nodePowerExtra_W as the total watt input and the condensity*/
 
 	bool isEngaged() const;
@@ -1072,14 +1070,11 @@ public:
 	/**< adds heat to the hpwh - this is the function that interprets the
 		various configurations (internal/external, resistance/heat pump) to add heat */
 
-		// Assign new condensity values from supplied vector. Note the input vector is currently resampled
-		// to preserve a condensity vector of size CONDENSITY_SIZE.
+	/// Assign new condensity values from supplied vector. Note the input vector is currently resampled
+	/// to preserve a condensity vector of size CONDENSITY_SIZE.
 	void setCondensity(const std::vector<double> &condensity_in);
 
-	void setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
-		double cnd5,double cnd6,double cnd7,double cnd8,
-		double cnd9,double cnd10,double cnd11,double cnd12);
-	/**< a function to set the condensity values, it pretties up the init funcs. */
+	int getCondensitySize() const;
 
 	void linearInterp(double &ynew,double xnew,double x0,double x1,double y0,double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
@@ -1148,10 +1143,10 @@ private:
 	//  by specifying the entire condensity in one node. */
 	std::vector<double> condensity;
 
-	double shrinkage;
-	/**< the shrinkage is a derived value, using parameters alpha, beta,
-		and the condentropy, which is derived from the condensity
-		alpha and beta are not intended to be settable
+	double Tshrinkage_C;
+	/**< Tshrinkage_C is a derived from the condentropy (conditional entropy),
+		using the condensity and fixed parameters Talpha_C and Tbeta_C.		
+		Talpha_C and Tbeta_C are not intended to be settable
 		see the hpwh_init functions for calculation of shrinkage */
 
 	struct perfPoint {

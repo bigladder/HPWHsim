@@ -52,7 +52,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	condensity = hSource.condensity;
 
-	shrinkage = hSource.shrinkage;
+	Tshrinkage_C = hSource.Tshrinkage_C;
 
 	perfMap = hSource.perfMap;
 
@@ -94,14 +94,11 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double> &condensity_in) {
-	condensity.resize(CONDENSITY_SIZE);
-	resampleExtensive(condensity, condensity_in);
+	condensity = condensity_in;
 }
 
-void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
-	double cnd5,double cnd6,double cnd7,double cnd8,
-	double cnd9,double cnd10,double cnd11,double cnd12) {
-	setCondensity({cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12});
+int HPWH::HeatSource::getCondensitySize() const {
+	return static_cast<int>(condensity.size());
 }
 
 int HPWH::HeatSource::findParent() const {
@@ -387,9 +384,6 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_WRAPPED:
 	{
 		static std::vector<double> heatDistribution(hpwh->getNumNodes());
-		//clear the heatDistribution vector, since it's static it is still holding the
-		//distribution from the last go around
-		heatDistribution.clear();
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
@@ -484,7 +478,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 
 double HPWH::HeatSource::getTankTemp() const{
 
-	std::vector<double> resampledTankTemps(CONDENSITY_SIZE);
+	std::vector<double> resampledTankTemps(getCondensitySize());
 	resample(resampledTankTemps, hpwh->tankTemps_C);
 
 	double tankTemp_C = 0.;
@@ -742,27 +736,24 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	for(int i = 0; i < hpwh->getNumNodes(); i++) {
-		if(i < lowestNode) {
-			heatDistribution.push_back(0);
-		} else {
-			int k;
-			if(configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
-				//intentional integer division
-				k = i / int(hpwh->getNumNodes() / CONDENSITY_SIZE);
-				heatDistribution.push_back(condensity[k]);
-			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-				double temp = 0;  //temp for temporary not temperature
-				double offset = 5.0 / 1.8;
-				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / this->shrinkage,offset);
-				temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
-				if(temp < 0.) // SETPOINT_FIX
-					temp = 0.;
-				heatDistribution.push_back(temp);
-			}
-		}
+	if(configuration == CONFIG_SUBMERGED) {
+		resampleExtensive(heatDistribution, condensity);
 	}
-	normalize(heatDistribution);
+	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
+		for(int i = 0; i < hpwh->getNumNodes(); i++) {
+			double dist = 0.;
+			if(i >= lowestNode){
+				double Toffset_C = 5.0 / 1.8; // 5 degF
+				double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
+				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
+				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
+				if(dist < 0.) // SETPOINT_FIX
+					dist = 0.;
+			}
+			heatDistribution[i] = dist;
+		}
+		normalize(heatDistribution);
+	}
 }
 
 double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
@@ -970,11 +961,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 	return timeRun;
 }
 
-void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
+void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condensitySize/* = CONDENSITY_SIZE*/) {
 
 	isOn = false;
 	isVIP = false;
-	condensity = std::vector<double>(CONDENSITY_SIZE, 0.);
+	condensity = std::vector<double>(condensitySize, 0.);
 	condensity[node] = 1;
 
 	perfMap.reserve(2);
@@ -996,33 +987,28 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 	typeOfHeatSource = TYPE_resistance;
 }
 
-void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
+void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 
-	std::vector<double> tempCondensity(CONDENSITY_SIZE);
+	// retain original condensity size for this heat source
+	std::vector<double> extraCondensity(getCondensitySize());
+	resampleExtensive(extraCondensity, nodePowerExtra_W);
 	double watts = 0.0;
-	for(unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
+	for(int i = 0; i < getCondensitySize(); ++i) {
 		//get sum of vector
-		watts += (*nodePowerExtra_W)[i];
-
-		//put into vector for normalization
-		tempCondensity[i] = (*nodePowerExtra_W)[i];
+		watts += extraCondensity[i];
 	}
+	normalize(extraCondensity);
 
-	normalize(tempCondensity);
-
+	// set condensity
+	setCondensity(extraCondensity);
 	if(hpwh->hpwhVerbosity >= VRB_emetic){
 		hpwh->msg("extra heat condensity: ");
-		for(unsigned int i = 0; i < tempCondensity.size(); i++) {
-			hpwh->msg("C[%d]: %f",i,tempCondensity[i]);
+		for(int i = 0; i < getCondensitySize(); i++) {
+			hpwh->msg("C[%d]: %f",i,condensity[i]);
 		}
 		hpwh->msg("\n ");
 	}
-
-	// set condensity based on normalized vector
-	setCondensity(tempCondensity[0],tempCondensity[1],tempCondensity[2],tempCondensity[3],
-		tempCondensity[4],tempCondensity[5],tempCondensity[6],tempCondensity[7],
-		tempCondensity[8],tempCondensity[9],tempCondensity[10],tempCondensity[11]);
-
+	
 	perfMap.clear();
 	perfMap.reserve(2);
 

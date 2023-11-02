@@ -184,6 +184,7 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 	double comparison = getComparisonValue();
 	comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
 
+	double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_NODE_SIZE;
 	for(auto nodeWeight : nodeWeights) {
 
 		// bottom calc node only
@@ -200,8 +201,8 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 			sum = nodeTemp * nodeWeight.weight;
 			totWeight = nodeWeight.weight;
 		} else { // all tank nodes corresponding to logical node
-			firstNode = (nodeWeight.nodeNum - 1) * hpwh->nodeDensity;
-			calcNode = (nodeWeight.nodeNum) * hpwh->nodeDensity - 1;
+			firstNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum - 1));
+			calcNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum))- 1;
 			double nodeTemp = resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)];
 			sum += nodeTemp * nodeWeight.weight;
 			totWeight += nodeWeight.weight;
@@ -222,7 +223,7 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal() {
 		// if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care about, so 
 		// shift a whole node.
 		// factor of hpwh->nodeDensity included below to reproduce original algorithm
-		fracTemp = diff > 0. ? (totWeight * comparison - sum) * hpwh->nodeDensity / diff : 1.;
+		fracTemp = diff > 0. ? (totWeight * comparison - sum) * nodeDensity / diff : 1.;
 	}
 
 	return fracTemp;
