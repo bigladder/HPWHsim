@@ -231,7 +231,6 @@ HPWH & HPWH::operator=(const HPWH &hpwh) {
 	fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
 	setpoint_C = hpwh.setpoint_C;
-	nodeDensity = hpwh.nodeDensity;
 
 	tankTemps_C = hpwh.tankTemps_C;
 	nextTankTemps_C = hpwh.nextTankTemps_C;
@@ -635,16 +634,17 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 				msg("%f,%f,",getNthHeatSourceEnergyInput(j),getNthHeatSourceEnergyOutput(j));
 			}
 
+			std::vector<double> displayTemps_C(10);
+			resampleIntensive(displayTemps_C, tankTemps_C);
 			bool first = true;
-			for (int k = 0; k < 10; ++k)
+			for (auto &displayTemp: displayTemps_C)
 			{
 				if (first)
 					first = false;
 				else
 					msg(",");
 
-				int j = nodeDensity * k;
-				msg("%f", tankTemps_C[j]);
+				msg("%f",displayTemp);
 			}
 
 			for (int k = 1; k < 7; ++k)
@@ -2756,9 +2756,6 @@ void HPWH::calcSizeConstants() {
 }
 
 void HPWH::calcDerivedValues() {
-	// tank node density (number of calculation nodes per regular node)
-	nodeDensity = getNumNodes() / 12;
-
 	// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
 	calcDerivedHeatingValues();
 
@@ -2780,24 +2777,27 @@ void HPWH::calcDerivedHeatingValues(){
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
 	//condentropy/shrinkage
-	double condentropy = 0;
-	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
-	for(int i = 0; i < getNumHeatSources(); i++) {
+	double condentropy = 0.;
+	double Talpha_C = 1.,Tbeta_C = 2.;  // Mapping from condentropy to shrinkage
+	for(int i = 0; i < getNumHeatSources(); ++i) {
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
 		// Calculate condentropy and ==> shrinkage
-		condentropy = 0;
+		condentropy = 0.;
 		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
 			if(heatSources[i].condensity[j] > 0.) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
 			}
 		}
-		heatSources[i].shrinkage = alpha + condentropy * beta;
+		 // condentropy shifts as ln(# of condensity nodes)
+		double condensity_size_factor = static_cast<double>(heatSources[i].getCondensitySize()) / CONDENSITY_SIZE;
+		double standard_condentropy = condentropy - log(condensity_size_factor);
+		heatSources[i].Tshrinkage_C = Talpha_C + standard_condentropy * Tbeta_C;
 		if(hpwhVerbosity >= VRB_emetic) {
-			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].shrinkage);
+			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].Tshrinkage_C);
 		}
 	}
 

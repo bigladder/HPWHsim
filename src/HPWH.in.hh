@@ -892,9 +892,6 @@ private:
 	int VIPIndex;
 	/**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance elements)*/
 
-	int nodeDensity;
-	/**< the number of calculation nodes in a logical node  */
-
 	int inletHeight;
 	/**< the number of a node in the tank that the inlet water enters the tank at, must be between 0 and numNodes-1  */
 
@@ -1017,7 +1014,7 @@ public:
 	/**< the copy constructor and assignment operator basically just checks if there
 		are backup/companion pointers - these can't be copied */
 
-	void setupAsResistiveElement(int node,double Watts);
+	void setupAsResistiveElement(int node,double Watts,int condensitySize = CONDENSITY_SIZE);
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
 	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
@@ -1138,10 +1135,10 @@ private:
 	//  by specifying the entire condensity in one node. */
 	std::vector<double> condensity;
 
-	double shrinkage;
-	/**< the shrinkage is a derived value, using parameters alpha, beta,
-		and the condentropy, which is derived from the condensity
-		alpha and beta are not intended to be settable
+	double Tshrinkage_C;
+	/**< Tshrinkage_C is a derived from the condentropy (conditional entropy),
+		using the condensity and fixed parameters Talpha_C and Tbeta_C.		
+		Talpha_C and Tbeta_C are not intended to be settable
 		see the hpwh_init functions for calculation of shrinkage */
 
 	struct perfPoint {
