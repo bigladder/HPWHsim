@@ -60,6 +60,6 @@ heatsource 1 coilConfig submerged
 
 heatsource 0 onlogic thirdSixth 6.5509 F
 
-heatsource 0 offlogic bottomTwelthMaxTemp 100 F
+heatsource 0 offlogic bottomTwelfthMaxTemp 100 F
 
 heatsource 0 backupSource 1
