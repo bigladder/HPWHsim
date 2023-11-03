@@ -94,7 +94,7 @@ heatsource 0 onlogic nodes 11 12 absolute < 105 F
 heatsource 2 onlogic bottomThird 35 F
 heatsource 2 onlogic standby 9 F
 
-heatsource 1 offlogic bottomTwelthMaxTemp 100 F
+heatsource 1 offlogic bottomTwelfthMaxTemp 100 F
 
 heatsource 1 backupSource 2
 heatsource 2 backupSource 1
