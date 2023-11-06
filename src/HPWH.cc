@@ -2461,21 +2461,22 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				double cumInletFraction = 0.;
 				for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
 
-					// Reset inlet inputs at this node. 
-					double nodeInletFraction = 0.;
-					nodeInletTV = 0.;
 
-					// Sum of all inlets Vi*Ti at this node
-					if(i == highInletH) {
-						nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
-						nodeInletFraction += highInletV * drawFraction / drawVolume_L;
-					}
-					if(i == lowInletH) {
-						nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
-						nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
+        // Reset inlet inputs at this node. 
+        double nodeInletFraction = 0.;
+        nodeInletTV = 0.;
 
-						break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
-					}
+        // Sum of all inlets Vi*Ti at this node
+        if(i == highInletH) {
+          nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
+          nodeInletFraction += highInletV * drawFraction / drawVolume_L;
+        }
+        if(i == lowInletH) {
+          nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
+          nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
+
+					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
+				}
 
 					// Look at the volume and temperature fluxes into this node
 					tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
@@ -2945,6 +2946,7 @@ int HPWH::checkInputs() {
 
 		//check is condensity sums to 1
 		condensitySum = 0;
+
 		for(int j = 0; j < heatSources[i].getCondensitySize(); j++)  condensitySum += heatSources[i].condensity[j];
 		if(fabs(condensitySum - 1.0) > 1e-6) {
 			if(hpwhVerbosity >= VRB_reluctant) {
