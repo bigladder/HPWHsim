@@ -18,6 +18,7 @@ set(headers
 
 set(source
   HPWH.cc
+  HPWHHeatSources.cc
   HPWHHeatingLogics.cc
   HPWHpresets.cc
 )
