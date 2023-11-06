@@ -17,6 +17,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
 
+	heatSources.clear();
+
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 550) {
 		if (hpwhVerbosity >= VRB_reluctant) {
@@ -44,18 +46,14 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		return failure;
 	}
 
-
-	numNodes = 12;
-	tankTemps_C = new double[numNodes];
+	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
 
-	nextTankTemps_C = new double[numNodes];
 	doTempDepression = false;
 	tankMixesOnDraw = true;
-
 
 	HeatSource resistiveElementBottom(this);
 	resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
@@ -73,19 +71,16 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
 		resistiveElementTop.isVIP = true;
 
-		numHeatSources = 2;
-		setOfSources = new HeatSource[numHeatSources];
-
 		// set everything in it's correct place
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 	else {
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-		setOfSources[0] = resistiveElementBottom;
+		heatSources.resize(1);
+		heatSources[0] = resistiveElementBottom;
 	}
 
 	// (1/EnFac - 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr))) 
@@ -114,16 +109,16 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].isOn) {
+	for (int i = 0; i < getNumHeatSources(); i++) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
-		for (int i = 0; i < numHeatSources; i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+		for (int i = 0; i < getNumHeatSources(); i++) {
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -138,6 +133,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
+	heatSources.clear();
 
 	//low power element will cause divide by zero/negative UA in EF -> UA conversion
 	if (lowerPower_W < 0) {
@@ -166,20 +162,12 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	}
 	canScale = true;
 
-	numNodes = 12;
-	tankTemps_C = new double[numNodes];
+	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
 	resetTankToSetpoint(); //start tank off at setpoint
 
-	nextTankTemps_C = new double[numNodes];
 	doTempDepression = false;
 	tankMixesOnDraw = true;
-
-	// Count up heat sources
-	numHeatSources = 0;
-	numHeatSources += upperPower_W > 0. ? 1 : 0;
-	numHeatSources += lowerPower_W > 0. ? 1 : 0;
-	setOfSources = new HeatSource[numHeatSources];
 
 	// Deal with upper element
 	if (upperPower_W > 0.) {
@@ -190,8 +178,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
 		resistiveElementTop.isVIP = true;
 
-		// Upper should always be first in setOfSources if it exists.
-		setOfSources[0] = resistiveElementTop; 
+		// Upper should always be first in heatSources if it exists.
+		heatSources.push_back(resistiveElementTop); 
 	}
 	
 	// Deal with bottom element
@@ -203,13 +191,11 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
 
 		// set everything in it's correct place
-		if (numHeatSources == 1) {// if one only one slot
-			setOfSources[0] = resistiveElementBottom;
-		}
-		else if (numHeatSources == 2) { // if two upper already exists
-			setOfSources[1] = resistiveElementBottom;
-			setOfSources[0].followedByHeatSource = &setOfSources[1];
-		}
+		heatSources.push_back(resistiveElementBottom);
+	}
+
+	if (getNumHeatSources() == 2) {
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	// Calc UA
@@ -232,16 +218,16 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	if (checkInputs() == HPWH_ABORT) return HPWH_ABORT;
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].isOn) {
+	for (auto &source: heatSources) {
+		if (source.isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		source.sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
-		for (int i = 0; i < numHeatSources; i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+		for (int i = 0; i < getNumHeatSources(); i++) {
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -255,13 +241,11 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	setAllDefaults(); // reset all defaults if you're re-initilizing
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
+	heatSources.clear();
 
 	//except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
-	numNodes = 12;
-	tankTemps_C = new double[numNodes];
+	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
-
-	nextTankTemps_C = new double[numNodes];
 
 	//start tank off at setpoint
 	resetTankToSetpoint();
@@ -275,9 +259,6 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	doTempDepression = false;
 	tankMixesOnDraw = true;
 
-	numHeatSources = 3;
-	setOfSources = new HeatSource[numHeatSources];
-
 	HeatSource compressor(this);
 	HeatSource resistiveElementBottom(this);
 	HeatSource resistiveElementTop(this);
@@ -287,8 +268,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	compressor.isVIP = false;
 	compressor.typeOfHeatSource = TYPE_compressor;
 
-	double split = 1.0 / 4.0;
-	compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+	compressor.setCondensity({1., 0., 0.});
 
 	compressor.perfMap.reserve(2);
 
@@ -316,7 +296,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//bottom resistor values
 	resistiveElementBottom.setupAsResistiveElement(0, 4000);
-	resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 	//logic conditions
@@ -324,19 +304,15 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	//resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 	resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUse_C));
 
-	resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
+	resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
 	compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 	compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
 
 	//custom adjustment for poorer performance
 	//compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
-
-
+	// 
 	//end section of parameters from GE model
-
-
-
 
 	//set tank volume from input
 	//use tank size setting function since it has bounds checking
@@ -348,15 +324,11 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 		return failure;
 	}
 
-
 	// derive conservative (high) UA from tank volume
 	//   curve fit by Jim Lutz, 5-25-2016
 	double tankVol_gal = tankVol_L / GAL_TO_L(1.);
 	double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
 	tankUA_kJperHrC = 0.0076183819 * v1 * v1;
-
-
-
 
 	//do a linear interpolation to scale COP curve constant, using measured values
 	// Chip's attempt 24-May-2014
@@ -383,20 +355,19 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	compressor.perfMap[1].inputPower_coeffs[1] /= genericFudge;
 	compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
 
-	//set everything in its places
-	setOfSources[0] = resistiveElementTop;
-	setOfSources[1] = resistiveElementBottom;
-	setOfSources[2] = compressor;
+	//set everything in its place
+	heatSources.resize(3);
+	heatSources[0] = resistiveElementTop;
+	heatSources[1] = resistiveElementBottom;
+	heatSources[2] = compressor;
 
-	//and you have to do this after putting them into setOfSources, otherwise
+	//and you have to do this after putting them into heatSources, otherwise
 	//you don't get the right pointers
-	setOfSources[2].backupHeatSource = &setOfSources[1];
-	setOfSources[1].backupHeatSource = &setOfSources[2];
+	heatSources[2].backupHeatSource = &heatSources[1];
+	heatSources[1].backupHeatSource = &heatSources[2];
 
-	setOfSources[0].followedByHeatSource = &setOfSources[1];
-	setOfSources[1].followedByHeatSource = &setOfSources[2];
-
-
+	heatSources[0].followedByHeatSource = &heatSources[1];
+	heatSources[1].followedByHeatSource = &heatSources[2];
 
 	//standard finishing up init, borrowed from init function
 
@@ -410,16 +381,16 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	}
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].isOn) {
+	for (int i = 0; i < getNumHeatSources(); i++) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
-		for (int i = 0; i < numHeatSources; i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+		for (int i = 0; i < getNumHeatSources(); i++) {
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -436,25 +407,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	// sets simHasFailed = true; this gets cleared on successful completion of init
 	// return 0 on success, HPWH_ABORT for failure
 
+	heatSources.clear();
+
 	//resistive with no UA losses for testing
 	if (presetNum == MODELS_restankNoUA) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(50);
 		tankUA_kJperHrC = 0; //0 to turn off
 
-
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 2;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
+
 		resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		resistiveElementTop.setupAsResistiveElement(8, 4500);
 
@@ -466,16 +435,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//assign heat sources into array in order of priority
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		//set everything in its places
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	//resistive tank with massive UA loss for testing
 	else if (presetNum == MODELS_restankHugeUA) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = 50;
 
 		tankSizeFixed = false;
@@ -484,10 +454,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
-
-
-		numHeatSources = 2;
-		setOfSources = new HeatSource[numHeatSources];
 
 		//set up a resistive element at the bottom, 4500 kW
 		HeatSource resistiveElementBottom(this);
@@ -503,19 +469,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
 		resistiveElementTop.isVIP = true;
 
-
 		//assign heat sources into array in order of priority
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	//realistic resistive tank
 	else if (presetNum == MODELS_restankRealistic) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankSizeFixed = false;
@@ -526,11 +490,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//should eventually put tankmixes to true when testing progresses
 		tankMixesOnDraw = false;
 
-		numHeatSources = 2;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
+
 		resistiveElementBottom.setupAsResistiveElement(0, 4500);
 		resistiveElementTop.setupAsResistiveElement(9, 4500);
 
@@ -541,15 +503,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
 		resistiveElementTop.isVIP = true;
 
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
+		//set everything in its place
+		heatSources.resize(2);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
+		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
 	else if (presetNum == MODELS_StorageTank) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = 52;
 
 		setpoint_C = 800;
@@ -561,10 +524,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		////////////////////////////////////////////////////
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-		
 		HeatSource extra(this);
 		
 		//compressor values
@@ -576,15 +535,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
 
 		//initial guess, will get reset based on the input heat vector
-		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		extra.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
-		setOfSources[0] = extra;
+		//set everything in its places
+		heatSources.resize(1);
+		heatSources[0] = extra;
 	}
 
 	//basic compressor tank for testing
 	else if (presetNum == MODELS_basicIntegrated) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = 50;
 
 		tankSizeFixed = false;
@@ -594,9 +554,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -614,13 +571,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
 		resistiveElementTop.isVIP = true;
 
-
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double oneSixth = 1.0 / 6.0;
-		compressor.setCondensity(oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, oneSixth, 0, 0, 0, 0, 0, 0);
+		//double oneSixth = 1.0 / 6.0;
+		compressor.setCondensity({1., 0.});
 
 		//GE tier 1 values
 		compressor.perfMap.reserve(2);
@@ -646,25 +602,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(20));
 		compressor.addTurnOnLogic(HPWH::standby(15));
 
-		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		//set everything in its place
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 
 	//simple external style for testing
 	else if (presetNum == MODELS_externalTest) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = 50;
 
 		tankSizeFixed = false;
@@ -675,16 +631,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
 		//GE tier 1 values
 		compressor.perfMap.reserve(2);
@@ -713,14 +666,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//lowT cutoff
 		compressor.addShutOffLogic(HPWH::bottomNodeMaxTemp(20, true));
 
-
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	//voltex 60 gallon
 	else if (presetNum == MODELS_AOSmithPHPT60) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 215.8;
@@ -729,9 +681,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -742,7 +691,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -783,24 +732,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithPHPT80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 283.9;
@@ -809,9 +757,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -822,7 +767,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -864,24 +809,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2012) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 172;
@@ -889,9 +833,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -903,7 +844,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -950,25 +891,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31.0)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28.0)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = compressor;
+		heatSources[2] = resistiveElementBottom;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
-
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a Colmac single pass preset cold weather or not
 	else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
@@ -978,21 +917,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7; 
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
+
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getNumNodes() - 1;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -1102,14 +1039,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		} //End if MODELS_ColmacCxV_5_SP
 
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	
 
 	// if colmac multipass
 	else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
@@ -1119,19 +1056,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
+
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
+		compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -1233,12 +1168,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	// If Nyle single pass preset
 	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
@@ -1248,22 +1183,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
-		//HeatSource resistiveElement(this);
 
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getNumNodes() - 1;
 
 		//logic conditions
 		if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {// If not cold weather package
@@ -1370,13 +1301,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	// If Nyle multipass presets
 	else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
@@ -1386,19 +1317,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
+
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
+		compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
 		//logic conditions//logic conditions
 		if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP) {// If not cold weather package
@@ -1539,12 +1468,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.useBtwxtGrid = true;
 
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	// if rheem multipass
 	else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 
@@ -1554,19 +1483,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
+
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
+		compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -1610,12 +1537,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		}
 
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = 65;
 
 		tankVolume_L = GAL_TO_L(500);
@@ -1625,18 +1552,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-13.);
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getNumNodes() - 1;
 
 		// What to do about these?!
 		compressor.hysteresis_dC = 4; 
@@ -1746,13 +1670,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
 
 		//set everything in its places
-		setOfSources[0] = compressor;
-
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 
 	else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP || presetNum == MODELS_SANCO2_119) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = 65;
 		setpointFixed = true;
 
@@ -1771,18 +1694,15 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-25.);
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getNumNodes() - 1;
 
 		compressor.perfMap.reserve(5);
 
@@ -1838,12 +1758,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			std::greater<double>(), true));
 		compressor.depressesTemperature = false;  //no temp depression
 
-		//set everything in its places
-		setOfSources[0] = compressor;
+		//set everything in its place
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_SANCO2_43) {
-		numNodes = 96;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(96);
 		setpoint_C = 65;
 		setpointFixed = true;
 
@@ -1854,9 +1774,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 
 		compressor.isOn = false;
@@ -1864,9 +1781,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-25.);
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getIndexTopNode();
 
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(5);
 
@@ -1916,16 +1833,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//lowT cutoff
 		std::vector<NodeWeight> nodeWeights1;
 		nodeWeights1.emplace_back(1);
-		compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelth absolute", nodeWeights1, F_TO_C(135), this, true, 
+		compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth absolute", nodeWeights1, F_TO_C(135), this, true, 
 			std::greater<double>(), true));
 		compressor.depressesTemperature = false;  //no temp depression
 
-		//set everything in its places
-		setOfSources[0] = compressor;
+		//set everything in its place
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 || presetNum == MODELS_RheemHBDR4550) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 171;
@@ -1933,9 +1850,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -1947,7 +1861,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		// performance map
 		compressor.perfMap.reserve(3);
@@ -2000,7 +1914,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
@@ -2008,25 +1922,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU66 || presetNum == MODELS_RheemHBDR2265 || presetNum == MODELS_RheemHBDR4565) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
 		if (presetNum == MODELS_AOSmithHPTU66) {
@@ -2040,9 +1954,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -2052,8 +1963,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		//double split = 1.0 / 4.0;
+		compressor.setCondensity({1., 0., 0.});
 
 		// performance map
 		compressor.perfMap.reserve(3);
@@ -2106,33 +2017,32 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(11); nodeWeights.emplace_back(12);
 		resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth absolute", nodeWeights, F_TO_C(105), this, true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
 
+		//set everything in its places
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-				//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 || presetNum == MODELS_RheemHBDR4580) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 299.5;
@@ -2140,9 +2050,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2155,8 +2062,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-		double split = 1.0 / 3.0;
-		compressor.setCondensity(split, split, split, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		//double split = 1.0 / 3.0;
+		compressor.setCondensity({1., 0., 0., 0.});
 
 		compressor.perfMap.reserve(3);
 
@@ -2206,7 +2113,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 
 		std::vector<NodeWeight> nodeWeights;
 		//		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
@@ -2214,26 +2121,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth absolute", nodeWeights, F_TO_C(105), this, true));
 		//		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
+		//set everything in its places
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-				//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = 283.9;
@@ -2241,9 +2147,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2255,8 +2158,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -2292,123 +2194,119 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80.108)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
 		// resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_AOSmithCAHP120) {
-	numNodes = 24;
-	tankTemps_C = new double[numNodes];
-	setpoint_C = F_TO_C(150.0);
+		setNumNodes(24);
+		setpoint_C = F_TO_C(150.0);
 
-	tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-	tankUA_kJperHrC = UAf_TO_UAc(3.94);
+		tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
+		tankUA_kJperHrC = UAf_TO_UAc(3.94);
 
-	doTempDepression = false;
-	tankMixesOnDraw = false;
+		doTempDepression = false;
+		tankMixesOnDraw = false;
 
-	numHeatSources = 3;
-	setOfSources = new HeatSource[numHeatSources];
+		HeatSource compressor(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource resistiveElementTop(this);
 
-	HeatSource compressor(this);
-	HeatSource resistiveElementBottom(this);
-	HeatSource resistiveElementTop(this);
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+		compressor.setCondensity({0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
-	//compressor values
-	compressor.isOn = false;
-	compressor.isVIP = false;
-	compressor.typeOfHeatSource = TYPE_compressor;
-	compressor.setCondensity(0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-
-	//From CAHP 120 COP Tests
-	compressor.perfMap.reserve(3);
+		//From CAHP 120 COP Tests
+		compressor.perfMap.reserve(3);
 	
-	// Tuned on the multiple K167 tests
-	compressor.perfMap.push_back({
-		50., // Temperature (T_F)
-		{2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
-		{5.91, -0.026299, 0.0} // COP Coefficients (COP_coeffs)
-		});
+		// Tuned on the multiple K167 tests
+		compressor.perfMap.push_back({
+			50., // Temperature (T_F)
+			{2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
+			{5.91, -0.026299, 0.0} // COP Coefficients (COP_coeffs)
+			});
 
-	compressor.perfMap.push_back({
-		67.5, // Temperature (T_F)
-		{2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
-		{7.26272, -0.034135, 0.0} // COP Coefficients (COP_coeffs)
-		});
+		compressor.perfMap.push_back({
+			67.5, // Temperature (T_F)
+			{2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
+			{7.26272, -0.034135, 0.0} // COP Coefficients (COP_coeffs)
+			});
 
-	compressor.perfMap.push_back({
-		95., // Temperature (T_F)
-		{2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (inputPower_coeffs)
-		{8.821262, -0.042059, 0.0} // COP Coefficients (COP_coeffs)
-		});
+		compressor.perfMap.push_back({
+			95., // Temperature (T_F)
+			{2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (inputPower_coeffs)
+			{8.821262, -0.042059, 0.0} // COP Coefficients (COP_coeffs)
+			});
 
-	compressor.minT = F_TO_C(47.0); //Product documentation says 45F doesn't look like it in CMP-T test//
-	compressor.maxT = F_TO_C(110.0);
-	compressor.hysteresis_dC = dF_TO_dC(2);
-	compressor.configuration = HeatSource::CONFIG_WRAPPED;
-	compressor.maxSetpoint_C = MAXOUTLET_R134A;
+		compressor.minT = F_TO_C(47.0); //Product documentation says 45F doesn't look like it in CMP-T test//
+		compressor.maxT = F_TO_C(110.0);
+		compressor.hysteresis_dC = dF_TO_dC(2);
+		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-	//top resistor values
-	double wattRE = 6000;//5650.; 
-	resistiveElementTop.setupAsResistiveElement(7, wattRE);
-	resistiveElementTop.isVIP = true; // VIP is the only source that turns on independently when something else is already heating.
+		//top resistor values
+		double wattRE = 6000;//5650.; 
+		resistiveElementTop.setupAsResistiveElement(7, wattRE);
+		resistiveElementTop.isVIP = true; // VIP is the only source that turns on independently when something else is already heating.
 
-	//bottom resistor values
-	resistiveElementBottom.setupAsResistiveElement(0, wattRE);
-	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); 
-	resistiveElementBottom.setCondensity(0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.); // Based of CMP test
+		//bottom resistor values
+		resistiveElementBottom.setupAsResistiveElement(0, wattRE);
+		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); 
+		resistiveElementBottom.setCondensity({0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
 
-	//logic conditions for 	
-	double compStart = dF_TO_dC(5.25); 
-	double standbyT = dF_TO_dC(5.); //Given CMP_T test 
-	compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
-	compressor.addTurnOnLogic(HPWH::standby(standbyT));
+		//logic conditions for 	
+		double compStart = dF_TO_dC(5.25); 
+		double standbyT = dF_TO_dC(5.); //Given CMP_T test 
+		compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
+		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-	double resistanceStart = 12.;
-	resistiveElementTop.addTurnOnLogic(HPWH::topThird(resistanceStart));
-	resistiveElementBottom.addTurnOnLogic(HPWH::topThird(resistanceStart));
+		double resistanceStart = 12.;
+		resistiveElementTop.addTurnOnLogic(HPWH::topThird(resistanceStart));
+		resistiveElementBottom.addTurnOnLogic(HPWH::topThird(resistanceStart));
 
-	resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(F_TO_C(117.)));
-	resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
+		resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(F_TO_C(117.)));
+		resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
 
-	//set everything in its places
-	setOfSources[0] = resistiveElementTop;
-	setOfSources[1] = resistiveElementBottom;
-	setOfSources[2] = compressor;
+		//set everything in its places
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-	//and you have to do this after putting them into setOfSources, otherwise
-	//you don't get the right pointers
-	setOfSources[2].backupHeatSource = &setOfSources[1];
-	setOfSources[1].backupHeatSource = &setOfSources[2];
+		//and you have to do this after putting them into heatSources, otherwise
+		//you don't get the right pointers
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-	setOfSources[0].followedByHeatSource = &setOfSources[1];
-	setOfSources[1].followedByHeatSource = &setOfSources[2];
-	//setOfSources[2].followedByHeatSource = &setOfSources[1];;
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
+		//heatSources[2].followedByHeatSource = &heatSources[1];;
 
-	setOfSources[0].companionHeatSource = &setOfSources[1];
-	setOfSources[1].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[1];
+		heatSources[1].companionHeatSource = &heatSources[2];
 
 	}
 	else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
 	{
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		if (presetNum == MODELS_AOSmithHPTS50) {
@@ -2426,9 +2324,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementTop(this);
 		HeatSource resistiveElementBottom(this);
@@ -2436,7 +2331,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0});
 
 		// performance map
 		compressor.perfMap.reserve(3);
@@ -2480,24 +2375,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(11.87)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	else if (presetNum == MODELS_GE2014STDMode) {
-			numNodes = 12;
-			tankTemps_C = new double[numNodes];
+			setNumNodes(12);
 			setpoint_C = F_TO_C(127.0);
 
 			tankVolume_L = GAL_TO_L(45);
@@ -2505,9 +2400,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			doTempDepression = false;
 			tankMixesOnDraw = true;
-
-			numHeatSources = 3;
-			setOfSources = new HeatSource[numHeatSources];
 
 			HeatSource compressor(this);
 			HeatSource resistiveElementBottom(this);
@@ -2518,8 +2410,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			compressor.isVIP = false;
 			compressor.typeOfHeatSource = TYPE_compressor;
 
-			double split = 1.0 / 4.0;
-			compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+			compressor.setCondensity({1., 0., 0.});
 
 			compressor.perfMap.reserve(2);
 
@@ -2547,35 +2438,35 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			//bottom resistor values
 			resistiveElementBottom.setupAsResistiveElement(0, 4000);
-			resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 			resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 			//logic conditions
 			resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 
-			resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
+			resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
 			compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
 			//    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 			//set everything in its places
-			setOfSources[0] = resistiveElementTop;
-			setOfSources[1] = resistiveElementBottom;
-			setOfSources[2] = compressor;
+			heatSources.resize(3);
+			heatSources[0] = resistiveElementTop;
+			heatSources[1] = resistiveElementBottom;
+			heatSources[2] = compressor;
 
-			//and you have to do this after putting them into setOfSources, otherwise
+			//and you have to do this after putting them into heatSources, otherwise
 			//you don't get the right pointers
-			setOfSources[2].backupHeatSource = &setOfSources[1];
-			setOfSources[1].backupHeatSource = &setOfSources[2];
+			heatSources[2].backupHeatSource = &heatSources[1];
+			heatSources[1].backupHeatSource = &heatSources[2];
 
-			setOfSources[0].followedByHeatSource = &setOfSources[1];
-			setOfSources[1].followedByHeatSource = &setOfSources[2];
+			heatSources[0].followedByHeatSource = &heatSources[1];
+			heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014STDMode_80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(75.4);
@@ -2583,9 +2474,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2596,8 +2484,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		compressor.perfMap.reserve(2);
 
@@ -2619,13 +2506,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
@@ -2634,22 +2521,22 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(45);
@@ -2658,9 +2545,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -2670,8 +2554,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -2700,7 +2583,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2712,26 +2595,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014_80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(75.4);
@@ -2739,9 +2621,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2752,8 +2631,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -2782,7 +2660,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2794,26 +2672,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_GE2014_80DR) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(75.4);
@@ -2821,9 +2698,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2834,8 +2708,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -2864,7 +2737,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2877,27 +2750,26 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-		// resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+		// resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	// PRESET USING GE2014 DATA 
 	else if (presetNum == MODELS_BWC2020_65) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(64);
@@ -2905,9 +2777,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -2918,8 +2787,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -2948,7 +2816,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2960,24 +2828,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		// compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
 	}
 	// If Rheem Premium
 	else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		if (presetNum == MODELS_Rheem2020Prem40) {
@@ -3000,9 +2867,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -3012,7 +2876,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -3048,29 +2912,29 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[1].backupHeatSource = &setOfSources[2];
-		setOfSources[2].backupHeatSource = &setOfSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	// If Rheem Build
 	else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		if (presetNum == MODELS_Rheem2020Build40) {
@@ -3093,9 +2957,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
@@ -3105,7 +2966,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 		compressor.perfMap.push_back({
@@ -3141,28 +3002,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[1].backupHeatSource = &setOfSources[2];
-		setOfSources[2].backupHeatSource = &setOfSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[2];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[2];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}		
 	else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 
 		if (presetNum == MODELS_RheemPlugInShared40) {
 			tankVolume_L = GAL_TO_L(36.0);
@@ -3188,15 +3048,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
 		HeatSource compressor(this);
 
 		//compressor values
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;		
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -3223,12 +3081,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_RheemPlugInDedicated40 || presetNum == MODELS_RheemPlugInDedicated50) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 		if (presetNum == MODELS_RheemPlugInDedicated40) {
 			tankVolume_L = GAL_TO_L(36);
@@ -3241,15 +3100,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 1;
-		setOfSources = new HeatSource[numHeatSources];
 		HeatSource compressor(this);
 
 		//compressor values
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0., 0., 0., 0.);
+		compressor.setCondensity({0.5, 0.5, 0.});
 
 		compressor.perfMap.reserve(2);
 		compressor.perfMap.push_back({
@@ -3271,18 +3128,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
-
 		//logic conditions
 		double compStart = dF_TO_dC(20);
 		double standbyT = dF_TO_dC(9);
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
+
 		//set everything in its places
-		setOfSources[0] = compressor;
+		heatSources.resize(1);
+		heatSources[0] = compressor;
 	}
 	else if (presetNum == MODELS_RheemHB50) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(45);
@@ -3290,9 +3147,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -3303,8 +3157,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -3342,28 +3195,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
 		compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(76.7747)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
 
-
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Stiebel220E) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127);
 
 		tankVolume_L = GAL_TO_L(56);
@@ -3372,9 +3224,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
-
-		numHeatSources = 2;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElement(this);
@@ -3386,7 +3235,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElement.setupAsResistiveElement(0, 1500);
 		resistiveElement.hysteresis_dC = dF_TO_dC(0);
 
-		compressor.setCondensity(0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -3409,30 +3258,28 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		compressor.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(6.5509)));
-		compressor.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		compressor.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 
 		compressor.depressesTemperature = false;  //no temp depression
 
 		//set everything in its places
-		setOfSources[0] = compressor;
-		setOfSources[1] = resistiveElement;
+		heatSources.resize(2);
+		heatSources[0] = compressor;
+		heatSources[1] = resistiveElement;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[0].backupHeatSource = &setOfSources[1];
+		heatSources[0].backupHeatSource = &heatSources[1];
 
 	}
 	else if (presetNum == MODELS_Generic1) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(50);
 		tankUA_kJperHrC = 9;
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -3442,8 +3289,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		compressor.perfMap.reserve(2);
 
@@ -3479,33 +3325,31 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(110)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(110)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Generic2) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(50);
 		tankUA_kJperHrC = 7.5;
 		doTempDepression = false;
 		tankMixesOnDraw = true;
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
 
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
@@ -3516,8 +3360,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -3554,27 +3397,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(60)));
 
 		resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(100)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
 
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_Generic3) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(50);
@@ -3583,12 +3426,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
+		//set everything in its places
+		HeatSource resistiveElementTop(this);
 		HeatSource compressor(this);
 		HeatSource resistiveElementBottom(this);
-		HeatSource resistiveElementTop(this);
 
 		//compressor values
 		compressor.isOn = false;
@@ -3596,8 +3437,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -3625,7 +3465,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4500);
-		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -3638,22 +3478,22 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = compressor;
-		setOfSources[2] = resistiveElementBottom;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (presetNum == MODELS_UEF2generic) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		tankVolume_L = GAL_TO_L(45);
@@ -3662,20 +3502,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
-		HeatSource compressor(this);
-		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource compressor(this);
 
 		//compressor values
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		compressor.perfMap.reserve(2);
 
@@ -3703,34 +3539,34 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
 		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(18.6605)));
 
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(86.1111)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
 	else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
-		numNodes = 12;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
 		if (presetNum == MODELS_AWHSTier3Generic40) {
@@ -3759,20 +3595,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = true;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
-		HeatSource compressor(this);
-		HeatSource resistiveElementBottom(this);
 		HeatSource resistiveElementTop(this);
+		HeatSource resistiveElementBottom(this);
+		HeatSource compressor(this);
 
 		//compressor values
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		double split = 1.0 / 4.0;
-		compressor.setCondensity(split, split, split, split, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1., 0., 0.});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -3803,7 +3635,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -3812,25 +3644,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
 		resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelthMaxTemp(F_TO_C(80)));
+		resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a the model is the TamOMatic, HotTam, Generic... This model is scalable. 
 	else if (presetNum == MODELS_TamScalable_SP) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 		canScale = true; // a fully scallable model
@@ -3842,21 +3674,21 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankUA_kJperHrC = 7; 
 		setTankSize_adjustUA(600., UNITS_GAL);
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
+		HeatSource resistiveElementTop(this);
+		HeatSource resistiveElementBottom(this);
 		HeatSource compressor(this);
+
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = numNodes - 1;
+		compressor.externalInletHeight = getIndexTopNode();
 
 		//Defrost Derate 
 		compressor.setupDefrostMap();
@@ -3886,9 +3718,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			std::greater<double>(), true));
 		compressor.depressesTemperature = false;  //no temp depression
 
-
-		HeatSource resistiveElementBottom(this);
-		HeatSource resistiveElementTop(this);
 		resistiveElementBottom.setupAsResistiveElement(0, 30000);
 		resistiveElementTop.setupAsResistiveElement(9, 30000);
 
@@ -3898,23 +3727,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 	else if (presetNum == MODELS_Scalable_MP) {
-		numNodes = 24;
-		tankTemps_C = new double[numNodes];
+		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
 		canScale = true; // a fully scallable model
@@ -3925,19 +3754,18 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important 
 		tankUA_kJperHrC = 7;
 
-		numHeatSources = 3;
-		setOfSources = new HeatSource[numHeatSources];
-
+		HeatSource resistiveElementTop(this);
+		HeatSource resistiveElementBottom(this);
 		HeatSource compressor(this);
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
 		compressor.externalOutletHeight = 0;
-		compressor.externalInletHeight = (int)(numNodes / 3.) - 1;
+		compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
 		//logic conditions
 		std::vector<NodeWeight> nodeWeights;
@@ -3968,8 +3796,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			});
 
-		HeatSource resistiveElementBottom(this);
-		HeatSource resistiveElementTop(this);
 		resistiveElementBottom.setupAsResistiveElement(0, 30000);
 		resistiveElementTop.setupAsResistiveElement(9, 30000);
 
@@ -3979,19 +3805,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//set everything in its places
-		setOfSources[0] = resistiveElementTop;
-		setOfSources[1] = resistiveElementBottom;
-		setOfSources[2] = compressor;
+		heatSources.resize(3);
+		heatSources[0] = resistiveElementTop;
+		heatSources[1] = resistiveElementBottom;
+		heatSources[2] = compressor;
 
-		//and you have to do this after putting them into setOfSources, otherwise
+		//and you have to do this after putting them into heatSources, otherwise
 		//you don't get the right pointers
-		setOfSources[2].backupHeatSource = &setOfSources[1];
-		setOfSources[1].backupHeatSource = &setOfSources[2];
+		heatSources[2].backupHeatSource = &heatSources[1];
+		heatSources[1].backupHeatSource = &heatSources[2];
 
-		setOfSources[0].followedByHeatSource = &setOfSources[1];
-		setOfSources[1].followedByHeatSource = &setOfSources[2];
+		heatSources[0].followedByHeatSource = &heatSources[1];
+		heatSources[1].followedByHeatSource = &heatSources[2];
 
-		setOfSources[0].companionHeatSource = &setOfSources[2];
+		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
 	else {
@@ -4004,9 +3831,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	//start tank off at setpoint
 	resetTankToSetpoint();
 
-	// initialize nextTankTemps_C 
-	nextTankTemps_C = new double[numNodes];
-
 	hpwhModel = presetNum;
 
 	//calculate oft-used derived values
@@ -4017,16 +3841,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	isHeating = false;
-	for (int i = 0; i < numHeatSources; i++) {
-		if (setOfSources[i].isOn) {
+	for (int i = 0; i < getNumHeatSources(); i++) {
+		if (heatSources[i].isOn) {
 			isHeating = true;
 		}
-		setOfSources[i].sortPerformanceMap();
+		heatSources[i].sortPerformanceMap();
 	}
 
 	if (hpwhVerbosity >= VRB_emetic) {
-		for (int i = 0; i < numHeatSources; i++) {
-			msg("heat source %d: %p \n", i, &setOfSources[i]);
+		for (int i = 0; i < getNumHeatSources(); i++) {
+			msg("heat source %d: %p \n", i, &heatSources[i]);
 		}
 		msg("\n\n");
 	}
@@ -4034,4 +3858,3 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	simHasFailed = false;
 	return 0;  //successful init returns 0
 }  //end HPWHinit_presets
-
