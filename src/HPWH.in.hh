@@ -511,7 +511,10 @@ public:
 		the preamble should be supplied with a trailing comma, as these functions do
 		not add one.  Additionally, a newline is written with each call.  */
 
-
+	/**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the 
+		existing nodes, regardless of numNodes. */
+	int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
+	void getTankTemps(std::vector<double> &tankTemps);
 
 	bool isSetpointFixed() const;  /**< is the setpoint allowed to be changed */
 	int setSetpoint(double newSetpoint,UNITS units = UNITS_C);/**<default units C*/
@@ -1294,7 +1297,6 @@ private:
 	void normalize(std::vector<double> &distribution);
 
 };  // end of HeatSource class
-
 
 // a few extra functions for unit converesion
 inline double dF_TO_dC(double temperature) { return (temperature*5.0/9.0); }

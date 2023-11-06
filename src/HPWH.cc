@@ -160,7 +160,6 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 	return false;
 }
 
-
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
@@ -1047,12 +1046,49 @@ int HPWH::resetTankToSetpoint() {
 }
 
 int HPWH::setTankToTemperature(double temp_C) {
-	for(auto &T : tankTemps_C) {
-		T = temp_C;
+	return setTankLayerTemperatures({temp_C});
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
+/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
+/// @return	Success: 0; Failure: HPWH_ABORT
+//-----------------------------------------------------------------------------
+int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS units)
+{
+	if((units != UNITS_C) && (units != UNITS_F))
+	{
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setSetpoint.  \n");
+		}
+		return HPWH_ABORT;
 	}
+
+	std::size_t numSetNodes = setTankTemps.size();
+	if(numSetNodes == 0)
+	{
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("No temperatures provided.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	// convert setTankTemps to °C, if necessary
+	if(units == UNITS_F)
+		for(auto &T: setTankTemps)
+			T = F_TO_C(T);
+
+	// set node temps
+	if(!resampleIntensive(tankTemps_C,setTankTemps))
+		return HPWH_ABORT;
+
 	return 0;
 }
 
+void HPWH::getTankTemps(std::vector<double> &tankTemps) {
+	tankTemps = tankTemps_C;
+}
 
 int HPWH::setAirFlowFreedom(double fanFraction) {
 	if(fanFraction < 0 || fanFraction > 1) {
@@ -1551,14 +1587,14 @@ int HPWH::switchToSoCControls(double targetSoC,double hysteresisFraction /*= 0.0
 	return 0;
 }
 
-std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
-	bool constantMainsT, double mainsT_C) {
-	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, -hystFract, tempMinUseful_C, constantMainsT, mainsT_C);
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc,double targetSoC,double hystFract,double tempMinUseful_C,
+	bool constantMainsT,double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc,targetSoC,this,-hystFract,tempMinUseful_C,constantMainsT,mainsT_C);
 }
 
-std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc, double targetSoC, double hystFract, double tempMinUseful_C,
-	bool constantMainsT, double mainsT_C) {
-	return std::make_shared<SoCBasedHeatingLogic>(desc, targetSoC, this, hystFract, tempMinUseful_C, constantMainsT, mainsT_C, std::greater<double>());
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc,double targetSoC,double hystFract,double tempMinUseful_C,
+	bool constantMainsT,double mainsT_C) {
+	return std::make_shared<SoCBasedHeatingLogic>(desc,targetSoC,this,hystFract,tempMinUseful_C,constantMainsT,mainsT_C,std::greater<double>());
 }
 
 //-----------------------------------------------------------------------------
