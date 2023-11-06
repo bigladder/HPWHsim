@@ -1008,7 +1008,7 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 		}
 		hpwh->msg("\n ");
 	}
-	
+
 	perfMap.clear();
 	perfMap.reserve(2);
 
