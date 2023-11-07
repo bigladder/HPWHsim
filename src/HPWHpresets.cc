@@ -517,7 +517,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setNumNodes(12);
 		setpoint_C = 52;
 
-		setpoint_C = 800;
+		setpoint_C = 80;
 
 		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(80);
