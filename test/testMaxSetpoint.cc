@@ -24,6 +24,8 @@ void testJustQAHVCompressor();
 void testHybridModel();
 void testStorageTankSetpoint();
 void testSetpointFixed();
+void testResampling();
+void testSetTankTemps();
 
 const double REMaxShouldBe = 100.;
 
@@ -37,6 +39,8 @@ int main(int, char*)
 	testHybridModel();
 	testStorageTankSetpoint();
 	testSetpointFixed();
+	testResampling();
+	testSetTankTemps();
 
 	//Made it through the gauntlet
 	return 0;
@@ -204,3 +208,86 @@ void testSetpointFixed() {
 	ASSERTTRUE(hpwh.setSetpoint(60.) == HPWH::HPWH_ABORT); // Can't go to normalish
 	ASSERTTRUE(hpwh.setSetpoint(10.) == HPWH::HPWH_ABORT); // Can't go low, albiet dumb
 }
+
+void testResampling() {
+
+// test extensive resampling
+    std::vector<double> values(10);
+    std::vector<double> sampleValues{20., 40., 60., 40., 20.};
+	ASSERTTRUE(resampleExtensive(values, sampleValues));
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(values[1], 10.)); //
+	ASSERTTRUE(relcmpd(values[5], 30.)); //
+
+// test intensive resampling
+ 	ASSERTTRUE(resampleIntensive(values, sampleValues));
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(values[1], 20.)); //
+	ASSERTTRUE(relcmpd(values[5], 60.)); //
+}
+
+void testSetTankTemps() {
+	HPWH hpwh;
+	getHPWHObject(hpwh, "Rheem2020Prem50"); // 12-node model
+
+	std::vector<double> newTemps;
+
+// test 1
+	std::vector<double> setTemps{10., 60.};
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(newTemps[0], 10.0)); //
+	ASSERTTRUE(relcmpd(newTemps[11], 60.0)); //
+
+// test 2
+	setTemps = {10., 20., 30., 40., 50., 60.};
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(newTemps[0], 10.)); //
+	ASSERTTRUE(relcmpd(newTemps[5], 30.)); //
+	ASSERTTRUE(relcmpd(newTemps[6], 40.)); //
+	ASSERTTRUE(relcmpd(newTemps[11], 60.)); //
+
+// test 3
+	setTemps = {10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90.};
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(newTemps[2], 25.3, 0.1)); //
+	ASSERTTRUE(relcmpd(newTemps[8], 67.6, 0.1)); //
+
+// test 4
+	int nSet = 24;
+	setTemps.resize(nSet);
+	double Ti = 20., Tf = 66.;
+	for (std::size_t i = 0; i < nSet; ++i)
+		setTemps[i] = Ti + (Tf - Ti) * i / (nSet - 1);
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(relcmpd(newTemps[4], 37.)); //
+	ASSERTTRUE(relcmpd(newTemps[10], 61.)); //
+
+// test 5
+	nSet = 12;
+	setTemps.resize(nSet);
+	Ti = 20.; Tf = 64.;
+	for (std::size_t i = 0; i < nSet; ++i)
+		setTemps[i] = Ti + (Tf - Ti) * i / (nSet - 1);
+	hpwh.setTankLayerTemperatures(setTemps);
+	hpwh.getTankTemps(newTemps);
+
+	// Check some expected values.
+	ASSERTTRUE(fabs(newTemps[3] - 32.) < 0.1); //
+	ASSERTTRUE(fabs(newTemps[11] - 64.) < 0.1); //
+
+}
+
