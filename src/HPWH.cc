@@ -1729,7 +1729,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double decisionPoin
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoint) {
-	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./2.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("larger draw",nodeWeights,decisionPoint,this,true);
 }
 
