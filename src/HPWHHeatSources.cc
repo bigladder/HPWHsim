@@ -383,7 +383,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
-		static std::vector<double> heatDistribution(hpwh->getNumNodes());
+		std::vector<double> heatDistribution(hpwh->getNumNodes());
+
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
