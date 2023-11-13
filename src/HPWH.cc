@@ -1781,25 +1781,22 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
-	} else if(nTCouple < 1) {
-		return double(HPWH_ABORT);
-	} else {
-
-		double fracBegin = static_cast<double>(iTCouple - 1.) / nTCouple;
-		double fracEnd = static_cast<double>(iTCouple) / nTCouple;
-		double averageTemp_C = getResampledValue(tankTemps_C, fracBegin, fracEnd);
-
-		if(units == UNITS_C) {
-			return averageTemp_C;
-		} else if(units == UNITS_F) {
-			return C_TO_F(averageTemp_C);
-		} else {
-			if(hpwhVerbosity >= VRB_reluctant) {
-				msg("Incorrect unit specification for getNthSimTcouple.  \n");
-			}
-			return double(HPWH_ABORT);
-		}
 	}
+	double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+	double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+			
+	double simTcoupleTemp_C = getResampledValue(tankTemps_C,beginFraction,endFraction);
+	if(units == UNITS_C) {
+		return simTcoupleTemp_C;
+	} else if(units == UNITS_F) {
+		return C_TO_F(simTcoupleTemp_C);
+	} else {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthSimTcouple.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
 }
 
 int HPWH::getNumHeatSources() const {
