@@ -1731,7 +1731,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double decisionPoin
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoint) {
-	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./2.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("larger draw",nodeWeights,decisionPoint,this,true);
 }
 
@@ -2577,18 +2577,14 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
 
 		// Small truncation differences here lead to larger differences later 
-		double T0 = tankTemps_C[0];
-		double Tn0 = tankTemps_C[getNumNodes() - 1];
-
-		// Boundary nodes for finite difference; outer edge of top and bottom nodes first
-		double nextT0 = (1. - bc) * T0 + bc * tankAmbientT_C;
-		double nextTn0 = (1. - bc) * Tn0 + bc * tankAmbientT_C;
+		// Boundary nodes for finite difference
 		if (getNumNodes() > 1) { // inner edges of top and bottom nodes
-			nextT0 += 2. * tau * (tankTemps_C[1] - T0);
-			nextTn0 += 2. * tau * (tankTemps_C[getNumNodes() - 2] - Tn0);
+			nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+			nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
 		}
-		nextTankTemps_C[0] = nextT0;
-		nextTankTemps_C[getNumNodes() - 1] = nextTn0;
+		else { // Factor of 2. for single-node
+			nextTankTemps_C[0] = (1.0 - 2. * bc) * tankTemps_C[0] + 2. * bc * tankAmbientT_C;
+		}
 
 		// Internal nodes for the finite difference
 		for(int i = 1; i < getNumNodes() - 1; i++) {
