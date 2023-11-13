@@ -3822,60 +3822,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		heatSources[0].companionHeatSource = &heatSources[2];
 	}	
-	else if (presetNum == MODELS_AQUATHERMAIRE) { // AquaThermAire
-		setNumNodes(1);
-		setpoint_C = F_TO_C(125.);
-
-		tankVolume_L = GAL_TO_L(54.4);
-		tankUA_kJperHrC = 10.35;
-
-		doTempDepression = false;
-		tankMixesOnDraw = true;
-
-		// heat exchangers only
-		waterIsDrawnFromTank = false;
-		heatExchangeEfficiency = 0.9;
-
-		HeatSource compressor(this);
-
-		//compressor values
-		compressor.isOn = false;
-		compressor.isVIP = false;
-		compressor.typeOfHeatSource = TYPE_compressor;
-
-		compressor.setCondensity({1.});
-
-		//AOSmithPHPT60 values
-		compressor.perfMap.reserve(2);
-
-		compressor.perfMap.push_back({
-			47, // Temperature (T_F)
-			{0.467 * 1000, 0.00281 * 1000, 0.0000072 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-			{4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-			});
-
-		compressor.perfMap.push_back({
-			67, // Temperature (T_F)
-			{0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-			{6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-			});
-
-		compressor.minT = F_TO_C(40.);
-		compressor.maxT = F_TO_C(125.);
-		compressor.hysteresis_dC = dF_TO_dC(4);
-		compressor.configuration = HeatSource::CONFIG_WRAPPED;
-		compressor.maxSetpoint_C = MAXOUTLET_R134A;
-
-		//logic conditions
-		double compStart = dF_TO_dC(43.6);
-		double standbyT = dF_TO_dC(23.8);
-		compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-		compressor.addTurnOnLogic(HPWH::standby(standbyT));
-
-		//set everything in its places
-		heatSources.resize(1);
-		heatSources[0] = compressor;
-	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have tried to select a preset model which does not exist.  \n");
