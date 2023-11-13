@@ -1779,47 +1779,22 @@ double HPWH::getNthSimTcouple(int iTCouple,int nTCouple,UNITS units  /*=UNITS_C*
 			msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
 		}
 		return double(HPWH_ABORT);
-	} else if(nTCouple > getNumNodes()) {
+	}
+	double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+	double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+			
+	double simTcoupleTemp_C = getResampledValue(tankTemps_C,beginFraction,endFraction);
+	if(units == UNITS_C) {
+		return simTcoupleTemp_C;
+	} else if(units == UNITS_F) {
+		return C_TO_F(simTcoupleTemp_C);
+	} else {
 		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("You have more simulated thermocouples than nodes.  \n");
+			msg("Incorrect unit specification for getNthSimTcouple.  \n");
 		}
 		return double(HPWH_ABORT);
-	} else {
-		double weight = getNumNodes() / static_cast<double>(nTCouple);
-		double start_ind = (iTCouple - 1.) * weight;
-		int ind = (int)std::ceil(start_ind);
-
-		double averageTemp_C = 0.0;
-
-		// Check any intial fraction of nodes 
-		averageTemp_C += getTankNodeTemp((int)std::floor(start_ind),UNITS_C) * ((double)ind - start_ind);
-		weight -= ((double)ind - start_ind);
-
-		// Check the full nodes
-		while(weight >= 1.0) {
-			averageTemp_C += getTankNodeTemp(ind,UNITS_C);
-			weight -= 1.0;
-			ind += 1;
-		}
-
-		// Check any leftover
-		if(weight > 0.) {
-			averageTemp_C += getTankNodeTemp(ind,UNITS_C) * weight;
-		}
-		// Divide by the original weight to get the true average
-		averageTemp_C /= ((double)getNumNodes() / (double)nTCouple);
-
-		if(units == UNITS_C) {
-			return averageTemp_C;
-		} else if(units == UNITS_F) {
-			return C_TO_F(averageTemp_C);
-		} else {
-			if(hpwhVerbosity >= VRB_reluctant) {
-				msg("Incorrect unit specification for getNthSimTcouple.  \n");
-			}
-			return double(HPWH_ABORT);
-		}
 	}
+
 }
 
 int HPWH::getNumHeatSources() const {
