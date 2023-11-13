@@ -185,8 +185,10 @@ set(yearLargeTestsModels
  Scalable_MP
 )
 set(heatExchangeModelNames
+ AquaThermAire
 )
 set(heatExchangeTests
+ villara_24hr67
 )
 set(yearLargeTests                                        
  testCA_36Unit_CTZ12
