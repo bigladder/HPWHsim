@@ -512,7 +512,9 @@ public:
 		the preamble should be supplied with a trailing comma, as these functions do
 		not add one.  Additionally, a newline is written with each call.  */
 
-
+	/**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the 
+		existing nodes, regardless of numNodes. */
+	int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
 	bool isSetpointFixed() const;  /**< is the setpoint allowed to be changed */
 	int setSetpoint(double newSetpoint,UNITS units = UNITS_C);/**<default units C*/

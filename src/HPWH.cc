@@ -1047,9 +1047,43 @@ int HPWH::resetTankToSetpoint() {
 }
 
 int HPWH::setTankToTemperature(double temp_C) {
-	for(auto &T : tankTemps_C) {
-		T = temp_C;
+	return setTankLayerTemperatures({temp_C});
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
+/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
+/// @return	Success: 0; Failure: HPWH_ABORT
+//-----------------------------------------------------------------------------
+int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS units)
+{
+	if((units != UNITS_C) && (units != UNITS_F))
+	{
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for setSetpoint.  \n");
+		}
+		return HPWH_ABORT;
 	}
+
+	std::size_t numSetNodes = setTankTemps.size();
+	if(numSetNodes == 0)
+	{
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("No temperatures provided.\n");
+		}
+		return HPWH_ABORT;
+	}
+
+	// convert setTankTemps to °C, if necessary
+	if(units == UNITS_F)
+		for(auto &T: setTankTemps)
+			T = F_TO_C(T);
+
+	// set node temps
+	if(!resampleIntensive(tankTemps_C,setTankTemps))
+		return HPWH_ABORT;
+
 	return 0;
 }
 
