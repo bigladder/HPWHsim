@@ -37,6 +37,7 @@ public:
 	static const float KWATER_WpermC;
 	static const float CPWATER_kJperkgC;
 	static const int CONDENSITY_SIZE = 12;  /**< this must be an integer, and only the value 12 change at your own risk */
+	static const int LOGIC_NODE_SIZE = 12;  /**< number of logic nodes associated with temperature-based heating logic */
 	static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
 	static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced to 0 this saves on computations */
 	static const float UNINITIALIZED_LOCATIONTEMP;  /**< this is used to tell the
@@ -376,31 +377,31 @@ public:
 	std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc,double targetSoC,double hystFract,double tempMinUseful_C,
 		bool constMains,double mains_C);
 
-	std::shared_ptr<TempBasedHeatingLogic> topThird(double d);
-	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double d) ;
-	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double d);
-	std::shared_ptr<TempBasedHeatingLogic> secondSixth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double d);
-	std::shared_ptr<TempBasedHeatingLogic> topSixth(double d);
+	std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint) ;
+	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> secondSixth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> topSixth(double decisionPoint);
 
-	std::shared_ptr<TempBasedHeatingLogic> standby(double d);
-	std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double d,bool isEnteringWaterHighTempShutoff = false);
-	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double d);
-	std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double d);
+	std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(double decisionPoint,bool isEnteringWaterHighTempShutoff = false);
+	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double decisionPoint);
 
-	std::shared_ptr<TempBasedHeatingLogic> largeDraw(double d);
-	std::shared_ptr<TempBasedHeatingLogic> largerDraw(double d);
+	std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
 
 	///this is the value that the public functions will return in case of a simulation
 	///destroying error
@@ -1002,6 +1003,8 @@ private:
 	/**< A map from index of an resistance element in heatSources to position in the tank, its
 	is sorted by height from lowest to highest*/
 
+	/// Generates a vector of logical nodes
+	std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction,double topFraction);
 
 };  //end of HPWH class
 
