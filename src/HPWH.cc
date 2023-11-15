@@ -1075,7 +1075,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps,const UNITS 
 		return HPWH_ABORT;
 	}
 
-	// convert setTankTemps to °C, if necessary
+	// convert setTankTemps to ï¿½C, if necessary
 	if(units == UNITS_F)
 		for(auto &T: setTankTemps)
 			T = F_TO_C(T);
@@ -2410,7 +2410,7 @@ int HPWH::getResistancePosition(int elementIndex) const {
 		return HPWH_ABORT;
 	}
 
-	for(int i = 0; i < CONDENSITY_SIZE; i++) {
+	for(int i = 0; i < heatSources[elementIndex].getCondensitySize(); ++i) {
 		if(heatSources[elementIndex].condensity[i] == 1) { // res elements have a condenstiy of 1 at a specific node
 			return i;
 		}
@@ -2659,17 +2659,6 @@ void HPWH::mixTankInversions() {
 
 
 void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C){
-	if((*nodePowerExtra_W).size() > CONDENSITY_SIZE){
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("nodeExtraHeat_KWH  (%i) has size greater than %d  \n",(*nodePowerExtra_W).size(),CONDENSITY_SIZE);
-		}
-		simHasFailed = true;
-	}
-
-	//for (unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++){
-	//	tankTemps_C[i] += (*nodePowerExtra_W)[i] * minutesPerStep * 60. / (CPWATER_kJperkgC * 1000. * DENSITYWATER_kgperL * tankVolume_L / numNodes);
-	//}
-	//mixTankInversions();
 
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
@@ -2804,7 +2793,7 @@ void HPWH::calcDerivedHeatingValues(){
 
 		// Calculate condentropy and ==> shrinkage
 		condentropy = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++) {
+		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
 			if(heatSources[i].condensity[j] > 0) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
@@ -2815,22 +2804,19 @@ void HPWH::calcDerivedHeatingValues(){
 			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].shrinkage);
 		}
 	}
-
 	//lowest node
 	int lowest = 0;
 	for(int i = 0; i < getNumHeatSources(); i++) {
 		lowest = 0;
+		const int condensitySize = heatSources[i].getCondensitySize();
+		double nodeRatio = getNumNodes() / condensitySize;
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
-		for(int j = 0; j < getNumNodes(); j++) {
-			if(hpwhVerbosity >= VRB_emetic) {
-				msg(outputString,"j: %d  j/ (numNodes/CONDENSITY_SIZE) %d \n",j,j / (getNumNodes() / CONDENSITY_SIZE));
-			}
-
-			if(heatSources[i].condensity[(j / (getNumNodes() / CONDENSITY_SIZE))] > 0) {
-				lowest = j;
+		for(auto j = 0; j < condensitySize; ++j) {
+			if(heatSources[i].condensity[j] > 0) {
+				lowest = static_cast<int>(nodeRatio * j);
 				break;
 			}
 		}
@@ -2925,13 +2911,6 @@ int HPWH::checkInputs() {
 		}
 		returnVal = HPWH_ABORT;
 	}
-	if((getNumNodes() % 12) != 0) {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("The number of nodes must be a multiple of 12");
-		}
-		returnVal = HPWH_ABORT;
-	}
-
 
 	double condensitySum;
 	//loop through all heat sources to check each for malconfigurations
@@ -2973,7 +2952,7 @@ int HPWH::checkInputs() {
 
 		//check is condensity sums to 1
 		condensitySum = 0;
-		for(int j = 0; j < CONDENSITY_SIZE; j++)  condensitySum += heatSources[i].condensity[j];
+		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j)  condensitySum += heatSources[i].condensity[j];
 		if(fabs(condensitySum - 1.0) > 1e-6) {
 			if(hpwhVerbosity >= VRB_reluctant) {
 				msg("The condensity for heatsource %d does not sum to 1.  \n",i);
@@ -3306,9 +3285,9 @@ int HPWH::HPWHinit_file(string configFile) {
 					line_ss >> nextToken;
 					while(std::regex_match(nextToken,std::regex("\\d+"))) {
 						int nodeNum = std::stoi(nextToken);
-						if(nodeNum > 13 || nodeNum < 0) {
+						if(nodeNum > LOGIC_NODE_SIZE + 1 || nodeNum < 0) {
 							if(hpwhVerbosity >= VRB_reluctant) {
-								msg("Node number for heatsource %d %s must be between 0 and 13.  \n",heatsource,token.c_str());
+								msg("Node number for heatsource %d %s must be between 0 and %d.  \n",heatsource,token.c_str(), LOGIC_NODE_SIZE + 1);
 							}
 							return HPWH_ABORT;
 						}
@@ -3329,7 +3308,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					if(nodeNums.size() != weights.size()) {
 						if(hpwhVerbosity >= VRB_reluctant) {
-							msg("Number of weights for heatsource %d %s (%d) does not macht number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
+							msg("Number of weights for heatsource %d %s (%d) does not match number of nodes for %s (%d).  \n",heatsource,token.c_str(),weights.size(),token.c_str(),nodeNums.size());
 						}
 						return HPWH_ABORT;
 					}
@@ -3504,8 +3483,11 @@ int HPWH::HPWHinit_file(string configFile) {
 			}
 
 			else if(token == "condensity") {
-				line_ss >> dblArray[0] >> dblArray[1] >> dblArray[2] >> dblArray[3] >> dblArray[4] >> dblArray[5] >> dblArray[6] >> dblArray[7] >> dblArray[8] >> dblArray[9] >> dblArray[10] >> dblArray[11];
-				heatSources[heatsource].setCondensity(dblArray[0],dblArray[1],dblArray[2],dblArray[3],dblArray[4],dblArray[5],dblArray[6],dblArray[7],dblArray[8],dblArray[9],dblArray[10],dblArray[11]);
+				double x;
+				std::vector<double> condensity;
+				while (line_ss >> x)
+					condensity.push_back(x);
+				heatSources[heatsource].setCondensity(condensity);
 			} else if(token == "nTemps") {
 				line_ss >> nTemps;
 				heatSources[heatsource].perfMap.resize(nTemps);

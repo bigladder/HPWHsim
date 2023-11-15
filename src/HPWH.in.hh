@@ -1080,6 +1080,8 @@ public:
 		double cnd9,double cnd10,double cnd11,double cnd12);
 	/**< a function to set the condensity values, it pretties up the init funcs. */
 
+	int getCondensitySize() const;
+
 	void linearInterp(double &ynew,double xnew,double x0,double x1,double y0,double y1);
 	/**< Does a simple linear interpolation between two points to the xnew point */
 

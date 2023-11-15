@@ -104,6 +104,9 @@ void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double 
 	setCondensity({cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12});
 }
 
+int HPWH::HeatSource::getCondensitySize() const {
+	return static_cast<int>(condensity.size());
+}
 int HPWH::HeatSource::findParent() const {
 	for(int i = 0; i < hpwh->getNumHeatSources(); ++i) {
 		if(this == hpwh->heatSources[i].backupHeatSource) {
@@ -494,7 +497,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 
 double HPWH::HeatSource::getCondenserTemp() const{
 	double condenserTemp_C = 0.0;
-	int tempNodesPerCondensityNode = hpwh->getNumNodes() / CONDENSITY_SIZE;
+	int tempNodesPerCondensityNode = hpwh->getNumNodes() / getCondensitySize();
 	int j = 0;
 
 	for(int i = 0; i < hpwh->getNumNodes(); i++) {
@@ -762,7 +765,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 			int k;
 			if(configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
 				//intentional integer division
-				k = i / int(hpwh->getNumNodes() / CONDENSITY_SIZE);
+				k = i / int(hpwh->getNumNodes() / getCondensitySize());
 				heatDistribution.push_back(condensity[k]);
 			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
 				double temp = 0;  //temp for temporary not temperature
@@ -1011,7 +1014,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 
 void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 
-	std::vector<double> tempCondensity(CONDENSITY_SIZE);
+	std::vector<double> tempCondensity(getCondensitySize());
 	double watts = 0.0;
 	for(unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
 		//get sum of vector
