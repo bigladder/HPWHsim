@@ -633,16 +633,17 @@ int HPWH::runNSteps(int N,double *inletT_C,double *drawVolume_L,
 				msg("%f,%f,",getNthHeatSourceEnergyInput(j),getNthHeatSourceEnergyOutput(j));
 			}
 
+			std::vector<double> displayTemps_C(10);
+			resampleIntensive(displayTemps_C, tankTemps_C);
 			bool first = true;
-			for (int k = 0; k < 10; ++k)
+			for (auto &displayTemp: displayTemps_C)
 			{
 				if (first)
 					first = false;
 				else
 					msg(",");
 
-				int j = nodeDensity * k;
-				msg("%f", tankTemps_C[j]);
+				msg("%f",displayTemp);
 			}
 
 			for (int k = 1; k < 7; ++k)
