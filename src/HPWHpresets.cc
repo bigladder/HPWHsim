@@ -298,7 +298,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//bottom resistor values
 	resistiveElementBottom.setupAsResistiveElement(0, 4000);
-	resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 	resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 	//logic conditions
@@ -537,7 +537,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
 
 		//initial guess, will get reset based on the input heat vector
-		extra.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		extra.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
 		//set everything in its places
 		heatSources.resize(1);
@@ -639,7 +639,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
 		//GE tier 1 values
 		compressor.perfMap.reserve(2);
@@ -693,7 +693,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -769,7 +769,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		//voltex60 tier 1 values
 		compressor.perfMap.reserve(2);
@@ -846,7 +846,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -924,7 +924,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
@@ -1063,7 +1063,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
@@ -1190,7 +1190,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
@@ -1324,7 +1324,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.extrapolationMethod = EXTRAP_NEAREST;
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.hysteresis_dC = 0;
@@ -1490,7 +1490,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;
@@ -1560,7 +1560,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-13.);
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.externalOutletHeight = 0;
 		compressor.externalInletHeight = getNumNodes() - 1;
 
@@ -1702,7 +1702,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
 		compressor.minT = F_TO_C(-25.);
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.externalOutletHeight = 0;
 		compressor.externalInletHeight = getNumNodes() - 1;
 
@@ -1785,7 +1785,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.externalOutletHeight = 0;
 		compressor.externalInletHeight = getIndexTopNode();
 
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(5);
 
@@ -1863,7 +1863,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.typeOfHeatSource = TYPE_compressor;
 
 		double split = 1.0 / 5.0;
-		compressor.setCondensity(split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
 
 		// performance map
 		compressor.perfMap.reserve(3);
@@ -2234,7 +2234,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		compressor.setCondensity({0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
 		//From CAHP 120 COP Tests
 		compressor.perfMap.reserve(3);
@@ -2272,7 +2272,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, wattRE);
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2); 
-		resistiveElementBottom.setCondensity(0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.); // Based of CMP test
+		resistiveElementBottom.setCondensity({0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
 
 		//logic conditions for 	
 		double compStart = dF_TO_dC(5.25); 
@@ -2333,7 +2333,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0});
 
 		// performance map
 		compressor.perfMap.reserve(3);
@@ -2440,7 +2440,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 			//bottom resistor values
 			resistiveElementBottom.setupAsResistiveElement(0, 4000);
-			resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 			resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 			//logic conditions
@@ -2508,7 +2508,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2585,7 +2585,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2662,7 +2662,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2739,7 +2739,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2818,7 +2818,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -2878,7 +2878,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -2968,7 +2968,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isVIP = false;
 		compressor.typeOfHeatSource = TYPE_compressor;
 
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 		compressor.perfMap.push_back({
@@ -3056,7 +3056,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;		
-		compressor.setCondensity(0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -3237,7 +3237,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElement.setupAsResistiveElement(0, 1500);
 		resistiveElement.hysteresis_dC = dF_TO_dC(0);
 
-		compressor.setCondensity(0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
 		compressor.perfMap.reserve(2);
 
@@ -3467,7 +3467,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4500);
-		resistiveElementBottom.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -3541,7 +3541,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -3637,7 +3637,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		//bottom resistor values
 		resistiveElementBottom.setupAsResistiveElement(0, 4000);
-		resistiveElementBottom.setCondensity(0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
 		//logic conditions
@@ -3683,7 +3683,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.isMultipass = false;
 		compressor.perfMap.reserve(1);
@@ -3762,7 +3762,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.isOn = false;
 		compressor.isVIP = true;
 		compressor.typeOfHeatSource = TYPE_compressor;
-		compressor.setCondensity(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+		compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
 		compressor.configuration = HeatSource::CONFIG_EXTERNAL;
 		compressor.perfMap.reserve(1);
 		compressor.hysteresis_dC = 0;

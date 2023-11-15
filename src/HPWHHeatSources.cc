@@ -98,12 +98,6 @@ void HPWH::HeatSource::setCondensity(const std::vector<double> &condensity_in) {
 	resampleExtensive(condensity, condensity_in);
 }
 
-void HPWH::HeatSource::setCondensity(double cnd1,double cnd2,double cnd3,double cnd4,
-	double cnd5,double cnd6,double cnd7,double cnd8,
-	double cnd9,double cnd10,double cnd11,double cnd12) {
-	setCondensity({cnd1, cnd2, cnd3, cnd4, cnd5, cnd6, cnd7, cnd8, cnd9, cnd10, cnd11, cnd12});
-}
-
 int HPWH::HeatSource::getCondensitySize() const {
 	return static_cast<int>(condensity.size());
 }
@@ -1022,9 +1016,9 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 	}
 
 	// set condensity based on normalized vector
-	setCondensity(tempCondensity[0],tempCondensity[1],tempCondensity[2],tempCondensity[3],
+	setCondensity({tempCondensity[0],tempCondensity[1],tempCondensity[2],tempCondensity[3],
 		tempCondensity[4],tempCondensity[5],tempCondensity[6],tempCondensity[7],
-		tempCondensity[8],tempCondensity[9],tempCondensity[10],tempCondensity[11]);
+		tempCondensity[8],tempCondensity[9],tempCondensity[10],tempCondensity[11]});
 
 	perfMap.clear();
 	perfMap.reserve(2);
