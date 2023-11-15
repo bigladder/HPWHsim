@@ -384,10 +384,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
-		static std::vector<double> heatDistribution(hpwh->getNumNodes());
-		//clear the heatDistribution vector, since it's static it is still holding the
-		//distribution from the last go around
-		heatDistribution.clear();
+		std::vector<double> heatDistribution;
+
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
@@ -989,10 +987,12 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts) {
 }
 
 void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
-
-	std::vector<double> tempCondensity(getCondensitySize());
-	double watts = 0.0;
-	for(unsigned int i = 0; i < (*nodePowerExtra_W).size(); i++) {
+	// The size of nodePowerExtra_W is hard-coded as 3 in cse/dhwsolar.cpp.
+	// Apparently, this refers to a fixed condensity size of 12.
+	// Suggest specifying the full condensity (scaled by power) instead.
+	std::vector<double> tempCondensity(CONDENSITY_SIZE);
+	double watts = 0.;
+	for(unsigned int i = 0; (i < (*nodePowerExtra_W).size()) && (i < tempCondensity.size()); ++i) {
 		//get sum of vector
 		watts += (*nodePowerExtra_W)[i];
 
@@ -1011,9 +1011,7 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double>* nodePowerExtra_W) {
 	}
 
 	// set condensity based on normalized vector
-	setCondensity({tempCondensity[0],tempCondensity[1],tempCondensity[2],tempCondensity[3],
-		tempCondensity[4],tempCondensity[5],tempCondensity[6],tempCondensity[7],
-		tempCondensity[8],tempCondensity[9],tempCondensity[10],tempCondensity[11]});
+	setCondensity(tempCondensity);
 
 	perfMap.clear();
 	perfMap.reserve(2);
