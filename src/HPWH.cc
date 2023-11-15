@@ -2420,12 +2420,10 @@ int HPWH::getResistancePosition(int elementIndex) const {
 //the privates
 void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbientT_C,
 	double inletVol2_L,double inletT2_C) {
-	//set up some useful variables for calculations
-	double drawFraction;
-	this->outletTemp_C = 0.;
-	double nodeInletFraction,cumInletFraction,drawVolume_N;
-	double nodeInletTV = 0.;
 
+	outletTemp_C = 0.;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	if(drawVolume_L > 0.) {
 
 		//calculate how many nodes to draw (wholeNodesToDraw), and the remainder (drawFraction)
@@ -2458,7 +2456,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
 		//calculate how many nodes to draw (drawVolume_N)
-		drawVolume_N = drawVolume_L / nodeVolume_L;
+		double drawVolume_N = drawVolume_L / nodeVolume_L;
 		if(drawVolume_L > tankVolume_L) {
 			//if (hpwhVerbosity >= VRB_reluctant) {
 			//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
@@ -2481,16 +2479,17 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		while(drawVolume_N > 0) {
 
 			// Draw one node at a time
-			drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+			double drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+			double nodeInletTV = 0.;
 
 			//add temperature for outletT average
 			outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
 
-			cumInletFraction = 0.;
+			double cumInletFraction = 0.;
 			for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
 
 				// Reset inlet inputs at this node. 
-				nodeInletFraction = 0.;
+				double nodeInletFraction = 0.;
 				nodeInletTV = 0.;
 
 				// Sum of all inlets Vi*Ti at this node
@@ -2553,9 +2552,15 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 		// Boundary condition for the finite difference. 
 		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
 
+			// Small truncation differences here lead to larger differences later 
 		// Boundary nodes for finite difference
-		nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-		nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
+		if (getNumNodes() > 1) { // inner edges of top and bottom nodes
+			nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
+			nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
+		}
+		else { // Factor of 2. for single-node
+			nextTankTemps_C[0] = (1.0 - 2. * bc) * tankTemps_C[0] + 2. * bc * tankAmbientT_C;
+		}
 
 		// Internal nodes for the finite difference
 		for(int i = 1; i < getNumNodes() - 1; i++) {

@@ -736,24 +736,22 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	for(int i = 0; i < hpwh->getNumNodes(); i++) {
-		if(i < lowestNode) {
-			heatDistribution.push_back(0);
-		} else {
-			int k;
-			if(configuration == CONFIG_SUBMERGED) { // Inside the tank, no swoopiness required
-				//intentional integer division
-				k = i / int(hpwh->getNumNodes() / getCondensitySize());
-				heatDistribution.push_back(condensity[k]);
-			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-				double temp = 0;  //temp for temporary not temperature
-				double offset = 5.0 / 1.8;
-				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
-				temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
-				if(temp < 0.) // SETPOINT_FIX
-					temp = 0.;
-				heatDistribution.push_back(temp);
+	heatDistribution.resize(hpwh->getNumNodes());
+	if(configuration == CONFIG_SUBMERGED) {
+		resampleExtensive(heatDistribution, condensity);
+	}
+	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
+		for(int i = 0; i < hpwh->getNumNodes(); i++) {
+			double dist = 0.;
+			if(i >= lowestNode){
+				double Toffset_C = 5.0 / 1.8; // 5 degF
+				double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
+				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
+				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
+				if(dist < 0.) // SETPOINT_FIX
+					dist = 0.;
 			}
+			heatDistribution[i] = dist;
 		}
 	}
 	normalize(heatDistribution);
