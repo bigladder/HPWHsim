@@ -291,9 +291,9 @@ public:
 		std::string description;
 		std::function<bool(double,double)> compare;
 
-		HeatingLogic(std::string desc,double d,HPWH *pHPWH,
+		HeatingLogic(std::string desc,double decisionPoint_in,HPWH *hpwh_in,
 			std::function<bool(double,double)> c,bool isHTS):
-			description(desc),decisionPoint(d),parentHPWH(pHPWH),compare(c),
+			description(desc),decisionPoint(decisionPoint_in),hpwh(hpwh_in),compare(c),
 			isEnteringWaterHighTempShutoff(isHTS)
 		{};
 
@@ -314,16 +314,16 @@ public:
 
 	protected:
 		double decisionPoint;
-		HPWH* parentHPWH;
+		HPWH* hpwh;
 		bool isEnteringWaterHighTempShutoff;
 	};
 
 	struct SoCBasedHeatingLogic: HeatingLogic {
 	public:
-		SoCBasedHeatingLogic(std::string desc,double d,HPWH *pHPWH,
+		SoCBasedHeatingLogic(std::string desc,double decisionPoint,HPWH *hpwh,
 			double hF = -0.05,double tM_C = 43.333,bool constMains = false,double mains_C = 18.333,
 			std::function<bool(double,double)> c = std::less<double>()):
-			HeatingLogic(desc,d,pHPWH,c,false),
+			HeatingLogic(desc,decisionPoint,hpwh,c,false),
 			hysteresisFraction(hF),tempMinUseful_C(tM_C),
 			useCostantMains(constMains),constantMains_C(mains_C)
 		{};
@@ -348,10 +348,10 @@ public:
 	struct TempBasedHeatingLogic: HeatingLogic {
 	public:
 		TempBasedHeatingLogic(std::string desc,std::vector<NodeWeight> n,
-			double d,HPWH *phpwh,bool a = false,
+			double decisionPoint,HPWH *hpwh,bool a = false,
 			std::function<bool(double,double)> c = std::less<double>(),
 			bool isHTS = false):
-			HeatingLogic(desc,d,phpwh,c,isHTS),
+			HeatingLogic(desc,decisionPoint,hpwh,c,isHTS),
 			nodeWeights(n),isAbsolute(a)
 		{};
 
@@ -919,7 +919,7 @@ private:
 	/**< the mass of water (kg) in a single node  */
 	double nodeMass_kg;
 
-	/**< the heat capacity of the water (kJ/°C) in a single node  */
+	/**< the heat capacity of the water (kJ/ï¿½C) in a single node  */
 	double nodeCp_kJperC;
 
 	/**< the height in meters of the one node  */
