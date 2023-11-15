@@ -1149,7 +1149,7 @@ private:
 	//  by specifying the entire condensity in one node. */
 	std::vector<double> condensity;
 
-	double shrinkage;
+	double Tshrinkage_C;
 	/**< the shrinkage is a derived value, using parameters alpha, beta,
 		and the condentropy, which is derived from the condensity
 		alpha and beta are not intended to be settable
@@ -1297,9 +1297,8 @@ private:
 
 	void calcHeatDist(std::vector<double> &heatDistribution);
 
-	double getCondenserTemp() const;
-	/**< returns the temperature of the condensor - it's a weighted average of the
-		tank temperature, using the condensity as weights */
+	double getTankTemp() const;
+	/**< returns the tank temperature, using the condensity as weights */
 
 	void sortPerformanceMap();
 	/**< sorts the Performance Map by increasing external temperatures */

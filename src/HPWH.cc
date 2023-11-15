@@ -160,7 +160,6 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 	return false;
 }
 
-
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
@@ -452,7 +451,7 @@ int HPWH::runOneStep(double drawVolume_L,
 				HeatSource* heatSourcePtr;
 				if(heatSources[i].isLockedOut() && heatSources[i].backupHeatSource != NULL) {
 
-					// Check that the backup isn't locked out too or already engaged then it will heat on it's own.
+					// Check that the backup isn't locked out too or already engaged then it will heat on its own.
 					if(heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
 						shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,DRstatus) || //){
 						heatSources[i].backupHeatSource->isEngaged()) {
@@ -515,8 +514,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	if(areAllHeatSourcesOff() == true) {
 		isHeating = false;
 	}
-
-	//If theres extra user defined heat to add -> Add extra heat!
+	//If there's extra user defined heat to add -> Add extra heat!
 	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
 		addExtraHeat(nodePowerExtra_W,tankAmbientT_C);
 		updateSoCIfNecessary();
@@ -2657,7 +2655,6 @@ void HPWH::mixTankInversions() {
 	}
 }
 
-
 void HPWH::addExtraHeat(std::vector<double>* nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
@@ -2785,23 +2782,23 @@ void HPWH::calcDerivedHeatingValues(){
 
 	//condentropy/shrinkage
 	double condentropy = 0;
-	double alpha = 1,beta = 2;  // Mapping from condentropy to shrinkage
-	for(int i = 0; i < getNumHeatSources(); i++) {
+	double Talpha_C = 1,Tbeta_C = 2;  // Mapping from condentropy to shrinkage
+	for(int i = 0; i < getNumHeatSources(); ++i) {
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
 		}
 
 		// Calculate condentropy and ==> shrinkage
-		condentropy = 0;
+		condentropy = 0.;
 		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
-			if(heatSources[i].condensity[j] > 0) {
+			if(heatSources[i].condensity[j] > 0.) {
 				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
 				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
 			}
 		}
-		heatSources[i].shrinkage = alpha + condentropy * beta;
+		heatSources[i].Tshrinkage_C = Talpha_C + condentropy * Tbeta_C;
 		if(hpwhVerbosity >= VRB_emetic) {
-			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].shrinkage);
+			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].Tshrinkage_C);
 		}
 	}
 	//lowest node
@@ -3088,6 +3085,20 @@ int HPWH::checkInputs() {
 
 	//if there's no failures, return 0
 	return returnVal;
+}
+
+bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs,DRMODES DR_signal) const {
+
+	if(hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
+		return true;
+	} else if(hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
+		return true;
+	}
+	return false;
+}
+
+void HPWH::resetTopOffTimer() {
+	timerTOT = 0.;
 }
 
 #ifndef HPWH_ABRIDGED

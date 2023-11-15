@@ -52,7 +52,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 
 	condensity = hSource.condensity;
 
-	shrinkage = hSource.shrinkage;
+	Tshrinkage_C = hSource.Tshrinkage_C;
 
 	perfMap = hSource.perfMap;
 
@@ -241,19 +241,6 @@ bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C) {
 	return isLockedOut();
 }
 
-bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs,DRMODES DR_signal) const {
-
-	if(hs == TYPE_compressor && (DR_signal & DR_LOC) != 0) {
-		return true;
-	} else if(hs == TYPE_resistance && (DR_signal & DR_LOR) != 0) {
-		return true;
-	}
-	return false;
-}
-
-void HPWH::resetTopOffTimer() {
-	timerTOT = 0.;
-}
 
 void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal) {
 	isOn = true;
@@ -411,10 +398,10 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		calcHeatDist(heatDistribution);
 
 		if(isACompressor()) {
-			hpwh->condenserInlet_C = getCondenserTemp();
+			hpwh->condenserInlet_C = getTankTemp();
 		}
 		// calculate capacity btu/hr, input btu/hr, and cop
-		getCapacity(externalT_C,getCondenserTemp(),input_BTUperHr,cap_BTUperHr,cop);
+		getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
 
 		//some outputs for debugging
 		if(hpwh->hpwhVerbosity >= VRB_typical) {
@@ -436,7 +423,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 
 		if(isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
-			hpwh->condenserOutlet_C = getCondenserTemp();
+			hpwh->condenserOutlet_C = getTankTemp();
 		}
 
 		//after you've done everything, any leftover capacity is time that didn't run
@@ -495,7 +482,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 	}
 }
 
-double HPWH::HeatSource::getCondenserTemp() const{
+double HPWH::HeatSource::getTankTemp() const{
 	double condenserTemp_C = 0.0;
 	int tempNodesPerCondensityNode = hpwh->getNumNodes() / getCondensitySize();
 	int j = 0;
@@ -770,7 +757,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 			} else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
 				double temp = 0;  //temp for temporary not temperature
 				double offset = 5.0 / 1.8;
-				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / this->shrinkage,offset);
+				temp = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
 				temp *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
 				if(temp < 0.) // SETPOINT_FIX
 					temp = 0.;
