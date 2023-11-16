@@ -514,7 +514,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,double condenserTemp_C,dou
 		std::vector<double> target{externalT_F,Tout_F,condenserTemp_F};
 		btwxtInterp(input_BTUperHr,cop,target);
 	} else {
-		if(perfMap.empty()) {
+		if(perfMap.empty()) { // Avoid using empty perfMap
 			input_BTUperHr = 0.;
 			cop = 0.;
 		} else if(perfMap.size() > 1) {
