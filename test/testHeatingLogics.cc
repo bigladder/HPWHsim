@@ -288,7 +288,7 @@ void testExtraHeat() {
 	hpwh.runOneStep(0, ambientT_C, externalT_C, HPWH::DR_LOC, inletVol2_L, inletT2_C, &nodePowerExtra_W);
 	double Q_final = hpwh.getTankHeatContent_kJ();
 
-	double dQ_actual_kJ = (Q_final - Q_init) * 1.055055853 / 1.055; // Correct for approx. BU->kJ conversion.
+	double dQ_actual_kJ = (Q_final - Q_init) * 1.055055853 / 1.055; // Correct for approx. BTU->kJ conversion.
 
 	double dQ_expected_kJ = extraPower_W * 60. / 1.e3; // 1 min
 
