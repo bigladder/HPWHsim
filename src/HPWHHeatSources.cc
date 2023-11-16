@@ -990,33 +990,14 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 }
 
 void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
-	// The elements of nodePowerExtra_W are assigned to the condensity nodes for
-	// this heat source. If condensity.size() is larger than nodePowerExtra_W.size,
-	// the additional elements of condensity are set to zero. If condensity.size() is smaller than nodePowerExtra_W.size,
-	// the additional elements of nodePowerExtra_W are omitted.
-	// Suggest specifying nodePowerExtra_W as the full condensity distribution (scaled by power) instead.
-	for(unsigned int i = 0; i < condensity.size(); ++i) {
-
-		//put into vector for normalization
-		condensity[i] = (i < nodePowerExtra_W.size()) ? nodePowerExtra_W[i] : 0.;
-	}
-	normalize(condensity);
-
-	if(hpwh->hpwhVerbosity >= VRB_emetic){
-		hpwh->msg("extra heat condensity: ");
-		for(unsigned int i = 0; i < condensity.size(); i++) {
-			hpwh->msg("C[%d]: %f",i,condensity[i]);
-		}
-		hpwh->msg("\n ");
-	}
-
-	perfMap.clear();
-	perfMap.reserve(2);
-
+	// The total power in nodePowerExtra_W is applied, using the existing condensity.
 	double watts = 0.;
 	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
 		watts += nodePowerExtra_W[i];
 	}
+
+	perfMap.clear();
+	perfMap.reserve(2);
 
 	perfMap.push_back({
 		50, // Temperature (T_F)
@@ -1029,7 +1010,6 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 		{watts,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
 		});
-
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {
