@@ -383,7 +383,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
-		std::vector<double> heatDistribution(hpwh->getNumNodes());
+		std::vector<double> heatDistribution;
 
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
@@ -737,6 +737,7 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
+	heatDistribution.resize(hpwh->getNumNodes());
 	if(configuration == CONFIG_SUBMERGED) {
 		resampleExtensive(heatDistribution, condensity);
 	}
@@ -989,22 +990,21 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 }
 
 void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
+	// The elements of nodePowerExtra_W are assigned to the condensity nodes for
+	// this heat source. If condensity.size() is larger than nodePowerExtra_W.size,
+	// the additional elements of condensity are set to zero. If condensity.size() is smaller than nodePowerExtra_W.size,
+	// the additional elements of nodePowerExtra_W are omitted.
+	// Suggest specifying nodePowerExtra_W as the full condensity distribution (scaled by power) instead.
+	for(unsigned int i = 0; i < condensity.size(); ++i) {
 
-	// retain original condensity size for this heat source
-	std::vector<double> extraCondensity(getCondensitySize());
-	resampleExtensive(extraCondensity, nodePowerExtra_W);
-	double watts = 0.0;
-	for(int i = 0; i < getCondensitySize(); ++i) {
-		//get sum of vector
-		watts += extraCondensity[i];
+		//put into vector for normalization
+		condensity[i] = (i < nodePowerExtra_W.size()) ? nodePowerExtra_W[i] : 0.;
 	}
-	normalize(extraCondensity);
+	normalize(condensity);
 
-	// set condensity
-	setCondensity(extraCondensity);
 	if(hpwh->hpwhVerbosity >= VRB_emetic){
 		hpwh->msg("extra heat condensity: ");
-		for(int i = 0; i < getCondensitySize(); i++) {
+		for(unsigned int i = 0; i < condensity.size(); i++) {
 			hpwh->msg("C[%d]: %f",i,condensity[i]);
 		}
 		hpwh->msg("\n ");
@@ -1012,6 +1012,11 @@ void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
 
 	perfMap.clear();
 	perfMap.reserve(2);
+
+	double watts = 0.;
+	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
+		watts += nodePowerExtra_W[i];
+	}
 
 	perfMap.push_back({
 		50, // Temperature (T_F)
