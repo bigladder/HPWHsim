@@ -433,7 +433,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 
 	case CONFIG_EXTERNAL:
 		//Else the heat source is external. SANCO2 system is only current example
-		//capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
+		//capacity is calculated internal to this functio
+		// n, and cap/input_BTUperHr, cop are outputs
 		this->runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
 		break;
 	}
@@ -513,7 +514,10 @@ void HPWH::HeatSource::getCapacity(double externalT_C,double condenserTemp_C,dou
 		std::vector<double> target{externalT_F,Tout_F,condenserTemp_F};
 		btwxtInterp(input_BTUperHr,cop,target);
 	} else {
-		if(perfMap.size() > 1) {
+		if(perfMap.empty()) {
+			input_BTUperHr = 0.;
+			cop = 0.;
+		} else if(perfMap.size() > 1) {
 			double COP_T1,COP_T2;    			   //cop at ambient temperatures T1 and T2
 			double inputPower_T1_Watts,inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
 
