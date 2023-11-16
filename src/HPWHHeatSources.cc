@@ -989,27 +989,31 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 	typeOfHeatSource = TYPE_resistance;
 }
 
-void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
-	// The total power in nodePowerExtra_W is applied, using the existing condensity.
-	double watts = 0.;
-	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
-		watts += nodePowerExtra_W[i];
-	}
+void HPWH::HeatSource::setupExtraHeat(const double extraPower_W) {
 
 	perfMap.clear();
 	perfMap.reserve(2);
 
 	perfMap.push_back({
 		50, // Temperature (T_F)
-		{watts,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
 		});
 
 	perfMap.push_back({
 		67, // Temperature (T_F)
-		{watts,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
 		});
+}
+
+void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
+	// Only the total power in nodePowerExtra_W is used.
+	double extraPower_W = 0.;
+	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
+		extraPower_W += nodePowerExtra_W[i];
+	}
+	setupExtraHeat(extraPower_W);
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {
