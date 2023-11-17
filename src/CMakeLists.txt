@@ -17,10 +17,12 @@ set(headers
   HPWH.hh
   HPWHMain.hh
   HPWHHeatSources.hh
+  HPWHHeatingLogics.hh
 )
 
 set(source
   HPWH.cc
+  HPWHMain.cc
   HPWHHeatSources.cc
   HPWHHeatingLogics.cc
   HPWHpresets.cc
