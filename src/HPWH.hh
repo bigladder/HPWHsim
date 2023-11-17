@@ -20,10 +20,7 @@ namespace Btwxt { class RegularGridInterpolator; };
  *  excluded from compiling.  This is done in order to reduce the size of the
  * final compiled code.  */
 
-#define HPWHVRSN_MAJOR @HPWHsim_VRSN_MAJOR@
-#define HPWHVRSN_MINOR @HPWHsim_VRSN_MINOR@
-#define HPWHVRSN_PATCH @HPWHsim_VRSN_PATCH@
-#define HPWHVRSN_META "@HPWHsim_VRSN_META@"
+#include "HPWHversion.hh"
 
 class HPWH {
 public:
