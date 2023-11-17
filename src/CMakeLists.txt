@@ -18,6 +18,7 @@ set(headers
   HPWHMain.hh
   HPWHHeatSources.hh
   HPWHHeatingLogics.hh
+  HPWHPresets.hh
   HPWHUtilities.hh
 )
 
