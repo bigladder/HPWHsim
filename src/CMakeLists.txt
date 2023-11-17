@@ -18,14 +18,15 @@ set(headers
   HPWHMain.hh
   HPWHHeatSources.hh
   HPWHHeatingLogics.hh
+  HPWHUtilities.hh
 )
 
 set(source
-  HPWH.cc
   HPWHMain.cc
   HPWHHeatSources.cc
   HPWHHeatingLogics.cc
   HPWHpresets.cc
+  HPWHUtilities.cc
 )
 add_library(libHPWHsim ${source} ${headers})
 

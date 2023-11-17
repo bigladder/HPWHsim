@@ -1,3 +1,6 @@
+/*
+* Heating logic
+*/
 
 #ifndef HPWHHeatingLogics_hh
 #define HPWHHeatingLogics_hh
@@ -110,4 +113,4 @@ private:
 	std::vector<NodeWeight> nodeWeights;
 };
 
-#endif
+#endif // HPWHHeatingLogics_hh

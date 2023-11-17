@@ -605,7 +605,6 @@ void HPWH::addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,d
 	}
 }
 
-
 void HPWH::setVerbosity(VERBOSITY hpwhVrb) {
 	hpwhVerbosity = hpwhVrb;
 }
@@ -695,7 +694,6 @@ void HPWH::printHeatSourceInfo() {
 	msg(ss.str().c_str());
 }
 
-
 void HPWH::printTankTemps() {
 	std::stringstream ss;
 
@@ -708,7 +706,6 @@ void HPWH::printTankTemps() {
 
 	msg(ss.str().c_str());
 }
-
 
 // public members to write to CSV file
 int HPWH::WriteCSVHeading(FILE* outFILE,const char* preamble,int nTCouples,int options) const {

@@ -1,3 +1,7 @@
+/*
+*	Heat source
+*/
+
 #ifndef HPWHHeatSources_hh
 #define HPWHHeatSources_hh
 

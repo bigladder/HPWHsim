@@ -13,8 +13,6 @@
 #include <cstdlib>   //for exit
 #include <vector>
 
-namespace Btwxt { class RegularGridInterpolator; };
-
 #include "HPWH.hh"
 
 class HPWH {
@@ -669,7 +667,6 @@ public:
 	double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
 	/**< Returns the constant flow rate for an external multipass heat sources. */
 
-
 	double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 
 	int getSizingFractions(double &aquafract,double &percentUseable) const;
@@ -777,8 +774,6 @@ private:
 	/**< function pointer to indicate an external message processing function  */
 	void* messageCallbackContextPtr;
 	/**< caller context pointer for external message processing  */
-
-
 
 	MODELS hpwhModel;
 	/**< The hpwh should know which preset initialized it, or if it was from a fileget */

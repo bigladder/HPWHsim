@@ -1,19 +1,13 @@
 /*
-* General functions
+* Utility functions
 */
-
-#include "HPWH.hh"
-#include "btwxt.h"
 
 #include <stdarg.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include <regex>
 
-using std::endl;
-using std::cout;
-using std::string;
+#include "HPWH.hh"
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
