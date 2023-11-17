@@ -15,6 +15,8 @@ include_directories("${PROJECT_BINARY_DIR}/src" "${PROJECT_SOURCE_DIR}/src")
 set(headers
   HPWHversion.in.hh
   HPWH.hh
+  HPWHMain.hh
+  HPWHHeatSources.hh
 )
 
 set(source
