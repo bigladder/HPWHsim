@@ -537,7 +537,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
 
 		//initial guess, will get reset based on the input heat vector
-		extra.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+		extra.setCondensity({1., 0., 0., 0.});
 
 		//set everything in its places
 		heatSources.resize(1);
