@@ -3833,8 +3833,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		tankMixesOnDraw = true;
 
 		// heat exchangers only
-		waterIsDrawnFromTank = false;
-		heatExchangeEfficiency = 0.9;
+		hasHeatExchanger = true;
+		heatExchangerEffectiveness = 0.9;
 
 		HeatSource compressor(this);
 

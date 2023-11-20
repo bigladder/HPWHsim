@@ -193,8 +193,8 @@ void HPWH::setAllDefaults() {
 	usesSoCLogic = false;
 	setMinutesPerStep(1.0);
 	hpwhVerbosity = VRB_minuteOut;
-	waterIsDrawnFromTank = true;
-	heatExchangeEfficiency = 0.9;
+	hasHeatExchanger = false;
+	heatExchangerEffectiveness = 0.9;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -2461,7 +2461,24 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
 
-		if (waterIsDrawnFromTank) {
+		if (hasHeatExchanger) {// heat-exchange models
+
+			const double densityTank_kgperL = DENSITYWATER_kgperL;
+			const double CpTank_kJperkgC  = CPWATER_kJperkgC;
+
+			double C_Node_kJperC = CpTank_kJperkgC * densityTank_kgperL * nodeVolume_L;
+			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+
+			outletTemp_C = inletT_C;
+			for (auto &nodeTemp: tankTemps_C) {	
+				double maxHeatExchange_kJ = (nodeTemp - outletTemp_C) / (1. / C_Node_kJperC + 1. / C_draw_kJperC);
+				double heatExchange_kJ = heatExchangerEffectiveness * maxHeatExchange_kJ;
+
+				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
+				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
+			}
+		}
+		else { 
 			//calculate how many nodes to draw (drawVolume_N)
 			double drawVolume_N = drawVolume_L / nodeVolume_L;
 			if(drawVolume_L > tankVolume_L) {
@@ -2481,7 +2498,6 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				drawVolume_N = 0.;
 			}
 
-
 			while(drawVolume_N > 0) {
 
 				// Draw one node at a time
@@ -2495,18 +2511,18 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
 
 
-        // Reset inlet inputs at this node. 
-        double nodeInletFraction = 0.;
-        nodeInletTV = 0.;
+				// Reset inlet inputs at this node. 
+				double nodeInletFraction = 0.;
+				nodeInletTV = 0.;
 
-        // Sum of all inlets Vi*Ti at this node
-        if(i == highInletH) {
-          nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
-          nodeInletFraction += highInletV * drawFraction / drawVolume_L;
-        }
-        if(i == lowInletH) {
-          nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
-          nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
+				// Sum of all inlets Vi*Ti at this node
+				if(i == highInletH) {
+				  nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
+				  nodeInletFraction += highInletV * drawFraction / drawVolume_L;
+				}
+				if(i == lowInletH) {
+				  nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
+				  nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
 
 					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
 				}
@@ -2530,22 +2546,6 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 			//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
 			outletTemp_C /= (drawVolume_L / nodeVolume_L);
-		}
-		else { // heat-exchange models
-			const double densityTank_kgperL = DENSITYWATER_kgperL;
-			const double CpTank_kJperkgC  = CPWATER_kJperkgC;
-
-			double C_Node_kJperC = CpTank_kJperkgC * densityTank_kgperL * nodeVolume_L;
-			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
-
-			outletTemp_C = inletT_C;
-			for (auto &nodeTemp: tankTemps_C) {	
-				double maxHeatExchange_kJ = (nodeTemp - outletTemp_C) / (1. / C_Node_kJperC + 1. / C_draw_kJperC);
-				double heatExchange_kJ = heatExchangeEfficiency * maxHeatExchange_kJ;
-
-				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
-				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
-			}
 		}
 
 		//Account for mixing at the bottom of the tank
@@ -3242,21 +3242,21 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				return HPWH_ABORT;
 			}
-		} else if(token == "waterIsDrawnFromTank") {
+		} else if(token == "hasHeatExchanger") {
 			// false of this model uses heat exchange
 			line_ss >> tempString;
-			if(tempString == "true") waterIsDrawnFromTank = true;
-			else if(tempString == "false") waterIsDrawnFromTank = false;
+			if(tempString == "true") hasHeatExchanger = true;
+			else if(tempString == "false") hasHeatExchanger = false;
 			else {
 				if(hpwhVerbosity >= VRB_reluctant) {
 					msg("Improper value for %s\n",token.c_str());
 				}
 				return HPWH_ABORT;
 			}
-		} else if(token == "heatExchangeEfficiency") {
+		} else if(token == "heatExchangerEffectiveness") {
 			// applies to heat-exchange models only
 			line_ss >> tempDouble;
-			heatExchangeEfficiency = tempDouble;			
+			heatExchangerEffectiveness = tempDouble;			
 		} else if(token == "verbosity") {
 			line_ss >> token;
 			if(token == "silent") {
