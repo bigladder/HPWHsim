@@ -125,9 +125,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
+	model = hpwh.getHPWHModel();
 
-   if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
+   if(model == HPWH::MODELS::Sanden80 || model == HPWH::MODELS::Sanden40) {
      newSetpoint = (149 - 32) / 1.8;
    }
  } else if (input1 == "File") {
@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 	  }
 
 	  // Mix down for yearly tests with large compressors
-	  if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.) {
+	  if (static_cast<int>(hpwh.getHPWHModel()) >= 210 && minutesToRun > 500000.) {
 		  //Do a simple mix down of the draw for the cold water temperature
 		  if (hpwh.getSetpoint() <= 125.) {
 			  allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);

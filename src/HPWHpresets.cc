@@ -102,7 +102,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		tankUA_kJperHrC = 0.0;
 	}
 
-	hpwhModel = MODELS_CustomResTank;
+	hpwhModel = MODELS::CustomResTank;
 
 	//calculate oft-used derived values
 	calcDerivedValues();
@@ -212,7 +212,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		tankUA_kJperHrC = 0.0;
 	}
 
-	hpwhModel = HPWH::MODELS_CustomResTankGeneric;
+	hpwhModel = MODELS::CustomResTankGeneric;
 
 	//calculate oft-used derived values
 	calcDerivedValues();
@@ -245,7 +245,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 	// return 0 on success, HPWH_ABORT for failure
 	heatSources.clear();
 
-	//except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
+	//except where noted, these values are taken from MODELS::GE2014STDMode on 5/17/16
 	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
 
@@ -373,7 +373,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
 	//standard finishing up init, borrowed from init function
 
-	hpwhModel = MODELS_genericCustomUEF;
+	hpwhModel = MODELS::genericCustomUEF;
 
 	//calculate oft-used derived values
 	calcDerivedValues();
@@ -412,7 +412,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	heatSources.clear();
 
 	//resistive with no UA losses for testing
-	if (presetNum == MODELS_restankNoUA) {
+	if (presetNum == MODELS::restankNoUA) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -446,7 +446,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	//resistive tank with massive UA loss for testing
-	else if (presetNum == MODELS_restankHugeUA) {
+	else if (presetNum == MODELS::restankHugeUA) {
 		setNumNodes(12);
 		setpoint_C = 50;
 
@@ -480,7 +480,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	//realistic resistive tank
-	else if (presetNum == MODELS_restankRealistic) {
+	else if (presetNum == MODELS::restankRealistic) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -513,7 +513,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].followedByHeatSource = &heatSources[1];
 	}
 
-	else if (presetNum == MODELS_StorageTank) {
+	else if (presetNum == MODELS::StorageTank) {
 		setNumNodes(12);
 		setpoint_C = 52;
 
@@ -545,7 +545,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	//basic compressor tank for testing
-	else if (presetNum == MODELS_basicIntegrated) {
+	else if (presetNum == MODELS::basicIntegrated) {
 		setNumNodes(12);
 		setpoint_C = 50;
 
@@ -621,7 +621,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	//simple external style for testing
-	else if (presetNum == MODELS_externalTest) {
+	else if (presetNum == MODELS::externalTest) {
 		setNumNodes(96);
 		setpoint_C = 50;
 
@@ -673,7 +673,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0] = compressor;
 	}
 	//voltex 60 gallon
-	else if (presetNum == MODELS_AOSmithPHPT60) {
+	else if (presetNum == MODELS::AOSmithPHPT60) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -749,7 +749,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_AOSmithPHPT80) {
+	else if (presetNum == MODELS::AOSmithPHPT80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -826,7 +826,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_GE2012) {
+	else if (presetNum == MODELS::GE2012) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -908,7 +908,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a Colmac single pass preset cold weather or not
-	else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP) {
+	else if (MODELS::ColmacCxV_5_SP <= presetNum && presetNum <= MODELS::ColmacCxA_30_SP) {
 		setNumNodes(96);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -948,7 +948,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
-		if (presetNum == MODELS_ColmacCxV_5_SP) {
+		if (presetNum == MODELS::ColmacCxV_5_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			//logic conditions
 			compressor.minT = F_TO_C(-4.0);
@@ -969,7 +969,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			compressor.minT = F_TO_C(40.);
 			compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-			if (presetNum == MODELS_ColmacCxA_10_SP) {
+			if (presetNum == MODELS::ColmacCxA_10_SP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
 
 				compressor.perfMap.push_back({
@@ -983,7 +983,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_15_SP) {
+			else if (presetNum == MODELS::ColmacCxA_15_SP) {
 				setTankSize_adjustUA(600., UNITS_GAL);
 
 				compressor.perfMap.push_back({
@@ -997,7 +997,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_20_SP) {
+			else if (presetNum == MODELS::ColmacCxA_20_SP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
 
 				compressor.perfMap.push_back({
@@ -1011,7 +1011,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_25_SP) {
+			else if (presetNum == MODELS::ColmacCxA_25_SP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 
 				compressor.perfMap.push_back({
@@ -1025,7 +1025,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_30_SP) {
+			else if (presetNum == MODELS::ColmacCxA_30_SP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 
 				compressor.perfMap.push_back({
@@ -1038,7 +1038,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-0.0000251665, -0.0003289731, -0.0000801823, 0.0000325972, 0.0000002705} // COP Coefficients (COP_coeffs)
 					});
 			}
-		} //End if MODELS_ColmacCxV_5_SP
+		} //End if MODELS::ColmacCxV_5_SP
 
 		//set everything in its places
 		heatSources.resize(1);
@@ -1047,7 +1047,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	
 
 	// if colmac multipass
-	else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP) {
+	else if (MODELS::ColmacCxV_5_MP <= presetNum && presetNum <= MODELS::ColmacCxA_30_MP) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -1084,7 +1084,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//Defrost Derate 
 		compressor.setupDefrostMap();
 
-		if (presetNum == MODELS_ColmacCxV_5_MP) {
+		if (presetNum == MODELS::ColmacCxV_5_MP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(9.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
@@ -1106,7 +1106,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			compressor.maxT = F_TO_C(105.);
 			compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-			if (presetNum == MODELS_ColmacCxA_10_MP) {
+			if (presetNum == MODELS::ColmacCxA_10_MP) {
 				setTankSize_adjustUA(500., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
 				compressor.perfMap.push_back({
@@ -1118,7 +1118,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_15_MP) {
+			else if (presetNum == MODELS::ColmacCxA_15_MP) {
 				setTankSize_adjustUA(600., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
 				compressor.perfMap.push_back({ 
@@ -1131,7 +1131,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_20_MP) {
+			else if (presetNum == MODELS::ColmacCxA_20_MP) {
 				setTankSize_adjustUA(800., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(36.); //https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
@@ -1144,7 +1144,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_25_MP) {
+			else if (presetNum == MODELS::ColmacCxA_25_MP) {
 				setTankSize_adjustUA(1000., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
 				compressor.perfMap.push_back({ 
@@ -1156,7 +1156,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					});
 
 			}
-			else if (presetNum == MODELS_ColmacCxA_30_MP) {
+			else if (presetNum == MODELS::ColmacCxA_30_MP) {
 				setTankSize_adjustUA(1200., UNITS_GAL);
 				compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
 				compressor.perfMap.push_back({
@@ -1174,7 +1174,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0] = compressor;
 	}
 	// If Nyle single pass preset
-	else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP) {
+	else if (MODELS::NyleC25A_SP <= presetNum && presetNum <= MODELS::NyleC250A_C_SP) {
 		setNumNodes(96);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -1199,7 +1199,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.externalInletHeight = getNumNodes() - 1;
 
 		//logic conditions
-		if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP) {// If not cold weather package
+		if (MODELS::NyleC25A_SP <= presetNum && presetNum <= MODELS::NyleC250A_SP) {// If not cold weather package
 			compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
 		}
 		else {
@@ -1228,7 +1228,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.setupDefrostMap();
 
 		//Perfmaps for each compressor size
-		if (presetNum == MODELS_NyleC25A_SP) {
+		if (presetNum == MODELS::NyleC25A_SP) {
 			setTankSize_adjustUA(200., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1240,7 +1240,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-0.000384778,-0.000404744,-0.000036277, 0.000001900 } // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP) {
+		else if (presetNum == MODELS::NyleC60A_SP || presetNum == MODELS::NyleC60A_C_SP) {
 			setTankSize_adjustUA(300., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1252,7 +1252,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-0.0003311463,-0.0002154270,0.0001307922,0.0000005568} // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP) {
+		else if (presetNum == MODELS::NyleC90A_SP || presetNum == MODELS::NyleC90A_C_SP) {
 			setTankSize_adjustUA(400., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1264,7 +1264,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					0.00006002498,-0.00045661397,-0.00034003896,-0.00004327766,0.00000176015} // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP) {
+		else if (presetNum == MODELS::NyleC125A_SP || presetNum == MODELS::NyleC125A_C_SP) {
 			setTankSize_adjustUA(500., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1276,7 +1276,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 					-1.4452E-05, -0.000492486, -0.000376814,	7.85911E-05,	1.47884E-06}// COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP) {
+		else if (presetNum == MODELS::NyleC185A_SP || presetNum == MODELS::NyleC185A_C_SP) {
 			setTankSize_adjustUA(800., UNITS_GAL);
 			compressor.perfMap.push_back({
 					90, // Temperature (T_F)
@@ -1288,7 +1288,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 						9.78042E-05, -0.000872708,-0.001013945, -0.00021852,	5.55444E-06}// COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP) {
+		else if (presetNum == MODELS::NyleC250A_SP || presetNum == MODELS::NyleC250A_C_SP) {
 			setTankSize_adjustUA(800., UNITS_GAL);
 
 			compressor.perfMap.push_back({
@@ -1308,7 +1308,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	// If Nyle multipass presets
-	else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP) {
+	else if (MODELS::NyleC60A_MP <= presetNum && presetNum <= MODELS::NyleC250A_C_MP) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -1332,7 +1332,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
 		//logic conditions//logic conditions
-		if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP) {// If not cold weather package
+		if (MODELS::NyleC60A_MP <= presetNum && presetNum <= MODELS::NyleC250A_MP) {// If not cold weather package
 			compressor.minT = F_TO_C(40.); // Min air temperature sans Cold Weather Package
 		}
 		else {
@@ -1361,10 +1361,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.perfGrid.push_back({ 40., 60., 80., 90. }); // Grid Axis 1 Tair (F)
 		compressor.perfGrid.push_back({ 40., 60., 80., 100., 130., 150. }); // Grid Axis 2 Tin (F)
 
-		if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP) {
+		if (presetNum == MODELS::NyleC60A_MP || presetNum == MODELS::NyleC60A_C_MP) {
 			setTankSize_adjustUA(360., UNITS_GAL); 
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(13.);
-			if (presetNum == MODELS_NyleC60A_C_MP) {
+			if (presetNum == MODELS::NyleC60A_C_MP) {
 				compressor.resDefrost = {
 								4.5,  // inputPwr_kW;
 								5.0,  // constTempLift_dF;
@@ -1381,10 +1381,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				1.860732984, 5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691 
 				});
 		}
-		else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP) {
+		else if (presetNum == MODELS::NyleC90A_MP || presetNum == MODELS::NyleC90A_C_MP) {
 			setTankSize_adjustUA(480., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(20.);
-			if (presetNum == MODELS_NyleC90A_C_MP) {
+			if (presetNum == MODELS::NyleC90A_C_MP) {
 				compressor.resDefrost = {
 								5.4,  // inputPwr_kW;
 								5.0,  // constTempLift_dF;
@@ -1402,10 +1402,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				});
 
 		}
-		else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP) {
+		else if (presetNum == MODELS::NyleC125A_MP || presetNum == MODELS::NyleC125A_C_MP) {
 			setTankSize_adjustUA(600., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(28.);
-			if (presetNum == MODELS_NyleC125A_C_MP) {
+			if (presetNum == MODELS::NyleC125A_C_MP) {
 				compressor.resDefrost = {
 								9.0,  // inputPwr_kW;
 								5.0,  // constTempLift_dF;
@@ -1422,10 +1422,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				3.27827381, 2.113821138, 1.770469799, 6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286
 				});
 		}
-		else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP) {
+		else if (presetNum == MODELS::NyleC185A_MP || presetNum == MODELS::NyleC185A_C_MP) {
 			setTankSize_adjustUA(960., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(40.);
-			if (presetNum == MODELS_NyleC185A_C_MP) {
+			if (presetNum == MODELS::NyleC185A_C_MP) {
 				compressor.resDefrost = {
 								7.2,  // inputPwr_kW;
 								5.0,  // constTempLift_dF;
@@ -1442,10 +1442,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				3.705475811, 2.561369758, 2.05950096, 10.26993865, 6.350722311, 5.04218853, 3.841688654, 2.574151735, 2.025616698
 				});
 		}
-		else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP) {
+		else if (presetNum == MODELS::NyleC250A_MP || presetNum == MODELS::NyleC250A_C_MP) {
 			setTankSize_adjustUA(960., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(50.);
-			if (presetNum == MODELS_NyleC250A_C_MP) {
+			if (presetNum == MODELS::NyleC250A_C_MP) {
 				compressor.resDefrost = {
 								18.0,  // inputPwr_kW;
 								5.0,  // constTempLift_dF;
@@ -1474,7 +1474,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0] = compressor;
 	}
 	// if rheem multipass
-	else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP) {
+	else if (MODELS::RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS::RHEEM_HPHD135VNU_483_MP) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -1515,7 +1515,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxT = F_TO_C(110.);
 		compressor.maxSetpoint_C = MAXOUTLET_R134A; // data says 150...
 
-		if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP || presetNum == MODELS_RHEEM_HPHD60VNU_201_MP) {
+		if (presetNum == MODELS::RHEEM_HPHD60HNU_201_MP || presetNum == MODELS::RHEEM_HPHD60VNU_201_MP) {
 			setTankSize_adjustUA(250., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(17.4);
 			compressor.perfMap.push_back({
@@ -1526,7 +1526,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 				{ 3.6840046360, 0.0995685071, -0.0398107723, -0.0001903160, 0.0000980361, -0.0003469814} // COP Coefficients (COP_coeffs)
 				});
 		}
-		else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP || presetNum == MODELS_RHEEM_HPHD135VNU_483_MP) {
+		else if (presetNum == MODELS::RHEEM_HPHD135HNU_483_MP || presetNum == MODELS::RHEEM_HPHD135VNU_483_MP) {
 			setTankSize_adjustUA(500., UNITS_GAL);
 			compressor.mpFlowRate_LPS = GPM_TO_LPS(34.87);
 			compressor.perfMap.push_back({
@@ -1543,7 +1543,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0] = compressor;
 	}
 
-	else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) {
+	else if (presetNum == MODELS::MITSUBISHI_QAHV_N136TAU_HPB_SP) {
 		setNumNodes(96);
 		setpoint_C = 65;
 
@@ -1676,19 +1676,19 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0] = compressor;
 	}
 
-	else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP || presetNum == MODELS_SANCO2_119) {
+	else if (presetNum == MODELS::SANCO2_83 || presetNum == MODELS::SANCO2_GS3_45HPA_US_SP || presetNum == MODELS::SANCO2_119) {
 		setNumNodes(96);
 		setpoint_C = 65;
 		setpointFixed = true;
 
-		if (presetNum == MODELS_SANCO2_119) {
+		if (presetNum == MODELS::SANCO2_119) {
 			tankVolume_L = GAL_TO_L(119);
 			tankUA_kJperHrC = 9;
 		}
 		else {
 			tankVolume_L = 315;
 			tankUA_kJperHrC = 7;
-			if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP) {
+			if (presetNum == MODELS::SANCO2_GS3_45HPA_US_SP) {
 				tankSizeFixed = false;
 			}
 		}
@@ -1746,7 +1746,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		std::vector<NodeWeight> nodeWeights;
 		nodeWeights.emplace_back(8);
 		compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>("eighth node absolute", nodeWeights, F_TO_C(113), this, true));
-		if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119) {
+		if (presetNum == MODELS::SANCO2_83 || presetNum == MODELS::SANCO2_119) {
 			compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
 			// Adds a bonus standby logic so the external heater does not cycle, recommended for any external heater with standby
 			std::vector<NodeWeight> nodeWeightStandby;
@@ -1764,7 +1764,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources.resize(1);
 		heatSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_SANCO2_43) {
+	else if (presetNum == MODELS::SANCO2_43) {
 		setNumNodes(96);
 		setpoint_C = 65;
 		setpointFixed = true;
@@ -1843,7 +1843,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources.resize(1);
 		heatSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 || presetNum == MODELS_RheemHBDR4550) {
+	else if (presetNum == MODELS::AOSmithHPTU50 || presetNum == MODELS::RheemHBDR2250 || presetNum == MODELS::RheemHBDR4550) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
@@ -1893,7 +1893,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		//top resistor values
-		if (presetNum == MODELS_RheemHBDR2250) {
+		if (presetNum == MODELS::RheemHBDR2250) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
 		}
 		else {
@@ -1902,7 +1902,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		if (presetNum == MODELS_RheemHBDR2250) {
+		if (presetNum == MODELS::RheemHBDR2250) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
 		}
 		else {
@@ -1941,11 +1941,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 
 	}
-	else if (presetNum == MODELS_AOSmithHPTU66 || presetNum == MODELS_RheemHBDR2265 || presetNum == MODELS_RheemHBDR4565) {
+	else if (presetNum == MODELS::AOSmithHPTU66 || presetNum == MODELS::RheemHBDR2265 || presetNum == MODELS::RheemHBDR4565) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_AOSmithHPTU66) {
+		if (presetNum == MODELS::AOSmithHPTU66) {
 			tankVolume_L = 244.6;
 		}
 		else {
@@ -1996,7 +1996,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
 		//top resistor values
-		if (presetNum == MODELS_RheemHBDR2265) {
+		if (presetNum == MODELS::RheemHBDR2265) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
 		}
 		else {
@@ -2005,7 +2005,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		if (presetNum == MODELS_RheemHBDR2265) {
+		if (presetNum == MODELS::RheemHBDR2265) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
 		}
 		else {
@@ -2043,7 +2043,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_AOSmithHPTU80 || presetNum == MODELS_RheemHBDR2280 || presetNum == MODELS_RheemHBDR4580) {
+	else if (presetNum == MODELS::AOSmithHPTU80 || presetNum == MODELS::RheemHBDR2280 || presetNum == MODELS::RheemHBDR4580) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2092,7 +2092,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.hysteresis_dC = dF_TO_dC(1);
 
 		//top resistor values
-		if (presetNum == MODELS_RheemHBDR2280) {
+		if (presetNum == MODELS::RheemHBDR2280) {
 			resistiveElementTop.setupAsResistiveElement(8, 2250);
 		}
 		else {
@@ -2101,7 +2101,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		resistiveElementTop.isVIP = true;
 
 		//bottom resistor values
-		if (presetNum == MODELS_RheemHBDR2280) {
+		if (presetNum == MODELS::RheemHBDR2280) {
 			resistiveElementBottom.setupAsResistiveElement(0, 2250);
 		}
 		else {
@@ -2140,7 +2140,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].companionHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_AOSmithHPTU80_DR) {
+	else if (presetNum == MODELS::AOSmithHPTU80_DR) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2216,7 +2216,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_AOSmithCAHP120) {
+	else if (presetNum == MODELS::AOSmithCAHP120) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(150.0);
 
@@ -2306,20 +2306,20 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].companionHeatSource = &heatSources[2];
 
 	}
-	else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+	else if (MODELS::AOSmithHPTS50 <= presetNum && presetNum <= MODELS::AOSmithHPTS80)
 	{
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_AOSmithHPTS50) {
+		if (presetNum == MODELS::AOSmithHPTS50) {
 			tankVolume_L = GAL_TO_L(45.6);
 			tankUA_kJperHrC = 6.403;
 		}
-		else if (presetNum == MODELS_AOSmithHPTS66) {
+		else if (presetNum == MODELS::AOSmithHPTS66) {
 			tankVolume_L = GAL_TO_L(67.63);
 			tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
 		}
-		else if (presetNum == MODELS_AOSmithHPTS80) {
+		else if (presetNum == MODELS::AOSmithHPTS80) {
 			tankVolume_L = GAL_TO_L(81.94);
 			tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
 		}
@@ -2393,7 +2393,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].companionHeatSource = &heatSources[2];
 	}
 
-	else if (presetNum == MODELS_GE2014STDMode) {
+	else if (presetNum == MODELS::GE2014STDMode) {
 			setNumNodes(12);
 			setpoint_C = F_TO_C(127.0);
 
@@ -2467,7 +2467,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_GE2014STDMode_80) {
+	else if (presetNum == MODELS::GE2014STDMode_80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2537,7 +2537,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_GE2014) {
+	else if (presetNum == MODELS::GE2014) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2614,7 +2614,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_GE2014_80) {
+	else if (presetNum == MODELS::GE2014_80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2691,7 +2691,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_GE2014_80DR) {
+	else if (presetNum == MODELS::GE2014_80DR) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2770,7 +2770,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	}
 	// PRESET USING GE2014 DATA 
-	else if (presetNum == MODELS_BWC2020_65) {
+	else if (presetNum == MODELS::BWC2020_65) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -2845,23 +2845,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	}
 	// If Rheem Premium
-	else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80) {
+	else if (MODELS::Rheem2020Prem40 <= presetNum && presetNum <= MODELS::Rheem2020Prem80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_Rheem2020Prem40) {
+		if (presetNum == MODELS::Rheem2020Prem40) {
 			tankVolume_L = GAL_TO_L(36.1);
 			tankUA_kJperHrC = 9.5;
 		}
-		else if (presetNum == MODELS_Rheem2020Prem50) {
+		else if (presetNum == MODELS::Rheem2020Prem50) {
 			tankVolume_L = GAL_TO_L(45.1);
 			tankUA_kJperHrC = 8.55;
 		}
-		else if (presetNum == MODELS_Rheem2020Prem65) {
+		else if (presetNum == MODELS::Rheem2020Prem65) {
 			tankVolume_L = GAL_TO_L(58.5);
 			tankUA_kJperHrC = 10.64;
 		}
-		else if (presetNum == MODELS_Rheem2020Prem80) {
+		else if (presetNum == MODELS::Rheem2020Prem80) {
 			tankVolume_L = GAL_TO_L(72.0);
 			tankUA_kJperHrC = 10.83;
 		}
@@ -2935,23 +2935,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}
 
 	// If Rheem Build
-	else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80) {
+	else if (MODELS::Rheem2020Build40 <= presetNum && presetNum <= MODELS::Rheem2020Build80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_Rheem2020Build40) {
+		if (presetNum == MODELS::Rheem2020Build40) {
 			tankVolume_L = GAL_TO_L(36.1);
 			tankUA_kJperHrC = 9.5;
 		}
-		else if (presetNum == MODELS_Rheem2020Build50) {
+		else if (presetNum == MODELS::Rheem2020Build50) {
 			tankVolume_L = GAL_TO_L(45.1);
 			tankUA_kJperHrC = 8.55;
 		}
-		else if (presetNum == MODELS_Rheem2020Build65) {
+		else if (presetNum == MODELS::Rheem2020Build65) {
 			tankVolume_L = GAL_TO_L(58.5);
 			tankUA_kJperHrC = 10.64;
 		}
-		else if (presetNum == MODELS_Rheem2020Build80) {
+		else if (presetNum == MODELS::Rheem2020Build80) {
 			tankVolume_L = GAL_TO_L(72.0);
 			tankUA_kJperHrC = 10.83;
 		}
@@ -3023,25 +3023,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		heatSources[0].companionHeatSource = &heatSources[2];
 	}		
-	else if (MODELS_RheemPlugInShared40 <= presetNum && presetNum <= MODELS_RheemPlugInShared80) {
+	else if (MODELS::RheemPlugInShared40 <= presetNum && presetNum <= MODELS::RheemPlugInShared80) {
 		setNumNodes(12);
 
-		if (presetNum == MODELS_RheemPlugInShared40) {
+		if (presetNum == MODELS::RheemPlugInShared40) {
 			tankVolume_L = GAL_TO_L(36.0);
 			tankUA_kJperHrC = 9.5;
 			setpoint_C = F_TO_C(140.0);
 		}
-		else if (presetNum == MODELS_RheemPlugInShared50) {
+		else if (presetNum == MODELS::RheemPlugInShared50) {
 			tankVolume_L = GAL_TO_L(45.0);
 			tankUA_kJperHrC = 8.55;
 			setpoint_C = F_TO_C(140.0);
 		}
-		else if (presetNum == MODELS_RheemPlugInShared65) {
+		else if (presetNum == MODELS::RheemPlugInShared65) {
 			tankVolume_L = GAL_TO_L(58.5);
 			tankUA_kJperHrC = 10.64;
 			setpoint_C = F_TO_C(127.0);
 		}
-		else if (presetNum == MODELS_RheemPlugInShared80) {
+		else if (presetNum == MODELS::RheemPlugInShared80) {
 			tankVolume_L = GAL_TO_L(72.0);
 			tankUA_kJperHrC = 10.83;
 			setpoint_C = F_TO_C(127.0);
@@ -3088,14 +3088,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources.resize(1);
 		heatSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_RheemPlugInDedicated40 || presetNum == MODELS_RheemPlugInDedicated50) {
+	else if (presetNum == MODELS::RheemPlugInDedicated40 || presetNum == MODELS::RheemPlugInDedicated50) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
-		if (presetNum == MODELS_RheemPlugInDedicated40) {
+		if (presetNum == MODELS::RheemPlugInDedicated40) {
 			tankVolume_L = GAL_TO_L(36);
 			tankUA_kJperHrC = 5.5;
 		}
-		else if (presetNum == MODELS_RheemPlugInDedicated50) {
+		else if (presetNum == MODELS::RheemPlugInDedicated50) {
 			tankVolume_L = GAL_TO_L(45);
 			tankUA_kJperHrC = 6.33;
 		}
@@ -3140,7 +3140,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources.resize(1);
 		heatSources[0] = compressor;
 	}
-	else if (presetNum == MODELS_RheemHB50) {
+	else if (presetNum == MODELS::RheemHB50) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -3216,7 +3216,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_Stiebel220E) {
+	else if (presetNum == MODELS::Stiebel220E) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127);
 
@@ -3274,7 +3274,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].backupHeatSource = &heatSources[1];
 
 	}
-	else if (presetNum == MODELS_Generic1) {
+	else if (presetNum == MODELS::Generic1) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -3344,7 +3344,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_Generic2) {
+	else if (presetNum == MODELS::Generic2) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -3418,7 +3418,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_Generic3) {
+	else if (presetNum == MODELS::Generic3) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -3494,7 +3494,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (presetNum == MODELS_UEF2generic) {
+	else if (presetNum == MODELS::UEF2generic) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
@@ -3567,23 +3567,23 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 	}
-	else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80) {
+	else if (MODELS::AWHSTier3Generic40 <= presetNum && presetNum <= MODELS::AWHSTier3Generic80) {
 		setNumNodes(12);
 		setpoint_C = F_TO_C(127.0);
 
-		if (presetNum == MODELS_AWHSTier3Generic40) {
+		if (presetNum == MODELS::AWHSTier3Generic40) {
 			tankVolume_L = GAL_TO_L(36.1);
 			tankUA_kJperHrC = 5;
 		}
-		else if (presetNum == MODELS_AWHSTier3Generic50) {
+		else if (presetNum == MODELS::AWHSTier3Generic50) {
 			tankVolume_L = GAL_TO_L(45);
 			tankUA_kJperHrC = 6.5;
 		}
-		else if (presetNum == MODELS_AWHSTier3Generic65) {
+		else if (presetNum == MODELS::AWHSTier3Generic65) {
 			tankVolume_L = GAL_TO_L(64);
 			tankUA_kJperHrC = 7.6;
 		}
-		else if (presetNum == MODELS_AWHSTier3Generic80) {
+		else if (presetNum == MODELS::AWHSTier3Generic80) {
 			tankVolume_L = GAL_TO_L(75.4);
 			tankUA_kJperHrC = 10.;
 		} 
@@ -3663,7 +3663,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 	}
 	// If a the model is the TamOMatic, HotTam, Generic... This model is scalable. 
-	else if (presetNum == MODELS_TamScalable_SP) {
+	else if (presetNum == MODELS::TamScalable_SP) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;
@@ -3744,7 +3744,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		heatSources[0].companionHeatSource = &heatSources[2];
 	}
-	else if (presetNum == MODELS_Scalable_MP) {
+	else if (presetNum == MODELS::Scalable_MP) {
 		setNumNodes(24);
 		setpoint_C = F_TO_C(135.0);
 		tankSizeFixed = false;

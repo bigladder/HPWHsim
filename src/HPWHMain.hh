@@ -57,7 +57,7 @@ public:
 						  every x minutes, where x is defined by timer_TOT. */
 	};
 
-	enum MODELS;
+	enum class MODELS;
 
 	///specifies the modes for writing output
 	///the specified values are used for >= comparisons, so the numerical order is relevant
@@ -68,7 +68,6 @@ public:
 		VRB_typical = 20,    /**< print some basic debugging info  */
 		VRB_emetic = 30      /**< print all the things  */
 	};
-
 
 	enum UNITS{
 		UNITS_C,          /**< celsius  */
@@ -499,7 +498,7 @@ public:
 	/**< get the heat content of the tank, relative to zero celsius
 	 * returns using kilojoules */
 
-	int getHPWHModel() const;
+	MODELS getHPWHModel() const;
 	/**< get the model number of the HPWHsim model number of the hpwh */
 
 	int getCompressorCoilConfig() const;

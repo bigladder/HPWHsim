@@ -862,7 +862,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,double& maxAllowedSetpoint,s
 				returnVal = true;
 			}
 		} else if(lowestElementIndex == -1 && !hasACompressor()) { // There are no heat sources here!
-			if(hpwhModel == MODELS_StorageTank) {
+			if(hpwhModel == MODELS::StorageTank) {
 				returnVal = true; // The one pass the storage tank doesn't have any heating elements so sure change the setpoint it does nothing!
 			} else {
 				why = "There aren't any heat sources to check the new setpoint against!";
@@ -1977,7 +1977,7 @@ double HPWH::getLocationTemp_C() const {
 	return locationTemperature_C;
 }
 
-int HPWH::getHPWHModel() const {
+HPWH::MODELS HPWH::getHPWHModel() const {
 	return hpwhModel;
 }
 int HPWH::getCompressorCoilConfig() const {
@@ -2811,7 +2811,7 @@ int HPWH::checkInputs() {
 	int returnVal = 0;
 	//use a returnVal so that all checks are processed and error messages written
 
-	if(getNumHeatSources() <= 0 && hpwhModel != MODELS_StorageTank) {
+	if(getNumHeatSources() <= 0 && hpwhModel != MODELS::StorageTank) {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("You must have at least one HeatSource.\n");
 		}
@@ -3515,7 +3515,7 @@ int HPWH::HPWHinit_file(string configFile) {
 
 
 	//take care of the non-input processing
-	hpwhModel = MODELS_CustomFile;
+	hpwhModel = MODELS::CustomFile;
 
 	tankTemps_C.resize(num_nodes);
 	resetTankToSetpoint();
