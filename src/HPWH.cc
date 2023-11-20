@@ -2699,6 +2699,8 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 			heatSources[i].perfMap.clear();
 			heatSources[i].energyInput_kWh = 0.0;
 			heatSources[i].energyOutput_kWh = 0.0;
+
+			break; // Only add extra heat to the first "extra" heat source found.
 		}
 	}
 }
