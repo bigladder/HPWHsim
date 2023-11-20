@@ -18,6 +18,7 @@ set(headers
 )
 
 set(source
+  HPWHversion.cc
   HPWH.cc
   HPWHHeatSources.cc
   HPWHHeatingLogics.cc
