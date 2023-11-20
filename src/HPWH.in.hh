@@ -1005,10 +1005,11 @@ private:
 	/// Generates a vector of logical nodes
 	std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction,double topFraction);
 
-	/// True: water is drawn from the tank itself; False: tank provides heat exchange only
-	bool waterIsDrawnFromTank;
+	/// False: water is drawn from the tank itself; True: tank provides heat exchange only
+	bool hasHeatExchanger;
   
-	double heatExchangeEfficiency;
+	/// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by heat-exchange models only).
+	double heatExchangerEffectiveness;
 
 };  //end of HPWH class
 

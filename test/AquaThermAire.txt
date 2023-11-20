@@ -5,8 +5,8 @@ volume 54.4 gal
 UA 10.35 kJperHrC
 depressTemp false
 mixOnDraw true
-waterIsDrawnFromTank false
-heatExchangeEfficiency 0.9
+hasHeatExchanger true
+heatExchangerEffectiveness 0.9
 
 #a test comment
 numHeatSources 1
