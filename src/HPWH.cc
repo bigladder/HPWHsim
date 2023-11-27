@@ -2538,7 +2538,36 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 	} //end if(draw_volume_L > 0)
 
+	// Initialize newTankTemps_C
+	nextTankTemps_C = tankTemps_C;
 
+	double standbyLossesBottom_kJ = 0.;
+	double standbyLossesTop_kJ = 0.;
+	double standbyLossesSides_kJ = 0.;
+
+	// Standby losses from the top and bottom of the tank
+	{
+		auto standbyLossRate_kJperHrC = tankUA_kJperHrC * fracAreaTop;
+
+		standbyLossesBottom_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[0] - tankAmbientT_C);
+		standbyLossesTop_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C);
+
+		nextTankTemps_C.front() -= standbyLossesBottom_kJ / nodeCp_kJperC;
+		nextTankTemps_C.back() -= standbyLossesTop_kJ / nodeCp_kJperC;
+	}
+
+	// Standby losses from the sides of the tank
+	{
+		auto standbyLossRate_kJperHrC = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
+		for(int i = 0; i < getNumNodes(); i++) {
+			double standbyLosses_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[i] - tankAmbientT_C);
+			standbyLossesSides_kJ += standbyLosses_kJ;
+
+			nextTankTemps_C[i] -= standbyLosses_kJ / nodeCp_kJperC;
+		}
+	}
+
+	// Heat transfer between nodes
 	if(doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
@@ -2552,68 +2581,22 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			return;
 		}
 
-		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
-
-		// Small truncation differences here lead to larger differences later 
-		// Boundary nodes for finite difference
+		// End nodes
 		if (getNumNodes() > 1) { // inner edges of top and bottom nodes
-			nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-			nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
-		}
-		else { // Factor of 2. for single-node
-			nextTankTemps_C[0] = (1.0 - 2. * bc) * tankTemps_C[0] + 2. * bc * tankAmbientT_C;
+			nextTankTemps_C.front() += 2. * tau * (tankTemps_C[1] - tankTemps_C.front());
+			nextTankTemps_C.back() += 2. * tau * (tankTemps_C[getNumNodes() - 2] - tankTemps_C.back());
 		}
 
-		// Internal nodes for the finite difference
+		// Internal nodes
 		for(int i = 1; i < getNumNodes() - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + 2.0 * tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
-		}
-
-		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
-		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-	} else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
-
-		for(int i = 0; i < getNumNodes(); i++) {
-			nextTankTemps_C[i] = tankTemps_C[i];
-		}
-
-		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.front() -= standbyLosses_kJ / nodeCp_kJperC;
-
-		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.back() -= standbyLosses_kJ / nodeCp_kJperC;
-		// UA loss from the sides are found at the bottom of the function.
-
-	}
-
-	//calculate standby losses from the sides of the tank
-	{
-		auto rat = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
-		auto nextT = nextTankTemps_C.begin();
-		for(auto T: tankTemps_C) {
-			//faction of tank area on the sides
-			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = rat * (T - tankAmbientT_C) * hoursPerStep;
-			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-			//The effect of standby loss on temperature in each node
-			*nextT -= standbyLosses_kJ / nodeCp_kJperC;
-			++nextT;
+			nextTankTemps_C[i] += 2. * tau * (tankTemps_C[i + 1] - 2. * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 	}
 
-	// Assign the new temporary tank temps to the real tank temps.
-	for(int i = 0; i < getNumNodes(); i++) 	tankTemps_C[i] = nextTankTemps_C[i];
+	// Update tankTemps_C
+	tankTemps_C = nextTankTemps_C;
+	
+	standbyLosses_kWh += KJ_TO_KWH(standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
 
 	// check for inverted temperature profile 
 	mixTankInversions();
@@ -3112,8 +3095,16 @@ void HPWH::resetTopOffTimer() {
 	timerTOT = 0.;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Checks whether energy is balanced during a simulation step. 
+/// @note	Used in test/main.cc
+/// @param[in]	drawVol_L				Water volume drawn during simulation step
+///	@param[in]	prevHeatContent_kJ		Heat content of tank prior to simulation step
+///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance	
+/// @return	true if balanced; false otherwise.
+//-----------------------------------------------------------------------------
 bool HPWH::isEnergyBalanced(
-	const double drawVol_L,const double prevHeatContent_kJ,const double deltaEnergyThreshold /* = 0.001 */)
+	const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance /* = 0.001 */)
 {
 	// Check energy balancing. 
 	double qInElect_kJ = 0;
@@ -3126,16 +3117,16 @@ bool HPWH::isEnergyBalanced(
 	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
 	double qOutTankContents_kJ = getTankHeatContent_kJ() - prevHeatContent_kJ;
 	double qBal_kJ =
-		+ qInElect_kJ					// electrical energy in to heat sources
-		+ qInHeatSourceEnviron_kJ		// heat energy extracted from environment by condenser
-		- qOutTankEnviron_kJ			// heat transferred from tank to environment
-		- qOutWater_kJ					// heat water energy expelled by water flow
-		- qOutTankContents_kJ;			// change in heat energy stored by tank
+		+ qInElect_kJ					// electrical energy delivered to heat sources
+		+ qInHeatSourceEnviron_kJ		// heat extracted from environment by condenser
+		- qOutTankEnviron_kJ			// heat released from tank to environment
+		- qOutWater_kJ					// heat expelled to outlet by water flow
+		- qOutTankContents_kJ;			// change in heat stored by tank
 		
-	double fBal = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
-	if(fBal > deltaEnergyThreshold) {
+	double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+	if(fracEnergyDiff > fracEnergyTolerance) {
 		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("Energy-balance error: %f kJ, %f %% \n",qBal_kJ,100*fBal);
+			msg("Energy-balance error: %f kJ, %f %% \n",qBal_kJ,100. * fracEnergyDiff);
 		}
 		return false;
 	}

@@ -801,12 +801,13 @@ public:
 
 	bool isSoCControlled() const;
 
-		bool isEnergyBalanced(const double drawVol_L,const double prevHeatContent_kJ,const double deltaEnergyThreshold = 0.001);
+	/// Checks whether energy is balanced during a simulation step.
+	bool isEnergyBalanced(const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance = 0.001);
 
-	bool isEnergyBalanced(const double drawVol_L,double inletT_C_in,const double prevHeatContent_kJ,const double deltaEnergyThreshold)
-	{
+	/// Overloaded version of above that allows specification of inlet temperature.
+	bool isEnergyBalanced(const double drawVol_L,double inletT_C_in,const double prevHeatContent_kJ,const double fracEnergyTolerance) {
 		setInletT(inletT_C_in);
-		return isEnergyBalanced(drawVol_L,prevHeatContent_kJ,deltaEnergyThreshold);
+		return isEnergyBalanced(drawVol_L,prevHeatContent_kJ,fracEnergyTolerance);
 	}
 
 private:
@@ -814,7 +815,7 @@ private:
 
 	void setAllDefaults(); /**< sets all the defaults default */
 
-	void updateTankTemps(double draw,double inletT,double ambientT,double inletVol2_L,double inletT2_L);
+	void updateTankTemps(double draw,double inletT_C,double ambientT_C,double inletVol2_L,double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	void updateSoCIfNecessary();

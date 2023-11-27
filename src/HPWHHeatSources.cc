@@ -463,7 +463,7 @@ void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
 
 	bool normalization_needed = true;
 
-	// Need to renormalize if elements removed.
+	// Need to renormalize if negligible elements are zeroed.
 	while (normalization_needed)
 	{
 		normalization_needed = false;
