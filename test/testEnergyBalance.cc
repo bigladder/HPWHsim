@@ -1,0 +1,46 @@
+/*
+ * unit test for energy balancing
+ */
+#include "HPWH.hh"
+#include "testUtilityFcts.cc"
+
+#include <iostream>
+#include <string> 
+
+/* Test energy balance*/
+void testEnergyBalance() {
+
+	HPWH hpwh;
+	getHPWHObject(hpwh, "AOSmithHPTS50");
+
+	double maxDrawVol_L = 1.;
+	const double ambientT_C = 20.;
+	const double externalT_C = 20.;
+
+	//
+	//hpwh.setUA(0.);
+	hpwh.setTankToTemperature(20.);
+	hpwh.setInletT(5.);
+
+	const double Pi = 4. * atan(1.);
+	double testDuration_min = 60.;
+	for(int i_min = 0; i_min < testDuration_min; ++i_min)
+	{
+		double t_min = static_cast<double>(i_min);
+
+		double flowFac = sin(Pi * t_min / testDuration_min) - 0.5;
+		flowFac += fabs(flowFac); // semi-sinusoidal flow profile
+		double drawVol_L = flowFac * maxDrawVol_L;
+
+		double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+		hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW);
+		ASSERTTRUE(hpwh.isEnergyBalanced(drawVol_L,prevHeatContent_kJ,1.e-6));
+	}
+}
+
+int main(int, char*)
+{
+	testEnergyBalance();
+
+	return 0;
+}

@@ -3112,6 +3112,36 @@ void HPWH::resetTopOffTimer() {
 	timerTOT = 0.;
 }
 
+bool HPWH::isEnergyBalanced(
+	const double drawVol_L,const double prevHeatContent_kJ,const double deltaEnergyThreshold /* = 0.001 */)
+{
+	// Check energy balancing. 
+	double qInElect_kJ = 0;
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		qInElect_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+	}
+
+	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
+	double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
+	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
+	double qOutTankContents_kJ = getTankHeatContent_kJ() - prevHeatContent_kJ;
+	double qBal_kJ =
+		+ qInElect_kJ					// electrical energy in to heat sources
+		+ qInHeatSourceEnviron_kJ		// heat energy extracted from environment by condenser
+		- qOutTankEnviron_kJ			// heat transferred from tank to environment
+		- qOutWater_kJ					// heat water energy expelled by water flow
+		- qOutTankContents_kJ;			// change in heat energy stored by tank
+		
+	double fBal = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+	if(fBal > deltaEnergyThreshold) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Energy-balance error: %f kJ, %f %% \n",qBal_kJ,100*fBal);
+		}
+		return false;
+	}
+	return true;
+}
+
 #ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(string configFile) {
 

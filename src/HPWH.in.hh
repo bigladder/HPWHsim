@@ -801,6 +801,14 @@ public:
 
 	bool isSoCControlled() const;
 
+		bool isEnergyBalanced(const double drawVol_L,const double prevHeatContent_kJ,const double deltaEnergyThreshold = 0.001);
+
+	bool isEnergyBalanced(const double drawVol_L,double inletT_C_in,const double prevHeatContent_kJ,const double deltaEnergyThreshold)
+	{
+		setInletT(inletT_C_in);
+		return isEnergyBalanced(drawVol_L,prevHeatContent_kJ,deltaEnergyThreshold);
+	}
+
 private:
 	class HeatSource;
 
