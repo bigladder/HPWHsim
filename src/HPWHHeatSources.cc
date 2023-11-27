@@ -459,21 +459,34 @@ double HPWH::HeatSource::expitFunc(double x,double offset) {
 }
 
 void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
-	double sum_tmp = 0.0;
 	size_t N = distribution.size();
 
-	for(size_t i = 0; i < N; i++) {
-		sum_tmp += distribution[i];
-	}
-	for(size_t i = 0; i < N; i++) {
-		if(sum_tmp > 0.0) {
-			distribution[i] /= sum_tmp;
-		} else {
-			distribution[i] = 0.0;
+	bool normalization_needed = true;
+
+	// Need to renormalize if elements removed.
+	while (normalization_needed)
+	{
+		normalization_needed = false;
+		double sum_tmp = 0.;
+		for(size_t i = 0; i < N; i++) {
+			sum_tmp += distribution[i];
 		}
-		//this gives a very slight speed improvement (milliseconds per simulated year)
-		if(distribution[i] < TOL_MINVALUE) {
-			distribution[i] = 0;
+		if(sum_tmp > 0.) {
+			for(size_t i = 0; i < N; i++) {			
+				distribution[i] /= sum_tmp;
+				//this gives a very slight speed improvement (milliseconds per simulated year)
+				if(distribution[i] < TOL_MINVALUE) {
+					if (distribution[i] > 0.) {
+						normalization_needed = true;
+					}
+					distribution[i] = 0.;					
+				}
+			}
+		}
+		else {
+			 for(size_t i = 0; i < N; i++) {
+				distribution[i] = 0.;
+			}
 		}
 	}
 }
