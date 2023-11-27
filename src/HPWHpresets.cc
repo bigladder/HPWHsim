@@ -39,6 +39,8 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		return HPWH_ABORT;
 	}
 
+	setNumNodes(12);
+
 	//use tank size setting function since it has bounds checking
 	tankSizeFixed = false;
 	int failure = this->setTankSize(tankVol_L);
@@ -46,7 +48,6 @@ int HPWH::HPWHinit_resTank(double tankVol_L, double energyFactor, double upperPo
 		return failure;
 	}
 
-	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
 
 	//start tank off at setpoint
@@ -155,6 +156,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 		return HPWH_ABORT;
 	}
 
+	setNumNodes(12);
+
 	//set tank size function has bounds checking
 	tankSizeFixed = false;
 	if (this->setTankSize(tankVol_L) == HPWH_ABORT) {
@@ -162,7 +165,6 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L, double rValue_M2KperW, doubl
 	}
 	canScale = true;
 
-	setNumNodes(12);
 	setpoint_C = F_TO_C(127.0);
 	resetTankToSetpoint(); //start tank off at setpoint
 
@@ -533,7 +535,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
 
 		//initial guess, will get reset based on the input heat vector
-		extra.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+		extra.setCondensity({1., 0., 0., 0.});
 
 		//set everything in its places
 		heatSources.resize(1);
