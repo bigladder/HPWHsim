@@ -1020,6 +1020,10 @@ public:
 	void setupAsResistiveElement(int node,double Watts,int condensitySize = CONDENSITY_SIZE);
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
+
+	void setupExtraHeat(const double extraPower_W);
+	/**< Sets the power provided by this heat source to extraPower_W*/
+
 	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
 	/**< Configure a user-defined heat source added as extra, based off using
 		  nodePowerExtra_W as the total watt input and the condensity*/

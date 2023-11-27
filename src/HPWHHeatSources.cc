@@ -383,7 +383,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
 	{
-		static std::vector<double> heatDistribution(hpwh->getNumNodes());
+		std::vector<double> heatDistribution;
+
 		//calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
@@ -432,7 +433,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 
 	case CONFIG_EXTERNAL:
 		//Else the heat source is external. SANCO2 system is only current example
-		//capacity is calculated internal to this function, and cap/input_BTUperHr, cop are outputs
+		//capacity is calculated internal to this functio
+		// n, and cap/input_BTUperHr, cop are outputs
 		this->runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
 		break;
 	}
@@ -512,7 +514,10 @@ void HPWH::HeatSource::getCapacity(double externalT_C,double condenserTemp_C,dou
 		std::vector<double> target{externalT_F,Tout_F,condenserTemp_F};
 		btwxtInterp(input_BTUperHr,cop,target);
 	} else {
-		if(perfMap.size() > 1) {
+		if(perfMap.empty()) { // Avoid using empty perfMap
+			input_BTUperHr = 0.;
+			cop = 0.;
+		} else if(perfMap.size() > 1) {
 			double COP_T1,COP_T2;    			   //cop at ambient temperatures T1 and T2
 			double inputPower_T1_Watts,inputPower_T2_Watts; //input power at ambient temperatures T1 and T2
 
@@ -736,6 +741,7 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
+	heatDistribution.resize(hpwh->getNumNodes());
 	if(configuration == CONFIG_SUBMERGED) {
 		resampleExtensive(heatDistribution, condensity);
 	}
@@ -987,43 +993,31 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 	typeOfHeatSource = TYPE_resistance;
 }
 
-void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
-
-	// retain original condensity size for this heat source
-	std::vector<double> extraCondensity(getCondensitySize());
-	resampleExtensive(extraCondensity, nodePowerExtra_W);
-	double watts = 0.0;
-	for(int i = 0; i < getCondensitySize(); ++i) {
-		//get sum of vector
-		watts += extraCondensity[i];
-	}
-	normalize(extraCondensity);
-
-	// set condensity
-	setCondensity(extraCondensity);
-	if(hpwh->hpwhVerbosity >= VRB_emetic){
-		hpwh->msg("extra heat condensity: ");
-		for(int i = 0; i < getCondensitySize(); i++) {
-			hpwh->msg("C[%d]: %f",i,condensity[i]);
-		}
-		hpwh->msg("\n ");
-	}
+void HPWH::HeatSource::setupExtraHeat(const double extraPower_W) {
 
 	perfMap.clear();
 	perfMap.reserve(2);
 
 	perfMap.push_back({
 		50, // Temperature (T_F)
-		{watts,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
 		});
 
 	perfMap.push_back({
 		67, // Temperature (T_F)
-		{watts,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
+		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
 		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
 		});
+}
 
+void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
+	// Only the total power in nodePowerExtra_W is used.
+	double extraPower_W = 0.;
+	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
+		extraPower_W += nodePowerExtra_W[i];
+	}
+	setupExtraHeat(extraPower_W);
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {
