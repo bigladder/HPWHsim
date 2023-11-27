@@ -2567,7 +2567,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 		// Internal nodes for the finite difference
 		for(int i = 1; i < getNumNodes() - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
+			nextTankTemps_C[i] = tankTemps_C[i] + 2.0 * tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 
 		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
