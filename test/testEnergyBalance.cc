@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string> 
 
-/* Test energy balance*/
+/* Test energy balance */
 void testEnergyBalance() {
 
 	HPWH hpwh;
@@ -18,7 +18,6 @@ void testEnergyBalance() {
 	const double externalT_C = 20.;
 
 	//
-	//hpwh.setUA(0.);
 	hpwh.setTankToTemperature(20.);
 	hpwh.setInletT(5.);
 
