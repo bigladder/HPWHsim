@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "hpwh-testing"
+version = "0.0.0" # Generated from git on CI
+description = "Scripts to compare measured vs simulated HPWH data."
+authors = ["Big Ladder Software"]
+repository = "https://github.com/cse-sim/hpwh-testing"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "*"
+plotly = "*"
+koozie = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.21.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
