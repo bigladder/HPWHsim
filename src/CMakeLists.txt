@@ -1,6 +1,6 @@
 # Set HPWHsim Version
 add_custom_target(${PROJECT_NAME}_version_header
-  DEPENDS ${PROJECT_SOURCE_DIR}/src/HPWH.in.hh
+  DEPENDS ${PROJECT_SOURCE_DIR}/src/HPWHversion.in.hh
   COMMAND ${CMAKE_COMMAND}
    ARGS -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
    -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
@@ -10,13 +10,15 @@ add_custom_target(${PROJECT_NAME}_version_header
 )
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
-include_directories("${PROJECT_BINARY_DIR}/src")
+include_directories("${PROJECT_BINARY_DIR}/src" "${PROJECT_SOURCE_DIR}/src")
 
 set(headers
-  HPWH.in.hh
+  HPWHversion.in.hh
+  HPWH.hh
 )
 
 set(source
+  HPWHversion.cc
   HPWH.cc
   HPWHHeatSources.cc
   HPWHHeatingLogics.cc
