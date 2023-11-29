@@ -201,7 +201,15 @@ fig.update_layout(
     title_x=0.5,
     plot_bgcolor='white',
     font_color='black',
-    margin=dict(l=0, r=0, t=30, b=40)
+    margin=dict(l=0, r=0, t=30, b=40),
+
+    # updatemenus =[dict(type='buttons',
+    #                 buttons=[button_degF, button_degC],
+    #                 x=1.05,
+    #                 xanchor="left",
+    #                 y=1,
+    #                 yanchor="top")])
+
     )
 fig.update_xaxes(
     linecolor='black',
