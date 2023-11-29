@@ -2640,19 +2640,21 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
 
-			// Set up the extra heat source
-			heatSources[i].setupExtraHeat(nodePowerExtra_W);
+			if(heatSources[i].isOn) {
+				// Set up the extra heat source
+				heatSources[i].setupExtraHeat(nodePowerExtra_W);
 
-			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
-			calcDerivedHeatingValues();
+				// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
+				calcDerivedHeatingValues();
 
-			// add heat 
-			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
-
-			// 0 out to ignore features
-			heatSources[i].perfMap.clear();
-			heatSources[i].energyInput_kWh = 0.0;
-			heatSources[i].energyOutput_kWh = 0.0;
+				// add heat 
+				heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
+			} else {
+				// 0 out to ignore features
+				heatSources[i].perfMap.clear();
+				heatSources[i].energyInput_kWh = 0.0;
+				heatSources[i].energyOutput_kWh = 0.0;
+			}
 
 			break; // Only add extra heat to the first "extra" heat source found.
 		}
@@ -3096,9 +3098,9 @@ bool HPWH::isEnergyBalanced(
 	const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance /* = 0.001 */)
 {
 	// Check energy balancing. 
-	double qInElect_kJ = 0;
+	double qInExternal_kJ = 0;
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		qInElect_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		qInExternal_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
 	}
 
 	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
@@ -3106,7 +3108,7 @@ bool HPWH::isEnergyBalanced(
 	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
 	double qOutTankContents_kJ = getTankHeatContent_kJ() - prevHeatContent_kJ;
 	double qBal_kJ =
-		+ qInElect_kJ					// electrical energy delivered to heat sources
+		+ qInExternal_kJ				// external energy delivered to heat sources
 		+ qInHeatSourceEnviron_kJ		// heat extracted from environment by condenser
 		- qOutTankEnviron_kJ			// heat released from tank to environment
 		- qOutWater_kJ					// heat expelled to outlet by water flow
