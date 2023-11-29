@@ -13,6 +13,9 @@ GRID_LINES_COLOR = "rgba(128,128,128,0.3)"
 RED_BLUE_DIVERGING_PALLETTE = ["#750e13","#da1e28","#ff8389",
                                "#33b1ff","#0072c3","#003a6d"]
 
+STORAGE_TANK_AVG_TEMP_LABEL = "Storage Tank Average Temperature"
+STORAGE_TANK_AVG_TEMP_COLOR = "black"
+
 NUMBER_OF_THERMOCOUPLES = 6
 
 def call_csv(path,skip_rows):
@@ -46,12 +49,17 @@ def calculate_average_tank_temperature(variable_type):
 
     if variable_type == "Measured":
         df = df_measured
+        AVG_TEMP_UNIT_LABEL = " (C)"
     elif variable_type == "Simulated":
         df = df_simulated
+        AVG_TEMP_UNIT_LABEL = ""
 
-    df["Storage Tank Average Temperature"] = df[variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]].mean(axis=1)
-    variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(0,"Storage Tank Average Temperature")
+    df[f"{STORAGE_TANK_AVG_TEMP_LABEL} (C)"] = df[variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]].mean(axis=1)
+    variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(0,f"{STORAGE_TANK_AVG_TEMP_LABEL}{AVG_TEMP_UNIT_LABEL}")
 
+    if variable_type == "Measured":
+        [df.rename(columns={temperature_column:f"{temperature_column}{AVG_TEMP_UNIT_LABEL}"}, inplace=True) for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"]["Measured"]] 
+    
     for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]:
         for index in range(len(df)):
             df.loc[index,temperature_column] = convert(df.loc[index,temperature_column],"degC","degF")
@@ -61,8 +69,8 @@ def calculate_average_tank_temperature(variable_type):
 def add_average_temperature_details():
 
     AVERAGE_TEMPERATURE_DETAILS = {
-            "Labels":"Storage Tank Average Temperature",
-            "Colors":"black"
+            "Labels":f"{STORAGE_TANK_AVG_TEMP_LABEL}",
+            "Colors":f"{STORAGE_TANK_AVG_TEMP_COLOR}"
         }
     
     for key in AVERAGE_TEMPERATURE_DETAILS.keys():
