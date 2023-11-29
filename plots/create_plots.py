@@ -69,8 +69,8 @@ def add_average_temperature_details():
         variables["Y-Variables"]["Temperature"][key].insert(0,AVERAGE_TEMPERATURE_DETAILS[key])
 
 
-df_measured = call_csv("villara_24hr67_Expt_AquaThermAire.csv",0)
-df_simulated = call_csv("villara_24hr67_File_AquaThermAire.csv",0)
+df_measured = call_csv("plots/villara_24hr67_Expt_AquaThermAire.csv",0)
+df_simulated = call_csv("plots/villara_24hr67_File_AquaThermAire.csv",0)
 
 # convert measured power from kW to W
 df_measured["Power_kW"] = convert_values(df_measured["Power_kW"],"kW","W")
