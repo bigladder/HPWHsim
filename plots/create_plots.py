@@ -187,7 +187,7 @@ fig.update_layout(
     yaxis = dict(range=y_range[0]),
     yaxis2 = dict(range=y_range[1]),
     yaxis3 = dict(range=y_range[2]),
-    xaxis = dict(range=[0,1440]),
+    xaxis = dict(range=[1,1440]),
     xaxis3_title="Time (min)",
     title="HPWH Data",
     title_x=0.5,
