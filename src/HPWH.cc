@@ -312,6 +312,7 @@ int HPWH::runOneStep(double drawVolume_L,
 		heatSources[i].runtime_min = 0;
 		heatSources[i].energyInput_kWh = 0.;
 		heatSources[i].energyOutput_kWh = 0.;
+		heatSources[i].extraEnergyInput_kWh = 0.;
 	}
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
@@ -538,7 +539,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//sum energyRemovedFromEnvironment_kWh for each heat source;
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
+		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh - heatSources[i].extraEnergyInput_kWh);
 	}
 
 	//cursory check for inverted temperature profile
@@ -1888,6 +1889,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const
 		return double(HPWH_ABORT);
 	}
 }
+
 double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
 	if(N >= getNumHeatSources() || N < 0) {
@@ -1911,7 +1913,28 @@ double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) cons
 	}
 }
 
+double HPWH::getNthHeatSourceExtraEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const {
+	//energy used by the heat source is positive - this should always be positive
+	if(N >= getNumHeatSources() || N < 0) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
 
+	if(units == UNITS_KWH) {
+		return heatSources[N].extraEnergyInput_kWh;
+	} else if(units == UNITS_BTU) {
+		return KWH_TO_BTU(heatSources[N].extraEnergyInput_kWh);
+	} else if(units == UNITS_KJ) {
+		return KWH_TO_KJ(heatSources[N].extraEnergyInput_kWh);
+	} else {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
 double HPWH::getNthHeatSourceRunTime(int N) const {
 	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
@@ -2640,22 +2663,21 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 	for(int i = 0; i < getNumHeatSources(); i++){
 		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
 
-			if(heatSources[i].isOn) {
-				// Set up the extra heat source
-				heatSources[i].setupExtraHeat(nodePowerExtra_W);
+			// Set up the extra heat source
+			heatSources[i].setupExtraHeat(nodePowerExtra_W);
 
-				// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
-				calcDerivedHeatingValues();
+			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
+			calcDerivedHeatingValues();
 
-				// add heat 
-				heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
-			} else {
-				// 0 out to ignore features
-				heatSources[i].perfMap.clear();
-				heatSources[i].energyInput_kWh = 0.0;
-				heatSources[i].energyOutput_kWh = 0.0;
-			}
+			// add heat 
+			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
 
+/*			// 0 out to ignore features
+			heatSources[i].perfMap.clear();
+
+			heatSources[i].energyInput_kWh = 0.0;
+			heatSources[i].energyOutput_kWh = 0.0;
+*/
 			break; // Only add extra heat to the first "extra" heat source found.
 		}
 	}
@@ -3098,21 +3120,25 @@ bool HPWH::isEnergyBalanced(
 	const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance /* = 0.001 */)
 {
 	// Check energy balancing. 
-	double qInExternal_kJ = 0;
+	double qInElectrical_kJ = 0.;
+	double qInExtra_kJ = 0.;
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-		qInExternal_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		qInExtra_kJ += getNthHeatSourceExtraEnergyInput(iHS, UNITS_KJ);
 	}
 
 	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
 	double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
 	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-	double qOutTankContents_kJ = getTankHeatContent_kJ() - prevHeatContent_kJ;
-	double qBal_kJ =
-		+ qInExternal_kJ				// external energy delivered to heat sources
+	double expectedTankHeatContent_kJ =
+		  prevHeatContent_kJ			// previous heat content
+		+ qInElectrical_kJ				// electrical energy delivered to heat sources
+		+ qInExtra_kJ					// extra energy delivered to heat sources
 		+ qInHeatSourceEnviron_kJ		// heat extracted from environment by condenser
 		- qOutTankEnviron_kJ			// heat released from tank to environment
-		- qOutWater_kJ					// heat expelled to outlet by water flow
-		- qOutTankContents_kJ;			// change in heat stored by tank
+		- qOutWater_kJ;					// heat expelled to outlet by water flow
+
+	double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
 		
 	double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
 	if(fracEnergyDiff > fracEnergyTolerance) {
