@@ -61,9 +61,10 @@ def calculate_average_tank_temperature(variable_type):
 def add_average_temperature_details():
 
     AVERAGE_TEMPERATURE_DETAILS = {
-            "Labels":"Storage Tank Average Temperature",
-            "Colors":"black"
-        }
+        "Labels":["Storage Tank Average Temperature","Storage Tank Outlet Temperature"],
+        "Colors":["black","orange"],
+        "Line Mode":["lines","lines+markers"],
+        "Line Visibility":[True,True]
     
     for key in AVERAGE_TEMPERATURE_DETAILS.keys():
         variables["Y-Variables"]["Temperature"][key].insert(0,AVERAGE_TEMPERATURE_DETAILS[key])
@@ -89,20 +90,26 @@ variables = {"Y-Variables":{
 							 "Simulated":["h_src1In (Wh)"]},
                     "Labels":["Power Input"],
 					"Units":"W",
-                    "Colors":["red"]},
+                    "Colors":["red"],
+                    "Line Mode":["lines"],
+                    "Line Visibility":[True]},
                 "Flow Rate":
                     {"Column Names":{"Measured":["flow_out_gpm"],
 							 "Simulated":["draw"]},
 					"Labels":["Flow Rate"],
                     "Units":"Gal/min",
-                    "Colors":["green"]},
+                    "Colors":["green"],
+                    "Line Mode":["lines"],
+                    "Line Visibility":[True]},
                 "Temperature":
                     {"Column Names":{"Measured":[f"T_Tank_{str(number)}" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)],
                              "Simulated":[f"tcouple{number} (C)" for number in reversed(range(1,NUMBER_OF_THERMOCOUPLES+1))]},
                     "Labels":[f"Storage Tank Temperature {number}" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)],
                     "Units":f"{DEGREE_SIGN}F",
-                    "Colors":list(reversed(RED_BLUE_DIVERGING_PALLETTE))}
-                },
+                    "Colors":list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+                    "Line Mode":["lines"]*NUMBER_OF_THERMOCOUPLES,
+                    "Line Visibility":["legendonly"]*NUMBER_OF_THERMOCOUPLES
+                }},
             "X-Variables":{"Time":
                     {"Column Names":{"Measured":"minutes",
 							 "Simulated":"minutes"},
@@ -144,9 +151,9 @@ def plot_graphs(variable_type,variable,value,row):
                         x=df[variables["X-Variables"]["Time"]["Column Names"][variable_type]],
                         y=df[variables["Y-Variables"][variable]["Column Names"][variable_type][value]],
                         name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
-                        mode="lines",
+                        mode=variables['Y-Variables'][variable]['Line Mode'][value],
                         line=LINE_TYPE,
-                        visible=visible,
+                        visible=variables['Y-Variables'][variable]['Line Visibility'][value],
                         ),
                 row=row,
                 col=1
