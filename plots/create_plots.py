@@ -150,16 +150,36 @@ def retrieve_line_type(variable_type,value):
 
 def plot_graphs(variable_type,variable,value,row):
     df = retrieve_dataframe(variable_type)
-    LINE_TYPE = retrieve_line_type(variable_type)
-    if value == 0:
-        visible = True
+    LINE_TYPE = retrieve_line_type(variable_type,value)
+
+    if (value == 1) and (variable_type == "Measured"):
+        fillcolor = "white"
+        marker = dict(
+            size = 7,
+            line = dict(
+                color = "orange",
+                width = 2
+            ))
+    elif (value == 1) and (variable_type == "Simulated"):
+        fillcolor = None
+        marker = dict(
+            size = 7,
+            color="white",
+            line = dict(
+                color = "orange",
+                width = 2
+            ))
     else:
-        visible = 'legendonly'
+        fillcolor = None
+        marker = None
+
     fig.add_trace(go.Scatter(
                         x=df[variables["X-Variables"]["Time"]["Column Names"][variable_type]],
                         y=df[variables["Y-Variables"][variable]["Column Names"][variable_type][value]],
                         name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
                         mode=variables['Y-Variables'][variable]['Line Mode'][value],
+                        marker=marker,
+                        fillcolor=fillcolor,
                         line=LINE_TYPE,
                         visible=variables['Y-Variables'][variable]['Line Visibility'][value],
                         ),
