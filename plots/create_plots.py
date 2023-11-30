@@ -68,8 +68,8 @@ def add_average_temperature_details():
     }
     
     for key in AVERAGE_TEMPERATURE_DETAILS.keys():
-        variables["Y-Variables"]["Temperature"][key].insert(0,AVERAGE_TEMPERATURE_DETAILS[key])
-
+        for index, label in enumerate(AVERAGE_TEMPERATURE_DETAILS[key]):
+            variables["Y-Variables"]["Temperature"][key].insert(index,AVERAGE_TEMPERATURE_DETAILS[key][index])
 
 df_measured = call_csv("plots/villara_24hr67_Expt_AquaThermAire.csv",0)
 df_simulated = call_csv("plots/villara_24hr67_File_AquaThermAire.csv",0)
