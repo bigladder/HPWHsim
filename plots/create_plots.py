@@ -65,6 +65,7 @@ def add_average_temperature_details():
         "Colors":["black","orange"],
         "Line Mode":["lines","lines+markers"],
         "Line Visibility":[True,True]
+    }
     
     for key in AVERAGE_TEMPERATURE_DETAILS.keys():
         variables["Y-Variables"]["Temperature"][key].insert(0,AVERAGE_TEMPERATURE_DETAILS[key])
