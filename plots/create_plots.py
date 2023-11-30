@@ -50,7 +50,14 @@ def calculate_average_tank_temperature(variable_type):
         df = df_simulated
 
     df["Storage Tank Average Temperature"] = df[variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]].mean(axis=1)
-    variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(0,"Storage Tank Average Temperature")
+    
+    TEMPERATURE_DETAILS = {
+        "Measured":["Storage Tank Average Temperature","T_Out_water"],
+        "Simulated":["Storage Tank Average Temperature","toutlet (C)"]
+    }
+
+    for index, label in enumerate(TEMPERATURE_DETAILS[variable_type]):
+        variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(index, label)
 
     for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]:
         for index in range(len(df)):
