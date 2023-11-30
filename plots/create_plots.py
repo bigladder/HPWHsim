@@ -127,7 +127,7 @@ def retrieve_dataframe(variable_type):
     elif variable_type == "Simulated":
          return df_simulated
 
-def retrieve_line_type(variable_type): 
+def retrieve_line_type(variable_type,value): 
     if variable_type == "Measured":
          return dict(color=variables["Y-Variables"][variable]["Colors"][value])
     elif variable_type == "Simulated":
