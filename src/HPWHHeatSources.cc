@@ -762,6 +762,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 		resampleExtensive(heatDistribution, condensity);
 	}
 	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
+		double totDist = 0.;
 		for(int i = 0; i < hpwh->getNumNodes(); i++) {
 			double dist = 0.;
 			if(i >= lowestNode){
@@ -773,8 +774,14 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 					dist = 0.;
 			}
 			heatDistribution[i] = dist;
+			totDist += dist;
 		}
-		normalize(heatDistribution);
+		if(totDist > 0.) {
+			normalize(heatDistribution);
+		}
+		else {
+			heatDistribution.assign(heatDistribution.size(), 1./static_cast<double>(heatDistribution.size()));
+		}
 	}
 }
 
