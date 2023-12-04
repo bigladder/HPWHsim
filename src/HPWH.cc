@@ -186,6 +186,37 @@ void normalize(std::vector<double> &distribution) {
 	}
 }
 
+int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes){
+	int lowest = 0;
+	const int distSize = nodeDist.size();
+	double nodeRatio = static_cast<double>(numTankNodes) / distSize;
+
+	for(auto j = 0; j < distSize; ++j) {
+		if(nodeDist[j] > 0.) {
+			lowest = static_cast<int>(nodeRatio * j);
+			break;
+		}
+	}
+
+	return lowest;
+}
+
+double findShrinkageT_C(const std::vector<double> &nodeDist){
+	double alphaT_C = 1.,betaT_C = 2.;
+	double condentropy = 0.;
+	for(std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode) {
+		double dist = nodeDist[iNode];
+		if(dist > 0.) {
+			condentropy -= dist * log(dist);
+		}
+	}
+	// condentropy shifts as ln(# of condensity nodes)
+	double size_factor = static_cast<double>(nodeDist.size()) / HPWH::CONDENSITY_SIZE;
+	double standard_condentropy = condentropy - log(size_factor);
+
+	return alphaT_C + standard_condentropy * betaT_C;
+}
+
 void calcThermalDist(
 	std::vector<double> &thermalDist,
 	const double shrinkageT_C,
@@ -207,7 +238,7 @@ void calcThermalDist(
 		thermalDist[i] = dist;
 	}
 
-normalize(thermalDist);
+	normalize(thermalDist);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -2824,52 +2855,24 @@ void HPWH::calcDerivedValues() {
 void HPWH::calcDerivedHeatingValues(){
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
-	//condentropy/shrinkage
-	double condentropy = 0.;
-	double Talpha_C = 1.,Tbeta_C = 2.;  // Mapping from condentropy to shrinkage
+	// find condentropy/shrinkage
 	for(int i = 0; i < getNumHeatSources(); ++i) {
+		heatSources[i].Tshrinkage_C = findShrinkageT_C(heatSources[i].condensity);
+
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
-		}
-
-		// Calculate condentropy and ==> shrinkage
-		condentropy = 0.;
-		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
-			if(heatSources[i].condensity[j] > 0.) {
-				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
-				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
-			}
-		}
-		 // condentropy shifts as ln(# of condensity nodes)
-		double condensity_size_factor = static_cast<double>(heatSources[i].getCondensitySize()) / CONDENSITY_SIZE;
-		double standard_condentropy = condentropy - log(condensity_size_factor);
-		heatSources[i].Tshrinkage_C = Talpha_C + standard_condentropy * Tbeta_C;
-		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].Tshrinkage_C);
 		}
 	}
 
-	//lowest node
-	int lowest = 0;
+	// find lowest node
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		lowest = 0;
-		const int condensitySize = heatSources[i].getCondensitySize();
-		double nodeRatio = getNumNodes() / condensitySize;
+		heatSources[i].lowestNode = findLowestNode(heatSources[i].condensity,getNumNodes());
+
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
+			msg(outputString," lowest : %d \n",heatSources[i].lowestNode);
 		}
-
-		for(auto j = 0; j < condensitySize; ++j) {
-			if(heatSources[i].condensity[j] > 0) {
-				lowest = static_cast<int>(nodeRatio * j);
-				break;
-			}
-		}
-		if(hpwhVerbosity >= VRB_emetic) {
-			msg(outputString," lowest : %d \n",lowest);
-		}
-
-		heatSources[i].lowestNode = lowest;
 	}
 
 	// define condenser index and lowest resistance element index
