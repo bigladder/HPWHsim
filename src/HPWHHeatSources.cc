@@ -452,32 +452,6 @@ void HPWH::HeatSource::sortPerformanceMap() {
 		});
 }
 
-double HPWH::HeatSource::expitFunc(double x,double offset) {
-	double val;
-	val = 1 / (1 + exp(x - offset));
-	return val;
-}
-
-void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
-	double sum_tmp = 0.0;
-	size_t N = distribution.size();
-
-	for(size_t i = 0; i < N; i++) {
-		sum_tmp += distribution[i];
-	}
-	for(size_t i = 0; i < N; i++) {
-		if(sum_tmp > 0.0) {
-			distribution[i] /= sum_tmp;
-		} else {
-			distribution[i] = 0.0;
-		}
-		//this gives a very slight speed improvement (milliseconds per simulated year)
-		if(distribution[i] < TOL_MINVALUE) {
-			distribution[i] = 0;
-		}
-	}
-}
-
 double HPWH::HeatSource::getTankTemp() const{
 
 	std::vector<double> resampledTankTemps(getCondensitySize());
