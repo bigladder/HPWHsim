@@ -800,6 +800,10 @@ public:
 
 	bool isSoCControlled() const;
 
+	/// adds heat to the set of nodes that are at the same temperature, above the
+	///	specified node number
+	double addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C);
+
 private:
 	class HeatSource;
 
@@ -817,17 +821,17 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
-	#ifdef NEWEXTRAHEAT
+
+#ifdef NEWEXTRAHEAT
 	/// adds extra heat to the set of nodes that are at the same temperature, above the
 	///	specified node number
-	void addExtraHeatAboveNode(double qAdd_kJ,int node);
 	void modifyHeatDistribution(std::vector<double> &heatDistribution);
 	void addExtraHeat(std::vector<double> &extraHeatDist_W);
-	#else
+#else
 	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
 	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
 	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
-	#endif
+#endif
 	///  "extra" heat added during a simulation step
 	double extraEnergyInput_kWh;
 
@@ -1277,9 +1281,6 @@ private:
 
 	// some private functions, mostly used for heating the water with the addHeat function
 
-	double addHeatAboveNode(double cap_kJ,int node);
-	/**< adds heat to the set of nodes that are at the same temperature, above the
-		specified node number */
 	double addHeatExternal(double externalT_C,double minutesToRun,double &cap_BTUperHr,double &input_BTUperHr,double &cop);
 	/**<  Add heat from a source outside of the tank. Assume the condensity is where
 		the water is drawn from and hot water is put at the top of the tank. */

@@ -2738,62 +2738,74 @@ void HPWH::mixTankInversions() {
 	}
 }
 
-#ifdef NEWEXTRAHEAT
-
 //-----------------------------------------------------------------------------
 ///	@brief	Adds a heat amount qAdd_kJ at and above the node with index nodeNum. 
-/// @note	addExtraHeat
+/// @note	addHeat
 /// @param[in]	qAdd_kJ					Amount of heat to add
 ///	@param[in]	nodeNum					Lowest node at which to add heat
 //-----------------------------------------------------------------------------
-void HPWH::addExtraHeatAboveNode(double qAdd_kJ,int nodeNum) {
+double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
+	double Q_kJ,deltaT_C,targetTemp_C;
 
-	while(qAdd_kJ > 0.) {
-		// Find the first node above the specified node that has a higher temperature than the one above it.
-//		double prevHeatContent_kJ = getTankHeatContent_kJ();
-		bool uniformT = true;
-		int nodesToHeat = 1;
-		double heatToTemp_C = tankTemps_C[nodeNum];
-		for(int i = nodeNum; i < getNumNodes() - 1; ++i) {
-			if(tankTemps_C[i + 1] > tankTemps_C[i]) {
-				heatToTemp_C = tankTemps_C[i + 1];
-				uniformT = false;
-				break;
-			} else {
-				++nodesToHeat;
-			}
-		}
+	//double volumePerNode_L = hpwh->tankVolume_L / hpwh->getNumNodes();
+	double maxTargetTemp_C = std::min(maxSetpoint_C,setpoint_C);
 
-		double incQ_kJ = 0.;
-		if(uniformT) {
-			heatToTemp_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / nodesToHeat;
-			incQ_kJ = qAdd_kJ;
-		}
-		else {
-			for(int i = nodeNum; i < nodeNum + nodesToHeat; ++i) {
-				double qNode_kJ = nodeCp_kJperC * ((heatToTemp_C > tankTemps_C[i]) ? (heatToTemp_C - tankTemps_C[i]) : 0.);
-				incQ_kJ += qNode_kJ;
-			}
-		
-			if (incQ_kJ > qAdd_kJ) {
-				heatToTemp_C = tankTemps_C[nodeNum] + (qAdd_kJ / incQ_kJ) * (heatToTemp_C - tankTemps_C[nodeNum]);
-				incQ_kJ = qAdd_kJ;
-			}
-		}
-
-		for(int i = nodeNum; i < nodeNum + nodesToHeat; ++i) {
-			double qNode_kJ = nodeCp_kJperC * ((heatToTemp_C > tankTemps_C[i]) ? (heatToTemp_C - tankTemps_C[i]) : 0.);
-			tankTemps_C[i] += qNode_kJ / nodeCp_kJperC;
-		}
-		qAdd_kJ -= incQ_kJ;
-		/*
-		double heatContent_kJ = getTankHeatContent_kJ();
-		double dHeat_kJ = heatContent_kJ - prevHeatContent_kJ;
-		std::cout <<std::setprecision(12) << std::setw(12)
-			<< dHeat_kJ << ", " << incQ_kJ<<"\n";
-		*/
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
 	}
+
+	// find the first node (from the bottom) that does not have the same temperature as the one above it
+	// if they all have the same temp., use the top node, hpwh->numNodes-1
+	int setPointNodeNum = nodeNum;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			setPointNodeNum = i + 1;
+		}
+	}
+
+	// maximum heat deliverable in this timestep
+	while((qAdd_kJ > 0) && (setPointNodeNum < getNumNodes())) {
+		// if the whole tank is at the same temp, the target temp is the setpoint
+		if(setPointNodeNum == (getNumNodes() - 1)) {
+			targetTemp_C = maxTargetTemp_C;
+		}
+		//otherwise the target temp is the first non-equal-temp node
+		else {
+			targetTemp_C = tankTemps_C[setPointNodeNum + 1];
+		}
+		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
+		if(targetTemp_C > maxTargetTemp_C) {
+			targetTemp_C = maxTargetTemp_C;
+		}
+
+		deltaT_C = targetTemp_C - tankTemps_C[setPointNodeNum];
+
+		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
+		Q_kJ = CPWATER_kJperkgC * nodeVolume_L * DENSITYWATER_kgperL * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
+
+		//Running the rest of the time won't recover
+		if(Q_kJ > qAdd_kJ) {
+			for(int j = nodeNum; j <= setPointNodeNum; j++) {
+				tankTemps_C[j] += qAdd_kJ / CPWATER_kJperkgC / nodeVolume_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - nodeNum);
+			}
+			qAdd_kJ = 0;
+		}
+		else if(Q_kJ > 0.) // SETPOINT_FIX
+		{	// temp will recover by/before end of timestep
+			for(int j = nodeNum; j <= setPointNodeNum; j++)
+				tankTemps_C[j] = targetTemp_C;
+			qAdd_kJ -= Q_kJ;
+		}
+		setPointNodeNum++;
+	}
+
+	//return the unused capacity
+	return qAdd_kJ;
 }
+
+#ifdef NEWEXTRAHEAT
 
 void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 {
@@ -2810,26 +2822,31 @@ void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 	double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
 	int lowestNode = findLowestNode(heatDistribution_W,getNumNodes());
 
-	calcThermalDist(heatDistribution_W,shrinkageT_C,lowestNode,tankTemps_C,setpoint_C);
+	std::vector<double> modHeatDistribution_W(getNumNodes());
+	resampleExtensive(modHeatDistribution_W,heatDistribution_W);
 
-	for(auto &heat: heatDistribution_W)
-		heat *= totalHeat_W; 
+	calcThermalDist(modHeatDistribution_W,shrinkageT_C,lowestNode,tankTemps_C,setpoint_C);
+
+	heatDistribution_W = modHeatDistribution_W;
+	for(auto &heat_W: heatDistribution_W)
+		heat_W *= totalHeat_W; 
 }
 
 void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 
-	std::vector<double> heatDistribution_W(getNumNodes());
-	resampleExtensive(heatDistribution_W,extraHeatDist_W);
-	auto modHeatDistribution_W = heatDistribution_W;
+	auto modHeatDistribution_W = extraHeatDist_W;
 	if(true) {
 		modifyHeatDistribution(modHeatDistribution_W);
 	}
 
+	std::vector<double> heatDistribution_W(getNumNodes());
+	resampleExtensive(heatDistribution_W,modHeatDistribution_W);
+
 	double tot_qAdded_kJ = 0.;
 	for(int i = getNumNodes() - 1; i >= 0; i--) {
-		if(modHeatDistribution_W[i] != 0) {
-			double qAdd_kJ = modHeatDistribution_W[i] / 1000. * minutesPerStep * 60.;
-			addExtraHeatAboveNode(qAdd_kJ,i);
+		if(heatDistribution_W[i] != 0) {
+			double qAdd_kJ = heatDistribution_W[i] / 1000. * minutesPerStep * 60.;
+			addHeatAboveNode(qAdd_kJ,i,10000);
 			tot_qAdded_kJ += qAdd_kJ;
 		}
 	}
