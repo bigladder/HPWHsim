@@ -524,6 +524,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		doTempDepression = false;
 		tankMixesOnDraw = false;
 
+#ifndef NEWEXTRAHEAT
 		HeatSource extra(this);
 		
 		//compressor values
@@ -540,6 +541,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		//set everything in its places
 		heatSources.resize(1);
 		heatSources[0] = extra;
+#endif
 	}
 
 	//basic compressor tank for testing

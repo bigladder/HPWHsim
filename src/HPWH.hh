@@ -20,6 +20,8 @@ namespace Btwxt { class RegularGridInterpolator; };
  *  excluded from compiling.  This is done in order to reduce the size of the
  * final compiled code.  */
 
+#define NEWEXTRAHEAT
+
 #include "HPWHversion.hh"
 
 class HPWH {
@@ -815,9 +817,19 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
+	#ifdef NEWEXTRAHEAT
+	/// adds extra heat to the set of nodes that are at the same temperature, above the
+	///	specified node number
+	void addExtraHeatAboveNode(double qAdd_kJ,int node);
+	void modifyHeatDistribution(std::vector<double> &heatDistribution);
+	void addExtraHeat(std::vector<double> &extraHeatDist_W);
+	#else
 	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
 	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
 	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
+	#endif
+	///  "extra" heat added during a simulation step
+	double extraEnergyInput_kWh;
 
 	double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */

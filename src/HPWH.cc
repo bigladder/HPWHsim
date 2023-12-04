@@ -351,7 +351,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	double tankAmbientT_C,double heatSourceAmbientT_C,
 	DRMODES DRstatus,
 	double inletVol2_L,double inletT2_C,
-	std::vector<double>* nodePowerExtra_W) {
+	std::vector<double>* extraHeatDist_W) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//check for errors
@@ -394,6 +394,7 @@ int HPWH::runOneStep(double drawVolume_L,
 		heatSources[i].energyInput_kWh = 0.;
 		heatSources[i].energyOutput_kWh = 0.;
 	}
+	extraEnergyInput_kWh = 0.;
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
 	// to the tracked locationTemperature
@@ -585,8 +586,12 @@ int HPWH::runOneStep(double drawVolume_L,
 		isHeating = false;
 	}
 	//If there's extra user defined heat to add -> Add extra heat!
-	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(*nodePowerExtra_W,tankAmbientT_C);
+	if(extraHeatDist_W != NULL && (*extraHeatDist_W).size() != 0) {
+#ifdef NEWEXTRAHEAT
+		addExtraHeat(*extraHeatDist_W);
+#else
+		addExtraHeat(*extraHeatDist_W,tankAmbientT_C);
+#endif
 		updateSoCIfNecessary();
 	}
 
@@ -2733,6 +2738,105 @@ void HPWH::mixTankInversions() {
 	}
 }
 
+#ifdef NEWEXTRAHEAT
+
+//-----------------------------------------------------------------------------
+///	@brief	Adds a heat amount qAdd_kJ at and above the node with index nodeNum. 
+/// @note	addExtraHeat
+/// @param[in]	qAdd_kJ					Amount of heat to add
+///	@param[in]	nodeNum					Lowest node at which to add heat
+//-----------------------------------------------------------------------------
+void HPWH::addExtraHeatAboveNode(double qAdd_kJ,int nodeNum) {
+
+	while(qAdd_kJ > 0.) {
+		// Find the first node above the specified node that has a higher temperature than the one above it.
+//		double prevHeatContent_kJ = getTankHeatContent_kJ();
+		bool uniformT = true;
+		int nodesToHeat = 1;
+		double heatToTemp_C = tankTemps_C[nodeNum];
+		for(int i = nodeNum; i < getNumNodes() - 1; ++i) {
+			if(tankTemps_C[i + 1] > tankTemps_C[i]) {
+				heatToTemp_C = tankTemps_C[i + 1];
+				uniformT = false;
+				break;
+			} else {
+				++nodesToHeat;
+			}
+		}
+
+		double incQ_kJ = 0.;
+		if(uniformT) {
+			heatToTemp_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / nodesToHeat;
+			incQ_kJ = qAdd_kJ;
+		}
+		else {
+			for(int i = nodeNum; i < nodeNum + nodesToHeat; ++i) {
+				double qNode_kJ = nodeCp_kJperC * ((heatToTemp_C > tankTemps_C[i]) ? (heatToTemp_C - tankTemps_C[i]) : 0.);
+				incQ_kJ += qNode_kJ;
+			}
+		
+			if (incQ_kJ > qAdd_kJ) {
+				heatToTemp_C = tankTemps_C[nodeNum] + (qAdd_kJ / incQ_kJ) * (heatToTemp_C - tankTemps_C[nodeNum]);
+				incQ_kJ = qAdd_kJ;
+			}
+		}
+
+		for(int i = nodeNum; i < nodeNum + nodesToHeat; ++i) {
+			double qNode_kJ = nodeCp_kJperC * ((heatToTemp_C > tankTemps_C[i]) ? (heatToTemp_C - tankTemps_C[i]) : 0.);
+			tankTemps_C[i] += qNode_kJ / nodeCp_kJperC;
+		}
+		qAdd_kJ -= incQ_kJ;
+		/*
+		double heatContent_kJ = getTankHeatContent_kJ();
+		double dHeat_kJ = heatContent_kJ - prevHeatContent_kJ;
+		std::cout <<std::setprecision(12) << std::setw(12)
+			<< dHeat_kJ << ", " << incQ_kJ<<"\n";
+		*/
+	}
+}
+
+void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
+{
+	double totalHeat_W = 0.;
+	for(auto &heat_W: heatDistribution_W)
+		totalHeat_W += heat_W;
+
+	if(totalHeat_W == 0.)
+		return;
+
+	for(auto &heat_W: heatDistribution_W)
+		heat_W /= totalHeat_W;
+
+	double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
+	int lowestNode = findLowestNode(heatDistribution_W,getNumNodes());
+
+	calcThermalDist(heatDistribution_W,shrinkageT_C,lowestNode,tankTemps_C,setpoint_C);
+
+	for(auto &heat: heatDistribution_W)
+		heat *= totalHeat_W; 
+}
+
+void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
+
+	std::vector<double> heatDistribution_W(getNumNodes());
+	resampleExtensive(heatDistribution_W,extraHeatDist_W);
+	auto modHeatDistribution_W = heatDistribution_W;
+	if(true) {
+		modifyHeatDistribution(modHeatDistribution_W);
+	}
+
+	double tot_qAdded_kJ = 0.;
+	for(int i = getNumNodes() - 1; i >= 0; i--) {
+		if(modHeatDistribution_W[i] != 0) {
+			double qAdd_kJ = modHeatDistribution_W[i] / 1000. * minutesPerStep * 60.;
+			addExtraHeatAboveNode(qAdd_kJ,i);
+			tot_qAdded_kJ += qAdd_kJ;
+		}
+	}
+	// Write the input & output energy
+	extraEnergyInput_kWh = KJ_TO_KWH(tot_qAdded_kJ);
+}
+#else
 void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
@@ -2747,6 +2851,8 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 			// add heat 
 			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
 
+			extraEnergyInput_kWh = heatSources[i].energyInput_kWh;
+
 			// 0 out to ignore features
 			heatSources[i].perfMap.clear();
 			heatSources[i].energyInput_kWh = 0.0;
@@ -2756,6 +2862,7 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 		}
 	}
 }
+#endif
 ///////////////////////////////////////////////////////////////////////////////////
 
 void HPWH::turnAllHeatSourcesOff() {

@@ -442,6 +442,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	// Write the input & output energy
 	energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
 	energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
+
 }
 
 // private HPWH::HeatSource functions
