@@ -720,19 +720,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 		resampleExtensive(heatDistribution, condensity);
 	}
 	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-		for(int i = 0; i < hpwh->getNumNodes(); i++) {
-			double dist = 0.;
-			if(i >= lowestNode){
-				double Toffset_C = 5.0 / 1.8; // 5 degF
-				double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
-				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
-				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
-				if(dist < 0.) // SETPOINT_FIX
-					dist = 0.;
-			}
-			heatDistribution[i] = dist;
-		}
-		normalize(heatDistribution);
+		calcThermalDist(heatDistribution,Tshrinkage_C,lowestNode,hpwh->tankTemps_C,hpwh->setpoint_C);
 	}
 }
 
