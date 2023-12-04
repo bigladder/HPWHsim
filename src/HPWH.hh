@@ -1293,10 +1293,6 @@ private:
 	void sortPerformanceMap();
 	/**< sorts the Performance Map by increasing external temperatures */
 
-	/**<  A few helper functions */
-	double expitFunc(double x,double offset);
-	void normalize(std::vector<double> &distribution);
-
 };  // end of HeatSource class
 
 // a few extra functions for unit converesion
@@ -1339,5 +1335,9 @@ inline bool resampleIntensive(std::vector<double> &values,const std::vector<doub
 	return resample(values,sampleValues);
 }
 bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues);
+
+///  helper functions
+double expitFunc(double x,double offset);
+void normalize(std::vector<double> &distribution);
 
 #endif
