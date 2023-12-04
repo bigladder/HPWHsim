@@ -587,11 +587,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	}
 	//If there's extra user defined heat to add -> Add extra heat!
 	if(extraHeatDist_W != NULL && (*extraHeatDist_W).size() != 0) {
-#ifdef NEWEXTRAHEAT
 		addExtraHeat(*extraHeatDist_W);
-#else
-		addExtraHeat(*extraHeatDist_W,tankAmbientT_C);
-#endif
 		updateSoCIfNecessary();
 	}
 
@@ -2743,6 +2739,7 @@ void HPWH::mixTankInversions() {
 /// @note	addHeat
 /// @param[in]	qAdd_kJ					Amount of heat to add
 ///	@param[in]	nodeNum					Lowest node at which to add heat
+/// @param[in]	maxSetpoint_C			Maximum setpoint (applies to heat sources)
 //-----------------------------------------------------------------------------
 double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 
@@ -2805,8 +2802,10 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 	return qAdd_kJ;
 }
 
-#ifdef NEWEXTRAHEAT
-
+//-----------------------------------------------------------------------------
+///	@brief	Modifies a heat distribution using a thermal distribution. 
+/// @param[in,out]	heatDistribution_W		The distribution to be modified
+//-----------------------------------------------------------------------------
 void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 {
 	double totalHeat_W = 0.;
@@ -2832,6 +2831,10 @@ void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 		heat_W *= totalHeat_W; 
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Adds extra heat to tank. 
+/// @param[in]	extraHeatDist_W		A distribution of extra heat to add
+//-----------------------------------------------------------------------------
 void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 
 	auto modHeatDistribution_W = extraHeatDist_W;
@@ -2855,33 +2858,7 @@ void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 	// Write the input & output energy
 	extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / 60.0);
 }
-#else
-void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
-	for(int i = 0; i < getNumHeatSources(); i++){
-		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
-
-			// Set up the extra heat source
-			heatSources[i].setupExtraHeat(nodePowerExtra_W);
-
-			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
-			calcDerivedHeatingValues();
-
-			// add heat 
-			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
-
-			extraEnergyInput_kWh = heatSources[i].energyInput_kWh;
-
-			// 0 out to ignore features
-			heatSources[i].perfMap.clear();
-			heatSources[i].energyInput_kWh = 0.0;
-			heatSources[i].energyOutput_kWh = 0.0;
-
-			break; // Only add extra heat to the first "extra" heat source found.
-		}
-	}
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////////////
 
 void HPWH::turnAllHeatSourcesOff() {
