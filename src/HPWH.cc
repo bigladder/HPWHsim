@@ -188,7 +188,7 @@ void normalize(std::vector<double> &distribution) {
 
 int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes){
 	int lowest = 0;
-	const int distSize = nodeDist.size();
+	const int distSize =  static_cast<int>(nodeDist.size());
 	double nodeRatio = static_cast<double>(numTankNodes) / distSize;
 
 	for(auto j = 0; j < distSize; ++j) {
