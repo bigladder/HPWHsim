@@ -20,8 +20,6 @@ namespace Btwxt { class RegularGridInterpolator; };
  *  excluded from compiling.  This is done in order to reduce the size of the
  * final compiled code.  */
 
-#define NEWEXTRAHEAT
-
 #include "HPWHversion.hh"
 
 class HPWH {
@@ -821,17 +819,11 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
-
-#ifdef NEWEXTRAHEAT
 	/// adds extra heat to the set of nodes that are at the same temperature, above the
 	///	specified node number
 	void modifyHeatDistribution(std::vector<double> &heatDistribution);
 	void addExtraHeat(std::vector<double> &extraHeatDist_W);
-#else
-	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
-	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
-	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
-#endif
+
 	///  "extra" heat added during a simulation step
 	double extraEnergyInput_kWh;
 
@@ -1033,13 +1025,6 @@ public:
 	void setupAsResistiveElement(int node,double Watts,int condensitySize = CONDENSITY_SIZE);
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
-
-	void setupExtraHeat(const double extraPower_W);
-	/**< Sets the power provided by this heat source to extraPower_W*/
-
-	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
-	/**< Configure a user-defined heat source added as extra, based off using
-		  nodePowerExtra_W as the total watt input and the condensity*/
 
 	bool isEngaged() const;
 	/**< return whether or not the heat source is engaged */

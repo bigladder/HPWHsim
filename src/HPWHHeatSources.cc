@@ -379,7 +379,6 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	// set the leftover capacity of the Heat Source to 0, so the first round of
 	// passing it on works
 
-	double Qadded_kJ = 0.;
 	switch(configuration) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
@@ -416,7 +415,6 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 				//add leftoverCap to the next run, and keep passing it on
 				leftoverCap_kJ = hpwh->addHeatAboveNode(captmp_kJ + leftoverCap_kJ,i,maxSetpoint_C);
 			}
-			Qadded_kJ += captmp_kJ;
 		}
 
 		if(isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
@@ -440,8 +438,6 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		this->runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
 		break;
 	}
-
-	double heatIn_kJ = BTU_TO_KJ(input_BTUperHr * runtime_min / 60.0);
 
 	// Write the input & output energy
 	energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
@@ -897,33 +893,6 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 	configuration = CONFIG_SUBMERGED; //immersed in tank
 
 	typeOfHeatSource = TYPE_resistance;
-}
-
-void HPWH::HeatSource::setupExtraHeat(const double extraPower_W) {
-
-	perfMap.clear();
-	perfMap.reserve(2);
-
-	perfMap.push_back({
-		50, // Temperature (T_F)
-		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
-		});
-
-	perfMap.push_back({
-		67, // Temperature (T_F)
-		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
-		});
-}
-
-void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
-	// Only the total power in nodePowerExtra_W is used.
-	double extraPower_W = 0.;
-	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
-		extraPower_W += nodePowerExtra_W[i];
-	}
-	setupExtraHeat(extraPower_W);
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {
