@@ -1339,6 +1339,8 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 ///  helper functions
 double expitFunc(double x,double offset);
 void normalize(std::vector<double> &distribution);
+int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes);
+double findShrinkageT_C(const std::vector<double> &nodeDist);
 void calcThermalDist(
 	std::vector<double> &thermalDist,
 	const double shrinkageT_C,
