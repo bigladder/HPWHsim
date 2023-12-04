@@ -1319,7 +1319,7 @@ inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
 inline double KW_TO_BTUperH(double kw) { return (kw * 3412.14); }
 inline double W_TO_BTUperH(double w) { return (w * 3.41214); }
 inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
-inline double BTU_TO_KJ(double btu) { return (btu * 1.055); }
+inline double BTU_TO_KJ(double btu) { return (btu * 1.055); } // poor approximation
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }

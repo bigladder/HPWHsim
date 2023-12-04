@@ -2745,7 +2745,6 @@ void HPWH::mixTankInversions() {
 ///	@param[in]	nodeNum					Lowest node at which to add heat
 //-----------------------------------------------------------------------------
 double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
-	double Q_kJ,deltaT_C,targetTemp_C;
 
 	//double volumePerNode_L = hpwh->tankVolume_L / hpwh->getNumNodes();
 	double maxTargetTemp_C = std::min(maxSetpoint_C,setpoint_C);
@@ -2766,7 +2765,8 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 	}
 
 	// maximum heat deliverable in this timestep
-	while((qAdd_kJ > 0) && (setPointNodeNum < getNumNodes())) {
+	double targetTemp_C;
+	while((qAdd_kJ > 0.) && (setPointNodeNum < getNumNodes())) {
 		// if the whole tank is at the same temp, the target temp is the setpoint
 		if(setPointNodeNum == (getNumNodes() - 1)) {
 			targetTemp_C = maxTargetTemp_C;
@@ -2780,17 +2780,17 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 			targetTemp_C = maxTargetTemp_C;
 		}
 
-		deltaT_C = targetTemp_C - tankTemps_C[setPointNodeNum];
+		double deltaT_C = targetTemp_C - tankTemps_C[setPointNodeNum];
 
 		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
-		Q_kJ = CPWATER_kJperkgC * nodeVolume_L * DENSITYWATER_kgperL * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
+		double Q_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
 
 		//Running the rest of the time won't recover
 		if(Q_kJ > qAdd_kJ) {
 			for(int j = nodeNum; j <= setPointNodeNum; j++) {
-				tankTemps_C[j] += qAdd_kJ / CPWATER_kJperkgC / nodeVolume_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - nodeNum);
+				tankTemps_C[j] += qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
 			}
-			qAdd_kJ = 0;
+			qAdd_kJ = 0.;
 		}
 		else if(Q_kJ > 0.) // SETPOINT_FIX
 		{	// temp will recover by/before end of timestep
@@ -2842,16 +2842,18 @@ void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 	std::vector<double> heatDistribution_W(getNumNodes());
 	resampleExtensive(heatDistribution_W,modHeatDistribution_W);
 
-	double tot_qAdded_kJ = 0.;
+	// Unnecessary unit conversions used here to match former method
+	double tot_qAdded_BTUperHr = 0.;
 	for(int i = getNumNodes() - 1; i >= 0; i--) {
 		if(heatDistribution_W[i] != 0) {
-			double qAdd_kJ = heatDistribution_W[i] / 1000. * minutesPerStep * 60.;
-			addHeatAboveNode(qAdd_kJ,i,10000);
-			tot_qAdded_kJ += qAdd_kJ;
+			double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
+			double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / 60.);
+			addHeatAboveNode(qAdd_KJ,i,100);
+			tot_qAdded_BTUperHr += qAdd_BTUperHr;
 		}
 	}
 	// Write the input & output energy
-	extraEnergyInput_kWh = KJ_TO_KWH(tot_qAdded_kJ);
+	extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / 60.0);
 }
 #else
 void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){

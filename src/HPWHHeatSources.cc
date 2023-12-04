@@ -379,6 +379,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	// set the leftover capacity of the Heat Source to 0, so the first round of
 	// passing it on works
 
+	double Qadded_kJ = 0.;
 	switch(configuration) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
@@ -415,6 +416,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 				//add leftoverCap to the next run, and keep passing it on
 				leftoverCap_kJ = hpwh->addHeatAboveNode(captmp_kJ + leftoverCap_kJ,i,maxSetpoint_C);
 			}
+			Qadded_kJ += captmp_kJ;
 		}
 
 		if(isACompressor()) { // outlet temperature is the condenser temperature after heat has been added
@@ -438,6 +440,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		this->runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
 		break;
 	}
+
+	double heatIn_kJ = BTU_TO_KJ(input_BTUperHr * runtime_min / 60.0);
 
 	// Write the input & output energy
 	energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
