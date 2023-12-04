@@ -186,6 +186,30 @@ void normalize(std::vector<double> &distribution) {
 	}
 }
 
+void calcThermalDist(
+	std::vector<double> &thermalDist,
+	const double shrinkageT_C,
+	const int lowestNode,
+	const std::vector<double> &nodeTemp_C,
+	const double setpointT_C) {
+
+	// Populate the vector of heat distribution
+	for(int i = 0; i < static_cast<int>(nodeTemp_C.size()); i++) {
+		double dist = 0.;
+		if(i >= lowestNode){
+			double Toffset_C = 5.0 / 1.8; // 5 degF
+			double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
+			dist = expitFunc((nodeTemp_C[i] - nodeTemp_C[lowestNode]) / shrinkageT_C,offset);
+			dist *= (setpointT_C - nodeTemp_C[i]);
+			if(dist < 0.) // SETPOINT_FIX
+				dist = 0.;
+		}
+		thermalDist[i] = dist;
+	}
+
+normalize(thermalDist);
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
