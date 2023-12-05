@@ -186,6 +186,12 @@ void normalize(std::vector<double> &distribution) {
 	}
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Finds the lowest tank node with non-zero weighting 
+/// @param[in]	nodeDist	weighting to be applied
+/// @param[in]	numTankNodes	number of nodes in tank
+/// @returns	index of lowest tank node
+//-----------------------------------------------------------------------------
 int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes){
 	int lowest = 0;
 	const int distSize =  static_cast<int>(nodeDist.size());
@@ -201,6 +207,12 @@ int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes){
 	return lowest;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Calculates a width parameter for a thermal distribution 
+/// @param[in]	nodeDist		original distribution from which theraml distribution
+///								is derived
+/// @returns	width parameter (in degC) 
+//-----------------------------------------------------------------------------
 double findShrinkageT_C(const std::vector<double> &nodeDist){
 	double alphaT_C = 1.,betaT_C = 2.;
 	double condentropy = 0.;
@@ -217,12 +229,23 @@ double findShrinkageT_C(const std::vector<double> &nodeDist){
 	return alphaT_C + standard_condentropy * betaT_C;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Calculates a thermal distribution for heat distribution. 
+/// @note	Fails if all nodeTemp_C values exceed setpointT_C
+/// @param[out]	thermalDist		resulting thermal distribution; does not require pre-allocation
+/// @param[in]	shrinkageT_C	width of distribution
+/// @param[in]	lowestNode		index of lowest non-zero contribution
+/// @param[in]	nodeTemp_C		node temperatures
+/// @param[in]	setpointT_C		distribution parameter 
+//-----------------------------------------------------------------------------
 void calcThermalDist(
 	std::vector<double> &thermalDist,
 	const double shrinkageT_C,
 	const int lowestNode,
 	const std::vector<double> &nodeTemp_C,
 	const double setpointT_C) {
+
+	thermalDist.resize(nodeTemp_C.size());
 
 	// Populate the vector of heat distribution
 	for(int i = 0; i < static_cast<int>(nodeTemp_C.size()); i++) {
@@ -232,7 +255,7 @@ void calcThermalDist(
 			double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
 			dist = expitFunc((nodeTemp_C[i] - nodeTemp_C[lowestNode]) / shrinkageT_C,offset);
 			dist *= (setpointT_C - nodeTemp_C[i]);
-			if(dist < 0.) // SETPOINT_FIX
+			if(dist < 0.)
 				dist = 0.;
 		}
 		thermalDist[i] = dist;
@@ -2809,26 +2832,24 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 {
 	double totalHeat_W = 0.;
-	for(auto &heat_W: heatDistribution_W)
-		totalHeat_W += heat_W;
+	for(auto &heatDist_W: heatDistribution_W)
+		totalHeat_W += heatDist_W;
 
 	if(totalHeat_W == 0.)
 		return;
 
-	for(auto &heat_W: heatDistribution_W)
-		heat_W /= totalHeat_W;
+	for(auto &heatDist_W: heatDistribution_W)
+		heatDist_W /= totalHeat_W;
 
 	double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
 	int lowestNode = findLowestNode(heatDistribution_W,getNumNodes());
 
-	std::vector<double> modHeatDistribution_W(getNumNodes());
-	resampleExtensive(modHeatDistribution_W,heatDistribution_W);
-
+	std::vector<double> modHeatDistribution_W;
 	calcThermalDist(modHeatDistribution_W,shrinkageT_C,lowestNode,tankTemps_C,setpoint_C);
 
 	heatDistribution_W = modHeatDistribution_W;
-	for(auto &heat_W: heatDistribution_W)
-		heat_W *= totalHeat_W; 
+	for(auto &heatDist_W: heatDistribution_W)
+		heatDist_W *= totalHeat_W; 
 }
 
 //-----------------------------------------------------------------------------
@@ -2838,9 +2859,7 @@ void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
 void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 
 	auto modHeatDistribution_W = extraHeatDist_W;
-	if(true) {
-		modifyHeatDistribution(modHeatDistribution_W);
-	}
+	modifyHeatDistribution(modHeatDistribution_W);
 
 	std::vector<double> heatDistribution_W(getNumNodes());
 	resampleExtensive(heatDistribution_W,modHeatDistribution_W);

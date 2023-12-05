@@ -515,7 +515,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	else if (presetNum == MODELS_StorageTank) {
 		setNumNodes(12);
-		setpoint_C = 800;//F_TO_C(127.0);
+		setpoint_C = F_TO_C(127.0);
 
 		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(80);
