@@ -716,8 +716,8 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	heatDistribution.resize(hpwh->getNumNodes());
 	if(configuration == CONFIG_SUBMERGED) {
+		heatDistribution.resize(hpwh->getNumNodes());
 		resampleExtensive(heatDistribution, condensity);
 	}
 	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
