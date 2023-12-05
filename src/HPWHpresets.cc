@@ -553,6 +553,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		setNumNodes(12);
 		setpoint_C = 50;
 
+		initialTankT_C = F_TO_C(170.);
+		hasInitialTankTemp = true;
+
 		tankSizeFixed = false;
 		tankVolume_L = 120;
 		tankUA_kJperHrC = 10; //0 to turn off
