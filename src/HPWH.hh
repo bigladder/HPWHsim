@@ -257,8 +257,7 @@ public:
 	enum HEATSOURCE_TYPE {
 		TYPE_none,        /**< a default to check to make sure it's been set  */
 		TYPE_resistance,  /**< a resistance element  */
-		TYPE_compressor,   /**< a vapor cycle compressor  */
-		TYPE_extra		  /**< an extra element to add user defined heat*/
+		TYPE_compressor   /**< a vapor cycle compressor  */
 	};
 
 	/** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
@@ -457,7 +456,7 @@ public:
 
 	int runOneStep(double drawVolume_L,double ambientT_C,
 		double externalT_C,DRMODES DRstatus,double inletVol2_L = 0.,double inletT2_C = 0.,
-		std::vector<double>* nodePowerExtra_W = NULL);
+		std::vector<double>* extraHeatDist_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
@@ -467,11 +466,11 @@ public:
 	 /** An overloaded function that uses takes inletT_C  */
 	int runOneStep(double inletT_C,double drawVolume_L,double ambientT_C,
 		double externalT_C,DRMODES DRstatus,double inletVol2_L = 0.,double inletT2_C = 0.,
-		std::vector<double>* nodePowerExtra_W = NULL) {
+		std::vector<double>* extraHeatDist_W = NULL) {
 		setInletT(inletT_C);
 		return runOneStep(drawVolume_L,ambientT_C,
 			externalT_C,DRstatus,inletVol2_L,inletT2_C,
-			nodePowerExtra_W);
+			extraHeatDist_W);
 	};
 
 
