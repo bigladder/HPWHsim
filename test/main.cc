@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
   double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
-  bool useSoC;
+  bool useSoC, writeOutletT;
   int i, outputCode;
   long minutesToRun;
 
@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
   newTankSize = 0.;
   tot_limit = 0.;
   useSoC = false;
+  writeOutletT = false;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -190,6 +191,9 @@ int main(int argc, char *argv[])
 	else if(var1 == "useSoC") {
 		useSoC = (bool)testVal;
 	}
+	else if(var1 == "writeOutletT") {
+		writeOutletT = (bool)testVal;
+	}	
 	else {
 		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 	}
@@ -286,7 +290,11 @@ int main(int argc, char *argv[])
 	  if(useSoC){ 
 		  header += strHeadSoC;
 	  }
-	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, 0);
+	  int csvOptions = HPWH::CSVOPT_NONE;
+	  if (writeOutletT) {
+		csvOptions |= HPWH::CSVOPT_WRITE_OUTLET_T;
+	  }
+	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
   }
 
   // ------------------------------------- Simulate --------------------------------------- //
@@ -397,7 +405,14 @@ int main(int argc, char *argv[])
 		  if (useSoC) {
 			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction()) + ", ";
 		  }
-		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+		  int csvOptions = HPWH::CSVOPT_NONE;
+		  if (writeOutletT){
+			csvOptions |= HPWH::CSVOPT_WRITE_OUTLET_T;
+			if (allSchedules[1][i] > 0.) {
+				csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+			}
+		  }
+		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
 	  }
 	  else {
 	  		for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
