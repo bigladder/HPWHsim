@@ -3121,6 +3121,8 @@ int HPWH::HPWHinit_file(string configFile) {
 	//some variables that will be handy
 	int heatsource,sourceNum,nTemps,tempInt;
 	std::size_t num_nodes = 0, numHeatSources = 0;
+	bool hasInitialTankTemp = false;
+	double initalTankT_C = 20.;
 
 	string tempString,units;
 	double tempDouble;
@@ -3215,6 +3217,19 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				return HPWH_ABORT;
 			}
+		} else if(token == "initialTankTemp") {
+			line_ss >> tempDouble >> units;
+			if(units == "F")  tempDouble = F_TO_C(tempDouble);
+			else if(units == "C");
+			else {
+				if(hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect units specification for %s.  \n",token.c_str());
+				}
+				return HPWH_ABORT;
+			}
+			initalTankT_C = tempDouble;
+			hasInitialTankTemp = true;
+
 		} else if(token == "verbosity") {
 			line_ss >> token;
 			if(token == "silent") {
@@ -3609,7 +3624,11 @@ int HPWH::HPWHinit_file(string configFile) {
 	hpwhModel = MODELS_CustomFile;
 
 	tankTemps_C.resize(num_nodes);
-	resetTankToSetpoint();
+
+	if (hasInitialTankTemp)
+		setTankToTemperature(initalTankT_C);
+	else
+		resetTankToSetpoint();
 
 	nextTankTemps_C.resize(num_nodes);
 
