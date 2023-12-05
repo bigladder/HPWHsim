@@ -1,3 +1,2 @@
 length_of_test 500
 setpoint 53
-initialTankT_C 150
