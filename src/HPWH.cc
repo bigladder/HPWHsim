@@ -2765,9 +2765,9 @@ void HPWH::mixTankInversions() {
 /// @param[in]	maxSetpoint_C			Maximum setpoint (applies to heat sources)
 /// @param[in]	allowLeftoverHeat		Allow heat carryover
 //-----------------------------------------------------------------------------
-double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C,bool allowLeftoverHeat /* = true */) {
+double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C,bool retainLeftoverHeat /* = true */) {
 
-	double maxTargetT_C = allowLeftoverHeat ? std::min(maxSetpoint_C,setpoint_C) : 1000.;
+	double maxTargetT_C = retainLeftoverHeat ? std::min(maxSetpoint_C,setpoint_C) : FLT_MAX;
 
 	if(hpwhVerbosity >= VRB_emetic) {
 		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
@@ -2780,7 +2780,7 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C,bo
 		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
 			break;
 		} else {
-			setPointNodeNum = i + 1;
+			setPointNodeNum++;
 		}
 	}
 
