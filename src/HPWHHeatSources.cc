@@ -413,7 +413,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 			captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
 			if(captmp_kJ != 0) {
 				//add leftoverCap to the next run, and keep passing it on
-				leftoverCap_kJ = hpwh->addHeatAboveNode(captmp_kJ + leftoverCap_kJ,i,maxSetpoint_C);
+				leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ,i);
 			}
 		}
 
@@ -725,6 +725,67 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 	}
 }
 
+double HPWH::HeatSource::addHeatAboveNode(double cap_kJ,int node) {
+	double Q_kJ,deltaT_C,targetTemp_C;
+	int setPointNodeNum;
+
+	double volumePerNode_L = hpwh->tankVolume_L / hpwh->getNumNodes();
+	double maxTargetTemp_C = std::min(maxSetpoint_C,hpwh->setpoint_C);
+
+	if(hpwh->hpwhVerbosity >= VRB_emetic) {
+		hpwh->msg("node %2d   cap_kwh %.4lf \n",node,KJ_TO_KWH(cap_kJ));
+	}
+
+	// find the first node (from the bottom) that does not have the same temperature as the one above it
+	// if they all have the same temp., use the top node, hpwh->numNodes-1
+	setPointNodeNum = node;
+	for(int i = node; i < hpwh->getNumNodes() - 1; i++) {
+		if(hpwh->tankTemps_C[i] != hpwh->tankTemps_C[i + 1]) {
+			break;
+		} else {
+			setPointNodeNum = i + 1;
+		}
+	}
+
+	// maximum heat deliverable in this timestep
+	while(cap_kJ > 0 && setPointNodeNum < hpwh->getNumNodes()) {
+		// if the whole tank is at the same temp, the target temp is the setpoint
+		if(setPointNodeNum == (hpwh->getNumNodes() - 1)) {
+			targetTemp_C = maxTargetTemp_C;
+		}
+		//otherwise the target temp is the first non-equal-temp node
+		else {
+			targetTemp_C = hpwh->tankTemps_C[setPointNodeNum + 1];
+		}
+		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
+		if(targetTemp_C > maxTargetTemp_C) {
+			targetTemp_C = maxTargetTemp_C;
+		}
+
+		deltaT_C = targetTemp_C - hpwh->tankTemps_C[setPointNodeNum];
+
+		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
+		Q_kJ = CPWATER_kJperkgC * volumePerNode_L * DENSITYWATER_kgperL * (setPointNodeNum + 1 - node) * deltaT_C;
+
+		//Running the rest of the time won't recover
+		if(Q_kJ > cap_kJ) {
+			for(int j = node; j <= setPointNodeNum; j++) {
+				hpwh->tankTemps_C[j] += cap_kJ / CPWATER_kJperkgC / volumePerNode_L / DENSITYWATER_kgperL / (setPointNodeNum + 1 - node);
+			}
+			cap_kJ = 0;
+		}
+		else if(Q_kJ > 0.) // SETPOINT_FIX
+		{	// temp will recover by/before end of timestep
+			for(int j = node; j <= setPointNodeNum; j++)
+				hpwh->tankTemps_C[j] = targetTemp_C;
+			cap_kJ -= Q_kJ;
+		}
+		setPointNodeNum++;
+	}
+
+	//return the unused capacity
+	return cap_kJ;
+}
 bool HPWH::HeatSource::isACompressor() const {
 	return this->typeOfHeatSource == TYPE_compressor;
 }
