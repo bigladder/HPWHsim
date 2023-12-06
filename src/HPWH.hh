@@ -813,6 +813,9 @@ public:
 		return isEnergyBalanced(drawVol_L,prevHeatContent_kJ,fracEnergyTolerance);
 	}
 
+	/// Addition of extra heat handled separately from normal heat sources
+	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
+
 private:
 	class HeatSource;
 
