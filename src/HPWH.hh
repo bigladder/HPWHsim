@@ -799,7 +799,7 @@ public:
 
 	/// adds heat to the set of nodes that are at the same temperature, above the
 	///	specified node number
-	double addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C);
+	double addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C,bool allowLeftoverHeat = true);
 
 private:
 	class HeatSource;
