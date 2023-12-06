@@ -374,8 +374,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 }
 
 void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
-	double input_BTUperHr = 0.,cap_BTUperHr = 0.,cop = 0.,captmp_kJ = 0.;
-	double leftoverCap_kJ = 0.0;
+	double input_BTUperHr = 0.,cap_BTUperHr = 0.,cop = 0.;
 	// set the leftover capacity of the Heat Source to 0, so the first round of
 	// passing it on works
 
@@ -409,16 +408,17 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		//the loop over nodes here is intentional - essentially each node that has
 		//some amount of heatDistribution acts as a separate resistive element
 		//maybe start from the top and go down?  test this with graphs
+		double leftoverCap_kJ = 0.;
 		for(int i = hpwh->getNumNodes() - 1; i >= 0; i--) {
 			//for(int i = 0; i < hpwh->numNodes; i++){
-			captmp_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
-			if(captmp_kJ != 0) {
+			double nodeCap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
+			if(nodeCap_kJ != 0.) {
 				if(typeOfHeatSource == TYPE_extra) {
-					hpwh->addExtraHeatAboveNode(captmp_kJ,i);
+					hpwh->addExtraHeatAboveNode(nodeCap_kJ,i);
 				}
 				else {
 					//add leftoverCap to the next run, and keep passing it on
-					leftoverCap_kJ = addHeatAboveNode(captmp_kJ + leftoverCap_kJ,i);
+					leftoverCap_kJ = addHeatAboveNode(nodeCap_kJ + leftoverCap_kJ,i);
 				}
 			}
 		}
@@ -428,9 +428,10 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 
 		//after you've done everything, any leftover capacity is time that didn't run
-		this->runtime_min = (1.0 - (leftoverCap_kJ / BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0))) * minutesToRun;
-#if 1	// error check, 1-22-2017
-		if(runtime_min < -0.001)
+		double cap_kJ =  BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.);
+		runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
+#if 1	// error check, 1-22-2017; updated 12-6-2023
+		if(runtime_min < -TOL_MINVALUE)
 			if(hpwh->hpwhVerbosity >= VRB_reluctant)
 				hpwh->msg("Internal error: Negative runtime = %0.3f min\n",runtime_min);
 #endif
@@ -441,16 +442,16 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		//Else the heat source is external. SANCO2 system is only current example
 		//capacity is calculated internal to this functio
 		// n, and cap/input_BTUperHr, cop are outputs
-		this->runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
+		runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
 		break;
 	}
 
 	// Write the input & output energy
 	if(typeOfHeatSource == TYPE_extra)
-		extraEnergyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
+		extraEnergyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
 	else
-		energyInput_kWh = BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
-	energyOutput_kWh = BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
+		energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
+	energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
 }
 
 // private HPWH::HeatSource functions
