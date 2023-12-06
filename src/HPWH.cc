@@ -2757,17 +2757,74 @@ void HPWH::mixTankInversions() {
 	}
 }
 
+
+double HPWH::addHeatAboveNode(double cap_kJ,const int nodeNum,const double maxSetpoint_C) {
+
+
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(cap_kJ));
+	}
+
+	// find the first node (from the bottom) that does not have the same temperature as the one above it
+	// if they all have the same temp., use the top node, hpwh->numNodes-1
+	int setPointNodeNum = nodeNum;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			setPointNodeNum = i + 1;
+		}
+	}
+
+	// maximum heat deliverable in this timestep
+	double maxTargetT_C = std::min(maxSetpoint_C,setpoint_C);
+	while(cap_kJ > 0 && setPointNodeNum < getNumNodes()) {
+		double targetT_C;
+		// if the whole tank is at the same temp, the target temp is the setpoint
+		if(setPointNodeNum == (getNumNodes() - 1)) {
+			targetT_C = maxTargetT_C;
+		}
+		//otherwise the target temp is the first non-equal-temp node
+		else {
+			targetT_C = tankTemps_C[setPointNodeNum + 1];
+		}
+		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
+		if(targetT_C > maxTargetT_C) {
+			targetT_C = maxTargetT_C;
+		}
+
+		double deltaT_C = targetT_C - tankTemps_C[setPointNodeNum];
+
+		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
+		double Q_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
+
+		//Running the rest of the time won't recover
+		if(Q_kJ > cap_kJ) {
+			for(int j = nodeNum; j <= setPointNodeNum; j++) {
+				tankTemps_C[j] += cap_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
+			}
+			cap_kJ = 0;
+		}
+		else if(Q_kJ > 0.) // SETPOINT_FIX
+		{	// temp will recover by/before end of timestep
+			for(int j = nodeNum; j <= setPointNodeNum; j++)
+				tankTemps_C[j] = targetT_C;
+			cap_kJ -= Q_kJ;
+		}
+		setPointNodeNum++;
+	}
+
+	//return the unused capacity
+	return cap_kJ;
+}
+
 //-----------------------------------------------------------------------------
-///	@brief	Adds a heat amount qAdd_kJ at and above the node with index nodeNum. 
+///	@brief	Adds extra heat amount qAdd_kJ at and above the node with index nodeNum. 
 /// @note	addHeat
 /// @param[in]	qAdd_kJ					Amount of heat to add
 ///	@param[in]	nodeNum					Lowest node at which to add heat
-/// @param[in]	maxSetpoint_C			Maximum setpoint (applies to heat sources)
 //-----------------------------------------------------------------------------
-double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
-
-	//double volumePerNode_L = hpwh->tankVolume_L / hpwh->getNumNodes();
-	double maxTargetTemp_C = std::min(maxSetpoint_C,setpoint_C);
+void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
 
 	if(hpwhVerbosity >= VRB_emetic) {
 		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
@@ -2785,44 +2842,37 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C) {
 	}
 
 	// maximum heat deliverable in this timestep
-	double targetTemp_C;
+	double targetT_C;
 	while((qAdd_kJ > 0.) && (setPointNodeNum < getNumNodes())) {
 		// if the whole tank is at the same temp, the target temp is the setpoint
 		if(setPointNodeNum == (getNumNodes() - 1)) {
-			targetTemp_C = maxTargetTemp_C;
+			targetT_C = tankTemps_C[setPointNodeNum] + qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
 		}
 		//otherwise the target temp is the first non-equal-temp node
 		else {
-			targetTemp_C = tankTemps_C[setPointNodeNum + 1];
-		}
-		// With DR tomfoolery make sure the target temperature doesn't exceed the setpoint.
-		if(targetTemp_C > maxTargetTemp_C) {
-			targetTemp_C = maxTargetTemp_C;
+			targetT_C = tankTemps_C[setPointNodeNum + 1];
 		}
 
-		double deltaT_C = targetTemp_C - tankTemps_C[setPointNodeNum];
+		double deltaT_C = targetT_C - tankTemps_C[setPointNodeNum];
 
 		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
-		double Q_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
+		double qInc_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
 
 		//Running the rest of the time won't recover
-		if(Q_kJ > qAdd_kJ) {
+		if(qInc_kJ > qAdd_kJ) {
 			for(int j = nodeNum; j <= setPointNodeNum; j++) {
 				tankTemps_C[j] += qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
 			}
 			qAdd_kJ = 0.;
 		}
-		else if(Q_kJ > 0.) // SETPOINT_FIX
+		else if(qInc_kJ > 0.)
 		{	// temp will recover by/before end of timestep
 			for(int j = nodeNum; j <= setPointNodeNum; j++)
-				tankTemps_C[j] = targetTemp_C;
-			qAdd_kJ -= Q_kJ;
+				tankTemps_C[j] = targetT_C;
+			qAdd_kJ -= qInc_kJ;
 		}
 		setPointNodeNum++;
 	}
-
-	//return the unused capacity
-	return qAdd_kJ;
 }
 
 //-----------------------------------------------------------------------------

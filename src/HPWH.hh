@@ -798,8 +798,12 @@ public:
 	bool isSoCControlled() const;
 
 	/// adds heat to the set of nodes that are at the same temperature, above the
+	///	specified node number. Tank temps will not exceed maxSetpoint_C.
+	double addHeatAboveNode(double qAdd_kJ,const int nodeNum,const double maxSetpoint_C);
+
+	/// adds extra heat to the set of nodes that are at the same temperature, above the
 	///	specified node number
-	double addHeatAboveNode(double qAdd_kJ,int nodeNum,double maxSetpoint_C);
+	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
 
 private:
 	class HeatSource;
