@@ -2658,6 +2658,63 @@ void HPWH::mixTankInversions() {
 	}
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Adds extra heat amount qAdd_kJ at and above the node with index nodeNum. 
+/// @note	addHeat
+/// @param[in]	qAdd_kJ					Amount of heat to add
+///	@param[in]	nodeNum					Lowest node at which to add heat
+//-----------------------------------------------------------------------------
+void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
+
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
+	}
+
+	// find the first node (from the bottom) that does not have the same temperature as the one above it
+	// if they all have the same temp., use the top node, hpwh->numNodes-1
+	int setPointNodeNum = nodeNum;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			setPointNodeNum = i + 1;
+		}
+	}
+
+	// maximum heat deliverable in this timestep
+	double targetT_C;
+	while((qAdd_kJ > 0.) && (setPointNodeNum < getNumNodes())) {
+		// if the whole tank is at the same temp, the target temp is the setpoint
+		if(setPointNodeNum == (getNumNodes() - 1)) {
+			targetT_C = tankTemps_C[setPointNodeNum] + qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
+		}
+		//otherwise the target temp is the first non-equal-temp node
+		else {
+			targetT_C = tankTemps_C[setPointNodeNum + 1];
+		}
+
+		double deltaT_C = targetT_C - tankTemps_C[setPointNodeNum];
+
+		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
+		double qInc_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
+
+		//Running the rest of the time won't recover
+		if(qInc_kJ > qAdd_kJ) {
+			for(int j = nodeNum; j <= setPointNodeNum; j++) {
+				tankTemps_C[j] += qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
+			}
+			qAdd_kJ = 0.;
+		}
+		else if(qInc_kJ > 0.)
+		{	// temp will recover by/before end of timestep
+			for(int j = nodeNum; j <= setPointNodeNum; j++)
+				tankTemps_C[j] = targetT_C;
+			qAdd_kJ -= qInc_kJ;
+		}
+		setPointNodeNum++;
+	}
+}
+
 void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
@@ -2672,12 +2729,6 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 			// add heat 
 			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
 
-/*			// 0 out to ignore features
-			heatSources[i].perfMap.clear();
-
-			heatSources[i].energyInput_kWh = 0.0;
-			heatSources[i].energyOutput_kWh = 0.0;
-*/
 			break; // Only add extra heat to the first "extra" heat source found.
 		}
 	}
