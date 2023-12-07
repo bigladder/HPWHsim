@@ -2675,7 +2675,7 @@ double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,const double maxT_C) {
 		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
 	}
 
-	// find number of nodes above nodeNum with the same temperature
+	// find number of nodes at or above nodeNum with the same temperature
 	int numNodesToHeat = 1;
 	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
 		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
@@ -2739,7 +2739,7 @@ void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
 		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
 	}
 
-	// find number of nodes above nodeNum with the same temperature
+	// find number of nodes at or above nodeNum with the same temperature
 	int numNodesToHeat = 1;
 	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
 		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
