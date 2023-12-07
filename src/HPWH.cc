@@ -163,8 +163,8 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
-	secondsPerStep = 60.0 * minutesPerStep;
-	hoursPerStep = minutesPerStep / 60.0;
+	secondsPerStep = sec_per_min * minutesPerStep;
+	hoursPerStep = minutesPerStep / min_per_hr;
 };
 
 // public HPWH functions
@@ -2659,10 +2659,79 @@ void HPWH::mixTankInversions() {
 }
 
 //-----------------------------------------------------------------------------
+///	@brief	Adds heat amount qAdd_kJ at and above the node with index nodeNum.
+///			Returns unused heat to prevent exceeding maximum or setpoint.
+/// @note	Moved from HPWH::HeatSource
+/// @param[in]	qAdd_kJ		Amount of heat to add
+///	@param[in]	nodeNum		Lowest node at which to add heat
+/// @param[in]	maxT_C		Maximum allowable temperature to maintain		
+//-----------------------------------------------------------------------------
+double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,const double maxT_C) {
+
+	// Do not exceed maxT_C or setpoint
+	double maxHeatToT_C = std::min(maxT_C,setpoint_C);
+
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
+	}
+
+	// find number of nodes above nodeNum with the same temperature
+	int numNodesToHeat = 1;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			numNodesToHeat++;
+		}
+	}
+
+	while((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes())) {
+
+		// assume there is another node above the equal-temp nodes
+		int targetTempNodeNum = nodeNum + numNodesToHeat;
+
+		double heatToT_C;
+		if(targetTempNodeNum > (getNumNodes() - 1)) {
+			// no nodes above the equal-temp nodes; target temperature is the maximum
+			heatToT_C = maxHeatToT_C;
+		}
+		else {
+			heatToT_C = tankTemps_C[targetTempNodeNum];
+			if(heatToT_C > maxHeatToT_C) {
+				// Ensure temperature does not exceed maximum
+				heatToT_C = maxHeatToT_C;
+			}
+		}
+
+		// heat needed to bring all equal-temp nodes up to heatToT_C
+		double qIncrement_kJ = nodeCp_kJperC * numNodesToHeat * (heatToT_C - tankTemps_C[nodeNum]);
+	
+		if(qIncrement_kJ > qAdd_kJ) {
+			// insufficient heat to reach heatToT_C; use all available heat
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+			for(int j = 0; j < numNodesToHeat; ++j) {
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			}
+			qAdd_kJ = 0.;
+		}
+		else if(qIncrement_kJ > 0.)
+		{	// add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C 
+			for(int j = 0; j < numNodesToHeat; ++j)
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			qAdd_kJ -= qIncrement_kJ;
+		}
+		numNodesToHeat++; 
+	}
+
+	// return any unused heat
+	return qAdd_kJ;
+}
+
+//-----------------------------------------------------------------------------
 ///	@brief	Adds extra heat amount qAdd_kJ at and above the node with index nodeNum. 
-/// @note	addHeat
-/// @param[in]	qAdd_kJ					Amount of heat to add
-///	@param[in]	nodeNum					Lowest node at which to add heat
+/// 		Does not limit final temperatures.
+/// @param[in]	qAdd_kJ				Amount of heat to add
+///	@param[in]	nodeNum				Lowest node at which to add heat
 //-----------------------------------------------------------------------------
 void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
 
@@ -2670,48 +2739,48 @@ void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
 		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
 	}
 
-	// find the first node (from the bottom) that does not have the same temperature as the one above it
-	// if they all have the same temp., use the top node, hpwh->numNodes-1
-	int setPointNodeNum = nodeNum;
+	// find number of nodes above nodeNum with the same temperature
+	int numNodesToHeat = 1;
 	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
 		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
 			break;
 		} else {
-			setPointNodeNum = i + 1;
+			numNodesToHeat++;
 		}
 	}
 
-	// maximum heat deliverable in this timestep
-	double targetT_C;
-	while((qAdd_kJ > 0.) && (setPointNodeNum < getNumNodes())) {
-		// if the whole tank is at the same temp, the target temp is the setpoint
-		if(setPointNodeNum == (getNumNodes() - 1)) {
-			targetT_C = tankTemps_C[setPointNodeNum] + qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
+	while((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes())) {
+
+		// assume there is another node above the equal-temp nodes
+		int targetTempNodeNum = nodeNum + numNodesToHeat;
+
+		double heatToT_C;
+		if(targetTempNodeNum > (getNumNodes() - 1)) {
+			// no nodes above the equal-temp nodes; target temperature limited by the heat available
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
 		}
-		//otherwise the target temp is the first non-equal-temp node
 		else {
-			targetT_C = tankTemps_C[setPointNodeNum + 1];
+			heatToT_C = tankTemps_C[targetTempNodeNum];
 		}
 
-		double deltaT_C = targetT_C - tankTemps_C[setPointNodeNum];
-
-		//heat needed to bring all equal temp. nodes up to the temp of the next node. kJ
-		double qInc_kJ = nodeCp_kJperC * (setPointNodeNum + 1 - nodeNum) * deltaT_C;
-
-		//Running the rest of the time won't recover
-		if(qInc_kJ > qAdd_kJ) {
-			for(int j = nodeNum; j <= setPointNodeNum; j++) {
-				tankTemps_C[j] += qAdd_kJ / nodeCp_kJperC / (setPointNodeNum + 1 - nodeNum);
+		// heat needed to bring all equal-temp nodes up to heatToT_C
+		double qIncrement_kJ = nodeCp_kJperC * numNodesToHeat * (heatToT_C - tankTemps_C[nodeNum]);
+	
+		if(qIncrement_kJ > qAdd_kJ) {
+			// insufficient heat to reach heatToT_C; use all available heat
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+			for(int j = 0; j < numNodesToHeat; ++j) {
+				tankTemps_C[nodeNum + j] = heatToT_C;
 			}
 			qAdd_kJ = 0.;
 		}
-		else if(qInc_kJ > 0.)
-		{	// temp will recover by/before end of timestep
-			for(int j = nodeNum; j <= setPointNodeNum; j++)
-				tankTemps_C[j] = targetT_C;
-			qAdd_kJ -= qInc_kJ;
+		else if(qIncrement_kJ > 0.)
+		{	// add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C 
+			for(int j = 0; j < numNodesToHeat; ++j)
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			qAdd_kJ -= qIncrement_kJ;
 		}
-		setPointNodeNum++;
+		numNodesToHeat++; 
 	}
 }
 
