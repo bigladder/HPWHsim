@@ -3,7 +3,7 @@ File Containing all of the presets available in HPWHsim
 */
 
 #include "HPWH.hh"
-#include "btwxt.h"
+#include <btwxt/btwxt.h>
 
 #include <algorithm>
 

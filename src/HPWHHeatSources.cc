@@ -6,7 +6,7 @@
 #include <regex>
 
  // vendor
-#include "btwxt.h"
+#include <btwxt/btwxt.h>
 
 #include "HPWH.hh"
 

@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "HPWH.hh"
-#include "btwxt.h"
+#include <btwxt/btwxt.h>
 
 #include <stdarg.h>
 #include <fstream>
