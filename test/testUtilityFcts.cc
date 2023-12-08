@@ -19,8 +19,8 @@ using std::string;
 #define C_TO_F(T) (((9.0/5.0)*T) + 32.0)
 #define dF_TO_dC(T) (T*5.0/9.0)
 #define GAL_TO_L(GAL) (GAL*3.78541)
-#define KW_TO_BTUperHR(KW) (KW * 3412.14)
-#define KWH_TO_BTU(KW) (KW * 3412.14)
+#define KW_TO_BTUperHR(KW) (KW * BTUperKWH)
+#define KWH_TO_BTU(KW) (KW * BTUperKWH)
 
 
 #define ASSERTTRUE(input, ...) if(! (input)) {cout<< "Assertation failed at " <<__FILE__ << ", line: " << __LINE__ << ".\n"; exit(1);}
