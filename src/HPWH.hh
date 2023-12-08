@@ -705,6 +705,12 @@ public:
 	/**< returns the energy output from the Nth heat source, with the specified units
 	  energy put into the water is positive - should always be positive
 	  returns HPWH_ABORT for N out of bounds or incorrect units  */
+
+	double getNthHeatSourceExtraEnergyInput(int N,UNITS units = UNITS_KWH) const;
+	/**< returns the "extra" energy input to the Nth heat source, with the specified units
+	  energy used by the heat source is positive - should always be positive
+	  returns HPWH_ABORT for N out of bounds or incorrect units  */
+
 	double getNthHeatSourceRunTime(int N) const;
 	/**< returns the run time for the Nth heat source, in minutes
 	  note: they may sum to more than 1 time step for concurrently running heat sources
@@ -797,12 +803,19 @@ public:
 
 	bool isSoCControlled() const;
 
-	/// adds heat to the set of nodes that are at the same temperature, above the
-	///	specified node number. Tank temps will not exceed maxSetpoint_C.
-	double addHeatAboveNode(double qAdd_kJ,const int nodeNum,const double maxSetpoint_C);
+	/// Checks whether energy is balanced during a simulation step.
+	bool isEnergyBalanced(const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance = 0.001);
 
-	/// adds extra heat to the set of nodes that are at the same temperature, above the
-	///	specified node number
+	/// Overloaded version of above that allows specification of inlet temperature.
+	bool isEnergyBalanced(const double drawVol_L,double inletT_C_in,const double prevHeatContent_kJ,const double fracEnergyTolerance) {
+		setInletT(inletT_C_in);
+		return isEnergyBalanced(drawVol_L,prevHeatContent_kJ,fracEnergyTolerance);
+	}
+
+	/// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent exceeding maximum or setpoint
+	double addHeatAboveNode(double qAdd_kJ,const int nodeNum,const double maxT_C);
+
+	/// Addition of extra heat handled separately from normal heat sources
 	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
 
 private:
@@ -810,7 +823,7 @@ private:
 
 	void setAllDefaults(); /**< sets all the defaults default */
 
-	void updateTankTemps(double draw,double inletT,double ambientT,double inletVol2_L,double inletT2_L);
+	void updateTankTemps(double draw,double inletT_C,double ambientT_C,double inletVol2_L,double inletT2_L);
 	void mixTankInversions();
 	/**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
 	void updateSoCIfNecessary();
@@ -1296,30 +1309,37 @@ private:
 
 };  // end of HeatSource class
 
-// a few extra functions for unit converesion
-inline double dF_TO_dC(double temperature) { return (temperature*5.0/9.0); }
-inline double F_TO_C(double temperature) { return ((temperature - 32.0)*5.0/9.0); }
-inline double C_TO_F(double temperature) { return (((9.0/5.0)*temperature) + 32.0); }
-inline double KWH_TO_BTU(double kwh) { return (3412.14 * kwh); }
-inline double KWH_TO_KJ(double kwh) { return (kwh * 3600.0); }
-inline double BTU_TO_KWH(double btu) { return (btu / 3412.14); }
-inline double BTUperH_TO_KW(double btu) { return (btu / 3412.14); }
-inline double KW_TO_BTUperH(double kw) { return (kw * 3412.14); }
-inline double W_TO_BTUperH(double w) { return (w * 3.41214); }
-inline double KJ_TO_KWH(double kj) { return (kj/3600.0); }
-inline double BTU_TO_KJ(double btu) { return (btu * 1.055); } // poor approximation
+constexpr double BTUperKWH = 3412.14163312794; // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
+constexpr double FperC = 9. / 5.; // degF / degC
+constexpr double offsetF = 32.; // degF offset
+constexpr double sec_per_min = 60.; // seconds / min
+constexpr double min_per_hr = 60.; // min / hr
+constexpr double sec_per_hr = sec_per_min * min_per_hr; // seconds / hr
+
+// a few extra functions for unit conversion
+inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
+inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
+inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
+inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
+inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
+inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }
+inline double BTUperH_TO_KW(double btu) { return (btu / BTUperKWH); }
+inline double KW_TO_BTUperH(double kw) { return (kw * BTUperKWH); }
+inline double W_TO_BTUperH(double w) { return (w * BTUperKWH / 1000.); }
+inline double KJ_TO_KWH(double kj) { return (kj / sec_per_hr); }
+inline double BTU_TO_KJ(double btu) { return (btu * sec_per_hr / BTUperKWH); }
 inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
 inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
-inline double GPM_TO_LPS(double gpm) { return (gpm * 3.78541 / 60.0); }
-inline double LPS_TO_GPM(double lps) { return (lps * 60.0 / 3.78541); }
+inline double GPM_TO_LPS(double gpm) { return (gpm * 3.78541 / sec_per_min); }
+inline double LPS_TO_GPM(double lps) { return (lps * sec_per_min / 3.78541); }
 
 inline double FT_TO_M(double feet) { return (feet / 3.2808); }
 inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
 
-inline double MIN_TO_SEC(double minute) { return minute * 60.; }
-inline double MIN_TO_HR(double minute) { return minute / 60.; }
+inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
+inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 {
