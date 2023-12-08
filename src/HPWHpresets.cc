@@ -1661,10 +1661,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			3.993147, 3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959
 			});
 
-		// Set up regular grid interpolator. 
+		// Set up regular grid interpolator.
+#if 0
 		Btwxt::GriddedData gridded_data(compressor.perfGrid, compressor.perfGridValues);
 		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
-		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gridded_data);
+#endif
+		compressor.perfRGI = new Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues);
 		compressor.useBtwxtGrid = true;
 
 		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
