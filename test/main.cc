@@ -351,27 +351,10 @@ int main(int argc, char *argv[])
 		  1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
 		  vectptr);
 
-	  // Check energy balance accounting. 
-	  double hpwhElect = 0;
-	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-		  hpwhElect += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+	  if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,EBALTHRESHOLD)) {
+		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
 	  }
-	  double hpwhqHW = GAL_TO_L(allSchedules[1][i]) * (hpwh.getOutletTemp() - allSchedules[0][i]) 
-				* HPWH::DENSITYWATER_kgperL
-				* HPWH::CPWATER_kJperkgC;
-	  double hpwhqEnv = hpwh.getEnergyRemovedFromEnvironment(HPWH::UNITS_KJ);
-	  double hpwhqLoss = hpwh.getStandbyLosses(HPWH::UNITS_KJ);
-	  double deltaHC = hpwh.getTankHeatContent_kJ() - tankHCStart;
-	  double qBal = hpwhqEnv// HP energy extracted from surround
-		  - hpwhqLoss		// tank loss to environment
-		  + hpwhElect		// electricity in from heat sources
-		  - hpwhqHW			// hot water energy from flows in and out
-		  - deltaHC;		// change in tank stored energy
 
-	  double fBal = fabs(qBal) / std::max(tankHCStart, 1.);
-	  if (fBal > EBALTHRESHOLD){
-		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
-	  }
 	  // Check timing
 	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
 		  if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
