@@ -163,8 +163,8 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
-	secondsPerStep = 60.0 * minutesPerStep;
-	hoursPerStep = minutesPerStep / 60.0;
+	secondsPerStep = sec_per_min * minutesPerStep;
+	hoursPerStep = minutesPerStep / min_per_hr;
 };
 
 // public HPWH functions
@@ -312,6 +312,7 @@ int HPWH::runOneStep(double drawVolume_L,
 		heatSources[i].runtime_min = 0;
 		heatSources[i].energyInput_kWh = 0.;
 		heatSources[i].energyOutput_kWh = 0.;
+		heatSources[i].extraEnergyInput_kWh = 0.;
 	}
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
@@ -538,7 +539,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//sum energyRemovedFromEnvironment_kWh for each heat source;
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
+		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh - heatSources[i].extraEnergyInput_kWh);
 	}
 
 	//cursory check for inverted temperature profile
@@ -1888,6 +1889,7 @@ double HPWH::getNthHeatSourceEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const
 		return double(HPWH_ABORT);
 	}
 }
+
 double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) const {
 	//returns energy from the heat source into the water - this should always be positive
 	if(N >= getNumHeatSources() || N < 0) {
@@ -1911,7 +1913,28 @@ double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) cons
 	}
 }
 
+double HPWH::getNthHeatSourceExtraEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const {
+	//energy used by the heat source is positive - this should always be positive
+	if(N >= getNumHeatSources() || N < 0) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
 
+	if(units == UNITS_KWH) {
+		return heatSources[N].extraEnergyInput_kWh;
+	} else if(units == UNITS_BTU) {
+		return KWH_TO_BTU(heatSources[N].extraEnergyInput_kWh);
+	} else if(units == UNITS_KJ) {
+		return KWH_TO_KJ(heatSources[N].extraEnergyInput_kWh);
+	} else {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
 double HPWH::getNthHeatSourceRunTime(int N) const {
 	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
@@ -2527,7 +2550,36 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 	} //end if(draw_volume_L > 0)
 
+	// Initialize newTankTemps_C
+	nextTankTemps_C = tankTemps_C;
 
+	double standbyLossesBottom_kJ = 0.;
+	double standbyLossesTop_kJ = 0.;
+	double standbyLossesSides_kJ = 0.;
+
+	// Standby losses from the top and bottom of the tank
+	{
+		auto standbyLossRate_kJperHrC = tankUA_kJperHrC * fracAreaTop;
+
+		standbyLossesBottom_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[0] - tankAmbientT_C);
+		standbyLossesTop_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C);
+
+		nextTankTemps_C.front() -= standbyLossesBottom_kJ / nodeCp_kJperC;
+		nextTankTemps_C.back() -= standbyLossesTop_kJ / nodeCp_kJperC;
+	}
+
+	// Standby losses from the sides of the tank
+	{
+		auto standbyLossRate_kJperHrC = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
+		for(int i = 0; i < getNumNodes(); i++) {
+			double standbyLosses_kJ = standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[i] - tankAmbientT_C);
+			standbyLossesSides_kJ += standbyLosses_kJ;
+
+			nextTankTemps_C[i] -= standbyLosses_kJ / nodeCp_kJperC;
+		}
+	}
+
+	// Heat transfer between nodes
 	if(doConduction) {
 
 		// Get the "constant" tau for the stability condition and the conduction calculation
@@ -2541,68 +2593,22 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			return;
 		}
 
-		// Boundary condition for the finite difference. 
-		const double bc = 2.0 * tau *  tankUA_kJperHrC * fracAreaTop * nodeHeight_m / KWATER_WpermC;
-
-		// Small truncation differences here lead to larger differences later 
-		// Boundary nodes for finite difference
+		// End nodes
 		if (getNumNodes() > 1) { // inner edges of top and bottom nodes
-			nextTankTemps_C[0] = (1.0 - 2.0 * tau - bc) * tankTemps_C[0] + 2.0 * tau * tankTemps_C[1] + bc * tankAmbientT_C;
-			nextTankTemps_C[getNumNodes() - 1] = (1.0 - 2.0 * tau - bc) * tankTemps_C[getNumNodes() - 1] + 2.0 * tau * tankTemps_C[getNumNodes() - 2] + bc * tankAmbientT_C;
-		}
-		else { // Factor of 2. for single-node
-			nextTankTemps_C[0] = (1.0 - 2. * bc) * tankTemps_C[0] + 2. * bc * tankAmbientT_C;
+			nextTankTemps_C.front() += 2. * tau * (tankTemps_C[1] - tankTemps_C.front());
+			nextTankTemps_C.back() += 2. * tau * (tankTemps_C[getNumNodes() - 2] - tankTemps_C.back());
 		}
 
-		// Internal nodes for the finite difference
+		// Internal nodes
 		for(int i = 1; i < getNumNodes() - 1; i++) {
-			nextTankTemps_C[i] = tankTemps_C[i] + tau * (tankTemps_C[i + 1] - 2.0 * tankTemps_C[i] + tankTemps_C[i - 1]);
-		}
-
-		// nextTankTemps_C gets assigns to tankTemps_C at the bottom of the function after q_UA.
-		// UA loss from the sides are found at the bottom of the function.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kJ += (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-	} else { // Ignore tank conduction and calculate UA losses from top and bottom. UA loss from the sides are found at the bottom of the function
-
-		for(int i = 0; i < getNumNodes(); i++) {
-			nextTankTemps_C[i] = tankTemps_C[i];
-		}
-
-		//kJ's lost as standby in the current time step for the top node.
-		double standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[0] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.front() -= standbyLosses_kJ / nodeCp_kJperC;
-
-		//kJ's lost as standby in the current time step for the bottom node.
-		standbyLosses_kJ = (tankUA_kJperHrC * fracAreaTop * (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C) * hoursPerStep);
-		standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-		nextTankTemps_C.back() -= standbyLosses_kJ / nodeCp_kJperC;
-		// UA loss from the sides are found at the bottom of the function.
-
-	}
-
-	//calculate standby losses from the sides of the tank
-	{
-		auto rat = (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
-		auto nextT = nextTankTemps_C.begin();
-		for(auto T: tankTemps_C) {
-			//faction of tank area on the sides
-			//kJ's lost as standby in the current time step for each node.
-			double standbyLosses_kJ = rat * (T - tankAmbientT_C) * hoursPerStep;
-			standbyLosses_kWh += KJ_TO_KWH(standbyLosses_kJ);
-
-			//The effect of standby loss on temperature in each node
-			*nextT -= standbyLosses_kJ / nodeCp_kJperC;
-			++nextT;
+			nextTankTemps_C[i] += 2. * tau * (tankTemps_C[i + 1] - 2. * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 	}
 
-	// Assign the new temporary tank temps to the real tank temps.
-	for(int i = 0; i < getNumNodes(); i++) 	tankTemps_C[i] = nextTankTemps_C[i];
+	// Update tankTemps_C
+	tankTemps_C = nextTankTemps_C;
+	
+	standbyLosses_kWh += KJ_TO_KWH(standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
 
 	// check for inverted temperature profile 
 	mixTankInversions();
@@ -2652,6 +2658,132 @@ void HPWH::mixTankInversions() {
 	}
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Adds heat amount qAdd_kJ at and above the node with index nodeNum.
+///			Returns unused heat to prevent exceeding maximum or setpoint.
+/// @note	Moved from HPWH::HeatSource
+/// @param[in]	qAdd_kJ		Amount of heat to add
+///	@param[in]	nodeNum		Lowest node at which to add heat
+/// @param[in]	maxT_C		Maximum allowable temperature to maintain		
+//-----------------------------------------------------------------------------
+double HPWH::addHeatAboveNode(double qAdd_kJ,int nodeNum,const double maxT_C) {
+
+	// Do not exceed maxT_C or setpoint
+	double maxHeatToT_C = std::min(maxT_C,setpoint_C);
+
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
+	}
+
+	// find number of nodes at or above nodeNum with the same temperature
+	int numNodesToHeat = 1;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			numNodesToHeat++;
+		}
+	}
+
+	while((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes())) {
+
+		// assume there is another node above the equal-temp nodes
+		int targetTempNodeNum = nodeNum + numNodesToHeat;
+
+		double heatToT_C;
+		if(targetTempNodeNum > (getNumNodes() - 1)) {
+			// no nodes above the equal-temp nodes; target temperature is the maximum
+			heatToT_C = maxHeatToT_C;
+		}
+		else {
+			heatToT_C = tankTemps_C[targetTempNodeNum];
+			if(heatToT_C > maxHeatToT_C) {
+				// Ensure temperature does not exceed maximum
+				heatToT_C = maxHeatToT_C;
+			}
+		}
+
+		// heat needed to bring all equal-temp nodes up to heatToT_C
+		double qIncrement_kJ = nodeCp_kJperC * numNodesToHeat * (heatToT_C - tankTemps_C[nodeNum]);
+	
+		if(qIncrement_kJ > qAdd_kJ) {
+			// insufficient heat to reach heatToT_C; use all available heat
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+			for(int j = 0; j < numNodesToHeat; ++j) {
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			}
+			qAdd_kJ = 0.;
+		}
+		else if(qIncrement_kJ > 0.)
+		{	// add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C 
+			for(int j = 0; j < numNodesToHeat; ++j)
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			qAdd_kJ -= qIncrement_kJ;
+		}
+		numNodesToHeat++; 
+	}
+
+	// return any unused heat
+	return qAdd_kJ;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Adds extra heat amount qAdd_kJ at and above the node with index nodeNum. 
+/// 		Does not limit final temperatures.
+/// @param[in]	qAdd_kJ				Amount of heat to add
+///	@param[in]	nodeNum				Lowest node at which to add heat
+//-----------------------------------------------------------------------------
+void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
+
+	if(hpwhVerbosity >= VRB_emetic) {
+		msg("node %2d   cap_kwh %.4lf \n",nodeNum,KJ_TO_KWH(qAdd_kJ));
+	}
+
+	// find number of nodes at or above nodeNum with the same temperature
+	int numNodesToHeat = 1;
+	for(int i = nodeNum; i < getNumNodes() - 1; i++) {
+		if(tankTemps_C[i] != tankTemps_C[i + 1]) {
+			break;
+		} else {
+			numNodesToHeat++;
+		}
+	}
+
+	while((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes())) {
+
+		// assume there is another node above the equal-temp nodes
+		int targetTempNodeNum = nodeNum + numNodesToHeat;
+
+		double heatToT_C;
+		if(targetTempNodeNum > (getNumNodes() - 1)) {
+			// no nodes above the equal-temp nodes; target temperature limited by the heat available
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+		}
+		else {
+			heatToT_C = tankTemps_C[targetTempNodeNum];
+		}
+
+		// heat needed to bring all equal-temp nodes up to heatToT_C
+		double qIncrement_kJ = nodeCp_kJperC * numNodesToHeat * (heatToT_C - tankTemps_C[nodeNum]);
+	
+		if(qIncrement_kJ > qAdd_kJ) {
+			// insufficient heat to reach heatToT_C; use all available heat
+			heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+			for(int j = 0; j < numNodesToHeat; ++j) {
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			}
+			qAdd_kJ = 0.;
+		}
+		else if(qIncrement_kJ > 0.)
+		{	// add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C 
+			for(int j = 0; j < numNodesToHeat; ++j)
+				tankTemps_C[nodeNum + j] = heatToT_C;
+			qAdd_kJ -= qIncrement_kJ;
+		}
+		numNodesToHeat++; 
+	}
+}
+
 void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
 
 	for(int i = 0; i < getNumHeatSources(); i++){
@@ -2665,11 +2797,6 @@ void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbient
 
 			// add heat 
 			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
-
-			// 0 out to ignore features
-			heatSources[i].perfMap.clear();
-			heatSources[i].energyInput_kWh = 0.0;
-			heatSources[i].energyOutput_kWh = 0.0;
 
 			break; // Only add extra heat to the first "extra" heat source found.
 		}
@@ -3099,6 +3226,48 @@ bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs,DRMODES DR_signal) const {
 
 void HPWH::resetTopOffTimer() {
 	timerTOT = 0.;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Checks whether energy is balanced during a simulation step. 
+/// @note	Used in test/main.cc
+/// @param[in]	drawVol_L				Water volume drawn during simulation step
+///	@param[in]	prevHeatContent_kJ		Heat content of tank prior to simulation step
+///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance	
+/// @return	true if balanced; false otherwise.
+//-----------------------------------------------------------------------------
+bool HPWH::isEnergyBalanced(
+	const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance /* = 0.001 */)
+{
+	// Check energy balancing. 
+	double qInElectrical_kJ = 0.;
+	double qInExtra_kJ = 0.;
+	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+		qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		qInExtra_kJ += getNthHeatSourceExtraEnergyInput(iHS, UNITS_KJ);
+	}
+
+	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
+	double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
+	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
+	double expectedTankHeatContent_kJ =
+		  prevHeatContent_kJ			// previous heat content
+		+ qInElectrical_kJ				// electrical energy delivered to heat sources
+		+ qInExtra_kJ					// extra energy delivered to heat sources
+		+ qInHeatSourceEnviron_kJ		// heat extracted from environment by condenser
+		- qOutTankEnviron_kJ			// heat released from tank to environment
+		- qOutWater_kJ;					// heat expelled to outlet by water flow
+
+	double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
+		
+	double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+	if(fracEnergyDiff > fracEnergyTolerance) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Energy-balance error: %f kJ, %f %% \n",qBal_kJ,100. * fracEnergyDiff);
+		}
+		return false;
+	}
+	return true;
 }
 
 #ifndef HPWH_ABRIDGED
