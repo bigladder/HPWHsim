@@ -261,6 +261,7 @@ void calcThermalDist(
 	thermalDist.resize(nodeT_C.size());
 
 	// Populate the vector of heat distribution
+	double totDist = 0.;
 	for(int i = 0; i < static_cast<int>(nodeT_C.size()); i++) {
 		double dist = 0.;
 		if(i >= lowestNode){
@@ -272,9 +273,16 @@ void calcThermalDist(
 				dist = 0.;
 		}
 		thermalDist[i] = dist;
+		totDist += dist;
 	}
 
-	normalize(thermalDist);
+	if(totDist > 0.) {
+		normalize(thermalDist);
+	}
+	else {
+		thermalDist.assign(thermalDist.size(), 1./static_cast<double>(thermalDist.size()));
+	}
+
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)

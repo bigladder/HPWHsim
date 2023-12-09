@@ -382,9 +382,10 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	{
 		std::vector<double> heatDistribution;
 
-		//calcHeatDist takes care of the swooping for wrapped configurations
+		// calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
+		// calculate capacity btu/hr, input btu/hr, and cop
 		if(isACompressor()) {
 			hpwh->condenserInlet_C = getTankTemp();
 			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
@@ -393,9 +394,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
 
 		}
-		// calculate capacity btu/hr, input btu/hr, and cop
-
-		//some outputs for debugging
+		// some outputs for debugging
 		if(hpwh->hpwhVerbosity >= VRB_typical) {
 			hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",BTU_TO_KWH(cap_BTUperHr)*(minutesToRun) / min_per_hr,cap_BTUperHr);
 		}
