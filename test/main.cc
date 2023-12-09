@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
   newTankSize = 0.;
   tot_limit = 0.;
   useSoC = false;
-  writeOutletT = false;
+  writeOutletT = true;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -190,9 +190,6 @@ int main(int argc, char *argv[])
 	}
 	else if(var1 == "useSoC") {
 		useSoC = (bool)testVal;
-	}
-	else if(var1 == "writeOutletT") {
-		writeOutletT = (bool)testVal;
 	}	
 	else {
 		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
@@ -291,9 +288,6 @@ int main(int argc, char *argv[])
 		  header += strHeadSoC;
 	  }
 	  int csvOptions = HPWH::CSVOPT_NONE;
-	  if (writeOutletT) {
-		csvOptions |= HPWH::CSVOPT_WRITE_OUTLET_T;
-	  }
 	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
   }
 
@@ -389,11 +383,8 @@ int main(int argc, char *argv[])
 			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction()) + ", ";
 		  }
 		  int csvOptions = HPWH::CSVOPT_NONE;
-		  if (writeOutletT){
-			csvOptions |= HPWH::CSVOPT_WRITE_OUTLET_T;
-			if (allSchedules[1][i] > 0.) {
-				csvOptions |= HPWH::CSVOPT_IS_DRAWING;
-			}
+		  if (allSchedules[1][i] > 0.) {
+			csvOptions |= HPWH::CSVOPT_IS_DRAWING;
 		  }
 		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
 	  }
