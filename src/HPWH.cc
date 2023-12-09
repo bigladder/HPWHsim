@@ -3291,7 +3291,7 @@ int HPWH::HPWHinit_file(string configFile) {
 	int heatsource,sourceNum,nTemps,tempInt;
 	std::size_t num_nodes = 0, numHeatSources = 0;
 	bool hasInitialTankTemp = false;
-	double initalTankT_C = 20.;
+	double initalTankT_C = F_TO_C(120.);
 
 	string tempString,units;
 	double tempDouble;

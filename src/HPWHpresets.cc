@@ -412,7 +412,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	heatSources.clear();
 
 	bool hasInitialTankTemp = false;
-	double initialTankT_C = 20.;
+	double initialTankT_C = F_TO_C(120.);
 
 	//resistive with no UA losses for testing
 	if (presetNum == MODELS_restankNoUA) {
@@ -518,7 +518,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 	else if (presetNum == MODELS_StorageTank) {
 		setNumNodes(12);
-		setpoint_C = F_TO_C(127.);
+		setpoint_C = 800.;
+
+		initialTankT_C = F_TO_C(127.);
+		hasInitialTankTemp = true;
 
 		tankSizeFixed = false;
 		tankVolume_L = GAL_TO_L(80);
