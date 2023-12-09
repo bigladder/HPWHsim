@@ -271,8 +271,7 @@ public:
 	enum CSVOPTIONS {
 		CSVOPT_NONE = 0,
 		CSVOPT_IPUNITS = 1 << 0,
-		CSVOPT_WRITE_OUTLET_T = 1 << 1,
-		CSVOPT_IS_DRAWING = 1 << 2
+		CSVOPT_IS_DRAWING = 1 << 1
 	};
 
 	struct NodeWeight {
