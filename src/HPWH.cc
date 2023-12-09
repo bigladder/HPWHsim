@@ -2931,13 +2931,13 @@ void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
 	for(int i = getNumNodes() - 1; i >= 0; i--) {
 		if(heatDistribution_W[i] != 0) {
 			double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
-			double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / 60.);
+			double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
 			addExtraHeatAboveNode(qAdd_KJ,i);
 			tot_qAdded_BTUperHr += qAdd_BTUperHr;
 		}
 	}
 	// Write the input & output energy
-	extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / 60.0);
+	extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

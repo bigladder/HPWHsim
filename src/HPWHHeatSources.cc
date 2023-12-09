@@ -757,14 +757,14 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 			getCapacityMP(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
 
-			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
+			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * sec_per_min);
 
 			targetTemp_C = calcMPOutletTemperature(heatingCapacity_KW);
 			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 		} else {
 			//how much heat is available this timestep
 			getCapacity(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
-			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
+			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / min_per_hr));
 			if(hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n",heatingCapacity_kJ);
 			}
