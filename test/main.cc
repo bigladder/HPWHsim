@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
-  bool useSoC, writeOutletT;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit, initialTankT_C;
+  bool useSoC;
   int i, outputCode;
   long minutesToRun;
 
@@ -157,13 +157,14 @@ int main(int argc, char *argv[])
   outputCode = 0;
   minutesToRun = 0;
   newSetpoint = 0.;
+  initialTankT_C = 0.;
   doCondu = 1;
   doInvMix = 1;
   inletH = 0.;
   newTankSize = 0.;
   tot_limit = 0.;
   useSoC = false;
-  writeOutletT = true;
+  bool hasInitialTankTemp = false;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -190,7 +191,11 @@ int main(int argc, char *argv[])
 	}
 	else if(var1 == "useSoC") {
 		useSoC = (bool)testVal;
-	}	
+	}
+	if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+		initialTankT_C = testVal;
+		hasInitialTankTemp = true;
+    }
 	else {
 		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 	}
@@ -224,6 +229,7 @@ int main(int argc, char *argv[])
     }
   }
   
+
   if (doInvMix == 0) {
 	  outputCode += hpwh.setDoInversionMixing(false);
   }
@@ -234,11 +240,17 @@ int main(int argc, char *argv[])
   if (newSetpoint > 0) {
 	  if (!allSchedules[5].empty()) {
 		  hpwh.setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
-		  hpwh.resetTankToSetpoint();
+		  if (hasInitialTankTemp)
+			  hpwh.setTankToTemperature(initialTankT_C);
+		  else
+			hpwh.resetTankToSetpoint();
 	  }
 	  else {
 		  hpwh.setSetpoint(newSetpoint);
-		  hpwh.resetTankToSetpoint();
+		  if (hasInitialTankTemp)
+			  hpwh.setTankToTemperature(initialTankT_C);
+		  else
+			hpwh.resetTankToSetpoint();
 	  }
   }
   if (inletH > 0) {
