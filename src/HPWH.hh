@@ -374,6 +374,8 @@ public:
 	std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc,double targetSoC,double hystFract,double tempMinUseful_C,
 		bool constMains,double mains_C);
 
+	std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> wholeTank_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);

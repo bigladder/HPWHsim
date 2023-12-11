@@ -3885,7 +3885,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 		//logic conditions
-		compressor.addTurnOnLogic(HPWH::bottomTwelfth_absolute(F_TO_C(111)));
+		compressor.addTurnOnLogic(HPWH::wholeTank_absolute(F_TO_C(111)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
 		//set everything in its places
