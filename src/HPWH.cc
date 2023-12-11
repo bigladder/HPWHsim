@@ -1607,6 +1607,16 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
 	return nodeWeights;
 }
 
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint,this);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank_absolute(double decisionPoint) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint,this,true);
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2./3., 1.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third",nodeWeights,decisionPoint,this);
@@ -3588,16 +3598,48 @@ int HPWH::HPWHinit_file(string configFile) {
 						heatSources[heatsource].standbyLogic = std::make_shared<HPWH::TempBasedHeatingLogic>("standby logic",nodeWeights,tempDouble,this,absolute,compare);
 					}
 				} else if(token == "onlogic") {
-					line_ss >> tempDouble >> units;
-					if(units == "F")  tempDouble = dF_TO_dC(tempDouble);
-					else if(units == "C"); //do nothing, lol
+					std::string nextToken;
+					line_ss >> nextToken;
+					bool absolute = (nextToken == "absolute");
+					if(absolute) {
+						std::string compareStr;
+						line_ss >> compareStr >> tempDouble >> units;
+						std::function<bool(double,double)> compare;
+						if(compareStr == "<") compare = std::less<double>();
+						else if(compareStr == ">") compare = std::greater<double>();
+						else {
+							if(hpwhVerbosity >= VRB_reluctant) {
+								msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n",compareStr.c_str(),heatsource,token.c_str());
+							}
+							return HPWH_ABORT;
+						}
+						line_ss >> tempDouble;
+					}
+					else {
+						tempDouble = std::stod(nextToken);
+					}
+					line_ss >> units;
+					if(units == "F") {
+						if(absolute) {
+							tempDouble = F_TO_C(tempDouble);
+						} else {
+							tempDouble = dF_TO_dC(tempDouble);
+						}
+					} else if(units == "C"); //do nothing, lol
 					else {
 						if(hpwhVerbosity >= VRB_reluctant) {
 							msg("Incorrect units specification for %s from heatsource %d.  \n",token.c_str(),heatsource);
 						}
 						return HPWH_ABORT;
 					}
-					if(tempString == "topThird") {
+					if(tempString == "wholeTank") {
+						if (absolute) {
+							heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank_absolute(tempDouble));
+						}
+						else {
+							heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank(tempDouble));
+						}
+					} else if(tempString == "topThird") {
 						heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
 					} else if(tempString == "bottomThird") {
 						heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
