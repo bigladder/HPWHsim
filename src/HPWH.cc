@@ -1614,7 +1614,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2./3., 1.);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute",nodeWeights,decisionPoint,this);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute",nodeWeights,decisionPoint,this,true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint) {
@@ -1665,6 +1665,11 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double decisionPoi
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,decisionPoint,this);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth_absolute(double decisionPoint) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,decisionPoint,this,true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint) {
@@ -3404,6 +3409,18 @@ int HPWH::HPWHinit_file(string configFile) {
 				}
 				return HPWH_ABORT;
 			}
+		} else if(token == "initialTankTemp") {
+			line_ss >> tempDouble >> units;
+			if(units == "F")  tempDouble = F_TO_C(tempDouble);
+			else if(units == "C");
+			else {
+				if(hpwhVerbosity >= VRB_reluctant) {
+					msg("Incorrect units specification for %s.  \n",token.c_str());
+				}
+				return HPWH_ABORT;
+			}
+			initalTankT_C = tempDouble;
+			hasInitialTankTemp = true;
 		} else if(token == "hasHeatExchanger") {
 			// false of this model uses heat exchange
 			line_ss >> tempString;

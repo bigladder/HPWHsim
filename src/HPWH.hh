@@ -379,6 +379,7 @@ public:
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint) ;
 	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> secondSixth(double decisionPoint);

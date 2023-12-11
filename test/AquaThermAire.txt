@@ -1,10 +1,11 @@
 verbosity silent
 numNodes 1 #number of nodes
-setpoint 125 F
+setpoint 50 C
 volume 54.4 gal
 UA 10.35 kJperHrC
 depressTemp false
-mixOnDraw true
+mixOnDraw false
+initialTankTemp 49.32 C
 hasHeatExchanger true
 heatExchangerEffectiveness 0.9
 
