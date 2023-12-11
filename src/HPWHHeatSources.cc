@@ -375,8 +375,6 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 
 void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	double input_BTUperHr = 0.,cap_BTUperHr = 0.,cop = 0.;
-	// set the leftover capacity of the Heat Source to 0, so the first round of
-	// passing it on works
 
 	switch(configuration) {
 	case CONFIG_SUBMERGED:
@@ -384,9 +382,10 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	{
 		std::vector<double> heatDistribution;
 
-		//calcHeatDist takes care of the swooping for wrapped configurations
+		// calcHeatDist takes care of the swooping for wrapped configurations
 		calcHeatDist(heatDistribution);
 
+		// calculate capacity btu/hr, input btu/hr, and cop
 		if(isACompressor()) {
 			hpwh->condenserInlet_C = getTankTemp();
 			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
@@ -395,31 +394,23 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
 
 		}
-		// calculate capacity btu/hr, input btu/hr, and cop
-
-		//some outputs for debugging
+		// some outputs for debugging
 		if(hpwh->hpwhVerbosity >= VRB_typical) {
-			hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",BTU_TO_KWH(cap_BTUperHr)*(minutesToRun) / 60.0,cap_BTUperHr);
-		}
-		if(hpwh->hpwhVerbosity >= VRB_emetic) {
-			hpwh->msg("heatDistribution: %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf %4.3lf \n",heatDistribution[0],heatDistribution[1],heatDistribution[2],heatDistribution[3],heatDistribution[4],heatDistribution[5],heatDistribution[6],heatDistribution[7],heatDistribution[8],heatDistribution[9],heatDistribution[10],heatDistribution[11]);
+			hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",BTU_TO_KWH(cap_BTUperHr)*(minutesToRun) / min_per_hr,cap_BTUperHr);
 		}
 
 		//the loop over nodes here is intentional - essentially each node that has
 		//some amount of heatDistribution acts as a separate resistive element
 		//maybe start from the top and go down?  test this with graphs
+
+		// set the leftover capacity to 0
 		double leftoverCap_kJ = 0.;
 		for(int i = hpwh->getNumNodes() - 1; i >= 0; i--) {
 			//for(int i = 0; i < hpwh->numNodes; i++){
-			double nodeCap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.0 * heatDistribution[i]);
+			double nodeCap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr * heatDistribution[i]);
 			if(nodeCap_kJ != 0.) {
-				if(typeOfHeatSource == TYPE_extra) {
-					hpwh->addExtraHeatAboveNode(nodeCap_kJ,i);
-				}
-				else {
-					//add leftoverCap to the next run, and keep passing it on
-					leftoverCap_kJ = hpwh->addHeatAboveNode(nodeCap_kJ + leftoverCap_kJ,i,maxSetpoint_C);
-				}
+				//add leftoverCap to the next run, and keep passing it on
+				leftoverCap_kJ = hpwh->addHeatAboveNode(nodeCap_kJ + leftoverCap_kJ,i,maxSetpoint_C);
 			}
 		}
 
@@ -428,7 +419,7 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 
 		//after you've done everything, any leftover capacity is time that didn't run
-		double cap_kJ =  BTU_TO_KJ(cap_BTUperHr * minutesToRun / 60.);
+		double cap_kJ =  BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
 		runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
 #if 1	// error check, 1-22-2017; updated 12-6-2023
 		if(runtime_min < -TOL_MINVALUE)
@@ -447,11 +438,8 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	}
 
 	// Write the input & output energy
-	if(typeOfHeatSource == TYPE_extra)
-		extraEnergyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
-	else
-		energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / 60.0);
-	energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / 60.0);
+	energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
+	energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
 }
 
 // private HPWH::HeatSource functions
@@ -460,45 +448,6 @@ void HPWH::HeatSource::sortPerformanceMap() {
 		[](const HPWH::HeatSource::perfPoint & a,const HPWH::HeatSource::perfPoint & b) -> bool {
 			return a.T_F < b.T_F;
 		});
-}
-
-double HPWH::HeatSource::expitFunc(double x,double offset) {
-	double val;
-	val = 1 / (1 + exp(x - offset));
-	return val;
-}
-
-void HPWH::HeatSource::normalize(std::vector<double> &distribution) {
-	size_t N = distribution.size();
-
-	bool normalization_needed = true;
-
-	// Need to renormalize if negligible elements are zeroed.
-	while (normalization_needed)
-	{
-		normalization_needed = false;
-		double sum_tmp = 0.;
-		for(size_t i = 0; i < N; i++) {
-			sum_tmp += distribution[i];
-		}
-		if(sum_tmp > 0.) {
-			for(size_t i = 0; i < N; i++) {			
-				distribution[i] /= sum_tmp;
-				//this gives a very slight speed improvement (milliseconds per simulated year)
-				if(distribution[i] < TOL_MINVALUE) {
-					if (distribution[i] > 0.) {
-						normalization_needed = true;
-					}
-					distribution[i] = 0.;					
-				}
-			}
-		}
-		else {
-			 for(size_t i = 0; i < N; i++) {
-				distribution[i] = 0.;
-			}
-		}
-	}
 }
 
 double HPWH::HeatSource::getTankTemp() const{
@@ -764,31 +713,12 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr,double& cop,std::vecto
 void HPWH::HeatSource::calcHeatDist(std::vector<double> &heatDistribution) {
 
 	// Populate the vector of heat distribution
-	heatDistribution.resize(hpwh->getNumNodes());
 	if(configuration == CONFIG_SUBMERGED) {
+		heatDistribution.resize(hpwh->getNumNodes());
 		resampleExtensive(heatDistribution, condensity);
 	}
 	else if(configuration == CONFIG_WRAPPED) { // Wrapped around the tank, send through the logistic function
-		double totDist = 0.;
-		for(int i = 0; i < hpwh->getNumNodes(); i++) {
-			double dist = 0.;
-			if(i >= lowestNode){
-				double Toffset_C = 5.0 / 1.8; // 5 degF
-				double offset = Toffset_C / 1.; // should be dimensionless; guessing the denominator should have been Tshrinkage_C
-				dist = expitFunc((hpwh->tankTemps_C[i] - hpwh->tankTemps_C[lowestNode]) / Tshrinkage_C,offset);
-				dist *= (hpwh->setpoint_C - hpwh->tankTemps_C[i]);
-				if(dist < 0.) // SETPOINT_FIX
-					dist = 0.;
-			}
-			heatDistribution[i] = dist;
-			totDist += dist;
-		}
-		if(totDist > 0.) {
-			normalize(heatDistribution);
-		}
-		else {
-			heatDistribution.assign(heatDistribution.size(), 1./static_cast<double>(heatDistribution.size()));
-		}
+		calcThermalDist(heatDistribution,Tshrinkage_C,lowestNode,hpwh->tankTemps_C,hpwh->setpoint_C);
 	}
 }
 
@@ -827,14 +757,14 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 			getCapacityMP(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
 			double heatingCapacity_KW = BTUperH_TO_KW(capTemp_BTUperHr);
 
-			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * 60.0);
+			heatingCapacity_kJ = heatingCapacity_KW * (timeRemaining_min * sec_per_min);
 
 			targetTemp_C = calcMPOutletTemperature(heatingCapacity_KW);
 			deltaT_C = targetTemp_C - hpwh->tankTemps_C[externalOutletHeight];
 		} else {
 			//how much heat is available this timestep
 			getCapacity(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
-			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / 60.0));
+			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / min_per_hr));
 			if(hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n",heatingCapacity_kJ);
 			}
@@ -960,33 +890,6 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,double Watts,int condens
 	configuration = CONFIG_SUBMERGED; //immersed in tank
 
 	typeOfHeatSource = TYPE_resistance;
-}
-
-void HPWH::HeatSource::setupExtraHeat(const double extraPower_W) {
-
-	perfMap.clear();
-	perfMap.reserve(2);
-
-	perfMap.push_back({
-		50, // Temperature (T_F)
-		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
-		});
-
-	perfMap.push_back({
-		67, // Temperature (T_F)
-		{extraPower_W,0.0,0.0}, // Input Power Coefficients (inputPower_coeffs)
-		{1.0,0.0,0.0} // COP Coefficients (COP_coeffs)
-		});
-}
-
-void HPWH::HeatSource::setupExtraHeat(std::vector<double> &nodePowerExtra_W) {
-	// Only the total power in nodePowerExtra_W is used.
-	double extraPower_W = 0.;
-	for(unsigned int i = 0; i < nodePowerExtra_W.size(); ++i) {
-		extraPower_W += nodePowerExtra_W[i];
-	}
-	setupExtraHeat(extraPower_W);
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic) {

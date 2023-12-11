@@ -45,7 +45,7 @@ void testEnergyBalanceSolar() {
 
 	double maxDrawVol_L = 1.;
 	const double ambientT_C = 20.;
-	const double externalT_C = F_TO_C(-999.); // used in cse to keep heat source from turning on.
+	const double externalT_C = 20.;
 
 	std::vector<double> nodePowerExtra_W = {1000.};
 	//
