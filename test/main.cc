@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
   string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3, inputFile, outputDirectory;
   string inputVariableName, firstCol;
-  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit;
+  double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit, initialTankT_C;
   bool useSoC;
   int i, outputCode;
   long minutesToRun;
@@ -157,12 +157,14 @@ int main(int argc, char *argv[])
   outputCode = 0;
   minutesToRun = 0;
   newSetpoint = 0.;
+  initialTankT_C = 0.;
   doCondu = 1;
   doInvMix = 1;
   inletH = 0.;
   newTankSize = 0.;
   tot_limit = 0.;
   useSoC = false;
+  bool hasInitialTankTemp = false;
   cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
 
   while(controlFile >> var1 >> testVal) {
@@ -190,6 +192,10 @@ int main(int argc, char *argv[])
 	else if(var1 == "useSoC") {
 		useSoC = (bool)testVal;
 	}
+	if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+		initialTankT_C = testVal;
+		hasInitialTankTemp = true;
+    }
 	else {
 		cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 	}
@@ -223,6 +229,7 @@ int main(int argc, char *argv[])
     }
   }
   
+
   if (doInvMix == 0) {
 	  outputCode += hpwh.setDoInversionMixing(false);
   }
@@ -233,11 +240,17 @@ int main(int argc, char *argv[])
   if (newSetpoint > 0) {
 	  if (!allSchedules[5].empty()) {
 		  hpwh.setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
-		  hpwh.resetTankToSetpoint();
+		  if (hasInitialTankTemp)
+			  hpwh.setTankToTemperature(initialTankT_C);
+		  else
+			hpwh.resetTankToSetpoint();
 	  }
 	  else {
 		  hpwh.setSetpoint(newSetpoint);
-		  hpwh.resetTankToSetpoint();
+		  if (hasInitialTankTemp)
+			  hpwh.setTankToTemperature(initialTankT_C);
+		  else
+			hpwh.resetTankToSetpoint();
 	  }
   }
   if (inletH > 0) {
@@ -343,27 +356,10 @@ int main(int argc, char *argv[])
 		  1. * GAL_TO_L(allSchedules[1][i]), allSchedules[0][i],
 		  vectptr);
 
-	  // Check energy balance accounting. 
-	  double hpwhElect = 0;
-	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-		  hpwhElect += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+	  if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,EBALTHRESHOLD)) {
+		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
 	  }
-	  double hpwhqHW = GAL_TO_L(allSchedules[1][i]) * (hpwh.getOutletTemp() - allSchedules[0][i]) 
-				* HPWH::DENSITYWATER_kgperL
-				* HPWH::CPWATER_kJperkgC;
-	  double hpwhqEnv = hpwh.getEnergyRemovedFromEnvironment(HPWH::UNITS_KJ);
-	  double hpwhqLoss = hpwh.getStandbyLosses(HPWH::UNITS_KJ);
-	  double deltaHC = hpwh.getTankHeatContent_kJ() - tankHCStart;
-	  double qBal = hpwhqEnv// HP energy extracted from surround
-		  - hpwhqLoss		// tank loss to environment
-		  + hpwhElect		// electricity in from heat sources
-		  - hpwhqHW			// hot water energy from flows in and out
-		  - deltaHC;		// change in tank stored energy
 
-	  double fBal = fabs(qBal) / std::max(tankHCStart, 1.);
-	  if (fBal > EBALTHRESHOLD){
-		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error " << qBal << "kJ, " << 100*fBal << "%"<< "\n";
-	  }
 	  // Check timing
 	  for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
 		  if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
