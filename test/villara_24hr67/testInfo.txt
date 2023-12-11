@@ -1,2 +1,3 @@
-HPWH_setpoint 51.67
+setpoint 50
 length_of_test 1441
+initialTankT_C 49.32

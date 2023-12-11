@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 	else if(var1 == "useSoC") {
 		useSoC = (bool)testVal;
 	}
-	if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+	else if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
 		initialTankT_C = testVal;
 		hasInitialTankTemp = true;
     }

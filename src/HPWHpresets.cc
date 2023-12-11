@@ -3828,13 +3828,16 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 	}	
 	else if (presetNum == MODELS_AQUATHERMAIRE) { // AquaThermAire
 		setNumNodes(1);
-		setpoint_C = F_TO_C(125.);
+		setpoint_C = 50.;
+
+		initialTankT_C = 49.32;
+		hasInitialTankTemp = true;
 
 		tankVolume_L = GAL_TO_L(54.4);
 		tankUA_kJperHrC = 10.35;
 
 		doTempDepression = false;
-		tankMixesOnDraw = true;
+		tankMixesOnDraw = false;
 
 		// heat exchangers only
 		hasHeatExchanger = true;
@@ -3882,7 +3885,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
 		//logic conditions
-		compressor.addTurnOnLogic(HPWH::bottomTwelfth(dF_TO_dC(111)));
+		compressor.addTurnOnLogic(HPWH::bottomTwelfth_absolute(F_TO_C(111)));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
 		//set everything in its places
