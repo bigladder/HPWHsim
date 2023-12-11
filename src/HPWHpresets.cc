@@ -529,23 +529,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		doTempDepression = false;
 		tankMixesOnDraw = false;
-
-		HeatSource extra(this);
-		
-		//compressor values
-		extra.isOn = false;
-		extra.isVIP = false;
-		extra.typeOfHeatSource = TYPE_extra;
-		extra.configuration = HeatSource::CONFIG_WRAPPED;
-		
-		extra.addTurnOnLogic(HPWH::topThird_absolute(1));
-
-		//initial guess, will get reset based on the input heat vector
-		extra.setCondensity({1., 0., 0., 0.});
-
-		//set everything in its places
-		heatSources.resize(1);
-		heatSources[0] = extra;
 	}
 
 	//basic compressor tank for testing
