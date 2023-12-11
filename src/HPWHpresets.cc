@@ -1666,7 +1666,13 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		Btwxt::GriddedData gridded_data(compressor.perfGrid, compressor.perfGridValues);
 		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
 #endif
-		compressor.perfRGI = new Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues);
+		Btwxt::GridAxis g0(compressor.perfGrid[0], "TAir", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::linear);
+		Btwxt::GridAxis g1(compressor.perfGrid[1], "TOut", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::linear);
+		Btwxt::GridAxis g2(compressor.perfGrid[2], "TIn", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::linear);
+
+		std::vector<Btwxt::GridAxis> gx{ g0, g1, g2 };
+
+		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues);
 		compressor.useBtwxtGrid = true;
 
 		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
