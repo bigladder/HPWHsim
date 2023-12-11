@@ -3827,7 +3827,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[0].companionHeatSource = &heatSources[2];
 	}	
 	else if (presetNum == MODELS_AQUATHERMAIRE) { // AquaThermAire
-		setNumNodes(1);
+		setNumNodes(12);
 		setpoint_C = 50.;
 
 		initialTankT_C = 49.32;
