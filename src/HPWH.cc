@@ -921,7 +921,6 @@ void HPWH::printTankTemps() {
 	msg(ss.str().c_str());
 }
 
-
 // public members to write to CSV file
 int HPWH::WriteCSVHeading(FILE* outFILE,const char* preamble,int nTCouples,int options) const {
 
@@ -938,6 +937,8 @@ int HPWH::WriteCSVHeading(FILE* outFILE,const char* preamble,int nTCouples,int o
 	for(int iTC = 0; iTC < nTCouples; iTC++) {
 		fprintf(outFILE,",tcouple%d (%s)",iTC + 1,doIP ? "F" : "C");
 	}
+
+	fprintf(outFILE,", toutlet (%s)",doIP ? "F" : "C");
 
 	fprintf(outFILE,"\n");
 
@@ -959,6 +960,13 @@ int HPWH::WriteCSVRow(FILE* outFILE,const char* preamble,int nTCouples,int optio
 
 	for(int iTC = 0; iTC < nTCouples; iTC++) {
 		fprintf(outFILE,",%0.2f",getNthSimTcouple(iTC + 1,nTCouples,doIP ? UNITS_F : UNITS_C));
+	}
+
+	if (options & HPWH::CSVOPT_IS_DRAWING) {
+		fprintf(outFILE,",%0.2f",doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
+	}
+	else {
+		fprintf(outFILE,",");
 	}
 
 	fprintf(outFILE,"\n");

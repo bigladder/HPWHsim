@@ -268,8 +268,9 @@ public:
 
 	/** specifies the unit type for outputs in the CSV file-s  */
 	enum CSVOPTIONS {
-		CSVOPT_NONE,
-		CSVOPT_IPUNITS
+		CSVOPT_NONE = 0,
+		CSVOPT_IPUNITS = 1 << 0,
+		CSVOPT_IS_DRAWING = 1 << 1
 	};
 
 	struct NodeWeight {
@@ -500,6 +501,7 @@ public:
 	void printTankTemps();
 	/**< this prints out all the node temps, kind of nicely formatted
 		does not use verbosity, as it is public and expected to be called only when needed  */
+
 	int WriteCSVHeading(FILE* outFILE,const char* preamble = "",int nTCouples = 6,int options = CSVOPT_NONE) const;
 	int WriteCSVRow(FILE* outFILE,const char* preamble = "",int nTCouples = 6,int options = CSVOPT_NONE) const;
 	/**< a couple of function to write the outputs to a file
