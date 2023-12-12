@@ -1662,10 +1662,6 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			});
 
 		// Set up regular grid interpolator.
-#if 0
-		Btwxt::GriddedData gridded_data(compressor.perfGrid, compressor.perfGridValues);
-		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
-#endif
 		Btwxt::GridAxis g0(compressor.perfGrid[0], "TAir", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::constant);
 		Btwxt::GridAxis g1(compressor.perfGrid[1], "TOut", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::constant);
 		Btwxt::GridAxis g2(compressor.perfGrid[2], "TIn", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::linear);
