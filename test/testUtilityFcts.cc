@@ -298,7 +298,7 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 		hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
 	}
 	else if (modelName == "AquaThermAire") {
-		hpwhModel = HPWH::MODELS_AQUATHERMAIRE;
+		hpwhModel = HPWH::MODELS_AquaThermAire;
 	}
 	else { 
 		hpwhModel = HPWH::MODELS_basicIntegrated;
