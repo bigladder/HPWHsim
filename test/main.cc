@@ -299,7 +299,8 @@ int main(int argc, char *argv[])
 	  if(useSoC){ 
 		  header += strHeadSoC;
 	  }
-	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, 0);
+	  int csvOptions = HPWH::CSVOPT_NONE;
+	  hpwh.WriteCSVHeading(outputFile, header.c_str(), nTestTCouples, csvOptions);
   }
 
   // ------------------------------------- Simulate --------------------------------------- //
@@ -393,7 +394,11 @@ int main(int argc, char *argv[])
 		  if (useSoC) {
 			  strPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(hpwh.getSoCFraction()) + ", ";
 		  }
-		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, 0);
+		  int csvOptions = HPWH::CSVOPT_NONE;
+		  if (allSchedules[1][i] > 0.) {
+			csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+		  }
+		  hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
 	  }
 	  else {
 	  		for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
