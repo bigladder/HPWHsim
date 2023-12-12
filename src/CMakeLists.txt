@@ -25,7 +25,7 @@ set(source
 )
 add_library(libHPWHsim ${source} ${headers})
 
-target_include_directories(libHPWHsim PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/vendor/btwxt/src)
+target_include_directories(libHPWHsim PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries( libHPWHsim PUBLIC btwxt)
 
