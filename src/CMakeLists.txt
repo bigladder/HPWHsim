@@ -10,7 +10,6 @@ add_custom_target(${PROJECT_NAME}_version_header
 )
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
-include_directories("${PROJECT_BINARY_DIR}/src" "${PROJECT_SOURCE_DIR}/src")
 
 set(headers
   HPWHversion.in.hh
@@ -26,10 +25,13 @@ set(source
 )
 add_library(libHPWHsim ${source} ${headers})
 
+target_include_directories(libHPWHsim PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+
+target_link_libraries( libHPWHsim PUBLIC btwxt)
+
 add_dependencies(libHPWHsim ${PROJECT_NAME}_version_header)
 
 set_target_properties(libHPWHsim PROPERTIES OUTPUT_NAME HPWHsim)
 set_target_properties(libHPWHsim PROPERTIES PDB_NAME libHPWHsim)
 target_compile_features(libHPWHsim PUBLIC cxx_std_17)
 
-target_include_directories(libHPWHsim PUBLIC ${PROJECT_SOURCE_DIR}/vendor/btwxt/src)

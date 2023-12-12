@@ -3,7 +3,7 @@ File Containing all of the presets available in HPWHsim
 */
 
 #include "HPWH.hh"
-#include "btwxt.h"
+#include <btwxt/btwxt.h>
 
 #include <algorithm>
 
@@ -1650,10 +1650,14 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 			3.993147, 3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959
 			});
 
-		// Set up regular grid interpolator. 
-		Btwxt::GriddedData gridded_data(compressor.perfGrid, compressor.perfGridValues);
-		gridded_data.set_axis_extrap_method(2, Btwxt::Method::LINEAR); //Linearly extrapolate on Tin (F)
-		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gridded_data);
+		// Set up regular grid interpolator.
+		Btwxt::GridAxis g0(compressor.perfGrid[0], "TAir", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::constant);
+		Btwxt::GridAxis g1(compressor.perfGrid[1], "TOut", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::constant);
+		Btwxt::GridAxis g2(compressor.perfGrid[2], "TIn", Btwxt::InterpolationMethod::linear, Btwxt::ExtrapolationMethod::linear);
+
+		std::vector<Btwxt::GridAxis> gx{ g0, g1, g2 };
+
+		compressor.perfRGI = new Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues);
 		compressor.useBtwxtGrid = true;
 
 		compressor.secondaryHeatExchanger = { dF_TO_dC(10.), dF_TO_dC(15.), 27. };
