@@ -63,6 +63,10 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+double makeC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute){
+	return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+}
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end. 
@@ -1732,14 +1736,10 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
 	return nodeWeights;
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint) {
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint,this);
-}
-
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank_absolute(double decisionPoint) {
-	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint,this,true);
+	double decisionPoint_C = makeC(decisionPoint,units,absolute);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint_C,this,absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint) {
@@ -3742,12 +3742,7 @@ int HPWH::HPWHinit_file(string configFile) {
 						return HPWH_ABORT;
 					}
 					if(tempString == "wholeTank") {
-						if (absolute) {
-							heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank_absolute(tempDouble));
-						}
-						else {
-							heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank(tempDouble));
-						}
+						heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank(tempDouble,UNITS_C,absolute));
 					} else if(tempString == "topThird") {
 						heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
 					} else if(tempString == "bottomThird") {

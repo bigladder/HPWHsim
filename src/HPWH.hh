@@ -373,8 +373,7 @@ public:
 	std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc,double targetSoC,double hystFract,double tempMinUseful_C,
 		bool constMains,double mains_C);
 
-	std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint);
-	std::shared_ptr<TempBasedHeatingLogic> wholeTank_absolute(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint,const UNITS units = UNITS_C, const bool absolute = false);
 	std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
@@ -1358,6 +1357,9 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 }
 
 template< typename T> inline bool aboutEqual(T a,T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
+
+/// Generate an absolute or relative temperature in degC.
+double makeC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute);
 
 // resampling utility functions
 double getResampledValue(const std::vector<double> &values,double beginFraction,double endFraction);
