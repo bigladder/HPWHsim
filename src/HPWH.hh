@@ -218,7 +218,7 @@ public:
 		MODELS_RHEEM_HPHD135HNU_483_MP = 352, // really bad fit to data due to inconsistency in data
 		MODELS_RHEEM_HPHD135VNU_483_MP = 353,  // really bad fit to data due to inconsistency in data
 
-		MODELS_AQUATHERMAIRE = 400 // heat exchanger model
+		MODELS_AquaThermAire = 400 // heat exchanger model
 	};
 
 	///specifies the modes for writing output
