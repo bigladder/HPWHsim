@@ -257,8 +257,7 @@ public:
 	enum HEATSOURCE_TYPE {
 		TYPE_none,        /**< a default to check to make sure it's been set  */
 		TYPE_resistance,  /**< a resistance element  */
-		TYPE_compressor,   /**< a vapor cycle compressor  */
-		TYPE_extra		  /**< an extra element to add user defined heat*/
+		TYPE_compressor   /**< a vapor cycle compressor  */
 	};
 
 	/** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
@@ -458,7 +457,7 @@ public:
 
 	int runOneStep(double drawVolume_L,double ambientT_C,
 		double externalT_C,DRMODES DRstatus,double inletVol2_L = 0.,double inletT2_C = 0.,
-		std::vector<double>* nodePowerExtra_W = NULL);
+		std::vector<double>* extraHeatDist_W = NULL);
 	/**< This function will progress the simulation forward in time by one step
 	 * all calculated outputs are stored in private variables and accessed through functions
 	 *
@@ -468,11 +467,11 @@ public:
 	 /** An overloaded function that uses takes inletT_C  */
 	int runOneStep(double inletT_C,double drawVolume_L,double ambientT_C,
 		double externalT_C,DRMODES DRstatus,double inletVol2_L = 0.,double inletT2_C = 0.,
-		std::vector<double>* nodePowerExtra_W = NULL) {
+		std::vector<double>* extraHeatDist_W = NULL) {
 		setInletT(inletT_C);
 		return runOneStep(drawVolume_L,ambientT_C,
 			externalT_C,DRstatus,inletVol2_L,inletT2_C,
-			nodePowerExtra_W);
+			extraHeatDist_W);
 	};
 
 
@@ -838,9 +837,13 @@ private:
 
 	void addHeatParent(HeatSource *heatSourcePtr,double heatSourceAmbientT_C,double minutesToRun);
 
-	void addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C);
-	/**< adds extra heat defined by the user, where nodeExtraHeat[] is a vector of heat quantities to be added during the step. 
-	nodeExtraHeat[ 0] would go to bottom node, 1 to next etc.  */
+	/// adds extra heat to the set of nodes that are at the same temperature, above the
+	///	specified node number
+	void modifyHeatDistribution(std::vector<double> &heatDistribution);
+	void addExtraHeat(std::vector<double> &extraHeatDist_W);
+
+	///  "extra" heat added during a simulation step
+	double extraEnergyInput_kWh;
 
 	double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
 	/**< functions to calculate what the temperature in a portion of the tank is  */
@@ -1041,13 +1044,6 @@ public:
 	/**< configure the heat source to be a resisive element, positioned at the
 		specified node, with the specified power in watts */
 
-	void setupExtraHeat(const double extraPower_W);
-	/**< Sets the power provided by this heat source to extraPower_W*/
-
-	void setupExtraHeat(std::vector<double> &nodePowerExtra_W);
-	/**< Configure a user-defined heat source added as extra, based off using
-		  nodePowerExtra_W as the total watt input and the condensity*/
-
 	bool isEngaged() const;
 	/**< return whether or not the heat source is engaged */
 	void engageHeatSource(DRMODES DRstatus = DR_ALLOW);
@@ -1140,8 +1136,6 @@ private:
 	/**< the energy used by the heat source */
 	double energyOutput_kWh;
 	/**< the energy put into the water by the heat source */
-	double extraEnergyInput_kWh;
-	/**< the "extra" energy supplied to the heat source */
 
 // these are the heat source property variables
 	bool isVIP;
@@ -1315,10 +1309,6 @@ private:
 	void sortPerformanceMap();
 	/**< sorts the Performance Map by increasing external temperatures */
 
-	/**<  A few helper functions */
-	double expitFunc(double x,double offset);
-	void normalize(std::vector<double> &distribution);
-
 };  // end of HeatSource class
 
 constexpr double BTUperKWH = 3412.14163312794; // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
@@ -1368,5 +1358,17 @@ inline bool resampleIntensive(std::vector<double> &values,const std::vector<doub
 	return resample(values,sampleValues);
 }
 bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sampleValues);
+
+///  helper functions
+double expitFunc(double x,double offset);
+void normalize(std::vector<double> &distribution);
+int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes);
+double findShrinkageT_C(const std::vector<double> &nodeDist);
+void calcThermalDist(
+	std::vector<double> &thermalDist,
+	const double shrinkageT_C,
+	const int lowestNode,
+	const std::vector<double> &nodeTemp_C,
+	const double setpointT_C);
 
 #endif

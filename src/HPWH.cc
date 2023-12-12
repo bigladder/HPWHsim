@@ -160,6 +160,131 @@ bool resampleExtensive(std::vector<double> &values,const std::vector<double> &sa
 	return false;
 }
 
+double expitFunc(double x,double offset) {
+	double val;
+	val = 1 / (1 + exp(x - offset));
+	return val;
+}
+
+void normalize(std::vector<double> &distribution) {
+	size_t N = distribution.size();
+
+	bool normalization_needed = true;
+
+	// Need to renormalize if negligible elements are zeroed.
+	while (normalization_needed)
+	{
+		normalization_needed = false;
+		double sum_tmp = 0.;
+		for(size_t i = 0; i < N; i++) {
+			sum_tmp += distribution[i];
+		}
+		if(sum_tmp > 0.) {
+			for(size_t i = 0; i < N; i++) {			
+				distribution[i] /= sum_tmp;
+				//this gives a very slight speed improvement (milliseconds per simulated year)
+				if(distribution[i] < HPWH::TOL_MINVALUE) {
+					if (distribution[i] > 0.) {
+						normalization_needed = true;
+					}
+					distribution[i] = 0.;					
+				}
+			}
+		}
+		else {
+			 for(size_t i = 0; i < N; i++) {
+				distribution[i] = 0.;
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Finds the lowest tank node with non-zero weighting 
+/// @param[in]	nodeDist	weighting to be applied
+/// @param[in]	numTankNodes	number of nodes in tank
+/// @returns	index of lowest tank node
+//-----------------------------------------------------------------------------
+int findLowestNode(const std::vector<double> &nodeDist,const int numTankNodes){
+	int lowest = 0;
+	const int distSize =  static_cast<int>(nodeDist.size());
+	double nodeRatio = static_cast<double>(numTankNodes) / distSize;
+
+	for(auto j = 0; j < distSize; ++j) {
+		if(nodeDist[j] > 0.) {
+			lowest = static_cast<int>(nodeRatio * j);
+			break;
+		}
+	}
+
+	return lowest;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Calculates a width parameter for a thermal distribution 
+/// @param[in]	nodeDist		original distribution from which theraml distribution
+///								is derived
+/// @returns	width parameter (in degC) 
+//-----------------------------------------------------------------------------
+double findShrinkageT_C(const std::vector<double> &nodeDist){
+	double alphaT_C = 1.,betaT_C = 2.;
+	double condentropy = 0.;
+	for(std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode) {
+		double dist = nodeDist[iNode];
+		if(dist > 0.) {
+			condentropy -= dist * log(dist);
+		}
+	}
+	// condentropy shifts as ln(# of condensity nodes)
+	double size_factor = static_cast<double>(nodeDist.size()) / HPWH::CONDENSITY_SIZE;
+	double standard_condentropy = condentropy - log(size_factor);
+
+	return alphaT_C + standard_condentropy * betaT_C;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Calculates a thermal distribution for heat distribution. 
+/// @note	Fails if all nodeTemp_C values exceed setpointT_C
+/// @param[out]	thermalDist		resulting thermal distribution; does not require pre-allocation
+/// @param[in]	shrinkageT_C	width of distribution
+/// @param[in]	lowestNode		index of lowest non-zero contribution
+/// @param[in]	nodeTemp_C		node temperatures
+/// @param[in]	setpointT_C		distribution parameter 
+//-----------------------------------------------------------------------------
+void calcThermalDist(
+	std::vector<double> &thermalDist,
+	const double shrinkageT_C,
+	const int lowestNode,
+	const std::vector<double> &nodeT_C,
+	const double setpointT_C) {
+
+	thermalDist.resize(nodeT_C.size());
+
+	// Populate the vector of heat distribution
+	double totDist = 0.;
+	for(int i = 0; i < static_cast<int>(nodeT_C.size()); i++) {
+		double dist = 0.;
+		if(i >= lowestNode){
+			double Toffset_C = 5.0 / 1.8; // 5 degF
+			double offset = Toffset_C / 1.; // should be dimensionless
+			dist = expitFunc((nodeT_C[i] - nodeT_C[lowestNode]) / shrinkageT_C,offset);
+			dist *= (setpointT_C - nodeT_C[i]);
+			if(dist < 0.)
+				dist = 0.;
+		}
+		thermalDist[i] = dist;
+		totDist += dist;
+	}
+
+	if(totDist > 0.) {
+		normalize(thermalDist);
+	}
+	else {
+		thermalDist.assign(thermalDist.size(), 1./static_cast<double>(thermalDist.size()));
+	}
+
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
 	minutesPerStep = minutesPerStep_in;
@@ -270,7 +395,7 @@ int HPWH::runOneStep(double drawVolume_L,
 	double tankAmbientT_C,double heatSourceAmbientT_C,
 	DRMODES DRstatus,
 	double inletVol2_L,double inletT2_C,
-	std::vector<double>* nodePowerExtra_W) {
+	std::vector<double>* extraHeatDist_W) {
 	//returns 0 on successful completion, HPWH_ABORT on failure
 
 	//check for errors
@@ -312,8 +437,8 @@ int HPWH::runOneStep(double drawVolume_L,
 		heatSources[i].runtime_min = 0;
 		heatSources[i].energyInput_kWh = 0.;
 		heatSources[i].energyOutput_kWh = 0.;
-		heatSources[i].extraEnergyInput_kWh = 0.;
 	}
+	extraEnergyInput_kWh = 0.;
 
 	// if you are doing temp. depression, set tank and heatSource ambient temps
 	// to the tracked locationTemperature
@@ -505,8 +630,8 @@ int HPWH::runOneStep(double drawVolume_L,
 		isHeating = false;
 	}
 	//If there's extra user defined heat to add -> Add extra heat!
-	if(nodePowerExtra_W != NULL && (*nodePowerExtra_W).size() != 0) {
-		addExtraHeat(*nodePowerExtra_W,tankAmbientT_C);
+	if(extraHeatDist_W != NULL && (*extraHeatDist_W).size() != 0) {
+		addExtraHeat(*extraHeatDist_W);
 		updateSoCIfNecessary();
 	}
 
@@ -539,7 +664,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//sum energyRemovedFromEnvironment_kWh for each heat source;
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh - heatSources[i].extraEnergyInput_kWh);
+		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
 	}
 
 	//cursory check for inverted temperature profile
@@ -1921,28 +2046,6 @@ double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) cons
 	}
 }
 
-double HPWH::getNthHeatSourceExtraEnergyInput(int N,UNITS units /*=UNITS_KWH*/) const {
-	//energy used by the heat source is positive - this should always be positive
-	if(N >= getNumHeatSources() || N < 0) {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("You have attempted to access the energy input of a heat source that does not exist.  \n");
-		}
-		return double(HPWH_ABORT);
-	}
-
-	if(units == UNITS_KWH) {
-		return heatSources[N].extraEnergyInput_kWh;
-	} else if(units == UNITS_BTU) {
-		return KWH_TO_BTU(heatSources[N].extraEnergyInput_kWh);
-	} else if(units == UNITS_KJ) {
-		return KWH_TO_KJ(heatSources[N].extraEnergyInput_kWh);
-	} else {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("Incorrect unit specification for getNthHeatSourceEnergyInput.  \n");
-		}
-		return double(HPWH_ABORT);
-	}
-}
 double HPWH::getNthHeatSourceRunTime(int N) const {
 	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
@@ -2792,24 +2895,59 @@ void HPWH::addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum) {
 	}
 }
 
-void HPWH::addExtraHeat(std::vector<double> &nodePowerExtra_W,double tankAmbientT_C){
+//-----------------------------------------------------------------------------
+///	@brief	Modifies a heat distribution using a thermal distribution. 
+/// @param[in,out]	heatDistribution_W		The distribution to be modified
+//-----------------------------------------------------------------------------
+void HPWH::modifyHeatDistribution(std::vector<double> &heatDistribution_W)
+{
+	double totalHeat_W = 0.;
+	for(auto &heatDist_W: heatDistribution_W)
+		totalHeat_W += heatDist_W;
 
-	for(int i = 0; i < getNumHeatSources(); i++){
-		if(heatSources[i].typeOfHeatSource == TYPE_extra) {
+	if(totalHeat_W == 0.)
+		return;
 
-			// Set up the extra heat source
-			heatSources[i].setupExtraHeat(nodePowerExtra_W);
+	for(auto &heatDist_W: heatDistribution_W)
+		heatDist_W /= totalHeat_W;
 
-			// condentropy/shrinkage and lowestNode are now in calcDerivedHeatingValues()
-			calcDerivedHeatingValues();
+	double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
+	int lowestNode = findLowestNode(heatDistribution_W,getNumNodes());
 
-			// add heat 
-			heatSources[i].addHeat(tankAmbientT_C,minutesPerStep);			 
+	std::vector<double> modHeatDistribution_W;
+	calcThermalDist(modHeatDistribution_W,shrinkageT_C,lowestNode,tankTemps_C,setpoint_C);
 
-			break; // Only add extra heat to the first "extra" heat source found.
+	heatDistribution_W = modHeatDistribution_W;
+	for(auto &heatDist_W: heatDistribution_W)
+		heatDist_W *= totalHeat_W; 
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Adds extra heat to tank. 
+/// @param[in]	extraHeatDist_W		A distribution of extra heat to add
+//-----------------------------------------------------------------------------
+void HPWH::addExtraHeat(std::vector<double> &extraHeatDist_W){
+
+	auto modHeatDistribution_W = extraHeatDist_W;
+	modifyHeatDistribution(modHeatDistribution_W);
+
+	std::vector<double> heatDistribution_W(getNumNodes());
+	resampleExtensive(heatDistribution_W,modHeatDistribution_W);
+
+	// Unnecessary unit conversions used here to match former method
+	double tot_qAdded_BTUperHr = 0.;
+	for(int i = getNumNodes() - 1; i >= 0; i--) {
+		if(heatDistribution_W[i] != 0) {
+			double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
+			double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
+			addExtraHeatAboveNode(qAdd_KJ,i);
+			tot_qAdded_BTUperHr += qAdd_BTUperHr;
 		}
 	}
+	// Write the input & output energy
+	extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 void HPWH::turnAllHeatSourcesOff() {
@@ -2909,52 +3047,24 @@ void HPWH::calcDerivedValues() {
 void HPWH::calcDerivedHeatingValues(){
 	static char outputString[MAXOUTSTRING];  //this is used for debugging outputs
 
-	//condentropy/shrinkage
-	double condentropy = 0.;
-	double Talpha_C = 1.,Tbeta_C = 2.;  // Mapping from condentropy to shrinkage
+	// find condentropy/shrinkage
 	for(int i = 0; i < getNumHeatSources(); ++i) {
+		heatSources[i].Tshrinkage_C = findShrinkageT_C(heatSources[i].condensity);
+
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
-		}
-
-		// Calculate condentropy and ==> shrinkage
-		condentropy = 0.;
-		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j) {
-			if(heatSources[i].condensity[j] > 0.) {
-				condentropy -= heatSources[i].condensity[j] * log(heatSources[i].condensity[j]);
-				if(hpwhVerbosity >= VRB_emetic)  msg(outputString,"condentropy %.2lf \n",condentropy);
-			}
-		}
-		 // condentropy shifts as ln(# of condensity nodes)
-		double condensity_size_factor = static_cast<double>(heatSources[i].getCondensitySize()) / CONDENSITY_SIZE;
-		double standard_condentropy = condentropy - log(condensity_size_factor);
-		heatSources[i].Tshrinkage_C = Talpha_C + standard_condentropy * Tbeta_C;
-		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"shrinkage %.2lf \n\n",heatSources[i].Tshrinkage_C);
 		}
 	}
 
-	//lowest node
-	int lowest = 0;
+	// find lowest node
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		lowest = 0;
-		const int condensitySize = heatSources[i].getCondensitySize();
-		double nodeRatio = getNumNodes() / condensitySize;
+		heatSources[i].lowestNode = findLowestNode(heatSources[i].condensity,getNumNodes());
+
 		if(hpwhVerbosity >= VRB_emetic) {
 			msg(outputString,"Heat Source %d \n",i);
+			msg(outputString," lowest : %d \n",heatSources[i].lowestNode);
 		}
-
-		for(auto j = 0; j < condensitySize; ++j) {
-			if(heatSources[i].condensity[j] > 0) {
-				lowest = static_cast<int>(nodeRatio * j);
-				break;
-			}
-		}
-		if(hpwhVerbosity >= VRB_emetic) {
-			msg(outputString," lowest : %d \n",lowest);
-		}
-
-		heatSources[i].lowestNode = lowest;
 	}
 
 	// define condenser index and lowest resistance element index
@@ -3249,15 +3359,14 @@ bool HPWH::isEnergyBalanced(
 {
 	// Check energy balancing. 
 	double qInElectrical_kJ = 0.;
-	double qInExtra_kJ = 0.;
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
 		qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
-		qInExtra_kJ += getNthHeatSourceExtraEnergyInput(iHS, UNITS_KJ);
 	}
 
-	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
+	double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
 	double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
 	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
+	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
 	double expectedTankHeatContent_kJ =
 		  prevHeatContent_kJ			// previous heat content
 		+ qInElectrical_kJ				// electrical energy delivered to heat sources
