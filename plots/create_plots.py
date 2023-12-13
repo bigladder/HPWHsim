@@ -198,6 +198,8 @@ df_simulated = filter_dataframe_range(df_simulated, "Simulated")
 
 df_measured = calculate_average_tank_temperature("Measured")
 df_simulated = calculate_average_tank_temperature("Simulated")
+
+# add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
 add_temperature_details()
 
 # print measured and simulated energy consumption
