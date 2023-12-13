@@ -228,10 +228,21 @@ def plot_graphs(variable_type, variable, value, row):
 
     if (value in [1, 2]) and (variable_type == "Measured"):
         fillcolor = "white"
+        marker = dict(
+            size=7,
+            line=dict(
                 color=variables["Y-Variables"][variable]["Colors"][value], width=2
+            ),
+        )
     elif (value in [1, 2]) and (variable_type == "Simulated"):
         fillcolor = None
+        marker = dict(
+            size=7,
+            color="white",
+            line=dict(
                 color=variables["Y-Variables"][variable]["Colors"][value], width=2
+            ),
+        )
     else:
         fillcolor = None
         marker = None
