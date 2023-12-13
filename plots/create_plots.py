@@ -60,6 +60,14 @@ def calculate_energy_consumption():
     )
 
 
+def set_inlet_temperature_to_nan_at_no_draw(df, inlet_temperature_column, draw_column):
+    for index in range(len(df)):
+        if df.loc[index, draw_column] == 0:
+            df.loc[index, inlet_temperature_column] = None
+
+    return df
+
+
 def calculate_average_tank_temperature(variable_type):
     global df_measured, df_simulated
 
