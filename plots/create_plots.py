@@ -254,7 +254,9 @@ def plot_graphs(variable_type, variable, value, row):
                 variables["Y-Variables"][variable]["Column Names"][variable_type][value]
             ],
             name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
-            mode=variables["Y-Variables"][variable]["Line Mode"][value],
+            mode="lines+markers"
+            if (value == 2) and (variable_type == "Measured")
+            else variables["Y-Variables"][variable]["Line Mode"][value],
             marker=marker,
             fillcolor=fillcolor,
             line=LINE_TYPE,
