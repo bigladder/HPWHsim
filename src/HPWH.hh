@@ -820,6 +820,9 @@ public:
 	/// Addition of extra heat handled separately from normal heat sources
 	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
 
+	typedef std::vector<double> schedule;
+	bool readSchedules(const std::string &testDirectory, std::vector<schedule> &allSchedules);
+
 private:
 	class HeatSource;
 

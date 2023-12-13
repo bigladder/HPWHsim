@@ -3935,3 +3935,198 @@ int HPWH::HPWHinit_file(string configFile) {
 	return 0;
 }
 #endif
+
+// this function reads the named schedule into the provided array
+int readSchedule(HPWH::schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
+	int minuteHrTmp;
+	bool hourInput;
+	string line, snippet, s, minORhr;
+	double valTmp;
+	std::ifstream inputFile(scheduleFileName.c_str());
+	//open the schedule file provided
+	cout << "Opening " << scheduleFileName << '\n';
+
+	if(!inputFile.is_open()) {
+		return 1;
+	}
+
+	inputFile >> snippet >> valTmp;
+	// cout << "snippet " << snippet << " valTmp"<< valTmp<<'\n';
+
+	if(snippet != "default") {
+		cout << "First line of " << scheduleFileName << " must specify default\n";
+		return 1;
+	}
+	// cout << valTmp << " minutes = " << minutesOfTest << "\n";
+
+	// Fill with the default value
+	scheduleArray.assign(minutesOfTest, valTmp);
+
+	// Burn the first two lines
+	std::getline(inputFile, line);
+	std::getline(inputFile, line);
+
+	std::stringstream ss(line); // Will parse with a stringstream
+	// Grab the first token, which is the minute or hour marker
+	ss >> minORhr;
+	if (minORhr.empty() ) { // If nothing left in the file
+		return 0;
+	}
+	hourInput = tolower(minORhr.at(0)) == 'h';
+	char c; // to eat the commas nom nom
+	// Read all the exceptions to the default value
+	while (inputFile >> minuteHrTmp >> c >> valTmp) {
+
+		if (minuteHrTmp >= (int)scheduleArray.size()) {
+			cout << "In " << scheduleFileName << " the input file has more minutes than the test was defined with\n";
+			return 1;
+		}
+		// Update the value
+		if (!hourInput) {
+			scheduleArray[minuteHrTmp] = valTmp;
+		}
+		else if (hourInput) {
+			for (int j = minuteHrTmp * 60; j < (minuteHrTmp+1) * 60; j++) {
+				scheduleArray[j] = valTmp;
+				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
+			}
+		}
+	}
+
+	inputFile.close();
+	return 0;
+}
+
+bool HPWH::readSchedules(const std::string &testDirectory, std::vector<HPWH::schedule> &allSchedules)
+{
+	std::ifstream controlFile;
+	std::string fileToOpen = testDirectory + "/" + "testInfo.txt";
+	// Read the test control file
+	controlFile.open(fileToOpen.c_str());
+	if(!controlFile.is_open()) {
+		cout << "Could not open control file " << fileToOpen << "\n";
+		return false;
+	}
+	double outputCode = 0;
+	double minutesToRun = 0;
+	double newSetpoint = 0.;
+	double initialTankT_C = 0.;
+	double doCondu = 1;
+	double doInvMix = 1;
+	double inletH = 0.;
+	double newTankSize = 0.;
+	double tot_limit = 0.;
+	bool useSoC = false;
+	bool hasInitialTankTemp = false;
+	//cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
+
+	std::string var1;
+	double testVal;
+	while(controlFile >> var1 >> testVal) {
+		if(var1 == "setpoint") { // If a setpoint was specified then override the default
+			newSetpoint = testVal;
+		}
+		else if(var1 == "length_of_test") {
+			minutesToRun = (int) testVal;
+		}
+		else if(var1 == "doInversionMixing") {
+			doInvMix = (testVal > 0.0) ? 1 : 0;
+		}
+		else if(var1 == "doConduction") {
+			doCondu = (testVal > 0.0) ? 1 : 0;
+		}
+		else if(var1 == "inletH") {
+			inletH = testVal;
+		}
+		else if(var1 == "tanksize") {
+			newTankSize = testVal;
+		}
+		else if(var1 == "tot_limit") {
+			tot_limit = testVal;
+		}
+		else if(var1 == "useSoC") {
+			useSoC = (bool)testVal;
+		}
+		if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+			initialTankT_C = testVal;
+			hasInitialTankTemp = true;
+		}
+		else {
+			cout << var1 << " in testInfo.txt is an unrecogized key.\n";
+		}
+	}
+
+	if(minutesToRun == 0) {
+		cout << "Error, must record length_of_test in testInfo.txt file\n";
+		exit(1);
+	}
+
+	// ------------------------------------- Read Schedules--------------------------------------- //
+	std::vector<string> scheduleNames;
+	scheduleNames.push_back("inletT");
+	scheduleNames.push_back("draw");
+	scheduleNames.push_back("ambientT");
+	scheduleNames.push_back("evaporatorT");
+	scheduleNames.push_back("DR");
+	scheduleNames.push_back("setpoint");
+	scheduleNames.push_back("SoC");
+
+	for(auto i = 0; (unsigned)i < scheduleNames.size(); i++) {
+		fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
+		outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
+		if(outputCode != 0) {
+			if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC") {
+				cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
+				return false;
+			}
+			else {
+				outputCode = 0;
+			}
+		}
+	}
+	  
+	if (doInvMix == 0) {
+		outputCode += setDoInversionMixing(false);
+	}
+
+	if (doCondu == 0) {
+		outputCode += setDoConduction(false);
+	}
+	if (newSetpoint > 0) {
+		if (!allSchedules[5].empty()) {
+			setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
+			if (hasInitialTankTemp)
+				setTankToTemperature(initialTankT_C);
+			else
+			resetTankToSetpoint();
+		}
+		else {
+			setSetpoint(newSetpoint);
+			if (hasInitialTankTemp)
+				setTankToTemperature(initialTankT_C);
+			else
+			resetTankToSetpoint();
+		}
+	}
+	if (inletH > 0) {
+		outputCode += setInletByFraction(inletH);
+	}
+	if (newTankSize > 0) {
+		setTankSize(newTankSize, HPWH::UNITS_GAL);
+	}
+	if (tot_limit > 0) {
+		outputCode += setTimerLimitTOT(tot_limit);
+	}
+	if (useSoC) {
+		if (allSchedules[6].empty()) {
+			cout << "If useSoC is true need an SoCschedule.csv file \n";
+		}
+		outputCode += switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
+	}
+		
+	if (outputCode != 0) {
+		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
+		return false;
+	}
+	return true;
+}
