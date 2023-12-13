@@ -8,9 +8,8 @@ pd.set_option('display.max_rows', 1500)
 DEGREE_SIGN = u'\N{DEGREE SIGN}'
 GRID_LINE_WIDTH = 1.5
 GRID_LINES_COLOR = "rgba(128,128,128,0.3)"
-# TODO: reverse colors in list below, and revert reverse in variables dictionary
-RED_BLUE_DIVERGING_PALLETTE = ["#750e13","#da1e28","#ff8389",
-                               "#33b1ff","#0072c3","#003a6d"]
+RED_BLUE_DIVERGING_PALLETTE = ["#003a6d","#0072c3","#33b1ff",
+                               "#ff8389","#da1e28","#750e13"]
 
 NUMBER_OF_THERMOCOUPLES = 6
 
@@ -113,7 +112,7 @@ variables = {"Y-Variables":{
                              "Simulated":[f"tcouple{number} (C)" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)]},
                     "Labels":[f"Storage Tank Temperature {number}" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)],
                     "Units":f"{DEGREE_SIGN}F",
-                    "Colors":list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+                    "Colors":list(RED_BLUE_DIVERGING_PALLETTE),
                     "Line Mode":["lines"]*NUMBER_OF_THERMOCOUPLES,
                     "Line Visibility":["legendonly"]*NUMBER_OF_THERMOCOUPLES
                 }},
