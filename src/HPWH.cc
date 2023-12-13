@@ -1362,12 +1362,12 @@ int HPWH::setTankSize(double HPWH_size,UNITS units /*=UNITS_L*/,bool forceChange
 
 	return 0;
 }
-int HPWH::setDoInversionMixing(bool doInvMix) {
-	this->doInversionMixing = doInvMix;
+int HPWH::setDoInversionMixing(bool doInversionMixing_in) {
+	doInversionMixing = doInversionMixing_in;
 	return 0;
 }
-int HPWH::setDoConduction(bool doCondu) {
-	this->doConduction = doCondu;
+int HPWH::setDoConduction(bool doConduction_in) {
+	doConduction = doConduction_in;
 	return 0;
 }
 
@@ -3936,8 +3936,8 @@ int HPWH::HPWHinit_file(string configFile) {
 }
 #endif
 
-// this function reads the named schedule into the provided array
-int readSchedule(HPWH::schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
+// reads the named schedule into the provided array
+int readSchedule(HPWH::Schedule &scheduleArray, string scheduleFileName, long minutesOfTest) {
 	int minuteHrTmp;
 	bool hourInput;
 	string line, snippet, s, minORhr;
@@ -3997,7 +3997,7 @@ int readSchedule(HPWH::schedule &scheduleArray, string scheduleFileName, long mi
 	return 0;
 }
 
-bool HPWH::readSchedules(const std::string &testDirectory, std::vector<HPWH::schedule> &allSchedules)
+bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &controlInfo)
 {
 	std::ifstream controlFile;
 	std::string fileToOpen = testDirectory + "/" + "testInfo.txt";
@@ -4007,61 +4007,66 @@ bool HPWH::readSchedules(const std::string &testDirectory, std::vector<HPWH::sch
 		cout << "Could not open control file " << fileToOpen << "\n";
 		return false;
 	}
-	double outputCode = 0;
-	double minutesToRun = 0;
-	double newSetpoint = 0.;
-	double initialTankT_C = 0.;
-	double doCondu = 1;
-	double doInvMix = 1;
-	double inletH = 0.;
-	double newTankSize = 0.;
-	double tot_limit = 0.;
-	bool useSoC = false;
-	bool hasInitialTankTemp = false;
-	//cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
+	controlInfo.minutesToRun = 0;
+	controlInfo.newSetpoint = 0.;
+	controlInfo.initialTankT_C = 0.;
+	controlInfo.doCondu = 1;
+	controlInfo.doInvMix = 1;
+	controlInfo.inletH = 0.;
+	controlInfo.newTankSize = 0.;
+	controlInfo.tot_limit = 0.;
+	controlInfo.useSoC = false;
+	controlInfo.hasInitialTankTemp = false;
+
+	//const double soCMinTUse_C = F_TO_C(110.);
+	//const double soCMains_C = F_TO_C(65.);
 
 	std::string var1;
 	double testVal;
 	while(controlFile >> var1 >> testVal) {
 		if(var1 == "setpoint") { // If a setpoint was specified then override the default
-			newSetpoint = testVal;
+			controlInfo.newSetpoint = testVal;
 		}
 		else if(var1 == "length_of_test") {
-			minutesToRun = (int) testVal;
+			controlInfo.minutesToRun = (int) testVal;
 		}
 		else if(var1 == "doInversionMixing") {
-			doInvMix = (testVal > 0.0) ? 1 : 0;
+			controlInfo.doInvMix = (testVal > 0.0) ? 1 : 0;
 		}
 		else if(var1 == "doConduction") {
-			doCondu = (testVal > 0.0) ? 1 : 0;
+			controlInfo.doCondu = (testVal > 0.0) ? 1 : 0;
 		}
 		else if(var1 == "inletH") {
-			inletH = testVal;
+			controlInfo.inletH = testVal;
 		}
 		else if(var1 == "tanksize") {
-			newTankSize = testVal;
+			controlInfo.newTankSize = testVal;
 		}
 		else if(var1 == "tot_limit") {
-			tot_limit = testVal;
+			controlInfo.tot_limit = testVal;
 		}
 		else if(var1 == "useSoC") {
-			useSoC = (bool)testVal;
+			controlInfo.useSoC = (bool)testVal;
 		}
 		if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
-			initialTankT_C = testVal;
-			hasInitialTankTemp = true;
+			controlInfo.initialTankT_C = testVal;
+			controlInfo.hasInitialTankTemp = true;
 		}
 		else {
 			cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 		}
 	}
 
-	if(minutesToRun == 0) {
+	if(controlInfo.minutesToRun == 0) {
 		cout << "Error, must record length_of_test in testInfo.txt file\n";
-		exit(1);
+		return false;
 	}
 
-	// ------------------------------------- Read Schedules--------------------------------------- //
+	return true;
+}
+
+bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlInfo &controlInfo, std::vector<HPWH::Schedule> &allSchedules)
+{
 	std::vector<string> scheduleNames;
 	scheduleNames.push_back("inletT");
 	scheduleNames.push_back("draw");
@@ -4071,9 +4076,12 @@ bool HPWH::readSchedules(const std::string &testDirectory, std::vector<HPWH::sch
 	scheduleNames.push_back("setpoint");
 	scheduleNames.push_back("SoC");
 
+	allSchedules.reserve(scheduleNames.size());
+	int outputCode;
 	for(auto i = 0; (unsigned)i < scheduleNames.size(); i++) {
-		fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
-		outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
+		std::string fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
+		Schedule schedule;
+		outputCode = readSchedule(schedule, fileToOpen, controlInfo.minutesToRun);
 		if(outputCode != 0) {
 			if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC") {
 				cout << "readSchedule returns an error on " << scheduleNames[i] << " schedule!\n";
@@ -4083,44 +4091,47 @@ bool HPWH::readSchedules(const std::string &testDirectory, std::vector<HPWH::sch
 				outputCode = 0;
 			}
 		}
+		allSchedules.push_back(schedule);
 	}
 	  
-	if (doInvMix == 0) {
+	if (controlInfo.doInvMix == 0) {
 		outputCode += setDoInversionMixing(false);
 	}
 
-	if (doCondu == 0) {
+	if (controlInfo.doCondu == 0) {
 		outputCode += setDoConduction(false);
 	}
-	if (newSetpoint > 0) {
+	if (controlInfo.newSetpoint > 0) {
 		if (!allSchedules[5].empty()) {
 			setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
-			if (hasInitialTankTemp)
-				setTankToTemperature(initialTankT_C);
+			if (controlInfo.hasInitialTankTemp)
+				setTankToTemperature(controlInfo.initialTankT_C);
 			else
 			resetTankToSetpoint();
 		}
 		else {
-			setSetpoint(newSetpoint);
-			if (hasInitialTankTemp)
-				setTankToTemperature(initialTankT_C);
+			setSetpoint(controlInfo.newSetpoint); 
+			if (controlInfo.hasInitialTankTemp)
+				setTankToTemperature(controlInfo.initialTankT_C);
 			else
 			resetTankToSetpoint();
 		}
 	}
-	if (inletH > 0) {
-		outputCode += setInletByFraction(inletH);
+	if (controlInfo.inletH > 0) {
+		outputCode += setInletByFraction(controlInfo.inletH);
 	}
-	if (newTankSize > 0) {
-		setTankSize(newTankSize, HPWH::UNITS_GAL);
+	if (controlInfo.newTankSize > 0) {
+		setTankSize(controlInfo.newTankSize, HPWH::UNITS_GAL);
 	}
-	if (tot_limit > 0) {
-		outputCode += setTimerLimitTOT(tot_limit);
+	if (controlInfo.tot_limit > 0) {
+		outputCode += setTimerLimitTOT(controlInfo.tot_limit);
 	}
-	if (useSoC) {
+	if (controlInfo.useSoC) {
 		if (allSchedules[6].empty()) {
 			cout << "If useSoC is true need an SoCschedule.csv file \n";
 		}
+		const double soCMinTUse_C = F_TO_C(110.);
+		const double soCMains_C = F_TO_C(65.);
 		outputCode += switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
 	}
 		

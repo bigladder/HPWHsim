@@ -576,10 +576,10 @@ public:
 	double getTankSize(UNITS units = UNITS_L) const;
 	/**< returns the tank volume in L or GAL  */
 
-	int setDoInversionMixing(bool doInvMix);
+	int setDoInversionMixing(bool doInversionMixing_in);
 	/**< This is a simple setter for the logical for running the inversion mixing method, default is true */
 
-	int setDoConduction(bool doCondu);
+	int setDoConduction(bool doConduction_in);
 	/**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
 	int setUA(double UA,UNITS units = UNITS_kJperHrC);
@@ -820,8 +820,23 @@ public:
 	/// Addition of extra heat handled separately from normal heat sources
 	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
 
-	typedef std::vector<double> schedule;
-	bool readSchedules(const std::string &testDirectory, std::vector<schedule> &allSchedules);
+	struct ControlInfo{
+		double outputCode = 0;
+		long minutesToRun = 0;
+		double newSetpoint = 0.;
+		double initialTankT_C = 0.;
+		double doCondu = 1;
+		double doInvMix = 1;
+		double inletH = 0.;
+		double newTankSize = 0.;
+		double tot_limit = 0.;
+		bool useSoC = false;
+		bool hasInitialTankTemp = false;
+	};
+	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
+
+	typedef std::vector<double> Schedule;
+	bool readSchedules(const std::string &testDirectory, const ControlInfo &controlInfo, std::vector<Schedule> &allSchedules);
 
 private:
 	class HeatSource;
