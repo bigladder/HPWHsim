@@ -26,12 +26,10 @@ using std::ifstream;
 int main(int argc, char *argv[]){
 	HPWH hpwh;
 
-	HPWH::MODELS model;
-
+	const long maximumDurationNormalTest_min = 500000;
 	const double energyBalThreshold = 0.005; // 0.5 %
 	const int nTestTCouples = 6;
 
-	string var1, inputFile;
 	string inputVariableName, firstCol;
 
 	FILE * outputFile = NULL;
@@ -52,18 +50,17 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	// Help message
-	std::string input1, input2, input3;
-	std::string outputDirectory;
+	std::string input1, input2, input3, input4;
 	if(argc > 1) {
 		input1 = argv[1];
 		input2 = argv[2];
 		input3 = argv[3];
-		outputDirectory = argv[4];
+		input4 = argv[4];
 	} else {
 		input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
 		input2 = "def";
 		input3 = "ghi";
-		outputDirectory = ".";
+		input4 = ".";
 	}
 	if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
 		cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
@@ -73,46 +70,43 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-	double airTemp;
-	bool doTempDepress;
-	if(argc == 6) {
-		airTemp = std::stoi(argv[5]);
-		doTempDepress = true;
-	} else {
-		airTemp = 0;
-		doTempDepress = false;
-	}
-
-	// Only input file specified -- don't suffix with .csv
+	std::string presetOrFile = input1;
+	std::string modelName = input2;
 	std::string testDirectory = input3;
+	std::string outputDirectory = input4;
+
+	double airT_C = 0.;
+	bool doTempDepress = false;;
+	if(argc == 6) { // air temperature specified on command line
+		airT_C = F_TO_C(std::stoi(argv[5]));
+		doTempDepress = true;
+	}
 
 	// Parse the model
 	HPWH::ControlInfo controlInfo;
 	controlInfo.setpointT_C = 0.;
-	if(input1 == "Preset") {
-		inputFile = "";   
-		if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT) {
+	if(presetOrFile == "Preset") {  
+		if (getHPWHObject(hpwh, modelName) == HPWH::HPWH_ABORT) {
 			cout << "Error, preset model did not initialize.\n";
 			exit(1);
 		}
 
-		model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
+		HPWH::MODELS model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
 		if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
 			controlInfo.setpointT_C = F_TO_C(149.);
 		}
-	} else if (input1 == "File") {
-		inputFile = input2 + ".txt";
+	} else if (presetOrFile == "File") {
+		std::string inputFile = modelName + ".txt";
 		if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
 	}
 	else {
-		cout << "Invalid argument, received '"<< input1 << "', expected 'Preset' or 'File'.\n";
+		cout << "Invalid argument, received '"<< presetOrFile << "', expected 'Preset' or 'File'.\n";
 		exit(1);
 	}
 
 	// Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
 	// try and trigger the lockout and hysteresis conditions
-	double tempDepressThresh = 4.;
-	hpwh.setMaxTempDepression(tempDepressThresh);
+	hpwh.setMaxTempDepression(4.);
 	hpwh.setDoTempDepression(doTempDepress);
 
 	if(!hpwh.readControlInfo(testDirectory,controlInfo)){
@@ -126,7 +120,7 @@ int main(int argc, char *argv[]){
 	}
 
    // ----------------------Open the Output Files and Print the Header---------------------------- //
-	if (controlInfo.timeToRun_min > 500000.) {
+	if (controlInfo.timeToRun_min > maximumDurationNormalTest_min) {
 		std::string fileToOpen = outputDirectory + "/DHW_YRLY.csv";
 
 		if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0) {
@@ -159,23 +153,20 @@ int main(int argc, char *argv[]){
 	double cumHeatIn[3] = { 0,0,0 };
 	double cumHeatOut[3] = { 0,0,0 };
 
+	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!hpwh.isSetpointFixed());
+
 	// Loop over the minutes in the test
 	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
-		double airTemp2;
-		if (doTempDepress) {
-			airTemp2 = F_TO_C(airTemp);
-		}
-		else {
-			airTemp2 = allSchedules[2][i];
+		if (!doTempDepress) {
+			airT_C = allSchedules[2][i];
 		}
 
 		// Process the dr status
 		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
 		// Change setpoint if there is a setpoint schedule.
-		bool doSetSetpoint = (!allSchedules[5].empty()) && (!hpwh.isSetpointFixed());
-		if (doSetSetpoint) {
+		if (doChangeSetpoint) {
 			hpwh.setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
 		}
 
@@ -188,7 +179,7 @@ int main(int argc, char *argv[]){
 		}
 		
 		// Mix down for yearly tests with large compressors
-		if (hpwh.getHPWHModel() >= 210 && controlInfo.timeToRun_min > 500000.) {
+		if ((hpwh.getHPWHModel() >= 210) && (controlInfo.timeToRun_min > maximumDurationNormalTest_min)) {
 			//Do a simple mix down of the draw for the cold water temperature
 			if (hpwh.getSetpoint() <= 125.) {
 				allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
@@ -201,7 +192,7 @@ int main(int argc, char *argv[]){
 		hpwh.runOneStep(
 			allSchedules[0][i],					// inlet water temperature (C)
 			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
-			airTemp2,							// ambient Temp (C)
+			airT_C,								// ambient Temp (C)
 			allSchedules[3][i],					// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
 			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
@@ -222,22 +213,22 @@ int main(int argc, char *argv[]){
 
 		// Check flow for external MP
 		if (hpwh.isCompressoExternalMultipass()) {
-			double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
-			double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
-			if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
-				cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
-					<< mpFlowVolume_Gal << "\n";
+			double volumeHeated_gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
+			double mpFlowVolume_gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM)*hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
+			if (fabs(volumeHeated_gal - mpFlowVolume_gal) > 0.000001) {
+				cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [gal]: " << volumeHeated_gal << ", mpFlowRate in 1 minute [gal]: "
+					<< mpFlowVolume_gal << "\n";
 				exit(1);
 			}
 		}
 
 		// Recording
-		if (controlInfo.timeToRun_min < 500000.) {
+		if (controlInfo.timeToRun_min < maximumDurationNormalTest_min) {
 			// Copy current status into the output file
 			if (doTempDepress) {
-				airTemp2 = hpwh.getLocationTemp_C();
+				airT_C = hpwh.getLocationTemp_C();
 			}
-			strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
+			strPreamble = std::to_string(i) + ", " + std::to_string(airT_C) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
 				std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
 			// Add some more outputs for mp tests
 			if (hpwh.isCompressoExternalMultipass()) {
@@ -261,7 +252,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	if (controlInfo.timeToRun_min > 500000.) {
+	if (controlInfo.timeToRun_min > maximumDurationNormalTest_min) {
 		firstCol = input3 + "," + input1 + "," + input2;
 		fprintf(yearOutFile, "%s", firstCol.c_str());
 		double totalIn = 0, totalOut = 0;

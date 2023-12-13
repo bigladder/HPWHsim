@@ -1545,9 +1545,9 @@ int HPWH::getInletHeight(int whichInlet) const {
 
 int HPWH::setMaxTempDepression(double maxDepression,UNITS units /*=UNITS_C*/) {
 	if(units == UNITS_C) {
-		this->maxDepression_C = maxDepression;
+		maxDepression_C = maxDepression;
 	} else if(units == UNITS_F) {
-		this->maxDepression_C = F_TO_C(maxDepression);
+		maxDepression_C = F_TO_C(maxDepression);
 	} else {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("Incorrect unit specification for max Temp Depression.  \n");
@@ -4101,7 +4101,7 @@ bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlIn
 	if (controlInfo.doCondu == 0) {
 		outputCode += setDoConduction(false);
 	}
-	if (controlInfo.setpointT_C > 0) {
+	if (controlInfo.setpointT_C > 0.) {
 		if (!allSchedules[5].empty()) {
 			setSetpoint(allSchedules[5][0]); //expect this to fail sometimes
 			if (controlInfo.hasInitialTankTemp)
