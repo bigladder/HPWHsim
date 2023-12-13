@@ -111,7 +111,7 @@ variables = {"Y-Variables":{
                     "Line Visibility":[True]},
                 "Temperature":
                     {"Column Names":{"Measured":[f"T_Tank_{str(number)}" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)],
-                             "Simulated":[f"tcouple{number} (C)" for number in reversed(range(1,NUMBER_OF_THERMOCOUPLES+1))]},
+                             "Simulated":[f"tcouple{number} (C)" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)]},
                     "Labels":[f"Storage Tank Temperature {number}" for number in range(1,NUMBER_OF_THERMOCOUPLES+1)],
                     "Units":f"{DEGREE_SIGN}F",
                     "Colors":list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
