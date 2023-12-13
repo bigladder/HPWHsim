@@ -838,6 +838,28 @@ public:
 	typedef std::vector<double> Schedule;
 	bool readSchedules(const std::string &testDirectory, const ControlInfo &controlInfo, std::vector<Schedule> &allSchedules);
 
+	struct TestDesc{
+		std::string presetOrFile;
+		std::string modelName;
+		std::string testName;
+	};
+
+	bool runSimulation(
+		const TestDesc &testDesc,
+		const std::string &outputDirectory,
+		const HPWH::ControlInfo &controlInfo, 
+		std::vector<HPWH::Schedule> &allSchedules,
+		double airT_C,
+		const bool doTempDepress);
+
+	bool runYearlySimulation(
+		const TestDesc &testDesc,
+		const std::string &outputDirectory,
+		const HPWH::ControlInfo &controlInfo, 
+		std::vector<HPWH::Schedule> &allSchedules,
+		double airT_C,
+		const bool doTempDepress);
+
 private:
 	class HeatSource;
 

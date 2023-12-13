@@ -4007,6 +4007,7 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 		cout << "Could not open control file " << fileToOpen << "\n";
 		return false;
 	}
+
 	controlInfo.timeToRun_min = 0;
 	controlInfo.setpointT_C = 0.;
 	controlInfo.initialTankT_C = 0.;
@@ -4056,6 +4057,7 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 			cout << var1 << " in testInfo.txt is an unrecogized key.\n";
 		}
 	}
+	controlFile.close();
 
 	if(controlInfo.timeToRun_min == 0) {
 		cout << "Error, must record length_of_test in testInfo.txt file\n";
@@ -4139,5 +4141,246 @@ bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlIn
 		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
 		return false;
 	}
+	return true;
+}
+
+bool HPWH::runSimulation(
+	const TestDesc &testDesc,
+	const std::string &outputDirectory,
+	const HPWH::ControlInfo &controlInfo, 
+	std::vector<HPWH::Schedule> &allSchedules,
+	double airT_C,
+	const bool doTempDepress
+)
+{
+	const double energyBalThreshold = 0.005; // 0.5 %
+	const int nTestTCouples = 6;
+
+	const std::string sHead = "minutes,Ta,Tsetpoint,inletT,draw,";
+	const std::string sHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
+	const std::string sHeadSoC = "targetSoCFract,soCFract,";
+
+	FILE * outputFile = NULL;
+	std::string sOutputFilename = outputDirectory + "/" + testDesc.testName + "_" + testDesc.presetOrFile + "_" + testDesc.modelName + ".csv";
+	if (fopen_s(&outputFile, sOutputFilename.c_str(), "w+") != 0) {
+		cout << "Could not open output file " << sOutputFilename << "\n";
+		return false;
+	}
+	  
+	string sHeader = sHead;
+	if (isCompressoExternalMultipass()) {
+		sHeader += sHeadMP;
+	}
+	if(controlInfo.useSoC){ 
+		sHeader += sHeadSoC;
+	}
+	int csvOptions = HPWH::CSVOPT_NONE;
+	WriteCSVHeading(outputFile, sHeader.c_str(), nTestTCouples, csvOptions);
+
+	// ------------------------------------- Simulate --------------------------------------- //
+	cout << "Now Simulating " << controlInfo.timeToRun_min << " Minutes of the Test\n";
+
+	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!isSetpointFixed());
+
+	// Loop over the minutes in the test
+	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
+
+		if (!doTempDepress) {
+			airT_C = allSchedules[2][i];
+		}
+
+		// Process the dr status
+		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
+
+		// Change setpoint if there is a setpoint schedule.
+		if (doChangeSetpoint) {
+			setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
+		}
+
+		// Change SoC schedule	
+		if (controlInfo.useSoC) {
+			if (setTargetSoCFraction(allSchedules[6][i]) != 0) {
+				cout << "ERROR: Can not set the target state of charge fraction. \n";
+				return false;
+			}
+		}
+
+		double tankHCStart = getTankHeatContent_kJ();
+
+		// Run the step
+		runOneStep(
+			allSchedules[0][i],					// inlet water temperature (C)
+			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
+			airT_C,								// ambient Temp (C)
+			allSchedules[3][i],					// external Temp (C)
+			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
+			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
+			allSchedules[0][i],					// inlet-2 Temp (C)
+			NULL);								// no extra heat
+
+		if (!isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
+			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+		}
+
+		// Check timing
+		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+			if (getNthHeatSourceRunTime(iHS) > 1.) {
+				cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for " << getNthHeatSourceRunTime(iHS) << " min" << "\n";
+				return false; 
+			}
+		}
+
+		// Check flow for external MP
+		if (isCompressoExternalMultipass()) {
+			double volumeHeated_gal = getExternalVolumeHeated(HPWH::UNITS_GAL);
+			double mpFlowVolume_gal = getExternalMPFlowRate(HPWH::UNITS_GPM)*getNthHeatSourceRunTime(getCompressorIndex());
+			if (fabs(volumeHeated_gal - mpFlowVolume_gal) > 0.000001) {
+				cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [gal]: " << volumeHeated_gal << ", mpFlowRate in 1 min [gal]: "
+					<< mpFlowVolume_gal << "\n";
+				return false;
+			}
+		}
+
+		// Recording
+		if (doTempDepress) {
+			airT_C = getLocationTemp_C();
+		}
+		std::string sPreamble = std::to_string(i) + ", " + std::to_string(airT_C) + ", " + std::to_string(getSetpoint()) + ", " +
+			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
+		// Add some more outputs for mp tests
+		if (isCompressoExternalMultipass()) {
+			sPreamble += std::to_string(getCondenserWaterInletTemp()) + ", " + std::to_string(getCondenserWaterOutletTemp()) + ", " +
+				std::to_string(getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+		}
+		if (controlInfo.useSoC) {
+			sPreamble += std::to_string(allSchedules[6][i]) + ", " + std::to_string(getSoCFraction()) + ", ";
+		}
+		csvOptions = HPWH::CSVOPT_NONE;
+		if (allSchedules[1][i] > 0.) {
+			csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+		}
+		WriteCSVRow(outputFile, sPreamble.c_str(), nTestTCouples, csvOptions);
+	}
+
+	fclose(outputFile);
+	return true;
+}
+
+bool HPWH::runYearlySimulation(
+	const TestDesc &testDesc,
+	const std::string &outputDirectory,
+	const HPWH::ControlInfo &controlInfo, 
+	std::vector<HPWH::Schedule> &allSchedules,
+	double airT_C,
+	const bool doTempDepress)
+{
+	const double energyBalThreshold = 0.005; // 0.5 %
+
+	std::string sOutputFilename = outputDirectory + "/DHW_YRLY.csv";
+
+	FILE * outputFile = NULL;
+	if (fopen_s(&outputFile, sOutputFilename.c_str(), "a+") != 0) {
+		cout << "Could not open output file " << sOutputFilename << "\n";
+		return false;
+	}
+
+	cout << "Now Simulating " << controlInfo.timeToRun_min << " Minutes of the Test\n";
+
+	double cumHeatIn[3] = { 0,0,0 };
+	double cumHeatOut[3] = { 0,0,0 };
+
+	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!isSetpointFixed());
+
+	// Loop over the minutes in the test
+	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
+
+		if (!doTempDepress) {
+			airT_C = allSchedules[2][i];
+		}
+
+		// Process the dr status
+		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
+
+		// Change setpoint if there is a setpoint schedule.
+		if (doChangeSetpoint) {
+			setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
+		}
+
+		// Change SoC schedule	
+		if (controlInfo.useSoC) {
+			if (setTargetSoCFraction(allSchedules[6][i]) != 0) {
+				cout << "ERROR: Can not set the target state of charge fraction. \n";
+				return false;
+			}
+		}
+		
+		// Mix down for yearly tests with large compressors
+		if (getHPWHModel() >= 210) {
+			//Do a simple mix down of the draw for the cold water temperature
+			if (getSetpoint() <= 125.) {
+				allSchedules[1][i] *= (125. - allSchedules[0][i]) / (getTankNodeTemp(getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
+			}
+		}
+
+		double tankHCStart = getTankHeatContent_kJ();
+
+		// Run the step
+		runOneStep(
+			allSchedules[0][i],					// inlet water temperature (C)
+			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
+			airT_C,								// ambient Temp (C)
+			allSchedules[3][i],					// external Temp (C)
+			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
+			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
+			allSchedules[0][i],					// inlet-2 Temp (C)
+			NULL);								// no extra heat
+
+		if (!isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
+			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+		}
+
+		// Check timing
+		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+			if (getNthHeatSourceRunTime(iHS) > 1.) {
+				cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for " << getNthHeatSourceRunTime(iHS) << " min" << "\n";
+				exit(1); 
+			}
+		}
+
+		// Check flow for external MP
+		if (isCompressoExternalMultipass()) {
+			double volumeHeated_gal = getExternalVolumeHeated(HPWH::UNITS_GAL);
+			double mpFlowVolume_gal = getExternalMPFlowRate(HPWH::UNITS_GPM)*getNthHeatSourceRunTime(getCompressorIndex());
+			if (fabs(volumeHeated_gal - mpFlowVolume_gal) > 0.000001) {
+				cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [gal]: " << volumeHeated_gal << ", mpFlowRate in 1 min [gal]: "
+					<< mpFlowVolume_gal << "\n";
+				return false;
+			}
+		}
+
+		// Recording
+		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+	  		cumHeatIn[iHS] += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+		}
+
+	}
+
+	std::string firstCol = testDesc.testName + "," + testDesc.presetOrFile + "," + testDesc.modelName;
+	fprintf(outputFile, "%s", firstCol.c_str());
+	double totalIn = 0, totalOut = 0;
+	for (int iHS = 0; iHS < 3; iHS++) {
+		fprintf(outputFile, ",%0.0f,%0.0f", cumHeatIn[iHS], cumHeatOut[iHS]);
+		totalIn += cumHeatIn[iHS];
+		totalOut += cumHeatOut[iHS];
+	}
+	fprintf(outputFile, ",%0.0f,%0.0f", totalIn, totalOut);
+	for (int iHS = 0; iHS < 3; iHS++) {
+		fprintf(outputFile, ",%0.2f", cumHeatOut[iHS] /cumHeatIn[iHS]);
+	}
+	fprintf(outputFile, ",%0.2f", totalOut/totalIn);
+	fprintf(outputFile, "\n");
+	fclose(outputFile);
+
 	return true;
 }
