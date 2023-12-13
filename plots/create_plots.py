@@ -112,7 +112,7 @@ def calculate_average_tank_temperature(variable_type):
 
 
 def add_temperature_details():
-    AVERAGE_TEMPERATURE_DETAILS = {
+    TEMPERATURE_DETAILS = {
         "Labels": [
             "Storage Tank Average Temperature",
             "Storage Tank Outlet Temperature",
