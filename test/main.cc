@@ -26,16 +26,13 @@ using std::ifstream;
 int main(int argc, char *argv[]){
 	HPWH hpwh;
 
-	HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
 	HPWH::MODELS model;
 
+	const double energyBalThreshold = 0.005; // 0.5 %
 	const int nTestTCouples = 6;
 
 	string var1, inputFile;
 	string inputVariableName, firstCol;
-
-	double cumHeatIn[3] = { 0,0,0 };
-	double cumHeatOut[3] = { 0,0,0 };
 
 	FILE * outputFile = NULL;
 	FILE * yearOutFile = NULL;
@@ -77,13 +74,13 @@ int main(int argc, char *argv[]){
 	}
 
 	double airTemp;
-	bool HPWH_doTempDepress;
+	bool doTempDepress;
 	if(argc == 6) {
 		airTemp = std::stoi(argv[5]);
-		HPWH_doTempDepress = true;
+		doTempDepress = true;
 	} else {
 		airTemp = 0;
-		HPWH_doTempDepress = false;
+		doTempDepress = false;
 	}
 
 	// Only input file specified -- don't suffix with .csv
@@ -91,7 +88,7 @@ int main(int argc, char *argv[]){
 
 	// Parse the model
 	HPWH::ControlInfo controlInfo;
-	controlInfo.newSetpoint = 0.;
+	controlInfo.setpointT_C = 0.;
 	if(input1 == "Preset") {
 		inputFile = "";   
 		if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT) {
@@ -101,7 +98,7 @@ int main(int argc, char *argv[]){
 
 		model = static_cast<HPWH::MODELS> (hpwh.getHPWHModel());
 		if(model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40) {
-			controlInfo.newSetpoint = F_TO_C(149.);
+			controlInfo.setpointT_C = F_TO_C(149.);
 		}
 	} else if (input1 == "File") {
 		inputFile = input2 + ".txt";
@@ -116,7 +113,7 @@ int main(int argc, char *argv[]){
 	// try and trigger the lockout and hysteresis conditions
 	double tempDepressThresh = 4.;
 	hpwh.setMaxTempDepression(tempDepressThresh);
-	hpwh.setDoTempDepression(HPWH_doTempDepress);
+	hpwh.setDoTempDepression(doTempDepress);
 
 	if(!hpwh.readControlInfo(testDirectory,controlInfo)){
 		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
@@ -129,7 +126,7 @@ int main(int argc, char *argv[]){
 	}
 
    // ----------------------Open the Output Files and Print the Header---------------------------- //
-	if (controlInfo.minutesToRun > 500000.) {
+	if (controlInfo.timeToRun_min > 500000.) {
 		std::string fileToOpen = outputDirectory + "/DHW_YRLY.csv";
 
 		if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0) {
@@ -157,13 +154,16 @@ int main(int argc, char *argv[]){
 	}
 
 	// ------------------------------------- Simulate --------------------------------------- //
-	cout << "Now Simulating " << controlInfo.minutesToRun << " Minutes of the Test\n";
+	cout << "Now Simulating " << controlInfo.timeToRun_min << " Minutes of the Test\n";
+
+	double cumHeatIn[3] = { 0,0,0 };
+	double cumHeatOut[3] = { 0,0,0 };
 
 	// Loop over the minutes in the test
-	for (int i = 0; i < controlInfo.minutesToRun; i++) {
+	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
 		double airTemp2;
-		if (HPWH_doTempDepress) {
+		if (doTempDepress) {
 			airTemp2 = F_TO_C(airTemp);
 		}
 		else {
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]){
 		}
 
 		// Process the dr status
-		drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
+		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
 
 		// Change setpoint if there is a setpoint schedule.
 		bool doSetSetpoint = (!allSchedules[5].empty()) && (!hpwh.isSetpointFixed());
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]){
 		}
 		
 		// Mix down for yearly tests with large compressors
-		if (hpwh.getHPWHModel() >= 210 && controlInfo.minutesToRun > 500000.) {
+		if (hpwh.getHPWHModel() >= 210 && controlInfo.timeToRun_min > 500000.) {
 			//Do a simple mix down of the draw for the cold water temperature
 			if (hpwh.getSetpoint() <= 125.) {
 				allSchedules[1][i] *= (125. - allSchedules[0][i]) / (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
@@ -204,18 +204,17 @@ int main(int argc, char *argv[]){
 			airTemp2,							// ambient Temp (C)
 			allSchedules[3][i],					// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
-			GAL_TO_L(allSchedules[1][i]),		// inlet volume 2 (gallons)
-			allSchedules[0][i],					// inlet Temp 2 (C)
+			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
+			allSchedules[0][i],					// inlet-2 Temp (C)
 			NULL);								// no extra heat
 
-		const double EBALTHRESHOLD = 0.005;
-		if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,EBALTHRESHOLD)) {
+		if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
 			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
 		}
 
 		// Check timing
 		for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-			if (hpwh.getNthHeatSourceRunTime(iHS) > 1) {
+			if (hpwh.getNthHeatSourceRunTime(iHS) > 1.) {
 				cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for " << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
 				exit(1); 
 			}
@@ -233,9 +232,9 @@ int main(int argc, char *argv[]){
 		}
 
 		// Recording
-		if (controlInfo.minutesToRun < 500000.) {
+		if (controlInfo.timeToRun_min < 500000.) {
 			// Copy current status into the output file
-			if (HPWH_doTempDepress) {
+			if (doTempDepress) {
 				airTemp2 = hpwh.getLocationTemp_C();
 			}
 			strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " + std::to_string(hpwh.getSetpoint()) + ", " +
@@ -250,7 +249,7 @@ int main(int argc, char *argv[]){
 			}
 			int csvOptions = HPWH::CSVOPT_NONE;
 			if (allSchedules[1][i] > 0.) {
-			csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+				csvOptions |= HPWH::CSVOPT_IS_DRAWING;
 			}
 			hpwh.WriteCSVRow(outputFile, strPreamble.c_str(), nTestTCouples, csvOptions);
 		}
@@ -262,7 +261,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	if (controlInfo.minutesToRun > 500000.) {
+	if (controlInfo.timeToRun_min > 500000.) {
 		firstCol = input3 + "," + input1 + "," + input2;
 		fprintf(yearOutFile, "%s", firstCol.c_str());
 		double totalIn = 0, totalOut = 0;

@@ -822,13 +822,13 @@ public:
 
 	struct ControlInfo{
 		double outputCode = 0;
-		long minutesToRun = 0;
-		double newSetpoint = 0.;
+		long timeToRun_min = 0;
+		double setpointT_C = 0.;
 		double initialTankT_C = 0.;
 		double doCondu = 1;
 		double doInvMix = 1;
 		double inletH = 0.;
-		double newTankSize = 0.;
+		double tankSize_gal = 0.;
 		double tot_limit = 0.;
 		bool useSoC = false;
 		bool hasInitialTankTemp = false;
