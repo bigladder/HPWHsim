@@ -222,7 +222,6 @@ fig.update_layout(
     yaxis = dict(range=y_range[0]),
     yaxis2 = dict(range=y_range[1]),
     yaxis3 = dict(range=y_range[2]),
-    xaxis = dict(range=[1,1440]),
     xaxis3_title="Time (min)",
     title="HPWH Data",
     title_x=0.5,
@@ -238,6 +237,8 @@ fig.update_xaxes(
     tickson='boundaries',
     tickwidth=GRID_LINE_WIDTH,
     tickcolor='black',
+    minallowed = 1,
+    maxallowed = 1440,
     rangeslider=dict(
          bgcolor='grey',
          thickness=0.05
