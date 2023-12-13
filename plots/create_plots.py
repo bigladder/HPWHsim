@@ -111,7 +111,7 @@ def calculate_average_tank_temperature(variable_type):
     return df
 
 
-def add_average_temperature_details():
+def add_temperature_details():
     AVERAGE_TEMPERATURE_DETAILS = {
         "Labels": [
             "Storage Tank Average Temperature",
@@ -124,10 +124,10 @@ def add_average_temperature_details():
         "Line Visibility": [True, True],
     }
 
-    for key in AVERAGE_TEMPERATURE_DETAILS.keys():
-        for index, label in enumerate(AVERAGE_TEMPERATURE_DETAILS[key]):
+    for key in TEMPERATURE_DETAILS.keys():
+        for index, label in enumerate(TEMPERATURE_DETAILS[key]):
             variables["Y-Variables"]["Temperature"][key].insert(
-                index, AVERAGE_TEMPERATURE_DETAILS[key][index]
+                index, TEMPERATURE_DETAILS[key][index]
             )
 
 
@@ -198,7 +198,7 @@ df_simulated = filter_dataframe_range(df_simulated, "Simulated")
 
 df_measured = calculate_average_tank_temperature("Measured")
 df_simulated = calculate_average_tank_temperature("Simulated")
-add_average_temperature_details()
+add_temperature_details()
 
 # print measured and simulated energy consumption
 calculate_energy_consumption()
