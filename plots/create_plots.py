@@ -81,8 +81,18 @@ def calculate_average_tank_temperature(variable_type):
     ].mean(axis=1)
 
     TEMPERATURE_DETAILS = {
-        "Measured": ["Storage Tank Average Temperature", "T_Out_water"],
-        "Simulated": ["Storage Tank Average Temperature", "toutlet (C)"],
+        "Measured": [
+            "Storage Tank Average Temperature",
+            "T_Out_water",
+            "T_In_water",
+            "T_Plenum_In",
+        ],
+        "Simulated": [
+            "Storage Tank Average Temperature",
+            "toutlet (C)",
+            "inletT",
+            "Ta",
+        ],
     }
 
     for index, label in enumerate(TEMPERATURE_DETAILS[variable_type]):
@@ -106,8 +116,10 @@ def add_average_temperature_details():
         "Labels": [
             "Storage Tank Average Temperature",
             "Storage Tank Outlet Temperature",
+            "Storage Tank Inlet Temperature",
+            "Ambient Temperature",
         ],
-        "Colors": ["black", "orange"],
+        "Colors": ["black", "orange", "purple", "limegreen"],
         "Line Mode": ["lines", "lines+markers"],
         "Line Visibility": [True, True],
     }
@@ -212,10 +224,9 @@ def plot_graphs(variable_type, variable, value, row):
     df = retrieve_dataframe(variable_type)
     LINE_TYPE = retrieve_line_type(variable_type, value)
 
-    if (value == 1) and (variable_type == "Measured"):
+    if (value in [1, 2]) and (variable_type == "Measured"):
         fillcolor = "white"
-        marker = dict(size=7, line=dict(color="orange", width=2))
-    elif (value == 1) and (variable_type == "Simulated"):
+    elif (value in [1, 2]) and (variable_type == "Simulated"):
         fillcolor = None
         marker = dict(size=7, color="white", line=dict(color="orange", width=2))
     else:
