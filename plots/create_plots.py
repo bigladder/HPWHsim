@@ -120,8 +120,8 @@ def add_temperature_details():
             "Ambient Temperature",
         ],
         "Colors": ["black", "orange", "purple", "limegreen"],
-        "Line Mode": ["lines", "lines+markers"],
-        "Line Visibility": [True, True],
+        "Line Mode": ["lines", "lines+markers", "lines", "lines"],
+        "Line Visibility": [True, True, True, True],
     }
 
     for key in TEMPERATURE_DETAILS.keys():
