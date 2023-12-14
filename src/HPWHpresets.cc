@@ -3828,7 +3828,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 
 		// heat exchangers only
 		hasHeatExchanger = true;
-		heatExchangerEffectiveness = 0.93;
+		heatExchangerEffectiveness = 0.95;
 
 		HeatSource compressor(this);
 

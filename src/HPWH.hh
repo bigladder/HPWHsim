@@ -377,6 +377,7 @@ public:
 	std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint,const UNITS units = UNITS_C, const bool absolute = false);
 	std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> secondThird(double decisionPoint,const UNITS units = UNITS_C, const bool absolute = false);
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint) ;
 	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
