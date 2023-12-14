@@ -2610,11 +2610,10 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			outletTemp_C = inletT_C;
 			for (auto &nodeTemp: tankTemps_C) {	
 				double maxHeatExchange_kJ = C_draw_kJperC * (nodeTemp - outletTemp_C);
-				double heatExchange_kJ = heatExchangerEffectiveness * maxHeatExchange_kJ;
+				double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
 
 				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
 				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
-
 			}
 		}
 		else { 
@@ -3058,6 +3057,9 @@ void HPWH::calcSizeConstants() {
 
 	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
 	fracAreaSide = tankHeight_m / (tankHeight_m + tankRad_m);
+
+	/// Single-node heat-exchange effectiveness
+	nodeHeatExchangerEffectiveness = 1. - pow(1. - heatExchangerEffectiveness, 1./ static_cast<double>(getNumNodes()));
 }
 
 void HPWH::calcDerivedValues() {
