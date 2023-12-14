@@ -1036,6 +1036,9 @@ private:
 	/// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by heat-exchange models only).
 	double heatExchangerEffectiveness;
 
+	/// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water line (derived from heatExchangerEffectiveness).
+	double nodeHeatExchangerEffectiveness;
+
 };  //end of HPWH class
 
 class HPWH::HeatSource {
