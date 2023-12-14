@@ -7,7 +7,7 @@ depressTemp false
 mixOnDraw false
 initialTankTemp 49.32 C
 hasHeatExchanger true
-heatExchangerEffectiveness 0.9
+heatExchangerEffectiveness 0.97
 
 #a test comment
 numHeatSources 1

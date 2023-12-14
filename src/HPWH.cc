@@ -2609,11 +2609,12 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 			outletTemp_C = inletT_C;
 			for (auto &nodeTemp: tankTemps_C) {	
-				double maxHeatExchange_kJ = (nodeTemp - outletTemp_C) / (1. / C_Node_kJperC + 1. / C_draw_kJperC);
+				double maxHeatExchange_kJ = C_draw_kJperC * (nodeTemp - outletTemp_C);
 				double heatExchange_kJ = heatExchangerEffectiveness * maxHeatExchange_kJ;
 
 				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
 				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
+
 			}
 		}
 		else { 
