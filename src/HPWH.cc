@@ -944,7 +944,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE,const char* preamble,int nTCouples,int o
 		fprintf(outFILE,",tcouple%d (%s)",iTC + 1,doIP ? "F" : "C");
 	}
 
-	fprintf(outFILE,", toutlet (%s)",doIP ? "F" : "C");
+	fprintf(outFILE,",toutlet (%s)",doIP ? "F" : "C");
 
 	fprintf(outFILE,"\n");
 
@@ -1758,6 +1758,12 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2./3., 1.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute",nodeWeights,decisionPoint,this,true);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1./3., 2./3.);
+	double decisionPoint_C = makeC(decisionPoint,units,absolute);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("second third",nodeWeights,decisionPoint_C,this,absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint) {
