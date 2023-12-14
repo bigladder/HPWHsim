@@ -3364,6 +3364,14 @@ int HPWH::checkInputs() {
 		returnVal = HPWH_ABORT;
 	}
 
+	// Check single-node heat-exchange effectiveness validity
+	if( heatExchangerEffectiveness > 1.) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Heat-exchanger effectiveness cannot exceed 1.\n");
+			}
+		returnVal = HPWH_ABORT;
+	}
+
 	//if there's no failures, return 0
 	return returnVal;
 }
