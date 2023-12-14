@@ -4049,7 +4049,7 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 		else if(var1 == "useSoC") {
 			controlInfo.useSoC = (bool)testVal;
 		}
-		if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+		else if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
 			controlInfo.initialTankT_C = testVal;
 			controlInfo.hasInitialTankTemp = true;
 		}
@@ -4185,9 +4185,7 @@ bool HPWH::runSimulation(
 	// Loop over the minutes in the test
 	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
-		if (!doTempDepress) {
-			airT_C = allSchedules[2][i];
-		}
+		double ambientT_C = doTempDepress ? airT_C : allSchedules[2][i];
 
 		// Process the dr status
 		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
@@ -4211,7 +4209,7 @@ bool HPWH::runSimulation(
 		runOneStep(
 			allSchedules[0][i],					// inlet water temperature (C)
 			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
-			airT_C,								// ambient Temp (C)
+			ambientT_C,								// ambient Temp (C)
 			allSchedules[3][i],					// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
 			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
@@ -4243,9 +4241,9 @@ bool HPWH::runSimulation(
 
 		// Recording
 		if (doTempDepress) {
-			airT_C = getLocationTemp_C();
+			ambientT_C = getLocationTemp_C();
 		}
-		std::string sPreamble = std::to_string(i) + ", " + std::to_string(airT_C) + ", " + std::to_string(getSetpoint()) + ", " +
+		std::string sPreamble = std::to_string(i) + ", " + std::to_string(ambientT_C) + ", " + std::to_string(getSetpoint()) + ", " +
 			std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
 		// Add some more outputs for mp tests
 		if (isCompressoExternalMultipass()) {
