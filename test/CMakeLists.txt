@@ -12,6 +12,7 @@ add_executable(testPerformanceMaps testPerformanceMaps.cc)
 add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 add_executable(testHeatingLogics testHeatingLogics.cc)
 add_executable(testEnergyBalance testEnergyBalance.cc)
+add_executable(testCalcUEF testCalcUEF.cc)
 
 set(libs
  libHPWHsim 
@@ -28,6 +29,7 @@ target_link_libraries(testPerformanceMaps ${libs})
 target_link_libraries(testStateOfChargeFcts ${libs})
 target_link_libraries(testHeatingLogics ${libs})
 target_link_libraries(testEnergyBalance ${libs})
+target_link_libraries(testCalcUEF ${libs})
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")

@@ -58,7 +58,6 @@ int main(int argc, char *argv[]){
 	}
 
 	HPWH::TestDesc testDesc;
-
 	testDesc.presetOrFile = input1;
 	testDesc.modelName = input2;
 	testDesc.testName = input3;
