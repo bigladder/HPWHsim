@@ -832,6 +832,7 @@ public:
 		double tot_limit = 0.;
 		bool useSoC = false;
 		bool hasInitialTankTemp = false;
+		std::string temperature_units = "C";
 	};
 	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
 

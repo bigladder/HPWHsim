@@ -4018,6 +4018,7 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 	controlInfo.tot_limit = 0.;
 	controlInfo.useSoC = false;
 	controlInfo.hasInitialTankTemp = false;
+	controlInfo.temperature_units = "C";
 
 	//const double soCMinTUse_C = F_TO_C(110.);
 	//const double soCMains_C = F_TO_C(65.);
@@ -4050,6 +4051,10 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 			controlInfo.useSoC = (bool)testVal;
 		}
 		else if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+			controlInfo.initialTankT_C = testVal;
+			controlInfo.hasInitialTankTemp = true;
+		}
+		else if(var1 == "temperature_units") { // Initialize at this temperature instead of setpoint
 			controlInfo.initialTankT_C = testVal;
 			controlInfo.hasInitialTankTemp = true;
 		}

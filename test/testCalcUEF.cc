@@ -7,78 +7,79 @@
 #include <iostream>
 #include <string> 
 
-const std::vector<std::string> profileNames({	"24hr67_vsmall",
+const std::vector<std::string> sProfileNames({	"24hr67_vsmall",
 												"24hr67_low",
 												"24hr67_medium",
                                                 "24hr67_high"	});
 
-
-
-void testEnergyBalanceAOSmithHPTS50() {
+void runTest(const HPWH::TestDesc testDesc,double airT_C = 0.,bool doTempDepress = false) {
 
 	HPWH hpwh;
-	getHPWHObject(hpwh, "AOSmithHPTS50");
 
-	double maxDrawVol_L = 1.;
-	const double ambientT_C = 20.;
-	const double externalT_C = 20.;
+	getHPWHObject(hpwh, testDesc.modelName);
 
-	//
-	hpwh.setTankToTemperature(20.);
-	hpwh.setInletT(5.);
+	std::string sOutputDirectory =" ../build/test/output";
 
-	const double Pi = 4. * atan(1.);
-	double testDuration_min = 60.;
-	for(int i_min = 0; i_min < testDuration_min; ++i_min)
-	{
-		double t_min = static_cast<double>(i_min);
-
-		double flowFac = sin(Pi * t_min / testDuration_min) - 0.5;
-		flowFac += fabs(flowFac); // semi-sinusoidal flow profile
-		double drawVol_L = flowFac * maxDrawVol_L;
-
-		double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-		hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW);
-		ASSERTTRUE(hpwh.isEnergyBalanced(drawVol_L,prevHeatContent_kJ,1.e-6));
+	// Parse the model
+	if(testDesc.presetOrFile == "Preset") {  
+		if (getHPWHObject(hpwh, testDesc.modelName) == HPWH::HPWH_ABORT) {
+			cout << "Error, preset model did not initialize.\n";
+			exit(1);
+		}
+	} else if (testDesc.presetOrFile == "File") {
+		std::string inputFile = testDesc.modelName + ".txt";
+		if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
 	}
+	else {
+		cout << "Invalid argument, received '"<< testDesc.presetOrFile << "', expected 'Preset' or 'File'.\n";
+		exit(1);
+	}
+
+	// Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
+	// try and trigger the lockout and hysteresis conditions
+	hpwh.setMaxTempDepression(4.);
+	hpwh.setDoTempDepression(doTempDepress);
+
+	HPWH::ControlInfo controlInfo;
+	if(!hpwh.readControlInfo(testDesc.testName,controlInfo)){
+		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
+		exit(1);
+	}
+
+	std::vector<HPWH::Schedule> allSchedules;
+	if (!(hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules))) {
+		exit(1);
+	}
+
+	hpwh.runSimulation(testDesc,sOutputDirectory,controlInfo,allSchedules,airT_C,doTempDepress);
+
 }
 
 /* Test energy balance for storage tank with extra heat (solar)*/
-void testEnergyBalanceSolar() {
+void runTestSuite(const std::string &sModelName,const std::string &sPresetOrFile) {
 
-	HPWH hpwh;
-	getHPWHObject(hpwh, "StorageTank");
+	HPWH::TestDesc testDesc;
+	testDesc.modelName = sModelName;
+	testDesc.presetOrFile = sPresetOrFile;
 
-	double maxDrawVol_L = 1.;
-	const double ambientT_C = 20.;
-	const double externalT_C = 20.;
-
-	std::vector<double> nodePowerExtra_W = {1000.};
-	//
-	hpwh.setUA(0.);
-	hpwh.setTankToTemperature(20.);
-	hpwh.setInletT(5.);
-
-	const double Pi = 4. * atan(1.);
-	double testDuration_min = 60.;
-	for(int i_min = 0; i_min < testDuration_min; ++i_min)
-	{
-		double t_min = static_cast<double>(i_min);
-
-		double flowFac = sin(Pi * t_min / testDuration_min) - 0.5;
-		flowFac += fabs(flowFac); // semi-sinusoidal flow profile
-		double drawVol_L = flowFac * maxDrawVol_L;
-
-		double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-		hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW,0.,0.,&nodePowerExtra_W);
-		ASSERTTRUE(hpwh.isEnergyBalanced(drawVol_L,prevHeatContent_kJ,1.e-6));
+	for (auto &sProfileName: sProfileNames) {
+		testDesc.testName = sProfileName;
+		runTest(testDesc);
 	}
 }
 
-int main(int, char*)
+int main(int argc, char *argv[])
 {
-	testEnergyBalanceAOSmithHPTS50();
-	testEnergyBalanceSolar();
-	
+	// process command line arguments
+	if ((argc != 3)) {
+		cout << "Invalid input. This program takes TWO arguments: model type (i.e., Preset or File), model name (i.e., Sanden80)\n";
+		exit(1);
+	}
+
+	std::string sPresetOrFile = argv[1];
+	std::string sModelName = argv[2];
+
+	runTestSuite(sModelName,sPresetOrFile);
+
 	return 0;
 }
