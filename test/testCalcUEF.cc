@@ -18,7 +18,7 @@ void runTest(const HPWH::TestDesc testDesc,double airT_C = 0.,bool doTempDepress
 
 	getHPWHObject(hpwh, testDesc.modelName);
 
-	std::string sOutputDirectory =" ../build/test/output";
+	std::string sOutputDirectory =".";// ../build/test/output
 
 	// Parse the model
 	if(testDesc.presetOrFile == "Preset") {  

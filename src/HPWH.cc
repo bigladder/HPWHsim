@@ -4023,46 +4023,50 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 	//const double soCMinTUse_C = F_TO_C(110.);
 	//const double soCMains_C = F_TO_C(65.);
 
-	std::string var1;
-	double testVal;
-	while(controlFile >> var1 >> testVal) {
-		if(var1 == "setpoint") { // If a setpoint was specified then override the default
-			controlInfo.setpointT_C = testVal;
+	std::string token;
+	std::string sValue;
+	while(controlFile >> token >> sValue) {
+		if(token == "setpoint") { // If a setpoint was specified then override the default
+			controlInfo.setpointT_C = std::stod(sValue);
 		}
-		else if(var1 == "length_of_test") {
-			controlInfo.timeToRun_min = (int) testVal;
+		else if(token == "length_of_test") {
+			controlInfo.timeToRun_min = std::stoi(sValue);
 		}
-		else if(var1 == "doInversionMixing") {
-			controlInfo.doInvMix = (testVal > 0.0) ? 1 : 0;
+		else if(token == "doInversionMixing") {
+			controlInfo.doInvMix = (std::stod(sValue) > 0.0) ? 1 : 0;
 		}
-		else if(var1 == "doConduction") {
-			controlInfo.doCondu = (testVal > 0.0) ? 1 : 0;
+		else if(token == "doConduction") {
+			controlInfo.doCondu = (std::stod(sValue) > 0.0) ? 1 : 0;
 		}
-		else if(var1 == "inletH") {
-			controlInfo.inletH = testVal;
+		else if(token == "inletH") {
+			controlInfo.inletH = std::stod(sValue);
 		}
-		else if(var1 == "tanksize") {
-			controlInfo.tankSize_gal = testVal;
+		else if(token == "tanksize") {
+			controlInfo.tankSize_gal = std::stod(sValue);
 		}
-		else if(var1 == "tot_limit") {
-			controlInfo.tot_limit = testVal;
+		else if(token == "tot_limit") {
+			controlInfo.tot_limit = std::stod(sValue);
 		}
-		else if(var1 == "useSoC") {
-			controlInfo.useSoC = (bool)testVal;
+		else if(token == "useSoC") {
+			controlInfo.useSoC = static_cast<bool>(std::stoi(sValue));
 		}
-		else if(var1 == "initialTankT_C") { // Initialize at this temperature instead of setpoint
-			controlInfo.initialTankT_C = testVal;
+		else if(token == "initialTankT_C") { // Initialize at this temperature instead of setpoint
+			controlInfo.initialTankT_C = std::stod(sValue);
 			controlInfo.hasInitialTankTemp = true;
 		}
-		else if(var1 == "temperature_units") { // Initialize at this temperature instead of setpoint
-			controlInfo.initialTankT_C = testVal;
-			controlInfo.hasInitialTankTemp = true;
+		else if(token == "temperature_units") { // Initialize at this temperature instead of setpoint
+			controlInfo.temperature_units = sValue;
 		}
 		else {
-			cout << var1 << " in testInfo.txt is an unrecogized key.\n";
+			cout << token << " in testInfo.txt is an unrecogized key.\n";
 		}
 	}
 	controlFile.close();
+
+	if(controlInfo.temperature_units == "F") {
+		controlInfo.setpointT_C = F_TO_C(controlInfo.setpointT_C);
+		controlInfo.initialTankT_C = F_TO_C(controlInfo.initialTankT_C);
+	}
 
 	if(controlInfo.timeToRun_min == 0) {
 		cout << "Error, must record length_of_test in testInfo.txt file\n";
@@ -4100,7 +4104,21 @@ bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlIn
 		}
 		allSchedules.push_back(schedule);
 	}
-	  
+	
+	if(controlInfo.temperature_units == "F") {
+		for(auto &T: allSchedules[0]) {
+			T = F_TO_C(T);
+		}
+		for(auto &T: allSchedules[2]) {
+			T = F_TO_C(T);
+		}
+		for(auto &T: allSchedules[3]) {
+			T = F_TO_C(T);
+		}
+		for(auto &T: allSchedules[5]) {
+			T = F_TO_C(T);
+		}
+	}
 	if (controlInfo.doInvMix == 0) {
 		outputCode += setDoInversionMixing(false);
 	}
