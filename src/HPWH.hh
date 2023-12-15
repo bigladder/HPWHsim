@@ -381,7 +381,6 @@ public:
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint) ;
 	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
-	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> secondSixth(double decisionPoint);
@@ -1365,7 +1364,9 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 template< typename T> inline bool aboutEqual(T a,T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
 
 /// Generate an absolute or relative temperature in degC.
-double makeC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute);
+inline double convertTempToC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute){
+	return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+}
 
 // resampling utility functions
 double getResampledValue(const std::vector<double> &values,double beginFraction,double endFraction);
