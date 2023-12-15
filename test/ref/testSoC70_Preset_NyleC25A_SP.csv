@@ -1,4 +1,4 @@
-minutes,Ta,Tsetpoint,inletT,draw,targetSoCFract,soCFract,DRstatus,h_src1In (Wh),h_src1Out (Wh),tcouple1 (C),tcouple2 (C),tcouple3 (C),tcouple4 (C),tcouple5 (C),tcouple6 (C), toutlet (C)
+minutes,Ta,Tsetpoint,inletT,draw,targetSoCFract,soCFract,DRstatus,h_src1In (Wh),h_src1Out (Wh),tcouple1 (C),tcouple2 (C),tcouple3 (C),tcouple4 (C),tcouple5 (C),tcouple6 (C),toutlet (C)
 0, 20.000000, 65.000000, 15.000000, 10.000000, 0.900000, 0.947385, 0,0.00,0.00,50.00,65.00,65.00,65.00,65.00,65.00,65.00
 1, 20.000000, 65.000000, 15.000000, 10.000000, 0.900000, 0.894996, 0,0.00,0.00,35.00,64.99,64.99,64.99,64.99,64.99,65.00
 2, 20.000000, 65.000000, 15.000000, 10.000000, 0.900000, 0.849117, 0,55.43,122.36,20.85,64.98,64.99,64.99,64.99,64.99,64.99

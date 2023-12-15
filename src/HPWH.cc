@@ -63,10 +63,6 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-double makeC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute){
-	return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
-}
-
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end. 
@@ -1746,7 +1742,7 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
-	double decisionPoint_C = makeC(decisionPoint,units,absolute);
+	double decisionPoint_C = convertTempToC(decisionPoint,units,absolute);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint_C,this,absolute);
 }
 
@@ -1762,7 +1758,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double deci
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1./3., 2./3.);
-	double decisionPoint_C = makeC(decisionPoint,units,absolute);
+	double decisionPoint_C = convertTempToC(decisionPoint,units,absolute);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("second third",nodeWeights,decisionPoint_C,this,absolute);
 }
 
@@ -1814,11 +1810,6 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double decisionPoi
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,decisionPoint,this);
-}
-
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth_absolute(double decisionPoint) {
-	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1./12.);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth",nodeWeights,decisionPoint,this,true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint) {
