@@ -62,7 +62,7 @@ heatsource 0 copT4quad 0.0
 heatsource 0 minT -25 F
 heatsource 0 maxT 125 F
 heatsource 0 hysteresis 1 F
-heatsource 0 coilConfig wrapped
+heatsource 0 coilConfig submerged
 
 #Turns on when average tank temperature is 111F or colder
 heatsource 0 onlogic wholeTank absolute < 111 F

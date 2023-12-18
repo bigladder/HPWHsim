@@ -3869,7 +3869,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.minT = F_TO_C(-25);
 		compressor.maxT = F_TO_C(125.);
 		compressor.hysteresis_dC = dF_TO_dC(1);
-		compressor.configuration = HeatSource::CONFIG_WRAPPED;
+		compressor.configuration = HeatSource::CONFIG_SUBMERGED;
 
 		//logic conditions
 		compressor.addTurnOnLogic(HPWH::wholeTank(111,UNITS_F,true));
