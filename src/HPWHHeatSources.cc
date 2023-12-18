@@ -16,7 +16,7 @@ HPWH::HeatSource::HeatSource(HPWH *parentInput)
 	followedByHeatSource(NULL),minT(-273.15),maxT(100),hysteresis_dC(0),airflowFreedom(1.0),maxSetpoint_C(100.),
 	typeOfHeatSource(TYPE_none),extrapolationMethod(EXTRAP_LINEAR),maxOut_at_LowT{100,-273.15},standbyLogic(NULL),
 	isMultipass(true),mpFlowRate_LPS(0.),externalInletHeight(-1),externalOutletHeight(-1),useBtwxtGrid(false),
-	secondaryHeatExchanger{0.,0.,0.}
+	secondaryHeatExchanger{0.,0.,0.},heatExchange_coef(1.)
 {}
 
 HPWH::HeatSource::HeatSource(const HeatSource &hSource) {
@@ -90,6 +90,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource &hSource) {
 	extrapolationMethod = hSource.extrapolationMethod;
 	secondaryHeatExchanger = hSource.secondaryHeatExchanger;
 
+	heatExchange_coef = hSource.heatExchange_coef;
 	return *this;
 }
 
@@ -376,6 +377,10 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	double input_BTUperHr = 0.,cap_BTUperHr = 0.,cop = 0.;
 
+	double powerInput_kW = 0.;
+	double powerOutput_kW = 0.;
+	double heatAdded_kJ = 0.;
+
 	switch(configuration) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
@@ -392,8 +397,11 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 		else {
 			getCapacity(externalT_C,getTankTemp(),input_BTUperHr,cap_BTUperHr,cop);
-
 		}
+
+		powerInput_kW = BTUperH_TO_KW(input_BTUperHr);
+		powerOutput_kW = BTUperH_TO_KW(cap_BTUperHr);
+
 		// some outputs for debugging
 		if(hpwh->hpwhVerbosity >= VRB_typical) {
 			hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",BTU_TO_KWH(cap_BTUperHr)*(minutesToRun) / min_per_hr,cap_BTUperHr);
@@ -403,14 +411,18 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		//some amount of heatDistribution acts as a separate resistive element
 		//maybe start from the top and go down?  test this with graphs
 
+		double cap_kJ = powerOutput_kW * minutesToRun * sec_per_min;
+		double effectiveCap_kJ = heatExchange_coef * cap_kJ;
+
 		// set the leftover capacity to 0
 		double leftoverCap_kJ = 0.;
 		for(int i = hpwh->getNumNodes() - 1; i >= 0; i--) {
-			//for(int i = 0; i < hpwh->numNodes; i++){
-			double nodeCap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr * heatDistribution[i]);
+			double nodeCap_kJ = heatDistribution[i] * effectiveCap_kJ;
 			if(nodeCap_kJ != 0.) {
-				//add leftoverCap to the next run, and keep passing it on
-				leftoverCap_kJ = hpwh->addHeatAboveNode(nodeCap_kJ + leftoverCap_kJ,i,maxSetpoint_C);
+				//add leftoverCap to the next run, and keep passing it on 
+				double nodeHeatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
+				leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ,i,maxSetpoint_C);
+				heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
 			}
 		}
 
@@ -419,13 +431,16 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		}
 
 		//after you've done everything, any leftover capacity is time that didn't run
-		double cap_kJ =  BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
-		runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
+		runtime_min = (1. - (leftoverCap_kJ / effectiveCap_kJ)) * minutesToRun;
 #if 1	// error check, 1-22-2017; updated 12-6-2023
 		if(runtime_min < -TOL_MINVALUE)
 			if(hpwh->hpwhVerbosity >= VRB_reluctant)
 				hpwh->msg("Internal error: Negative runtime = %0.3f min\n",runtime_min);
 #endif
+		// Accumulate the input & output energy
+		energyInput_kWh += KJ_TO_KWH(powerInput_kW * runtime_min * sec_per_min);
+		energyOutput_kWh += KJ_TO_KWH(heatAdded_kJ);
+		energyRetained_kWh = KJ_TO_KWH(powerOutput_kW * runtime_min * sec_per_min) - KJ_TO_KWH(heatAdded_kJ);
 	}
 	break;
 
@@ -434,12 +449,41 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 		//capacity is calculated internal to this functio
 		// n, and cap/input_BTUperHr, cop are outputs
 		runtime_min = addHeatExternal(externalT_C,minutesToRun,cap_BTUperHr,input_BTUperHr,cop);
+		powerInput_kW = BTUperH_TO_KW(input_BTUperHr);
+		powerOutput_kW = BTUperH_TO_KW(cap_BTUperHr);
+
+		energyInput_kWh += KJ_TO_KWH(powerInput_kW * runtime_min * sec_per_min);
+		energyOutput_kWh += KJ_TO_KWH(powerOutput_kW * runtime_min * sec_per_min);
+		energyRetained_kWh = 0.;
 		break;
 	}
 
-	// Write the input & output energy
-	energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
-	energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
+}
+
+void HPWH::HeatSource::addTransientHeat(double minutesToRun) {
+	if(energyRetained_kWh > 0.) {
+		double heatAdded_kJ = 0.;
+
+		// calcHeatDist takes care of the swooping for wrapped configurations
+		std::vector<double> heatDistribution;
+		calcHeatDist(heatDistribution);
+
+		double cap_kJ = KWH_TO_KJ(energyRetained_kWh);
+		double effectiveCap_kJ = heatExchange_coef * cap_kJ;
+
+		// set the leftover capacity to 0
+		double leftoverCap_kJ = 0.;
+		for(int i = hpwh->getNumNodes() - 1; i >= 0; i--) {
+			double nodeCap_kJ = heatDistribution[i] * effectiveCap_kJ;
+			if(nodeCap_kJ != 0.) {
+				//add leftoverCap to the next run, and keep passing it on 
+				double nodeHeatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
+				leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ,i,maxSetpoint_C);
+				heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
+			}
+		}
+		energyRetained_kWh -= KJ_TO_KWH(heatAdded_kJ);
+	}
 }
 
 // private HPWH::HeatSource functions
