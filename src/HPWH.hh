@@ -712,11 +712,6 @@ public:
 	  energy put into the water is positive - should always be positive
 	  returns HPWH_ABORT for N out of bounds or incorrect units  */
 
-	double getNthHeatSourceExtraEnergyInput(int N,UNITS units = UNITS_KWH) const;
-	/**< returns the "extra" energy input to the Nth heat source, with the specified units
-	  energy used by the heat source is positive - should always be positive
-	  returns HPWH_ABORT for N out of bounds or incorrect units  */
-
 	double getNthHeatSourceRunTime(int N) const;
 	/**< returns the run time for the Nth heat source, in minutes
 	  note: they may sum to more than 1 time step for concurrently running heat sources
