@@ -821,18 +821,17 @@ public:
 	void addExtraHeatAboveNode(double qAdd_kJ,const int nodeNum);
 
 	struct ControlInfo{
-		double outputCode = 0;
-		long timeToRun_min = 0;
-		double setpointT_C = 0.;
-		double initialTankT_C = 0.;
-		double doCondu = 1;
-		double doInvMix = 1;
-		double inletH = 0.;
-		double tankSize_gal = 0.;
-		double tot_limit = 0.;
-		bool useSoC = false;
-		bool hasInitialTankTemp = false;
-		std::string temperature_units = "C";
+		long outputCode;
+		long timeToRun_min;
+		double setpointT_C;
+		std::unique_ptr<double> initialTankT_C;
+		bool doConduction;
+		bool doInversionMixing;
+		std::unique_ptr<double> inletH;
+		std::unique_ptr<double> tankSize_gal;
+		std::unique_ptr<double> tot_limit;
+		bool useSoC;
+		std::string temperatureUnits;
 	};
 	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
 

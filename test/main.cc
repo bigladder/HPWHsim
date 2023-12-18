@@ -108,6 +108,5 @@ int main(int argc, char *argv[]){
 		hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress);
 	}
 
-
   return 0;
 }
