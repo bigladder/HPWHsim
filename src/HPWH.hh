@@ -712,6 +712,8 @@ public:
 	  energy put into the water is positive - should always be positive
 	  returns HPWH_ABORT for N out of bounds or incorrect units  */
 
+	double getNthHeatSourceEnergyTransient(int N,UNITS units /*=UNITS_KWH*/) const;
+
 	double getNthHeatSourceRunTime(int N) const;
 	/**< returns the run time for the Nth heat source, in minutes
 	  note: they may sum to more than 1 time step for concurrently running heat sources
@@ -1093,6 +1095,8 @@ public:
 	/**< adds heat to the hpwh - this is the function that interprets the
 		various configurations (internal/external, resistance/heat pump) to add heat */
 
+	void addTransientHeat();
+
 	/// Assign new condensity values from supplied vector. Note the input vector is currently resampled
 	/// to preserve a condensity vector of size CONDENSITY_SIZE.
 	void setCondensity(const std::vector<double> &condensity_in);
@@ -1145,7 +1149,11 @@ private:
 	double energyOutput_kWh;
 	/**< the energy put into the water by the heat source */
 
-// these are the heat source property variables
+	/// the energy retained by the heat source, released as transient heat
+	double energyTransient_kWh;
+	double heatExchange_coef;
+	
+	// these are the heat source property variables
 	bool isVIP;
 	/**< is this heat source a high priority heat source? (e.g. upper resisitor) */
 	HeatSource* backupHeatSource;

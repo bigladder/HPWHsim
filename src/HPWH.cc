@@ -541,6 +541,8 @@ int HPWH::runOneStep(double drawVolume_L,
 		//do heating logic
 		double minutesToRun = minutesPerStep;
 		for(int i = 0; i < getNumHeatSources(); i++) {
+			heatSources[i].addTransientHeat();
+
 			// check/apply lock-outs
 			if(hpwhVerbosity >= VRB_emetic) {
 				msg("Checking lock-out logic for heat source %d:\n",i);
@@ -666,7 +668,10 @@ int HPWH::runOneStep(double drawVolume_L,
 
 	//sum energyRemovedFromEnvironment_kWh for each heat source;
 	for(int i = 0; i < getNumHeatSources(); i++) {
-		energyRemovedFromEnvironment_kWh += (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
+		energyRemovedFromEnvironment_kWh +=
+			+ heatSources[i].energyOutput_kWh
+			+ heatSources[i].energyTransient_kWh 
+			- heatSources[i].energyInput_kWh;
 	}
 
 	//cursory check for inverted temperature profile
@@ -2060,6 +2065,29 @@ double HPWH::getNthHeatSourceEnergyOutput(int N,UNITS units /*=UNITS_KWH*/) cons
 	}
 }
 
+double HPWH::getNthHeatSourceEnergyTransient(int N,UNITS units /*=UNITS_KWH*/) const {
+	//returns energy from the heat source into the water - this should always be positive
+	if(N >= getNumHeatSources() || N < 0) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("You have attempted to access the energy transient of a heat source that does not exist.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+
+	if(units == UNITS_KWH) {
+		return heatSources[N].energyTransient_kWh;
+	} else if(units == UNITS_BTU) {
+		return KWH_TO_BTU(heatSources[N].energyTransient_kWh);
+	} else if(units == UNITS_KJ) {
+		return KWH_TO_KJ(heatSources[N].energyTransient_kWh);
+	} else {
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Incorrect unit specification for getNthHeatSourceEnergyTransient.  \n");
+		}
+		return double(HPWH_ABORT);
+	}
+}
+
 double HPWH::getNthHeatSourceRunTime(int N) const {
 	if(N >= getNumHeatSources() || N < 0) {
 		if(hpwhVerbosity >= VRB_reluctant) {
@@ -3153,6 +3181,10 @@ void HPWH::calcDerivedHeatingValues(){
 		}
 	}
 
+	for(int i = 0; i < getNumHeatSources(); i++) {
+		heatSources[i].energyTransient_kWh = 0.;
+	}
+
 }
 
 void HPWH::mapResRelativePosToHeatSources() {
@@ -3400,8 +3432,10 @@ bool HPWH::isEnergyBalanced(
 {
 	// Check energy balancing. 
 	double qInElectrical_kJ = 0.;
+	double qOutTransient_kJ = 0.;
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
 		qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		qOutTransient_kJ += getNthHeatSourceEnergyTransient(iHS, UNITS_KJ);
 	}
 
 	double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
@@ -3413,6 +3447,7 @@ bool HPWH::isEnergyBalanced(
 		+ qInElectrical_kJ				// electrical energy delivered to heat sources
 		+ qInExtra_kJ					// extra energy delivered to heat sources
 		+ qInHeatSourceEnviron_kJ		// heat extracted from environment by condenser
+		- qOutTransient_kJ				// transient heat retained in heat sources
 		- qOutTankEnviron_kJ			// heat released from tank to environment
 		- qOutWater_kJ;					// heat expelled to outlet by water flow
 
@@ -3852,9 +3887,7 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					return HPWH_ABORT;
 				}
-			}
-
-			else if(token == "externalInlet") {
+			} else if(token == "externalInlet") {
 				line_ss >> tempInt;
 				if(tempInt < num_nodes && tempInt >= 0) {
 					heatSources[heatsource].externalInletHeight = tempInt;
@@ -3874,9 +3907,10 @@ int HPWH::HPWHinit_file(string configFile) {
 					}
 					return HPWH_ABORT;
 				}
-			}
-
-			else if(token == "condensity") {
+			} else if(token == "heatExchangerEffectiveness") {
+				line_ss >> tempDouble;
+				heatSources[heatsource].heatExchange_coef = tempDouble;
+			} else if(token == "condensity") {
 				double x;
 				std::vector<double> condensity;
 				while (line_ss >> x)

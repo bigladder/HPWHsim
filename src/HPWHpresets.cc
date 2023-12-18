@@ -3875,6 +3875,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		compressor.addTurnOnLogic(HPWH::wholeTank(111,UNITS_F,true));
 		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
+		compressor.heatExchange_coef = 0.9;
+
 		//set everything in its places
 		heatSources.resize(1);
 		heatSources[0] = compressor;
