@@ -4340,12 +4340,9 @@ bool HPWH::runYearlySimulation(
 	const bool doTempDepress,
 	TestResults &testResults)
 {
-	const double energyBalThreshold = 0.001; // 0.1 %
+	const double energyBalThreshold = 0.005; // 0.5 %
 
 	std::string sOutputFilename = outputDirectory + "/DHW_YRLY.csv";
-
-	// UEF data
-	testResults={false,0.,0.};
 
 	FILE * outputFile = NULL;
 	if (fopen_s(&outputFile, sOutputFilename.c_str(), "a+") != 0) {
@@ -4355,26 +4352,24 @@ bool HPWH::runYearlySimulation(
 
 	cout << "Now Simulating " << controlInfo.timeToRun_min << " Minutes of the Test\n";
 
-	double cumHeatIn[3] = {0, 0, 0};
-	double cumHeatOut[3] = {0, 0, 0};
+	double cumHeatIn[3] = { 0,0,0 };
+	double cumHeatOut[3] = { 0,0,0 };
 
 	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!isSetpointFixed());
 
 	// Loop over the minutes in the test
 	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
-		double inletT_C = allSchedules[0][i];
-		double drawVolume_L = GAL_TO_L(allSchedules[1][i]);
-		double ambientT_C = doTempDepress ? airT_C : allSchedules[2][i];
-		double externalT_C = allSchedules[3][i];
+		if (!doTempDepress) {
+			airT_C = allSchedules[2][i];
+		}
+
+		// Process the dr status
 		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
-		double inlet2T_C = inletT_C;
-		double draw2Volume_L = drawVolume_L;
 
 		// Change setpoint if there is a setpoint schedule.
 		if (doChangeSetpoint) {
-			double testSetpointT_C = allSchedules[5][i];
-			setSetpoint(testSetpointT_C); //expect this to fail sometimes
+			setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
 		}
 
 		// Change SoC schedule	
@@ -4393,20 +4388,20 @@ bool HPWH::runYearlySimulation(
 			}
 		}
 
-		double initialTankHeatContent_kJ = getTankHeatContent_kJ();
+		double tankHCStart = getTankHeatContent_kJ();
 
 		// Run the step
 		runOneStep(
-			inletT_C,							// inlet water temperature (C)
-			drawVolume_L,						// draw volume (L)
-			ambientT_C,							// ambient Temp (C)
-			externalT_C,						// external Temp (C)
+			allSchedules[0][i],					// inlet water temperature (C)
+			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
+			airT_C,								// ambient Temp (C)
+			allSchedules[3][i],					// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
-			draw2Volume_L,						// inlet-2 volume (L)
-			inlet2T_C,							// inlet-2 Temp (C)
+			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
+			allSchedules[0][i],					// inlet-2 Temp (C)
 			NULL);								// no extra heat
 
-		if (!isEnergyBalanced(drawVolume_L,inletT_C,initialTankHeatContent_kJ ,energyBalThreshold)) {
+		if (!isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
 			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
 		}
 
@@ -4430,17 +4425,11 @@ bool HPWH::runYearlySimulation(
 		}
 
 		// Recording
-		double energyConsumed_kJ = 0.;
 		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-			double heatSourceEnergyConsumed_kJ =  getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
-			energyConsumed_kJ += heatSourceEnergyConsumed_kJ;
-
-	  		cumHeatIn[iHS] += KJ_TO_KWH(heatSourceEnergyConsumed_kJ) * 1000.;
-	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
+	  		cumHeatIn[iHS] += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
+	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
 		}
 
-		testResults.totalEnergyConsumed_kJ += energyConsumed_kJ;
-		testResults.totalVolumeRemoved_L += drawVolume_L;
 	}
 
 	std::string firstCol = testDesc.testName + "," + testDesc.presetOrFile + "," + testDesc.modelName;
@@ -4459,6 +4448,5 @@ bool HPWH::runYearlySimulation(
 	fprintf(outputFile, "\n");
 	fclose(outputFile);
 
-	testResults.passed = true;
 	return true;
 }
