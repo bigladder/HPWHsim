@@ -3936,13 +3936,12 @@ int HPWH::HPWHinit_file(string configFile) {
 }
 #endif
 
-// reads the named schedule into the provided array
 //-----------------------------------------------------------------------------
-///	@brief	Reads a schedule into the schedule array. 
+///	@brief	Reads a named schedule into a schedule array. 
 /// @param[out]	scheduleArray	std::vector of test schedules
 ///	@param[in]	scheduleName	name of schedule to read
 ///	@param[in]	minutesOfTest			Upper (right) bounding fraction (0 to 1) 	
-/// @return	Resampled value; 0 if undefined.
+/// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
 bool readSchedule(HPWH::Schedule &scheduleArray, std::string scheduleName, long testLength_min) {
 	int minuteHrTmp;
@@ -4002,12 +4001,12 @@ bool readSchedule(HPWH::Schedule &scheduleArray, std::string scheduleName, long 
 	return true;
 }
 
-inline bool getBool(const std::string sValue){
-	if((sValue == "F") || (sValue == "false") || (sValue == "False") || (stod(sValue) == 0.))
-		return false;
-	return true;
-}
-
+//-----------------------------------------------------------------------------
+///	@brief	Reads the control info for a test from file "testInfo.txt"
+///	@param[in]	testDirectory	path to directory containing test files
+///	@param[out]	controlInfo		data structure containing control info 	
+/// @return		true if successful, false otherwise
+//-----------------------------------------------------------------------------
 bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &controlInfo)
 {
 	std::ifstream controlFile;
@@ -4084,6 +4083,13 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Reads the schedules for a test
+///	@param[in]	testDirectory	path to directory containing test files
+///	@param[in]	controlInfo		data structure containing control info 	
+///	@param[out]	allSchedules	collection of test schedules read 	
+/// @return		true if successful, false otherwise
+//-----------------------------------------------------------------------------
 bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlInfo &controlInfo, std::vector<HPWH::Schedule> &allSchedules)
 {
 	std::vector<string> scheduleNames;
@@ -4169,21 +4175,34 @@ bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlIn
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Reads the schedules for a test
+///	@param[in]	testDesc		data structure contained test description
+/// @param[in]	outputDirectory	destination path for test results (filename based on testDesc)
+///	@param[in]	controlInfo		data structure containing control info 	
+///	@param[in]	allSchedules	collection of test schedules 	
+///	@param[in]	airT_C			air temperature (degC) used for temperature depression 	
+///	@param[in]	doTempDepress	whether to apply temperature depression 	
+/// @return		true if successful, false otherwise
+//-----------------------------------------------------------------------------
 bool HPWH::runSimulation(
 	const TestDesc &testDesc,
 	const std::string &outputDirectory,
 	const HPWH::ControlInfo &controlInfo, 
 	std::vector<HPWH::Schedule> &allSchedules,
 	double airT_C,
-	const bool doTempDepress
-)
+	const bool doTempDepress,
+	TestResults &testResults)
 {
-	const double energyBalThreshold = 0.005; // 0.5 %
+	const double energyBalThreshold = 0.001; // 0.1 %
 	const int nTestTCouples = 6;
 
 	const std::string sHead = "minutes,Ta,Tsetpoint,inletT,draw,";
 	const std::string sHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
 	const std::string sHeadSoC = "targetSoCFract,soCFract,";
+
+	// UEF data
+	testResults={false,0.,0.};
 
 	FILE * outputFile = NULL;
 	std::string sOutputFilename = outputDirectory + "/" + testDesc.testName + "_" + testDesc.presetOrFile + "_" + testDesc.modelName + ".csv";
@@ -4210,14 +4229,18 @@ bool HPWH::runSimulation(
 	// Loop over the minutes in the test
 	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
+		double inletT_C = allSchedules[0][i];
+		double drawVolume_L = GAL_TO_L(allSchedules[1][i]);
 		double ambientT_C = doTempDepress ? airT_C : allSchedules[2][i];
-
-		// Process the dr status
+		double externalT_C = allSchedules[3][i];
 		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
+		double inlet2T_C = inletT_C;
+		double draw2Volume_L = drawVolume_L;
 
 		// Change setpoint if there is a setpoint schedule.
 		if (doChangeSetpoint) {
-			setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
+			double testSetpointT_C = allSchedules[5][i];
+			setSetpoint(testSetpointT_C); //expect this to fail sometimes
 		}
 
 		// Change SoC schedule	
@@ -4228,21 +4251,22 @@ bool HPWH::runSimulation(
 			}
 		}
 
-		double tankHCStart = getTankHeatContent_kJ();
+		double initialTankHeatContent_kJ = getTankHeatContent_kJ();
 
 		// Run the step
 		runOneStep(
-			allSchedules[0][i],					// inlet water temperature (C)
-			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
-			ambientT_C,								// ambient Temp (C)
-			allSchedules[3][i],					// external Temp (C)
+			inletT_C,							// inlet water temperature (C)
+			drawVolume_L,						// draw volume (L)
+			ambientT_C,							// ambient Temp (C)
+			externalT_C,						// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
-			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
-			allSchedules[0][i],					// inlet-2 Temp (C)
+			draw2Volume_L,						// inlet-2 volume (L)
+			inlet2T_C,							// inlet-2 Temp (C)
 			NULL);								// no extra heat
 
-		if (!isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
+		if (!isEnergyBalanced(drawVolume_L,inletT_C,initialTankHeatContent_kJ,energyBalThreshold)) {
 			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+			return false;
 		}
 
 		// Check timing
@@ -4283,23 +4307,45 @@ bool HPWH::runSimulation(
 			csvOptions |= HPWH::CSVOPT_IS_DRAWING;
 		}
 		WriteCSVRow(outputFile, sPreamble.c_str(), nTestTCouples, csvOptions);
-	}
 
+		double energyConsumed_kJ = 0.;
+		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
+			energyConsumed_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+		}
+		testResults.totalEnergyConsumed_kJ += energyConsumed_kJ;
+		testResults.totalVolumeRemoved_L += drawVolume_L;
+	}
 	fclose(outputFile);
+
+	testResults.passed = true;
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Reads the schedules for a test
+///	@param[in]	testDesc		data structure contained test description
+/// @param[in]	outputDirectory	destination path for test results (append file "DHW_YRLY.csv")
+///	@param[in]	controlInfo		data structure containing control info 	
+///	@param[in]	allSchedules	collection of test schedules 	
+///	@param[in]	airT_C			air temperature (degC) used for temperature depression 	
+///	@param[in]	doTempDepress	whether to apply temperature depression 	
+/// @return		true if successful, false otherwise
+//-----------------------------------------------------------------------------
 bool HPWH::runYearlySimulation(
 	const TestDesc &testDesc,
 	const std::string &outputDirectory,
 	const HPWH::ControlInfo &controlInfo, 
 	std::vector<HPWH::Schedule> &allSchedules,
 	double airT_C,
-	const bool doTempDepress)
+	const bool doTempDepress,
+	TestResults &testResults)
 {
-	const double energyBalThreshold = 0.005; // 0.5 %
+	const double energyBalThreshold = 0.001; // 0.1 %
 
 	std::string sOutputFilename = outputDirectory + "/DHW_YRLY.csv";
+
+	// UEF data
+	testResults={false,0.,0.};
 
 	FILE * outputFile = NULL;
 	if (fopen_s(&outputFile, sOutputFilename.c_str(), "a+") != 0) {
@@ -4309,24 +4355,26 @@ bool HPWH::runYearlySimulation(
 
 	cout << "Now Simulating " << controlInfo.timeToRun_min << " Minutes of the Test\n";
 
-	double cumHeatIn[3] = { 0,0,0 };
-	double cumHeatOut[3] = { 0,0,0 };
+	double cumHeatIn[3] = {0, 0, 0};
+	double cumHeatOut[3] = {0, 0, 0};
 
 	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!isSetpointFixed());
 
 	// Loop over the minutes in the test
 	for (int i = 0; i < controlInfo.timeToRun_min; i++) {
 
-		if (!doTempDepress) {
-			airT_C = allSchedules[2][i];
-		}
-
-		// Process the dr status
+		double inletT_C = allSchedules[0][i];
+		double drawVolume_L = GAL_TO_L(allSchedules[1][i]);
+		double ambientT_C = doTempDepress ? airT_C : allSchedules[2][i];
+		double externalT_C = allSchedules[3][i];
 		HPWH::DRMODES drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
+		double inlet2T_C = inletT_C;
+		double draw2Volume_L = drawVolume_L;
 
 		// Change setpoint if there is a setpoint schedule.
 		if (doChangeSetpoint) {
-			setSetpoint(allSchedules[5][i]); //expect this to fail sometimes
+			double testSetpointT_C = allSchedules[5][i];
+			setSetpoint(testSetpointT_C); //expect this to fail sometimes
 		}
 
 		// Change SoC schedule	
@@ -4345,20 +4393,20 @@ bool HPWH::runYearlySimulation(
 			}
 		}
 
-		double tankHCStart = getTankHeatContent_kJ();
+		double initialTankHeatContent_kJ = getTankHeatContent_kJ();
 
 		// Run the step
 		runOneStep(
-			allSchedules[0][i],					// inlet water temperature (C)
-			GAL_TO_L(allSchedules[1][i]),		// draw (gallons)
-			airT_C,								// ambient Temp (C)
-			allSchedules[3][i],					// external Temp (C)
+			inletT_C,							// inlet water temperature (C)
+			drawVolume_L,						// draw volume (L)
+			ambientT_C,							// ambient Temp (C)
+			externalT_C,						// external Temp (C)
 			drStatus,							// DDR Status (now an enum. Fixed for now as allow)
-			GAL_TO_L(allSchedules[1][i]),		// inlet-2 volume (gallons)
-			allSchedules[0][i],					// inlet-2 Temp (C)
+			draw2Volume_L,						// inlet-2 volume (L)
+			inlet2T_C,							// inlet-2 Temp (C)
 			NULL);								// no extra heat
 
-		if (!isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,energyBalThreshold)) {
+		if (!isEnergyBalanced(drawVolume_L,inletT_C,initialTankHeatContent_kJ ,energyBalThreshold)) {
 			cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
 		}
 
@@ -4382,11 +4430,17 @@ bool HPWH::runYearlySimulation(
 		}
 
 		// Recording
+		double energyConsumed_kJ = 0.;
 		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-	  		cumHeatIn[iHS] += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH)*1000.;
-	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH)*1000.;
+			double heatSourceEnergyConsumed_kJ =  getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+			energyConsumed_kJ += heatSourceEnergyConsumed_kJ;
+
+	  		cumHeatIn[iHS] += KJ_TO_KWH(heatSourceEnergyConsumed_kJ) * 1000.;
+	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
 		}
 
+		testResults.totalEnergyConsumed_kJ += energyConsumed_kJ;
+		testResults.totalVolumeRemoved_L += drawVolume_L;
 	}
 
 	std::string firstCol = testDesc.testName + "," + testDesc.presetOrFile + "," + testDesc.modelName;
@@ -4405,5 +4459,6 @@ bool HPWH::runYearlySimulation(
 	fprintf(outputFile, "\n");
 	fclose(outputFile);
 
+	testResults.passed = true;
 	return true;
 }

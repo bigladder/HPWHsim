@@ -12,13 +12,17 @@ const std::vector<std::string> sProfileNames({	"24hr67_vsmall",
 												"24hr67_medium",
                                                 "24hr67_high"	});
 
-void runTest(const HPWH::TestDesc testDesc,double airT_C = 0.,bool doTempDepress = false) {
-
+bool runTest(
+	const HPWH::TestDesc testDesc,
+	HPWH::TestResults &testResults,
+	double airT_C = 0.,
+	bool doTempDepress = false)
+{
 	HPWH hpwh;
 
 	getHPWHObject(hpwh, testDesc.modelName);
 
-	std::string sOutputDirectory =".";// ../build/test/output
+	std::string sOutputDirectory = "../build/test/output";
 
 	// Parse the model
 	if(testDesc.presetOrFile == "Preset") {  
@@ -51,7 +55,7 @@ void runTest(const HPWH::TestDesc testDesc,double airT_C = 0.,bool doTempDepress
 		exit(1);
 	}
 
-	hpwh.runSimulation(testDesc,sOutputDirectory,controlInfo,allSchedules,airT_C,doTempDepress);
+	return hpwh.runSimulation(testDesc,sOutputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
 
 }
 
@@ -62,10 +66,23 @@ void runTestSuite(const std::string &sModelName,const std::string &sPresetOrFile
 	testDesc.modelName = sModelName;
 	testDesc.presetOrFile = sPresetOrFile;
 
+	double totalEnergyConsumed_kJ = 0.;
+	double totalVolumeRemoved_L = 0.;
+
 	for (auto &sProfileName: sProfileNames) {
+		HPWH::TestResults testResults;
 		testDesc.testName = sProfileName;
-		runTest(testDesc);
+		ASSERTTRUE(runTest(testDesc,testResults));
+
+		totalEnergyConsumed_kJ += testResults.totalEnergyConsumed_kJ;
+		totalVolumeRemoved_L += testResults.totalVolumeRemoved_L;
 	}
+	double totalMassRemoved_kg = HPWH::DENSITYWATER_kgperL * totalVolumeRemoved_L;
+	double totalHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * totalMassRemoved_kg;
+	double refEnergy_kJ = totalHeatCapacity_kJperC * (51.7 - 14.4);
+
+	double UEF = refEnergy_kJ / totalEnergyConsumed_kJ;
+	std::cout << "UEF: " << UEF << "\n";
 }
 
 int main(int argc, char *argv[])

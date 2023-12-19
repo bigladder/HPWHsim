@@ -844,13 +844,20 @@ public:
 		std::string testName;
 	};
 
+	struct TestResults{
+		bool passed;
+		double totalEnergyConsumed_kJ;
+		double totalVolumeRemoved_L;
+	};
+
 	bool runSimulation(
 		const TestDesc &testDesc,
 		const std::string &outputDirectory,
 		const HPWH::ControlInfo &controlInfo, 
 		std::vector<HPWH::Schedule> &allSchedules,
 		double airT_C,
-		const bool doTempDepress);
+		const bool doTempDepress,
+		TestResults &testResults);
 
 	bool runYearlySimulation(
 		const TestDesc &testDesc,
@@ -858,7 +865,8 @@ public:
 		const HPWH::ControlInfo &controlInfo, 
 		std::vector<HPWH::Schedule> &allSchedules,
 		double airT_C,
-		const bool doTempDepress);
+		const bool doTempDepress,
+		TestResults &testResults);
 
 private:
 	class HeatSource;
@@ -1410,5 +1418,11 @@ void calcThermalDist(
 	const int lowestNode,
 	const std::vector<double> &nodeTemp_C,
 	const double setpointT_C);
+
+inline bool getBool(const std::string sValue){
+	if((sValue == "F") || (sValue == "false") || (sValue == "False") || (stoi(sValue) == 0))
+		return false;
+	return true;
+}
 
 #endif

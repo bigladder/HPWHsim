@@ -25,6 +25,7 @@ using std::ifstream;
 
 int main(int argc, char *argv[]){
 	HPWH hpwh;
+	bool failed = false;
 
 	const long maximumDurationNormalTest_min = 500000;
 
@@ -34,8 +35,10 @@ int main(int argc, char *argv[]){
 	// Obvious wrong number of command line arguments
 	if ((argc > 6)) {
 		cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and output directory\n";
-		exit(1);
+		failed = true;
 	}
+	ASSERTFALSE(failed);
+
 	// Help message
 	std::string input1, input2, input3, input4;
 	if(argc > 1) {
@@ -54,8 +57,9 @@ int main(int argc, char *argv[]){
 		cout << "All input files should be located in the test directory, with these names:\n";
 		cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
 		cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
-		exit(1);
+		failed = true;
 	}
+	ASSERTFALSE(failed);
 
 	HPWH::TestDesc testDesc;
 	testDesc.presetOrFile = input1;
@@ -67,7 +71,7 @@ int main(int argc, char *argv[]){
 	if(testDesc.presetOrFile == "Preset") {  
 		if (getHPWHObject(hpwh, testDesc.modelName) == HPWH::HPWH_ABORT) {
 			cout << "Error, preset model did not initialize.\n";
-			exit(1);
+			failed = true;
 		}
 	} else if (testDesc.presetOrFile == "File") {
 		std::string inputFile = testDesc.modelName + ".txt";
@@ -75,8 +79,9 @@ int main(int argc, char *argv[]){
 	}
 	else {
 		cout << "Invalid argument, received '"<< testDesc.presetOrFile << "', expected 'Preset' or 'File'.\n";
-		exit(1);
+		failed = true;
 	}
+	ASSERTFALSE(failed);
 
 	double airT_C = 0.;
 	bool doTempDepress = false;
@@ -91,22 +96,26 @@ int main(int argc, char *argv[]){
 	hpwh.setDoTempDepression(doTempDepress);
 
 	HPWH::ControlInfo controlInfo;
+	
+	
 	if(!hpwh.readControlInfo(testDesc.testName,controlInfo)){
 		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
-		exit(1);
+		failed = true;
 	}
+	ASSERTFALSE(failed);
 
 	std::vector<HPWH::Schedule> allSchedules;
-	if (!(hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules))) {
-		exit(1);
-	}
+	failed = !hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules);
+	ASSERTFALSE(failed);
 
+	HPWH::TestResults testResults;
 	if (controlInfo.timeToRun_min > maximumDurationNormalTest_min) {
-		hpwh.runYearlySimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress);
+		failed = !hpwh.runYearlySimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
 	}
 	else {
-		hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress);
+		failed = !hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
 	}
+	ASSERTFALSE(failed);
 
   return 0;
 }
