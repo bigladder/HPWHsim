@@ -297,6 +297,9 @@ HPWH::MODELS mapStringToPreset(string modelName) {
 	else if (modelName == "AWHSTier3Generic80") {
 		hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
 	}
+	else if (modelName == "AquaThermAire") {
+		hpwhModel = HPWH::MODELS_AquaThermAire;
+	}
 	else { 
 		hpwhModel = HPWH::MODELS_basicIntegrated;
 		cout << "Couldn't find model " << modelName << ".  Exiting...\n";
