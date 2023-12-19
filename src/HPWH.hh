@@ -216,7 +216,9 @@ public:
 		MODELS_RHEEM_HPHD60HNU_201_MP = 350,
 		MODELS_RHEEM_HPHD60VNU_201_MP = 351,
 		MODELS_RHEEM_HPHD135HNU_483_MP = 352, // really bad fit to data due to inconsistency in data
-		MODELS_RHEEM_HPHD135VNU_483_MP = 353  // really bad fit to data due to inconsistency in data
+		MODELS_RHEEM_HPHD135VNU_483_MP = 353,  // really bad fit to data due to inconsistency in data
+
+		MODELS_AquaThermAire = 400 // heat exchanger model
 	};
 
 	///specifies the modes for writing output
@@ -372,8 +374,10 @@ public:
 	std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc,double targetSoC,double hystFract,double tempMinUseful_C,
 		bool constMains,double mains_C);
 
+	std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint,const UNITS units = UNITS_C, const bool absolute = false);
 	std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
+	std::shared_ptr<TempBasedHeatingLogic> secondThird(double decisionPoint,const UNITS units = UNITS_C, const bool absolute = false);
 	std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
 	std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint) ;
 	std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
@@ -708,11 +712,6 @@ public:
 	  energy put into the water is positive - should always be positive
 	  returns HPWH_ABORT for N out of bounds or incorrect units  */
 
-	double getNthHeatSourceExtraEnergyInput(int N,UNITS units = UNITS_KWH) const;
-	/**< returns the "extra" energy input to the Nth heat source, with the specified units
-	  energy used by the heat source is positive - should always be positive
-	  returns HPWH_ABORT for N out of bounds or incorrect units  */
-
 	double getNthHeatSourceRunTime(int N) const;
 	/**< returns the run time for the Nth heat source, in minutes
 	  note: they may sum to more than 1 time step for concurrently running heat sources
@@ -980,7 +979,7 @@ private:
 	/**< the mass of water (kg) in a single node  */
 	double nodeMass_kg;
 
-	/**< the heat capacity of the water (kJ/°C) in a single node  */
+	/**< the heat capacity of the water (kJ/ï¿½C) in a single node  */
 	double nodeCp_kJperC;
 
 	/**< the height in meters of the one node  */
@@ -1066,6 +1065,15 @@ private:
 
 	/// Generates a vector of logical nodes
 	std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction,double topFraction);
+
+	/// False: water is drawn from the tank itself; True: tank provides heat exchange only
+	bool hasHeatExchanger;
+  
+	/// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by heat-exchange models only).
+	double heatExchangerEffectiveness;
+
+	/// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water line (derived from heatExchangerEffectiveness).
+	double nodeHeatExchangerEffectiveness;
 
 };  //end of HPWH class
 
@@ -1390,6 +1398,11 @@ inline HPWH::DRMODES operator|(HPWH::DRMODES a,HPWH::DRMODES b)
 }
 
 template< typename T> inline bool aboutEqual(T a,T b) { return fabs(a - b) < HPWH::TOL_MINVALUE; }
+
+/// Generate an absolute or relative temperature in degC.
+inline double convertTempToC(const double T_F_or_C,const HPWH::UNITS units,const bool absolute){
+	return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+}
 
 // resampling utility functions
 double getResampledValue(const std::vector<double> &values,double beginFraction,double endFraction);
