@@ -832,11 +832,13 @@ public:
 		std::unique_ptr<double> tot_limit;
 		bool useSoC;
 		std::string temperatureUnits;
+		bool extendedTest;
 	};
 	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
 
 	typedef std::vector<double> Schedule;
 	bool readSchedules(const std::string &testDirectory, const ControlInfo &controlInfo, std::vector<Schedule> &allSchedules);
+	bool readSchedule(Schedule &scheduleArray, std::string scheduleName, long testLength_min);
 
 	struct TestDesc{
 		std::string presetOrFile;
@@ -851,15 +853,6 @@ public:
 	};
 
 	bool runSimulation(
-		const TestDesc &testDesc,
-		const std::string &outputDirectory,
-		const HPWH::ControlInfo &controlInfo, 
-		std::vector<HPWH::Schedule> &allSchedules,
-		double airT_C,
-		const bool doTempDepress,
-		TestResults &testResults);
-
-	bool runYearlySimulation(
 		const TestDesc &testDesc,
 		const std::string &outputDirectory,
 		const HPWH::ControlInfo &controlInfo, 

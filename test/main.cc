@@ -95,9 +95,7 @@ int main(int argc, char *argv[]){
 	hpwh.setMaxTempDepression(4.);
 	hpwh.setDoTempDepression(doTempDepress);
 
-	HPWH::ControlInfo controlInfo;
-	
-	
+	HPWH::ControlInfo controlInfo;		
 	if(!hpwh.readControlInfo(testDesc.testName,controlInfo)){
 		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
 		failed = true;
@@ -108,14 +106,10 @@ int main(int argc, char *argv[]){
 	failed = !hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules);
 	ASSERTFALSE(failed);
 
+	controlInfo.extendedTest = (controlInfo.timeToRun_min > maximumDurationNormalTest_min);
+
 	HPWH::TestResults testResults;
-	if (controlInfo.timeToRun_min > maximumDurationNormalTest_min) {
-		failed = !hpwh.runYearlySimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
-	}
-	else {
-		failed = !hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
-	}
-	ASSERTFALSE(failed);
+	ASSERTTRUE(hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults));
 
   return 0;
 }
