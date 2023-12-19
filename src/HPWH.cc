@@ -315,6 +315,8 @@ void HPWH::setAllDefaults() {
 	usesSoCLogic = false;
 	setMinutesPerStep(1.0);
 	hpwhVerbosity = VRB_minuteOut;
+	hasHeatExchanger = false;
+	heatExchangerEffectiveness = 0.9;
 }
 
 HPWH::HPWH(const HPWH &hpwh) {
@@ -938,7 +940,7 @@ int HPWH::WriteCSVHeading(FILE* outFILE,const char* preamble,int nTCouples,int o
 		fprintf(outFILE,",tcouple%d (%s)",iTC + 1,doIP ? "F" : "C");
 	}
 
-	fprintf(outFILE,", toutlet (%s)",doIP ? "F" : "C");
+	fprintf(outFILE,",toutlet (%s)",doIP ? "F" : "C");
 
 	fprintf(outFILE,"\n");
 
@@ -1738,6 +1740,12 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
 	return nodeWeights;
 }
 
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
+	double decisionPoint_C = convertTempToC(decisionPoint,units,absolute);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("whole tank",nodeWeights,decisionPoint_C,this,absolute);
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2./3., 1.);
 	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third",nodeWeights,decisionPoint,this);
@@ -1745,7 +1753,13 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint) {
 	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2./3., 1.);
-	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute",nodeWeights,decisionPoint,this);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("top third absolute",nodeWeights,decisionPoint,this,true);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,const UNITS units /* = UNITS_C */, const bool absolute /* = false */) {
+	std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1./3., 2./3.);
+	double decisionPoint_C = convertTempToC(decisionPoint,units,absolute);
+	return std::make_shared<HPWH::TempBasedHeatingLogic>("second third",nodeWeights,decisionPoint_C,this,absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint) {
@@ -2581,38 +2595,56 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletT = inletT_C;
 			lowInletV = drawVolume_L - inletVol2_L;
 		}
-		//calculate how many nodes to draw (drawVolume_N)
-		double drawVolume_N = drawVolume_L / nodeVolume_L;
-		if(drawVolume_L > tankVolume_L) {
-			//if (hpwhVerbosity >= VRB_reluctant) {
-			//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
-			//	msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Continuing simulation at your own risk.  \n");
-			//}
-			//simHasFailed = true;
-			//return;
-			for(int i = 0; i < getNumNodes(); i++){
-				outletTemp_C += tankTemps_C[i];
-				tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
+
+		if (hasHeatExchanger) {// heat-exchange models
+
+			const double densityTank_kgperL = DENSITYWATER_kgperL;
+			const double CpTank_kJperkgC  = CPWATER_kJperkgC;
+
+			double C_Node_kJperC = CpTank_kJperkgC * densityTank_kgperL * nodeVolume_L;
+			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+
+			outletTemp_C = inletT_C;
+			for (auto &nodeTemp: tankTemps_C) {	
+				double maxHeatExchange_kJ = C_draw_kJperC * (nodeTemp - outletTemp_C);
+				double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
+
+				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
+				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
 			}
-			outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))
-				/ drawVolume_L * drawVolume_N;
-
-			drawVolume_N = 0.;
 		}
+		else { 
+			//calculate how many nodes to draw (drawVolume_N)
+			double drawVolume_N = drawVolume_L / nodeVolume_L;
+			if(drawVolume_L > tankVolume_L) {
+				//if (hpwhVerbosity >= VRB_reluctant) {
+				//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
+				//	msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Continuing simulation at your own risk.  \n");
+				//}
+				//simHasFailed = true;
+				//return;
+				for(int i = 0; i < getNumNodes(); i++){
+					outletTemp_C += tankTemps_C[i];
+					tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
+				}
+				outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))
+					/ drawVolume_L * drawVolume_N;
 
-		/////////////////////////////////////////////////////////////////////////////////////////////////
+				drawVolume_N = 0.;
+			}
 
-		while(drawVolume_N > 0) {
+			while(drawVolume_N > 0) {
 
-			// Draw one node at a time
-			double drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
-			double nodeInletTV = 0.;
+				// Draw one node at a time
+				double drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
+				double nodeInletTV = 0.;
 
-			//add temperature for outletT average
-			outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
+				//add temperature for outletT average
+				outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
 
-			double cumInletFraction = 0.;
-			for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
+				double cumInletFraction = 0.;
+				for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
+
 
 				// Reset inlet inputs at this node. 
 				double nodeInletFraction = 0.;
@@ -2620,38 +2652,36 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 
 				// Sum of all inlets Vi*Ti at this node
 				if(i == highInletH) {
-					nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
-					nodeInletFraction += highInletV * drawFraction / drawVolume_L;
+				  nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
+				  nodeInletFraction += highInletV * drawFraction / drawVolume_L;
 				}
 				if(i == lowInletH) {
-					nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
-					nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
+				  nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
+				  nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
 
 					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
 				}
 
-				// Look at the volume and temperature fluxes into this node
-				tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
-					nodeInletTV +
-					(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
+					// Look at the volume and temperature fluxes into this node
+					tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
+						nodeInletTV +
+						(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
 
-				cumInletFraction += nodeInletFraction;
+					cumInletFraction += nodeInletFraction;
 
+				}
+
+				// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
+				tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
+
+				drawVolume_N -= drawFraction;
+
+				mixTankInversions();
 			}
 
-			// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
-			tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
-
-			drawVolume_N -= drawFraction;
-
-			mixTankInversions();
+			//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
+			outletTemp_C /= (drawVolume_L / nodeVolume_L);
 		}
-
-
-		//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
-		this->outletTemp_C /= (drawVolume_L / nodeVolume_L);
-
-		/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Account for mixing at the bottom of the tank
 		if(tankMixesOnDraw && drawVolume_L > 0.) {
@@ -3024,6 +3054,9 @@ void HPWH::calcSizeConstants() {
 
 	// fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
 	fracAreaSide = tankHeight_m / (tankHeight_m + tankRad_m);
+
+	/// Single-node heat-exchange effectiveness
+	nodeHeatExchangerEffectiveness = 1. - pow(1. - heatExchangerEffectiveness, 1./ static_cast<double>(getNumNodes()));
 }
 
 void HPWH::calcDerivedValues() {
@@ -3141,7 +3174,6 @@ void HPWH::mapResRelativePosToHeatSources() {
 		});
 }
 
-
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
 int HPWH::checkInputs() {
 	int returnVal = 0;
@@ -3194,7 +3226,8 @@ int HPWH::checkInputs() {
 
 		//check is condensity sums to 1
 		condensitySum = 0;
-		for(int j = 0; j < heatSources[i].getCondensitySize(); ++j)  condensitySum += heatSources[i].condensity[j];
+
+		for(int j = 0; j < heatSources[i].getCondensitySize(); j++)  condensitySum += heatSources[i].condensity[j];
 		if(fabs(condensitySum - 1.0) > 1e-6) {
 			if(hpwhVerbosity >= VRB_reluctant) {
 				msg("The condensity for heatsource %d does not sum to 1.  \n",i);
@@ -3325,6 +3358,14 @@ int HPWH::checkInputs() {
 		if(hpwhVerbosity >= VRB_reluctant) {
 			msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, tankUA_kJperHrC is: %f  \n",tankUA_kJperHrC);
 		}
+		returnVal = HPWH_ABORT;
+	}
+
+	// Check single-node heat-exchange effectiveness validity
+	if( heatExchangerEffectiveness > 1.) {
+		if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Heat-exchanger effectiveness cannot exceed 1.\n");
+			}
 		returnVal = HPWH_ABORT;
 	}
 
@@ -3515,7 +3556,21 @@ int HPWH::HPWHinit_file(string configFile) {
 			}
 			initalTankT_C = tempDouble;
 			hasInitialTankTemp = true;
-
+		} else if(token == "hasHeatExchanger") {
+			// false of this model uses heat exchange
+			line_ss >> tempString;
+			if(tempString == "true") hasHeatExchanger = true;
+			else if(tempString == "false") hasHeatExchanger = false;
+			else {
+				if(hpwhVerbosity >= VRB_reluctant) {
+					msg("Improper value for %s\n",token.c_str());
+				}
+				return HPWH_ABORT;
+			}
+		} else if(token == "heatExchangerEffectiveness") {
+			// applies to heat-exchange models only
+			line_ss >> tempDouble;
+			heatExchangerEffectiveness = tempDouble;
 		} else if(token == "verbosity") {
 			line_ss >> token;
 			if(token == "silent") {
@@ -3668,16 +3723,43 @@ int HPWH::HPWHinit_file(string configFile) {
 						heatSources[heatsource].standbyLogic = std::make_shared<HPWH::TempBasedHeatingLogic>("standby logic",nodeWeights,tempDouble,this,absolute,compare);
 					}
 				} else if(token == "onlogic") {
-					line_ss >> tempDouble >> units;
-					if(units == "F")  tempDouble = dF_TO_dC(tempDouble);
-					else if(units == "C"); //do nothing, lol
+					std::string nextToken;
+					line_ss >> nextToken;
+					bool absolute = (nextToken == "absolute");
+					if(absolute) {
+						std::string compareStr;
+						line_ss >> compareStr >> tempDouble >> units;
+						std::function<bool(double,double)> compare;
+						if(compareStr == "<") compare = std::less<double>();
+						else if(compareStr == ">") compare = std::greater<double>();
+						else {
+							if(hpwhVerbosity >= VRB_reluctant) {
+								msg("Improper comparison, \"%s\", for heat source %d %s. Should be \"<\" or \">\".\n",compareStr.c_str(),heatsource,token.c_str());
+							}
+							return HPWH_ABORT;
+						}
+						line_ss >> tempDouble;
+					}
+					else {
+						tempDouble = std::stod(nextToken);
+					}
+					line_ss >> units;
+					if(units == "F") {
+						if(absolute) {
+							tempDouble = F_TO_C(tempDouble);
+						} else {
+							tempDouble = dF_TO_dC(tempDouble);
+						}
+					} else if(units == "C"); //do nothing, lol
 					else {
 						if(hpwhVerbosity >= VRB_reluctant) {
 							msg("Incorrect units specification for %s from heatsource %d.  \n",token.c_str(),heatsource);
 						}
 						return HPWH_ABORT;
 					}
-					if(tempString == "topThird") {
+					if(tempString == "wholeTank") {
+						heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank(tempDouble,UNITS_C,absolute));
+					} else if(tempString == "topThird") {
 						heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
 					} else if(tempString == "bottomThird") {
 						heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));

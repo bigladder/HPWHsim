@@ -1,4 +1,4 @@
-minutes,Ta,Tsetpoint,inletT,draw,DRstatus,h_src1In (Wh),h_src1Out (Wh),h_src2In (Wh),h_src2Out (Wh),h_src3In (Wh),h_src3Out (Wh),tcouple1 (C),tcouple2 (C),tcouple3 (C),tcouple4 (C),tcouple5 (C),tcouple6 (C), toutlet (C)
+minutes,Ta,Tsetpoint,inletT,draw,DRstatus,h_src1In (Wh),h_src1Out (Wh),h_src2In (Wh),h_src2Out (Wh),h_src3In (Wh),h_src3Out (Wh),tcouple1 (C),tcouple2 (C),tcouple3 (C),tcouple4 (C),tcouple5 (C),tcouple6 (C),toutlet (C)
 0, 7.222300, 65.555556, 4.444444, 0.000000, 0,0.00,0.00,0.00,0.00,0.00,0.00,65.55,65.55,65.55,65.55,65.55,65.55,
 1, 7.222300, 65.555556, 4.444444, 40.000000, 0,0.00,0.00,100.00,100.00,0.00,0.00,5.03,5.12,56.50,65.55,65.55,65.55,65.55
 2, 7.222300, 65.555556, 4.444444, 40.000000, 0,0.00,0.00,100.00,100.00,0.00,0.00,4.98,5.02,5.05,5.13,47.58,65.54,65.55

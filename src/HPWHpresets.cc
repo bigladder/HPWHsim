@@ -3812,8 +3812,73 @@ int HPWH::HPWHinit_presets(MODELS presetNum) {
 		heatSources[1].followedByHeatSource = &heatSources[2];
 
 		heatSources[0].companionHeatSource = &heatSources[2];
-	}
+	}	
+	else if (presetNum == MODELS_AquaThermAire) { // AquaThermAire
+		setNumNodes(12);
+		setpoint_C = 50.;
 
+		initialTankT_C = 49.32;
+		hasInitialTankTemp = true;
+
+		tankVolume_L = GAL_TO_L(54.4);
+		tankUA_kJperHrC = 10.35;
+
+		doTempDepression = false;
+		tankMixesOnDraw = false;
+
+		// heat exchangers only
+		hasHeatExchanger = true;
+		heatExchangerEffectiveness = 0.93;
+
+		HeatSource compressor(this);
+
+		//compressor values
+		compressor.isOn = false;
+		compressor.isVIP = false;
+		compressor.typeOfHeatSource = TYPE_compressor;
+
+		compressor.setCondensity({1.});
+
+		//AOSmithPHPT60 values
+		compressor.perfMap.reserve(4);
+
+		compressor.perfMap.push_back({
+			5, // Temperature (T_F)
+			{-1423, 38.70 ,0.}, // Input Power Coefficients (inputPower_coeffs)
+			{-0.13839, 0.012319, 0.} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			34, // Temperature (T_F)
+			{-1558, 42.40, 0.}, // Input Power Coefficients (inputPower_coeffs)
+			{-0.19375, 0.017247, 0.} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			67, // Temperature (T_F)
+			{-1713, 46.60, 0.}, // Input Power Coefficients (inputPower_coeffs)
+			{-0.28156, 0.025064, 0.} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.perfMap.push_back({
+			95, // Temperature (T_F)
+			{-1844, 50.17, 0.}, // Input Power Coefficients (inputPower_coeffs)
+			{-0.47273, 0.042082, 0.} // COP Coefficients (COP_coeffs)
+			});
+
+		compressor.minT = F_TO_C(-25);
+		compressor.maxT = F_TO_C(125.);
+		compressor.hysteresis_dC = dF_TO_dC(1);
+		compressor.configuration = HeatSource::CONFIG_SUBMERGED;
+
+		//logic conditions
+		compressor.addTurnOnLogic(HPWH::wholeTank(111,UNITS_F,true));
+		compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
+
+		//set everything in its places
+		heatSources.resize(1);
+		heatSources[0] = compressor;
+	}
 	else {
 		if (hpwhVerbosity >= VRB_reluctant) {
 			msg("You have tried to select a preset model which does not exist.  \n");
