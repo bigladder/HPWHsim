@@ -831,7 +831,8 @@ public:
 		std::unique_ptr<double> tot_limit;
 		bool useSoC;
 		std::string temperatureUnits;
-		bool extendedTest;
+		bool recordMinuteData;
+		bool recordYearData;
 	};
 	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
 

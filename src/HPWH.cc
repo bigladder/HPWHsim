@@ -314,7 +314,6 @@ void HPWH::setAllDefaults() {
 	prevDRstatus = DR_ALLOW; timerLimitTOT = 60.; timerTOT = 0.;
 	usesSoCLogic = false;
 	setMinutesPerStep(1.0);
-	hpwhVerbosity = VRB_minuteOut;
 	hasHeatExchanger = false;
 	heatExchangerEffectiveness = 0.9;
 }
@@ -4116,7 +4115,8 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 	controlInfo.tot_limit = nullptr;
 	controlInfo.useSoC = false;
 	controlInfo.temperatureUnits = "C";
-	controlInfo.extendedTest = false;
+	controlInfo.recordMinuteData = false;
+	controlInfo.recordYearData = false;
 
 	std::string token;
 	std::string sValue;
@@ -4294,33 +4294,37 @@ bool HPWH::runSimulation(
 	// UEF data
 	testResults = {false, 0., 0.};
 
-	FILE * outputFile = NULL;
-	std::string sOutputFilename;
-	std::string fileMode = "w+";
-	if (controlInfo.extendedTest) {	
-		sOutputFilename = outputDirectory + "/DHW_YRLY.csv";
-		fileMode = "a+";
-	}
-	else {
-		sOutputFilename = outputDirectory + "/" + testDesc.testName + "_" + testDesc.presetOrFile + "_" + testDesc.modelName + ".csv";
+	FILE *yearOutputFile = NULL;
+	if (controlInfo.recordYearData) {	
+		std::string sOutputFilename = outputDirectory + "/DHW_YRLY.csv";
+		if (fopen_s(&yearOutputFile, sOutputFilename.c_str(), "a+") != 0) {
+			if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Could not open output file \n", sOutputFilename.c_str());
+			}
+			return false;
+		}
 	}
 
-	if (fopen_s(&outputFile, sOutputFilename.c_str(), fileMode.c_str()) != 0) {
-		if(hpwhVerbosity >= VRB_reluctant) {
-			msg("Could not open output file \n", sOutputFilename.c_str());
+	FILE *minuteOutputFile = NULL;
+	if (controlInfo.recordMinuteData) {	
+		std::string sOutputFilename = outputDirectory + "/" + testDesc.testName + "_" + testDesc.presetOrFile + "_" + testDesc.modelName + ".csv";
+		if (fopen_s(&minuteOutputFile, sOutputFilename.c_str(), "w+") != 0) {
+			if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Could not open output file \n", sOutputFilename.c_str());
+			}
+			return false;
 		}
-		return false;
-	}
+	}	
 	
-	string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
-	if (!controlInfo.extendedTest) {	
+	if (controlInfo.recordMinuteData) {	
+		string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
 		if (isCompressoExternalMultipass()) {
 			sHeader += "condenserInletT,condenserOutletT,externalVolGPM,";
 		}
 		if(controlInfo.useSoC){ 
 			sHeader += "targetSoCFract,soCFract,";
 		}
-		WriteCSVHeading(outputFile, sHeader.c_str(), nTestTCouples, CSVOPT_NONE);
+		WriteCSVHeading(minuteOutputFile, sHeader.c_str(), nTestTCouples, CSVOPT_NONE);
 	}
 
 	// ------------------------------------- Simulate --------------------------------------- //
@@ -4328,8 +4332,8 @@ bool HPWH::runSimulation(
 		msg("Now Simulating %d Minutes of the Test\n", controlInfo.timeToRun_min);
 	}
 
-	double cumHeatIn[3] = {0, 0, 0};
-	double cumHeatOut[3] = {0, 0, 0};
+	double cumulativeEnergyIn_kWh[3] = {0., 0., 0.};
+	double cumulativeEnergyOut_kWh[3] = {0., 0., 0.};
 
 	bool doChangeSetpoint = (!allSchedules[5].empty()) && (!isSetpointFixed());
 
@@ -4357,9 +4361,9 @@ bool HPWH::runSimulation(
 			}
 		}
 
-		if (controlInfo.extendedTest) {
+		if (controlInfo.recordYearData) {
 			// Mix down for yearly tests with large compressors
-			if (getHPWHModel() >= 210) {
+			if (getHPWHModel() >= MODELS_ColmacCxV_5_SP) {
 				//Do a simple mix down of the draw for the cold water temperature
 				const double mixT_C = F_TO_C(125.);
 				if (getSetpoint() <= mixT_C) { // Seems to have been some confusion here regarding F<->C conversion
@@ -4427,7 +4431,8 @@ bool HPWH::runSimulation(
 			ambientT_C = getLocationTemp_C();
 		}
 
-		if (!controlInfo.extendedTest) {
+		// write minute summary
+		if (controlInfo.recordMinuteData) { 
 			std::string sPreamble = std::to_string(i) + ", " + std::to_string(ambientT_C) + ", " + std::to_string(getSetpoint()) + ", " +
 				std::to_string(allSchedules[0][i]) + ", " + std::to_string(allSchedules[1][i]) + ", ";
 			// Add some more outputs for mp tests
@@ -4442,40 +4447,45 @@ bool HPWH::runSimulation(
 			if (allSchedules[1][i] > 0.) {
 				csvOptions |= CSVOPT_IS_DRAWING;
 			}
-			WriteCSVRow(outputFile, sPreamble.c_str(), nTestTCouples, csvOptions);
+			WriteCSVRow(minuteOutputFile, sPreamble.c_str(), nTestTCouples, csvOptions);
 		}
 
-		// track energy draw and use
-		double energyConsumed_kJ = 0.;
+		// accumulate energy and draw
+		double energyIn_kJ = 0.;
 		for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
-			double heatSourceEnergyConsumed_kJ =  getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
-			energyConsumed_kJ += heatSourceEnergyConsumed_kJ;
+			double heatSourceEnergyIn_kJ = getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+			energyIn_kJ += heatSourceEnergyIn_kJ;
 
-	  		cumHeatIn[iHS] += KJ_TO_KWH(heatSourceEnergyConsumed_kJ) * 1000.;
-	  		cumHeatOut[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
+	  		cumulativeEnergyIn_kWh[iHS] += KJ_TO_KWH(heatSourceEnergyIn_kJ) * 1000.;
+	  		cumulativeEnergyOut_kWh[iHS] += getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
 		}
-		testResults.totalEnergyConsumed_kJ += energyConsumed_kJ;
+		testResults.totalEnergyConsumed_kJ += energyIn_kJ;
 		testResults.totalVolumeRemoved_L += drawVolume_L;
 	}
+	// -------------------------------------Simulation complete --------------------------------------- //
 	 
-	if (controlInfo.extendedTest) {
-		std::string firstCol = testDesc.testName + "," + testDesc.presetOrFile + "," + testDesc.modelName;
-		fprintf(outputFile, "%s", firstCol.c_str());
-		double totalIn = 0, totalOut = 0;
-		for (int iHS = 0; iHS < 3; iHS++) {
-			fprintf(outputFile, ",%0.0f,%0.0f", cumHeatIn[iHS], cumHeatOut[iHS]);
-			totalIn += cumHeatIn[iHS];
-			totalOut += cumHeatOut[iHS];
-		}
-		fprintf(outputFile, ",%0.0f,%0.0f", totalIn, totalOut);
-		for (int iHS = 0; iHS < 3; iHS++) {
-			fprintf(outputFile, ",%0.2f", cumHeatOut[iHS] /cumHeatIn[iHS]);
-		}
-		fprintf(outputFile, ",%0.2f", totalOut/totalIn);
-		fprintf(outputFile, "\n");
+	if (controlInfo.recordMinuteData) {
+		fclose(minuteOutputFile);
 	}
-
-	fclose(outputFile);
+	
+	// write year summary
+	if (controlInfo.recordYearData) { 
+		std::string firstCol = testDesc.testName + "," + testDesc.presetOrFile + "," + testDesc.modelName;
+		fprintf(yearOutputFile, "%s", firstCol.c_str());
+		double totalEnergyIn_kWh = 0, totalEnergyOut_kWh = 0;
+		for (int iHS = 0; iHS < 3; iHS++) {
+			fprintf(yearOutputFile, ",%0.0f,%0.0f", cumulativeEnergyIn_kWh[iHS], cumulativeEnergyOut_kWh[iHS]);
+			totalEnergyIn_kWh += cumulativeEnergyIn_kWh[iHS];
+			totalEnergyOut_kWh += cumulativeEnergyOut_kWh[iHS];
+		}
+		fprintf(yearOutputFile, ",%0.0f,%0.0f", totalEnergyIn_kWh, totalEnergyOut_kWh);
+		for (int iHS = 0; iHS < 3; iHS++) {
+			fprintf(yearOutputFile, ",%0.2f", cumulativeEnergyOut_kWh[iHS] /cumulativeEnergyIn_kWh[iHS]);
+		}
+		fprintf(yearOutputFile, ",%0.2f", totalEnergyOut_kWh/totalEnergyIn_kWh);
+		fprintf(yearOutputFile, "\n");
+		fclose(yearOutputFile);
+	}
 
 	testResults.passed = true;
 	return true;

@@ -12,7 +12,7 @@ const std::vector<std::string> sProfileNames({	"24hr67_vsmall",
 												"24hr67_medium",
                                                 "24hr67_high"	});
 
-bool runTest(
+static bool runTest(
 	const HPWH::TestDesc testDesc,
 	HPWH::TestResults &testResults,
 	double airT_C = 0.,
@@ -20,24 +20,23 @@ bool runTest(
 {
 	HPWH hpwh;
 
+#if defined _DEBUG
+	hpwh.setVerbosity(HPWH::VRB_reluctant);
+#endif
+
 	getHPWHObject(hpwh, testDesc.modelName);
 
 	std::string sOutputDirectory = "../build/test/output";
 
-	// Parse the model
+	// create the model
+	bool result = true;
 	if(testDesc.presetOrFile == "Preset") {  
-		if (getHPWHObject(hpwh, testDesc.modelName) == HPWH::HPWH_ABORT) {
-			cout << "Error, preset model did not initialize.\n";
-			exit(1);
-		}
+		result = (getHPWHObject(hpwh, testDesc.modelName) != HPWH::HPWH_ABORT);
 	} else if (testDesc.presetOrFile == "File") {
 		std::string inputFile = testDesc.modelName + ".txt";
-		if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
+		result = (hpwh.HPWHinit_file(inputFile) != HPWH::HPWH_ABORT);
 	}
-	else {
-		cout << "Invalid argument, received '"<< testDesc.presetOrFile << "', expected 'Preset' or 'File'.\n";
-		exit(1);
-	}
+	ASSERTTRUE(result);
 
 	// Use the built-in temperature depression for the lockout test. Set the temp depression of 4C to better
 	// try and trigger the lockout and hysteresis conditions
@@ -45,22 +44,23 @@ bool runTest(
 	hpwh.setDoTempDepression(doTempDepress);
 
 	HPWH::ControlInfo controlInfo;
-	if(!hpwh.readControlInfo(testDesc.testName,controlInfo)){
-		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
-		exit(1);
-	}
+	result = hpwh.readControlInfo(testDesc.testName,controlInfo);
+	ASSERTTRUE(result);
 
 	std::vector<HPWH::Schedule> allSchedules;
-	if (!(hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules))) {
-		exit(1);
-	}
+	result = hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules);
+	ASSERTTRUE(result);
 
-	return hpwh.runSimulation(testDesc,sOutputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
+	controlInfo.recordMinuteData = false;
+	controlInfo.recordYearData = false;
+	result = hpwh.runSimulation(testDesc,sOutputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults);
+	ASSERTTRUE(result);
 
+	return result;
 }
 
-/* Test energy balance for storage tank with extra heat (solar)*/
-void runTestSuite(const std::string &sModelName,const std::string &sPresetOrFile) {
+/* Evaluate UEF based on simulations using standard profiles */
+static bool runUEFTestSuite(const std::string &sModelName,const std::string &sPresetOrFile, double &UEF) {
 
 	HPWH::TestDesc testDesc;
 	testDesc.modelName = sModelName;
@@ -69,10 +69,11 @@ void runTestSuite(const std::string &sModelName,const std::string &sPresetOrFile
 	double totalEnergyConsumed_kJ = 0.;
 	double totalVolumeRemoved_L = 0.;
 
+	bool result = true;
 	for (auto &sProfileName: sProfileNames) {
 		HPWH::TestResults testResults;
 		testDesc.testName = sProfileName;
-		ASSERTTRUE(runTest(testDesc,testResults));
+		result &= runTest(testDesc,testResults);
 
 		totalEnergyConsumed_kJ += testResults.totalEnergyConsumed_kJ;
 		totalVolumeRemoved_L += testResults.totalVolumeRemoved_L;
@@ -81,8 +82,8 @@ void runTestSuite(const std::string &sModelName,const std::string &sPresetOrFile
 	double totalHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * totalMassRemoved_kg;
 	double refEnergy_kJ = totalHeatCapacity_kJperC * (51.7 - 14.4);
 
-	double UEF = refEnergy_kJ / totalEnergyConsumed_kJ;
-	std::cout << "UEF: " << UEF << "\n";
+	UEF = refEnergy_kJ / totalEnergyConsumed_kJ;
+	return result;
 }
 
 int main(int argc, char *argv[])
@@ -96,7 +97,10 @@ int main(int argc, char *argv[])
 	std::string sPresetOrFile = argv[1];
 	std::string sModelName = argv[2];
 
-	runTestSuite(sModelName,sPresetOrFile);
+	double UEF = 0.;
+	if (runUEFTestSuite(sModelName, sPresetOrFile, UEF)) {
+		std::cout << "UEF: " << UEF << "\n";
+	}
 
 	return 0;
 }

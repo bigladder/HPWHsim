@@ -1,4 +1,3 @@
-verbosity silent
 numNodes 12 #number of nodes
 setpoint 50 C
 volume 54.4 gal

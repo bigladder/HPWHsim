@@ -25,21 +25,23 @@ using std::ifstream;
 
 int main(int argc, char *argv[]){
 	HPWH hpwh;
-	bool failed = false;
 
 	const long maximumDurationNormalTest_min = 500000;
 
+#if defined _DEBUG
+	hpwh.setVerbosity(HPWH::VRB_reluctant);
+#endif
+  
 	// process command line arguments
 	cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
 	// Obvious wrong number of command line arguments
 	if ((argc > 6)) {
 		cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and output directory\n";
-		failed = true;
+		exit(1);
 	}
-	ASSERTFALSE(failed);
 
-	// Help message
+	// parse inputs
 	std::string input1, input2, input3, input4;
 	if(argc > 1) {
 		input1 = argv[1];
@@ -52,14 +54,15 @@ int main(int argc, char *argv[]){
 		input3 = "ghi";
 		input4 = ".";
 	}
+
+	// display help message
 	if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help")) {
 		cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] [testName] [airtemp override F (optional)]\"\n";
 		cout << "All input files should be located in the test directory, with these names:\n";
 		cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv inletTschedule.csv hpwhProperties.csv\n";
 		cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
-		failed = true;
+		exit(1);
 	}
-	ASSERTFALSE(failed);
 
 	HPWH::TestDesc testDesc;
 	testDesc.presetOrFile = input1;
@@ -71,17 +74,18 @@ int main(int argc, char *argv[]){
 	if(testDesc.presetOrFile == "Preset") {  
 		if (getHPWHObject(hpwh, testDesc.modelName) == HPWH::HPWH_ABORT) {
 			cout << "Error, preset model did not initialize.\n";
-			failed = true;
+			exit(1);
 		}
 	} else if (testDesc.presetOrFile == "File") {
 		std::string inputFile = testDesc.modelName + ".txt";
-		if (hpwh.HPWHinit_file(inputFile) != 0) exit(1);
+		if (hpwh.HPWHinit_file(inputFile) != 0) {
+			exit(1);
+		}
 	}
 	else {
 		cout << "Invalid argument, received '"<< testDesc.presetOrFile << "', expected 'Preset' or 'File'.\n";
-		failed = true;
+		exit(1);
 	}
-	ASSERTFALSE(failed);
 
 	double airT_C = 0.;
 	bool doTempDepress = false;
@@ -98,18 +102,21 @@ int main(int argc, char *argv[]){
 	HPWH::ControlInfo controlInfo;		
 	if(!hpwh.readControlInfo(testDesc.testName,controlInfo)){
 		cout << "Control file testInfo.txt has unsettable specifics in it. \n";
-		failed = true;
+		exit(1);
 	}
-	ASSERTFALSE(failed);
 
 	std::vector<HPWH::Schedule> allSchedules;
-	failed = !hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules);
-	ASSERTFALSE(failed);
+	if (!hpwh.readSchedules(testDesc.testName,controlInfo,allSchedules)) {
+		exit(1);
+	}
 
-	controlInfo.extendedTest = (controlInfo.timeToRun_min > maximumDurationNormalTest_min);
+	controlInfo.recordMinuteData = (controlInfo.timeToRun_min <= maximumDurationNormalTest_min);
+	controlInfo.recordYearData = !controlInfo.recordMinuteData;
 
 	HPWH::TestResults testResults;
-	ASSERTTRUE(hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults));
+	if (!hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults)) {
+		exit(1);
+	}
 
   return 0;
 }
