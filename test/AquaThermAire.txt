@@ -46,8 +46,8 @@ heatsource 0 copT2quad 0.0
 heatsource 0 inPowT3const -1713
 heatsource 0 inPowT3lin 46.60
 heatsource 0 inPowT3quad 0.0
-heatsource 0 copT3const -0.28156
-heatsource 0 copT3lin 0.025064
+heatsource 0 copT3const -0.239326
+heatsource 0 copT3lin 0.02882
 heatsource 0 copT3quad 0.0
 
 # 95F Coefficients
