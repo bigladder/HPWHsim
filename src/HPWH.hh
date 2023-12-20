@@ -839,7 +839,7 @@ public:
 
 	typedef std::vector<double> Schedule;
 	bool readSchedules(const std::string &testDirectory, const ControlInfo &controlInfo, std::vector<Schedule> &allSchedules);
-	bool readSchedule(Schedule &scheduleArray, std::string scheduleName, long testLength_min);
+	bool readSchedule(Schedule &schedule, std::string scheduleName, long testLength_min);
 
 	struct TestDesc{
 		std::string presetOrFile;

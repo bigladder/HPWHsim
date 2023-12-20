@@ -4018,13 +4018,13 @@ int HPWH::HPWHinit_file(string configFile) {
 #endif
 
 //-----------------------------------------------------------------------------
-///	@brief	Reads a named schedule into a schedule array. 
-/// @param[out]	scheduleArray	std::vector of test schedules
-///	@param[in]	scheduleName	name of schedule to read
-///	@param[in]	minutesOfTest			Upper (right) bounding fraction (0 to 1) 	
+///	@brief	Reads a named schedule 
+/// @param[out]	schedule			schedule values
+///	@param[in]	scheduleName		name of schedule to read
+///	@param[in]	testLength_min		length of test (min) 	
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
-bool HPWH::readSchedule(HPWH::Schedule &scheduleArray, std::string scheduleName, long testLength_min) {
+bool HPWH::readSchedule(HPWH::Schedule &schedule, std::string scheduleName, long testLength_min) {
 	int minuteHrTmp;
 	bool hourInput;
 	std::string line, snippet, s, minORhr;
@@ -4043,12 +4043,14 @@ bool HPWH::readSchedule(HPWH::Schedule &scheduleArray, std::string scheduleName,
 	inputFile >> snippet >> valTmp;
 
 	if(snippet != "default") {
-		cout << "First line of " << scheduleName << " must specify default\n";
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("First line of %s must specify default\n",scheduleName.c_str());
+		}
 		return false;
 	}
 
 	// Fill with the default value
-	scheduleArray.assign(testLength_min, valTmp);
+	schedule.assign(testLength_min, valTmp);
 
 	// Burn the first two lines
 	std::getline(inputFile, line);
@@ -4061,22 +4063,21 @@ bool HPWH::readSchedule(HPWH::Schedule &scheduleArray, std::string scheduleName,
 		return true;
 	}
 	hourInput = tolower(minORhr.at(0)) == 'h';
-	char c; // to eat the commas nom nom
-	// Read all the exceptions to the default value
+	char c; // for commas
 	while (inputFile >> minuteHrTmp >> c >> valTmp) {
-
-		if (minuteHrTmp >= (int)scheduleArray.size()) {
-			cout << "In " << scheduleName << " the input file has more minutes than the test was defined with\n";
+		if (minuteHrTmp >= static_cast<int>(schedule.size())) {
+			if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Input file for %s has more minutes than test definition\n",scheduleName.c_str());
+			}
 			return false;
 		}
-		// Update the value
+		// update the value
 		if (!hourInput) {
-			scheduleArray[minuteHrTmp] = valTmp;
+			schedule[minuteHrTmp] = valTmp;
 		}
 		else if (hourInput) {
 			for (int j = minuteHrTmp * 60; j < (minuteHrTmp+1) * 60; j++) {
-				scheduleArray[j] = valTmp;
-				//cout << "minute " << j-(minuteHrTmp) * 60 << " of hour" << (minuteHrTmp)<<"\n";
+				schedule[j] = valTmp;
 			}
 		}
 	}
@@ -4153,7 +4154,9 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 			controlInfo.temperatureUnits = sValue;
 		}
 		else {
-			cout << token << " in testInfo.txt is an unrecogized key.\n";
+			if(hpwhVerbosity >= VRB_reluctant) {
+				msg("Unrecognized key in %s\n",token.c_str());
+			}
 		}
 	}
 	controlFile.close();
@@ -4165,7 +4168,9 @@ bool HPWH::readControlInfo(const std::string &testDirectory, HPWH::ControlInfo &
 	}
 
 	if(controlInfo.timeToRun_min == 0) {
-		cout << "Error, must record length_of_test in testInfo.txt file\n";
+		if(hpwhVerbosity >= VRB_reluctant) {
+			msg("Error: record length_of_test not found in testInfo.txt file\n");
+		}
 		return false;
 	}
 
@@ -4271,13 +4276,14 @@ bool HPWH::readSchedules(const std::string &testDirectory, const HPWH::ControlIn
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Reads the schedules for a test
-///	@param[in]	testDesc		data structure contained test description
+///	@brief	Runs a simulation
+///	@param[in]	testDesc		data structure containing test description
 /// @param[in]	outputDirectory	destination path for test results (filename based on testDesc)
 ///	@param[in]	controlInfo		data structure containing control info 	
 ///	@param[in]	allSchedules	collection of test schedules 	
 ///	@param[in]	airT_C			air temperature (degC) used for temperature depression 	
 ///	@param[in]	doTempDepress	whether to apply temperature depression 	
+///	@param[out]	testResults		data structure containing test results
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
 bool HPWH::runSimulation(
@@ -4423,7 +4429,7 @@ bool HPWH::runSimulation(
 			}
 		}
 
-		// Recording
+		// location temperature reported with temperature depression, instead of ambient temperature 
 		if (doTempDepress) {
 			ambientT_C = getLocationTemp_C();
 		}
