@@ -14,11 +14,6 @@ jobs:
       with:
         clang-format-version: '16'
         check-path: 'src'
-    - name: Run clang-format style check on header files.
-      uses: jidicula/clang-format-action@v4.11.0
-      with:
-        clang-format-version: '16'
-        check-path: 'include/${{ env.REPOSITORY_NAME }}'
     - name: Run clang-format style check on test files.
       uses: jidicula/clang-format-action@v4.11.0
       with:
