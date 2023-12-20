@@ -93,7 +93,7 @@ heatsource 2 onlogic standby 11.0648 F
 # heatsource 2 offlogic largerDraw 62.4074 F
 
 heatsource 1 onlogic thirdSixth 60 F
-heatsource 1 offlogic bottomTwelthMaxTemp 80 F
+heatsource 1 offlogic bottomTwelfthMaxTemp 80 F
 
 
 heatsource 1 backupSource 2

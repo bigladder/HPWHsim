@@ -20,6 +20,7 @@ void testChangeToStateofChargeControlled(string& input);
 void testSetStateOfCharge(string& input);
 
 void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, double tankTAt76SoC);
+void testExtraHeat();
 
 const std::vector<string> hasHighShuttOffVectSP = {"Sanden80",
                                                    "QAHV_N136TAU_HPB_SP",
@@ -90,6 +91,7 @@ int main(int, char*)
         testCanNotSetEnteringWaterShutOff(hpwhStr);
     }
 
+    testExtraHeat();
     return 0;
 }
 
@@ -317,4 +319,34 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
     hpwh.setTargetSoCFraction(0.70);
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTFALSE(compressorIsRunning(hpwh));
+}
+
+/*Test adding extra heat to a tank for one minute*/
+void testExtraHeat()
+{
+    HPWH hpwh;
+    getHPWHObject(hpwh, "StorageTank");
+
+    const double ambientT_C = 20.;
+    const double externalT_C = 20.;
+    const double inletVol2_L = 0.;
+    const double inletT2_C = 0.;
+
+    double extraPower_W = 1000.;
+    std::vector<double> nodePowerExtra_W = {extraPower_W};
+
+    //
+    hpwh.setUA(0.);
+    hpwh.setTankToTemperature(20.);
+
+    double Q_init = hpwh.getTankHeatContent_kJ();
+    hpwh.runOneStep(
+        0, ambientT_C, externalT_C, HPWH::DR_LOC, inletVol2_L, inletT2_C, &nodePowerExtra_W);
+    double Q_final = hpwh.getTankHeatContent_kJ();
+
+    double dQ_actual_kJ = (Q_final - Q_init);
+
+    double dQ_expected_kJ = extraPower_W * 60. / 1.e3; // 1 min
+
+    ASSERTTRUE(cmpd(dQ_actual_kJ, dQ_expected_kJ));
 }

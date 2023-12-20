@@ -67,6 +67,6 @@ endif()
 message("Building ${PROJECT_NAME} ${${PROJECT_NAME}_VRSN_MAJOR}.${${PROJECT_NAME}_VRSN_MINOR}.${${PROJECT_NAME}_VRSN_PATCH}${${PROJECT_NAME}_VRSN_META}")
 
 configure_file(
-  "${PROJECT_SOURCE_DIR}/src/HPWH.in.hh"
-  "${PROJECT_BINARY_DIR}/src/HPWH.hh"
+  "${PROJECT_SOURCE_DIR}/src/HPWHversion.in.hh"
+  "${PROJECT_BINARY_DIR}/src/HPWHversion.hh"
 )

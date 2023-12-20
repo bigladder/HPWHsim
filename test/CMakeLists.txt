@@ -1,5 +1,5 @@
 # Build test tool
-include_directories("${PROJECT_BINARY_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
 
 add_executable(testTool main.cc )
 add_executable(testTankSizeFixed testTankSizeFixed.cc)
@@ -11,6 +11,7 @@ add_executable(testCompressorFcts testCompressorFcts.cc)
 add_executable(testPerformanceMaps testPerformanceMaps.cc)
 add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 add_executable(testHeatingLogics testHeatingLogics.cc)
+add_executable(testEnergyBalance testEnergyBalance.cc)
 
 set(libs
  libHPWHsim 
@@ -26,6 +27,7 @@ target_link_libraries(testCompressorFcts ${libs})
 target_link_libraries(testPerformanceMaps ${libs})
 target_link_libraries(testStateOfChargeFcts ${libs})
 target_link_libraries(testHeatingLogics ${libs})
+target_link_libraries(testEnergyBalance ${libs})
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -43,6 +45,7 @@ add_test(NAME "testCompressorFcts" COMMAND  $<TARGET_FILE:testCompressorFcts> ${
 add_test(NAME "testPerformanceMaps" COMMAND  $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testStateOfChargeFcts" COMMAND  $<TARGET_FILE:testStateOfChargeFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testHeatingLogics" COMMAND  $<TARGET_FILE:testHeatingLogics> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME "testEnergyBalance" COMMAND  $<TARGET_FILE:testEnergyBalance> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
 #"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -184,6 +187,12 @@ set(yearLargeTestsModels
  TamScalable_SP
  Scalable_MP
 )
+set(heatExchangeModelNames
+ AquaThermAire
+)
+set(heatExchangeTests
+ villara_24hr67
+)
 set(yearLargeTests                                        
  testCA_36Unit_CTZ12
 )
@@ -198,6 +207,10 @@ set(stateOfChargeCompressorNames
  Sanden120
  NyleC25A_SP
 )
+
+
+list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
+list(REMOVE_DUPLICATES extendedModelNames)
 
 # Unit tests
 function( add_TankSizeFixed_test )
@@ -214,7 +227,7 @@ function( add_TankSizeFixed_test )
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
-foreach(model ${modelNames})
+foreach(model ${extendedModelNames})
 	add_TankSizeFixed_test( MODEL_NAME "${model}")
 endforeach(model)
 foreach(model ${largeCompressorNames})
@@ -260,12 +273,22 @@ foreach(test ${testNames})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
+#Test(s) specifically for heat-exchange models
+foreach(test ${heatExchangeTests})
+  foreach(model ${heatExchangeModelNames})
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+    add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+  endforeach(model)
+endforeach(test)
+
 #Test models follow control logic with max temperatures. 
 foreach(test ${maxTempTests})
   foreach(model ${maxTempModels})
     add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
   endforeach(model)
 endforeach(test)
+
 #Add large compressor tests to the list
 foreach(test ${largeCompressorTests})
   foreach(model ${largeCompressorNames})
@@ -274,6 +297,7 @@ foreach(test ${largeCompressorTests})
     #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
   endforeach(model)
 endforeach(test)
+
 #Add State of Charge tests to the list
 foreach(test ${stateOfChargeTests})
   foreach(model ${stateOfChargeCompressorNames})
@@ -297,7 +321,6 @@ foreach(test ${yearLargeTests})
   endforeach(model)
 endforeach(test)
 
-
 # Tests for differences between File and Preset versions
 function( add_file_test )
   set(options)
@@ -319,6 +342,13 @@ endfunction()
 
 foreach(test ${testNames})
   foreach(model ${modelNames})
+    add_file_test( TEST_NAME "${test}" MODEL_NAME "${model}")
+  endforeach(model)
+endforeach(test)
+
+#Test(s) specifically for heat-exchange models
+foreach(test ${heatExchangeTests})
+  foreach(model ${heatExchangeModelNames})
     add_file_test( TEST_NAME "${test}" MODEL_NAME "${model}")
   endforeach(model)
 endforeach(test)
