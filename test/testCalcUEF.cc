@@ -1,5 +1,5 @@
 /*
- * unit test for energy balancing
+ * calculate UEF for specified HPWH model
  */
 #include "HPWH.hh"
 #include "testUtilityFcts.cc"

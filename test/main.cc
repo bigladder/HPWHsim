@@ -111,7 +111,12 @@ int main(int argc, char *argv[]){
 	}
 
 	controlInfo.recordMinuteData = (controlInfo.timeToRun_min <= maximumDurationNormalTest_min);
-	controlInfo.recordYearData = !controlInfo.recordMinuteData;
+	controlInfo.recordYearData = (controlInfo.timeToRun_min > maximumDurationNormalTest_min);
+
+	controlInfo.modifyDraw = ( // mix down large-compressor models for yearly tests
+		(hpwh.getHPWHModel() >= HPWH::MODELS_ColmacCxV_5_SP) && 
+		(hpwh.getHPWHModel() <= HPWH::MODELS_RHEEM_HPHD135VNU_483_MP) && 
+		(controlInfo.timeToRun_min > maximumDurationNormalTest_min));
 
 	HPWH::TestResults testResults;
 	if (!hpwh.runSimulation(testDesc,outputDirectory,controlInfo,allSchedules,airT_C,doTempDepress,testResults)) {

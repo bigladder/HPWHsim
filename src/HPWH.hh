@@ -833,6 +833,7 @@ public:
 		std::string temperatureUnits;
 		bool recordMinuteData;
 		bool recordYearData;
+		bool modifyDraw;
 	};
 	bool readControlInfo(const std::string &testDirectory, ControlInfo &controlInfo);
 
