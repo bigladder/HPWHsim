@@ -23,13 +23,13 @@ const double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 const double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
     double soCFraction;
-    if (parentHPWH->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
     {
         soCFraction = HPWH_ABORT;
     }
     else
     {
-        soCFraction = parentHPWH->getSoCFraction();
+        soCFraction = hpwh->getSoCFraction();
     }
     return soCFraction;
 }
@@ -42,7 +42,7 @@ const double HPWH::SoCBasedHeatingLogic::getMainsT_C()
     }
     else
     {
-        return parentHPWH->member_inletT_C;
+        return hpwh->member_inletT_C;
     }
 }
 
@@ -69,7 +69,7 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // Check how much of a change in the SoC fraction occurs if one full node at set point is added.
     // If this is less than the change needed move on.
-    double fullNodeSoC = 1. / parentHPWH->numNodes;
+    double fullNodeSoC = 1. / hpwh->getNumNodes();
     if (deltaSoCFraction >= fullNodeSoC)
     {
         return 1.;
@@ -77,39 +77,37 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // Find the last node greater the min use temp
     int calcNode = 0;
-    for (int i = parentHPWH->numNodes - 1; i >= 0; i--)
+    for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
     {
-        if (parentHPWH->tankTemps_C[i] < tempMinUseful_C)
+        if (hpwh->tankTemps_C[i] < tempMinUseful_C)
         {
             calcNode = i + 1;
             break;
         }
     }
-    if (calcNode == parentHPWH->numNodes)
+    if (calcNode == hpwh->getNumNodes())
     { // if the whole tank is cold
         return 1.;
     }
 
     // Find the fraction to heat the calc node to meet the target SoC fraction without heating the
     // node below up to tempMinUseful.
-    double maxSoC =
-        parentHPWH->numNodes *
-        parentHPWH->getChargePerNode(getMainsT_C(), tempMinUseful_C, parentHPWH->setpoint_C);
-    double targetTemp =
-        deltaSoCFraction * maxSoC +
-        (parentHPWH->tankTemps_C[calcNode] - getMainsT_C()) / (tempMinUseful_C - getMainsT_C());
+    double maxSoC = hpwh->getNumNodes() *
+                    hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpoint_C);
+    double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tankTemps_C[calcNode] - getMainsT_C()) /
+                                                        (tempMinUseful_C - getMainsT_C());
     targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
     // Catch case where node temperature == setpoint
     double fractCalcNode;
-    if (parentHPWH->tankTemps_C[calcNode] >= parentHPWH->setpoint_C)
+    if (hpwh->tankTemps_C[calcNode] >= hpwh->setpoint_C)
     {
         fractCalcNode = 1;
     }
     else
     {
-        fractCalcNode = (targetTemp - parentHPWH->tankTemps_C[calcNode]) /
-                        (parentHPWH->setpoint_C - parentHPWH->tankTemps_C[calcNode]);
+        fractCalcNode = (targetTemp - hpwh->tankTemps_C[calcNode]) /
+                        (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]);
     }
 
     // If we're at the bottom node there's not another node to heat so case 2 doesn't apply.
@@ -119,23 +117,22 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     }
 
     // Fraction to heat next node, where the step change occurs
-    double fractNextNode =
-        (tempMinUseful_C - parentHPWH->tankTemps_C[calcNode - 1]) /
-        (parentHPWH->tankTemps_C[calcNode] - parentHPWH->tankTemps_C[calcNode - 1]);
+    double fractNextNode = (tempMinUseful_C - hpwh->tankTemps_C[calcNode - 1]) /
+                           (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (parentHPWH->hpwhVerbosity >= VRB_emetic)
+    if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
-            (1. + fractNextNode * (parentHPWH->setpoint_C - parentHPWH->tankTemps_C[calcNode]) /
+            (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
                       (tempMinUseful_C - getMainsT_C()));
-        parentHPWH->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  "
-                        "%.6f, deltaSoCFraction: %.6f\n",
-                        fractCalcNode,
-                        fractNextNode,
-                        smallestSoCChangeWhenHeatingNextNode,
-                        deltaSoCFraction);
+        hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
+                  "deltaSoCFraction: %.6f\n",
+                  fractCalcNode,
+                  fractNextNode,
+                  smallestSoCChangeWhenHeatingNextNode,
+                  deltaSoCFraction);
     }
 
     // if the fraction is enough to heat up the next node, do that minimum and handle the heating of
@@ -175,14 +172,11 @@ const double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
     else
     {
-        return parentHPWH->getSetpoint() - value;
+        return hpwh->getSetpoint() - value;
     }
 }
 
-const double HPWH::TempBasedHeatingLogic::getTankValue()
-{
-    return parentHPWH->tankAvg_C(nodeWeights);
-}
+const double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->tankAvg_C(nodeWeights); }
 
 int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
 {
@@ -205,10 +199,10 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
         // bottom calc node only
         if (nodeWeight.nodeNum == 0)
         { // simple equation
-            return 1. / (double)parentHPWH->getNumNodes();
+            return 1. / (double)hpwh->getNumNodes();
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == 13)
+        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
         {
             return 1.;
         }
@@ -221,59 +215,60 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 
     logicNode = calcNodes / totWeight;
 
-    return logicNode / (double)CONDENSITY_SIZE;
+    return logicNode / static_cast<double>(LOGIC_NODE_SIZE);
 }
 
 const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
-    double fracTemp, diff;
+    double fracTemp;
+    double diff;
     int calcNode = 0;
     int firstNode = -1;
     double sum = 0;
     double totWeight = 0;
 
+    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
+    resample(resampledTankTemps, hpwh->tankTemps_C);
     double comparison = getComparisonValue();
     comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
 
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_NODE_SIZE;
     for (auto nodeWeight : nodeWeights)
     {
 
         // bottom calc node only
         if (nodeWeight.nodeNum == 0)
-        { // simple equation
-            calcNode = 0;
-            firstNode = 0;
-            sum = parentHPWH->tankTemps_C[firstNode] * nodeWeight.weight;
+        { // bottom-most tank node only
+            firstNode = calcNode = 0;
+            double nodeTemp = hpwh->tankTemps_C.front();
+            sum = nodeTemp * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == 13)
-        {
-            calcNode = parentHPWH->getNumNodes() - 1;
-            firstNode = parentHPWH->getNumNodes() - 1;
-            sum = parentHPWH->tankTemps_C[firstNode] * nodeWeight.weight;
+        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
+        { // top-most tank node only
+            calcNode = firstNode = hpwh->getNumNodes() - 1;
+            double nodeTemp = hpwh->tankTemps_C.back();
+            sum = nodeTemp * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
         else
-        { // have to tally up the nodes
-            // frac = ( nodesN*comparision - ( Sum Ti from i = 0 to N ) ) / ( TN+1 - T0 )
-            firstNode = (nodeWeight.nodeNum - 1) * parentHPWH->nodeDensity;
-            for (int n = 0; n < parentHPWH->nodeDensity; ++n)
-            { // Loop on the nodes in the logics
-                calcNode = (nodeWeight.nodeNum - 1) * parentHPWH->nodeDensity + n;
-                sum += parentHPWH->tankTemps_C[calcNode] * nodeWeight.weight;
-                totWeight += nodeWeight.weight;
-            }
+        { // all tank nodes corresponding to logical node
+            firstNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum - 1));
+            calcNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum)) - 1;
+            double nodeTemp = resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)];
+            sum += nodeTemp * nodeWeight.weight;
+            totWeight += nodeWeight.weight;
         }
     }
 
-    if (calcNode == parentHPWH->numNodes - 1)
+    if (calcNode == hpwh->getNumNodes() - 1)
     { // top node calc
-        diff = parentHPWH->getSetpoint() - parentHPWH->tankTemps_C[firstNode];
+        diff = hpwh->getSetpoint() - hpwh->tankTemps_C[firstNode];
     }
     else
     {
-        diff = parentHPWH->tankTemps_C[calcNode + 1] - parentHPWH->tankTemps_C[firstNode];
+        diff = hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[firstNode];
     }
     // if totWeight * comparison - sum < 0 then the shutoff condition is already true and you
     // shouldn't be here. Will revaluate shut off condition at the end the do while loop of
@@ -285,8 +280,9 @@ const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     else
     {
         // if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
-        // about, so shift a whole node.
-        fracTemp = diff > 0. ? (totWeight * comparison - sum) / diff : 1.;
+        // about, so shift a whole node. factor of hpwh->nodeDensity included below to reproduce
+        // original algorithm
+        fracTemp = diff > 0. ? (totWeight * comparison - sum) * nodeDensity / diff : 1.;
     }
 
     return fracTemp;
