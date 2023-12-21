@@ -2200,13 +2200,13 @@ double HPWH::getTankHeatContent_kJ() const {
 	// returns tank heat content relative to 0 C using kJ
 
 	//get average tank temperature
-	double avgTemp = 0.0;
+	double averageT_C = 0.0;
 	for(int i = 0; i < getNumNodes(); i++) {
-		avgTemp += tankTemps_C[i];
+		averageT_C += tankTemps_C[i];
 	}
-	avgTemp /= getNumNodes();
+	averageT_C /= getNumNodes();
 
-	double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
+	double totalHeat = averageT_C * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
 	return totalHeat;
 }
 
@@ -2561,8 +2561,6 @@ int HPWH::getResistancePosition(int elementIndex) const {
 void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbientT_C,
 	double inletVol2_L,double inletT2_C) {
 
-	outletTemp_C = 0.;
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	if(drawVolume_L > 0.) {
 
@@ -2575,29 +2573,30 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			return;
 		}
 
-		// Check which inlet is higher;
-		int highInletH;
-		double highInletV,highInletT;
-		int lowInletH;
-		double lowInletT,lowInletV;
+		// Sort the inlets by height.
+		int highInletNodeIndex;
+		double highInletFraction; // fraction of draw from high inlet
+		double highInletT_C;
+		int lowInletNodeIndex;
+		double lowInletT_C;
+		double lowInletFraction; // fraction of draw from low inlet
 		if(inletHeight > inlet2Height) {
-			highInletH = inletHeight;
-			highInletV = drawVolume_L - inletVol2_L;
-			highInletT = inletT_C;
-			lowInletH = inlet2Height;
-			lowInletT = inletT2_C;
-			lowInletV = inletVol2_L;
+			highInletNodeIndex = inletHeight;
+			highInletFraction = 1. - inletVol2_L / drawVolume_L;
+			highInletT_C = inletT_C;
+			lowInletNodeIndex = inlet2Height;
+			lowInletT_C = inletT2_C;
+			lowInletFraction = inletVol2_L / drawVolume_L;
 		} else {
-			highInletH = inlet2Height;
-			highInletV = inletVol2_L;
-			highInletT = inletT2_C;
-			lowInletH = inletHeight;
-			lowInletT = inletT_C;
-			lowInletV = drawVolume_L - inletVol2_L;
+			highInletNodeIndex = inlet2Height;
+			highInletFraction = inletVol2_L / drawVolume_L;
+			highInletT_C = inletT2_C;
+			lowInletNodeIndex = inletHeight;
+			lowInletT_C = inletT_C;
+			lowInletFraction = 1. - inletVol2_L / drawVolume_L;
 		}
 
 		if (hasHeatExchanger) {// heat-exchange models
-
 			const double densityTank_kgperL = DENSITYWATER_kgperL;
 			const double CpTank_kJperkgC  = CPWATER_kJperkgC;
 
@@ -2605,82 +2604,102 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 
 			outletTemp_C = inletT_C;
-			for (auto &nodeTemp: tankTemps_C) {	
-				double maxHeatExchange_kJ = C_draw_kJperC * (nodeTemp - outletTemp_C);
+			for (auto &nodeT_C: tankTemps_C) {	
+				double maxHeatExchange_kJ = C_draw_kJperC * (nodeT_C - outletTemp_C);
 				double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
 
-				nodeTemp -= heatExchange_kJ / C_Node_kJperC;
+				nodeT_C -= heatExchange_kJ / C_Node_kJperC;
 				outletTemp_C += heatExchange_kJ / C_draw_kJperC;
 			}
 		}
 		else { 
+
+			double previousHeatContent_kJ = getTankHeatContent_kJ();
+
+			outletTemp_C = 0.;
+			double C_Node_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * nodeVolume_L;
+
 			//calculate how many nodes to draw (drawVolume_N)
 			double drawVolume_N = drawVolume_L / nodeVolume_L;
+			double remainingDrawVolume_N = drawVolume_N;
 			if(drawVolume_L > tankVolume_L) {
-				//if (hpwhVerbosity >= VRB_reluctant) {
-				//	//msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Terminating simulation.  \n");
-				//	msg("WARNING: Drawing more than the tank volume in one step is undefined behavior.  Continuing simulation at your own risk.  \n");
-				//}
-				//simHasFailed = true;
-				//return;
+
 				for(int i = 0; i < getNumNodes(); i++){
 					outletTemp_C += tankTemps_C[i];
 					tankTemps_C[i] = (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) / drawVolume_L;
 				}
 				outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L + tankTemps_C[0] * (drawVolume_L - tankVolume_L))
-					/ drawVolume_L * drawVolume_N;
+					/ drawVolume_L * remainingDrawVolume_N;
 
-				drawVolume_N = 0.;
+				remainingDrawVolume_N = 0.;
 			}
 
-			while(drawVolume_N > 0) {
+			double heatRemoved_kJ = 0.;
+			while(remainingDrawVolume_N > 0.) {
 
-				// Draw one node at a time
-				double drawFraction = drawVolume_N > 1. ? 1. : drawVolume_N;
-				double nodeInletTV = 0.;
+				// draw one node at a time
+				double incrementalDrawVolume_N = remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
+				double nodeInletNT = 0.;
 
-				//add temperature for outletT average
-				outletTemp_C += drawFraction * tankTemps_C[getNumNodes() - 1];
-
-				double cumInletFraction = 0.;
-				for(int i = getNumNodes() - 1; i >= lowInletH; i--) {
+				double averageIntletT_C = highInletFraction * highInletT_C + lowInletFraction * lowInletT_C;
+				heatRemoved_kJ += incrementalDrawVolume_N * C_Node_kJperC * (tankTemps_C.back() - averageIntletT_C);
 
 
-				// Reset inlet inputs at this node. 
-				double nodeInletFraction = 0.;
-				nodeInletTV = 0.;
+				double cumulativeInletVolume_N = 0.;
+				for(int i = getNumNodes() - 1; i >= lowInletNodeIndex; i--) {
 
-				// Sum of all inlets Vi*Ti at this node
-				if(i == highInletH) {
-				  nodeInletTV += highInletV * drawFraction / drawVolume_L * highInletT;
-				  nodeInletFraction += highInletV * drawFraction / drawVolume_L;
-				}
-				if(i == lowInletH) {
-				  nodeInletTV += lowInletV * drawFraction / drawVolume_L * lowInletT;
-				  nodeInletFraction += lowInletV * drawFraction / drawVolume_L;
+					// reset inlet inputs at this node. 
+					double nodeInletVolume_N = 0.;
+					nodeInletNT = 0.;
 
-					break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
-				}
+					// sum of all inlets Ni*Ti at this node
+					if(i == highInletNodeIndex) {
+						double inletVolume_N = highInletFraction * incrementalDrawVolume_N;
+						nodeInletNT += inletVolume_N * highInletT_C;
+						nodeInletVolume_N += inletVolume_N;
+					}
+					if(i == lowInletNodeIndex) {
+						double inletVolume_N = lowInletFraction * incrementalDrawVolume_N;
+						nodeInletNT += inletVolume_N * lowInletT_C;
+						nodeInletVolume_N += inletVolume_N;
+						break; // if this is the bottom inlet break out of the four loop and use the boundary condition equation. 
+					}
+
 
 					// Look at the volume and temperature fluxes into this node
-					tankTemps_C[i] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[i] +
-						nodeInletTV +
-						(drawFraction - (cumInletFraction + nodeInletFraction)) * tankTemps_C[i - 1];
+					double nodeDrawVolume_N = incrementalDrawVolume_N - cumulativeInletVolume_N;
+					tankTemps_C[i] += nodeDrawVolume_N * (tankTemps_C[i - 1] - tankTemps_C[i])
+						- nodeInletVolume_N * tankTemps_C[i - 1]
+						+ nodeInletNT;
 
-					cumInletFraction += nodeInletFraction;
-
+					cumulativeInletVolume_N += nodeInletVolume_N;
 				}
 
-				// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
-				tankTemps_C[lowInletH] = (1. - (drawFraction - cumInletFraction)) * tankTemps_C[lowInletH] + nodeInletTV;
+				// add temperature for outletT average
+				double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+				outletTemp_C += heatRemoved_kJ / C_draw_kJperC;
 
-				drawVolume_N -= drawFraction;
+				// Boundary condition equation because it shouldn't take anything from tankTemps_C[i - 1] but it also might not exist. 
+				tankTemps_C[lowInletNodeIndex] += (cumulativeInletVolume_N - incrementalDrawVolume_N) * tankTemps_C[lowInletNodeIndex] + nodeInletNT;
+				remainingDrawVolume_N -= incrementalDrawVolume_N;
 
 				mixTankInversions();
 			}
 
 			//fill in average outlet T - it is a weighted averaged, with weights == nodes drawn
-			outletTemp_C /= (drawVolume_L / nodeVolume_L);
+			//outletTemp_C /= drawVolume_N;
+
+			double currentHeatContent_kJ = getTankHeatContent_kJ();
+
+			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+			double qOutWater_kJ = C_draw_kJperC * (outletTemp_C - inletT_C);	
+
+			double expectedHeatContent_kJ = previousHeatContent_kJ - qOutWater_kJ;
+			double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
+			if (fabs(qBal_kJ) > 1.e-5) {
+				std::cout <<qBal_kJ<<"\n";
+			}
+
 		}
 
 		//Account for mixing at the bottom of the tank
@@ -2697,7 +2716,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 	double standbyLossesBottom_kJ = 0.;
 	double standbyLossesTop_kJ = 0.;
 	double standbyLossesSides_kJ = 0.;
-
+	
 	// Standby losses from the top and bottom of the tank
 	{
 		auto standbyLossRate_kJperHrC = tankUA_kJperHrC * fracAreaTop;
@@ -2719,7 +2738,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			nextTankTemps_C[i] -= standbyLosses_kJ / nodeCp_kJperC;
 		}
 	}
-
+	
 	// Heat transfer between nodes
 	if(doConduction) {
 
@@ -2745,7 +2764,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			nextTankTemps_C[i] += 2. * tau * (tankTemps_C[i + 1] - 2. * tankTemps_C[i] + tankTemps_C[i - 1]);
 		}
 	}
-
+	
 	// Update tankTemps_C
 	tankTemps_C = nextTankTemps_C;
 	
@@ -2754,6 +2773,20 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 	// check for inverted temperature profile 
 	mixTankInversions();
 
+	/*
+	double currentHeatContent_kJ = getTankHeatContent_kJ();
+
+	double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+	checkQWater_kJ = C_draw_kJperC * (outletTemp_C - inletT_C);	
+	checkQStandby_kJ = (standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
+
+	double expectedHeatContent_kJ = previousHeatContent_kJ - checkQWater_kJ - checkQStandby_kJ;
+	double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
+
+	if (fabs(qBal_kJ) > 1.e-5) {
+		std::cout <<qBal_kJ<<"\n";
+	}
+	*/
 }  //end updateTankTemps
 
 void HPWH::updateSoCIfNecessary() {
@@ -3398,6 +3431,8 @@ void HPWH::resetTopOffTimer() {
 bool HPWH::isEnergyBalanced(
 	const double drawVol_L,const double prevHeatContent_kJ,const double fracEnergyTolerance /* = 0.001 */)
 {
+	double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
+
 	// Check energy balancing. 
 	double qInElectrical_kJ = 0.;
 	for (int iHS = 0; iHS < getNumHeatSources(); iHS++) {
@@ -3407,7 +3442,7 @@ bool HPWH::isEnergyBalanced(
 	double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
 	double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
 	double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-	double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL * CPWATER_kJperkgC; // assumes only one inlet
+	double qOutWater_kJ = C_draw_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
 	double expectedTankHeatContent_kJ =
 		  prevHeatContent_kJ			// previous heat content
 		+ qInElectrical_kJ				// electrical energy delivered to heat sources
