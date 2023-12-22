@@ -2632,12 +2632,10 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				remainingDrawVolume_N = 0.;
 			}
 
-			//double outletTotalNT_C = 0.;
 			while(remainingDrawVolume_N > 0.) {
 
 				// draw no more than one node at a time
 				double incrementalDrawVolume_N = remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
-				//outletTotalNT_C += incrementalDrawVolume_N * tankTemps_C.back();
 
 				double cumulativeInletFraction = 1.;
 				for(int i = getNumNodes() - 1; i >= 0; --i) {
@@ -2672,14 +2670,7 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 			double deltaT_C = heatExpelled_kJ / C_draw_kJperC;
 			double averageInletT_C = highInletFraction * highInletT_C + lowInletFraction * lowInletT_C;
-			outletTemp_C = averageInletT_C + deltaT_C;
-
-			/*
-			double expectedOutletTemp_C = outletTotalNT_C / drawVolume_N;					
-			double expectedHeatExpelled_kJ = C_draw_kJperC * (expectedOutletTemp_C - averageInletT_C);	
-			double expectedHeatContent_kJ = previousHeatContent_kJ - expectedHeatExpelled_kJ;
-			double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;	
-			*/
+			outletTemp_C = averageInletT_C + deltaT_C; // force rigid energy balance
 		}
 
 		// account for mixing at the bottom of the tank
