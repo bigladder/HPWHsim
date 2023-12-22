@@ -138,7 +138,9 @@ df_simulated = call_csv("plots/villara_24hr67_File_AquaThermAire.csv", 0)
 df_measured["Power_kW"] = convert_values(df_measured["Power_kW"], "kW", "W")
 # convert simulated energy consumption (Wh) for every minute to power (W)
 # (Wh / min) * (60 min / 1 h)
-df_simulated["h_src1In (Wh)"] = df_simulated["h_src1In (Wh)"] * 60
+df_simulated["h_src1In (Wh)"] = convert_values(
+    df_simulated["h_src1In (Wh)"], "Wh/min", "W"
+)
 
 fig = go.Figure()
 fig = make_subplots(rows=3, shared_xaxes=True, vertical_spacing=0.05)
