@@ -332,15 +332,15 @@ class HPWH
         virtual ~HeatingLogic() = default;
 
         /**< checks that the input is all valid. */
-        virtual const bool isValid() = 0;
+        virtual bool isValid() = 0;
         /**< gets the value for comparing the tank value to, i.e. the target SoC */
-        virtual const double getComparisonValue() = 0;
+        virtual double getComparisonValue() = 0;
         /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
-        virtual const double getTankValue() = 0;
+        virtual double getTankValue() = 0;
         /**< function to calculate where the average node for a logic set is. */
-        virtual const double nodeWeightAvgFract() = 0;
+        virtual double nodeWeightAvgFract() = 0;
         /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
-        virtual const double getFractToMeetComparisonExternal() = 0;
+        virtual double getFractToMeetComparisonExternal() = 0;
 
         virtual int setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
@@ -368,14 +368,14 @@ class HPWH
             , hysteresisFraction(hF)
             , useCostantMains(constMains)
             , constantMains_C(mains_C) {};
-        const bool isValid();
+        bool isValid();
 
-        const double getComparisonValue();
-        const double getTankValue();
-        const double nodeWeightAvgFract();
-        const double getFractToMeetComparisonExternal();
-        const double getMainsT_C();
-        const double getTempMinUseful_C();
+        double getComparisonValue();
+        double getTankValue();
+        double nodeWeightAvgFract();
+        double getFractToMeetComparisonExternal();
+        double getMainsT_C();
+        double getTempMinUseful_C();
         int setDecisionPoint(double value);
         int setConstantMainsTemperature(double mains_C);
 
@@ -398,18 +398,18 @@ class HPWH
                               bool isHTS = false)
             : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n) {};
 
-        const bool isValid();
+        bool isValid();
 
-        const double getComparisonValue();
-        const double getTankValue();
-        const double nodeWeightAvgFract();
-        const double getFractToMeetComparisonExternal();
+        double getComparisonValue();
+        double getTankValue();
+        double nodeWeightAvgFract();
+        double getFractToMeetComparisonExternal();
 
         int setDecisionPoint(double value);
         int setDecisionPoint(double value, bool absolute);
 
       private:
-        const bool areNodeWeightsValid();
+        bool areNodeWeightsValid();
 
         bool isAbsolute;
         std::vector<NodeWeight> nodeWeights;

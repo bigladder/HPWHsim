@@ -1,7 +1,11 @@
 # Build test tool
+SET_CXX_FLAGS()
+
 include_directories("${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
 
 add_executable(testTool main.cc)
+
+# TODO: Migrate to googletest framework
 add_executable(testTankSizeFixed testTankSizeFixed.cc)
 add_executable(testScaleHPWH testScaleHPWH.cc)
 add_executable(testMaxSetpoint testMaxSetpoint.cc)
@@ -13,10 +17,7 @@ add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 add_executable(testHeatingLogics testHeatingLogics.cc)
 add_executable(testEnergyBalance testEnergyBalance.cc)
 
-set(libs
-        libHPWHsim
-        btwxt
-        )
+set(libs libHPWHsim)
 
 target_link_libraries(testTool ${libs})
 target_link_libraries(testTankSizeFixed ${libs})

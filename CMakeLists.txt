@@ -1,10 +1,7 @@
-project(HPWHsim)
-
-cmake_minimum_required(VERSION 3.5)
-
-enable_testing()
-
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+cmake_policy(SET CMP0091 NEW)
+project(HPWHsim LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.7)
+cmake_policy(SET CMP0079 NEW) # target_link_libraries() allows use with targets in other directories.
 
 # Set a default build type if none was specified
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -15,13 +12,31 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             "MinSizeRel" "RelWithDebInfo")
 endif ()
 
-if (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wshadow")
-elseif (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+find_package(Git QUIET)
+
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+include(CMakeDependentOption)
+
+cmake_dependent_option(${PROJECT_NAME}_BUILD_TESTING "Build ${PROJECT_NAME} testing targets" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+#option(${PROJECT_NAME}_COVERAGE "Add ${PROJECT_NAME} coverage reports" OFF)
+#cmake_dependent_option(${PROJECT_NAME}_BUILD_EXAMPLES "Build ${PROJECT_NAME} examples" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+cmake_dependent_option(${PROJECT_NAME}_WARNINGS_AS_ERRORS "Treat warnings in ${PROJECT_NAME} as errors" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+
+if (NOT ${PROJECT_NAME}_STATIC_LIB)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
 
-find_package(Git QUIET)
+include(compiler-flags)
+
+# Set up testing/coverage
+if (${PROJECT_NAME}_BUILD_TESTING)
+    enable_testing()
+    #    if (${PROJECT_NAME}_COVERAGE)
+    #        set(ENABLE_COVERAGE ON CACHE BOOL "" FORCE)
+    #        find_package(codecov)
+    #    endif ()
+endif ()
 
 if (HPWHSIM_ABRIDGED)
     add_compile_definitions(HPWH_ABRIDGED)
@@ -30,6 +45,9 @@ endif ()
 add_subdirectory(vendor)
 add_subdirectory(src)
 
-if (NOT HPWHSIM_OMIT_TESTTOOL)
+if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(test)
+    #    if (${PROJECT_NAME}_COVERAGE)
+    #        coverage_evaluate()
+    #    endif ()
 endif ()

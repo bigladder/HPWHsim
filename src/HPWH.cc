@@ -4433,7 +4433,7 @@ int HPWH::HPWHinit_file(string configFile)
     }
 
     // some variables that will be handy
-    int heatsource, sourceNum, nTemps, tempInt;
+    std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
     double initalTankT_C = F_TO_C(120.);
@@ -4652,7 +4652,7 @@ int HPWH::HPWHinit_file(string configFile)
         {
             line_ss >> numHeatSources;
             heatSources.reserve(numHeatSources);
-            for (int i = 0; i < numHeatSources; i++)
+            for (std::size_t i = 0; i < numHeatSources; i++)
             {
                 heatSources.emplace_back(this);
             }
@@ -5151,7 +5151,7 @@ int HPWH::HPWHinit_file(string configFile)
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
-                int maxTemps = (int)heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -5206,6 +5206,8 @@ int HPWH::HPWHinit_file(string configFile)
                 nTemps = std::stoi(match[2].str());
                 string coeff = match[3].str();
 
+                /*
+                // TODO: Currently relies on the coefficients being defined in the correct order
                 int coeff_num;
                 if (coeff == "const")
                 {
@@ -5219,8 +5221,9 @@ int HPWH::HPWHinit_file(string configFile)
                 {
                     coeff_num = 2;
                 }
+                */
 
-                int maxTemps = (int)heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
                 if (maxTemps < nTemps)
                 {
