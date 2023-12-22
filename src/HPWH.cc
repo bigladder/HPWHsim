@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include <btwxt/btwxt.h>
+#include <fmt/format.h>
 
 #include <stdarg.h>
 #include <fstream>
@@ -1113,64 +1114,62 @@ void HPWH::printTankTemps()
 }
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVHeading(std::ofstream& outFILE, const char* preamble, int nTCouples, int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    fprintf(outFILE, "%s", preamble);
+    outFILE << preamble;
 
-    fprintf(outFILE, "%s", "DRstatus");
+    outFILE <<  "DRstatus";
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
+        outFILE << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F" : "C");
+        outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
-    fprintf(outFILE, ",toutlet (%s)", doIP ? "F" : "C");
-
-    fprintf(outFILE, "\n");
+    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
 
     return 0;
 }
 
-int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVRow(std::ofstream& outFILE, const char* preamble, int nTCouples, int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    fprintf(outFILE, "%s", preamble);
+    outFILE << preamble;
 
-    fprintf(outFILE, "%i", prevDRstatus);
+    outFILE << prevDRstatus;
+
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        fprintf(outFILE,
-                ",%0.2f,%0.2f",
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
                 getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
                 getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+        outFILE << fmt::format(",{:0.2f}", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        fprintf(outFILE, ",%0.2f", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
     }
     else
     {
-        fprintf(outFILE, ",");
+        outFILE << ",";
     }
 
-    fprintf(outFILE, "\n");
+    outFILE << std::endl;
 
     return 0;
 }

@@ -27,7 +27,7 @@ void testSetTankTemps();
 
 const double REMaxShouldBe = 100.;
 
-int main(int, char*)
+int main(int, char**)
 {
     testMaxSetpointResistanceTank();
     testScalableCompressor();

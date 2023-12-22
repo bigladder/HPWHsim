@@ -584,11 +584,11 @@ class HPWH
     /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
 
-    int WriteCSVHeading(FILE* outFILE,
+    int WriteCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
                         int nTCouples = 6,
                         int options = CSVOPT_NONE) const;
-    int WriteCSVRow(FILE* outFILE,
+    int WriteCSVRow(std::ofstream& outFILE,
                     const char* preamble = "",
                     int nTCouples = 6,
                     int options = CSVOPT_NONE) const;

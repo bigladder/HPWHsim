@@ -544,7 +544,7 @@ void testStorageTankErrors()
     ASSERTTRUE(hpwh.setScaleHPWHCapacityCOP(1., 1.) == HPWH::HPWH_ABORT);
 }
 
-int main(int, char*)
+int main(int, char**)
 {
 
     testSetMPCompressorOutputCapacity();
