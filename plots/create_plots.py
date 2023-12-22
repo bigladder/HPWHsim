@@ -125,7 +125,7 @@ def add_temperature_details():
     }
 
     for key in TEMPERATURE_DETAILS.keys():
-        for index, label in enumerate(TEMPERATURE_DETAILS[key]):
+        for index in range(len(TEMPERATURE_DETAILS[key])):
             variables["Y-Variables"]["Temperature"][key].insert(
                 index, TEMPERATURE_DETAILS[key][index]
             )
