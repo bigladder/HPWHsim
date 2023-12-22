@@ -16,7 +16,7 @@
 namespace Btwxt
 {
 class RegularGridInterpolator;
-};
+}
 
 // #define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
