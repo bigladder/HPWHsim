@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
 
 	  if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),allSchedules[0][i],tankHCStart,EBALTHRESHOLD)) {
 		  cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
-		 // exit(1);
+		  exit(1);
 	  }
 
 	  // Check timing
