@@ -150,7 +150,10 @@ fig = make_subplots(rows=3, shared_xaxes=True, vertical_spacing=0.05)
 variables = {
     "Y-Variables": {
         "Power Input": {
-            "Column Names": {"Measured": ["Power_kW"], "Simulated": ["h_src1In (Wh)"]},
+            "Column Names": {
+                "Measured": ["Power_kW"],
+                "Simulated": ["h_src1In (Wh)"],
+            },
             "Labels": ["Power Input"],
             "Units": "W",
             "Colors": ["red"],
