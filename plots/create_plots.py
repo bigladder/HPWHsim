@@ -350,5 +350,5 @@ fig.update_yaxes(
     zerolinecolor=GRID_LINES_COLOR,
 )
 
-file_path = "plots/hpwh_plots.html"
+file_path = "plots/hpwh-plots.html"
 fig.write_html(file_path)
