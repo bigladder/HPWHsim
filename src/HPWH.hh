@@ -324,10 +324,12 @@ class HPWH
                      std::function<bool(double, double)> c,
                      bool isHTS)
             : description(desc)
+            , compare(c)
             , decisionPoint(decisionPoint_in)
             , hpwh(hpwh_in)
-            , compare(c)
             , isEnteringWaterHighTempShutoff(isHTS) {};
+
+        virtual ~HeatingLogic() = default;
 
         /**< checks that the input is all valid. */
         virtual const bool isValid() = 0;
@@ -362,8 +364,8 @@ class HPWH
                              double mains_C = 18.333,
                              std::function<bool(double, double)> c = std::less<double>())
             : HeatingLogic(desc, decisionPoint, hpwh, c, false)
-            , hysteresisFraction(hF)
             , tempMinUseful_C(tM_C)
+            , hysteresisFraction(hF)
             , useCostantMains(constMains)
             , constantMains_C(mains_C) {};
         const bool isValid();
@@ -394,7 +396,7 @@ class HPWH
                               bool a = false,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), nodeWeights(n), isAbsolute(a) {};
+            : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n) {};
 
         const bool isValid();
 

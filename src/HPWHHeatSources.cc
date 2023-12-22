@@ -19,21 +19,21 @@ HPWH::HeatSource::HeatSource(HPWH* parentInput)
     , backupHeatSource(NULL)
     , companionHeatSource(NULL)
     , followedByHeatSource(NULL)
+    , useBtwxtGrid(false)
+    , standbyLogic(NULL)
+    , maxOut_at_LowT {100, -273.15}
+    , secondaryHeatExchanger {0., 0., 0.}
     , minT(-273.15)
     , maxT(100)
+    , maxSetpoint_C(100.)
     , hysteresis_dC(0)
     , airflowFreedom(1.0)
-    , maxSetpoint_C(100.)
-    , typeOfHeatSource(TYPE_none)
-    , extrapolationMethod(EXTRAP_LINEAR)
-    , maxOut_at_LowT {100, -273.15}
-    , standbyLogic(NULL)
-    , isMultipass(true)
-    , mpFlowRate_LPS(0.)
     , externalInletHeight(-1)
     , externalOutletHeight(-1)
-    , useBtwxtGrid(false)
-    , secondaryHeatExchanger {0., 0., 0.}
+    , mpFlowRate_LPS(0.)
+    , typeOfHeatSource(TYPE_none)
+    , isMultipass(true)
+    , extrapolationMethod(EXTRAP_LINEAR)
 {
 }
 
@@ -802,10 +802,8 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
     else
     {
         // Get bounding performance map points for interpolation/extrapolation
-        bool extrapolate = false;
         if (externalT_F > perfMap[0].T_F)
         {
-            extrapolate = true;
             if (extrapolationMethod == EXTRAP_NEAREST)
             {
                 externalT_F = perfMap[0].T_F;

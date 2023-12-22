@@ -2,7 +2,7 @@
  * Version control
  */
 
-#include "HPWHVersion.hh"
+#include "HPWHversion.hh"
 #include "HPWH.hh"
 
 // ugh, this should be in the header
