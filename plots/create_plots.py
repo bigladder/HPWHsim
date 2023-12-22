@@ -121,7 +121,7 @@ def add_temperature_details():
         ],
         "Colors": ["black", "orange", "purple", "limegreen"],
         "Line Mode": ["lines", "lines+markers", "lines", "lines"],
-        "Line Visibility": [True, True, True, True],
+        "Line Visibility": [True, True, "legendonly", "legendonly"],
     }
 
     for key in TEMPERATURE_DETAILS.keys():
