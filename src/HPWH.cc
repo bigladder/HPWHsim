@@ -322,7 +322,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 };
 
 // public HPWH functions
-HPWH::HPWH() : messageCallback(NULL), messageCallbackContextPtr(NULL), hpwhVerbosity(VRB_silent)
+HPWH::HPWH() : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
 };
@@ -1114,14 +1114,17 @@ void HPWH::printTankTemps()
 }
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(std::ofstream& outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVHeading(std::ofstream& outFILE,
+                          const char* preamble,
+                          int nTCouples,
+                          int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     outFILE << preamble;
 
-    outFILE <<  "DRstatus";
+    outFILE << "DRstatus";
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
@@ -1138,7 +1141,10 @@ int HPWH::WriteCSVHeading(std::ofstream& outFILE, const char* preamble, int nTCo
     return 0;
 }
 
-int HPWH::WriteCSVRow(std::ofstream& outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVRow(std::ofstream& outFILE,
+                      const char* preamble,
+                      int nTCouples,
+                      int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
@@ -1147,17 +1153,17 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE, const char* preamble, int nTCouple
 
     outFILE << prevDRstatus;
 
-
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        outFILE << fmt::format(",{:0.2f}", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+        outFILE << fmt::format(",{:0.2f}",
+                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
@@ -1247,15 +1253,12 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
     }
 
     double returnVal = heatSources[compressorIndex].maxSetpoint_C;
-    if (units == UNITS_C)
-    {
-        returnVal = returnVal;
-    }
-    else if (units == UNITS_F)
+
+    if (units == UNITS_F)
     {
         returnVal = C_TO_F(returnVal);
     }
-    else
+    else if (units != UNITS_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -4771,9 +4774,8 @@ int HPWH::HPWHinit_file(string configFile)
                     }
                     else
                     {
-                        for (auto n : nodeNums)
+                        for ([[maybe_unused]] auto n : nodeNums)
                         {
-                            n += 0; // used to get rid of unused variable compiler warning
                             weights.push_back(1.0);
                         }
                     }
@@ -5203,6 +5205,7 @@ int HPWH::HPWHinit_file(string configFile)
                 string var = match[1].str();
                 nTemps = std::stoi(match[2].str());
                 string coeff = match[3].str();
+
                 int coeff_num;
                 if (coeff == "const")
                 {
