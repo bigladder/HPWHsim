@@ -376,6 +376,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const {
 void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	double input_BTUperHr = 0.,cap_BTUperHr = 0.,cop = 0.;
 
+	double previousHeatContent_kJ = hpwh->getTankHeatContent_kJ();
 	switch(configuration) {
 	case CONFIG_SUBMERGED:
 	case CONFIG_WRAPPED:
@@ -441,6 +442,15 @@ void HPWH::HeatSource::addHeat(double externalT_C,double minutesToRun) {
 	// Write the input & output energy
 	energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
 	energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
+
+	double totalHeatExchange_kJ = KWH_TO_KJ(energyOutput_kWh);
+	double currentHeatContent_kJ = hpwh->getTankHeatContent_kJ();
+	double expectedHeatContent_kJ = previousHeatContent_kJ + totalHeatExchange_kJ;
+
+	double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
+	if (fabs(qBal_kJ) > 1.e-9) {
+		std::cout << qBal_kJ <<"\n";
+	}
 }
 
 // private HPWH::HeatSource functions
@@ -742,9 +752,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 
 	bool setPointExceeded = false;
 		
+	double nodeC_kJperC = hpwh->nodeVolume_L * DENSITYWATER_kgperL * cPWATER_kJperkgC;
 	double maxTargetT_C = std::min(maxSetpoint_C,hpwh->setpoint_C);
 	double targetT_C = 0.;
-	double inputTemp_BTUperHr = 0,capTemp_BTUperHr = 0,copTemp = 0;
+	double tempInput_BTUperHr = 0.,tempCap_BTUperHr = 0.,temp_cop = 0.;
 	double heatingCapacity_kJ;
 	double timeRemaining_min = minutesToRun;
 	do {
@@ -757,15 +768,15 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 			hpwh->mixTankNodes(0,hpwh->getNumNodes(),1.0); // 1.0 will give even mixing, so all temperatures mixed end at average temperature.
 
 			//how much heat is added this timestep
-			getCapacityMP(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
-			double heatingCapacity_kW = BTUperH_TO_KW(capTemp_BTUperHr);
-			heatingCapacity_kJ = BTUperH_TO_KW(capTemp_BTUperHr) * (timeRemaining_min * sec_per_min);
+			getCapacityMP(externalT_C,hpwh->tankTemps_C[externalOutletHeight],tempInput_BTUperHr,tempCap_BTUperHr,temp_cop);
+			double heatingCapacity_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+			heatingCapacity_kJ = BTUperH_TO_KW(tempCap_BTUperHr) * (timeRemaining_min * sec_per_min);
 
 			targetT_C = calcMPOutletTemperature(heatingCapacity_kW);
 		} else {
 			//how much heat is available this timestep
-			getCapacity(externalT_C,hpwh->tankTemps_C[externalOutletHeight],inputTemp_BTUperHr,capTemp_BTUperHr,copTemp);
-			heatingCapacity_kJ = BTU_TO_KJ(capTemp_BTUperHr * (minutesToRun / min_per_hr));
+			getCapacity(externalT_C,hpwh->tankTemps_C[externalOutletHeight],tempInput_BTUperHr,tempCap_BTUperHr,temp_cop);
+			heatingCapacity_kJ = BTU_TO_KJ(tempCap_BTUperHr * (minutesToRun / min_per_hr));
 			if(hpwh->hpwhVerbosity >= VRB_emetic) {
 				hpwh->msg("\theatingCapacity_kJ stepwise: %.2lf \n",heatingCapacity_kJ);
 			}
@@ -838,9 +849,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 
 			// track outputs - weight by the time ran
 			// Add in pump power to approximate a secondary heat exchange in line with the compressor
-			input_BTUperHr += (inputTemp_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) * timeUsed_min;
-			cap_BTUperHr += capTemp_BTUperHr * timeUsed_min;
-			cop += copTemp * timeUsed_min;
+			input_BTUperHr += (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) * timeUsed_min;
+			cap_BTUperHr += tempCap_BTUperHr * timeUsed_min;
+			cop += temp_cop * timeUsed_min;
 
 			hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
 		}

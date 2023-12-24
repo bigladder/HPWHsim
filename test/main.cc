@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 		  if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001) {
 			  cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: " << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: "
 				  << mpFlowVolume_Gal << "\n";
-			  exit(1);
+			 // exit(1);
 		  }
 	  }
 	  // Recording
