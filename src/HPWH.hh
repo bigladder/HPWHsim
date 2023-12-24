@@ -31,7 +31,7 @@ public:
 
 	static const float DENSITYWATER_kgperL;
 	static const float KWATER_WpermC;
-	static const float CPWATER_kJperkgC;
+	static const float cPWATER_kJperkgC; /// specific heat capcity of water
 	static const int CONDENSITY_SIZE = 12;  /**<number of condensity nodes associated with each heat source */
 	static const int LOGIC_NODE_SIZE = 12;  /**< number of logic nodes associated with temperature-based heating logic */
 	static const int MAXOUTSTRING = 200;  /**< this is the maximum length for a debuging output string */
@@ -935,10 +935,7 @@ private:
 	/**< the volume (L) of a single node  */
 	double nodeVolume_L;
 
-	/**< the mass of water (kg) in a single node  */
-	double nodeMass_kg;
-
-	/**< the heat capacity of the water (kJ/�C) in a single node  */
+	/**< heat capacity (kJ/degC) of the water in a single node  */
 	double nodeCp_kJperC;
 
 	/**< the height in meters of the one node  */
