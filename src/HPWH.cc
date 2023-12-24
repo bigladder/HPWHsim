@@ -2594,28 +2594,42 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 			lowInletFraction = 1. - inletVol2_L / drawVolume_L;
 		}
 
+		// calculate number of nodes to draw
+		double drawVolume_N = drawVolume_L / nodeVolume_L;
+		double drawCp_kJperC = cPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+
+		double previousHeatContent_kJ = getTankHeatContent_kJ();
+		double totalHeatExchange_kJ = 0.;
+
 		// heat-exchange models
 		if (hasHeatExchanger) {
-			const double densityTank_kgperL = DENSITYWATER_kgperL;
-			const double CpTank_kJperkgC  = cPWATER_kJperkgC;
+			//const double densityTank_kgperL = DENSITYWATER_kgperL;
+			//const double cpTank_kJperkgC  = cPWATER_kJperkgC;
 
-			double tankNodeCp_kJperC = CpTank_kJperkgC * densityTank_kgperL * nodeVolume_L;
-			double drawCp_kJperC = cPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+			//double testCp = cPWATER_kJperkgC* DENSITYWATER_kgperL * nodeVolume_L;
 
 			outletTemp_C = inletT_C;
 			for (auto &nodeT_C: tankTemps_C) {	
 				double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletTemp_C);
 				double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
 
-				nodeT_C -= heatExchange_kJ / tankNodeCp_kJperC;
+				totalHeatExchange_kJ += heatExchange_kJ;
+				nodeT_C -= heatExchange_kJ / nodeCp_kJperC;
 				outletTemp_C += heatExchange_kJ / drawCp_kJperC;
 			}
+
+			/*
+			double currentHeatContent_kJ = getTankHeatContent_kJ();
+			double expectedHeatContent_kJ = previousHeatContent_kJ - totalHeatExchange_kJ;
+
+			double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
+			if (fabs(qBal_kJ) > 1.e-9) {
+				std::cout << qBal_kJ <<"\n";
+			}
+			*/
 		}
 		else {
-			//double previousHeatContent_kJ = getTankHeatContent_kJ();
 
-			// calculate number of nodes to draw
-			double drawVolume_N = drawVolume_L / nodeVolume_L;
 			double remainingDrawVolume_N = drawVolume_N;
 			if(drawVolume_L > tankVolume_L) {
 
@@ -2669,28 +2683,9 @@ void HPWH::updateTankTemps(double drawVolume_L,double inletT_C,double tankAmbien
 				mixTankInversions();
 			}
 
+			outletTemp_C = totalHeatExpelled_kJ / drawCp_kJperC;
 
-
-			outletTemp_C = totalHeatExpelled_kJ / drawVolume_N / nodeCp_kJperC;
-
-			//double drawCp_kJperC = cPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L; // heat capacity of draw
-			//double altDrawCp_kJperC = drawVolume_N * nodeCp_kJperC; // heat capacity of draw
-
-/*
-double totalHeatDrawn_kJ = totalHeatExpelled_kJ - totalHeatAdded_kJ;
-			currentHeatContent_kJ = getTankHeatContent_kJ();
-			expectedHeatContent_kJ = previousHeatContent_kJ - totalHeatExpelled_kJ + totalHeatAdded_kJ;
-			qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
-			if (fabs(qBal_kJ) > 1.e-9) {
-				std::cout << qBal_kJ <<"\n";
-			}
-			
-			double heatExpelled_kJ = previousHeatContent_kJ - currentHeatContent_kJ;
-			double C_draw_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
-			double deltaT_C = heatExpelled_kJ / C_draw_kJperC;
-			double averageInletT_C = highInletFraction * highInletT_C + lowInletFraction * lowInletT_C;
-			outletTemp_C = averageInletT_C + deltaT_C; // force rigid energy balance
-			*/
+			totalHeatExchange_kJ = totalHeatExpelled_kJ - totalHeatAdded_kJ;
 		}
 
 		// account for mixing at the bottom of the tank
@@ -2699,6 +2694,14 @@ double totalHeatDrawn_kJ = totalHeatExpelled_kJ - totalHeatAdded_kJ;
 			mixTankNodes(0,mixedBelowNode,3.0);
 		}
 
+
+		double currentHeatContent_kJ = getTankHeatContent_kJ();
+		double expectedHeatContent_kJ = previousHeatContent_kJ - totalHeatExchange_kJ;
+		double qBal_kJ = expectedHeatContent_kJ - currentHeatContent_kJ;
+		if (fabs(qBal_kJ) > 1.e-9) {
+			std::cout << qBal_kJ <<"\n";
+		}
+			
 	} //end if(draw_volume_L > 0)
 
 	// Initialize newTankTemps_C
@@ -3428,7 +3431,7 @@ bool HPWH::isEnergyBalanced(
 		- qOutWater_kJ;					// heat expelled to outlet by water flow
 
 	double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
-		
+	//std::cout<<qBal_kJ<<"\n";	
 	double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
 	if(fracEnergyDiff > fracEnergyTolerance) {
 		if(hpwhVerbosity >= VRB_reluctant) {
