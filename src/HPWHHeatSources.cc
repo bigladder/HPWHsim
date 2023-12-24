@@ -646,7 +646,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,double condenserTemp_C,d
 }
 
 double HPWH::HeatSource::calcMPOutletTemperature(double heatingCapacity_KW) {
-	return hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * CPWATER_kJperkgC);
+	return hpwh->tankTemps_C[externalOutletHeight] + heatingCapacity_KW / (mpFlowRate_LPS * DENSITYWATER_kgperL * cPWATER_kJperkgC);
 }
 
 void HPWH::HeatSource::setupDefrostMap(double derate35/*=0.8865*/) {
@@ -742,7 +742,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 
 	bool setPointExceeded = false;
 		
-	double nodeC_kJperC = hpwh->nodeVolume_L * DENSITYWATER_kgperL * CPWATER_kJperkgC;
 	double maxTargetT_C = std::min(maxSetpoint_C,hpwh->setpoint_C);
 	double targetT_C = 0.;
 	double inputTemp_BTUperHr = 0,capTemp_BTUperHr = 0,copTemp = 0;
@@ -785,7 +784,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,double minutesToRun,
 		double deltaT_C = targetT_C - hpwh->tankTemps_C[externalOutletHeight];
 		setPointExceeded = (deltaT_C < 0.);
 		if (!setPointExceeded) {
-			double nodeHeat_kJ = nodeC_kJperC * deltaT_C;
+			double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
 			// Caclulate fraction of node to move
 			double nodeFrac = 0.;
