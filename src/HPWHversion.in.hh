@@ -1,6 +1,6 @@
 /*
-* Version control
-*/
+ * Version control
+ */
 
 #ifndef HPWHversion_hh
 #define HPWHversion_hh
