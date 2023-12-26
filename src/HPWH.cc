@@ -5103,7 +5103,7 @@ int HPWH::HPWHinit_file(string configFile)
             else if (token == "externalInlet")
             {
                 line_ss >> tempInt;
-                if (tempInt < num_nodes && tempInt >= 0)
+                if (tempInt < num_nodes)
                 {
                     heatSources[heatsource].externalInletHeight = static_cast<int>(tempInt);
                 }
@@ -5119,7 +5119,7 @@ int HPWH::HPWHinit_file(string configFile)
             else if (token == "externalOutlet")
             {
                 line_ss >> tempInt;
-                if (tempInt < num_nodes && tempInt >= 0)
+                if (tempInt < num_nodes)
                 {
                     heatSources[heatsource].externalOutletHeight = static_cast<int>(tempInt);
                 }
