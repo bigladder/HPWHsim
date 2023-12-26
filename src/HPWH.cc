@@ -53,7 +53,7 @@ using std::string;
 
 const double HPWH::DENSITYWATER_kgperL = 0.995; /// mass density of water
 const double HPWH::KWATER_WpermC = 0.62;        /// thermal conductivity of water
-const double HPWH::cPWATER_kJperkgC = 4.180;    /// specific heat capcity of water
+const double HPWH::CPWATER_kJperkgC = 4.180;    /// specific heat capcity of water
 
 const double HPWH::TOL_MINVALUE = 0.0001;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
@@ -3378,7 +3378,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
         // calculate number of nodes to draw
         double drawVolume_N = drawVolume_L / nodeVolume_L;
-        double drawCp_kJperC = cPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
+        double drawCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 
         double totalHeatExchange_kJ = 0.;
 
@@ -3508,7 +3508,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
         // Get the "constant" tau for the stability condition and the conduction calculation
         const double tau = 2. * KWATER_WpermC /
-                           ((cPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *
+                           ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *
                             (nodeHeight_m * nodeHeight_m)) *
                            secondsPerStep;
         if (tau > 1.)
@@ -3889,7 +3889,7 @@ void HPWH::calcSizeConstants()
     const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
     nodeVolume_L = tankVolume_L / getNumNodes();
-    nodeCp_kJperC = cPWATER_kJperkgC * DENSITYWATER_kgperL * nodeVolume_L;
+    nodeCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * nodeVolume_L;
     nodeHeight_m = tankHeight_m / getNumNodes();
 
     // The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop +
@@ -4354,7 +4354,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
     double drawCp_kJperC =
-        cPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
 
     // Check energy balancing.
     double qInElectrical_kJ = 0.;

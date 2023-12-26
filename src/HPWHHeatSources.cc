@@ -845,7 +845,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
 double HPWH::HeatSource::calcMPOutletTemperature(double heatingCapacity_KW)
 {
     return hpwh->tankTemps_C[externalOutletHeight] +
-           heatingCapacity_KW / (mpFlowRate_LPS * cPWATER_kJperkgC * DENSITYWATER_kgperL);
+           heatingCapacity_KW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
 }
 
 void HPWH::HeatSource::setupDefrostMap(double derate35 /*=0.8865*/)
