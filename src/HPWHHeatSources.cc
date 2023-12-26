@@ -948,9 +948,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
                                          double& cop)
 {
 
-    input_BTUperHr = 0;
-    cap_BTUperHr = 0;
-    cop = 0;
+    input_BTUperHr = 0.;
+    cap_BTUperHr = 0.;
+    cop = 0.;
 
     bool setPointExceeded = false;
     double maxTargetT_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
@@ -1086,7 +1086,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         }
         // if there's still time remaining and you haven't heated to the cutoff
         // specified in shutsOff logic, keep heating
-    } while ((timeRemaining_min > 0) && (!shutsOff()) && (!setPointExceeded));
+    } while ((timeRemaining_min > 0.) && (!shutsOff()) && (!setPointExceeded));
 
     // divide outputs by sum of weight - the total time ran
     // not timeRemaining_min == minutesToRun is possible

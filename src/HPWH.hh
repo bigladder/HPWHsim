@@ -40,8 +40,8 @@ class HPWH
     static const int MAXOUTSTRING =
         200; /**< this is the maximum length for a debuging output string */
 
-    static const double DENSITYWATER_kgperL;
-    static const double KWATER_WpermC;
+    static const double DENSITYWATER_kgperL; /// mass density of water
+    static const double KWATER_WpermC; /// thermal conductivity of water
     static const double cPWATER_kJperkgC; /// specific heat capcity of water
     static const double TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
                                          to 0 this saves on computations */
