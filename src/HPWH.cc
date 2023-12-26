@@ -1475,7 +1475,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS
         return HPWH_ABORT;
     }
 
-    // convert setTankTemps to °C, if necessary
+    // convert setTankTemps to Â°C, if necessary
     if (units == UNITS_F)
         for (auto& T : setTankTemps)
             T = F_TO_C(T);
