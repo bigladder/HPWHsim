@@ -31,7 +31,7 @@ class HPWH
     static const int version_major = HPWHVRSN_MAJOR;
     static const int version_minor = HPWHVRSN_MINOR;
     static const int version_patch = HPWHVRSN_PATCH;
-    static const std::string version_maint; // Initialized in source file (HPWH.cc)
+    static const std::string version_maint;
 
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
@@ -42,7 +42,7 @@ class HPWH
 
     static const double DENSITYWATER_kgperL; /// mass density of water
     static const double KWATER_WpermC;       /// thermal conductivity of water
-    static const double cPWATER_kJperkgC;    /// specific heat capcity of water
+    static const double CPWATER_kJperkgC;    /// specific heat capcity of water
     static const double TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
                                          to 0 this saves on computations */
 
