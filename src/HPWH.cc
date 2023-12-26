@@ -3402,10 +3402,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
             if (drawVolume_L > tankVolume_L)
             {
                 // if (hpwhVerbosity >= VRB_reluctant) {
-                //	//msg("WARNING: Drawing more than the tank volume in one step is undefined
-                //behavior.  Terminating simulation.  \n"); 	msg("WARNING: Drawing more than the tank
-                //volume in one step is undefined behavior.  Continuing simulation at your own risk.
-                //\n");
+                // msg("WARNING: Drawing more than the tank volume in one step is undefined
+                // behavior.  Terminating simulation.  \n"); 	msg("WARNING: Drawing more than the
+                // tank volume in one step is undefined behavior.  Continuing simulation at your own
+                // risk. \n");
                 // }
                 // simHasFailed = true;
                 // return;
