@@ -1476,7 +1476,7 @@ int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS
         return HPWH_ABORT;
     }
 
-    // convert setTankTemps to °C, if necessary
+    // convert setTankTemps to ï¿½C, if necessary
     if (units == UNITS_F)
         for (auto& T : setTankTemps)
             T = F_TO_C(T);
@@ -3404,9 +3404,9 @@ void HPWH::updateTankTemps(double drawVolume_L,
             {
                 // if (hpwhVerbosity >= VRB_reluctant) {
                 //	//msg("WARNING: Drawing more than the tank volume in one step is undefined
-                //behavior.  Terminating simulation.  \n"); 	msg("WARNING: Drawing more than the tank
-                //volume in one step is undefined behavior.  Continuing simulation at your own risk.
-                //\n");
+                // behavior.  Terminating simulation.  \n"); 	msg("WARNING: Drawing more than the
+                // tank volume in one step is undefined behavior.  Continuing simulation at your own
+                // risk. \n");
                 // }
                 // simHasFailed = true;
                 // return;
