@@ -593,7 +593,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         tankSizeFixed = false;
         tankVolume_L = 120;
         tankUA_kJperHrC = 10; // 0 to turn off
-        // tankUA_kJperHrC = 0; //0 to turn off
+                              // tankUA_kJperHrC = 0; //0 to turn off
 
         doTempDepression = false;
         tankMixesOnDraw = false;
