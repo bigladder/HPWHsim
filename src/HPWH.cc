@@ -2856,12 +2856,12 @@ double HPWH::getTankHeatContent_kJ() const
     // returns tank heat content relative to 0 C using kJ
 
     // sum over nodes
-    double totalHeat_kJ = 0.;
+    double totalT_C = 0.;
     for (int i = 0; i < getNumNodes(); i++)
     {
-        totalHeat_kJ += nodeCp_kJperC * tankTemps_C[i];
+        totalT_C += tankTemps_C[i];
     }
-    return totalHeat_kJ;
+    return nodeCp_kJperC * totalT_C;
 }
 
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
