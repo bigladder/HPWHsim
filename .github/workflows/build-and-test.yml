@@ -61,16 +61,16 @@ jobs:
         run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
       - name: Create Build Directory
         run: cmake -E make_directory ${{github.workspace}}/build
-      #      - name: Set coverage variables
-      #        id: cov
-      #        run: |
-      #          if ${{matrix.coverage}}; then
-      #          echo "COVERAGE=ON" >> $GITHUB_OUTPUT
-      #          echo "STATIC_LIB=OFF" >> $GITHUB_OUTPUT
-      #          else
-      #          echo "COVERAGE=OFF" >> $GITHUB_OUTPUT
-      #          echo "STATIC_LIB=ON" >> $GITHUB_OUTPUT
-      #          fi
+      - name: Set coverage variables
+        id: cov
+        run: |
+          if ${{matrix.coverage}}; then
+          echo "COVERAGE=ON" >> $GITHUB_OUTPUT
+          echo "STATIC_LIB=OFF" >> $GITHUB_OUTPUT
+          else
+          echo "COVERAGE=OFF" >> $GITHUB_OUTPUT
+          echo "STATIC_LIB=ON" >> $GITHUB_OUTPUT
+          fi
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE="${{ matrix.config }}" -D${{ env.REPOSITORY_NAME }}_BUILD_TESTING="ON" -D${{ env.REPOSITORY_NAME }}_STATIC_LIB="${{ steps.cov.outputs.STATIC_LIB }}" -D${{ env.REPOSITORY_NAME }}_COVERAGE="${{ steps.cov.outputs.COVERAGE }}"
       - name: Build
