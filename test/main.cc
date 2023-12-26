@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     // HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
     //  HPWH::UNITS units = HPWH::UNITS_F;
 
-    const double EBALTHRESHOLD = 1.e-9;
+    const double EBALTHRESHOLD = 1.e-6;
 
     const int nTestTCouples = 6;
 

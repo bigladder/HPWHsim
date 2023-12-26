@@ -51,8 +51,8 @@ using std::cout;
 using std::endl;
 using std::string;
 
-const double HPWH::DENSITYWATER_kgperL = 0.995;
-const double HPWH::KWATER_WpermC = 0.62;
+const double HPWH::DENSITYWATER_kgperL = 0.995; /// mass density of water
+const double HPWH::KWATER_WpermC = 0.62; /// thermal conductivity of water
 const double HPWH::cPWATER_kJperkgC = 4.180; /// specific heat capcity of water
 
 const double HPWH::TOL_MINVALUE = 0.0001;
