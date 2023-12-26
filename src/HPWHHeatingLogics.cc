@@ -121,7 +121,7 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
+    if (hpwh->verbosity >= VRB_emetic)
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *

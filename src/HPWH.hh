@@ -244,17 +244,6 @@ class HPWH
         MODELS_AquaThermAire = 400 // heat exchanger model
     };
 
-    /// specifies the modes for writing output
-    /// the specified values are used for >= comparisons, so the numerical order is relevant
-    enum VERBOSITY
-    {
-        VRB_silent = 0,     /**< print no outputs  */
-        VRB_reluctant = 10, /**< print only outputs for fatal errors  */
-        VRB_minuteOut = 15, /**< print minutely output  */
-        VRB_typical = 20,   /**< print some basic debugging info  */
-        VRB_emetic = 30     /**< print all the things  */
-    };
-
     enum UNITS
     {
         UNITS_C,         /**< celsius  */
@@ -570,10 +559,6 @@ class HPWH
     void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
     void setMinutesPerStep(double newMinutesPerStep);
 
-    void setVerbosity(VERBOSITY hpwhVrb);
-    /**< sets the verbosity to the specified level  */
-    void setMessageCallback(void (*callbackFunc)(const std::string message, void* pContext),
-                            void* pContext);
     /**< sets the function to be used for message passing  */
     void printHeatSourceInfo();
     /**< this prints out the heat source info, nicely formatted
@@ -942,56 +927,9 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    struct ControlInfo
-    {
-        long outputCode;
-        long timeToRun_min;
-        double setpointT_C;
-        std::unique_ptr<double> initialTankT_C;
-        bool doConduction;
-        bool doInversionMixing;
-        std::unique_ptr<double> inletH;
-        std::unique_ptr<double> tankSize_gal;
-        std::unique_ptr<double> tot_limit;
-        bool useSoC;
-        std::string temperatureUnits;
-        bool recordMinuteData;
-        bool recordYearData;
-        bool modifyDraw;
-    };
-    bool readControlInfo(const std::string& testDirectory, ControlInfo& controlInfo);
-
-    typedef std::vector<double> Schedule;
-    bool readSchedules(const std::string& testDirectory,
-                       const ControlInfo& controlInfo,
-                       std::vector<Schedule>& allSchedules);
-    bool readSchedule(Schedule& schedule, std::string scheduleName, long testLength_min);
-
-    struct TestDesc
-    {
-        std::string presetOrFile;
-        std::string modelName;
-        std::string testName;
-    };
-
-    struct TestResults
-    {
-        bool passed;
-        double totalEnergyConsumed_kJ;
-        double totalVolumeRemoved_L;
-    };
-
-    bool runSimulation(const TestDesc& testDesc,
-                       const std::string& outputDirectory,
-                       const HPWH::ControlInfo& controlInfo,
-                       std::vector<HPWH::Schedule>& allSchedules,
-                       double airT_C,
-                       const bool doTempDepress,
-                       TestResults& testResults);
-
   private:
     class HeatSource;
-
+ 
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
@@ -1039,13 +977,6 @@ class HPWH
 
     void calcAndSetSoCFraction();
 
-    void sayMessage(const std::string message) const;
-    /**< if the messagePriority is >= the hpwh verbosity,
-    either pass your message out to the callback function or print it to cout
-    otherwise do nothing  */
-    void msg(const char* fmt, ...) const;
-    void msgV(const char* fmt, va_list ap = NULL) const;
-
     bool simHasFailed;
     /**< did an internal error cause the simulation to fail?  */
 
@@ -1060,14 +991,6 @@ class HPWH
 
     bool canScale;
     /**< can the HPWH scale capactiy and COP or not  */
-
-    VERBOSITY hpwhVerbosity;
-    /**< an enum to let the sim know how much output to say  */
-
-    void (*messageCallback)(const std::string message, void* contextPtr);
-    /**< function pointer to indicate an external message processing function  */
-    void* messageCallbackContextPtr;
-    /**< caller context pointer for external message processing  */
 
     MODELS hpwhModel;
     /**< The hpwh should know which preset initialized it, or if it was from a fileget */
@@ -1216,6 +1139,40 @@ class HPWH
     /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
     /// line (derived from heatExchangerEffectiveness).
     double nodeHeatExchangerEffectiveness;
+    
+public:
+    /// specifies the modes for writing output
+    /// the specified values are used for >= comparisons, so the numerical order is relevant
+    enum VERBOSITY
+    {
+        VRB_silent = 0,     /**< print no outputs  */
+        VRB_reluctant = 10, /**< print only outputs for fatal errors  */
+        VRB_minuteOut = 15, /**< print minutely output  */
+        VRB_typical = 20,   /**< print some basic debugging info  */
+        VRB_emetic = 30     /**< print all the things  */
+    };
+
+    VERBOSITY verbosity;
+    /**< an enum to let the sim know how much output to say  */
+
+    void setVerbosity(VERBOSITY verbosity_in);
+
+    static void (*messageCallback)(const std::string message, void* contextPtr);
+    /**< function pointer to indicate an external message processing function  */
+    static void* messageCallbackContextPtr;
+    /**< caller context pointer for external message processing  */
+
+    static void sayMessage(const std::string message);
+    /**< if the messagePriority is >= the hpwh verbosity,
+    either pass your message out to the callback function or print it to cout
+    otherwise do nothing  */
+    static void msg(const char* fmt, ...);
+    static void msgV(const char* fmt, va_list ap = NULL);
+
+    /**< sets the verbosity to the specified level  */
+    static void setMessageCallback(void (*callbackFunc)(const std::string message, void* pContext),
+                            void* pContext);
+    class Simulator;
 
 }; // end of HPWH class
 
@@ -1538,6 +1495,68 @@ class HPWH::HeatSource
     /**< sorts the Performance Map by increasing external temperatures */
 
 }; // end of HeatSource class
+
+class HPWH::Simulator {
+  public:
+    friend class HPWH;
+
+    VERBOSITY verbosity;
+    void setVerbosity(VERBOSITY verbosity_in) { verbosity = verbosity_in;}
+
+    Simulator();
+    /**< constructor assigns a pointer to the hpwh that owns this heat source  */
+    Simulator(const Simulator& simulator_in);            /// copy constructor
+    Simulator& operator=(const Simulator& simulator_in); /// assignment operator
+ 
+    struct ControlInfo
+    {
+        long outputCode;
+        long timeToRun_min;
+        double setpointT_C;
+        std::unique_ptr<double> initialTankT_C;
+        bool doConduction;
+        bool doInversionMixing;
+        std::unique_ptr<double> inletH;
+        std::unique_ptr<double> tankSize_gal;
+        std::unique_ptr<double> tot_limit;
+        bool useSoC;
+        std::string temperatureUnits;
+        bool recordMinuteData;
+        bool recordYearData;
+        bool modifyDraw;
+    };
+    bool readControlInfo(const std::string& testDirectory, ControlInfo& controlInfo);
+
+    typedef std::vector<double> Schedule;
+    bool readSchedules(const std::string& testDirectory,
+                       const ControlInfo& controlInfo,
+                       std::vector<Schedule>& allSchedules);
+    bool readSchedule(Schedule& schedule, std::string scheduleName, long testLength_min);
+
+    struct TestDesc
+    {
+        std::string presetOrFile;
+        std::string modelName;
+        std::string testName;
+    };
+
+    struct TestResults
+    {
+        bool passed;
+        double totalEnergyConsumed_kJ;
+        double totalVolumeRemoved_L;
+    };
+
+    bool run(HPWH &hpwh,
+        const TestDesc& testDesc,
+                       const std::string& outputDirectory,
+                       const ControlInfo& controlInfo,
+                       std::vector<Schedule>& allSchedules,
+                       double airT_C,
+                       const bool doTempDepress,
+                       TestResults& testResults);
+
+};
 
 constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html

@@ -22,6 +22,7 @@ set(source
   HPWHHeatSources.cc
   HPWHHeatingLogics.cc
   HPWHpresets.cc
+  HPWHSimulator.cc
 )
 add_library(libHPWHsim ${source} ${headers})
 

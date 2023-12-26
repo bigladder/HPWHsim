@@ -10,8 +10,8 @@
 const std::vector<std::string>
     sProfileNames({"24hr67_vsmall", "24hr67_low", "24hr67_medium", "24hr67_high"});
 
-static bool runTest(const HPWH::TestDesc testDesc,
-                    HPWH::TestResults& testResults,
+static bool runTest(const HPWH::Simulator::TestDesc testDesc,
+                    HPWH::Simulator::TestResults& testResults,
                     double airT_C = 0.,
                     bool doTempDepress = false)
 {
@@ -43,17 +43,18 @@ static bool runTest(const HPWH::TestDesc testDesc,
     hpwh.setMaxTempDepression(4.);
     hpwh.setDoTempDepression(doTempDepress);
 
-    HPWH::ControlInfo controlInfo;
-    result = hpwh.readControlInfo(testDesc.testName, controlInfo);
+    HPWH::Simulator simulator;
+    HPWH::Simulator::ControlInfo controlInfo;
+    result = simulator.readControlInfo(testDesc.testName, controlInfo);
     ASSERTTRUE(result);
 
-    std::vector<HPWH::Schedule> allSchedules;
-    result = hpwh.readSchedules(testDesc.testName, controlInfo, allSchedules);
+    std::vector<HPWH::Simulator::Schedule> allSchedules;
+    result = simulator.readSchedules(testDesc.testName, controlInfo, allSchedules);
     ASSERTTRUE(result);
 
     controlInfo.recordMinuteData = false;
     controlInfo.recordYearData = false;
-    result = hpwh.runSimulation(
+    result = simulator.run(hpwh,
         testDesc, sOutputDirectory, controlInfo, allSchedules, airT_C, doTempDepress, testResults);
     ASSERTTRUE(result);
 
@@ -65,7 +66,7 @@ static bool
 runUEFTestSuite(const std::string& sModelName, const std::string& sPresetOrFile, double& UEF)
 {
 
-    HPWH::TestDesc testDesc;
+    HPWH::Simulator::TestDesc testDesc;
     testDesc.modelName = sModelName;
     testDesc.presetOrFile = sPresetOrFile;
 
@@ -75,7 +76,7 @@ runUEFTestSuite(const std::string& sModelName, const std::string& sPresetOrFile,
     bool result = true;
     for (auto& sProfileName : sProfileNames)
     {
-        HPWH::TestResults testResults;
+        HPWH::Simulator::TestResults testResults;
         testDesc.testName = sProfileName;
         result &= runTest(testDesc, testResults);
 

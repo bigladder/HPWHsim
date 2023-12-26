@@ -26,6 +26,7 @@ using std::string;
 int main(int argc, char* argv[])
 {
     HPWH hpwh;
+    HPWH::Simulator simulator;
 
     const long maximumDurationNormalTest_min = 500000;
 
@@ -74,7 +75,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    HPWH::TestDesc testDesc;
+    HPWH::Simulator::TestDesc testDesc;
     testDesc.presetOrFile = input1;
     testDesc.modelName = input2;
     testDesc.testName = input3;
@@ -117,15 +118,15 @@ int main(int argc, char* argv[])
     hpwh.setMaxTempDepression(4.);
     hpwh.setDoTempDepression(doTempDepress);
 
-    HPWH::ControlInfo controlInfo;
-    if (!hpwh.readControlInfo(testDesc.testName, controlInfo))
+    HPWH::Simulator::ControlInfo controlInfo;
+    if (!simulator.readControlInfo(testDesc.testName, controlInfo))
     {
         cout << "Control file testInfo.txt has unsettable specifics in it. \n";
         exit(1);
     }
 
-    std::vector<HPWH::Schedule> allSchedules;
-    if (!hpwh.readSchedules(testDesc.testName, controlInfo, allSchedules))
+    std::vector<HPWH::Simulator::Schedule> allSchedules;
+    if (!simulator.readSchedules(testDesc.testName, controlInfo, allSchedules))
     {
         exit(1);
     }
@@ -138,14 +139,15 @@ int main(int argc, char* argv[])
         (hpwh.getHPWHModel() <= HPWH::MODELS_RHEEM_HPHD135VNU_483_MP) &&
         (controlInfo.timeToRun_min > maximumDurationNormalTest_min));
 
-    HPWH::TestResults testResults;
-    if (!hpwh.runSimulation(testDesc,
-                            outputDirectory,
-                            controlInfo,
-                            allSchedules,
-                            airT_C,
-                            doTempDepress,
-                            testResults))
+    HPWH::Simulator::TestResults testResults;
+    if (!simulator.run(hpwh,
+                       testDesc,
+                       outputDirectory,
+                       controlInfo,
+                       allSchedules,
+                       airT_C,
+                       doTempDepress,
+                       testResults))
     {
         exit(1);
     }

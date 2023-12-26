@@ -27,7 +27,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
     if (lowerPower_W < 550)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Resistance tank lower element wattage below 550 W.  DOES NOT COMPUTE\n");
         }
@@ -35,7 +35,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     }
     if (upperPower_W < 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
@@ -43,7 +43,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     }
     if (energyFactor <= 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
         }
@@ -111,7 +111,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
 
     if (tankUA_kJperHrC < 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
+        if (verbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
         {
             msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
@@ -136,7 +136,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
         heatSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic)
+    if (verbosity >= VRB_emetic)
     {
         for (int i = 0; i < getNumHeatSources(); i++)
         {
@@ -163,7 +163,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
     if (lowerPower_W < 0)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Lower resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
@@ -171,7 +171,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     }
     if (upperPower_W < 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
@@ -179,7 +179,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     }
     if (rValue_M2KperW <= 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
         }
@@ -241,7 +241,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
 
     if (tankUA_kJperHrC < 0.)
     {
-        if (hpwhVerbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
+        if (verbosity >= VRB_reluctant && tankUA_kJperHrC < -0.1)
         {
             msg("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
@@ -266,7 +266,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
         source.sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic)
+    if (verbosity >= VRB_emetic)
     {
         for (int i = 0; i < getNumHeatSources(); i++)
         {
@@ -363,7 +363,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     int failure = this->setTankSize(tankVol_L);
     if (failure == HPWH_ABORT)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("Failure to set tank size in generic hpwh init.");
         }
@@ -437,7 +437,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
         heatSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic)
+    if (verbosity >= VRB_emetic)
     {
         for (int i = 0; i < getNumHeatSources(); i++)
         {
@@ -4223,7 +4223,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         }
         else
         {
-            if (hpwhVerbosity >= VRB_reluctant)
+            if (verbosity >= VRB_reluctant)
             {
                 msg("Incorrect model specification.  \n");
             }
@@ -4554,7 +4554,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
     else
     {
-        if (hpwhVerbosity >= VRB_reluctant)
+        if (verbosity >= VRB_reluctant)
         {
             msg("You have tried to select a preset model which does not exist.  \n");
         }
@@ -4586,7 +4586,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         heatSources[i].sortPerformanceMap();
     }
 
-    if (hpwhVerbosity >= VRB_emetic)
+    if (verbosity >= VRB_emetic)
     {
         for (int i = 0; i < getNumHeatSources(); i++)
         {
