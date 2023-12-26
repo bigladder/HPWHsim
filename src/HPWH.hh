@@ -929,7 +929,7 @@ class HPWH
 
   private:
     class HeatSource;
- 
+
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
@@ -1139,8 +1139,8 @@ class HPWH
     /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
     /// line (derived from heatExchangerEffectiveness).
     double nodeHeatExchangerEffectiveness;
-    
-public:
+
+  public:
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
     enum VERBOSITY
@@ -1171,7 +1171,7 @@ public:
 
     /**< sets the verbosity to the specified level  */
     static void setMessageCallback(void (*callbackFunc)(const std::string message, void* pContext),
-                            void* pContext);
+                                   void* pContext);
     class Simulator;
 
 }; // end of HPWH class
@@ -1496,18 +1496,19 @@ class HPWH::HeatSource
 
 }; // end of HeatSource class
 
-class HPWH::Simulator {
+class HPWH::Simulator
+{
   public:
     friend class HPWH;
 
     VERBOSITY verbosity;
-    void setVerbosity(VERBOSITY verbosity_in) { verbosity = verbosity_in;}
+    void setVerbosity(VERBOSITY verbosity_in) { verbosity = verbosity_in; }
 
     Simulator();
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
     Simulator(const Simulator& simulator_in);            /// copy constructor
     Simulator& operator=(const Simulator& simulator_in); /// assignment operator
- 
+
     struct ControlInfo
     {
         long outputCode;
@@ -1547,15 +1548,14 @@ class HPWH::Simulator {
         double totalVolumeRemoved_L;
     };
 
-    bool run(HPWH &hpwh,
-        const TestDesc& testDesc,
-                       const std::string& outputDirectory,
-                       const ControlInfo& controlInfo,
-                       std::vector<Schedule>& allSchedules,
-                       double airT_C,
-                       const bool doTempDepress,
-                       TestResults& testResults);
-
+    bool run(HPWH& hpwh,
+             const TestDesc& testDesc,
+             const std::string& outputDirectory,
+             const ControlInfo& controlInfo,
+             std::vector<Schedule>& allSchedules,
+             double airT_C,
+             const bool doTempDepress,
+             TestResults& testResults);
 };
 
 constexpr double BTUperKWH =

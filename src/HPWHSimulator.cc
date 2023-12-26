@@ -9,14 +9,11 @@
 
 #include "HPWH.hh"
 
-HPWH::Simulator::Simulator() : verbosity(VRB_typical)
-{
-}
+HPWH::Simulator::Simulator() : verbosity(VRB_typical) {}
 
 HPWH::Simulator::Simulator(const Simulator& simulator) { *this = simulator; }
 
-
-HPWH::Simulator &HPWH::Simulator::operator=(const Simulator& simulator_in)
+HPWH::Simulator& HPWH::Simulator::operator=(const Simulator& simulator_in)
 {
     if (this == &simulator_in)
     {
@@ -32,7 +29,9 @@ HPWH::Simulator &HPWH::Simulator::operator=(const Simulator& simulator_in)
 ///	@param[in]	testLength_min		length of test (min)
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
-bool HPWH::Simulator::readSchedule(Schedule& schedule, std::string scheduleName, long testLength_min)
+bool HPWH::Simulator::readSchedule(Schedule& schedule,
+                                   std::string scheduleName,
+                                   long testLength_min)
 {
     int minuteHrTmp;
     bool hourInput;
@@ -224,8 +223,8 @@ bool HPWH::Simulator::readControlInfo(const std::string& testDirectory, ControlI
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
 bool HPWH::Simulator::readSchedules(const std::string& testDirectory,
-                         const ControlInfo& controlInfo,
-                         std::vector<Schedule>& allSchedules)
+                                    const ControlInfo& controlInfo,
+                                    std::vector<Schedule>& allSchedules)
 {
     std::vector<std::string> scheduleNames;
     scheduleNames.push_back("inletT");
@@ -276,7 +275,7 @@ bool HPWH::Simulator::readSchedules(const std::string& testDirectory,
         }
     }
 
-     if (outputCode != 0)
+    if (outputCode != 0)
     {
         if (verbosity >= VRB_reluctant)
         {
@@ -298,14 +297,14 @@ bool HPWH::Simulator::readSchedules(const std::string& testDirectory,
 ///	@param[out]	testResults		data structure containing test results
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
-bool HPWH::Simulator::run(HPWH &hpwh,
-                        const TestDesc& testDesc,
-                         const std::string& outputDirectory,
-                         const ControlInfo& controlInfo,
-                         std::vector<Schedule>& allSchedules,
-                         double airT_C,
-                         const bool doTempDepress,
-                         TestResults& testResults)
+bool HPWH::Simulator::run(HPWH& hpwh,
+                          const TestDesc& testDesc,
+                          const std::string& outputDirectory,
+                          const ControlInfo& controlInfo,
+                          std::vector<Schedule>& allSchedules,
+                          double airT_C,
+                          const bool doTempDepress,
+                          TestResults& testResults)
 {
     const double energyBalThreshold = 0.0001; // 0.1 %
     const int nTestTCouples = 6;
@@ -393,7 +392,7 @@ bool HPWH::Simulator::run(HPWH &hpwh,
 
     if (controlInfo.recordMinuteData)
     {
-       std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
+        std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
         if (hpwh.isCompressoExternalMultipass())
         {
             sHeader += "condenserInletT,condenserOutletT,externalVolGPM,";
@@ -450,8 +449,9 @@ bool HPWH::Simulator::run(HPWH &hpwh,
             const double mixT_C = F_TO_C(125.);
             if (hpwh.getSetpoint() <= mixT_C)
             { // do a simple mix down of the draw for the cold-water temperature
-                drawVolume_L *= (mixT_C - inletT_C) /
-                                (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_C) - inletT_C);
+                drawVolume_L *=
+                    (mixT_C - inletT_C) /
+                    (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_C) - inletT_C);
             }
         }
 
@@ -461,14 +461,15 @@ bool HPWH::Simulator::run(HPWH &hpwh,
         double previousTankHeatContent_kJ = hpwh.getTankHeatContent_kJ();
 
         // run a step
-        int runResult = hpwh.runOneStep(inletT_C,     // inlet water temperature (C)
-                                   drawVolume_L, // draw volume (L)
-                                   ambientT_C,   // ambient Temp (C)
-                                   externalT_C,  // external Temp (C)
-                                   drStatus,     // DDR Status (now an enum. Fixed for now as allow)
-                                   drawVolume2_L, // inlet-2 volume (L)
-                                   inletT2_C,     // inlet-2 Temp (C)
-                                   NULL);         // no extra heat
+        int runResult =
+            hpwh.runOneStep(inletT_C,      // inlet water temperature (C)
+                            drawVolume_L,  // draw volume (L)
+                            ambientT_C,    // ambient Temp (C)
+                            externalT_C,   // external Temp (C)
+                            drStatus,      // DDR Status (now an enum. Fixed for now as allow)
+                            drawVolume2_L, // inlet-2 volume (L)
+                            inletT2_C,     // inlet-2 Temp (C)
+                            NULL);         // no extra heat
 
         if (runResult != 0)
         {
@@ -571,7 +572,8 @@ bool HPWH::Simulator::run(HPWH &hpwh,
         testResults.totalEnergyConsumed_kJ += energyIn_kJ;
         testResults.totalVolumeRemoved_L += drawVolume_L;
     }
-    // -------------------------------------Simulation complete-------------------------------------- //
+    // -------------------------------------Simulation
+    // complete-------------------------------------- //
 
     if (controlInfo.recordMinuteData)
     {

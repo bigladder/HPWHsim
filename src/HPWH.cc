@@ -325,10 +325,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 };
 
 // public HPWH functions
-HPWH::HPWH() : verbosity(VRB_silent)
-{
-    setAllDefaults();
-};
+HPWH::HPWH() : verbosity(VRB_silent) { setAllDefaults(); };
 
 void HPWH::setAllDefaults()
 {
@@ -5299,7 +5296,6 @@ int HPWH::HPWHinit_file(string configFile)
     return 0;
 }
 #endif
-
 
 void HPWH::setVerbosity(VERBOSITY verbosity_in) { verbosity = verbosity_in; }
 

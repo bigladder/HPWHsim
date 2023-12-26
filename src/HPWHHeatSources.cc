@@ -214,7 +214,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         //	if (lock == true && backupHeatSource == NULL) {
         //		if (hpwh->verbosity >= HPWH::VRB_emetic) {
         //			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined.
-        //Simulation will continue without lock-out");
+        // Simulation will continue without lock-out");
         //		}
         //		lock = false;
         //	}
@@ -248,15 +248,13 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             heatSourceAmbientT_C < maxT - hysteresis_dC)
         {
             unlock = true;
-            if (hpwh->verbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C > minT + hysteresis_dC)
+            if (hpwh->verbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT + hysteresis_dC)
             {
                 hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
                           minT);
             }
-            if (hpwh->verbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C < maxT - hysteresis_dC)
+            if (hpwh->verbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT - hysteresis_dC)
             {
                 hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
