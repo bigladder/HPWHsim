@@ -319,13 +319,13 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
     minutesPerStep = minutesPerStep_in;
     secondsPerStep = sec_per_min * minutesPerStep;
     hoursPerStep = minutesPerStep / min_per_hr;
-};
+}
 
 // public HPWH functions
 HPWH::HPWH() : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
-};
+}
 
 void HPWH::setAllDefaults()
 {
