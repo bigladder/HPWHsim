@@ -214,7 +214,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         //	if (lock == true && backupHeatSource == NULL) {
         //		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
         //			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined.
-        //Simulation will continue without lock-out");
+        // Simulation will continue without lock-out");
         //		}
         //		lock = false;
         //	}
