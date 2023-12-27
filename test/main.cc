@@ -119,14 +119,20 @@ int main(int argc, char* argv[])
     hpwh.setDoTempDepression(doTempDepress);
 
     HPWH::Simulator::ControlInfo controlInfo;
-    if (!simulator.readControlInfo(testDesc.testName, controlInfo))
+    std::ifstream fileStream;
+
+    if (!simulator.openFileText(fileStream, testDesc.testName + "/" + "testInfo.txt"))
     {
-        cout << "Control file testInfo.txt has unsettable specifics in it. \n";
+        exit(1);
+    }
+
+    if (!simulator.readControlInfo(fileStream, controlInfo))
+    {
         exit(1);
     }
 
     std::vector<HPWH::Simulator::Schedule> allSchedules;
-    if (!simulator.readSchedules(testDesc.testName, controlInfo, allSchedules))
+    if (!simulator.readSchedules(false, testDesc.testName, controlInfo, allSchedules))
     {
         exit(1);
     }
@@ -151,6 +157,5 @@ int main(int argc, char* argv[])
     {
         exit(1);
     }
-
     return 0;
 }

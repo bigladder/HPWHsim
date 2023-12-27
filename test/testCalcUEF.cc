@@ -5,6 +5,7 @@
 #include "testUtilityFcts.cc"
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 const std::vector<std::string>
@@ -45,17 +46,28 @@ static bool runTest(const HPWH::Simulator::TestDesc testDesc,
 
     HPWH::Simulator simulator;
     HPWH::Simulator::ControlInfo controlInfo;
-    result = simulator.readControlInfo(testDesc.testName, controlInfo);
+    std::ifstream fileStream;
+
+    result = simulator.openFileText(fileStream, testDesc.testName + "/" + "testInfo.txt");
+    ASSERTTRUE(result);
+
+    result = simulator.readControlInfo(fileStream, controlInfo);
     ASSERTTRUE(result);
 
     std::vector<HPWH::Simulator::Schedule> allSchedules;
-    result = simulator.readSchedules(testDesc.testName, controlInfo, allSchedules);
+    result = simulator.readSchedules(false, testDesc.testName, controlInfo, allSchedules);
     ASSERTTRUE(result);
 
     controlInfo.recordMinuteData = false;
     controlInfo.recordYearData = false;
     result = simulator.run(hpwh,
-        testDesc, sOutputDirectory, controlInfo, allSchedules, airT_C, doTempDepress, testResults);
+                           testDesc,
+                           sOutputDirectory,
+                           controlInfo,
+                           allSchedules,
+                           airT_C,
+                           doTempDepress,
+                           testResults);
     ASSERTTRUE(result);
 
     return result;

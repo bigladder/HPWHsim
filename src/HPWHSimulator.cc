@@ -22,87 +22,36 @@ HPWH::Simulator& HPWH::Simulator::operator=(const Simulator& simulator_in)
     return *this;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Reads a named schedule
-/// @param[out]	schedule			schedule values
-///	@param[in]	scheduleName		name of schedule to read
-///	@param[in]	testLength_min		length of test (min)
-/// @return		true if successful, false otherwise
-//-----------------------------------------------------------------------------
-bool HPWH::Simulator::readSchedule(Schedule& schedule,
-                                   std::string scheduleName,
-                                   long testLength_min)
+bool HPWH::Simulator::openFileText(std::ifstream& fileStream, const std::string& sFilename)
 {
-    int minuteHrTmp;
-    bool hourInput;
-    std::string line, snippet, s, minORhr;
-    double valTmp;
-
-    std::ifstream inputFile(scheduleName.c_str());
-
-    if (verbosity >= VRB_reluctant)
-    {
-        msg("Opening %s\n", scheduleName.c_str());
-    }
-
-    if (!inputFile.is_open())
-    {
-        return false;
-    }
-
-    inputFile >> snippet >> valTmp;
-
-    if (snippet != "default")
+    // std::string fileToOpen = testDirectory + "/" + "testInfo.txt";
+    // Read the test control file
+    fileStream.open(sFilename.c_str());
+    if (!fileStream.is_open())
     {
         if (verbosity >= VRB_reluctant)
         {
-            msg("First line of %s must specify default\n", scheduleName.c_str());
+            msg("Could not open control file %s\n", sFilename.c_str());
         }
         return false;
     }
+    return true;
+}
 
-    // Fill with the default value
-    schedule.assign(testLength_min, valTmp);
-
-    // Burn the first two lines
-    std::getline(inputFile, line);
-    std::getline(inputFile, line);
-
-    std::stringstream ss(line); // Will parse with a stringstream
-    // Grab the first token, which is the minute or hour marker
-    ss >> minORhr;
-    if (minORhr.empty())
-    { // If nothing left in the file
-        return true;
-    }
-    hourInput = tolower(minORhr.at(0)) == 'h';
-    char c; // for commas
-    while (inputFile >> minuteHrTmp >> c >> valTmp)
+bool HPWH::Simulator::openResourceText(std::istream& resourceStream, const std::string& sFilename)
+{
+    std::ifstream* controlFile = static_cast<std::ifstream*>(&resourceStream);
+    // std::string fileToOpen = testDirectory + "/" + "testInfo.txt";
+    // Read the test control file
+    controlFile->open(sFilename.c_str());
+    if (!controlFile->is_open())
     {
-        if (minuteHrTmp >= static_cast<int>(schedule.size()))
+        if (verbosity >= VRB_reluctant)
         {
-            if (verbosity >= VRB_reluctant)
-            {
-                msg("Input file for %s has more minutes than test definition\n",
-                    scheduleName.c_str());
-            }
-            return false;
+            msg("Could not open control file %s\n", sFilename.c_str());
         }
-        // update the value
-        if (!hourInput)
-        {
-            schedule[minuteHrTmp] = valTmp;
-        }
-        else if (hourInput)
-        {
-            for (int j = minuteHrTmp * 60; j < (minuteHrTmp + 1) * 60; j++)
-            {
-                schedule[j] = valTmp;
-            }
-        }
+        return false;
     }
-
-    inputFile.close();
     return true;
 }
 
@@ -112,21 +61,8 @@ bool HPWH::Simulator::readSchedule(Schedule& schedule,
 ///	@param[out]	controlInfo		data structure containing control info
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
-bool HPWH::Simulator::readControlInfo(const std::string& testDirectory, ControlInfo& controlInfo)
+bool HPWH::Simulator::readControlInfo(std::istream& controlStream, ControlInfo& controlInfo)
 {
-    std::ifstream controlFile;
-    std::string fileToOpen = testDirectory + "/" + "testInfo.txt";
-    // Read the test control file
-    controlFile.open(fileToOpen.c_str());
-    if (!controlFile.is_open())
-    {
-        if (verbosity >= VRB_reluctant)
-        {
-            msg("Could not open control file %s\n", fileToOpen.c_str());
-        }
-        return false;
-    }
-
     controlInfo.outputCode = 0;
     controlInfo.timeToRun_min = 0;
     controlInfo.setpointT_C = 0.;
@@ -144,7 +80,7 @@ bool HPWH::Simulator::readControlInfo(const std::string& testDirectory, ControlI
 
     std::string token;
     std::string sValue;
-    while (controlFile >> token >> sValue)
+    while (controlStream >> token >> sValue)
     {
         if (token == "setpoint")
         { // If a setpoint was specified then override the default
@@ -194,7 +130,6 @@ bool HPWH::Simulator::readControlInfo(const std::string& testDirectory, ControlI
             }
         }
     }
-    controlFile.close();
 
     if (controlInfo.temperatureUnits == "F")
     {
@@ -216,13 +151,86 @@ bool HPWH::Simulator::readControlInfo(const std::string& testDirectory, ControlI
 }
 
 //-----------------------------------------------------------------------------
+///	@brief	Reads a named schedule
+/// @param[out]	schedule			schedule values
+///	@param[in]	scheduleName		name of schedule to read
+///	@param[in]	testLength_min		length of test (min)
+/// @return		true if successful, false otherwise
+//-----------------------------------------------------------------------------
+bool HPWH::Simulator::readSchedule(Schedule& schedule,
+                                   const std::string& scheduleName,
+                                   std::istream& scheduleStream,
+                                   long testLength_min)
+{
+    int minuteHrTmp;
+    bool hourInput;
+    std::string line, snippet, s, minORhr;
+    double valTmp;
+
+    scheduleStream >> snippet >> valTmp;
+
+    if (snippet != "default")
+    {
+        if (verbosity >= VRB_reluctant)
+        {
+            msg("First line of %s must specify default\n", scheduleName.c_str());
+        }
+        return false;
+    }
+
+    // Fill with the default value
+    schedule.assign(testLength_min, valTmp);
+
+    // Burn the first two lines
+    std::getline(scheduleStream, line);
+    std::getline(scheduleStream, line);
+
+    std::stringstream ss(line); // Will parse with a stringstream
+    // Grab the first token, which is the minute or hour marker
+    ss >> minORhr;
+    if (minORhr.empty())
+    { // If nothing left in the file
+        return true;
+    }
+    hourInput = tolower(minORhr.at(0)) == 'h';
+    char c; // for commas
+    while (scheduleStream >> minuteHrTmp >> c >> valTmp)
+    {
+        if (minuteHrTmp >= static_cast<int>(schedule.size()))
+        {
+            if (verbosity >= VRB_reluctant)
+            {
+                msg("Input file for %s has more minutes than test definition\n",
+                    scheduleName.c_str());
+            }
+            return false;
+        }
+        // update the value
+        if (!hourInput)
+        {
+            schedule[minuteHrTmp] = valTmp;
+        }
+        else if (hourInput)
+        {
+            for (int j = minuteHrTmp * 60; j < (minuteHrTmp + 1) * 60; j++)
+            {
+                schedule[j] = valTmp;
+            }
+        }
+    }
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 ///	@brief	Reads the schedules for a test
 ///	@param[in]	testDirectory	path to directory containing test files
 ///	@param[in]	controlInfo		data structure containing control info
 ///	@param[out]	allSchedules	collection of test schedules read
 /// @return		true if successful, false otherwise
 //-----------------------------------------------------------------------------
-bool HPWH::Simulator::readSchedules(const std::string& testDirectory,
+bool HPWH::Simulator::readSchedules(const bool isResource,
+                                    const std::string& testName,
                                     const ControlInfo& controlInfo,
                                     std::vector<Schedule>& allSchedules)
 {
@@ -239,20 +247,37 @@ bool HPWH::Simulator::readSchedules(const std::string& testDirectory,
     allSchedules.reserve(scheduleNames.size());
     for (auto i = 0; i < scheduleNames.size(); i++)
     {
-        std::string fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
         Schedule schedule;
-        if (!readSchedule(schedule, fileToOpen, controlInfo.timeToRun_min))
+        if (isResource)
         {
-            if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC")
+        }
+        else
+        {
+            std::ifstream fileStream;
+            std::string sFilename = testName + "/" + scheduleNames[i] + "schedule.csv";
+            if (openFileText(fileStream, sFilename))
+            {
+
+                if (readSchedule(schedule, scheduleNames[i], fileStream, controlInfo.timeToRun_min))
+                {
+                    fileStream.close();
+                }
+                else
+                {
+                    msg("Unable to read schedule file %s\n", scheduleNames[i].c_str());
+                    return false;
+                }
+            }
+            else if (scheduleNames[i] != "setpoint" && scheduleNames[i] != "SoC")
             {
                 if (verbosity >= VRB_reluctant)
                 {
-                    msg("readSchedule returns an error on schedule %s\n", scheduleNames[i].c_str());
+                    msg("Unable to open schedule file %s\n", scheduleNames[i].c_str());
                 }
                 return false;
             }
+            allSchedules.push_back(schedule);
         }
-        allSchedules.push_back(schedule);
     }
 
     if (controlInfo.temperatureUnits == "F")
@@ -487,8 +512,8 @@ bool HPWH::Simulator::run(HPWH& hpwh,
             {
                 msg("WARNING: On minute %i, HPWH has an energy balance error.\n", i);
             }
-            // return false; // fails on ModelTest.testREGoesTo93C.TamScalable_SP.Preset; issue in
-            // addHeatExternal
+            // return false; // fails on ModelTest.testREGoesTo93C.TamScalable_SP.Preset; issue
+            // in addHeatExternal
         }
 
         // check timing
@@ -516,7 +541,8 @@ bool HPWH::Simulator::run(HPWH& hpwh,
             {
                 if (verbosity >= VRB_reluctant)
                 {
-                    msg("ERROR: Externally heated volumes are inconsistent! Volume Heated [gal]: "
+                    msg("ERROR: Externally heated volumes are inconsistent! Volume Heated "
+                        "[gal]: "
                         "%d, mpFlowRate in 1 min [gal] %d\n",
                         volumeHeated_gal,
                         mpFlowVolume_gal);
@@ -525,7 +551,8 @@ bool HPWH::Simulator::run(HPWH& hpwh,
             }
         }
 
-        // location temperature reported with temperature depression, instead of ambient temperature
+        // location temperature reported with temperature depression, instead of ambient
+        // temperature
         if (doTempDepress)
         {
             ambientT_C = hpwh.getLocationTemp_C();
@@ -572,8 +599,7 @@ bool HPWH::Simulator::run(HPWH& hpwh,
         testResults.totalEnergyConsumed_kJ += energyIn_kJ;
         testResults.totalVolumeRemoved_L += drawVolume_L;
     }
-    // -------------------------------------Simulation
-    // complete-------------------------------------- //
+    // -----Simulation complete-------------------------------------- //
 
     if (controlInfo.recordMinuteData)
     {

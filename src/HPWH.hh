@@ -1526,13 +1526,22 @@ class HPWH::Simulator
         bool recordYearData;
         bool modifyDraw;
     };
-    bool readControlInfo(const std::string& testDirectory, ControlInfo& controlInfo);
+    bool openFileText(std::ifstream& fileStream, const std::string& sFilename);
+    void closeFileText(std::ifstream& fileStream);
+
+    bool openResourceText(std::istream& resourceStream, const std::string& sFilename);
+
+    bool readControlInfo(std::istream& controlStream, ControlInfo& controlInfo);
 
     typedef std::vector<double> Schedule;
-    bool readSchedules(const std::string& testDirectory,
+    bool readSchedules(const bool isResource,
+                       const std::string& testName,
                        const ControlInfo& controlInfo,
                        std::vector<Schedule>& allSchedules);
-    bool readSchedule(Schedule& schedule, std::string scheduleName, long testLength_min);
+    bool readSchedule(Schedule& schedule,
+                      const std::string& scheduleName,
+                      std::istream& scheduleStream,
+                      long testLength_min);
 
     struct TestDesc
     {
