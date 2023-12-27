@@ -43,19 +43,6 @@ target_compile_options(${PROJECT_NAME}_common_interface INTERFACE
         >
         )
 
-#======================#
-# Compiler definitions #
-#======================#
-
-target_compile_definitions(${PROJECT_NAME}_common_interface INTERFACE
-        # GCC
-        $<$<CXX_COMPILER_ID:GNU>:
-        $<$<CONFIG:Debug>:
-        _GLIBCXX_DEBUG  # Standard container debug mode (bounds checking, ...)
-        >
-        >
-        )
-
 #==================#
 #  Linker options  #
 #==================#
@@ -67,8 +54,7 @@ target_link_options(${PROJECT_NAME}_common_interface INTERFACE
 
         )
 
-# This macro will encapsulate the CMAKE_CXX flags that should only be set for executables
-macro(SET_CXX_FLAGS)
+if (${PROJECT_NAME}_IS_TOP_LEVEL)
     # Remove unwanted CMake defaults from global flags
     if (MSVC)
         # See https://gitlab.kitware.com/cmake/cmake/-/blob/master/Modules/Platform/Windows-MSVC.cmake
@@ -98,10 +84,15 @@ macro(SET_CXX_FLAGS)
         set(CMAKE_CXX_FLAGS_DEBUG
                 -g            #*Produce debugging information in the operating system’s native format.
                 )
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+            set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}
+                    -D_GLIBCXX_DEBUG  # Standard container debug mode (bounds checking, etc.)
+                    )
+        endif ()
     endif ()
 
     # Convert lists to space-separated strings
     list(JOIN CMAKE_CXX_FLAGS " " CMAKE_CXX_FLAGS)
     list(JOIN CMAKE_CXX_FLAGS_RELEASE " " CMAKE_CXX_FLAGS_RELEASE)
     list(JOIN CMAKE_CXX_FLAGS_DEBUG " " CMAKE_CXX_FLAGS_DEBUG)
-endmacro()
+endif ()
