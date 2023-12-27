@@ -276,7 +276,7 @@ void testSetTankTemps()
     ASSERTTRUE(relcmpd(newTemps[8], 67.6, 0.1)); //
 
     // test 4
-    int nSet = 24;
+    std::size_t nSet = 24;
     setTemps.resize(nSet);
     double Ti = 20., Tf = 66.;
     for (std::size_t i = 0; i < nSet; ++i)
