@@ -44,6 +44,9 @@ target_include_directories(libHPWHsim PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT
 target_link_libraries(libHPWHsim PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
 target_compile_features(libHPWHsim PRIVATE cxx_std_17)
 
+include(GenerateExportHeader)
+generate_export_header(libHPWHsim)
+
 
 add_dependencies(libHPWHsim ${PROJECT_NAME}_version_header)
 
