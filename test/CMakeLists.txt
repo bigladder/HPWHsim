@@ -1,8 +1,4 @@
 # Build test tool
-SET_CXX_FLAGS()
-
-include_directories("${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
-
 add_executable(testTool main.cc)
 
 # TODO: Migrate to googletest framework
@@ -17,19 +13,21 @@ add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 add_executable(testHeatingLogics testHeatingLogics.cc)
 add_executable(testEnergyBalance testEnergyBalance.cc)
 
-set(libs libHPWHsim)
+set(libs libHPWHsim ${PROJECT_NAME}_common_interface)
 
-target_link_libraries(testTool ${libs})
-target_link_libraries(testTankSizeFixed ${libs})
-target_link_libraries(testScaleHPWH ${libs})
-target_link_libraries(testMaxSetpoint ${libs})
-target_link_libraries(testSizingFractions ${libs})
-target_link_libraries(testResistanceFcts ${libs})
-target_link_libraries(testCompressorFcts ${libs})
-target_link_libraries(testPerformanceMaps ${libs})
-target_link_libraries(testStateOfChargeFcts ${libs})
-target_link_libraries(testHeatingLogics ${libs})
-target_link_libraries(testEnergyBalance ${libs})
+target_link_libraries(testTool PRIVATE ${libs})
+target_link_libraries(testTankSizeFixed PRIVATE ${libs})
+target_link_libraries(testScaleHPWH PRIVATE ${libs})
+target_link_libraries(testMaxSetpoint PRIVATE ${libs})
+target_link_libraries(testSizingFractions PRIVATE ${libs})
+target_link_libraries(testResistanceFcts PRIVATE ${libs})
+target_link_libraries(testCompressorFcts PRIVATE ${libs})
+target_link_libraries(testPerformanceMaps PRIVATE ${libs})
+target_link_libraries(testStateOfChargeFcts PRIVATE ${libs})
+target_link_libraries(testHeatingLogics PRIVATE ${libs})
+target_link_libraries(testEnergyBalance PRIVATE ${libs})
+
+target_compile_features(testTool PRIVATE cxx_std_17)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
