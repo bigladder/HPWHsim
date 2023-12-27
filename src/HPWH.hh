@@ -1350,9 +1350,9 @@ class HPWH::HeatSource
     /** some compressors have a resistance element for defrost*/
     struct resistanceElementDefrost
     {
-        double inputPwr_kW;
-        double constTempLift_dF;
-        double onBelowT_F;
+        double inputPwr_kW {0.0};
+        double constTempLift_dF {0.0};
+        double onBelowT_F {-999};
     };
     resistanceElementDefrost resDefrost;
 
