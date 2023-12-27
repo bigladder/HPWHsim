@@ -85,14 +85,14 @@ jobs:
       - name: Test
         run: ctest -C ${{ matrix.config }} --output-on-failure
         working-directory: build
-#      - name: Code Coverage Analysis
-#        if: "matrix.coverage"
-#        run: make gcov
-#        working-directory: build
-#      - name: Upload Code Coverage Report
-#        if: "matrix.coverage"
-#        uses: codecov/codecov-action@v3
-#        with:
-#          flags: integration
-#          functionalities: "gcov"
-#          move_coverage_to_trash: true
+      - name: Code Coverage Analysis
+        if: "matrix.coverage"
+        run: make gcov
+        working-directory: build
+      - name: Upload Code Coverage Report
+        if: "matrix.coverage"
+        uses: codecov/codecov-action@v3
+        with:
+          flags: integration
+          functionalities: "gcov"
+          move_coverage_to_trash: true
