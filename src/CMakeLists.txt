@@ -61,7 +61,7 @@ if ("${RTL}" STREQUAL "RTL-NOTFOUND")
     set_target_properties(libHPWHsim PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif ()
 
-#if (${PROJECT_NAME}_COVERAGE)
-#    add_coverage(${PROJECT_NAME})
-#endif()
+if (${PROJECT_NAME}_COVERAGE)
+    add_coverage(libHPWHsim)
+endif ()
 
