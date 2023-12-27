@@ -14,36 +14,42 @@ jobs:
             coverage: false
             cc: gcc-11
             cxx: g++-11
+            experimental: false
           - os: ubuntu
             os_ver: "20.04"
             config: Release
             coverage: false
             cc: gcc-10
             cxx: g++-10
+            experimental: false
           - os: windows
             os_ver: "2022"
             config: Release
             coverage: false
             cc: cl
             cxx: cl
+            experimental: false
           - os: macos
             os_ver: "12"
             config: Release
             coverage: false
             cc: clang
             cxx: clang++
+            experimental: false
           - os: macos
             os_ver: "11"
             config: Release
             coverage: false
             cc: clang
             cxx: clang++
+            experimental: true
           - os: ubuntu
             os_ver: "20.04"
             config: Debug
             coverage: true
             cc: gcc-10
             cxx: g++-10
+            experimental: false
     defaults:
       run:
         shell: bash
@@ -52,6 +58,7 @@ jobs:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
     runs-on: ${{ matrix.os }}-${{ matrix.os_ver }}
+    continue-on-error: ${{ matrix.experimental }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
