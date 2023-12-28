@@ -650,7 +650,7 @@ void testSanden()
     ASSERTTRUE(outputBTUH == HPWH::HPWH_ABORT);
 }
 
-int main(int, char*)
+int main(int, char**)
 {
     testSanden(); // check can still work with HPWH::getCapacity() as expected
 

@@ -51,7 +51,7 @@ const std::vector<string> noHighShuttOffVectIntegrated = {"AOSmithHPTU80",
                                                           "restankRealistic",
                                                           "StorageTank"};
 
-int main(int, char*)
+int main(int, char**)
 {
     double tempsForSetSoC[5][3] = {
         {49, 99, 125}, {65, 110, 129}, {32, 120, 121}, {32, 33, 121}, {80, 81, 132.5}};
