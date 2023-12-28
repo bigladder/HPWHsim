@@ -5,7 +5,7 @@ File of the presets heating logics available HPWHsim
 #include "HPWH.hh"
 
 /* State of Charge Based Logic*/
-const bool HPWH::SoCBasedHeatingLogic::isValid()
+bool HPWH::SoCBasedHeatingLogic::isValid()
 {
     bool isValid = true;
     if (decisionPoint < 0)
@@ -15,12 +15,12 @@ const bool HPWH::SoCBasedHeatingLogic::isValid()
     return isValid;
 }
 
-const double HPWH::SoCBasedHeatingLogic::getComparisonValue()
+double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 {
     return decisionPoint + hysteresisFraction;
 }
 
-const double HPWH::SoCBasedHeatingLogic::getTankValue()
+double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
     double soCFraction;
     if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
@@ -34,7 +34,7 @@ const double HPWH::SoCBasedHeatingLogic::getTankValue()
     return soCFraction;
 }
 
-const double HPWH::SoCBasedHeatingLogic::getMainsT_C()
+double HPWH::SoCBasedHeatingLogic::getMainsT_C()
 {
     if (useCostantMains)
     {
@@ -46,7 +46,7 @@ const double HPWH::SoCBasedHeatingLogic::getMainsT_C()
     }
 }
 
-const double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() { return tempMinUseful_C; }
+double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() { return tempMinUseful_C; }
 
 int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value)
 {
@@ -61,9 +61,9 @@ int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
     return 0;
 }
 
-const double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
+double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
 
-const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
+double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
     double deltaSoCFraction = (getComparisonValue() + HPWH::TOL_MINVALUE) - getTankValue();
 
@@ -141,7 +141,7 @@ const double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 }
 
 /* Temperature Based Heating Logic*/
-const bool HPWH::TempBasedHeatingLogic::isValid()
+bool HPWH::TempBasedHeatingLogic::isValid()
 {
     bool isValid = true;
     if (!areNodeWeightsValid())
@@ -151,7 +151,7 @@ const bool HPWH::TempBasedHeatingLogic::isValid()
     return isValid;
 }
 
-const bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
+bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
 {
     for (auto nodeWeight : nodeWeights)
     {
@@ -163,7 +163,7 @@ const bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
     return true;
 }
 
-const double HPWH::TempBasedHeatingLogic::getComparisonValue()
+double HPWH::TempBasedHeatingLogic::getComparisonValue()
 {
     double value = decisionPoint;
     if (isAbsolute)
@@ -176,7 +176,7 @@ const double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
 }
 
-const double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->tankAvg_C(nodeWeights); }
+double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->tankAvg_C(nodeWeights); }
 
 int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
 {
@@ -189,7 +189,7 @@ int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
     return setDecisionPoint(value);
 }
 
-const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
+double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 {
     double logicNode;
     double calcNodes = 0, totWeight = 0;
@@ -218,7 +218,7 @@ const double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
     return logicNode / static_cast<double>(LOGIC_NODE_SIZE);
 }
 
-const double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
+double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
     double fracTemp;
     double diff;

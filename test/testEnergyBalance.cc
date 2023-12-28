@@ -72,7 +72,7 @@ void testEnergyBalanceSolar()
     }
 }
 
-int main(int, char*)
+int main(int, char**)
 {
     testEnergyBalanceAOSmithHPTS50();
     testEnergyBalanceSolar();
