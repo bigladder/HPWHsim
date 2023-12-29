@@ -3444,10 +3444,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
                     if (i > 0)
                     {
-                        double heatTransferred_kJ = nodeCp_kJperC * incrementalDrawVolume_N *
+                        double heatTransferred_kJ = incrementalDrawVolume_N *
                                                     (1. - inletFraction) * tankTemps_C[i - 1];
-                        tankTemps_C[i] += heatTransferred_kJ / nodeCp_kJperC;
-                        tankTemps_C[i - 1] -= heatTransferred_kJ / nodeCp_kJperC;
+                        tankTemps_C[i] += heatTransferred_kJ;
+                        tankTemps_C[i - 1] -= heatTransferred_kJ;
                     }
                 }
 
