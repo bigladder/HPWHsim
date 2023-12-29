@@ -3382,8 +3382,6 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double drawVolume_N = drawVolume_L / nodeVolume_L;
         double drawCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
 
-        double totalHeatExchange_kJ = 0.;
-
         // heat-exchange models
         if (hasHeatExchanger)
         {
@@ -3393,7 +3391,6 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletTemp_C);
                 double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
 
-                totalHeatExchange_kJ += heatExchange_kJ;
                 nodeT_C -= heatExchange_kJ / nodeCp_kJperC;
                 outletTemp_C += heatExchange_kJ / drawCp_kJperC;
             }
