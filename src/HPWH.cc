@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HPWH.hh"
 #include <btwxt/btwxt.h>
+#include <fmt/format.h>
 
 #include <stdarg.h>
 #include <fstream>
@@ -319,13 +320,13 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
     minutesPerStep = minutesPerStep_in;
     secondsPerStep = sec_per_min * minutesPerStep;
     hoursPerStep = minutesPerStep / min_per_hr;
-};
+}
 
 // public HPWH functions
-HPWH::HPWH() : messageCallback(NULL), messageCallbackContextPtr(NULL), hpwhVerbosity(VRB_silent)
+HPWH::HPWH() : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
-};
+}
 
 void HPWH::setAllDefaults()
 {
@@ -1114,64 +1115,68 @@ void HPWH::printTankTemps()
 }
 
 // public members to write to CSV file
-int HPWH::WriteCSVHeading(FILE* outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVHeading(std::ofstream& outFILE,
+                          const char* preamble,
+                          int nTCouples,
+                          int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    fprintf(outFILE, "%s", preamble);
+    outFILE << preamble;
 
-    fprintf(outFILE, "%s", "DRstatus");
+    outFILE << "DRstatus";
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        fprintf(outFILE, ",h_src%dIn (Wh),h_src%dOut (Wh)", iHS + 1, iHS + 1);
+        outFILE << fmt::format(",h_src{}In (Wh),h_src{}Out (Wh)", iHS + 1, iHS + 1);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        fprintf(outFILE, ",tcouple%d (%s)", iTC + 1, doIP ? "F" : "C");
+        outFILE << fmt::format(",tcouple{} ({})", iTC + 1, doIP ? "F" : "C");
     }
 
-    fprintf(outFILE, ",toutlet (%s)", doIP ? "F" : "C");
-
-    fprintf(outFILE, "\n");
+    outFILE << fmt::format(",toutlet ({})", doIP ? "F" : "C") << std::endl;
 
     return 0;
 }
 
-int HPWH::WriteCSVRow(FILE* outFILE, const char* preamble, int nTCouples, int options) const
+int HPWH::WriteCSVRow(std::ofstream& outFILE,
+                      const char* preamble,
+                      int nTCouples,
+                      int options) const
 {
 
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
-    fprintf(outFILE, "%s", preamble);
+    outFILE << preamble;
 
-    fprintf(outFILE, "%i", prevDRstatus);
+    outFILE << prevDRstatus;
 
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        fprintf(outFILE,
-                ",%0.2f,%0.2f",
-                getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
+                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        fprintf(outFILE, ",%0.2f", getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+        outFILE << fmt::format(",{:0.2f}",
+                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        fprintf(outFILE, ",%0.2f", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
     }
     else
     {
-        fprintf(outFILE, ",");
+        outFILE << ",";
     }
 
-    fprintf(outFILE, "\n");
+    outFILE << std::endl;
 
     return 0;
 }
@@ -1249,15 +1254,12 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
     }
 
     double returnVal = heatSources[compressorIndex].maxSetpoint_C;
-    if (units == UNITS_C)
-    {
-        returnVal = returnVal;
-    }
-    else if (units == UNITS_F)
+
+    if (units == UNITS_F)
     {
         returnVal = C_TO_F(returnVal);
     }
-    else
+    else if (units != UNITS_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -4410,7 +4412,7 @@ int HPWH::HPWHinit_file(string configFile)
     }
 
     // some variables that will be handy
-    int heatsource, sourceNum, nTemps, tempInt;
+    std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
     double initalTankT_C = F_TO_C(120.);
@@ -4629,7 +4631,7 @@ int HPWH::HPWHinit_file(string configFile)
         {
             line_ss >> numHeatSources;
             heatSources.reserve(numHeatSources);
-            for (int i = 0; i < numHeatSources; i++)
+            for (std::size_t i = 0; i < numHeatSources; i++)
             {
                 heatSources.emplace_back(this);
             }
@@ -4751,9 +4753,8 @@ int HPWH::HPWHinit_file(string configFile)
                     }
                     else
                     {
-                        for (auto n : nodeNums)
+                        for ([[maybe_unused]] auto n : nodeNums)
                         {
-                            n += 0; // used to get rid of unused variable compiler warning
                             weights.push_back(1.0);
                         }
                     }
@@ -5081,9 +5082,9 @@ int HPWH::HPWHinit_file(string configFile)
             else if (token == "externalInlet")
             {
                 line_ss >> tempInt;
-                if (tempInt < num_nodes && tempInt >= 0)
+                if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalInletHeight = tempInt;
+                    heatSources[heatsource].externalInletHeight = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -5097,9 +5098,9 @@ int HPWH::HPWHinit_file(string configFile)
             else if (token == "externalOutlet")
             {
                 line_ss >> tempInt;
-                if (tempInt < num_nodes && tempInt >= 0)
+                if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalOutletHeight = tempInt;
+                    heatSources[heatsource].externalOutletHeight = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -5129,7 +5130,7 @@ int HPWH::HPWHinit_file(string configFile)
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
-                int maxTemps = (int)heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -5183,6 +5184,9 @@ int HPWH::HPWHinit_file(string configFile)
                 string var = match[1].str();
                 nTemps = std::stoi(match[2].str());
                 string coeff = match[3].str();
+
+                /*
+                // TODO: Currently relies on the coefficients being defined in the correct order
                 int coeff_num;
                 if (coeff == "const")
                 {
@@ -5196,8 +5200,9 @@ int HPWH::HPWHinit_file(string configFile)
                 {
                     coeff_num = 2;
                 }
+                */
 
-                int maxTemps = (int)heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
                 if (maxTemps < nTemps)
                 {

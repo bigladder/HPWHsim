@@ -16,7 +16,7 @@
 namespace Btwxt
 {
 class RegularGridInterpolator;
-};
+}
 
 // #define HPWH_ABRIDGED
 /**<  If HPWH_ABRIDGED is defined, then some function definitions will be
@@ -326,21 +326,23 @@ class HPWH
                      std::function<bool(double, double)> c,
                      bool isHTS)
             : description(desc)
+            , compare(c)
             , decisionPoint(decisionPoint_in)
             , hpwh(hpwh_in)
-            , compare(c)
             , isEnteringWaterHighTempShutoff(isHTS) {};
 
+        virtual ~HeatingLogic() = default;
+
         /**< checks that the input is all valid. */
-        virtual const bool isValid() = 0;
+        virtual bool isValid() = 0;
         /**< gets the value for comparing the tank value to, i.e. the target SoC */
-        virtual const double getComparisonValue() = 0;
+        virtual double getComparisonValue() = 0;
         /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
-        virtual const double getTankValue() = 0;
+        virtual double getTankValue() = 0;
         /**< function to calculate where the average node for a logic set is. */
-        virtual const double nodeWeightAvgFract() = 0;
+        virtual double nodeWeightAvgFract() = 0;
         /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
-        virtual const double getFractToMeetComparisonExternal() = 0;
+        virtual double getFractToMeetComparisonExternal() = 0;
 
         virtual int setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
@@ -364,18 +366,18 @@ class HPWH
                              double mains_C = 18.333,
                              std::function<bool(double, double)> c = std::less<double>())
             : HeatingLogic(desc, decisionPoint, hpwh, c, false)
-            , hysteresisFraction(hF)
             , tempMinUseful_C(tM_C)
+            , hysteresisFraction(hF)
             , useCostantMains(constMains)
             , constantMains_C(mains_C) {};
-        const bool isValid();
+        bool isValid();
 
-        const double getComparisonValue();
-        const double getTankValue();
-        const double nodeWeightAvgFract();
-        const double getFractToMeetComparisonExternal();
-        const double getMainsT_C();
-        const double getTempMinUseful_C();
+        double getComparisonValue();
+        double getTankValue();
+        double nodeWeightAvgFract();
+        double getFractToMeetComparisonExternal();
+        double getMainsT_C();
+        double getTempMinUseful_C();
         int setDecisionPoint(double value);
         int setConstantMainsTemperature(double mains_C);
 
@@ -396,20 +398,20 @@ class HPWH
                               bool a = false,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), nodeWeights(n), isAbsolute(a) {};
+            : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n) {};
 
-        const bool isValid();
+        bool isValid();
 
-        const double getComparisonValue();
-        const double getTankValue();
-        const double nodeWeightAvgFract();
-        const double getFractToMeetComparisonExternal();
+        double getComparisonValue();
+        double getTankValue();
+        double nodeWeightAvgFract();
+        double getFractToMeetComparisonExternal();
 
         int setDecisionPoint(double value);
         int setDecisionPoint(double value, bool absolute);
 
       private:
-        const bool areNodeWeightsValid();
+        bool areNodeWeightsValid();
 
         bool isAbsolute;
         std::vector<NodeWeight> nodeWeights;
@@ -586,11 +588,11 @@ class HPWH
     /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
 
-    int WriteCSVHeading(FILE* outFILE,
+    int WriteCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
                         int nTCouples = 6,
                         int options = CSVOPT_NONE) const;
-    int WriteCSVRow(FILE* outFILE,
+    int WriteCSVRow(std::ofstream& outFILE,
                     const char* preamble = "",
                     int nTCouples = 6,
                     int options = CSVOPT_NONE) const;
@@ -1348,9 +1350,9 @@ class HPWH::HeatSource
     /** some compressors have a resistance element for defrost*/
     struct resistanceElementDefrost
     {
-        double inputPwr_kW;
-        double constTempLift_dF;
-        double onBelowT_F;
+        double inputPwr_kW {0.0};
+        double constTempLift_dF {0.0};
+        double onBelowT_F {-999};
     };
     resistanceElementDefrost resDefrost;
 
