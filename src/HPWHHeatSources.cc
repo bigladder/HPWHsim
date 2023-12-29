@@ -969,7 +969,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
             hpwh->mixTankNodes(
                 0, hpwh->getNumNodes(), 1.0); // 1.0 will give even mixing, so all temperatures
                                               // mixed end at average temperature.
-
             // how much heat is added this timestep
             getCapacityMP(externalT_C,
                           hpwh->tankTemps_C[externalOutletHeight],
