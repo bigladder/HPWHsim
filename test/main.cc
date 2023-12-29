@@ -15,6 +15,8 @@
 #include <sstream>
 #include <string>
 #include <algorithm> // std::max
+#include <stdio.h>
+#include <fmt/format.h>
 
 #define MAX_DIR_LENGTH 255
 
@@ -63,8 +65,8 @@ int main(int argc, char* argv[])
     bool HPWH_doTempDepress;
     int doInvMix, doCondu;
 
-    FILE* outputFile = NULL;
-    FILE* yearOutFile = NULL;
+    std::ofstream outputFile;
+    std::ofstream yearOutFile;
     ifstream controlFile;
 
     string strPreamble;
@@ -329,8 +331,8 @@ int main(int argc, char* argv[])
     if (minutesToRun > 500000.)
     {
         fileToOpen = outputDirectory + "/DHW_YRLY.csv";
-
-        if (fopen_s(&yearOutFile, fileToOpen.c_str(), "a+") != 0)
+        yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
+        if (!yearOutFile.is_open())
         {
             cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
@@ -339,8 +341,8 @@ int main(int argc, char* argv[])
     else
     {
         fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
-
-        if (fopen_s(&outputFile, fileToOpen.c_str(), "w+") != 0)
+        outputFile.open(fileToOpen.c_str(), std::ifstream::out);
+        if (!outputFile.is_open())
         {
             cout << "Could not open output file " << fileToOpen << "\n";
             exit(1);
@@ -500,26 +502,25 @@ int main(int argc, char* argv[])
     if (minutesToRun > 500000.)
     {
         firstCol = input3 + "," + input1 + "," + input2;
-        fprintf(yearOutFile, "%s", firstCol.c_str());
+        yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
         {
-            fprintf(yearOutFile, ",%0.0f,%0.0f", cumHeatIn[iHS], cumHeatOut[iHS]);
+            yearOutFile << fmt::format(",{:0.0f},{:0.0f}", cumHeatIn[iHS], cumHeatOut[iHS]);
             totalIn += cumHeatIn[iHS];
             totalOut += cumHeatOut[iHS];
         }
-        fprintf(yearOutFile, ",%0.0f,%0.0f", totalIn, totalOut);
+        yearOutFile << fmt::format(",{:0.0f},{:0.0f}", totalIn, totalOut);
         for (int iHS = 0; iHS < 3; iHS++)
         {
-            fprintf(yearOutFile, ",%0.2f", cumHeatOut[iHS] / cumHeatIn[iHS]);
+            yearOutFile << fmt::format(",{:0.2f}", cumHeatOut[iHS] / cumHeatIn[iHS]);
         }
-        fprintf(yearOutFile, ",%0.2f", totalOut / totalIn);
-        fprintf(yearOutFile, "\n");
-        fclose(yearOutFile);
+        yearOutFile << fmt::format(",{:0.2f}", totalOut / totalIn) << std::endl;
+        yearOutFile.close();
     }
     else
     {
-        fclose(outputFile);
+        yearOutFile.close();
     }
     controlFile.close();
 
