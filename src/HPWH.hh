@@ -968,8 +968,14 @@ class HPWH
         double volume_L;
         double flowRate_Lper_min;
 
-        Draw(const double startTime_min_in,const double volume_L_in,const double flowRate_Lper_min_in):
-            startTime_min(startTime_min_in), volume_L(volume_L_in),flowRate_Lper_min(flowRate_Lper_min_in){}
+        Draw(const double startTime_min_in,
+             const double volume_L_in,
+             const double flowRate_Lper_min_in)
+            : startTime_min(startTime_min_in)
+            , volume_L(volume_L_in)
+            , flowRate_Lper_min(flowRate_Lper_min_in)
+        {
+        }
     };
 
     typedef std::vector<Draw> DrawPattern;
@@ -1562,7 +1568,10 @@ inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
 
-inline double HM_TO_MIN(const double hours, const double minutes){return min_per_hr * hours + minutes;}
+inline double HM_TO_MIN(const double hours, const double minutes)
+{
+    return min_per_hr * hours + minutes;
+}
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {

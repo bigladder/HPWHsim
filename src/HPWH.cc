@@ -76,41 +76,45 @@ HPWH::DrawPattern HPWH::verySmallUsage = {
     {HM_TO_MIN(9, 15), 3.8, 3.8},
 };
 
-HPWH::DrawPattern HPWH::lowUsage = {
-    {HM_TO_MIN(0, 00), 7.6, 3.8},
-    {HM_TO_MIN(1, 00), 3.8, 3.8},
-    {HM_TO_MIN(1, 05), 1.9, 3.8},
-    {HM_TO_MIN(1, 10), 1.9, 3.8},
-    {HM_TO_MIN(1, 15), 1.9, 3.8},
-    {HM_TO_MIN(8, 00), 3.8, 3.8},
-    {HM_TO_MIN(8, 15), 7.6, 3.8},
-    {HM_TO_MIN(9, 00), 5.7, 3.8},
-    {HM_TO_MIN(9, 15), 3.8, 3.8},
-};
+HPWH::DrawPattern HPWH::lowUsage = {{HM_TO_MIN(0, 00), 56.8, 6.4},
+                                    {HM_TO_MIN(0, 30), 7.6, 3.8},
+                                    {HM_TO_MIN(1, 00), 3.8, 3.8},
+                                    {HM_TO_MIN(10, 30), 22.7, 6.4},
+                                    {HM_TO_MIN(11, 30), 15.1, 6.4},
+                                    {HM_TO_MIN(12, 00), 3.8, 3.8},
+                                    {HM_TO_MIN(12, 45), 3.8, 3.8},
+                                    {HM_TO_MIN(12, 50), 3.8, 3.8},
+                                    {HM_TO_MIN(16, 15), 7.6, 3.8},
+                                    {HM_TO_MIN(16, 45), 7.6, 6.4},
+                                    {HM_TO_MIN(17, 00), 11.4, 6.4}};
 
-HPWH::DrawPattern HPWH::mediumUsage = {
-    {HM_TO_MIN(0, 00), 7.6, 3.8},
-    {HM_TO_MIN(1, 00), 3.8, 3.8},
-    {HM_TO_MIN(1, 05), 1.9, 3.8},
-    {HM_TO_MIN(1, 10), 1.9, 3.8},
-    {HM_TO_MIN(1, 15), 1.9, 3.8},
-    {HM_TO_MIN(8, 00), 3.8, 3.8},
-    {HM_TO_MIN(8, 15), 7.6, 3.8},
-    {HM_TO_MIN(9, 00), 5.7, 3.8},
-    {HM_TO_MIN(9, 15), 3.8, 3.8},
-};
+HPWH::DrawPattern HPWH::mediumUsage = {{HM_TO_MIN(0, 00), 56.8, 6.4},
+                                       {HM_TO_MIN(0, 30), 7.6, 3.8},
+                                       {HM_TO_MIN(1, 40), 34.1, 6.4},
+                                       {HM_TO_MIN(10, 30), 34.1, 6.4},
+                                       {HM_TO_MIN(11, 30), 18.9, 6.4},
+                                       {HM_TO_MIN(12, 00), 3.8, 3.8},
+                                       {HM_TO_MIN(12, 45), 3.8, 3.8},
+                                       {HM_TO_MIN(12, 50), 3.8, 3.8},
+                                       {HM_TO_MIN(16, 00), 3.8, 3.8},
+                                       {HM_TO_MIN(16, 15), 7.6, 3.8},
+                                       {HM_TO_MIN(16, 45), 7.6, 6.4},
+                                       {HM_TO_MIN(17, 00), 26.5, 6.4}};
 
-HPWH::DrawPattern HPWH::highUsage = {
-    {HM_TO_MIN(0, 00), 7.6, 3.8},
-    {HM_TO_MIN(1, 00), 3.8, 3.8},
-    {HM_TO_MIN(1, 05), 1.9, 3.8},
-    {HM_TO_MIN(1, 10), 1.9, 3.8},
-    {HM_TO_MIN(1, 15), 1.9, 3.8},
-    {HM_TO_MIN(8, 00), 3.8, 3.8},
-    {HM_TO_MIN(8, 15), 7.6, 3.8},
-    {HM_TO_MIN(9, 00), 5.7, 3.8},
-    {HM_TO_MIN(9, 15), 3.8, 3.8},
-};
+HPWH::DrawPattern HPWH::highUsage = {{HM_TO_MIN(0, 00), 102, 11.4},
+                                     {HM_TO_MIN(0, 30), 7.6, 3.8},
+                                     {HM_TO_MIN(0, 40), 3.8, 3.8},
+                                     {HM_TO_MIN(1, 40), 34.1, 6.4},
+                                     {HM_TO_MIN(10, 30), 56.8, 11.4},
+                                     {HM_TO_MIN(11, 30), 18.9, 6.4},
+                                     {HM_TO_MIN(12, 00), 3.8, 3.8},
+                                     {HM_TO_MIN(12, 45), 3.8, 3.8},
+                                     {HM_TO_MIN(12, 50), 3.8, 3.8},
+                                     {HM_TO_MIN(16, 00), 7.6, 3.8},
+                                     {HM_TO_MIN(16, 15), 7.6, 3.8},
+                                     {HM_TO_MIN(16, 30), 7.6, 6.4},
+                                     {HM_TO_MIN(16, 45), 7.6, 6.4},
+                                     {HM_TO_MIN(17, 00), 53.0, 11.4}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
@@ -5397,7 +5401,22 @@ int HPWH::HPWHinit_file(string configFile)
 
 HPWH::Usage HPWH::findUsageFromFirstHourRating() { return Usage::Medium; }
 
-HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating() { return Usage::Medium; }
+HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
+{
+    if (tankVolume_L < L_TO_GAL(1.7))
+    {
+        return Usage::VerySmall;
+    }
+    else if (tankVolume_L < L_TO_GAL(2.8))
+    {
+        return Usage::Low;
+    }
+    else if (tankVolume_L < L_TO_GAL(4.))
+    {
+        return Usage::Medium;
+    }
+    return Usage::High;
+}
 
 bool HPWH::calcUEF(const Usage usage, double& UEF)
 {
@@ -5478,6 +5497,7 @@ bool HPWH::calcUEF(const Usage usage, double& UEF)
                 totalEnergyConsumed_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
             }
 
+            drawnVolume_L += incrementalDrawVolume_L;
             ++runTime_min;
         }
     }
