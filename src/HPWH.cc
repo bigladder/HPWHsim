@@ -64,6 +64,54 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+HPWH::DrawPattern HPWH::verySmallUsage = {
+    {HM_TO_MIN(0, 00), 7.6, 3.8},
+    {HM_TO_MIN(1, 00), 3.8, 3.8},
+    {HM_TO_MIN(1, 05), 1.9, 3.8},
+    {HM_TO_MIN(1, 10), 1.9, 3.8},
+    {HM_TO_MIN(1, 15), 1.9, 3.8},
+    {HM_TO_MIN(8, 00), 3.8, 3.8},
+    {HM_TO_MIN(8, 15), 7.6, 3.8},
+    {HM_TO_MIN(9, 00), 5.7, 3.8},
+    {HM_TO_MIN(9, 15), 3.8, 3.8},
+};
+
+HPWH::DrawPattern HPWH::lowUsage = {
+    {HM_TO_MIN(0, 00), 7.6, 3.8},
+    {HM_TO_MIN(1, 00), 3.8, 3.8},
+    {HM_TO_MIN(1, 05), 1.9, 3.8},
+    {HM_TO_MIN(1, 10), 1.9, 3.8},
+    {HM_TO_MIN(1, 15), 1.9, 3.8},
+    {HM_TO_MIN(8, 00), 3.8, 3.8},
+    {HM_TO_MIN(8, 15), 7.6, 3.8},
+    {HM_TO_MIN(9, 00), 5.7, 3.8},
+    {HM_TO_MIN(9, 15), 3.8, 3.8},
+};
+
+HPWH::DrawPattern HPWH::mediumUsage = {
+    {HM_TO_MIN(0, 00), 7.6, 3.8},
+    {HM_TO_MIN(1, 00), 3.8, 3.8},
+    {HM_TO_MIN(1, 05), 1.9, 3.8},
+    {HM_TO_MIN(1, 10), 1.9, 3.8},
+    {HM_TO_MIN(1, 15), 1.9, 3.8},
+    {HM_TO_MIN(8, 00), 3.8, 3.8},
+    {HM_TO_MIN(8, 15), 7.6, 3.8},
+    {HM_TO_MIN(9, 00), 5.7, 3.8},
+    {HM_TO_MIN(9, 15), 3.8, 3.8},
+};
+
+HPWH::DrawPattern HPWH::highUsage = {
+    {HM_TO_MIN(0, 00), 7.6, 3.8},
+    {HM_TO_MIN(1, 00), 3.8, 3.8},
+    {HM_TO_MIN(1, 05), 1.9, 3.8},
+    {HM_TO_MIN(1, 10), 1.9, 3.8},
+    {HM_TO_MIN(1, 15), 1.9, 3.8},
+    {HM_TO_MIN(8, 00), 3.8, 3.8},
+    {HM_TO_MIN(8, 15), 7.6, 3.8},
+    {HM_TO_MIN(9, 00), 5.7, 3.8},
+    {HM_TO_MIN(9, 15), 3.8, 3.8},
+};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -5346,3 +5394,98 @@ int HPWH::HPWHinit_file(string configFile)
     return 0;
 }
 #endif
+
+HPWH::Usage HPWH::findUsageFromFirstHourRating() { return Usage::Medium; }
+
+HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating() { return Usage::Medium; }
+
+bool HPWH::calcUEF(const Usage usage, double& UEF)
+{
+
+    DrawPattern* drawPattern = nullptr;
+
+    switch (usage)
+    {
+    case Usage::VerySmall:
+    {
+        drawPattern = &verySmallUsage;
+        break;
+    }
+    case Usage::Low:
+    {
+        drawPattern = &lowUsage;
+        break;
+    }
+    case Usage::Medium:
+    {
+        drawPattern = &mediumUsage;
+        break;
+    }
+    case Usage::High:
+    {
+        drawPattern = &highUsage;
+        break;
+    }
+    }
+
+    if (drawPattern == nullptr)
+        return false;
+
+    const double inletT_C = 20.;
+    const double ambientT_C = 20.;
+    const double externalT_C = 20.;
+    const DRMODES drMode = DR_ALLOW;
+
+    double totalVolumeRemoved_L = 0.;
+    double totalEnergyConsumed_kJ = 0.;
+
+    int runTime_min = 0;
+    for (auto& draw : *drawPattern)
+    {
+        double drawnVolume_L = 0.;
+
+        double incrementalDrawVolume_L = draw.flowRate_Lper_min * (1.);
+        if (incrementalDrawVolume_L > tankVolume_L)
+        {
+            incrementalDrawVolume_L = tankVolume_L;
+        }
+
+        while ((drawnVolume_L < draw.volume_L) || (runTime_min < draw.startTime_min))
+        {
+            if (drawnVolume_L + incrementalDrawVolume_L > draw.volume_L)
+            {
+                incrementalDrawVolume_L = draw.volume_L - drawnVolume_L;
+            }
+
+            // run a step
+            int runResult = runOneStep(inletT_C,                // inlet water temperature (C)
+                                       incrementalDrawVolume_L, // draw volume (L)
+                                       ambientT_C,              // ambient Temp (C)
+                                       externalT_C,             // external Temp (C)
+                                       drMode,                  // DDR Status
+                                       0,                       // inlet-2 volume (L)
+                                       inletT_C,                // inlet-2 Temp (C)
+                                       NULL);                   // no extra heat
+
+            if (runResult == HPWH_ABORT)
+            {
+                return false;
+            }
+
+            totalVolumeRemoved_L += incrementalDrawVolume_L;
+            for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
+            {
+                totalEnergyConsumed_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+            }
+
+            ++runTime_min;
+        }
+    }
+
+    double totalMassRemoved_kg = HPWH::DENSITYWATER_kgperL * totalVolumeRemoved_L;
+    double totalHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * totalMassRemoved_kg;
+    double refEnergy_kJ = totalHeatCapacity_kJperC * (51.7 - 14.4);
+
+    UEF = refEnergy_kJ / totalEnergyConsumed_kJ;
+    return true;
+}

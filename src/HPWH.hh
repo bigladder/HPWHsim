@@ -944,6 +944,41 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    /// Draw patterns corresponding to ratings for UEF calculation
+    enum class Usage
+    {
+        VerySmall,
+        Low,
+        Medium,
+        High
+    };
+
+    /// Determine usage using the first-hour rating method
+    Usage findUsageFromFirstHourRating();
+
+    /// Determine usage using the maximum GPM rating method
+    Usage findUsageFromMaximumGPM_Rating();
+
+    /// Calculate UEF
+    bool calcUEF(const Usage usage, double& UEF);
+
+    struct Draw
+    {
+        double startTime_min;
+        double volume_L;
+        double flowRate_Lper_min;
+
+        Draw(const double startTime_min_in,const double volume_L_in,const double flowRate_Lper_min_in):
+            startTime_min(startTime_min_in), volume_L(volume_L_in),flowRate_Lper_min(flowRate_Lper_min_in){}
+    };
+
+    typedef std::vector<Draw> DrawPattern;
+
+    static DrawPattern verySmallUsage;
+    static DrawPattern lowUsage;
+    static DrawPattern mediumUsage;
+    static DrawPattern highUsage;
+
   private:
     class HeatSource;
 
@@ -1526,6 +1561,8 @@ inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
 
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
+
+inline double HM_TO_MIN(const double hours, const double minutes){return min_per_hr * hours + minutes;}
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {
