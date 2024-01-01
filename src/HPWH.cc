@@ -3414,7 +3414,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 remainingDrawVolume_N = 0.;
             }
 
-            double totalHeatExpelled_kJ = 0.;
+            double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
             {
 
@@ -3422,9 +3422,9 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                double heatOutput_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tankTemps_C.back();
-                totalHeatExpelled_kJ += heatOutput_kJ;
-                tankTemps_C.back() -= heatOutput_kJ / nodeCp_kJperC;
+                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tankTemps_C.back();
+                totalExpelledHeat_kJ += outputHeat_kJ;
+                tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
                 for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
@@ -3444,10 +3444,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
                     if (i > 0)
                     {
-                        double heatTransferred_kJ =
+                        double transferT_C =
                             incrementalDrawVolume_N * (1. - inletFraction) * tankTemps_C[i - 1];
-                        tankTemps_C[i] += heatTransferred_kJ;
-                        tankTemps_C[i - 1] -= heatTransferred_kJ;
+                        tankTemps_C[i] += transferT_C;
+                        tankTemps_C[i - 1] -= transferT_C;
                     }
                 }
 
@@ -3455,7 +3455,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 mixTankInversions();
             }
 
-            outletTemp_C = totalHeatExpelled_kJ / drawCp_kJperC;
+            outletTemp_C = totalExpelledHeat_kJ / drawCp_kJperC;
         }
 
         // account for mixing at the bottom of the tank
