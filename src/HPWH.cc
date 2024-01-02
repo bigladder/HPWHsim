@@ -3177,6 +3177,9 @@ void HPWH::calcDerivedHeatingValues(){
 		}
 	}
 
+	for(int i = 0; i < getNumHeatSources(); i++) {
+		heatSources[i].energyRetained_kWh = 0.;
+	}
 }
 
 void HPWH::mapResRelativePosToHeatSources() {
