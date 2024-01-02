@@ -1,10 +1,11 @@
-.*
 !/.gitignore
 *~
 ~*
 *.o
 *.x
 *.png
+.idea
+.vscode
 .Rproj.user
 *TestToolOutput.csv
 !Documentation/**
