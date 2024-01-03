@@ -65,7 +65,7 @@ void testEnergyBalanceSolar()
         flowFac += fabs(flowFac); // semi-sinusoidal flow profile
         double drawVol_L = flowFac * maxDrawVol_L;
 
-        double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
+        double prevHeatContent_kJ = hpwh.getTotalHeatContent_kJ();
         hpwh.runOneStep(
             drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW, 0., 0., &nodePowerExtra_W);
         ASSERTTRUE(hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6));

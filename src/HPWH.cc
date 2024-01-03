@@ -808,8 +808,7 @@ int HPWH::runOneStep(double drawVolume_L,
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         energyRemovedFromEnvironment_kWh +=
-            (heatSources[i].energyOutput_kWh + heatSources[i].energyRetained_kWh -
-             heatSources[i].energyInput_kWh);
+            (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
     }
 
     // cursory check for inverted temperature profile
@@ -2905,6 +2904,18 @@ double HPWH::getTankHeatContent_kJ() const
     return totalHeat;
 }
 
+double HPWH::getTotalHeatContent_kJ() const
+{
+    double tankHeat_kJ = getTankHeatContent_kJ();
+
+    double retainedHeat_kJ = 0.;
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        retainedHeat_kJ += getNthHeatSourceEnergyRetained(iHS, UNITS_KJ);
+    }
+    return tankHeat_kJ + retainedHeat_kJ;
+}
+
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
 
 int HPWH::getHPWHModel() const { return hpwhModel; }
@@ -4412,35 +4423,31 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 /// @return	true if balanced; false otherwise.
 //-----------------------------------------------------------------------------
 bool HPWH::isEnergyBalanced(const double drawVol_L,
-                            const double prevHeatContent_kJ,
+                            const double prevTankHeatContent_kJ,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
     // Check energy balancing.
-    double qInElectrical_kJ = 0.;
-    double qOutRetained_kJ = 0.;
+    double qInHeatSource_kJ = 0.;
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
-        qOutRetained_kJ += getNthHeatSourceEnergyRetained(iHS, UNITS_KJ);
+        qInHeatSource_kJ += getNthHeatSourceEnergyOutput(iHS, UNITS_KJ);
     }
 
     double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
-    double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
     double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL *
-                          CPWATER_kJperkgC; // assumes only one inlet
-    double expectedTankHeatContent_kJ =
-        prevHeatContent_kJ        // previous heat content
-        + qInElectrical_kJ        // electrical energy delivered to heat sources
-        + qInExtra_kJ             // extra energy delivered to heat sources
-        + qInHeatSourceEnviron_kJ // heat extracted from environment by condenser
-        - qOutRetained_kJ         // heat retained in heat sources
-        - qOutTankEnviron_kJ      // heat released from tank to environment
-        - qOutWater_kJ;           // heat expelled to outlet by water flow
+                          CPWATER_kJperkgC;                    // assumes only one inlet
+    double expectedTankHeatContent_kJ = prevTankHeatContent_kJ // previous heat content
+                                        + qInHeatSource_kJ // heat added to tank from heat sources
+                                        + qInExtra_kJ // extra added heat to tank from heat sources
+                                        -
+                                        qOutTankEnviron_kJ // heat released from tank to environment
+                                        - qOutWater_kJ;    // heat expelled to outlet by water flow
 
-    double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
+    double currTankHeatContent_kJ = getTankHeatContent_kJ();
+    double qBal_kJ = currTankHeatContent_kJ - expectedTankHeatContent_kJ;
 
-    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevTankHeatContent_kJ, 1.);
     if (fracEnergyDiff > fracEnergyTolerance)
     {
         if (hpwhVerbosity >= VRB_reluctant)

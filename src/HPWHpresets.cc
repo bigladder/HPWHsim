@@ -4530,7 +4530,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.perfMap.push_back({
             67,                      // Temperature (T_F)
             {-1713, 46.60, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.28156, 0.025064, 0.} // COP Coefficients (COP_coeffs)
+            {-0.239326, 0.02882, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
@@ -4548,8 +4548,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.addTurnOnLogic(HPWH::wholeTank(111, UNITS_F, true));
         compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
-        compressor.heatRetentionCoef = 0.1;
-        compressor.energyRetained_kWh = KJ_TO_KWH(0.);
+        compressor.heatRetentionCoef = 0.2;
+        compressor.energyRetained_kWh = KJ_TO_KWH(2000.);
 
         // set everything in its places
         heatSources.resize(1);

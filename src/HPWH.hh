@@ -866,6 +866,8 @@ class HPWH
     /**< get the heat content of the tank, relative to zero celsius
      * returns using kilojoules */
 
+    double getTotalHeatContent_kJ() const;
+
     int getHPWHModel() const;
     /**< get the model number of the HPWHsim model number of the hpwh */
 
@@ -1237,7 +1239,8 @@ class HPWH::HeatSource
     /**< adds heat to the hpwh - this is the function that interprets the
         various configurations (internal/external, resistance/heat pump) to add heat */
 
-    void addTransientHeat(double minutesToRun);
+    /// Add some retained heat to the tank
+    void addTransientHeat();
 
     /// Assign new condensity values from supplied vector. Note the input vector is currently
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.

@@ -573,7 +573,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
     }
 }
 
-void HPWH::HeatSource::addTransientHeat(double minutesToRun)
+void HPWH::HeatSource::addTransientHeat()
 {
     if (energyRetained_kWh > 0.)
     {
@@ -599,6 +599,7 @@ void HPWH::HeatSource::addTransientHeat(double minutesToRun)
                 heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
             }
         }
+        energyOutput_kWh += KJ_TO_KWH(heatAdded_kJ);
         energyRetained_kWh -= KJ_TO_KWH(heatAdded_kJ);
     }
 }
