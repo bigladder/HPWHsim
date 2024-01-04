@@ -5425,11 +5425,17 @@ HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
     return Usage::High;
 }
 
-bool HPWH::calcUEF(const Usage usage, double& UEF)
+//-----------------------------------------------------------------------------
+///	@brief	Calculates the uniform energy factor (UEF)
+/// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058
+/// @param[in]	usage	            Specification of draw pattern
+///	@param[out]	UEF		            Result of calculation
+/// @return	true (success), false (failure).
+//-----------------------------------------------------------------------------
+bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
 {
-
+    // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
-
     switch (usage)
     {
     case Usage::VerySmall:
@@ -5453,31 +5459,57 @@ bool HPWH::calcUEF(const Usage usage, double& UEF)
         break;
     }
     }
-
     if (drawPattern == nullptr)
+    {
         return false;
+    }
 
-    const double inletT_C = 20.;
-    const double ambientT_C = 20.;
-    const double externalT_C = 20.;
+    const double setpointT_C = 51.7; //
+    const double inletT_C = 14.4;    // p. 40433
+    const double ambientT_C = 19.7;  // p. 40435
+    const double externalT_C = 19.7;
     const DRMODES drMode = DR_ALLOW;
 
-    double totalVolumeRemoved_L = 0.;
-    double totalEnergyConsumed_kJ = 0.;
+    double dailyRemovedVolume_L = 0.;
+    double dailyUsedEnergy_kJ = 0.;
+
+    if (!isSetpointFixed())
+    {
+        if (setSetpoint(setpointT_C, UNITS_C) == HPWH_ABORT)
+        {
+            return false;
+        }
+    }
+
+    // first-recovery info
+    bool isFirstRecoveryPeriod = true;
+    double recoveryEfficiency = 0.;
+
+    double dailyHeatingEnergy_kJ = 0.; // total energy added to water over 24-hr test
+    double dailyUsedElectricalEnergy_kJ = 0.; // total electrical energy consumed over 24-hr test
+    double dailyUsedFossilFuelEnergy_kJ = 0.;  // total "fossil-fuel" energy consumed over 24-hr test
 
     int runTime_min = 0;
     for (auto& draw : *drawPattern)
     {
         double drawnVolume_L = 0.;
 
+        double recoveryVolume_L = 0.;
+        double recoveryVolumeTemperature_LC = 0.;
+        double recoveryUsedElectricalEnergy_kJ = 0.;
+        double recoveryUsedFossilFuelEnergy_kJ = 0.;
+
+        // limit draw-volume increment to tank volume
         double incrementalDrawVolume_L = draw.flowRate_Lper_min * (1.);
         if (incrementalDrawVolume_L > tankVolume_L)
         {
             incrementalDrawVolume_L = tankVolume_L;
         }
 
+        // iterate until 1) specified draw volume has been reached and 2) next draw has started
         while ((drawnVolume_L < draw.volume_L) || (runTime_min < draw.startTime_min))
         {
+            // do not exceed specified draw volume
             if (drawnVolume_L + incrementalDrawVolume_L > draw.volume_L)
             {
                 incrementalDrawVolume_L = draw.volume_L - drawnVolume_L;
@@ -5489,7 +5521,7 @@ bool HPWH::calcUEF(const Usage usage, double& UEF)
                                        ambientT_C,              // ambient Temp (C)
                                        externalT_C,             // external Temp (C)
                                        drMode,                  // DDR Status
-                                       0,                       // inlet-2 volume (L)
+                                       0.,                      // inlet-2 volume (L)
                                        inletT_C,                // inlet-2 Temp (C)
                                        NULL);                   // no extra heat
 
@@ -5498,21 +5530,81 @@ bool HPWH::calcUEF(const Usage usage, double& UEF)
                 return false;
             }
 
-            totalVolumeRemoved_L += incrementalDrawVolume_L;
+            // collect consumed electrical-energy info
+            double usedFossilFuelEnergy_kJ = 0.;
+            double usedElectricalEnergy_kJ = 0.;
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                totalEnergyConsumed_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+                usedElectricalEnergy_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
             }
+
+            // collect recovery info
+            recoveryVolume_L += incrementalDrawVolume_L;
+            recoveryVolumeTemperature_LC += incrementalDrawVolume_L * outletTemp_C;
+            recoveryUsedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
+            recoveryUsedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
 
             drawnVolume_L += incrementalDrawVolume_L;
             ++runTime_min;
         }
+
+        // collect end-of-draw info
+        double recoveryUsedEnergy_kJ = recoveryUsedElectricalEnergy_kJ + recoveryUsedFossilFuelEnergy_kJ; // see 6.4.3
+
+        double recoveryOutletT_C = 0.;
+        if (recoveryVolume_L > 0.)
+        {
+            recoveryOutletT_C = recoveryVolumeTemperature_LC / recoveryVolume_L;                  
+        }
+        double recoveryMassRemoved_kg = HPWH::DENSITYWATER_kgperL * drawnVolume_L;
+        double recoveryHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * recoveryMassRemoved_kg; 
+        double recoveryHeatingEnergy_kJ = recoveryHeatCapacity_kJperC * (recoveryOutletT_C - inletT_C);
+
+        if (isFirstRecoveryPeriod)
+        {   
+            // find the "Recovery Efficiency" (6.4.2)
+            if (recoveryUsedEnergy_kJ > 0.)
+            {
+                recoveryEfficiency = recoveryHeatingEnergy_kJ / recoveryUsedEnergy_kJ;
+            }
+            isFirstRecoveryPeriod = false;
+        }
+
+        dailyHeatingEnergy_kJ += recoveryHeatingEnergy_kJ;
+
+        // collect 24-hr test info
+        dailyRemovedVolume_L += drawnVolume_L;
+        dailyUsedElectricalEnergy_kJ += recoveryUsedElectricalEnergy_kJ;
+        dailyUsedEnergy_kJ += recoveryUsedEnergy_kJ;
     }
 
-    double totalMassRemoved_kg = HPWH::DENSITYWATER_kgperL * totalVolumeRemoved_L;
-    double totalHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * totalMassRemoved_kg;
-    double refEnergy_kJ = totalHeatCapacity_kJperC * (51.7 - 14.4);
+    // find the "Adjusted Daily Water Heating Energy Consumption" (6.3.6)
+    if (recoveryEfficiency > 0.)
+    {
+        dailyTestSummary.adjustedDailyWaterHeatingEnergy_kJ = dailyHeatingEnergy_kJ / recoveryEfficiency;
+    }
 
-    UEF = refEnergy_kJ / totalEnergyConsumed_kJ;
+    // find the "Uniform Energy Factor" (6.4.4) 
+    double dailyMassRemoved_kg = HPWH::DENSITYWATER_kgperL * dailyRemovedVolume_L;
+    double dailyHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * dailyMassRemoved_kg;
+    double standardDailyHeatingEnergy_kJ = dailyHeatCapacity_kJperC * (setpointT_C - inletT_C);
+    dailyTestSummary.UEF = standardDailyHeatingEnergy_kJ / dailyUsedEnergy_kJ;
+
+    // find the "Annual Energy Consumption" (6.4.5)
+    double annualEnergyConsumption_kJ = 0.;
+    if (dailyTestSummary.UEF > 0.)
+    {
+        constexpr double day_per_year = 365.;
+        const double nominalDifferenceT_C = F_TO_C(67.);
+        annualEnergyConsumption_kJ = dailyHeatCapacity_kJperC * nominalDifferenceT_C / dailyTestSummary.UEF;
+    }
+
+    // find the "Annual Electrical Energy Consumption" (6.4.6)
+    dailyTestSummary.annualElectricalEnergyConsumption_kJ = 0.;
+    if (dailyUsedEnergy_kJ > 0.)
+    {
+        dailyTestSummary.annualElectricalEnergyConsumption_kJ = (dailyUsedElectricalEnergy_kJ / dailyUsedEnergy_kJ) * annualEnergyConsumption_kJ;
+    }
+
     return true;
 }

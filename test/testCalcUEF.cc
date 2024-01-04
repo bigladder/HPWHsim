@@ -17,7 +17,9 @@ static bool testCalcUEF(const std::string& sModelName, double& UEF)
         return false;
     }
 
-    return hpwh.calcUEF(hpwh.findUsageFromMaximumGPM_Rating(), UEF);
+    HPWH::DailyTestSummary dailyTestSummary;
+    return hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
+    UEF = dailyTestSummary.UEF;
 }
 
 int main(int argc, char* argv[])
@@ -101,10 +103,10 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    double UEF = 0.;
-    if(hpwh.calcUEF(hpwh.findUsageFromMaximumGPM_Rating(), UEF))
+    HPWH::DailyTestSummary dailyTestSummary;
+    if(hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary))
     {
-        std::cout << "UEF: " << UEF << "\n";
+        std::cout << "UEF: " << dailyTestSummary.UEF << "\n";
     }
     else
     {

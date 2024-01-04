@@ -959,8 +959,17 @@ class HPWH
     /// Determine usage using the maximum GPM rating method
     Usage findUsageFromMaximumGPM_Rating();
 
-    /// Calculate UEF
-    bool calcUEF(const Usage usage, double& UEF);
+    struct DailyTestSummary 
+    {
+        double UEF;
+        double recoveryEfficiency;
+        double adjustedDailyWaterHeatingEnergy_kJ;
+        double annualElectricalEnergyConsumption_kJ;
+        double annualEnergyConsumption_kJ;
+    };
+
+    /// run 24-hr draw pattern
+    bool runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary);
 
     struct Draw
     {
