@@ -5403,7 +5403,14 @@ HPWH::Usage HPWH::findUsageFromFirstHourRating() { return Usage::Medium; }
 
 HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
 {
-    if (tankVolume_L < L_TO_GAL(1.7))
+    // Assume flow rate unlimited for heat-exchange models
+    if (hasHeatExchanger)
+    {
+        return Usage::High;
+    }
+
+    // Assume max. flow rate = tankVolume / (1 min)
+    else if (tankVolume_L < L_TO_GAL(1.7))
     {
         return Usage::VerySmall;
     }
