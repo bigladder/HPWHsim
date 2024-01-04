@@ -364,8 +364,6 @@ int main(int argc, char* argv[])
     // ------------------------------------- Simulate --------------------------------------- //
     cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
-    double powerInput_kJ = 0.;
-
     std::vector<double> nodeExtraHeat_W;
     std::vector<double>* vectptr = NULL;
     // Loop over the minutes in the test
@@ -432,10 +430,6 @@ int main(int argc, char* argv[])
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
-        }
-
-        for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++) {
-            powerInput_kJ += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
         }
 
         // Check timing
@@ -529,7 +523,6 @@ int main(int argc, char* argv[])
     }
     controlFile.close();
 
-    std::cout << "Power Input (Wh): " << 1000. * KJ_TO_KWH(powerInput_kJ) << "\n";
     return 0;
 }
 
