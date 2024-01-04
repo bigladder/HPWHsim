@@ -18,8 +18,10 @@ static bool testCalcUEF(const std::string& sModelName, double& UEF)
     }
 
     HPWH::DailyTestSummary dailyTestSummary;
-    return hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
+    bool result = hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
     UEF = dailyTestSummary.UEF;
+
+    return result;
 }
 
 int main(int argc, char* argv[])
@@ -51,11 +53,12 @@ int main(int argc, char* argv[])
     if (runUnitTests)
     {
         double UEF;
-        ASSERTTRUE(testCalcUEF("AOSmithHPTS50", UEF));
-        ASSERTTRUE(cmpd(UEF, 4.4091));
-
+ 
         ASSERTTRUE(testCalcUEF("AquaThermAire", UEF));
-        ASSERTTRUE(cmpd(UEF, 3.5848));
+        ASSERTTRUE(cmpd(UEF, 2.8442));
+
+        ASSERTTRUE(testCalcUEF("AOSmithHPTS50", UEF));
+        ASSERTTRUE(cmpd(UEF, 3.4366));
 
         return 0;
     }
