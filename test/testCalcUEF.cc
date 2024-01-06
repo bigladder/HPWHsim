@@ -108,11 +108,14 @@ int main(int argc, char* argv[])
     if (hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary))
     {
         std::cout << "\tRecovery Efficiency: " << dailyTestSummary.recoveryEfficiency << "\n";
-        std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kJ): " << dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ << "\n";
+        std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kJ): "
+                  << dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ << "\n";
         std::cout << "\tUEF: " << dailyTestSummary.UEF << "\n";
-        std::cout << "\tAnnual Electrical Energy Consumption (kJ): " << dailyTestSummary.annualElectricalEnergyConsumption_kJ << "\n";
-        std::cout << "\tAnnual Energy Consumption (kJ): " << dailyTestSummary.annualEnergyConsumption_kJ << "\n";
-   }
+        std::cout << "\tAnnual Electrical Energy Consumption (kJ): "
+                  << dailyTestSummary.annualElectricalEnergyConsumption_kJ << "\n";
+        std::cout << "\tAnnual Energy Consumption (kJ): "
+                  << dailyTestSummary.annualEnergyConsumption_kJ << "\n";
+    }
     else
     {
         std::cout << "Unable to determine efficiency metrics.\n";
