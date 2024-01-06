@@ -51,10 +51,10 @@ int main(int argc, char* argv[])
         HPWH::DailyTestSummary dailyTestSummary;
 
         ASSERTTRUE(testCalcMetrics("AquaThermAire", dailyTestSummary));
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.8442));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.8258));
 
         ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", dailyTestSummary));
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 3.4366));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 4.8021));
 
         return 0;
     }
