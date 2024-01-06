@@ -7,7 +7,7 @@
 #include <string>
 
 /* Evaluate UEF based on simulations using standard profiles */
-static bool testCalcUEF(const std::string& sModelName, double& UEF)
+static bool testCalcMetrics(const std::string& sModelName, HPWH::DailyTestSummary& dailyTestSummary)
 {
     HPWH hpwh;
 
@@ -17,11 +17,7 @@ static bool testCalcUEF(const std::string& sModelName, double& UEF)
         return false;
     }
 
-    HPWH::DailyTestSummary dailyTestSummary;
-    bool result = hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
-    UEF = dailyTestSummary.UEF;
-
-    return result;
+    return hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
 }
 
 int main(int argc, char* argv[])
@@ -52,18 +48,19 @@ int main(int argc, char* argv[])
 
     if (runUnitTests)
     {
-        double UEF;
- 
-        ASSERTTRUE(testCalcUEF("AquaThermAire", UEF));
-        ASSERTTRUE(cmpd(UEF, 2.8442));
+        HPWH::DailyTestSummary dailyTestSummary;
 
-        ASSERTTRUE(testCalcUEF("AOSmithHPTS50", UEF));
-        ASSERTTRUE(cmpd(UEF, 3.4366));
+        ASSERTTRUE(testCalcMetrics("AquaThermAire", dailyTestSummary));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.8442));
+
+        ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", dailyTestSummary));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 3.4366));
 
         return 0;
     }
 
-    if (!validNumArgs) {
+    if (!validNumArgs)
+    {
         cout << "Invalid input:\n\
             To run all unit tests, provide ZERO arguments.\n\
             To determine the UEF for a particular model spec, provide ONE or TWO arguments:\n\
@@ -78,8 +75,8 @@ int main(int argc, char* argv[])
     }
 
     HPWH hpwh;
-     bool validModel = false;
-   if (sPresetOrFile == "preset")
+    bool validModel = false;
+    if (sPresetOrFile == "preset")
     {
         HPWH::MODELS model = mapStringToPreset(sModelName);
         if (hpwh.HPWHinit_presets(model) == 0)
@@ -102,18 +99,23 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    sPresetOrFile[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+    sPresetOrFile[0] =
+        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
     HPWH::DailyTestSummary dailyTestSummary;
-    if(hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary))
+    if (hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary))
     {
-        std::cout << "UEF: " << dailyTestSummary.UEF << "\n";
-    }
+        std::cout << "\tRecovery Efficiency: " << dailyTestSummary.recoveryEfficiency << "\n";
+        std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kJ): " << dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ << "\n";
+        std::cout << "\tUEF: " << dailyTestSummary.UEF << "\n";
+        std::cout << "\tAnnual Electrical Energy Consumption (kJ): " << dailyTestSummary.annualElectricalEnergyConsumption_kJ << "\n";
+        std::cout << "\tAnnual Energy Consumption (kJ): " << dailyTestSummary.annualEnergyConsumption_kJ << "\n";
+   }
     else
     {
-        std::cout << "Unable to determine UEF.\n";
+        std::cout << "Unable to determine efficiency metrics.\n";
     }
 
     return 0;

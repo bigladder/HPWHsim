@@ -898,6 +898,9 @@ class HPWH
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
 
+    /// returns the average tank temperature
+    double getTankTemp_C() const;
+
     double getLocationTemp_C() const;
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -959,17 +962,21 @@ class HPWH
     /// Determine usage using the maximum GPM rating method
     Usage findUsageFromMaximumGPM_Rating();
 
-    struct DailyTestSummary 
+    struct DailyTestSummary
     {
         double UEF;
         double recoveryEfficiency;
-        double adjustedDailyWaterHeatingEnergy_kJ;
+        double dailyHeatingEnergyConsumption_kJ;
+        double adjustedDailyWaterHeatingEnergyConsumption_kJ;
+        double modifiedDailyWaterHeatingEnergyConsumption_kJ;
+        double energyUsedToHeatWater_kJ;
+        double standardEnergyUsedToHeatWater_kJ;
         double annualElectricalEnergyConsumption_kJ;
         double annualEnergyConsumption_kJ;
     };
 
     /// run 24-hr draw pattern
-    bool runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary);
+    bool runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary);
 
     struct Draw
     {

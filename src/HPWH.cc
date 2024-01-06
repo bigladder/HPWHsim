@@ -2904,20 +2904,21 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
     }
 }
 
+double HPWH::getTankTemp_C() const
+{
+    // get average tank temperature
+    double totalT_C = 0.;
+    for (auto& T_C : tankTemps_C)
+    {
+        totalT_C += T_C;
+    }
+    return totalT_C / static_cast<double>(getNumNodes());
+}
+
 double HPWH::getTankHeatContent_kJ() const
 {
     // returns tank heat content relative to 0 C using kJ
-
-    // get average tank temperature
-    double avgTemp = 0.0;
-    for (int i = 0; i < getNumNodes(); i++)
-    {
-        avgTemp += tankTemps_C[i];
-    }
-    avgTemp /= getNumNodes();
-
-    double totalHeat = avgTemp * DENSITYWATER_kgperL * CPWATER_kJperkgC * tankVolume_L;
-    return totalHeat;
+    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getTankTemp_C();
 }
 
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
@@ -5432,7 +5433,7 @@ HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
 ///	@param[out]	UEF		            Result of calculation
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
+bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
 {
     // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
@@ -5464,13 +5465,10 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
         return false;
     }
 
-    const double inletT_C = 14.4;    // p. 40433
-    const double ambientT_C = 19.7;  // p. 40435
+    const double inletT_C = 14.4;   // p. 40433
+    const double ambientT_C = 19.7; // p. 40435
     const double externalT_C = 19.7;
     const DRMODES drMode = DR_ALLOW;
-
-    double dailyRemovedVolume_L = 0.;
-    double dailyUsedEnergy_kJ = 0.;
 
     /*
     constexpr double setpointT_C = 51.7; //
@@ -5483,22 +5481,61 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
     }
     */
 
+    int preTime_min = 0;
+    bool heatersAreOn = false;
+    // 1-hr initiation
+    while ((preTime_min < 60) || heatersAreOn)
+    {
+        if (runOneStep(inletT_C,    // inlet water temperature (C)
+                       0,           // draw volume (L)
+                       ambientT_C,  // ambient Temp (C)
+                       externalT_C, // external Temp (C)
+                       drMode,      // DDR Status
+                       0.,          // inlet-2 volume (L)
+                       inletT_C,    // inlet-2 Temp (C)
+                       NULL)        // no extra heat
+            == HPWH_ABORT)
+        {
+            return false;
+        }
+
+        heatersAreOn = false;
+        for (auto& heatSource : heatSources)
+        {
+            heatersAreOn |= heatSource.isEngaged();
+        }
+
+        // std::cout << preTime_min << ": " << getTankTemp_C() << ", " << (heatersAreOn? "On":
+        // "Off") << "\n";
+
+        ++preTime_min;
+    }
+
+    double tankT_C = getTankTemp_C();
+    double initialTankT_C = tankT_C;
+
+    double dailyRemovedVolume_L = 0.;
+    double dailyUsedEnergy_kJ = 0.;
+    double dailyHeatingEnergy_kJ = 0.;        // total energy added to water over 24-hr test
+    double dailyUsedElectricalEnergy_kJ = 0.; // total electrical energy consumed over 24-hr test
+
     // first-recovery info
     bool isFirstRecoveryPeriod = true;
-
-    double dailyHeatingEnergy_kJ = 0.; // total energy added to water over 24-hr test
-    double dailyUsedElectricalEnergy_kJ = 0.; // total electrical energy consumed over 24-hr test
-    double dailyUsedFossilFuelEnergy_kJ = 0.;  // total "fossil-fuel" energy consumed over 24-hr test
+    double firstRecoveryUsedEnergy_kJ = 0.;
+    double recoveryHeatingEnergy_kJ = 0.;
 
     int runTime_min = 0;
     for (auto& draw : *drawPattern)
     {
-        double drawnVolume_L = 0.;
+        double drawVolume_L = 0.;
+        double drawVolumeTemperature_LC = 0.;
+        double drawHeatingEnergy_kJ = 0.;
+        double drawUsedElectricalEnergy_kJ = 0.;
+        double drawUsedFossilFuelEnergy_kJ = 0.;
 
-        double recoveryVolume_L = 0.;
-        double recoveryVolumeTemperature_LC = 0.;
-        double recoveryUsedElectricalEnergy_kJ = 0.;
-        double recoveryUsedFossilFuelEnergy_kJ = 0.;
+        double drawSumOutletVolumeT_LC = 0.;
+        double drawSumInletVolumeT_LC = 0.;
+        int drawSumTimeT_minC = 0;
 
         // limit draw-volume increment to tank volume
         double incrementalDrawVolume_L = draw.flowRate_Lper_min * (1.);
@@ -5507,13 +5544,16 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
             incrementalDrawVolume_L = tankVolume_L;
         }
 
+        bool includedInFirstRecoveryPeriod = isFirstRecoveryPeriod;
+        bool isDrawComplete = false;
         // iterate until 1) specified draw volume has been reached and 2) next draw has started
-        while ((drawnVolume_L < draw.volume_L) || (runTime_min < draw.startTime_min))
+        while ((drawVolume_L < draw.volume_L) || (runTime_min < draw.startTime_min))
         {
             // do not exceed specified draw volume
-            if (drawnVolume_L + incrementalDrawVolume_L > draw.volume_L)
+            if (drawVolume_L + incrementalDrawVolume_L > draw.volume_L)
             {
-                incrementalDrawVolume_L = draw.volume_L - drawnVolume_L;
+                incrementalDrawVolume_L = draw.volume_L - drawVolume_L;
+                isDrawComplete = true;
             }
 
             // run a step
@@ -5531,70 +5571,143 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
                 return false;
             }
 
-            // collect consumed electrical-energy info
+            tankT_C = getTankTemp_C();
+
+            drawSumOutletVolumeT_LC += incrementalDrawVolume_L * outletTemp_C;
+            drawSumInletVolumeT_LC += incrementalDrawVolume_L * inletT_C;
+            ++drawSumTimeT_minC;
+
+            // collect heating energy
+            double incrementalDrawMass_kg = DENSITYWATER_kgperL * incrementalDrawVolume_L;
+            double incrementalDrawHeatCapacity_kJperC = CPWATER_kJperkgC * incrementalDrawMass_kg;
+            drawHeatingEnergy_kJ += incrementalDrawHeatCapacity_kJperC * (outletTemp_C - inletT_C);
+
+            // collect used-energy info
             double usedFossilFuelEnergy_kJ = 0.;
             double usedElectricalEnergy_kJ = 0.;
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
                 usedElectricalEnergy_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
             }
+            drawUsedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
+            drawUsedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
 
             // collect recovery info
-            recoveryVolume_L += incrementalDrawVolume_L;
-            recoveryVolumeTemperature_LC += incrementalDrawVolume_L * outletTemp_C;
-            recoveryUsedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
-            recoveryUsedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
+            if (isFirstRecoveryPeriod)
+            {
+                firstRecoveryUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+                if (isDrawComplete) // check for cut-off
+                {
+                    heatersAreOn = false;
+                    for (auto& heatSource : heatSources)
+                    {
+                        heatersAreOn |= heatSource.isEngaged();
+                    }
+                    if (!heatersAreOn)
+                    {
+                        isFirstRecoveryPeriod = false;
 
-            drawnVolume_L += incrementalDrawVolume_L;
+                        double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
+                        double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
+                        recoveryHeatingEnergy_kJ +=
+                            tankHeatCapacity_kJperC * (tankT_C - initialTankT_C);
+                    }
+                }
+            }
+
+            drawVolume_L += incrementalDrawVolume_L;
             ++runTime_min;
         }
 
-        // collect end-of-draw info
-        double recoveryUsedEnergy_kJ = recoveryUsedElectricalEnergy_kJ + recoveryUsedFossilFuelEnergy_kJ; // see 6.4.3
-
-        double recoveryOutletT_C = 0.;
-        if (recoveryVolume_L > 0.)
+        if (includedInFirstRecoveryPeriod)
         {
-            recoveryOutletT_C = recoveryVolumeTemperature_LC / recoveryVolume_L;                  
-        }
-        double recoveryMassRemoved_kg = HPWH::DENSITYWATER_kgperL * drawnVolume_L;
-        double recoveryHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * recoveryMassRemoved_kg; 
-        double recoveryHeatingEnergy_kJ = recoveryHeatCapacity_kJperC * (recoveryOutletT_C - inletT_C);
+            double meanDrawOutletT_C = drawSumOutletVolumeT_LC / drawVolume_L;
+            double meanDrawInletT_C = drawSumInletVolumeT_LC / drawVolume_L;
 
-        if (isFirstRecoveryPeriod)
-        {   
-            // find the "Recovery Efficiency" (6.4.2)
-            if (recoveryUsedEnergy_kJ > 0.)
-            {
-                dailyTestSummary.recoveryEfficiency = recoveryHeatingEnergy_kJ / recoveryUsedEnergy_kJ;
-            }
-            isFirstRecoveryPeriod = false;
-        }
+            double drawMass_kg = DENSITYWATER_kgperL * drawVolume_L;
+            double drawHeatCapacity_kJperC = CPWATER_kJperkgC * drawMass_kg;
 
-        dailyHeatingEnergy_kJ += recoveryHeatingEnergy_kJ;
+            recoveryHeatingEnergy_kJ +=
+                drawHeatCapacity_kJperC * (meanDrawOutletT_C - meanDrawInletT_C);
+        }
 
         // collect 24-hr test info
-        dailyRemovedVolume_L += drawnVolume_L;
-        dailyUsedElectricalEnergy_kJ += recoveryUsedElectricalEnergy_kJ;
-        dailyUsedFossilFuelEnergy_kJ += recoveryUsedFossilFuelEnergy_kJ;
-        dailyUsedEnergy_kJ += recoveryUsedEnergy_kJ;
+        dailyRemovedVolume_L += drawVolume_L;
+        dailyHeatingEnergy_kJ += drawHeatingEnergy_kJ;
+        dailyUsedElectricalEnergy_kJ += drawUsedElectricalEnergy_kJ;
+        dailyUsedEnergy_kJ += drawUsedFossilFuelEnergy_kJ + drawUsedElectricalEnergy_kJ;
     }
 
-    // find the "Adjusted Daily Water Heating Energy Consumption" (6.3.6)
-    dailyTestSummary.adjustedDailyWaterHeatingEnergy_kJ = 0.;
-    if (dailyTestSummary.recoveryEfficiency > 0.)
+    // find the "Recovery Efficiency" (6.3.3)
+    dailyTestSummary.recoveryEfficiency = 0.;
+    if (firstRecoveryUsedEnergy_kJ > 0.)
     {
-        dailyTestSummary.adjustedDailyWaterHeatingEnergy_kJ = dailyHeatingEnergy_kJ / dailyTestSummary.recoveryEfficiency;
+        dailyTestSummary.recoveryEfficiency = recoveryHeatingEnergy_kJ / firstRecoveryUsedEnergy_kJ;
     }
 
-    // find the "Uniform Energy Factor" (6.4.4) 
-    const double standardSetpointT_C = 51.7; //
-    const double standardInletT_C = 14.4; //
-
+    // find the standard daily heating energy
+    constexpr double standardSetpointT_C = 51.7;
+    constexpr double standardInletT_C = 14.4;
     double dailyMassRemoved_kg = HPWH::DENSITYWATER_kgperL * dailyRemovedVolume_L;
     double dailyHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * dailyMassRemoved_kg;
-    double standardDailyHeatingEnergy_kJ = dailyHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
-    dailyTestSummary.UEF = standardDailyHeatingEnergy_kJ / dailyUsedEnergy_kJ;
+    double standardDailyHeatingEnergy_kJ =
+        dailyHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+
+    // find the "Daily Water Heating Energy Consumption (Qd)" (6.3.5)
+    dailyTestSummary.dailyHeatingEnergyConsumption_kJ = dailyUsedEnergy_kJ;
+    if (dailyTestSummary.recoveryEfficiency > 0.)
+    {
+        double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
+        double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
+        dailyTestSummary.dailyHeatingEnergyConsumption_kJ += tankHeatCapacity_kJperC *
+                                                             (tankT_C - initialTankT_C) /
+                                                             dailyTestSummary.recoveryEfficiency;
+    }
+
+    // find the "Adjusted Daily Water Heating Energy Consumption (Qda)" (6.3.6a)
+    // same as above, because no change in ambient temperature
+    dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ =
+        dailyTestSummary.dailyHeatingEnergyConsumption_kJ;
+
+    // find the "Energy Used to Heat Water (Q_HW)" (6.3.6a)
+    dailyTestSummary.energyUsedToHeatWater_kJ = 0.;
+    if (dailyTestSummary.recoveryEfficiency > 0.)
+    {
+        dailyTestSummary.energyUsedToHeatWater_kJ =
+            dailyHeatingEnergy_kJ / dailyTestSummary.recoveryEfficiency;
+    }
+
+    // find the "Standard Energy Used to Heat Water (Q_HW,T)" (6.3.6b)
+    dailyTestSummary.standardEnergyUsedToHeatWater_kJ = 0.;
+    if (dailyTestSummary.recoveryEfficiency > 0.)
+    {
+        double removedMass_kg = DENSITYWATER_kgperL * dailyRemovedVolume_L;
+        double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
+        double standardRemovedEnergy_kJ =
+            removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+        dailyTestSummary.standardEnergyUsedToHeatWater_kJ =
+            standardRemovedEnergy_kJ / dailyTestSummary.recoveryEfficiency;
+    }
+
+    // add to the adjusted daily water heating energy consumption (p. 40487)
+    double energyUsedToHeatWaterDifference_kJ = dailyTestSummary.standardEnergyUsedToHeatWater_kJ -
+                                                dailyTestSummary.energyUsedToHeatWater_kJ;
+    dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ +=
+        energyUsedToHeatWaterDifference_kJ;
+
+    // find the "Modified Daily Water Heating Energy Consumption (Qdm = Qda - QHWD) (p. 40487)
+    // note: same as Q_HW,T
+    dailyTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ =
+        dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ -
+        energyUsedToHeatWaterDifference_kJ;
+
+    // find the "Uniform Energy Factor" (6.4.4)
+    dailyTestSummary.UEF = 0.;
+    if (dailyTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ > 0.)
+    {
+        dailyTestSummary.UEF = standardDailyHeatingEnergy_kJ /
+                               dailyTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ;
+    }
 
     // find the "Annual Energy Consumption" (6.4.5)
     dailyTestSummary.annualEnergyConsumption_kJ = 0.;
@@ -5602,14 +5715,17 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary &dailyTestSummary)
     {
         constexpr double days_per_year = 365.;
         const double nominalDifferenceT_C = F_TO_C(67.);
-        dailyTestSummary.annualEnergyConsumption_kJ = days_per_year * dailyHeatCapacity_kJperC * nominalDifferenceT_C / dailyTestSummary.UEF;
+        dailyTestSummary.annualEnergyConsumption_kJ =
+            days_per_year * dailyHeatCapacity_kJperC * nominalDifferenceT_C / dailyTestSummary.UEF;
     }
 
     // find the "Annual Electrical Energy Consumption" (6.4.6)
     dailyTestSummary.annualElectricalEnergyConsumption_kJ = 0.;
     if (dailyUsedEnergy_kJ > 0.)
     {
-        dailyTestSummary.annualElectricalEnergyConsumption_kJ = (dailyUsedElectricalEnergy_kJ / dailyUsedEnergy_kJ) * dailyTestSummary.annualEnergyConsumption_kJ;
+        dailyTestSummary.annualElectricalEnergyConsumption_kJ =
+            (dailyUsedElectricalEnergy_kJ / dailyUsedEnergy_kJ) *
+            dailyTestSummary.annualEnergyConsumption_kJ;
     }
 
     return true;
