@@ -5528,7 +5528,6 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
     for (auto& draw : *drawPattern)
     {
         double drawVolume_L = 0.;
-        double drawVolumeTemperature_LC = 0.;
         double drawHeatingEnergy_kJ = 0.;
         double drawUsedElectricalEnergy_kJ = 0.;
         double drawUsedFossilFuelEnergy_kJ = 0.;
