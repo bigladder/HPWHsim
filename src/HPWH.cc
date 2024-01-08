@@ -5400,30 +5400,186 @@ int HPWH::HPWHinit_file(string configFile)
 }
 #endif
 
-HPWH::Usage HPWH::findUsageFromFirstHourRating() { return Usage::Medium; }
-
-HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
+bool HPWH::findUsageFromFirstHourRating(HPWH::Usage& usage, const double setpointT_C /* = 51.7 */)
 {
-    // Assume flow rate unlimited for heat-exchange models
-    if (hasHeatExchanger)
+    double flowRate_Lper_min = GAL_TO_L(3.);
+    if (tankVolume_L < GAL_TO_L(20.))
+        flowRate_Lper_min = GAL_TO_L(1.5);
+
+    constexpr double inletT_C = 14.4;   // p. 40433
+    constexpr double ambientT_C = 19.7; // p. 40435
+    constexpr double externalT_C = 19.7;
+    constexpr DRMODES drMode = DR_ALLOW;
+    if (!isSetpointFixed())
     {
-        return Usage::High;
+        if (setSetpoint(setpointT_C, UNITS_C) == HPWH_ABORT)
+        {
+            return false;
+        }
     }
 
-    // Assume max. flow rate = tankVolume / (1 min)
-    else if (tankVolume_L < L_TO_GAL(1.7))
+    double maxT_C = getTankTemp_C();
+    double prevMinT_C = getTankTemp_C();
+    double tolT_C = dF_TO_dC(0.); // tolerance
+
+    double drawVolume_L = 0.;
+    double lastPassDrawVolume_L = 0.;
+    int testTime_min = 0;
+    int drawOnTime = 0;
+    int prevDrawOffTime_min = 0;
+    bool heatersAreOn = false;
+    bool isDrawing = false;
+    bool testIsRunning = true;
+    int testStage = 1;
+    bool lastDrawSucceeded = false;
+    while (testIsRunning)
     {
-        return Usage::VerySmall;
+        heatersAreOn = false;
+        for (auto& heatSource : heatSources)
+        {
+            heatersAreOn |= heatSource.isEngaged();
+        }
+        double tankT_C = getTankTemp_C();
+
+        switch (testStage)
+        {
+        case 1:
+        {
+            if (!heatersAreOn)
+            {
+                isDrawing = true;
+                drawOnTime = testTime_min;
+                testStage = 2;
+            }
+            break;
+        }
+
+        case 2:
+        {
+            if (heatersAreOn)
+            {
+                isDrawing = false;
+                prevDrawOffTime_min = testTime_min;
+                maxT_C = tankT_C;
+                testStage = 3;
+            }
+            break;
+        }
+
+        case 3:
+        {
+            if (isDrawing)
+            {
+                double targetT_C = maxT_C - dF_TO_dC(15.) - tolT_C;
+                if (outletTemp_C < targetT_C) // outletT has dropped by 15 degF below max T
+                {
+                    prevMinT_C = outletTemp_C;
+                    maxT_C = tankT_C; // initialize for next pass
+                    isDrawing = false;
+                    prevDrawOffTime_min = testTime_min;
+                }
+            }
+            else
+            {
+                if (tankT_C > maxT_C) // has not reached max T
+                {
+                    maxT_C = tankT_C + tolT_C;
+                    if (testTime_min >= 60) // start a final draw
+                    {
+                        isDrawing = true;
+                        drawOnTime = testTime_min;
+                        testStage = 4;
+                    }
+                }
+                else {
+                    if (testTime_min >= 60)
+                    {
+                        testIsRunning = false;
+                    }
+                    else
+                    {
+                        isDrawing = true;
+                        drawOnTime = testTime_min;
+                    }
+                }
+            }
+            break;
+        }
+
+        case 4:
+        {
+            if (testTime_min > drawOnTime)
+            {
+                if (outletTemp_C > prevMinT_C - tolT_C)
+                {
+                    lastDrawSucceeded = true;
+                }
+            }
+            if (outletTemp_C <= prevMinT_C + tolT_C)
+            {
+                testIsRunning = false;
+            }
+        }
+        }
+
+        // limit draw-volume increment to tank volume
+        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
+        if (incrementalDrawVolume_L > tankVolume_L)
+        {
+            incrementalDrawVolume_L = tankVolume_L;
+        }
+
+        if (runOneStep(inletT_C,                // inlet water temperature (C)
+                       incrementalDrawVolume_L, // draw volume (L)
+                       ambientT_C,              // ambient Temp (C)
+                       externalT_C,             // external Temp (C)
+                       drMode,                  // DDR Status
+                       0.,                      // inlet-2 volume (L)
+                       inletT_C,                // inlet-2 Temp (C)
+                       NULL)                    // no extra heat
+            == HPWH_ABORT)
+        {
+            return false;
+        }
+
+        // std::cout << preTime_min << ": " << getTankTemp_C() << ", " << (heatersAreOn? "On":
+        // "Off") << "\n";
+        if (testStage == 4)
+        {
+            lastPassDrawVolume_L += incrementalDrawVolume_L;
+        }
+        else
+        {
+            drawVolume_L += incrementalDrawVolume_L;
+        }
+
+        ++testTime_min;
     }
-    else if (tankVolume_L < L_TO_GAL(2.8))
+
+    if (lastDrawSucceeded)
     {
-        return Usage::Low;
+        drawVolume_L += lastPassDrawVolume_L;
     }
-    else if (tankVolume_L < L_TO_GAL(4.))
+
+    //
+    if (drawVolume_L < GAL_TO_L(18.))
     {
-        return Usage::Medium;
+        usage = Usage::VerySmall;
     }
-    return Usage::High;
+    else if (drawVolume_L < GAL_TO_L(51.))
+    {
+        usage = Usage::Low;
+    }
+    else if (drawVolume_L < GAL_TO_L(75.))
+    {
+        usage = Usage::Medium;
+    }
+    else
+    {
+        usage = Usage::High;
+    }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -5433,7 +5589,9 @@ HPWH::Usage HPWH::findUsageFromMaximumGPM_Rating()
 ///	@param[out]	UEF		            Result of calculation
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
+bool HPWH::runDailyTest(const Usage usage,
+                        DailyTestSummary& dailyTestSummary,
+                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
@@ -5465,13 +5623,11 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
         return false;
     }
 
-    const double inletT_C = 14.4;   // p. 40433
-    const double ambientT_C = 19.7; // p. 40435
-    const double externalT_C = 19.7;
-    const DRMODES drMode = DR_ALLOW;
+    constexpr double inletT_C = 14.4;   // p. 40433
+    constexpr double ambientT_C = 19.7; // p. 40435
+    constexpr double externalT_C = 19.7;
+    constexpr DRMODES drMode = DR_ALLOW;
 
-    /*
-    constexpr double setpointT_C = 51.7; //
     if (!isSetpointFixed())
     {
         if (setSetpoint(setpointT_C, UNITS_C) == HPWH_ABORT)
@@ -5479,7 +5635,6 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
             return false;
         }
     }
-    */
 
     int preTime_min = 0;
     bool heatersAreOn = false;
@@ -5523,6 +5678,7 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
     bool isFirstRecoveryPeriod = true;
     double firstRecoveryUsedEnergy_kJ = 0.;
     double recoveryHeatingEnergy_kJ = 0.;
+    bool hasHeated = false;
 
     int runTime_min = 0;
     for (auto& draw : *drawPattern)
@@ -5602,7 +5758,8 @@ bool HPWH::runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary)
                     {
                         heatersAreOn |= heatSource.isEngaged();
                     }
-                    if (!heatersAreOn)
+                    hasHeated |= heatersAreOn;
+                    if (hasHeated && (!heatersAreOn))
                     {
                         isFirstRecoveryPeriod = false;
 
