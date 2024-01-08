@@ -7,7 +7,9 @@
 #include <string>
 
 /* Evaluate UEF based on simulations using standard profiles */
-static bool testCalcMetrics(const std::string& sModelName, HPWH::DailyTestSummary& dailyTestSummary)
+static bool testCalcMetrics(const std::string& sModelName,
+                            HPWH::Usage& usage,
+                            HPWH::DailyTestSummary& dailyTestSummary)
 {
     HPWH hpwh;
 
@@ -17,11 +19,16 @@ static bool testCalcMetrics(const std::string& sModelName, HPWH::DailyTestSummar
         return false;
     }
 
-    return hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary);
+    if (!hpwh.findUsageFromFirstHourRating(usage))
+        return false;
+
+    return hpwh.runDailyTest(usage, dailyTestSummary);
 }
 
 int main(int argc, char* argv[])
 {
+    HPWH::Usage usage;
+    HPWH::DailyTestSummary dailyTestSummary;
     bool validNumArgs = false;
     bool runUnitTests = false;
 
@@ -48,13 +55,13 @@ int main(int argc, char* argv[])
 
     if (runUnitTests)
     {
-        HPWH::DailyTestSummary dailyTestSummary;
+        ASSERTTRUE(testCalcMetrics("AquaThermAire", usage, dailyTestSummary));
+        ASSERTTRUE(usage == HPWH::Usage::High);
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 3.2797));
 
-        ASSERTTRUE(testCalcMetrics("AquaThermAire", dailyTestSummary));
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.8258));
-
-        ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", dailyTestSummary));
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 4.8021));
+        ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", usage, dailyTestSummary));
+        ASSERTTRUE(usage == HPWH::Usage::Medium);
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 4.8246));
 
         return 0;
     }
@@ -104,21 +111,53 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    HPWH::DailyTestSummary dailyTestSummary;
-    if (hpwh.runDailyTest(hpwh.findUsageFromMaximumGPM_Rating(), dailyTestSummary))
+    if (hpwh.findUsageFromFirstHourRating(usage))
     {
-        std::cout << "\tRecovery Efficiency: " << dailyTestSummary.recoveryEfficiency << "\n";
-        std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kJ): "
-                  << dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ << "\n";
-        std::cout << "\tUEF: " << dailyTestSummary.UEF << "\n";
-        std::cout << "\tAnnual Electrical Energy Consumption (kJ): "
-                  << dailyTestSummary.annualElectricalEnergyConsumption_kJ << "\n";
-        std::cout << "\tAnnual Energy Consumption (kJ): "
-                  << dailyTestSummary.annualEnergyConsumption_kJ << "\n";
+        std::string sUsage = "";
+        switch (usage)
+        {
+        case HPWH::Usage::VerySmall:
+        {
+            sUsage = "Very Small";
+            break;
+        }
+        case HPWH::Usage::Low:
+        {
+            sUsage = "Low";
+            break;
+        }
+        case HPWH::Usage::Medium:
+        {
+            sUsage = "Medium";
+            break;
+        }
+        case HPWH::Usage::High:
+        {
+            sUsage = "High";
+            break;
+        }
+        }
+        std::cout << "\tUsage: " << sUsage << "\n";
+
+        if (hpwh.runDailyTest(usage, dailyTestSummary))
+        {
+            std::cout << "\tRecovery Efficiency: " << dailyTestSummary.recoveryEfficiency << "\n";
+            std::cout << "\tUEF: " << dailyTestSummary.UEF << "\n";
+            std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kWh): "
+                      << KJ_TO_KWH(dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ) << "\n";
+            std::cout << "\tAnnual Electrical Energy Consumption (kWh): "
+                      << KJ_TO_KWH(dailyTestSummary.annualElectricalEnergyConsumption_kJ) << "\n";
+            std::cout << "\tAnnual Energy Consumption (kWh): "
+                      << KJ_TO_KWH(dailyTestSummary.annualEnergyConsumption_kJ) << "\n";
+        }
+        else
+        {
+            std::cout << "Unable to determine efficiency metrics.\n";
+        }
     }
     else
     {
-        std::cout << "Unable to determine efficiency metrics.\n";
+        std::cout << "Unable to determine first-hour rating.\n";
     }
 
     return 0;

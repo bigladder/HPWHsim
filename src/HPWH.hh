@@ -957,10 +957,7 @@ class HPWH
     };
 
     /// Determine usage using the first-hour rating method
-    Usage findUsageFromFirstHourRating();
-
-    /// Determine usage using the maximum GPM rating method
-    Usage findUsageFromMaximumGPM_Rating();
+    bool findUsageFromFirstHourRating(HPWH::Usage &usage,const double setpointT_C = 51.7);
 
     struct DailyTestSummary
     {
@@ -976,7 +973,7 @@ class HPWH
     };
 
     /// run 24-hr draw pattern
-    bool runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary);
+    bool runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary, const double setpointT_C = 51.7);
 
     struct Draw
     {
