@@ -27,35 +27,35 @@ heatsource 0 T4 95 F
 #quadratic terms for this product are zero. It's remarkably linear.
 
 #  5F Coefficients
-heatsource 0 inPowT1const -1423
-heatsource 0 inPowT1lin 38.70
+heatsource 0 inPowT1const -1356
+heatsource 0 inPowT1lin 39.80
 heatsource 0 inPowT1quad 0.0
-heatsource 0 copT1const -0.13839
-heatsource 0 copT1lin 0.012319
+heatsource 0 copT1const 2.003
+heatsource 0 copT1lin -0.003637
 heatsource 0 copT1quad 0.0
 
 # 34F Coefficients
-heatsource 0 inPowT2const -1558
-heatsource 0 inPowT2lin 42.40
+heatsource 0 inPowT2const -1485
+heatsource 0 inPowT2lin 43.60
 heatsource 0 inPowT2quad 0.0
-heatsource 0 copT2const -0.19375
-heatsource 0 copT2lin 0.017247
+heatsource 0 copT2const 2.805
+heatsource 0 copT2lin -0.005092
 heatsource 0 copT2quad 0.0
 
 # 67F Coefficients
-heatsource 0 inPowT3const -1713
-heatsource 0 inPowT3lin 46.60
+heatsource 0 inPowT3const -1632
+heatsource 0 inPowT3lin 47.93
 heatsource 0 inPowT3quad 0.0
-heatsource 0 copT3const -0.28156
-heatsource 0 copT3lin 0.025064
+heatsource 0 copT3const 4.076
+heatsource 0 copT3lin -0.007400
 heatsource 0 copT3quad 0.0
 
 # 95F Coefficients
-heatsource 0 inPowT4const -1844
-heatsource 0 inPowT4lin 50.17
+heatsource 0 inPowT4const -1757
+heatsource 0 inPowT4lin 51.60
 heatsource 0 inPowT4quad 0.0
-heatsource 0 copT4const -0.47273
-heatsource 0 copT4lin 0.042082
+heatsource 0 copT4const 6.843
+heatsource 0 copT4lin -0.012424
 heatsource 0 copT4quad 0.0
 
 
