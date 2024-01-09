@@ -956,6 +956,9 @@ class HPWH
         High
     };
 
+
+    bool prepForTest();
+
     /// Determine usage using the first-hour rating method
     bool findUsageFromFirstHourRating(HPWH::Usage &usage,const double setpointT_C = 51.7);
 
