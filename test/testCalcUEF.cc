@@ -57,11 +57,11 @@ int main(int argc, char* argv[])
     {
         ASSERTTRUE(testCalcMetrics("AquaThermAire", usage, dailyTestSummary));
         ASSERTTRUE(usage == HPWH::Usage::High);
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 3.2797));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.7540));
 
         ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", usage, dailyTestSummary));
         ASSERTTRUE(usage == HPWH::Usage::Medium);
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 4.8246));
+        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.6290));
 
         return 0;
     }
