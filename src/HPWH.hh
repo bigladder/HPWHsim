@@ -947,7 +947,7 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    /// designations to determine draw pattern in 24-hr test
+    /// draw-pattern designations for 24-hr test
     enum class Usage
     {
         VerySmall,
@@ -968,21 +968,17 @@ class HPWH
         double standardEnergyUsedToHeatWater_kJ;
         double annualElectricalEnergyConsumption_kJ;
         double annualEnergyConsumption_kJ;
-        Usage usage;
-        bool qualifies = true;
-
-        static double consumerHPWH_maxPower_kW;
+        bool qualifies = false;
     };
 
     /// perform a draw/heat cycle to prepare for test
-    bool prepForTest(StandardTestSummary& standardTestSummary);
+    bool prepForTest();
 
-    /// determine usage using the first-hour rating method
-    bool findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,
-                                      const double setpointT_C = 51.7);
+    /// determine usage based on the first-hour rating method
+    bool findUsageFromFirstHourRating(Usage &usage, const double setpointT_C = 51.7);
 
-    /// run 24-hr draw pattern
-    bool run24hrTest(StandardTestSummary& standardTestSummary, const double setpointT_C = 51.7);
+    /// run 24-hr draw pattern and compute metrics
+    bool run24hrTest(const Usage &usage, StandardTestSummary& standardTestSummary, const double setpointT_C = 51.7);
 
     /// specific information for a single draw
     struct Draw

@@ -64,8 +64,6 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-double HPWH::StandardTestSummary::consumerHPWH_maxPower_kW = 6.; // EERE–2019–BT–TP–0032, p. 40415
-
 HPWH::DrawPattern HPWH::verySmallUsage = {
     {HM_TO_MIN(0, 00), 7.6, 3.8},
     {HM_TO_MIN(1, 00), 3.8, 3.8},
@@ -5404,18 +5402,16 @@ int HPWH::HPWHinit_file(string configFile)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
-/// @note	Flags if model is not qualified for test
-/// @param[in/out] standardTestSummary	 contains usage on output
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::prepForTest(StandardTestSummary& standardTestSummary)
+bool HPWH::prepForTest()
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4;   // p. 40433
-    constexpr double ambientT_C = 19.7; // p. 40435
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
     DRMODES drMode = DR_ALLOW;
@@ -5478,41 +5474,27 @@ bool HPWH::prepForTest(StandardTestSummary& standardTestSummary)
             return false;
         }
 
-        if (isHeating) // check whether power is below limit for consumer HPWH
-        {
-            double qInElectrical_kJ = 0.;
-            for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
-            {
-                qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
-            }
-            double electricalPower_kW = qInElectrical_kJ / sec_per_min;
-            if (electricalPower_kW > StandardTestSummary::consumerHPWH_maxPower_kW)
-            {
-                standardTestSummary.qualifies = false;
-            }
-        }
-
         ++time_min;
     }
     return true;
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Finds usage prior to 24-hr test
-/// @note	Determines usage; flags if model is not qualified
+///	@brief	Find usage category prior to 24-hr test
+/// @note	Determines usage category for 24-hr test
 /// @param[in/out] standardTestSummary	 contains usage on output
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,
+bool HPWH::findUsageFromFirstHourRating(Usage &usage,
                                         const double setpointT_C /* = 51.7 */)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    constexpr double inletT_C = 14.4;   // p. 40433
-    constexpr double ambientT_C = 19.7; // p. 40435
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
     if (!isSetpointFixed())
@@ -5543,10 +5525,11 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
     bool done = false;
     int step = 0;
 
-    if (!prepForTest(standardTestSummary))
+    if (!prepForTest())
     {
         return false;
     }
+
     bool firstDraw = true;
     isDrawing = true;
     maxOutletT_C = 0.;
@@ -5628,7 +5611,7 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
         {
             if ((tankT_C > maxTankT_C) && isHeating &&
                 (elapsedTime_min <
-                 60)) // has not reached maxTankT, heat is on, and has not reached 1 hr
+                 60)) // has not reached maxTankT, heat is on, and less than 1 hr has elpased
             {
                 maxTankT_C = std::max(tankT_C, maxTankT_C);
             }
@@ -5643,20 +5626,6 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
         }
         }
 
-        if (isHeating) // check whether power is below limit for consumer HPWH
-        {
-            double qInElectrical_kJ = 0.;
-            for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
-            {
-                qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
-            }
-            double electricalPower_kW = qInElectrical_kJ / sec_per_min;
-            if (electricalPower_kW > StandardTestSummary::consumerHPWH_maxPower_kW)
-            {
-                standardTestSummary.qualifies = false;
-            }
-        }
-
         drawVolume_L += incrementalDrawVolume_L;
         ++elapsedTime_min;
     }
@@ -5664,19 +5633,19 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
     //
     if (totalDrawVolume_L < GAL_TO_L(18.))
     {
-        standardTestSummary.usage = Usage::VerySmall;
+        usage = Usage::VerySmall;
     }
     else if (totalDrawVolume_L < GAL_TO_L(51.))
     {
-        standardTestSummary.usage = Usage::Low;
+        usage = Usage::Low;
     }
     else if (totalDrawVolume_L < GAL_TO_L(75.))
     {
-        standardTestSummary.usage = Usage::Medium;
+        usage = Usage::Medium;
     }
     else
     {
-        standardTestSummary.usage = Usage::High;
+        usage = Usage::High;
     }
 
     return true;
@@ -5689,12 +5658,12 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
+bool HPWH::run24hrTest(const Usage &usage, StandardTestSummary& standardTestSummary,
                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
-    switch (standardTestSummary.usage)
+    switch (usage)
     {
     case Usage::VerySmall:
     {
@@ -5722,8 +5691,8 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
         return false;
     }
 
-    constexpr double inletT_C = 14.4;   // p. 40433
-    constexpr double ambientT_C = 19.7; // p. 40435
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
     constexpr DRMODES drMode = DR_ALLOW;
 
@@ -5735,10 +5704,11 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
         }
     }
 
-    if (!prepForTest(standardTestSummary))
+    if (!prepForTest())
     {
         return false;
     }
+
     // idle for 1 hr
     int preTime_min = 0;
     bool heatersAreOn = false;
@@ -5887,6 +5857,12 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
         dailyHeatingEnergy_kJ += drawHeatingEnergy_kJ;
         dailyUsedElectricalEnergy_kJ += drawUsedElectricalEnergy_kJ;
         dailyUsedEnergy_kJ += drawUsedFossilFuelEnergy_kJ + drawUsedElectricalEnergy_kJ;
+    }
+
+    // require heating during 24-hr test for unit to qualify as consumer water heater
+    if (hasHeated)
+    {
+        standardTestSummary.qualifies = true;
     }
 
     // find the "Recovery Efficiency" (6.3.3)
