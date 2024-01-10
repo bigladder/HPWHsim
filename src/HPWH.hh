@@ -974,11 +974,12 @@ class HPWH
         static double consumerHPWH_maxPower_kW;
     };
 
-     /// perform a draw/heat cycle to prepare for test
-     bool prepForTest(StandardTestSummary& standardTestSummary);
+    /// perform a draw/heat cycle to prepare for test
+    bool prepForTest(StandardTestSummary& standardTestSummary);
 
-     /// determine usage using the first-hour rating method
-     bool findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,const double setpointT_C = 51.7);
+    /// determine usage using the first-hour rating method
+    bool findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,
+                                      const double setpointT_C = 51.7);
 
     /// run 24-hr draw pattern
     bool run24hrTest(StandardTestSummary& standardTestSummary, const double setpointT_C = 51.7);

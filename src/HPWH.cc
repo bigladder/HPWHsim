@@ -5504,7 +5504,8 @@ bool HPWH::prepForTest(StandardTestSummary& standardTestSummary)
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary, const double setpointT_C /* = 51.7 */)
+bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,
+                                        const double setpointT_C /* = 51.7 */)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5582,16 +5583,18 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
             sumOutletVolumeT_LC += incrementalDrawVolume_L * outletTemp_C;
 
             maxOutletT_C = std::max(outletTemp_C, maxOutletT_C);
-            if (outletTemp_C < maxOutletT_C - dF_TO_dC(15.)) // outletT has dropped by 15 degF below max T
+            if (outletTemp_C <
+                maxOutletT_C - dF_TO_dC(15.)) // outletT has dropped by 15 degF below max T
             {
                 avgOutletT_C = sumOutletVolumeT_LC / sumOutletVolume_L;
                 minOutletT_C = outletTemp_C;
-                if(elapsedTime_min >= 60)
+                if (elapsedTime_min >= 60)
                 {
                     double fac = 1;
                     if (!firstDraw)
                     {
-                        fac = (avgOutletT_C - prevMinOutletT_C) / (prevAvgOutletT_C - prevMinOutletT_C);
+                        fac = (avgOutletT_C - prevMinOutletT_C) /
+                              (prevAvgOutletT_C - prevMinOutletT_C);
                     }
                     totalDrawVolume_L += fac * drawVolume_L;
                     done = true;
@@ -5608,8 +5611,7 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
                     prevMinOutletT_C = minOutletT_C;
                     ++step;
                 }
-
-             }
+            }
             break;
         }
 
@@ -5624,8 +5626,9 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
 
         case 2: // heating
         {
-            if ((tankT_C > maxTankT_C) &&
-                isHeating && (elapsedTime_min < 60)) // has not reached maxTankT, heat is on, and has not reached 1 hr
+            if ((tankT_C > maxTankT_C) && isHeating &&
+                (elapsedTime_min <
+                 60)) // has not reached maxTankT, heat is on, and has not reached 1 hr
             {
                 maxTankT_C = std::max(tankT_C, maxTankT_C);
             }
@@ -5687,7 +5690,7 @@ bool HPWH::findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
-                        const double setpointT_C /* = 51.7 */)
+                       const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
@@ -5890,7 +5893,8 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
     standardTestSummary.recoveryEfficiency = 0.;
     if (firstRecoveryUsedEnergy_kJ > 0.)
     {
-        standardTestSummary.recoveryEfficiency = recoveryHeatingEnergy_kJ / firstRecoveryUsedEnergy_kJ;
+        standardTestSummary.recoveryEfficiency =
+            recoveryHeatingEnergy_kJ / firstRecoveryUsedEnergy_kJ;
     }
 
     // find the standard daily heating energy
@@ -5908,9 +5912,9 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
         double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
         double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
         double finalTankT_C = tankT_C;
-        standardTestSummary.dailyHeatingEnergyConsumption_kJ -= tankHeatCapacity_kJperC *
-                                                             (finalTankT_C - initialTankT_C) /
-                                                             standardTestSummary.recoveryEfficiency;
+        standardTestSummary.dailyHeatingEnergyConsumption_kJ -=
+            tankHeatCapacity_kJperC * (finalTankT_C - initialTankT_C) /
+            standardTestSummary.recoveryEfficiency;
     }
 
     // find the "Adjusted Daily Water Heating Energy Consumption (Qda)" (6.3.6a)
@@ -5939,8 +5943,9 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
     }
 
     // add to the adjusted daily water heating energy consumption (p. 40487)
-    double energyUsedToHeatWaterDifference_kJ = standardTestSummary.standardEnergyUsedToHeatWater_kJ -
-                                                standardTestSummary.energyUsedToHeatWater_kJ;
+    double energyUsedToHeatWaterDifference_kJ =
+        standardTestSummary.standardEnergyUsedToHeatWater_kJ -
+        standardTestSummary.energyUsedToHeatWater_kJ;
     standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ +=
         energyUsedToHeatWaterDifference_kJ;
 
@@ -5955,7 +5960,7 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
     if (standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ > 0.)
     {
         standardTestSummary.UEF = standardDailyHeatingEnergy_kJ /
-                               standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ;
+                                  standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ;
     }
 
     // find the "Annual Energy Consumption" (6.4.5)
@@ -5964,8 +5969,9 @@ bool HPWH::run24hrTest(StandardTestSummary& standardTestSummary,
     {
         constexpr double days_per_year = 365.;
         const double nominalDifferenceT_C = F_TO_C(67.);
-        standardTestSummary.annualEnergyConsumption_kJ =
-            days_per_year * dailyHeatCapacity_kJperC * nominalDifferenceT_C / standardTestSummary.UEF;
+        standardTestSummary.annualEnergyConsumption_kJ = days_per_year * dailyHeatCapacity_kJperC *
+                                                         nominalDifferenceT_C /
+                                                         standardTestSummary.UEF;
     }
 
     // find the "Annual Electrical Energy Consumption" (6.4.6)
