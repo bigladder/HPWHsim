@@ -5512,11 +5512,11 @@ bool HPWH::findUsageFromFirstHourRating(Usage& usage, const double setpointT_C /
     double drawVolume_L = 0.;
     double totalDrawVolume_L = 0.;
 
-    double sumOutletVolumeT_LC = 0;
-    double sumOutletVolume_L = 0;
+    double sumOutletVolumeT_LC = 0.;
+    double sumOutletVolume_L = 0.;
 
-    double avgOutletT_C = 0;
-    double minOutletT_C = 0;
+    double avgOutletT_C = 0.;
+    double minOutletT_C = 0.;
     double prevAvgOutletT_C = 0.;
     double prevMinOutletT_C = 0.;
 
