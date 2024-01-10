@@ -6,10 +6,9 @@
 
 #include <string>
 
-/* Evaluate UEF based on simulations using standard profiles */
-static bool testCalcMetrics(const std::string& sModelName,
-                            HPWH::Usage& usage,
-                            HPWH::DailyTestSummary& dailyTestSummary)
+/* Measure metrics based on simulations using standard profiles */
+static bool testMeasureMetrics(const std::string& sModelName,
+                            HPWH::StandardTestSummary& standardTestSummary)
 {
     HPWH hpwh;
 
@@ -19,16 +18,17 @@ static bool testCalcMetrics(const std::string& sModelName,
         return false;
     }
 
-    if (!hpwh.findUsageFromFirstHourRating(usage))
+    if (!hpwh.findUsageFromFirstHourRating(standardTestSummary))
+    {
         return false;
+    }
 
-    return hpwh.runDailyTest(usage, dailyTestSummary);
+    return hpwh.run24hrTest(standardTestSummary);
 }
 
 int main(int argc, char* argv[])
 {
-    HPWH::Usage usage;
-    HPWH::DailyTestSummary dailyTestSummary;
+    HPWH::StandardTestSummary standardTestSummary;
     bool validNumArgs = false;
     bool runUnitTests = false;
 
@@ -55,13 +55,15 @@ int main(int argc, char* argv[])
 
     if (runUnitTests)
     {
-        ASSERTTRUE(testCalcMetrics("AquaThermAire", usage, dailyTestSummary));
-        ASSERTTRUE(usage == HPWH::Usage::High);
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.7540));
+        ASSERTTRUE(testMeasureMetrics("AquaThermAire", standardTestSummary));
+        ASSERTTRUE(standardTestSummary.qualifies );
+        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Medium);
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 2.6326));
 
-        ASSERTTRUE(testCalcMetrics("AOSmithHPTS50", usage, dailyTestSummary));
-        ASSERTTRUE(usage == HPWH::Usage::Medium);
-        ASSERTTRUE(cmpd(dailyTestSummary.UEF, 2.6290));
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", standardTestSummary));
+        ASSERTTRUE(standardTestSummary.qualifies );
+        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Low);
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
 
         return 0;
     }
@@ -111,53 +113,65 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    if (hpwh.findUsageFromFirstHourRating(usage))
+    if (hpwh.findUsageFromFirstHourRating(standardTestSummary))
     {
-        std::string sUsage = "";
-        switch (usage)
+        if (standardTestSummary.qualifies)
         {
-        case HPWH::Usage::VerySmall:
-        {
-            sUsage = "Very Small";
-            break;
-        }
-        case HPWH::Usage::Low:
-        {
-            sUsage = "Low";
-            break;
-        }
-        case HPWH::Usage::Medium:
-        {
-            sUsage = "Medium";
-            break;
-        }
-        case HPWH::Usage::High:
-        {
-            sUsage = "High";
-            break;
-        }
-        }
-        std::cout << "\tUsage: " << sUsage << "\n";
-
-        if (hpwh.runDailyTest(usage, dailyTestSummary))
-        {
-            std::cout << "\tRecovery Efficiency: " << dailyTestSummary.recoveryEfficiency << "\n";
-            std::cout << "\tUEF: " << dailyTestSummary.UEF << "\n";
-            std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kWh): "
-                      << KJ_TO_KWH(dailyTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ) << "\n";
-            std::cout << "\tAnnual Electrical Energy Consumption (kWh): "
-                      << KJ_TO_KWH(dailyTestSummary.annualElectricalEnergyConsumption_kJ) << "\n";
-            std::cout << "\tAnnual Energy Consumption (kWh): "
-                      << KJ_TO_KWH(dailyTestSummary.annualEnergyConsumption_kJ) << "\n";
+            std::string sUsage = "";
+            switch (standardTestSummary.usage)
+            {
+            case HPWH::Usage::VerySmall:
+            {
+                sUsage = "Very Small";
+                break;
+            }
+            case HPWH::Usage::Low:
+            {
+                sUsage = "Low";
+                break;
+            }
+            case HPWH::Usage::Medium:
+            {
+                sUsage = "Medium";
+                break;
+            }
+            case HPWH::Usage::High:
+            {
+                sUsage = "High";
+                break;
+            }
+            }
+            std::cout << "\tUsage: " << sUsage << "\n";
         }
         else
         {
-            std::cout << "Unable to determine efficiency metrics.\n";
+            std::cout << "\tDoes not qualify as consumer water heater.\n";
+        }
+
+        if (hpwh.run24hrTest(standardTestSummary))
+        {
+
+            std::cout << "\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
+                      << "\n";
+            std::cout << "\tUEF: " << standardTestSummary.UEF << "\n";
+            std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kWh): "
+                      << KJ_TO_KWH(
+                             standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ)
+                      << "\n";
+            std::cout << "\tAnnual Electrical Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.annualElectricalEnergyConsumption_kJ)
+                      << "\n";
+            std::cout << "\tAnnual Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.annualEnergyConsumption_kJ) << "\n";
+        }
+        else
+        {
+            std::cout << "Unable to complete 24-hr test.\n";
         }
     }
     else
     {
-        std::cout << "Unable to determine first-hour rating.\n";
+        std::cout << "Unable to complete first-hour rating test.\n";
     }
 
     return 0;
