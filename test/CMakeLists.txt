@@ -39,8 +39,9 @@ add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_C
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
+    message(STATUS "Installing python packages")
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-    execute_process(COMMAND poetry install WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python")
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python")
     set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 endif ()
 
