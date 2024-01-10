@@ -36,6 +36,14 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 #add_custom_target(do_always ALL COMMAND ${CMAKE_COMMAND} file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") )
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
 
+cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+
+if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+    execute_process(COMMAND poetry install WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python")
+    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+endif ()
+
 # Run Unit tests
 add_test(NAME "testScaleHPWH" COMMAND $<TARGET_FILE:testScaleHPWH> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME "testMaxSetpoint" COMMAND $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -265,6 +273,19 @@ function(add_model_test)
     add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTool> ${testToolArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
+    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_INP_SOURCE} STREQUAL "Preset")
+        set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measurements.csv")
+        if (EXISTS ${measurementsPath})
+            set(simulationOutputName "${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}")
+            set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
+            set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
+
+            set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+            add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/create_test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath})
+            set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
+        endif ()
+    endif ()
+
 endfunction()
 
 foreach (test ${testNames})
