@@ -5486,8 +5486,7 @@ bool HPWH::prepForTest()
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findUsageFromFirstHourRating(Usage &usage,
-                                        const double setpointT_C /* = 51.7 */)
+bool HPWH::findUsageFromFirstHourRating(Usage& usage, const double setpointT_C /* = 51.7 */)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5658,7 +5657,8 @@ bool HPWH::findUsageFromFirstHourRating(Usage &usage,
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::run24hrTest(const Usage &usage, StandardTestSummary& standardTestSummary,
+bool HPWH::run24hrTest(const Usage& usage,
+                       StandardTestSummary& standardTestSummary,
                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage

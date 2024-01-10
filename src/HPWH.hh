@@ -975,10 +975,12 @@ class HPWH
     bool prepForTest();
 
     /// determine usage based on the first-hour rating method
-    bool findUsageFromFirstHourRating(Usage &usage, const double setpointT_C = 51.7);
+    bool findUsageFromFirstHourRating(Usage& usage, const double setpointT_C = 51.7);
 
     /// run 24-hr draw pattern and compute metrics
-    bool run24hrTest(const Usage &usage, StandardTestSummary& standardTestSummary, const double setpointT_C = 51.7);
+    bool run24hrTest(const Usage& usage,
+                     StandardTestSummary& standardTestSummary,
+                     const double setpointT_C = 51.7);
 
     /// specific information for a single draw
     struct Draw
