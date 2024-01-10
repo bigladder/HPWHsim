@@ -8,7 +8,7 @@
 
 /* Measure metrics based on simulations using standard profiles */
 static bool testMeasureMetrics(const std::string& sModelName,
-                            HPWH::StandardTestSummary& standardTestSummary)
+                               HPWH::StandardTestSummary& standardTestSummary)
 {
     HPWH hpwh;
 
@@ -56,14 +56,19 @@ int main(int argc, char* argv[])
     if (runUnitTests)
     {
         ASSERTTRUE(testMeasureMetrics("AquaThermAire", standardTestSummary));
-        ASSERTTRUE(standardTestSummary.qualifies );
+        ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Medium);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 2.6326));
 
         ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", standardTestSummary));
-        ASSERTTRUE(standardTestSummary.qualifies );
+        ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Low);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
+
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", standardTestSummary));
+        ASSERTTRUE(standardTestSummary.qualifies);
+        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::High);
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.5230));
 
         return 0;
     }
