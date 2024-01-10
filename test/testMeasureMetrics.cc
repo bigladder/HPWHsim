@@ -1,13 +1,14 @@
 /*
- * test UEF calculation
+ * test measure performance metrics
  */
 #include "HPWH.hh"
 #include "testUtilityFcts.cc"
 
 #include <string>
 
-/* Measure metrics based on simulations using standard profiles */
+/* Measure metrics using 24-hr test based on model name (preset only) */
 static bool testMeasureMetrics(const std::string& sModelName,
+                               HPWH::Usage& usage,
                                HPWH::StandardTestSummary& standardTestSummary)
 {
     HPWH hpwh;
@@ -18,12 +19,12 @@ static bool testMeasureMetrics(const std::string& sModelName,
         return false;
     }
 
-    if (!hpwh.findUsageFromFirstHourRating(standardTestSummary))
+    if (!hpwh.findUsageFromFirstHourRating(usage))
     {
         return false;
     }
 
-    return hpwh.run24hrTest(standardTestSummary);
+    return hpwh.run24hrTest(usage, standardTestSummary);
 }
 
 int main(int argc, char* argv[])
@@ -55,19 +56,20 @@ int main(int argc, char* argv[])
 
     if (runUnitTests)
     {
-        ASSERTTRUE(testMeasureMetrics("AquaThermAire", standardTestSummary));
+        HPWH::Usage usage;
+        ASSERTTRUE(testMeasureMetrics("AquaThermAire", usage, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Medium);
+        ASSERTTRUE(usage == HPWH::Usage::Medium);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 2.6326));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", usage, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::Low);
+        ASSERTTRUE(usage == HPWH::Usage::Low);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", usage, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(standardTestSummary.usage == HPWH::Usage::High);
+        ASSERTTRUE(usage == HPWH::Usage::High);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.5230));
 
         return 0;
@@ -77,9 +79,9 @@ int main(int argc, char* argv[])
     {
         cout << "Invalid input:\n\
             To run all unit tests, provide ZERO arguments.\n\
-            To determine the UEF for a particular model spec, provide ONE or TWO arguments:\n\
-            \t[model spec Type (i.e., Preset (default) or File)]\n\
-            \t[model spec Name (i.e., Sanden80)]\n";
+            To determine performance metrics for a particular model spec, provide ONE or TWO arguments:\n\
+            \t[model spec Type, i.e., Preset (default) or File]\n\
+            \t[model spec Name, i.e., Sanden80]\n";
         exit(1);
     }
 
@@ -118,43 +120,42 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    if (hpwh.findUsageFromFirstHourRating(standardTestSummary))
+    HPWH::Usage usage;
+    if (hpwh.findUsageFromFirstHourRating(usage))
     {
-        if (standardTestSummary.qualifies)
+        std::string sUsage = "";
+        switch (usage)
         {
-            std::string sUsage = "";
-            switch (standardTestSummary.usage)
-            {
-            case HPWH::Usage::VerySmall:
-            {
-                sUsage = "Very Small";
-                break;
-            }
-            case HPWH::Usage::Low:
-            {
-                sUsage = "Low";
-                break;
-            }
-            case HPWH::Usage::Medium:
-            {
-                sUsage = "Medium";
-                break;
-            }
-            case HPWH::Usage::High:
-            {
-                sUsage = "High";
-                break;
-            }
-            }
-            std::cout << "\tUsage: " << sUsage << "\n";
-        }
-        else
+        case HPWH::Usage::VerySmall:
         {
-            std::cout << "\tDoes not qualify as consumer water heater.\n";
+            sUsage = "Very Small";
+            break;
         }
+        case HPWH::Usage::Low:
+        {
+            sUsage = "Low";
+            break;
+        }
+        case HPWH::Usage::Medium:
+        {
+            sUsage = "Medium";
+            break;
+        }
+        case HPWH::Usage::High:
+        {
+            sUsage = "High";
+            break;
+        }
+        }
+        std::cout << "\tUsage: " << sUsage << "\n";
 
-        if (hpwh.run24hrTest(standardTestSummary))
+        if (hpwh.run24hrTest(usage, standardTestSummary))
         {
+
+            if (!standardTestSummary.qualifies)
+            {
+                std::cout << "\tDoes not qualify as consumer water heater.\n";
+            }
 
             std::cout << "\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
                       << "\n";
