@@ -273,7 +273,7 @@ function(add_model_test)
     add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTool> ${testToolArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
-    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_INP_SOURCE} STREQUAL "Preset")
+    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_INP_SOURCE} STREQUAL "File")
         set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measurements.csv")
         if (EXISTS ${measurementsPath})
             set(simulationOutputName "${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}")
