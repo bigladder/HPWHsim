@@ -947,7 +947,7 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    /// Draw patterns corresponding to ratings for UEF calculation
+    /// designations to determine draw pattern in 24-hr test
     enum class Usage
     {
         VerySmall,
@@ -956,13 +956,8 @@ class HPWH
         High
     };
 
-
-    bool prepForTest();
-
-    /// Determine usage using the first-hour rating method
-    bool findUsageFromFirstHourRating(HPWH::Usage &usage,const double setpointT_C = 51.7);
-
-    struct DailyTestSummary
+    /// collection of information derived from standard test
+    struct StandardTestSummary
     {
         double UEF;
         double recoveryEfficiency;
@@ -973,11 +968,22 @@ class HPWH
         double standardEnergyUsedToHeatWater_kJ;
         double annualElectricalEnergyConsumption_kJ;
         double annualEnergyConsumption_kJ;
+        Usage usage;
+        bool qualifies = true;
+
+        static double consumerHPWH_maxPower_kW;
     };
 
-    /// run 24-hr draw pattern
-    bool runDailyTest(const Usage usage, DailyTestSummary& dailyTestSummary, const double setpointT_C = 51.7);
+     /// perform a draw/heat cycle to prepare for test
+     bool prepForTest(StandardTestSummary& standardTestSummary);
 
+     /// determine usage using the first-hour rating method
+     bool findUsageFromFirstHourRating(StandardTestSummary& standardTestSummary,const double setpointT_C = 51.7);
+
+    /// run 24-hr draw pattern
+    bool run24hrTest(StandardTestSummary& standardTestSummary, const double setpointT_C = 51.7);
+
+    /// specific information for a single draw
     struct Draw
     {
         double startTime_min;
@@ -994,8 +1000,10 @@ class HPWH
         }
     };
 
+    /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
+    /// standard draw patterns
     static DrawPattern verySmallUsage;
     static DrawPattern lowUsage;
     static DrawPattern mediumUsage;
