@@ -13,6 +13,9 @@
 #include <cstdlib> //for exit
 #include <vector>
 
+#include <courierr/courierr.h>
+#include <fmt/format.h>
+
 namespace Btwxt
 {
 class RegularGridInterpolator;

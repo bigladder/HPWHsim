@@ -28,6 +28,16 @@ target_link_libraries(testHeatingLogics PRIVATE ${libs})
 target_link_libraries(testEnergyBalance PRIVATE ${libs})
 
 target_compile_features(testTool PRIVATE cxx_std_17)
+target_compile_features(testTankSizeFixed PRIVATE cxx_std_17)
+target_compile_features(testScaleHPWH PRIVATE cxx_std_17)
+target_compile_features(testMaxSetpoint PRIVATE cxx_std_17)
+target_compile_features(testSizingFractions PRIVATE cxx_std_17)
+target_compile_features(testResistanceFcts PRIVATE cxx_std_17)
+target_compile_features(testCompressorFcts PRIVATE cxx_std_17)
+target_compile_features(testPerformanceMaps PRIVATE cxx_std_17)
+target_compile_features(testStateOfChargeFcts PRIVATE cxx_std_17)
+target_compile_features(testHeatingLogics PRIVATE cxx_std_17)
+target_compile_features(testEnergyBalance PRIVATE cxx_std_17)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
