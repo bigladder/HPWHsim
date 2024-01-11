@@ -1334,7 +1334,7 @@ class HPWH::HeatSource
     /**< The values for input power and cop use matching to the grid. Should be long format with { {
      * inputPower_W }, { COP } }. */
 
-    class Btwxt::RegularGridInterpolator* perfRGI;
+    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI;
     /**< The grid interpolator used for mapping performance*/
 
     bool useBtwxtGrid;
