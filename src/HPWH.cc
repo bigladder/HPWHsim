@@ -3462,7 +3462,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
         if (tankMixesOnDraw && drawVolume_L > 0.)
         {
             int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
-            mixTankNodes(0, mixedBelowNode, 3.0);
+            mixTankNodes(0, mixedBelowNode, 1. / 3.);
         }
 
     } // end if(draw_volume_L > 0)
@@ -3859,20 +3859,19 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
     return sum / totWeight;
 }
 
-void HPWH::mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor)
+void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {
-    double ave = 0.;
-    double numAvgNodes = (double)(mixedBelowNode - mixedAboveNode);
-    for (int i = mixedAboveNode; i < mixedBelowNode; i++)
+    double avgT_C = 0.;
+    double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
+    for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        ave += tankTemps_C[i];
+        avgT_C += tankTemps_C[i];
     }
-    ave /= numAvgNodes;
+    avgT_C /= numAvgNodes;
 
-    for (int i = mixedAboveNode; i < mixedBelowNode; i++)
+    for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        tankTemps_C[i] += ((ave - tankTemps_C[i]) / mixFactor);
-        // tankTemps_C[i] = tankTemps_C[i] * (1.0 - 1.0 / mixFactor) + ave / mixFactor;
+        tankTemps_C[i] += mixFactor * (avgT_C - tankTemps_C[i]);
     }
 }
 

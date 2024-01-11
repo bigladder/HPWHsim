@@ -975,9 +975,9 @@ class HPWH
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
     /**< functions to calculate what the temperature in a portion of the tank is  */
 
-    void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
-    /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed
-     * below node. */
+    /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
+    /// by a factor mixFactor towards their average temperature
+    void mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void calcDerivedValues();
     /**< a helper function for the inits, calculating condentropy and the lowest node  */
