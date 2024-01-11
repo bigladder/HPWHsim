@@ -66,9 +66,13 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH();                            /**< default constructor */
-    HPWH(const HPWH& hpwh);            /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh); /**< assignment operator  */
+    class Logger;
+    class Exception;
+
+    HPWH(const std::shared_ptr<Logger>& logger_in =
+             std::make_shared<Logger>()); /**< default constructor */
+    HPWH(const HPWH& hpwh);               /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
@@ -949,6 +953,8 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    std::shared_ptr<Logger> logger;
+
   private:
     class HeatSource;
 
@@ -1496,6 +1502,37 @@ class HPWH::HeatSource
     /**< sorts the Performance Map by increasing external temperatures */
 
 }; // end of HeatSource class
+
+class HPWH::Logger : public Courierr::Courierr
+{
+  public:
+    void error(const std::string_view message) override { write_message("ERROR", message); }
+
+    void warning(const std::string_view message) override { write_message("WARNING", message); }
+
+    void info(const std::string_view message) override { write_message("NOTE", message); }
+
+    void debug(const std::string_view message) override { write_message("DEBUG", message); }
+
+  protected:
+    void write_message(const std::string_view message_type, const std::string_view message)
+    {
+        std::string context_string =
+            message_context
+                ? fmt::format(" ({})", *(reinterpret_cast<std::string*>(message_context)))
+                : "";
+        std::cout << fmt::format("  [{}]{} {}", message_type, context_string, message) << std::endl;
+    }
+};
+
+class HPWH::Exception : public Courierr::CourierrException
+{
+  public:
+    explicit Exception(const std::string& message, Courierr::Courierr& logger)
+        : CourierrException(message, logger)
+    {
+    }
+};
 
 constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html

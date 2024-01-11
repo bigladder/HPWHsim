@@ -323,7 +323,11 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH() : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
+HPWH::HPWH(const std::shared_ptr<Logger>& logger_in /* = std::make_shared<Logger>() */)
+    : logger(logger_in)
+    , hpwhVerbosity(VRB_silent)
+    , messageCallback(NULL)
+    , messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
 }
@@ -370,6 +374,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     simHasFailed = hpwh.simHasFailed;
 
+    logger = hpwh.logger;
     hpwhVerbosity = hpwh.hpwhVerbosity;
 
     // these should actually be the same pointers

@@ -908,11 +908,18 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-
-    std::vector<double> result = perfRGI->get_values_at_target(target);
-
-    input_BTUperHr = result[0];
-    cop = result[1];
+    std::vector<double> testTarget = {1, 2, 3};
+    try
+    {
+        std::vector<double> result = perfRGI->get_values_at_target(testTarget); // target);
+        input_BTUperHr = result[0];
+        cop = result[1];
+    }
+    catch (...)
+    {
+        hpwh->simHasFailed = true;
+        hpwh->logger->error(fmt::format("btwxt error"));
+    }
 }
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
