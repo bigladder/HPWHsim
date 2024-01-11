@@ -4516,27 +4516,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.perfMap.reserve(4);
 
         compressor.perfMap.push_back({
-            5,                       // Temperature (T_F)
-            {-1423, 38.70, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.13839, 0.012319, 0.} // COP Coefficients (COP_coeffs)
+            5,                     // Temperature (T_F)
+            {-1356, 39.80, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {2.003, -0.003637, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            34,                      // Temperature (T_F)
-            {-1558, 42.40, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.19375, 0.017247, 0.} // COP Coefficients (COP_coeffs)
+            34,                    // Temperature (T_F)
+            {-1485, 43.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {2.805, -0.005092, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            67,                      // Temperature (T_F)
-            {-1713, 46.60, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.28156, 0.025064, 0.} // COP Coefficients (COP_coeffs)
+            67,                    // Temperature (T_F)
+            {-1632, 47.93, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {4.076, -0.007400, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            95,                      // Temperature (T_F)
-            {-1844, 50.17, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.47273, 0.042082, 0.} // COP Coefficients (COP_coeffs)
+            95,                    // Temperature (T_F)
+            {-1757, 51.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {6.843, -0.012424, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.minT = F_TO_C(-25);

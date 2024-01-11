@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     // HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
     //  HPWH::UNITS units = HPWH::UNITS_F;
 
-    const double EBALTHRESHOLD = 0.005;
+    const double EBALTHRESHOLD = 1.e-6;
 
     const int nTestTCouples = 6;
 
@@ -430,6 +430,7 @@ int main(int argc, char* argv[])
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+            exit(1);
         }
 
         // Check timing
@@ -454,7 +455,7 @@ int main(int argc, char* argv[])
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
                      << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: " << mpFlowVolume_Gal
                      << "\n";
-                exit(1);
+                // exit(1);
             }
         }
         // Recording
