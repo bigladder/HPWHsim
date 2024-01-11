@@ -1843,7 +1843,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         }
 
         // Set up regular grid interpolator.
-        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues));
+        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues));
         compressor.useBtwxtGrid = true;
 
         // set everything in its places
@@ -2213,7 +2214,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
 
-        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues));
+        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues));
 
         compressor.useBtwxtGrid = true;
 
