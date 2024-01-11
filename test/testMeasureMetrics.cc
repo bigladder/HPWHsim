@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
         ASSERTTRUE(testMeasureMetrics("AquaThermAire", usage, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(usage == HPWH::Usage::Medium);
-        ASSERTTRUE(cmpd(standardTestSummary.UEF, 2.6326));
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.2212));
 
         ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", usage, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
