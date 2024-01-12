@@ -41,7 +41,8 @@ cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
     message(STATUS "Installing python packages")
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python")
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
+    message("Poetry success? ${result} ${errors} ${outputs}")
     set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 endif ()
 
