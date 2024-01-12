@@ -451,7 +451,8 @@ int HPWH::runOneStep(double drawVolume_L,
     // check for errors
     if (doTempDepression == true && minutesPerStep != 1)
     {
-        msg("minutesPerStep must equal one for temperature depression to work.  \n");
+        logger->warning(
+            fmt::format("minutesPerStep must equal one for temperature depression to work."));
         simHasFailed = true;
         return HPWH_ABORT;
     }
@@ -460,14 +461,15 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         if (hpwhVerbosity >= VRB_typical)
         {
-            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme "
-                " \n");
+            logger->warning(fmt::format("DR_TOO | DR_TOT use conflicting logic sets. The logic "
+                                        "will follow a DR_TOT scheme"));
         }
     }
 
     if (hpwhVerbosity >= VRB_typical)
     {
-        msg("Beginning runOneStep.  \nTank Temps: ");
+        logger->info(fmt::format("Beginning runOneStep."));
+        logger->info(fmt::format("Tank Temps:"));
         printTankTemps();
         msg("Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, "
             "heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
@@ -483,7 +485,7 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("simHasFailed is set, aborting.  \n");
+            logger->warning(fmt::format("simHasFailed is set, aborting."));
         }
         return HPWH_ABORT;
     }
@@ -530,7 +532,7 @@ int HPWH::runOneStep(double drawVolume_L,
         turnAllHeatSourcesOff(); // turns off isheating
         if (hpwhVerbosity >= VRB_emetic)
         {
-            msg("DR_LOC | DR_LOC everything off, DRstatus = %i \n", DRstatus);
+            logger->info(fmt::format("DR_LOC | DR_LOC everything off, DRstatus = {}", DRstatus));
         }
     }
     else
@@ -550,9 +552,9 @@ int HPWH::runOneStep(double drawVolume_L,
 
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = "
-                    "%i \n",
-                    DRstatus);
+                logger->info(fmt::format("TURNED ON DR_TOO engaged compressor and lowest "
+                                         "resistance element, DRstatus = {}",
+                                         DRstatus));
             }
         }
 
@@ -561,11 +563,11 @@ int HPWH::runOneStep(double drawVolume_L,
         {
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu "
-                    "shut off logics\n",
-                    i,
-                    heatSources[i].turnOnLogicSet.size(),
-                    heatSources[i].shutOffLogicSet.size());
+                logger->info(fmt::format("Heat source choice:\theatsource {} can choose from {} "
+                                         "turn-on logics and {} shut-off logics",
+                                         i,
+                                         heatSources[i].turnOnLogicSet.size(),
+                                         heatSources[i].shutOffLogicSet.size()));
             }
             if (isHeating == true)
             {

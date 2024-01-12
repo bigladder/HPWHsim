@@ -908,6 +908,7 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
+    //std::vector<double> testTarget = {1, 2, 3};
     try
     {
         std::vector<double> result = perfRGI->get_values_at_target(target);
@@ -917,7 +918,7 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vec
     catch (...)
     {
         hpwh->simHasFailed = true;
-        hpwh->logger->error(fmt::format("btwxt error"));
+        //hpwh->logger->error(fmt::format("btwxt error"));
     }
 }
 

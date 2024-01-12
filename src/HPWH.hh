@@ -1506,13 +1506,13 @@ class HPWH::HeatSource
 class HPWH::Logger : public Courierr::Courierr
 {
   public:
-    void error(const std::string_view message) override { write_message("ERROR", message); }
+    void error(const std::string_view message) override { write_message("HPWHsim ERROR", message); }
 
-    void warning(const std::string_view message) override { write_message("WARNING", message); }
+    void warning(const std::string_view message) override { write_message("HPWHsim WARNING", message); }
 
-    void info(const std::string_view message) override { write_message("NOTE", message); }
+    void info(const std::string_view message) override { write_message("HPWHsim NOTE", message); }
 
-    void debug(const std::string_view message) override { write_message("DEBUG", message); }
+    void debug(const std::string_view message) override { write_message("HPWHsim DEBUG", message); }
 
   protected:
     void write_message(const std::string_view message_type, const std::string_view message)
