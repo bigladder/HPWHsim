@@ -604,7 +604,6 @@ class HPWH
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
     int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
-    void getTankTemps(std::vector<double>& tankTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
     int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
@@ -739,16 +738,6 @@ class HPWH
     /**< returns the index of the top node  */
     int getIndexTopNode() const;
 
-    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
-
-    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
-    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
-
     int getNumHeatSources() const;
     /**< returns the number of heat sources  */
 
@@ -835,17 +824,6 @@ class HPWH
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
-    double getOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
-    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
-    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
@@ -900,10 +878,42 @@ class HPWH
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
 
-    /// returns the average tank temperature
+     double getLocationTemp_C() const;
+
+ 
+    void getTankTemps(std::vector<double>& tankTemps);
+
+    double getOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the outlet temperature in the specified units
+      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser inlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser outlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
+    /**< returns the temperature of the water at the specified node - with specified units
+      or HPWH_ABORT for incorrect node number or unit failure  */
+
+    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
+        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
+        1 at the bottom using specified units
+        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+        
+    /// returns the tank temperature averaged uniformly
     double getTankTemp_C() const;
 
-    double getLocationTemp_C() const;
+    /// returns the tank temperature averaged over a distribution.
+    double getTankTemp_C(const std::vector<double> &dist) const;
+
+    /// returns the average tank temperature based on weighted logic nodes.
+   double getTankTemp_C(const std::vector<NodeWeight> &nodeWeights) const;
+ 
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
@@ -949,8 +959,8 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    /// draw-pattern designations for 24-hr test
-    enum class Usage
+    /// usage designations to determine draw pattern for 24-hr test
+    enum class FirstHourRating
     {
         VerySmall,
         Low,
@@ -976,11 +986,11 @@ class HPWH
     /// perform a draw/heat cycle to prepare for test
     bool prepForTest();
 
-    /// determine usage based on the first-hour rating method
-    bool findUsageFromFirstHourRating(Usage& usage, const double setpointT_C = 51.7);
+    /// determine usage designation based on the first-hour rating method
+    bool findFirstHourRating(FirstHourRating& firstHourRating, const double setpointT_C = 51.7);
 
     /// run 24-hr draw pattern and compute metrics
-    bool run24hrTest(const Usage& usage,
+    bool run24hrTest(const FirstHourRating firstHourRating,
                      StandardTestSummary& standardTestSummary,
                      const double setpointT_C = 51.7);
 
@@ -1035,9 +1045,6 @@ class HPWH
 
     ///  "extra" heat added during a simulation step
     double extraEnergyInput_kWh;
-
-    double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
-    /**< functions to calculate what the temperature in a portion of the tank is  */
 
     void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
     /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed

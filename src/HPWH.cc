@@ -1500,51 +1500,6 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
     }
 }
 
-int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpoint_C); }
-
-int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
-
-//-----------------------------------------------------------------------------
-///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
-/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
-///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
-/// @return	Success: 0; Failure: HPWH_ABORT
-//-----------------------------------------------------------------------------
-int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
-{
-    if ((units != UNITS_C) && (units != UNITS_F))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpoint.  \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    std::size_t numSetNodes = setTankTemps.size();
-    if (numSetNodes == 0)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("No temperatures provided.\n");
-        }
-        return HPWH_ABORT;
-    }
-
-    // convert setTankTemps to �C, if necessary
-    if (units == UNITS_F)
-        for (auto& T : setTankTemps)
-            T = F_TO_C(T);
-
-    // set node temps
-    if (!resampleIntensive(tankTemps_C, setTankTemps))
-        return HPWH_ABORT;
-
-    return 0;
-}
-
-void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_C; }
-
 int HPWH::setAirFlowFreedom(double fanFraction)
 {
     if (fanFraction < 0 || fanFraction > 1)
@@ -2464,74 +2419,6 @@ int HPWH::getNumNodes() const { return static_cast<int>(tankTemps_C.size()); }
 
 int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
 
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
-{
-    if (tankTemps_C.empty())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access the temperature of a tank node that does not exist.  "
-                "\n");
-        }
-        return double(HPWH_ABORT);
-    }
-    else
-    {
-        double result = tankTemps_C[nodeNum];
-        // if (result == double(HPWH_ABORT)) { can't happen?
-        //	return result;
-        // }
-        if (units == UNITS_C)
-        {
-            return result;
-        }
-        else if (units == UNITS_F)
-        {
-            return C_TO_F(result);
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for getTankNodeTemp.  \n");
-            }
-            return double(HPWH_ABORT);
-        }
-    }
-}
-
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
-{
-    if (iTCouple > nTCouple || iTCouple < 1)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
-    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-
-    double simTcoupleTemp_C = getResampledValue(tankTemps_C, beginFraction, endFraction);
-    if (units == UNITS_C)
-    {
-        return simTcoupleTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(simTcoupleTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getNthSimTcouple.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
@@ -2775,66 +2662,6 @@ double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
     }
 }
 
-double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return outletTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(outletTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getOutletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
-double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return condenserInlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserInlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
-double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return condenserOutlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserOutlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
 double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
 {
     if (units == UNITS_L)
@@ -2905,9 +2732,147 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+
+double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return outletTemp_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(outletTemp_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getOutletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return condenserInlet_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(condenserInlet_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return condenserOutlet_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(condenserOutlet_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
+{
+    if (tankTemps_C.empty())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access the temperature of a tank node that does not exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+    else
+    {
+        double result = tankTemps_C[nodeNum];
+        // if (result == double(HPWH_ABORT)) { can't happen?
+        //	return result;
+        // }
+        if (units == UNITS_C)
+        {
+            return result;
+        }
+        else if (units == UNITS_F)
+        {
+            return C_TO_F(result);
+        }
+        else
+        {
+            if (hpwhVerbosity >= VRB_reluctant)
+            {
+                msg("Incorrect unit specification for getTankNodeTemp.  \n");
+            }
+            return double(HPWH_ABORT);
+        }
+    }
+}
+
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
+{
+    if (iTCouple > nTCouple || iTCouple < 1)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+
+    double simTcoupleTemp_C = getResampledValue(tankTemps_C, beginFraction, endFraction);
+    if (units == UNITS_C)
+    {
+        return simTcoupleTemp_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(simTcoupleTemp_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getNthSimTcouple.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
+
+void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_C; }
+
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the tank temperature averaged uniformly
+/// @param[in]	nodeWeights	Discrete set of weighted nodes
+/// @return	Tank temperature (C)
+//-----------------------------------------------------------------------------
 double HPWH::getTankTemp_C() const
 {
-    // get average tank temperature
     double totalT_C = 0.;
     for (auto& T_C : tankTemps_C)
     {
@@ -2916,15 +2881,120 @@ double HPWH::getTankTemp_C() const
     return totalT_C / static_cast<double>(getNumNodes());
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the average tank temperature based on distribution.
+/// @note	Distribution must have positive size and be normalized.
+/// @param[in]	dist	Discrete set of distribution values
+//-----------------------------------------------------------------------------
+double HPWH::getTankTemp_C(const std::vector<double> &dist) const
+{
+    std::vector<double> resampledTankTemps_C(dist.size());
+    resample(resampledTankTemps_C, tankTemps_C);
+
+    double tankT_C = 0.;
+
+    std::size_t j = 0;
+    for (auto& nodeT_C : resampledTankTemps_C)
+    {
+        tankT_C += dist[j] * nodeT_C;
+        ++j;
+    }
+    return tankT_C;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the average tank temperature based on weighted logic nodes.
+/// @note	Logic nodes must be normalizable and are referred to the fixed size LOGIC_NODE_SIZE.
+///         Node indices as associated with tank nodes as follows:
+///         node # 0: bottom tank node only;
+///         node # LOGIC_NODE_SIZE + 1: top node only;
+///         nodes # 1..LOGIC_NODE_SIZE: resampled tank nodes.
+/// @param[in]	nodeWeights	Discrete set of weighted nodes
+/// @return	Tank temperature (C)
+//-----------------------------------------------------------------------------
+double HPWH::getTankTemp_C(const std::vector<HPWH::NodeWeight> &nodeWeights) const
+{
+    double sum = 0;
+    double totWeight = 0;
+
+    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
+    resample(resampledTankTemps, tankTemps_C);
+
+    for (auto& nodeWeight : nodeWeights)
+    {
+        if (nodeWeight.nodeNum == 0)
+        { // bottom node only
+            sum += tankTemps_C.front() * nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+        else if (nodeWeight.nodeNum > LOGIC_NODE_SIZE)
+        { // top node only
+            sum += tankTemps_C.back() * nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+        else
+        { // general case; sum over all weighted nodes
+            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
+                   nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+    }
+    return sum / totWeight;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
+/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
+/// @return	Success: 0; Failure: HPWH_ABORT
+//-----------------------------------------------------------------------------
+int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
+{
+    if ((units != UNITS_C) && (units != UNITS_F))
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setSetpoint.  \n");
+        }
+        return HPWH_ABORT;
+    }
+
+    std::size_t numSetNodes = setTankTemps.size();
+    if (numSetNodes == 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("No temperatures provided.\n");
+        }
+        return HPWH_ABORT;
+    }
+
+    // convert setTankTemps to �C, if necessary
+    if (units == UNITS_F)
+        for (auto& T : setTankTemps)
+            T = F_TO_C(T);
+
+    // set node temps
+    if (!resampleIntensive(tankTemps_C, setTankTemps))
+        return HPWH_ABORT;
+
+    return 0;
+}
+
+int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpoint_C); }
+
+int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
+
+///////////////////////////////////////////////////////////////////////////////////
+
 double HPWH::getTankHeatContent_kJ() const
 {
     // returns tank heat content relative to 0 C using kJ
     return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getTankTemp_C();
 }
 
-double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
-
 int HPWH::getHPWHModel() const { return hpwhModel; }
+
 int HPWH::getCompressorCoilConfig() const
 {
     if (!hasACompressor())
@@ -3883,36 +3953,6 @@ bool HPWH::areAllHeatSourcesOff() const
         }
     }
     return allOff;
-}
-
-double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
-{
-    double sum = 0;
-    double totWeight = 0;
-
-    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
-    resample(resampledTankTemps, tankTemps_C);
-
-    for (auto& nodeWeight : nodeWeights)
-    {
-        if (nodeWeight.nodeNum == 0)
-        { // bottom node only
-            sum += tankTemps_C.front() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-        else if (nodeWeight.nodeNum > LOGIC_NODE_SIZE)
-        { // top node only
-            sum += tankTemps_C.back() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-        else
-        { // general case; sum over all weighted nodes
-            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
-                   nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-    }
-    return sum / totWeight;
 }
 
 void HPWH::mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor)
@@ -5459,13 +5499,13 @@ bool HPWH::prepForTest()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Find usage category prior to 24-hr test
+///	@brief	Find usage designation prior to 24-hr test
 /// @note	Determines usage category for 24-hr test
 /// @param[in/out] standardTestSummary	 contains usage on output
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findUsageFromFirstHourRating(Usage& usage, const double setpointT_C /* = 51.7 */)
+bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, const double setpointT_C /* = 51.7 */)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5611,19 +5651,19 @@ bool HPWH::findUsageFromFirstHourRating(Usage& usage, const double setpointT_C /
     //
     if (totalDrawVolume_L < GAL_TO_L(18.))
     {
-        usage = Usage::VerySmall;
+        firstHourRating = FirstHourRating::VerySmall;
     }
     else if (totalDrawVolume_L < GAL_TO_L(51.))
     {
-        usage = Usage::Low;
+        firstHourRating = FirstHourRating::Low;
     }
     else if (totalDrawVolume_L < GAL_TO_L(75.))
     {
-        usage = Usage::Medium;
+        firstHourRating = FirstHourRating::Medium;
     }
     else
     {
-        usage = Usage::High;
+        firstHourRating = FirstHourRating::High;
     }
 
     return true;
@@ -5636,30 +5676,30 @@ bool HPWH::findUsageFromFirstHourRating(Usage& usage, const double setpointT_C /
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::run24hrTest(const Usage& usage,
+bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& standardTestSummary,
                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage
     DrawPattern* drawPattern = nullptr;
-    switch (usage)
+    switch (firstHourRating)
     {
-    case Usage::VerySmall:
+    case FirstHourRating::VerySmall:
     {
         drawPattern = &verySmallUsage;
         break;
     }
-    case Usage::Low:
+    case FirstHourRating::Low:
     {
         drawPattern = &lowUsage;
         break;
     }
-    case Usage::Medium:
+    case FirstHourRating::Medium:
     {
         drawPattern = &mediumUsage;
         break;
     }
-    case Usage::High:
+    case FirstHourRating::High:
     {
         drawPattern = &highUsage;
         break;
