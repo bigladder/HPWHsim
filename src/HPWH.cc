@@ -5502,10 +5502,9 @@ bool HPWH::prepForTest()
 }
 
 //-----------------------------------------------------------------------------
-///	@brief	Find usage designation prior to 24-hr test
-/// @note	Determines usage category for 24-hr test
-/// @param[in/out] standardTestSummary	 contains usage on output
-///	@param[in]	setpointT_C		         setpoint temperature (optional)
+///	@brief	Find first-hour rating designation for 24-hr test
+/// @param[out] firstHourRating	    contains first-hour rating designation
+///	@param[in]	setpointT_C		    setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
@@ -5676,16 +5675,17 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
 //-----------------------------------------------------------------------------
 ///	@brief	Performs standard 24-hr test
 /// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058
-/// @param[in/out] standardTestSummary	 specifies usage on input, test metrics on output
-///	@param[in]	setpointT_C		         setpoint temperature (optional)
+/// @param[in] firstHourRating          specifies first-hour rating
+/// @param[out] standardTestSummary	    contains test metrics on output
+///	@param[in]	setpointT_C		        setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& standardTestSummary,
                        const double setpointT_C /* = 51.7 */)
 {
-    // select the draw pattern based on usage
-    DrawPattern &drawPattern = drawPatterns[firstHourRating];
+    // select the draw pattern
+    DrawPattern& drawPattern = drawPatterns[firstHourRating];
 
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435

@@ -879,9 +879,8 @@ class HPWH
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
 
-     double getLocationTemp_C() const;
+    double getLocationTemp_C() const;
 
- 
     void getTankTemps(std::vector<double>& tankTemps);
 
     double getOutletTemp(UNITS units = UNITS_C) const;
@@ -905,16 +904,16 @@ class HPWH
         which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
         1 at the bottom using specified units
         returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
-        
+
     /// returns the tank temperature averaged uniformly
     double getTankTemp_C() const;
 
     /// returns the tank temperature averaged over a distribution.
-    double getTankTemp_C(const std::vector<double> &dist) const;
+    double getTankTemp_C(const std::vector<double>& dist) const;
 
     /// returns the average tank temperature based on weighted logic nodes.
-   double getTankTemp_C(const std::vector<NodeWeight> &nodeWeights) const;
- 
+    double getTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
@@ -960,7 +959,7 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    /// usage designations to determine draw pattern for 24-hr test
+    /// first-hour rating designations to determine draw pattern for 24-hr test
     enum class FirstHourRating
     {
         VerySmall,
@@ -987,7 +986,7 @@ class HPWH
     /// perform a draw/heat cycle to prepare for test
     bool prepForTest();
 
-    /// determine usage designation based on the first-hour rating method
+    /// determine first-hour rating
     bool findFirstHourRating(FirstHourRating& firstHourRating, const double setpointT_C = 51.7);
 
     /// run 24-hr draw pattern and compute metrics
@@ -1015,12 +1014,8 @@ class HPWH
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    /// standard draw patterns
-    static std::unordered_map<FirstHourRating,DrawPattern> drawPatterns;
-    //static DrawPattern verySmallUsage;
-    //static DrawPattern lowUsage;
-    //static DrawPattern mediumUsage;
-    //static DrawPattern highUsage;
+    /// collection of standard draw patterns
+    static std::unordered_map<FirstHourRating, DrawPattern> drawPatterns;
 
   private:
     class HeatSource;
