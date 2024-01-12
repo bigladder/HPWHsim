@@ -8,7 +8,7 @@
 
 /* Measure metrics using 24-hr test based on model name (preset only) */
 static bool testMeasureMetrics(const std::string& sModelName,
-                               HPWH::Usage& usage,
+                               HPWH::FirstHourRating& firstHourRating,
                                HPWH::StandardTestSummary& standardTestSummary)
 {
     HPWH hpwh;
@@ -19,12 +19,12 @@ static bool testMeasureMetrics(const std::string& sModelName,
         return false;
     }
 
-    if (!hpwh.findUsageFromFirstHourRating(usage))
+    if (!hpwh.findFirstHourRating(firstHourRating))
     {
         return false;
     }
 
-    return hpwh.run24hrTest(usage, standardTestSummary);
+    return hpwh.run24hrTest(firstHourRating, standardTestSummary);
 }
 
 int main(int argc, char* argv[])
@@ -56,20 +56,20 @@ int main(int argc, char* argv[])
 
     if (runUnitTests)
     {
-        HPWH::Usage usage;
-        ASSERTTRUE(testMeasureMetrics("AquaThermAire", usage, standardTestSummary));
+        HPWH::FirstHourRating firstHourRating;
+        ASSERTTRUE(testMeasureMetrics("AquaThermAire", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(usage == HPWH::Usage::Medium);
+        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::Medium);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.2212));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", usage, standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(usage == HPWH::Usage::Low);
+        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::Low);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", usage, standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(usage == HPWH::Usage::High);
+        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::High);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.5230));
 
         return 0;
@@ -120,36 +120,36 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    HPWH::Usage usage;
-    if (hpwh.findUsageFromFirstHourRating(usage))
+    HPWH::FirstHourRating firstHourRating;
+    if (hpwh.findFirstHourRating(firstHourRating))
     {
-        std::string sUsage = "";
-        switch (usage)
+        std::string sFirstHourRating = "";
+        switch (firstHourRating)
         {
-        case HPWH::Usage::VerySmall:
+        case HPWH::FirstHourRating::VerySmall:
         {
-            sUsage = "Very Small";
+            sFirstHourRating = "Very Small";
             break;
         }
-        case HPWH::Usage::Low:
+        case HPWH::FirstHourRating::Low:
         {
-            sUsage = "Low";
+            sFirstHourRating = "Low";
             break;
         }
-        case HPWH::Usage::Medium:
+        case HPWH::FirstHourRating::Medium:
         {
-            sUsage = "Medium";
+            sFirstHourRating = "Medium";
             break;
         }
-        case HPWH::Usage::High:
+        case HPWH::FirstHourRating::High:
         {
-            sUsage = "High";
+            sFirstHourRating = "High";
             break;
         }
         }
-        std::cout << "\tUsage: " << sUsage << "\n";
+        std::cout << "\tFirst-Hour Rating: " << sFirstHourRating << "\n";
 
-        if (hpwh.run24hrTest(usage, standardTestSummary))
+        if (hpwh.run24hrTest(firstHourRating, standardTestSummary))
         {
 
             if (!standardTestSummary.qualifies)

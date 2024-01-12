@@ -464,12 +464,9 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
         {
             hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
-
         fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
-
         frac = fracTemp < frac ? fracTemp : frac;
     }
-
     return frac;
 }
 
@@ -564,24 +561,12 @@ void HPWH::HeatSource::sortPerformanceMap()
 
 double HPWH::HeatSource::getTankTemp() const
 {
-
-    std::vector<double> resampledTankTemps(getCondensitySize());
-    resample(resampledTankTemps, hpwh->tankTemps_C);
-
-    double tankTemp_C = 0.;
-
-    std::size_t j = 0;
-    for (auto& resampledNodeTemp : resampledTankTemps)
-    {
-        tankTemp_C += condensity[j] * resampledNodeTemp;
-        // Note that condensity is normalized.
-        ++j;
-    }
+    double tankT_C = hpwh->getTankTemp_C(condensity);
     if (hpwh->hpwhVerbosity >= VRB_typical)
     {
-        hpwh->msg("tank temp %.2lf \n", tankTemp_C);
+        hpwh->msg("tank temp %.2lf \n", tankT_C);
     }
-    return tankTemp_C;
+    return tankT_C;
 }
 
 void HPWH::HeatSource::getCapacity(double externalT_C,
