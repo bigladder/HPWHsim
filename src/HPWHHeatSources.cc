@@ -561,7 +561,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 
 double HPWH::HeatSource::getTankTemp() const
 {
-    double tankT_C = hpwh->getTankTemp_C(condensity);
+    double tankT_C = hpwh->getAverageTankTemp_C(condensity);
     if (hpwh->hpwhVerbosity >= VRB_typical)
     {
         hpwh->msg("tank temp %.2lf \n", tankT_C);

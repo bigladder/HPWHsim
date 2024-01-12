@@ -2874,7 +2874,7 @@ void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getTankTemp_C() const
+double HPWH::getAverageTankTemp_C() const
 {
     double totalT_C = 0.;
     for (auto& T_C : tankTemps_C)
@@ -2889,7 +2889,7 @@ double HPWH::getTankTemp_C() const
 /// @note	Distribution must have positive size and be normalized.
 /// @param[in]	dist	Discrete set of distribution values
 //-----------------------------------------------------------------------------
-double HPWH::getTankTemp_C(const std::vector<double>& dist) const
+double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
 {
     std::vector<double> resampledTankTemps_C(dist.size());
     resample(resampledTankTemps_C, tankTemps_C);
@@ -2915,7 +2915,7 @@ double HPWH::getTankTemp_C(const std::vector<double>& dist) const
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
 {
     double sum = 0;
     double totWeight = 0;
@@ -2993,7 +2993,7 @@ int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures(
 double HPWH::getTankHeatContent_kJ() const
 {
     // returns tank heat content relative to 0 C using kJ
-    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getTankTemp_C();
+    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getAverageTankTemp_C();
 }
 
 int HPWH::getHPWHModel() const { return hpwhModel; }
@@ -5526,7 +5526,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
         }
     }
 
-    double tankT_C = getTankTemp_C();
+    double tankT_C = getAverageTankTemp_C();
     double maxTankT_C = tankT_C;
     double maxOutletT_C = 0.;
 
@@ -5577,7 +5577,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
         {
             return false;
         }
-        tankT_C = getTankTemp_C();
+        tankT_C = getAverageTankTemp_C();
 
         switch (step)
         {
@@ -5732,7 +5732,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         ++preTime_min;
     }
 
-    double tankT_C = getTankTemp_C();
+    double tankT_C = getAverageTankTemp_C();
     double initialTankT_C = tankT_C;
 
     double dailyRemovedVolume_L = 0.;
@@ -5792,7 +5792,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                 return false;
             }
 
-            tankT_C = getTankTemp_C();
+            tankT_C = getAverageTankTemp_C();
             hasHeated |= isHeating;
 
             drawSumOutletVolumeT_LC += incrementalDrawVolume_L * outletTemp_C;

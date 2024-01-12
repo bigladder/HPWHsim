@@ -906,13 +906,13 @@ class HPWH
         returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
 
     /// returns the tank temperature averaged uniformly
-    double getTankTemp_C() const;
+    double getAverageTankTemp_C() const;
 
-    /// returns the tank temperature averaged over a distribution.
-    double getTankTemp_C(const std::vector<double>& dist) const;
+    /// returns the tank temperature averaged over a distribution
+    double getAverageTankTemp_C(const std::vector<double>& dist) const;
 
-    /// returns the average tank temperature based on weighted logic nodes.
-    double getTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+    /// returns the tank temperature averaged using weighted logic nodes
+    double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
 
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
