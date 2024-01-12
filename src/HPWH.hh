@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib> //for exit
 #include <vector>
+#include <unordered_map>
 
 namespace Btwxt
 {
@@ -1015,10 +1016,11 @@ class HPWH
     typedef std::vector<Draw> DrawPattern;
 
     /// standard draw patterns
-    static DrawPattern verySmallUsage;
-    static DrawPattern lowUsage;
-    static DrawPattern mediumUsage;
-    static DrawPattern highUsage;
+    static std::unordered_map<FirstHourRating,DrawPattern> drawPatterns;
+    //static DrawPattern verySmallUsage;
+    //static DrawPattern lowUsage;
+    //static DrawPattern mediumUsage;
+    //static DrawPattern highUsage;
 
   private:
     class HeatSource;

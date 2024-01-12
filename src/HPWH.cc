@@ -65,57 +65,60 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-HPWH::DrawPattern HPWH::verySmallUsage = {
-    {HM_TO_MIN(0, 00), 7.6, 3.8},
-    {HM_TO_MIN(1, 00), 3.8, 3.8},
-    {HM_TO_MIN(1, 05), 1.9, 3.8},
-    {HM_TO_MIN(1, 10), 1.9, 3.8},
-    {HM_TO_MIN(1, 15), 1.9, 3.8},
-    {HM_TO_MIN(8, 00), 3.8, 3.8},
-    {HM_TO_MIN(8, 15), 7.6, 3.8},
-    {HM_TO_MIN(9, 00), 5.7, 3.8},
-    {HM_TO_MIN(9, 15), 3.8, 3.8},
-};
+std::unordered_map<HPWH::FirstHourRating, HPWH::DrawPattern> HPWH::drawPatterns = {
+    {HPWH::FirstHourRating::VerySmall,
+     {{HM_TO_MIN(0, 00), 7.6, 3.8},
+      {HM_TO_MIN(1, 00), 3.8, 3.8},
+      {HM_TO_MIN(1, 05), 1.9, 3.8},
+      {HM_TO_MIN(1, 10), 1.9, 3.8},
+      {HM_TO_MIN(1, 15), 1.9, 3.8},
+      {HM_TO_MIN(8, 00), 3.8, 3.8},
+      {HM_TO_MIN(8, 15), 7.6, 3.8},
+      {HM_TO_MIN(9, 00), 5.7, 3.8},
+      {HM_TO_MIN(9, 15), 3.8, 3.8}}},
 
-HPWH::DrawPattern HPWH::lowUsage = {{HM_TO_MIN(0, 00), 56.8, 6.4},
-                                    {HM_TO_MIN(0, 30), 7.6, 3.8},
-                                    {HM_TO_MIN(1, 00), 3.8, 3.8},
-                                    {HM_TO_MIN(10, 30), 22.7, 6.4},
-                                    {HM_TO_MIN(11, 30), 15.1, 6.4},
-                                    {HM_TO_MIN(12, 00), 3.8, 3.8},
-                                    {HM_TO_MIN(12, 45), 3.8, 3.8},
-                                    {HM_TO_MIN(12, 50), 3.8, 3.8},
-                                    {HM_TO_MIN(16, 15), 7.6, 3.8},
-                                    {HM_TO_MIN(16, 45), 7.6, 6.4},
-                                    {HM_TO_MIN(17, 00), 11.4, 6.4}};
+    {HPWH::FirstHourRating::Low,
+     {{HM_TO_MIN(0, 00), 56.8, 6.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(1, 00), 3.8, 3.8},
+      {HM_TO_MIN(10, 30), 22.7, 6.4},
+      {HM_TO_MIN(11, 30), 15.1, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 11.4, 6.4}}},
 
-HPWH::DrawPattern HPWH::mediumUsage = {{HM_TO_MIN(0, 00), 56.8, 6.4},
-                                       {HM_TO_MIN(0, 30), 7.6, 3.8},
-                                       {HM_TO_MIN(1, 40), 34.1, 6.4},
-                                       {HM_TO_MIN(10, 30), 34.1, 6.4},
-                                       {HM_TO_MIN(11, 30), 18.9, 6.4},
-                                       {HM_TO_MIN(12, 00), 3.8, 3.8},
-                                       {HM_TO_MIN(12, 45), 3.8, 3.8},
-                                       {HM_TO_MIN(12, 50), 3.8, 3.8},
-                                       {HM_TO_MIN(16, 00), 3.8, 3.8},
-                                       {HM_TO_MIN(16, 15), 7.6, 3.8},
-                                       {HM_TO_MIN(16, 45), 7.6, 6.4},
-                                       {HM_TO_MIN(17, 00), 26.5, 6.4}};
+    {HPWH::FirstHourRating::Medium,
+     {{HM_TO_MIN(0, 00), 56.8, 6.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(1, 40), 34.1, 6.4},
+      {HM_TO_MIN(10, 30), 34.1, 6.4},
+      {HM_TO_MIN(11, 30), 18.9, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 00), 3.8, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 26.5, 6.4}}},
 
-HPWH::DrawPattern HPWH::highUsage = {{HM_TO_MIN(0, 00), 102, 11.4},
-                                     {HM_TO_MIN(0, 30), 7.6, 3.8},
-                                     {HM_TO_MIN(0, 40), 3.8, 3.8},
-                                     {HM_TO_MIN(1, 40), 34.1, 6.4},
-                                     {HM_TO_MIN(10, 30), 56.8, 11.4},
-                                     {HM_TO_MIN(11, 30), 18.9, 6.4},
-                                     {HM_TO_MIN(12, 00), 3.8, 3.8},
-                                     {HM_TO_MIN(12, 45), 3.8, 3.8},
-                                     {HM_TO_MIN(12, 50), 3.8, 3.8},
-                                     {HM_TO_MIN(16, 00), 7.6, 3.8},
-                                     {HM_TO_MIN(16, 15), 7.6, 3.8},
-                                     {HM_TO_MIN(16, 30), 7.6, 6.4},
-                                     {HM_TO_MIN(16, 45), 7.6, 6.4},
-                                     {HM_TO_MIN(17, 00), 53.0, 11.4}};
+    {HPWH::FirstHourRating::High,
+     {{HM_TO_MIN(0, 00), 102, 11.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(0, 40), 3.8, 3.8},
+      {HM_TO_MIN(1, 40), 34.1, 6.4},
+      {HM_TO_MIN(10, 30), 56.8, 11.4},
+      {HM_TO_MIN(11, 30), 18.9, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 00), 7.6, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 30), 7.6, 6.4},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
@@ -2886,7 +2889,7 @@ double HPWH::getTankTemp_C() const
 /// @note	Distribution must have positive size and be normalized.
 /// @param[in]	dist	Discrete set of distribution values
 //-----------------------------------------------------------------------------
-double HPWH::getTankTemp_C(const std::vector<double> &dist) const
+double HPWH::getTankTemp_C(const std::vector<double>& dist) const
 {
     std::vector<double> resampledTankTemps_C(dist.size());
     resample(resampledTankTemps_C, tankTemps_C);
@@ -2912,7 +2915,7 @@ double HPWH::getTankTemp_C(const std::vector<double> &dist) const
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getTankTemp_C(const std::vector<HPWH::NodeWeight> &nodeWeights) const
+double HPWH::getTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
 {
     double sum = 0;
     double totWeight = 0;
@@ -5505,7 +5508,8 @@ bool HPWH::prepForTest()
 ///	@param[in]	setpointT_C		         setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, const double setpointT_C /* = 51.7 */)
+bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
+                               const double setpointT_C /* = 51.7 */)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5681,34 +5685,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern based on usage
-    DrawPattern* drawPattern = nullptr;
-    switch (firstHourRating)
-    {
-    case FirstHourRating::VerySmall:
-    {
-        drawPattern = &verySmallUsage;
-        break;
-    }
-    case FirstHourRating::Low:
-    {
-        drawPattern = &lowUsage;
-        break;
-    }
-    case FirstHourRating::Medium:
-    {
-        drawPattern = &mediumUsage;
-        break;
-    }
-    case FirstHourRating::High:
-    {
-        drawPattern = &highUsage;
-        break;
-    }
-    }
-    if (drawPattern == nullptr)
-    {
-        return false;
-    }
+    DrawPattern &drawPattern = drawPatterns[firstHourRating];
 
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
@@ -5770,7 +5747,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     bool hasHeated = false;
 
     int runTime_min = 0;
-    for (auto& draw : *drawPattern)
+    for (auto& draw : drawPattern)
     {
         double drawVolume_L = 0.;
         double drawHeatingEnergy_kJ = 0.;
