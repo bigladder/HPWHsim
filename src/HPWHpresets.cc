@@ -1459,7 +1459,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(15), this, false));
+            "fourth node", nodeWeights, dF_TO_dC(15.), this, false));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
