@@ -1033,16 +1033,14 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
                 timeUsed_min = (heatingCapacityNeeded_kJ / heatingCapacity_kJ) * timeRemaining_min;
                 timeRemaining_min -= timeUsed_min;
             }
-            // if more than one, round down to 1 and subtract the amount of time it would
-            // take to heat that node from the timeRemaining
+            // if nodeFrac > 1., heat exactly one node and reduce timeRemaining_min accordingly
             else if (nodeFrac > 1.)
             {
                 nodeFrac = 1.;
                 timeUsed_min = (nodeHeat_kJ / heatingCapacity_kJ) * timeRemaining_min;
                 timeRemaining_min -= timeUsed_min;
             }
-            // otherwise just the fraction available
-            // this should make heatingCapacity == 0 if nodeFrac < 1
+            // if nodeFrac <= 1., remaining heat will be used this pass
             else
             {
                 timeUsed_min = timeRemaining_min;
