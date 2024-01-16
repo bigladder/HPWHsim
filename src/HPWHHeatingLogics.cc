@@ -269,18 +269,15 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     // if averageT_C > comparison then the shutoff condition is already true and you
     // shouldn't be here. Will revaluate shut off condition at the end the do while loop of
     // addHeatExternal, in the mean time lets not shift anything around.
+    // Then should shut off, 0 means shift no nodes
 
-    // Then should shut off
-    // 0 means shift no nodes
-
-    // if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
+    // If the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
     // about, so shift a whole node.
-    // factor of hpwh->nodeDensity converts logic nodes to tank nodes
-
+    // factor of nodeDensity converts logic-node fraction to tank-node fraction
     double nodeFrac =
         compare(averageT_C, comparisonT_C)
             ? 0.
-            : ((nodeDiffT_C > 0.) ? nodeDensity * totWeight * logicNodeDiffT_C / nodeDiffT_C : 1.);
+            : ((nodeDiffT_C > 0.) ? nodeDensity * logicNodeDiffT_C / nodeDiffT_C : 1.);
 
     return nodeFrac;
 }
