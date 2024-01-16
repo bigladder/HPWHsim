@@ -908,10 +908,10 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-    //std::vector<double> testTarget = {1, 2, 3};
+    std::vector<double> testTarget = {1, 2, 3};
     try
     {
-        std::vector<double> result = perfRGI->get_values_at_target(target);
+        std::vector<double> result = perfRGI->get_values_at_target(testTarget);
         input_BTUperHr = result[0];
         cop = result[1];
     }
