@@ -986,27 +986,33 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
             // fraction of node to move
             double nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
+            double heatToAdd_kJ = heatingCapacity_kJ;
             if (nodeFrac > 1.)
             {
                 nodeFrac = 1.;
+                heatToAdd_kJ = nodeHeat_kJ;
             }
 
             double fractToShutOff = fractToMeetComparisonExternal();
             if (fractToShutOff < nodeFrac)
             {
                 nodeFrac = fractToShutOff;
+                heatToAdd_kJ = nodeFrac * nodeHeat_kJ;
             }
 
+            double ratio = heatToAdd_kJ / heatingCapacity_kJ;
+
             double timeUsed_min = timeRemaining_min;
-            if (nodeFrac < 1.)
+            if (ratio < 1.)
+             {
+                timeUsed_min *= ratio;
+                timeRemaining_min -= timeUsed_min;
+            }
+             else
+             
             {
                timeRemaining_min = 0.;
 
-            }
-            else
-            {
-                timeUsed_min *= (nodeHeat_kJ / heatingCapacity_kJ);
-                timeRemaining_min -= timeUsed_min;
             }
 
             // Track the condenser temperature if this is a compressor before moving the nodes
@@ -1109,21 +1115,26 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 
             // fraction of node to move
             double nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
+            double heatToAdd_kJ = heatingCapacity_kJ;
             if (nodeFrac > 1.)
             {
                 nodeFrac = 1.;
+                heatToAdd_kJ = nodeHeat_kJ;
             }
 
+            double ratio = heatToAdd_kJ / heatingCapacity_kJ;
+
             double timeUsed_min = timeRemaining_min;
-            if (nodeFrac < 1.)
+            if (ratio < 1.)
+             {
+                timeUsed_min *= ratio;
+                timeRemaining_min -= timeUsed_min;
+            }
+             else
+             
             {
                timeRemaining_min = 0.;
 
-            }
-            else
-            {
-                timeUsed_min *= (nodeHeat_kJ / heatingCapacity_kJ);
-                timeRemaining_min -= timeUsed_min;
             }
 
             // Track the condenser temperature if this is a compressor before moving the nodes
