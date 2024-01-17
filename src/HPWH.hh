@@ -1456,7 +1456,13 @@ class HPWH::HeatSource
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
-    /**  I wrote some methods to help with the add heat interface - MJL  */
+     double addHeatExternalMP(double externalT_C,
+                           double minutesToRun,
+                           double& cap_BTUperHr,
+                           double& input_BTUperHr,
+                           double& cop);
+
+     /**  I wrote some methods to help with the add heat interface - MJL  */
     void getCapacity(double externalT_C,
                      double condenserTemp_C,
                      double setpointTemp_C,
