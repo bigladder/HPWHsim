@@ -544,7 +544,14 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // Else the heat source is external. SANCO2 system is only current example
         // capacity is calculated internal to this functio
         //  n, and cap/input_BTUperHr, cop are outputs
-        runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
+        if (isMultipass)
+        {
+            runtime_min = addHeatExternalMP(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
+        }
+        else
+        {
+            runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
+        }
         break;
     }
 
@@ -955,38 +962,25 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     do
     {
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        if (isMultipass)
-        {
-            // if multipass evenly mix the tank up
-            hpwh->mixTankNodes(
-                0, hpwh->getNumNodes(), 1.0); // 1.0 will give even mixing, so all temperatures
-                                              // mixed end at average temperature.
 
-            // how much heat is available in remaining time
-            getCapacityMP(externalT_C,
-                          hpwh->tankTemps_C[externalOutletHeight],
-                          tempInput_BTUperHr,
-                          tempCap_BTUperHr,
-                          temp_cop);
-        }
-        else
-        {
-            // how much heat is available in remaining time
-            getCapacity(externalT_C,
-                        hpwh->tankTemps_C[externalOutletHeight],
-                        tempInput_BTUperHr,
-                        tempCap_BTUperHr,
-                        temp_cop);
-        }
+        double &externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double &externalInletT_C = hpwh->tankTemps_C[externalInletHeight];
 
-        double heatingCapacity_kJ = BTU_TO_KJ(tempCap_BTUperHr * (timeRemaining_min / min_per_hr));
+        // how much heat is available in remaining time
+        getCapacity(externalT_C,
+                    externalOutletT_C,
+                    tempInput_BTUperHr,
+                    tempCap_BTUperHr,
+                    temp_cop);
 
-        double targetT_C =
-            (isMultipass) ? calcMPOutletTemperature(BTUperH_TO_KW(tempCap_BTUperHr)) : maxTargetT_C;
-        double deltaT_C = targetT_C - hpwh->tankTemps_C[externalOutletHeight];
+        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double deltaT_C = maxTargetT_C - externalOutletT_C;
         targetReached = (deltaT_C <= 0.);
         if (!targetReached)
         {
+            double heatingCapacity_kJ = heatingPower_kW * (timeRemaining_min * sec_per_min);
+            double targetT_C = externalOutletT_C + deltaT_C;
+
             // heat for outlet node to reach target temperature
             double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
@@ -997,43 +991,157 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
                 nodeFrac = 1.;
             }
 
-            if (!isMultipass)
+            double fractToShutOff = fractToMeetComparisonExternal();
+            if (fractToShutOff < nodeFrac)
             {
-                double fractToShutOff = fractToMeetComparisonExternal();
-                if (fractToShutOff < nodeFrac)
-                {
-                    nodeFrac = fractToShutOff;
-                }
+                nodeFrac = fractToShutOff;
             }
 
-            double timeUsed_min = ((nodeFrac * nodeHeat_kJ) / heatingCapacity_kJ) * timeRemaining_min;
-            if (timeUsed_min < timeRemaining_min)
+            double timeUsed_min = timeRemaining_min;
+            if (nodeFrac < 1.)
             {
-                timeRemaining_min -= timeUsed_min;
+               timeRemaining_min = 0.;
+
             }
             else
             {
-                timeUsed_min = timeRemaining_min;
-                timeRemaining_min = 0.;
+                timeUsed_min *= (nodeHeat_kJ / heatingCapacity_kJ);
+                timeRemaining_min -= timeUsed_min;
             }
 
             // Track the condenser temperature if this is a compressor before moving the nodes
             if (isACompressor())
             {
-                hpwh->condenserInlet_C += hpwh->tankTemps_C[externalOutletHeight] * timeUsed_min;
+                hpwh->condenserInlet_C += externalOutletT_C * timeUsed_min;
                 hpwh->condenserOutlet_C += targetT_C * timeUsed_min;
             }
 
             // move all nodes down, mixing if less than a full node
-            for (int n = externalOutletHeight; n < externalInletHeight; n++)
+            for (std::size_t n = externalOutletHeight; n < externalInletHeight; n++)
             {
                 hpwh->tankTemps_C[n] =
                     (1. - nodeFrac) * hpwh->tankTemps_C[n] + nodeFrac * hpwh->tankTemps_C[n + 1];
             }
 
             // add water to top node, heated to setpoint
-            hpwh->tankTemps_C[externalInletHeight] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[externalInletHeight] + nodeFrac * targetT_C;
+            externalInletT_C = (1. - nodeFrac) * externalInletT_C + nodeFrac * targetT_C;
+
+            hpwh->mixTankInversions();
+            hpwh->updateSoCIfNecessary();
+
+            // track outputs - weight by the time ran
+            // Add in pump power to approximate a secondary heat exchange in line with the
+            // compressor
+            input_BTUperHr +=
+                (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
+                timeUsed_min;
+            cap_BTUperHr += tempCap_BTUperHr * timeUsed_min;
+            cop += temp_cop * timeUsed_min;
+
+            hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
+        }
+        // if there's still time remaining and you haven't heated to the cutoff
+        // specified in shutsOff logic, keep heating
+    } while ((timeRemaining_min > 0.) && (!shutsOff()) && (!targetReached));
+
+    // divide outputs by sum of weight - the total time ran
+    // not timeRemaining_min == minutesToRun is possible
+    //   must prevent divide by 0 (added 4-11-2023)
+    double timeRun_min = timeToRun_min - timeRemaining_min;
+    if (timeRun_min > 0.)
+    {
+        input_BTUperHr /= timeRun_min;
+        cap_BTUperHr /= timeRun_min;
+        cop /= timeRun_min;
+        hpwh->condenserInlet_C /= timeRun_min;
+        hpwh->condenserOutlet_C /= timeRun_min;
+    }
+
+    if (hpwh->hpwhVerbosity >= VRB_emetic)
+    {
+        hpwh->msg("final remaining time: %.2lf \n", timeRemaining_min);
+    }
+    // return the time left
+    return timeRun_min;
+}
+
+double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
+                                         double timeToRun_min,
+                                         double& cap_BTUperHr,
+                                         double& input_BTUperHr,
+                                         double& cop)
+{
+    input_BTUperHr = 0.;
+    cap_BTUperHr = 0.;
+    cop = 0.;
+
+    bool targetReached = false;
+    double timeRemaining_min = timeToRun_min;
+    do
+    {
+        double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
+
+        // if multipass evenly mix the tank up
+        hpwh->mixTankNodes(
+            0, hpwh->getNumNodes(), 1.0); // 1.0 will give even mixing, so all temperatures
+                                            // mixed end at average temperature.
+
+        double &externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double &externalInletT_C = hpwh->tankTemps_C[externalInletHeight];
+    
+        // how much heat is available in remaining time
+        getCapacityMP(externalT_C,
+                        externalOutletT_C,
+                        tempInput_BTUperHr,
+                        tempCap_BTUperHr,
+                        temp_cop);
+
+        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double deltaT_C = heatingPower_kW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
+        targetReached = (deltaT_C <= 0.);
+        if (!targetReached)
+        {
+            double targetT_C = externalOutletT_C + deltaT_C;
+            double heatingCapacity_kJ = heatingPower_kW * (timeRemaining_min * sec_per_min);
+
+            // heat for outlet node to reach target temperature
+            double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
+
+            // fraction of node to move
+            double nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
+            if (nodeFrac > 1.)
+            {
+                nodeFrac = 1.;
+            }
+
+            double timeUsed_min = timeRemaining_min;
+            if (nodeFrac < 1.)
+            {
+               timeRemaining_min = 0.;
+
+            }
+            else
+            {
+                timeUsed_min *= (nodeHeat_kJ / heatingCapacity_kJ);
+                timeRemaining_min -= timeUsed_min;
+            }
+
+            // Track the condenser temperature if this is a compressor before moving the nodes
+            if (isACompressor())
+            {
+                hpwh->condenserInlet_C += externalOutletT_C * timeUsed_min;
+                hpwh->condenserOutlet_C += targetT_C * timeUsed_min;
+            }
+
+            // move all nodes down, mixing if less than a full node
+            for (std::size_t n = externalOutletHeight; n < externalInletHeight; n++)
+            {
+                hpwh->tankTemps_C[n] =
+                    (1. - nodeFrac) * hpwh->tankTemps_C[n] + nodeFrac * hpwh->tankTemps_C[n + 1];
+            }
+
+            // add water to top node, heated to setpoint
+            externalInletT_C = (1. - nodeFrac) * externalInletT_C + nodeFrac * targetT_C;
 
             hpwh->mixTankInversions();
             hpwh->updateSoCIfNecessary();
