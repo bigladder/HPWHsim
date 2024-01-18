@@ -953,7 +953,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     cop = 0.;
 
     bool targetReached = false;
-    double maxTargetT_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
+    double targetT_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
     double timeRemaining_min = timeToRun_min;
     do
     {
@@ -966,12 +966,11 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
         double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
-        double deltaT_C = maxTargetT_C - externalOutletT_C;
+        double deltaT_C = targetT_C - externalOutletT_C;
         targetReached = (deltaT_C <= 0.);
         if (!targetReached)
         {
             double heatingCapacity_kJ = heatingPower_kW * (timeRemaining_min * sec_per_min);
-            double targetT_C = externalOutletT_C + deltaT_C;
 
             // heat for outlet node to reach target temperature
             double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
@@ -1025,9 +1024,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
             hpwh->mixTankInversions();
             hpwh->updateSoCIfNecessary();
 
-            // track outputs - weight by the time ran
-            // Add in pump power to approximate a secondary heat exchange in line with the
-            // compressor
+            // track outputs weighted by the time run
+            // pump power added to approximate a secondary heat exchange in line with the compressor
             input_BTUperHr +=
                 (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
                 timeUsed_min;
@@ -1105,8 +1103,11 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
         double heatingCapacity_kJ = heatingPower_kW * (timeRemaining_min * sec_per_min);
 
+        double deltaT_C =
+            heatingPower_kW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
+
         // heat added to outlet node at current power and flow rate
-        double nodeHeat_kJ = hpwh->nodeVolume_L * heatingPower_kW / mpFlowRate_LPS;
+        double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
         // adjust time step based on capacity fraction for outlet node to reach target
         // temperature
@@ -1122,8 +1123,6 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         }
 
         // find temperature change at outlet
-        double deltaT_C =
-            heatingPower_kW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
         double targetT_C = externalOutletT_C + deltaT_C;
 
         if (isACompressor())
@@ -1145,7 +1144,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->mixTankInversions();
         hpwh->updateSoCIfNecessary();
 
-        // track outputs - weigh by the time run
+        // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
         input_BTUperHr +=
             (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
