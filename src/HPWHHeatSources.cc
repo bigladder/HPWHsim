@@ -1029,11 +1029,13 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight; static_cast<int>(nodeIndex) <= externalInletHeight;
+        for (std::size_t nodeIndex = externalOutletHeight;
+             static_cast<int>(nodeIndex) <= externalInletHeight;
              ++nodeIndex)
         {
-            double& mixT_C =
-                (static_cast<int>(nodeIndex) == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
+            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
+                                 ? targetT_C
+                                 : hpwh->tankTemps_C[nodeIndex + 1];
             hpwh->tankTemps_C[nodeIndex] =
                 (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
         }
@@ -1153,11 +1155,13 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight; static_cast<int>(nodeIndex) <= externalInletHeight;
+        for (std::size_t nodeIndex = externalOutletHeight;
+             static_cast<int>(nodeIndex) <= externalInletHeight;
              ++nodeIndex)
         {
-            double& mixT_C =
-                (static_cast<int>(nodeIndex) == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
+            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
+                                 ? targetT_C
+                                 : hpwh->tankTemps_C[nodeIndex + 1];
             hpwh->tankTemps_C[nodeIndex] =
                 (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
         }
