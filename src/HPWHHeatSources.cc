@@ -980,27 +980,30 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         // heat for outlet node to reach target temperature
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
-        // fraction of node to move
-        double nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
-        double addedHeat_kJ = heatingCapacity_kJ;
-        if (nodeFrac > 1.)
+         // assume one node will be heated this pass
+        double neededHeat_kJ  = nodeHeat_kJ;
+
+        // reduce node fraction to heat if limited by capacity
+        double nodeFrac = 1.;
+        if (heatingCapacity_kJ < nodeHeat_kJ)
         {
-            nodeFrac = 1.;
-            addedHeat_kJ = nodeHeat_kJ;
+            nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
+            neededHeat_kJ = heatingCapacity_kJ;
         }
 
+        // limit node fraction to heat by comparison criterion
         double fractToShutOff = fractToMeetComparisonExternal();
         if (fractToShutOff < nodeFrac)
         {
             nodeFrac = fractToShutOff;
-            addedHeat_kJ = nodeFrac * nodeHeat_kJ;
+            neededHeat_kJ = nodeFrac * nodeHeat_kJ;
         }
 
-        // heat no more than one node by using less than remaining time, if necessary
+        // heat for less than remaining time if full capacity will not be used
         double heatingTime_min = remainingTime_min;
-        if (heatingCapacity_kJ > nodeHeat_kJ)
+        if (heatingCapacity_kJ > neededHeat_kJ)
         {
-            heatingTime_min *= nodeHeat_kJ / heatingCapacity_kJ;
+            heatingTime_min *= neededHeat_kJ / heatingCapacity_kJ;
             remainingTime_min -= heatingTime_min;
         }
         else
@@ -1057,6 +1060,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     {
         hpwh->msg("final remaining time: %.2lf \n", remainingTime_min);
     }
+
     // return the time left
     return runTime_min;
 }
@@ -1083,7 +1087,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     double remainingTime_min = stepTime_min;
     do
     {
-        // find node fraction that should be heated in remaining time
+        // find node fraction to heat in remaining time
         double nodeFrac = mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->nodeVolume_L;
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
@@ -1116,7 +1120,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         // heat needed to raise temperature of one node by deltaT_C 
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
-        // heat no more than one node by using less than remaining time, if necessary
+        // heat no more than one node this step
         double heatingTime_min = remainingTime_min;
         if (heatingCapacity_kJ > nodeHeat_kJ)
         {
@@ -1127,7 +1131,6 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         {
             remainingTime_min = 0.;
         }
-
 
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
@@ -1175,6 +1178,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     {
         hpwh->msg("final remaining time: %.2lf \n", remainingTime_min);
     }
+
     // return the elasped time
     return elapsedTime_min;
 }
