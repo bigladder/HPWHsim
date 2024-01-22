@@ -942,6 +942,15 @@ bool HPWH::HeatSource::isExternalMultipass() const
     return isMultipass && configuration == HeatSource::CONFIG_EXTERNAL;
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Add external heat for a single-pass configuration.
+/// @param[in]	externalT_C	        external temperature
+///	@param[in]	stepTime_min		heating time available
+///	@param[out]	cap_BTUperHr		heating capacity delivered
+///	@param[out]	input_BTUperHr		input power drawn
+/// @param[out]	cop		            average cop
+/// @return	elapsed time (min)
+//-----------------------------------------------------------------------------
 double HPWH::HeatSource::addHeatExternal(double externalT_C,
                                          double stepTime_min,
                                          double& cap_BTUperHr,
@@ -958,7 +967,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     {
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
         double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
-  
+
         // how much heat is available in remaining time
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
@@ -976,12 +985,12 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // maximum heat that can be added in remaining time
         double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
- 
+
         // heat for outlet node to reach target temperature
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
-         // assume one node will be heated this pass
-        double neededHeat_kJ  = nodeHeat_kJ;
+        // assume one node will be heated this pass
+        double neededHeat_kJ = nodeHeat_kJ;
 
         // reduce node fraction to heat if limited by capacity
         double nodeFrac = 1.;
@@ -1020,10 +1029,13 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight; nodeIndex <= externalInletHeight; ++nodeIndex)
+        for (std::size_t nodeIndex = externalOutletHeight; nodeIndex <= externalInletHeight;
+             ++nodeIndex)
         {
-            double& mixT_C = (nodeIndex == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] = (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+            double& mixT_C =
+                (nodeIndex == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
+            hpwh->tankTemps_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -1100,7 +1112,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
         double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
- 
+
         // find heating capacity
         getCapacityMP(
             externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
@@ -1117,7 +1129,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         // maximum heat that can be added in remaining time
         double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
 
-        // heat needed to raise temperature of one node by deltaT_C 
+        // heat needed to raise temperature of one node by deltaT_C
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
         // heat no more than one node this step
@@ -1141,10 +1153,13 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight; nodeIndex <= externalInletHeight; ++nodeIndex)
+        for (std::size_t nodeIndex = externalOutletHeight; nodeIndex <= externalInletHeight;
+             ++nodeIndex)
         {
-            double& mixT_C = (nodeIndex == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] = (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+            double& mixT_C =
+                (nodeIndex == externalInletHeight) ? targetT_C : hpwh->tankTemps_C[nodeIndex + 1];
+            hpwh->tankTemps_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();

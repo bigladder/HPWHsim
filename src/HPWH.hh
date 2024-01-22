@@ -1456,6 +1456,7 @@ class HPWH::HeatSource
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
+    /// Add heat from external source using a multi-pass configuration
     double addHeatExternalMP(double externalT_C,
                              double minutesToRun,
                              double& cap_BTUperHr,
