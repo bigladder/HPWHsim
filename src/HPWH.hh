@@ -70,9 +70,9 @@ class HPWH
     class Exception;
 
     HPWH(const std::shared_ptr<Logger>& logger_in =
-             std::make_shared<Logger>()); /**< default constructor */
-    HPWH(const HPWH& hpwh);               /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
+             std::make_shared<Logger>(0b0000)); /**< default constructor */
+    HPWH(const HPWH& hpwh);                     /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);          /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
@@ -1505,14 +1505,51 @@ class HPWH::HeatSource
 
 class HPWH::Logger : public Courierr::Courierr
 {
+  private:
+    unsigned loggerBits = 0b0000;
+    const unsigned errorMask = 0b1000;
+    const unsigned messageMask = 0b0100;
+    const unsigned infoMask = 0b0010;
+    const unsigned debugMask = 0b0001;
+
   public:
-    void error(const std::string_view message) override { write_message("ERROR", message); }
+#if NDEBUG
+    Logger(const unsigned loggerBits_in = 0b0000) : loggerBits(loggerBits_in) {}
+#else
+    Logger(const unsigned loggerBits_in = 0b0001) : loggerBits(loggerBits_in) {}
+#endif
 
-    void warning(const std::string_view message) override { write_message("WARNING", message); }
+    void error(const std::string_view message) override
+    {
+        if (showErrors())
+            write_message("ERROR", message);
+    }
 
-    void info(const std::string_view message) override { write_message("NOTE", message); }
+    void warning(const std::string_view message) override
+    {
+        if (showMessages())
+            write_message("WARNING", message);
+    }
 
-    void debug(const std::string_view message) override { write_message("DEBUG", message); }
+    void info(const std::string_view message) override
+    {
+        if (showInfo())
+            write_message("NOTE", message);
+    }
+
+    void debug(const std::string_view message) override
+    {
+        if (showDebug())
+            write_message("DEBUG", message);
+    }
+
+    unsigned getErrors() const { return loggerBits; }
+    void setErrors(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
+
+    bool showErrors() const { return errorMask & loggerBits; }
+    bool showMessages() const { return messageMask & loggerBits; }
+    bool showInfo() const { return infoMask & loggerBits; }
+    bool showDebug() const { return debugMask & loggerBits; }
 
   protected:
     void write_message(const std::string_view message_type, const std::string_view message)
@@ -1521,7 +1558,8 @@ class HPWH::Logger : public Courierr::Courierr
             message_context
                 ? fmt::format("({})", *(reinterpret_cast<std::string*>(message_context)))
                 : "";
-        std::cout << fmt::format("HPWHsim  [{}]{} {}", message_type, context_string, message) << std::endl;
+        std::cout << fmt::format("HPWHsim  [{}]{} {}", message_type, context_string, message)
+                  << std::endl;
     }
 };
 
