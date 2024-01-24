@@ -1508,7 +1508,7 @@ class HPWH::Logger : public Courierr::Courierr
   private:
     unsigned loggerBits = 0b0000;
     const unsigned errorMask = 0b1000;
-    const unsigned messageMask = 0b0100;
+    const unsigned warningMask = 0b0100;
     const unsigned infoMask = 0b0010;
     const unsigned debugMask = 0b0001;
 
@@ -1519,37 +1519,26 @@ class HPWH::Logger : public Courierr::Courierr
     Logger(const unsigned loggerBits_in = 0b0001) : loggerBits(loggerBits_in) {}
 #endif
 
-    void error(const std::string_view message) override
-    {
-        if (showErrors())
-            write_message("ERROR", message);
-    }
+    void error(const std::string_view message) override { write_message("ERROR", message); }
 
-    void warning(const std::string_view message) override
-    {
-        if (showMessages())
-            write_message("WARNING", message);
-    }
+    void warning(const std::string_view message) override { write_message("WARNING", message); }
 
-    void info(const std::string_view message) override
-    {
-        if (showInfo())
-            write_message("NOTE", message);
-    }
+    void info(const std::string_view message) override { write_message("NOTE", message); }
 
-    void debug(const std::string_view message) override
-    {
-        if (showDebug())
-            write_message("DEBUG", message);
-    }
+    void debug(const std::string_view message) override { write_message("DEBUG", message); }
 
-    unsigned getErrors() const { return loggerBits; }
-    void setErrors(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
+    unsigned getMode() const { return loggerBits; }
+    void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
 
-    bool showErrors() const { return errorMask & loggerBits; }
-    bool showMessages() const { return messageMask & loggerBits; }
-    bool showInfo() const { return infoMask & loggerBits; }
-    bool showDebug() const { return debugMask & loggerBits; }
+    bool error() const { return errorMask & loggerBits; }
+    bool warning() const { return warningMask & loggerBits; }
+    bool info() const { return infoMask & loggerBits; }
+    bool debug() const { return debugMask & loggerBits; }
+
+    bool showError(const std::string_view message) { error(message); return error();}
+    bool showWarning(const std::string_view message) { warning(message); return warning();}
+    bool showInfo(const std::string_view message) { info(message); return info();}
+    bool showDebug(const std::string_view message) { debug(message); return debug();}
 
   protected:
     void write_message(const std::string_view message_type, const std::string_view message)
@@ -1571,6 +1560,14 @@ class HPWH::Exception : public Courierr::CourierrException
     {
     }
 };
+
+#define LOG_ERROR(f) (logger->error() ? logger->showError(f) : false)
+
+#define LOG_WARNING(f) (logger->warning() ? logger->showWarning(f) : false) 
+
+#define LOG_INFO(f) (logger->info() ? logger->showInfo(f) : false)                                                                               \
+
+#define LOG_DEBUG(f) (logger->debug() ? logger->showDebug(f) : false) 
 
 constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
