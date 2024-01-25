@@ -100,25 +100,11 @@ class HPWH
 
     struct HPWH::Messenger
     {
-        const unsigned errorMask = 0b1000;
-        const unsigned warningMask = 0b0100;
-        const unsigned infoMask = 0b0010;
-        const unsigned debugMask = 0b0001;
-
-        unsigned loggerBits = 0b0000;
 
         std::shared_ptr<Courierr::Courierr> logger;
 
-        static const unsigned defaultBits =
-#if NDEBUG
-            0b0000;
-#else
-            0b0001;
-#endif
-
-        Messenger(const std::shared_ptr<Courierr::Courierr>& logger_in = std::make_shared<Logger>(),
-                  const unsigned loggerBits_in = defaultBits)
-            : logger(logger_in), loggerBits(loggerBits_in)
+        Messenger(const std::shared_ptr<Courierr::Courierr>& logger_in = std::make_shared<Logger>())
+            : logger(logger_in)
         {
         }
 
@@ -129,33 +115,29 @@ class HPWH
 
         std::shared_ptr<Courierr::Courierr> get_logger() { return logger; };
 
-        unsigned getMode() const { return loggerBits; }
-        void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
-
-        bool error() const { return errorMask & loggerBits; }
-        bool warning() const { return warningMask & loggerBits; }
-        bool info() const { return infoMask & loggerBits; }
-        bool debug() const { return debugMask & loggerBits; }
-
-        bool showError(const std::string message) const
+        bool error(const std::string message) const
         {
             logger->error(message);
-            return error();
+            return true;
         }
-        bool showWarning(const std::string_view message) const
+        bool warning(const std::string_view message) const
         {
             logger->warning(message);
-            return warning();
+            return true;
         }
-        bool showInfo(const std::string_view message) const
+        bool info(const std::string_view message) const
         {
             logger->info(message);
-            return info();
+            return true;
         }
-        bool showDebug(const std::string_view message) const
+        bool debug(const std::string_view message) const
         {
+#if NDEBUG
             logger->debug(message);
-            return debug();
+            return true;
+#else
+            return false;
+#endif
         }
     };
 
@@ -354,6 +336,12 @@ class HPWH
         VRB_emetic = 30     /**< print all the things  */
     };
 
+    VERBOSITY getVerbosity() const { return verbosity; }
+
+    /// sets the verbosity to the specified level
+    void setVerbosity(VERBOSITY verbosity_in) { verbosity = verbosity_in; }
+
+
     enum UNITS
     {
         UNITS_C,         /**< celsius  */
@@ -444,6 +432,10 @@ class HPWH
         virtual int setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
         bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
+
+        VERBOSITY getVerbosity() const { return hpwh->getVerbosity(); }
+        void setVerbosity(VERBOSITY verbosity) { hpwh->setVerbosity(verbosity); }
+
 
       protected:
         double decisionPoint;
@@ -671,8 +663,6 @@ class HPWH
     void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
     void setMinutesPerStep(double newMinutesPerStep);
 
-    void setVerbosity(VERBOSITY hpwhVrb);
-    /**< sets the verbosity to the specified level  */
     void setMessageCallback(void (*callbackFunc)(const std::string message, void* pContext),
                             void* pContext);
     /**< sets the function to be used for message passing  */
@@ -684,6 +674,8 @@ class HPWH
     void printTankTemps();
     /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
+
+    std::string HPWH::getTankTempsString() const;
 
     int WriteCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
@@ -1052,6 +1044,8 @@ class HPWH
 
     std::shared_ptr<Courierr::Courierr> get_logger() { return messenger->get_logger(); }
 
+    std::shared_ptr<Messenger> getMessenger() const{return messenger;}
+
   private:
     class HeatSource;
 
@@ -1124,7 +1118,7 @@ class HPWH
     bool canScale;
     /**< can the HPWH scale capactiy and COP or not  */
 
-    VERBOSITY hpwhVerbosity;
+    VERBOSITY verbosity;
     /**< an enum to let the sim know how much output to say  */
 
     void (*messageCallback)(const std::string message, void* contextPtr);
@@ -1365,6 +1359,11 @@ class HPWH::HeatSource
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    VERBOSITY getVerbosity() const { return hpwh->getVerbosity(); }
+    void setVerbosity(VERBOSITY verbosity) { hpwh->setVerbosity(verbosity); }
+
+    std::shared_ptr<Messenger> getMessenger(){return hpwh->getMessenger();}
+
   private:
     // start with a few type definitions
     enum COIL_CONFIG
@@ -1600,14 +1599,17 @@ class HPWH::HeatSource
 
 }; // end of HeatSource class
 
-#define LOG_ERROR(...) (messenger->error() ? messenger->showError(fmt::format(__VA_ARGS__)) : false)
+#define LOG_ERROR(verbosity, ...)                                                                  \
+    ((getVerbosity() >= verbosity) ? getMessenger()->error(fmt::format(__VA_ARGS__)) : false)
 
-#define LOG_WARNING(...)                                                                           \
-    (messenger->warning() ? messenger->showWarning(fmt::format(__VA_ARGS__)) : false)
+#define LOG_WARNING(verbosity, ...)                                                                           \
+    ((getVerbosity() >= verbosity) ? getMessenger()->warning(fmt::format(__VA_ARGS__)) : false)
 
-#define LOG_INFO(...) (messenger->info() ? messenger->showInfo(fmt::format(__VA_ARGS__)) : false)
+#define LOG_INFO(verbosity, ...)                                                                              \
+    ((getVerbosity() >= verbosity) ? getMessenger()->info(fmt::format(__VA_ARGS__)) : false)
 
-#define LOG_DEBUG(...) (messenger->debug() ? messenger->showDebug(fmt::format(__VA_ARGS__)) : false)
+#define LOG_DEBUG(verbosity, ...)                                                                             \
+    ((getVerbosity() >= verbosity) ? getMessenger()->debug(fmt::format(__VA_ARGS__)) : false)
 
 constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.htmls
