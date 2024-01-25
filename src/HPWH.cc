@@ -323,12 +323,12 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Logger>& logger_in /* = std::make_shared<Logger>() */)
-    : logger(logger_in)
-    , hpwhVerbosity(VRB_silent)
+HPWH::HPWH(const std::shared_ptr<Courierr::Courierr>& logger /* = std::make_shared<Logger>() */)
+    : hpwhVerbosity(VRB_silent)
     , messageCallback(NULL)
     , messageCallbackContextPtr(NULL)
 {
+    messenger = std::make_shared<Messenger>(logger);
     setAllDefaults();
 }
 
@@ -359,7 +359,7 @@ void HPWH::setAllDefaults()
     usesSoCLogic = false;
     setMinutesPerStep(1.0);
     hpwhVerbosity = VRB_minuteOut;
-    logger->setMode(0b1101);
+    messenger->setMode(0b1101);
     hasHeatExchanger = false;
     heatExchangerEffectiveness = 0.9;
 }
@@ -375,7 +375,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
     simHasFailed = hpwh.simHasFailed;
 
-    logger = hpwh.logger;
+    messenger = std::move(hpwh.messenger);
     hpwhVerbosity = hpwh.hpwhVerbosity;
 
     // these should actually be the same pointers
@@ -452,36 +452,35 @@ int HPWH::runOneStep(double drawVolume_L,
     // check for errors
     if (doTempDepression && (minutesPerStep != 1))
     {
-        LOG_WARNING(
-            fmt::format("minutesPerStep must equal one for temperature depression to work."));
+        LOG_WARNING("minutesPerStep must equal one for temperature depression to work.");
         simHasFailed = true;
         return HPWH_ABORT;
     }
 
     if ((DRstatus & (DR_TOO | DR_TOT)))
     {
-        LOG_WARNING(fmt::format("DR_TOO | DR_TOT use conflicting logic sets. The logic "
-                                "will follow a DR_TOT scheme"));
+        LOG_WARNING("DR_TOO | DR_TOT use conflicting logic sets. The logic "
+                                "will follow a DR_TOT scheme");
     }
 
     if (hpwhVerbosity >= VRB_typical)
     {
-        LOG_INFO(fmt::format("Beginning runOneStep."));
-        LOG_INFO(fmt::format("Tank Temps:"));
+        LOG_INFO("Beginning runOneStep.");
+        LOG_INFO("Tank Temps:");
         printTankTemps();
-        LOG_INFO(fmt::format("Step Inputs: InletT_C: {}, drawVolume_L: {}, tankAmbientT_C: {}, "
+        LOG_INFO("Step Inputs: InletT_C: {}, drawVolume_L: {}, tankAmbientT_C: {}, "
                              "heatSourceAmbientT_C: {}, DRstatus:  {}, minutesPerStep:  {}",
                              member_inletT_C,
                              drawVolume_L,
                              tankAmbientT_C,
                              heatSourceAmbientT_C,
                              DRstatus,
-                             minutesPerStep));
+                             minutesPerStep);
     }
     // is the failure flag is set, don't run
     if (simHasFailed)
     {
-        LOG_WARNING(fmt::format("simHasFailed is set, aborting."));
+        LOG_WARNING("simHasFailed is set, aborting.");
         return HPWH_ABORT;
     }
 
@@ -525,7 +524,7 @@ int HPWH::runOneStep(double drawVolume_L,
     if (((DRstatus & DR_LOC) != 0) && ((DRstatus & DR_LOR) != 0))
     {
         turnAllHeatSourcesOff(); // turns off isheating
-        logger->info(fmt::format("DR_LOC | DR_LOC everything off, DRstatus = {}", DRstatus));
+        LOG_INFO("DR_LOC | DR_LOC everything off, DRstatus = {}", DRstatus);
     }
     else
     { // do normal check
@@ -542,19 +541,19 @@ int HPWH::runOneStep(double drawVolume_L,
                 heatSources[lowestElementIndex].engageHeatSource(DRstatus);
             }
 
-            LOG_INFO(fmt::format("TURNED ON DR_TOO engaged compressor and lowest "
+            LOG_INFO("TURNED ON DR_TOO engaged compressor and lowest "
                                  "resistance element, DRstatus = {}",
-                                 DRstatus));
+                                 DRstatus);
         }
 
         // do HeatSource choice
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            LOG_INFO(fmt::format("Heat source choice:\theatsource {} can choose from {} "
+            LOG_INFO("Heat source choice:\theatsource {} can choose from {} "
                                  "turn-on logics and {} shut-off logics",
                                  i,
                                  heatSources[i].turnOnLogicSet.size(),
-                                 heatSources[i].shutOffLogicSet.size()));
+                                 heatSources[i].shutOffLogicSet.size());
 
             if (isHeating == true)
             {
@@ -576,7 +575,7 @@ int HPWH::runOneStep(double drawVolume_L,
                 // come on, then turn  off and start it up
                 if (heatSources[i].isVIP)
                 {
-                    LOG_INFO(fmt::format("\tVIP check"));
+                    LOG_INFO("\tVIP check");
 
                     if (heatSources[i].shouldHeat())
                     {
@@ -610,11 +609,11 @@ int HPWH::runOneStep(double drawVolume_L,
 
         } // end loop over heat sources
 
-        if (LOG_INFO(fmt::format("after heat source choosing:  ")))
+        if (LOG_INFO("after heat source choosing:  "))
         {
             for (int i = 0; i < getNumHeatSources(); i++)
             {
-                LOG_INFO(fmt::format("heat source %d: %d \t", i, heatSources[i].isEngaged()));
+                LOG_INFO("heat source %d: %d \t", i, heatSources[i].isEngaged());
             }
             LOG_INFO("");
         }

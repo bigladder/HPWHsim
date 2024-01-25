@@ -66,13 +66,103 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    class Logger;
-    class Exception;
+    class HPWH::Logger : public Courierr::Courierr
+    {
+      public:
+        void error(const std::string_view message) override { write_message("ERROR", message); }
 
-    HPWH(const std::shared_ptr<Logger>& logger_in =
-             std::make_shared<Logger>(0b0000)); /**< default constructor */
-    HPWH(const HPWH& hpwh);                     /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);          /**< assignment operator  */
+        void warning(const std::string_view message) override { write_message("WARNING", message); }
+
+        void info(const std::string_view message) override { write_message("NOTE", message); }
+
+        void debug(const std::string_view message) override { write_message("DEBUG", message); }
+
+      protected:
+        void write_message(const std::string_view message_type, const std::string_view message)
+        {
+            std::string context_string =
+                message_context
+                    ? fmt::format("({})", *(reinterpret_cast<std::string*>(message_context)))
+                    : "";
+            std::cout << fmt::format("HPWHsim  [{}]{} {}", message_type, context_string, message)
+                      << std::endl;
+        }
+    };
+
+    class HPWH::Exception : public Courierr::CourierrException
+    {
+      public:
+        explicit Exception(const std::string& message, Courierr::Courierr& logger)
+            : CourierrException(message, logger)
+        {
+        }
+    };
+
+    struct HPWH::Messenger
+    {
+        const unsigned errorMask = 0b1000;
+        const unsigned warningMask = 0b0100;
+        const unsigned infoMask = 0b0010;
+        const unsigned debugMask = 0b0001;
+
+        unsigned loggerBits = 0b0000;
+
+        std::shared_ptr<Courierr::Courierr> logger;
+
+        static const unsigned defaultBits =
+#if NDEBUG
+            0b0000;
+#else
+            0b0001;
+#endif
+
+        Messenger(const std::shared_ptr<Courierr::Courierr>& logger_in = std::make_shared<Logger>(),
+                  const unsigned loggerBits_in = defaultBits)
+            : logger(logger_in), loggerBits(loggerBits_in)
+        {
+        }
+
+        void set_logger(std::shared_ptr<Courierr::Courierr> logger_in)
+        {
+            logger = std::move(logger_in);
+        }
+
+        std::shared_ptr<Courierr::Courierr> get_logger() { return logger; };
+
+        unsigned getMode() const { return loggerBits; }
+        void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
+
+        bool error() const { return errorMask & loggerBits; }
+        bool warning() const { return warningMask & loggerBits; }
+        bool info() const { return infoMask & loggerBits; }
+        bool debug() const { return debugMask & loggerBits; }
+
+        bool showError(const std::string message) const
+        {
+            logger->error(message);
+            return error();
+        }
+        bool showWarning(const std::string_view message) const
+        {
+            logger->warning(message);
+            return warning();
+        }
+        bool showInfo(const std::string_view message) const
+        {
+            logger->info(message);
+            return info();
+        }
+        bool showDebug(const std::string_view message) const
+        {
+            logger->debug(message);
+            return debug();
+        }
+    };
+
+    HPWH(const std::shared_ptr<Courierr::Courierr>& logger =
+             std::make_shared<Logger>()); /**< default constructor */
+    HPWH(const HPWH& hpwh);               /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
@@ -953,7 +1043,14 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-    std::shared_ptr<Logger> logger;
+    std::shared_ptr<Messenger> messenger;
+
+    void set_logger(std::shared_ptr<Courierr::Courierr> logger) const
+    {
+        messenger->set_logger(logger);
+    }
+
+    std::shared_ptr<Courierr::Courierr> get_logger() { return messenger->get_logger(); }
 
   private:
     class HeatSource;
@@ -1503,74 +1600,17 @@ class HPWH::HeatSource
 
 }; // end of HeatSource class
 
-class HPWH::Logger : public Courierr::Courierr
-{
-  private:
-    unsigned loggerBits = 0b0000;
-    const unsigned errorMask = 0b1000;
-    const unsigned warningMask = 0b0100;
-    const unsigned infoMask = 0b0010;
-    const unsigned debugMask = 0b0001;
+#define LOG_ERROR(...) (messenger->error() ? messenger->showError(fmt::format(__VA_ARGS__)) : false)
 
-  public:
-#if NDEBUG
-    Logger(const unsigned loggerBits_in = 0b0000) : loggerBits(loggerBits_in) {}
-#else
-    Logger(const unsigned loggerBits_in = 0b0001) : loggerBits(loggerBits_in) {}
-#endif
+#define LOG_WARNING(...)                                                                           \
+    (messenger->warning() ? messenger->showWarning(fmt::format(__VA_ARGS__)) : false)
 
-    void error(const std::string_view message) override { write_message("ERROR", message); }
+#define LOG_INFO(...) (messenger->info() ? messenger->showInfo(fmt::format(__VA_ARGS__)) : false)
 
-    void warning(const std::string_view message) override { write_message("WARNING", message); }
-
-    void info(const std::string_view message) override { write_message("NOTE", message); }
-
-    void debug(const std::string_view message) override { write_message("DEBUG", message); }
-
-    unsigned getMode() const { return loggerBits; }
-    void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
-
-    bool error() const { return errorMask & loggerBits; }
-    bool warning() const { return warningMask & loggerBits; }
-    bool info() const { return infoMask & loggerBits; }
-    bool debug() const { return debugMask & loggerBits; }
-
-    bool showError(const std::string_view message) { error(message); return error();}
-    bool showWarning(const std::string_view message) { warning(message); return warning();}
-    bool showInfo(const std::string_view message) { info(message); return info();}
-    bool showDebug(const std::string_view message) { debug(message); return debug();}
-
-  protected:
-    void write_message(const std::string_view message_type, const std::string_view message)
-    {
-        std::string context_string =
-            message_context
-                ? fmt::format("({})", *(reinterpret_cast<std::string*>(message_context)))
-                : "";
-        std::cout << fmt::format("HPWHsim  [{}]{} {}", message_type, context_string, message)
-                  << std::endl;
-    }
-};
-
-class HPWH::Exception : public Courierr::CourierrException
-{
-  public:
-    explicit Exception(const std::string& message, Courierr::Courierr& logger)
-        : CourierrException(message, logger)
-    {
-    }
-};
-
-#define LOG_ERROR(f) (logger->error() ? logger->showError(f) : false)
-
-#define LOG_WARNING(f) (logger->warning() ? logger->showWarning(f) : false) 
-
-#define LOG_INFO(f) (logger->info() ? logger->showInfo(f) : false)                                                                               \
-
-#define LOG_DEBUG(f) (logger->debug() ? logger->showDebug(f) : false) 
+#define LOG_DEBUG(...) (messenger->debug() ? messenger->showDebug(fmt::format(__VA_ARGS__)) : false)
 
 constexpr double BTUperKWH =
-    3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
+    3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.htmls
 constexpr double FperC = 9. / 5.;   // degF / degC
 constexpr double offsetF = 32.;     // degF offset
 constexpr double sec_per_min = 60.; // seconds / min
