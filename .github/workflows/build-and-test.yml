@@ -83,9 +83,9 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install Poetry
-        uses: snok/install-poetry@v1.7.1
+        uses: snok/install-poetry@v1
         with:
-          version: 1.7.1
+          version: 1
           virtualenvs-create: true
           virtualenvs-in-project: false
       - name: Configure CMake
