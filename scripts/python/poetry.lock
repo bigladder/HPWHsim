@@ -44,8 +44,8 @@ plotly = "*"
 [package.source]
 type = "git"
 url = "https://github.com/bigladder/dimes"
-reference = "add-marker-type"
-resolved_reference = "a6adabd210d525629d742f2eb82ab7e605b42f74"
+reference = "HEAD"
+resolved_reference = "1b8082f06909d551b36e7b784816d7abd915b58a"
 
 [[package]]
 name = "koozie"
@@ -332,4 +332,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "0e0bb4a7c8fb14e6a82367e075a191c601513632d06cd58f619b13156a3a63f7"
+content-hash = "ebef51a759a5d8889120fc7d4b5c2d113864baa8c8c3b6a11ecdc7e2e1248b3e"
