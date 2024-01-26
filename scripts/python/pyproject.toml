@@ -9,7 +9,7 @@ python = "^3.8"
 pandas = "*"
 plotly = "*"
 koozie = "*"
-dimes = { git = "https://github.com/bigladder/dimes", branch = "add-marker-type" }
+dimes = { git = "https://github.com/bigladder/dimes" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
