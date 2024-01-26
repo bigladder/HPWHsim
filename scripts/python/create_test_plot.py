@@ -218,7 +218,6 @@ def plot_graphs(variable_type, variable, value, row):
                 variables["Y-Variables"][variable]["Column Names"][variable_type][value]
             ],
             name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
-            dimension=variable,
             native_units=variables["Y-Variables"][variable]["Units"],
             line_properties=LineProperties(
                 color=variables["Y-Variables"][variable]["Colors"][value],
