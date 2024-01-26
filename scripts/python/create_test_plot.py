@@ -1,15 +1,17 @@
 import sys
 from pathlib import Path
 
-import dimes # type: ignore
+import dimes  # type: ignore
 from dimes import LineProperties
-import pandas as pd # type: ignore
-import plotly.graph_objects as go # type: ignore
-from plotly.subplots import make_subplots # type: ignore
-from koozie import convert # type: ignore
+import pandas as pd  # type: ignore
+import plotly.graph_objects as go  # type: ignore
+from plotly.subplots import make_subplots  # type: ignore
+from koozie import convert  # type: ignore
 
 if len(sys.argv) != 4:
-    sys.exit("Incorrect number of arguments. Must be two: Measured Path, Simulated Path, Output Path")
+    sys.exit(
+        "Incorrect number of arguments. Must be two: Measured Path, Simulated Path, Output Path"
+    )
 
 measured_path = Path(sys.argv[1])
 simulated_path = Path(sys.argv[2])
@@ -19,7 +21,14 @@ DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
 GRID_LINES_COLOR = "rgba(128,128,128,0.3)"
 # TODO: reverse colors in list below, and revert reverse in variables dictionary
-RED_BLUE_DIVERGING_PALLETTE = ["#750e13", "#da1e28", "#ff8389", "#33b1ff", "#0072c3", "#003a6d"]
+RED_BLUE_DIVERGING_PALLETTE = [
+    "#750e13",
+    "#da1e28",
+    "#ff8389",
+    "#33b1ff",
+    "#0072c3",
+    "#003a6d",
+]
 
 NUMBER_OF_THERMOCOUPLES = 6
 
@@ -69,7 +78,9 @@ def calculate_average_tank_temperature(variable_type):
     }
 
     for index, label in enumerate(TEMPERATURE_DETAILS[variable_type]):
-        variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(index, label)
+        variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(
+            index, label
+        )
 
     for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"][
         variable_type
@@ -108,7 +119,9 @@ df_simulated = call_csv(simulated_path, 0)
 # convert measured power from kW to W
 df_measured["Power_kW"] = convert_values(df_measured["Power_kW"], "kW", "W")
 # convert simulated energy consumption (Wh) for every minute to power (W)
-df_simulated["h_src1In (Wh)"] = convert_values(df_simulated["h_src1In (Wh)"], "Wh/min", "W")
+df_simulated["h_src1In (Wh)"] = convert_values(
+    df_simulated["h_src1In (Wh)"], "Wh/min", "W"
+)
 
 variables = {
     "Y-Variables": {
@@ -131,7 +144,8 @@ variables = {
         "Temperature": {
             "Column Names": {
                 "Measured": [
-                    f"T_Tank_{str(number)}" for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+                    f"T_Tank_{str(number)}"
+                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
                 ],
                 "Simulated": [
                     f"tcouple{number} (C)"
@@ -202,7 +216,9 @@ def plot_graphs(variable_type, variable, value, row):
 
     plot.add_time_series(
         dimes.TimeSeriesData(
-            df[variables["Y-Variables"][variable]["Column Names"][variable_type][value]],
+            df[
+                variables["Y-Variables"][variable]["Column Names"][variable_type][value]
+            ],
             name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
             dimension=variable,
             native_units=variables["Y-Variables"][variable]["Units"],
@@ -231,7 +247,9 @@ plot = dimes.TimeSeriesPlot(
 
 for row, variable in enumerate(variables["Y-Variables"].keys()):
     for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
-        for value in range(len(variables["Y-Variables"][variable]["Column Names"][variable_type])):
+        for value in range(
+            len(variables["Y-Variables"][variable]["Column Names"][variable_type])
+        ):
             plot_graphs(variable_type, variable, value, row + 1)
 
 plot.write_html_plot(output_path)
