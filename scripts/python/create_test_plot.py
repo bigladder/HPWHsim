@@ -4,8 +4,6 @@ from pathlib import Path
 import dimes  # type: ignore
 from dimes import LineProperties
 import pandas as pd  # type: ignore
-import plotly.graph_objects as go  # type: ignore
-from plotly.subplots import make_subplots  # type: ignore
 from koozie import convert  # type: ignore
 
 if len(sys.argv) != 4:
