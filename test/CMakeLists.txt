@@ -13,7 +13,7 @@ add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
 add_executable(testHeatingLogics testHeatingLogics.cc)
 add_executable(testEnergyBalance testEnergyBalance.cc)
 
-set(libs libHPWHsim ${PROJECT_NAME}_common_interface)
+set(libs ${PROJECT_NAME} ${PROJECT_NAME}_common_interface)
 
 target_link_libraries(testTool PRIVATE ${libs})
 target_link_libraries(testTankSizeFixed PRIVATE ${libs})
