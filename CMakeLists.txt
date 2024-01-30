@@ -47,6 +47,7 @@ add_subdirectory(src)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(test)
+    add_subdirectory(unit_tests)
     if (${PROJECT_NAME}_COVERAGE)
         coverage_evaluate()
     endif ()
