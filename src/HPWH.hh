@@ -468,7 +468,7 @@ class HPWH
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
-    int HPWHinit_presets(MODELS presetNum);
+    int initPresets(MODELS presetNum);
     /**< This function will reset all member variables to defaults and then
      * load in a set of parameters that are hardcoded in this function -
      * which particular set of parameters is selected by presetNum.
@@ -479,7 +479,7 @@ class HPWH
      * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
-    int HPWHinit_file(std::string configFile);
+    int initFile(std::string configFile);
     /**< This function will load in a set of parameters from a file
      * The file name is the input - there should be at most one set of parameters per file
      * This is useful for testing new variations, and for the sort of variability
@@ -945,6 +945,10 @@ class HPWH
 
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
+
+    static bool mapStringToPreset(const std::string& modelName, MODELS& model);
+
+   bool getObject(const std::string &modelName);
 
   private:
     class HeatSource;
