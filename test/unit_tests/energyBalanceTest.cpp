@@ -15,20 +15,17 @@
 // HPWHsim
 #include "HPWH.hh"
 
-const double Pi = 4. * atan(1.);
-
-struct EnergyBalanceTest : public testing::Test
-{
-};
-
 /*
  * energyBalance tests
  */
-TEST_F(EnergyBalanceTest, energyBalance)
+TEST(EnergyBalanceTest, energyBalance)
 {
+    const double Pi = 4. * atan(1.);
+
     {
         std::string sModelName = "AOSmithHPTS50";
 
+            // get preset model
         HPWH hpwh;
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
@@ -65,6 +62,7 @@ TEST_F(EnergyBalanceTest, energyBalance)
     {
         std::string sModelName = "StorageTank";
 
+        // get preset model
         HPWH hpwh;
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 

@@ -784,8 +784,8 @@ class HPWH
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
-    /**< Scales the heatpump water heater input capacity and COP*/
+    int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+    /**< Scales the input capacity and COP*/
 
     int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
