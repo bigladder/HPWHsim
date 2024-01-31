@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     {
         inputFile = "";
 
-        if (hpwh.getObject(input2))
+        if (!hpwh.getObject(input2))
         {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
