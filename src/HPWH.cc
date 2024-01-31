@@ -5686,16 +5686,19 @@ bool HPWH::getObject(const std::string &modelName)
 
     if (mapStringToPreset(modelName, model))
     {
-        result = initPresets(model);
-        if (modelName == "TamScalable_SP_2X")
+        if (initPresets(model) == 0)
         {
-            setScaleHPWHCapacityCOP(2., 1.); // Scale the compressor
-            setResistanceCapacity(60.);      // Reset resistance elements in kW
-        }
-        else if (modelName == "TamScalable_SP_Half")
-        {
-            setScaleHPWHCapacityCOP(1 / 2., 1.); // Scale the compressor
-            setResistanceCapacity(15.);          // Reset resistance elements in kW
+            if (modelName == "TamScalable_SP_2X")
+            {
+                setScaleHPWHCapacityCOP(2., 1.); // Scale the compressor
+                setResistanceCapacity(60.);      // Reset resistance elements in kW
+            }
+            else if (modelName == "TamScalable_SP_Half")
+            {
+                setScaleHPWHCapacityCOP(1 / 2., 1.); // Scale the compressor
+                setResistanceCapacity(15.);          // Reset resistance elements in kW
+            }
+            result = true;
         }
     }
     return result;
