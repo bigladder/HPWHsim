@@ -451,7 +451,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     return 0;
 }
 
-int HPWH::HPWHinit_presets(MODELS presetNum)
+int HPWH::initPresets(MODELS presetNum)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing

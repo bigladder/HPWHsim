@@ -14,7 +14,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
- /*
+
 #define STRING(x) #x
 #define XSTRING(x) STRING(x)
 
@@ -75,6 +75,8 @@ struct HPWH_HeatingLogicsTests : public HPWH_Tests
 
 TEST_F(HPWH_Tests, tankSizeFixed)
 {
+    const double tol =  1.e-4;
+
     for (auto& sModelName : sModelNames)
     {
 
@@ -86,7 +88,7 @@ TEST_F(HPWH_Tests, tankSizeFixed)
         HPWH hpwh;
 
         // set preset
-        EXPECT_EQ(hpwh.initPresets(model), 0) << "Could not initialize model.";
+        EXPECT_NEAR(hpwh.initPresets(model), 0, tol) << "Could not initialize model.";
 
 
         // get the initial tank size
@@ -102,12 +104,12 @@ TEST_F(HPWH_Tests, tankSizeFixed)
     // change tank size (unforced)
         if (hpwh.isTankSizeFixed())
         { // tank size should not have changed
-            EXPECT_EQ(intitialTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL))
+            EXPECT_NEAR(intitialTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL), tol)
                 << "The tank size has changed when it should not.";
         }
         else
         { // tank size should have changed to target value
-            EXPECT_EQ(targetTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL))
+            EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL), tol)
                 << "The tank size did not change to the target value.";
         }
 
@@ -116,10 +118,9 @@ TEST_F(HPWH_Tests, tankSizeFixed)
 
 
 // tank size should have changed to target value
-        EXPECT_EQ(targetTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL))
+        EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL), tol)
             << "The tank size has not changed when forced.";
  
     }
 
 }
-   */

@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     {
         inputFile = "";
 
-        if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT)
+        if (hpwh.getObject(input2))
         {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     else if (input1 == "File")
     {
         inputFile = input2 + ".txt";
-        if (hpwh.HPWHinit_file(inputFile) != 0)
+        if (hpwh.initFile(inputFile) != 0)
             exit(1);
     }
     else
