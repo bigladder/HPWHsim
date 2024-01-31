@@ -3,6 +3,7 @@ set(library_sources
 		energyBalanceTest.cpp
 		fixedTankSizeTest.cpp
 		sizingFractionsTest.cpp
+		maxSetpointTest.cpp
 		unit-test-main.cpp
 	)
 

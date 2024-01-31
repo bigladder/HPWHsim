@@ -25,7 +25,7 @@ TEST(EnergyBalanceTest, energyBalance)
     {
         std::string sModelName = "AOSmithHPTS50";
 
-            // get preset model
+        // get preset model
         HPWH hpwh;
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
