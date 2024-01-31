@@ -1,4 +1,5 @@
 set(library_sources
+		scaleTest.cpp
 		fixedTankSizeTest.cpp
 		energyBalanceTest.cpp
 		unit-test-main.cpp

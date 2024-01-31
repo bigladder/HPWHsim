@@ -3073,7 +3073,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
 
 bool HPWH::isHPWHScalable() const { return canScale; }
 
-int HPWH::setScaleHPWHCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
+int HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
 {
     if (!isHPWHScalable())
     {
@@ -3137,7 +3137,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
     }
 
     double scale = newCapacity / oldCapacity;
-    return setScaleHPWHCapacityCOP(scale, 1.); // Scale the compressor capacity
+    return setScaleCapacityCOP(scale, 1.); // Scale the compressor capacity
 }
 
 int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
@@ -5690,12 +5690,12 @@ bool HPWH::getObject(const std::string &modelName)
         {
             if (modelName == "TamScalable_SP_2X")
             {
-                setScaleHPWHCapacityCOP(2., 1.); // Scale the compressor
+                setScaleCapacityCOP(2., 1.); // Scale the compressor
                 setResistanceCapacity(60.);      // Reset resistance elements in kW
             }
             else if (modelName == "TamScalable_SP_Half")
             {
-                setScaleHPWHCapacityCOP(1 / 2., 1.); // Scale the compressor
+                setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
                 setResistanceCapacity(15.);          // Reset resistance elements in kW
             }
             result = true;

@@ -41,7 +41,7 @@ TEST_F(FixedSizeTest, tankSizeFixed)
 
     for (auto& sModelName : sModelNames)
     {
-        // get model from preset
+        // get preset model
         HPWH hpwh;
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
