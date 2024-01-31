@@ -19,9 +19,8 @@
 
 constexpr double tol = 1.e-4;
 
-
 TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
-{    
+{
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
@@ -64,7 +63,7 @@ TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
 }
- 
+
 TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
 {
     // get preset model
@@ -110,9 +109,9 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
     EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
 }
 
-TEST(SizingFractionsTest,resTankRealistic_SizingFract)
+TEST(SizingFractionsTest, resTankRealistic_SizingFract)
 {
-   // get preset model
+    // get preset model
     HPWH hpwh;
     const std::string sModelName = "restankRealistic";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
@@ -123,7 +122,7 @@ TEST(SizingFractionsTest,resTankRealistic_SizingFract)
 
 TEST(SizingFractionsTest, storageTank_SizingFract)
 {
-   // get preset model
+    // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
@@ -132,7 +131,7 @@ TEST(SizingFractionsTest, storageTank_SizingFract)
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), HPWH::HPWH_ABORT);
 }
 
-TEST(SizingFractionsTest , getCompressorMinRuntime)
+TEST(SizingFractionsTest, getCompressorMinRuntime)
 {
     // get preset model
     HPWH hpwh;
