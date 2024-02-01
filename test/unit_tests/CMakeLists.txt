@@ -6,6 +6,7 @@ set(library_sources
 		maxSetpointTest.cpp
 		heatingLogicsTest.cpp
 		stateOfChargeFncsTest.cpp
+		resistanceFncsTest.cpp
 		unit-test-main.cpp
 	)
 
