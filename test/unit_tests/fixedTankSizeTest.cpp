@@ -15,9 +15,6 @@
 // HPWHsim
 #include "HPWH.hh"
 
-#define STRING(x) #x
-#define XSTRING(x) STRING(x)
-
 struct FixedSizeTest : public testing::Test
 {
     const std::vector<std::string> sModelNames = {"AOSmithHPTS50",
