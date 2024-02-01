@@ -1,3 +1,7 @@
+/*
+ * HPWHsim unit tests
+ */
+
 #ifndef HPWH_UNIT_TEST_hh
 #define HPWH_UNIT_TEST_hh
 

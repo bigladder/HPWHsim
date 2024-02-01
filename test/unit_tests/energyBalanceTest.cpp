@@ -23,13 +23,14 @@ TEST(EnergyBalanceTest, energyBalance)
 {
     const double Pi = 4. * atan(1.);
 
+    /* no extra heat */
     {
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "AOSmithHPTS50";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
-        double maxDrawVol_L = 1.;
+        const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
         const double externalT_C = 20.;
 
@@ -58,20 +59,19 @@ TEST(EnergyBalanceTest, energyBalance)
         EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
     }
 
-    /* storage tank with extra heat (solar)*/
+    /* storage tank with extra heat (solar) */
     {
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "StorageTank";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
-        double maxDrawVol_L = 1.;
+        const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
         const double externalT_C = 20.;
 
-        std::vector<double> nodePowerExtra_W = {1000.};
         //
-        hpwh.setUA(0.);
+        std::vector<double> nodePowerExtra_W = {1000.};
         hpwh.setTankToTemperature(20.);
         hpwh.setInletT(5.);
 

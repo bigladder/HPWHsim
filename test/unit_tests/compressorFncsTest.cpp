@@ -50,7 +50,7 @@ struct CompressorFncsTest : public testing::Test
 };
 
 /*
- * compressorSpecs
+ * compressorSpecs tests
  */
 TEST_F(CompressorFncsTest, compressorSpecs)
 {
