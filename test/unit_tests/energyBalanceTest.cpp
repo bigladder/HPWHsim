@@ -24,10 +24,9 @@ TEST(EnergyBalanceTest, energyBalance)
     const double Pi = 4. * atan(1.);
 
     {
-        std::string sModelName = "AOSmithHPTS50";
-
         // get preset model
         HPWH hpwh;
+        const std::string sModelName = "AOSmithHPTS50";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
         double maxDrawVol_L = 1.;
@@ -61,10 +60,9 @@ TEST(EnergyBalanceTest, energyBalance)
 
     /* storage tank with extra heat (solar)*/
     {
-        std::string sModelName = "StorageTank";
-
         // get preset model
         HPWH hpwh;
+        const std::string sModelName = "StorageTank";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model.";
 
         double maxDrawVol_L = 1.;

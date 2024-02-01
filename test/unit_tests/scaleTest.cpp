@@ -16,6 +16,8 @@
 #include "HPWH.hh"
 #include "unit-test.hh"
 
+constexpr double tol = 1.e-4;
+
 struct Performance
 {
     double input, output, cop;
@@ -80,10 +82,10 @@ bool scaleCapacityCOP(HPWH& hpwh,
  */
 TEST(ScaleTest, noScaleOutOfBounds)
 { // Test that we CANNOT scale the scalable model with scale <= 0
-    const std::string sModelName = "TamScalable_SP";
 
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double num = 0;
@@ -109,11 +111,10 @@ TEST(ScaleTest, noneScalable)
 
 TEST(ScaleTest, scalableScales)
 { // Test the scalable hpwh can scale
-    const double tol = 1.e-4;
-    const std::string sModelName = "TamScalable_SP";
 
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0, point1;
@@ -210,11 +211,10 @@ TEST(ScaleTest, scalableScales)
 
 TEST(ScaleTest, scalableMPScales)
 { // Test the scalable MP hpwh can scale
-    const double tol = 1.e-4;
-    const std::string sModelName = "Scalable_MP";
 
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "Scalable_MP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0, point1;
@@ -312,11 +312,9 @@ TEST(ScaleTest, scalableMPScales)
 
 TEST(ScaleTest, getCompressorSPCapacity)
 {
-    const double tol = 1.e-4;
-    const std::string sModelName = "ColmacCxA_20_SP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "ColmacCxA_20_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0;
@@ -346,11 +344,9 @@ TEST(ScaleTest, getCompressorSPCapacity)
 
 TEST(ScaleTest, getCompressorMPCapacity)
 {
-    const double tol = 1.e-4;
-    const std::string sModelName = "ColmacCxA_20_MP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "ColmacCxA_20_MP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0;
@@ -378,11 +374,9 @@ TEST(ScaleTest, getCompressorMPCapacity)
 
 TEST(ScaleTest, getCompressorMPOutputCapacity)
 {
-    const double tol = 1.e-4;
-    const std::string sModelName = "Scalable_MP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "Scalable_MP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
@@ -417,11 +411,9 @@ TEST(ScaleTest, getCompressorMPOutputCapacity)
 
 TEST(ScaleTest, setCompressorSPOutputCapacity)
 {
-    const double tol = 1.e-4;
-    const std::string sModelName = "TamScalable_SP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
@@ -543,10 +535,9 @@ TEST(ScaleTest, resistanceScales)
  */
 TEST(ScaleTest, storageTankErrors)
 {
-    const std::string sModelName = "StorageTank";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "StorageTank";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     EXPECT_EQ(hpwh.setResistanceCapacity(1000.), HPWH::HPWH_ABORT);

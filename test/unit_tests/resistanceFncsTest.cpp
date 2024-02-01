@@ -22,20 +22,18 @@
 TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
 {
     {
-        const std::string sModelName = "ColmacCxA_30_SP";
-
         // get preset model
         HPWH hpwh;
+        const std::string sModelName = "ColmacCxA_30_SP";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
         EXPECT_EQ(hpwh.setResistanceCapacity(100.), HPWH::HPWH_ABORT); // Need's to be scalable
     }
 
     {
-        const std::string sModelName = "restankRealistic";
-
         // get preset model
         HPWH hpwh;
+        const std::string sModelName = "restankRealistic";
         EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
         EXPECT_EQ(hpwh.setResistanceCapacity(-100.), HPWH::HPWH_ABORT);
@@ -134,10 +132,10 @@ TEST(ResistanceFunctionsTest, getResistancePositionInRETank)
  */
 TEST(ResistanceFunctionsTest, getResistancePositionInCompressorTank)
 {
-    const std::string sModelName = "TamScalable_SP";
 
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     EXPECT_EQ(hpwh.getResistancePosition(0), 9);                   // Check top elements

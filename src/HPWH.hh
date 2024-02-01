@@ -463,7 +463,7 @@ class HPWH
 
     /// this is the value that the public functions will return in case of a simulation
     /// destroying error
-    static const int HPWH_ABORT = -274000;
+    static const int HPWH_ABORT;
 
     static std::string getVersion();
     /**< This function returns a string with the current version number */
