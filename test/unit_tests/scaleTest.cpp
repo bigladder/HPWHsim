@@ -517,24 +517,22 @@ void testResistanceScales()
 
     // check units convert
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr),
-                    2. * KW_TO_BTUperH(elementPower),
-                    tol);
+                    2. * KW_TO_BTUperH(elementPower));
 
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(
-        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), factor * elementPower + elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+                    factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(
-        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
 }
 
 void testStorageTankErrors()
