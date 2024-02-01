@@ -870,8 +870,8 @@ class HPWH
     /**< get the model number of the HPWHsim model number of the hpwh */
 
     int getCompressorCoilConfig() const;
-    bool isCompressorMultipass() const;
-    bool isCompressoExternalMultipass() const;
+    int isCompressorMultipass() const;
+    int isCompressorExternalMultipass() const;
 
     bool hasACompressor() const;
     /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.

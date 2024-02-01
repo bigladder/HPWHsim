@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
         }
 
         string header = strHead;
-        if (hpwh.isCompressoExternalMultipass())
+        if (hpwh.isCompressorExternalMultipass() == 1)
         {
             header += strHeadMP;
         }
@@ -445,7 +445,7 @@ int main(int argc, char* argv[])
             }
         }
         // Check flow for external MP
-        if (hpwh.isCompressoExternalMultipass())
+        if (hpwh.isCompressorExternalMultipass() == 1)
         {
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
             double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
@@ -471,7 +471,7 @@ int main(int argc, char* argv[])
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
-            if (hpwh.isCompressoExternalMultipass())
+            if (hpwh.isCompressorExternalMultipass() == 1)
             {
                 strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
                                std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +

@@ -2874,6 +2874,7 @@ double HPWH::getTankHeatContent_kJ() const
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
 
 int HPWH::getHPWHModel() const { return hpwhModel; }
+
 int HPWH::getCompressorCoilConfig() const
 {
     if (!hasACompressor())
@@ -2886,7 +2887,8 @@ int HPWH::getCompressorCoilConfig() const
     }
     return heatSources[compressorIndex].configuration;
 }
-bool HPWH::isCompressorMultipass() const
+
+int HPWH::isCompressorMultipass() const
 {
     if (!hasACompressor())
     {
@@ -2896,9 +2898,10 @@ bool HPWH::isCompressorMultipass() const
         }
         return HPWH_ABORT;
     }
-    return heatSources[compressorIndex].isMultipass;
+    return static_cast<int>(heatSources[compressorIndex].isMultipass);
 }
-bool HPWH::isCompressoExternalMultipass() const
+
+int HPWH::isCompressorExternalMultipass() const
 {
     if (!hasACompressor())
     {
@@ -2908,7 +2911,7 @@ bool HPWH::isCompressoExternalMultipass() const
         }
         return HPWH_ABORT;
     }
-    return heatSources[compressorIndex].isExternalMultipass();
+    return static_cast<int>(heatSources[compressorIndex].isExternalMultipass());
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
@@ -2927,7 +2930,7 @@ bool HPWH::hasExternalHeatSource() const
 
 double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
 {
-    if (!isCompressoExternalMultipass())
+    if (!isCompressorExternalMultipass())
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {

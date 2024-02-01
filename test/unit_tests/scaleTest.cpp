@@ -27,7 +27,7 @@ struct Performance
 void getCompressorPerformance(
     HPWH& hpwh, Performance& point, double waterTempC, double airTempC, double setpointC)
 {
-    if (hpwh.isCompressorMultipass())
+    if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
       // temperature of the lift
         hpwh.setSetpoint((waterTempC + setpointC) / 2.);
