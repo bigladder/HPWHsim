@@ -5,6 +5,7 @@ set(library_sources
 		sizingFractionsTest.cpp
 		maxSetpointTest.cpp
 		heatingLogicsTest.cpp
+		stateOfChargeFncsTest.cpp
 		unit-test-main.cpp
 	)
 
