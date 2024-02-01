@@ -2690,10 +2690,7 @@ int HPWH::isNthHeatSourceRunning(int N) const
     }
 }
 
-int HPWH::isCompressorRunning() const
-{
-    return isNthHeatSourceRunning(getCompressorIndex());
-}
+int HPWH::isCompressorRunning() const { return isNthHeatSourceRunning(getCompressorIndex()); }
 
 HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 {
@@ -5686,7 +5683,7 @@ bool compressorIsRunning(HPWH& hpwh)
     return true;
 }
 
-bool HPWH::getObject(const std::string &modelName)
+bool HPWH::getObject(const std::string& modelName)
 {
     /**Sets up the preset HPWH object with modelName */
     bool result = false;
@@ -5699,12 +5696,12 @@ bool HPWH::getObject(const std::string &modelName)
             if (modelName == "TamScalable_SP_2X")
             {
                 setScaleCapacityCOP(2., 1.); // Scale the compressor
-                setResistanceCapacity(60.);      // Reset resistance elements in kW
+                setResistanceCapacity(60.);  // Reset resistance elements in kW
             }
             else if (modelName == "TamScalable_SP_Half")
             {
                 setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
-                setResistanceCapacity(15.);          // Reset resistance elements in kW
+                setResistanceCapacity(15.);      // Reset resistance elements in kW
             }
             result = true;
         }
