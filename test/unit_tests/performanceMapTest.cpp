@@ -174,7 +174,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
 /*
  * ColmacCxV_5_MP tests
  */
-TEST_F(PerformanceMapTest,  ColmacCxV_5_MP)
+TEST_F(PerformanceMapTest, ColmacCxV_5_MP)
 {
     // get preset model
     HPWH hpwh;
@@ -203,7 +203,7 @@ TEST_F(PerformanceMapTest,  ColmacCxV_5_MP)
 /*
  * ColmacCxA_10_MP tests
  */
-TEST_F(PerformanceMapTest,  ColmacCxA_10_MP)
+TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
 {
     // get preset model
     HPWH hpwh;
@@ -246,13 +246,13 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_MP)
 
     // test some points outside of defrost ////////////////
     checkPoint = {60.0, 66.0, 37.94515042};
-     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
+    EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
     checkPoint = {60.0, 114.0, 35.2295393};
-     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
+    EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
     checkPoint = {80.0, 66.0, 50.360549115};
-     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
+    EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
     checkPoint = {80.0, 114.0, 43.528417017};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
@@ -287,7 +287,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_20_MP)
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
     checkPoint = {80.0, 114.0, 68.034677};
-   EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
+    EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
 
     checkPoint = {100.0, 66.0, 90.289474295};
     EXPECT_NEAR_REL(checkPoint.outputBTUH, getCapacityMP_F_KW(hpwh, checkPoint));
@@ -528,68 +528,67 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
     // test
     checkPoint = {-13.0, 176.0, 41.0, 65872.597448};
     EXPECT_EQ(getCapacitySP_F_BTUHR(hpwh, checkPoint),
-               HPWH::HPWH_ABORT); // max setpoint without adjustment forces error
+              HPWH::HPWH_ABORT); // max setpoint without adjustment forces error
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {-13.0, 176.0, 84.2, 55913.249232};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {14.0, 176.0, 84.2, 92933.01932};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {42.8, 140.0, 41.0, 136425.98804};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {50.0, 140.0, 41.0, 136425.98804};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {50.0, 176.0, 84.2, 136564.470884};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
     checkPoint = {60.8, 158.0, 84.2, 136461.998288};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {71.6, 158.0, 48.2, 136498.001712};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test constant with setpoint between 140 and 158
     checkPoint = {71.6, 149.0, 48.2, 136498.001712};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {82.4, 176.0, 41.0, 136557.496756};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test
     checkPoint = {104.0, 140.0, 62.6, 136480};
-   EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+    EXPECT_NEAR_REL(checkPoint.outputBTUH,
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
     checkPoint = {104.0, 158.0, 62.6, 136480};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
     // test
     checkPoint = {104.0, 176.0, 84.2, 136564.470884};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 }
-
 
 /*
  * QAHV_N136TAU_HPB_SP_extrapolation tests
@@ -629,55 +628,56 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
     // test linear along Tin
     checkPoint = {-13.0, 176.0, 100.0, 55913.249232};
     EXPECT_TRUE(checkPoint.outputBTUH >
-               getCapacitySP_F_BTUHR(hpwh,
-                                     checkPoint,
-                                     tInOffsetQAHV_dF,
-                                     tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
+                getCapacitySP_F_BTUHR(hpwh,
+                                      checkPoint,
+                                      tInOffsetQAHV_dF,
+                                      tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test linear along Tin
     checkPoint = {10.4, 140.0, 111., 89000.085396};
     EXPECT_TRUE(checkPoint.outputBTUH >
-               getCapacitySP_F_BTUHR(hpwh,
-                                     checkPoint,
-                                     tInOffsetQAHV_dF,
-                                     tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
+                getCapacitySP_F_BTUHR(hpwh,
+                                      checkPoint,
+                                      tInOffsetQAHV_dF,
+                                      tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test linear along Tin
     checkPoint = {64.4, 158.0, 100, 136461.998288};
     EXPECT_TRUE(checkPoint.outputBTUH >
-               getCapacitySP_F_BTUHR(hpwh,
-                                     checkPoint,
-                                     tInOffsetQAHV_dF,
-                                     tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
+                getCapacitySP_F_BTUHR(hpwh,
+                                      checkPoint,
+                                      tInOffsetQAHV_dF,
+                                      tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test linear along Tin
     checkPoint = {86.0, 158.0, 100, 136461.998288};
     EXPECT_TRUE(checkPoint.outputBTUH >
-               getCapacitySP_F_BTUHR(hpwh,
-                                     checkPoint,
-                                     tInOffsetQAHV_dF,
-                                     tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
+                getCapacitySP_F_BTUHR(hpwh,
+                                      checkPoint,
+                                      tInOffsetQAHV_dF,
+                                      tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test linear along Tin
     checkPoint = {104.0, 176.0, 100., 136564.470884};
     EXPECT_TRUE(checkPoint.outputBTUH >
-               getCapacitySP_F_BTUHR(hpwh,
-                                     checkPoint,
-                                     tInOffsetQAHV_dF,
-                                     tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
+                getCapacitySP_F_BTUHR(hpwh,
+                                      checkPoint,
+                                      tInOffsetQAHV_dF,
+                                      tOutOffsetQAHV_dF)); // Check output has decreased at high Tin
 
     // test const along Tair
     checkPoint = {110.0, 140.0, 62.6, 136480};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     // test const along Tair
     checkPoint = {114.0, 176.0, 84.2, 136564.470884};
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
-                getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
+                    getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     checkPoint = {114.0, 200.0, 84.2, 136564.470884};
-    EXPECT_EQ(getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF), HPWH::HPWH_ABORT);
+    EXPECT_EQ(getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF),
+              HPWH::HPWH_ABORT);
 }
 
 /*

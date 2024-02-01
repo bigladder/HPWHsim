@@ -18,14 +18,13 @@
 constexpr double tol = 1.e-4;
 
 /*
- * getSoC test
+ * getSoC tests
  */
 TEST(StateOfChargeFunctionsTest, getSoC)
 {
-    const std::string sModelName = "Sanden80";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "Sanden80";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     const double mainsT_C = F_TO_C(55.);
@@ -64,14 +63,13 @@ TEST(StateOfChargeFunctionsTest, getSoC)
 }
 
 /*
- * chargeBelowSetpoint test
+ * chargeBelowSetpoint tests
  */
 TEST(StateOfChargeFunctionsTest, chargeBelowSetpoint)
 {
-    const std::string sModelName = "ColmacCxV_5_SP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "ColmacCxV_5_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     const double mainsT_C = F_TO_C(60.);
