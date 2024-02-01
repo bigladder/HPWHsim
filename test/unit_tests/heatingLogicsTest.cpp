@@ -175,9 +175,9 @@ TEST_F(HeatingLogicsTest, noShutOffMP_external)
 }
 
 /*
- * state-of-charge tests
+ * state-of-charge logics tests
  */
-TEST_F(HeatingLogicsTest, stateOfCharge)
+TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 {
     std::vector<std::string> sCombinedModelNames = sHighShutOffSP_modelNames;
     sCombinedModelNames.insert(sCombinedModelNames.end(),
