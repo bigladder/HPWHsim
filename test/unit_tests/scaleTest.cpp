@@ -463,13 +463,14 @@ TEST(ScaleTest, setCompressorSPOutputCapacity)
     EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
-void testChipsCaseWithIPUnits()
+/*
+ * chipsCaseWithIPUnits tests
+ */
+TEST(ScaleTest, chipsCaseWithIPUnits)
 {
-    const double tol = 1.e-4;
-    const std::string sModelName = "TamScalable_SP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     const double waterT_F = 50;
@@ -487,26 +488,28 @@ void testChipsCaseWithIPUnits()
     EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
 
-void testScaleRestank()
+/*
+ * scaleRestank tests
+ */
+TEST(ScaleTest, scaleRestank)
 {
-    const std::string sModelName = "restankRealistic";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "restankRealistic";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     // Scale COP for restank fails.
     EXPECT_EQ(hpwh.setScaleCapacityCOP(2., 2.), HPWH::HPWH_ABORT);
 }
 
-void testResistanceScales()
+/*
+ * resistanceScales tests
+ */
+TEST(ScaleTest, resistanceScales)
 {
-    const double tol = 1.e-4;
-
-    const std::string sModelName = "TamScalable_SP";
-
     // get preset model
     HPWH hpwh;
+    const std::string sModelName = "TamScalable_SP";
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double elementPower = 30.; // KW
@@ -522,8 +525,8 @@ void testResistanceScales()
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
                     factor * elementPower + elementPower);
 
@@ -535,9 +538,12 @@ void testResistanceScales()
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
 }
 
-void testStorageTankErrors()
+/*
+ * storageTankErrors tests
+ */
+TEST(ScaleTest, storageTankErrors)
 {
-    const std::string sModelName = "TamScalable_SP";
+    const std::string sModelName = "StorageTank";
 
     // get preset model
     HPWH hpwh;
