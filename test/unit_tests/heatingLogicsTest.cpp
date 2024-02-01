@@ -14,6 +14,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
+#include "unit-test.hh"
 
 struct HeatingLogicsTest : public testing::Test
 {

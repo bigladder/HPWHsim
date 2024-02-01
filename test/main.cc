@@ -9,7 +9,6 @@
  *
  */
 #include "HPWH.hh"
-#include "testUtilityFcts.cc"
 #include <iostream>
 #include <fstream>
 #include <sstream>

@@ -14,6 +14,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
+#include "unit-test.hh"
 
 #define SIZE static_cast<double>(HPWH::CONDENSITY_SIZE)
 
