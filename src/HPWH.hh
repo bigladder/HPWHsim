@@ -877,8 +877,9 @@ class HPWH
     /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
      */
 
+    /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
     int isCompressorRunning() const;
- 
+
     bool hasExternalHeatSource() const;
     /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
      * resistance element. */
@@ -950,7 +951,7 @@ class HPWH
 
     static bool mapStringToPreset(const std::string& modelName, MODELS& model);
 
-   bool getObject(const std::string &modelName);
+    bool getObject(const std::string& modelName);
 
   private:
     class HeatSource;
