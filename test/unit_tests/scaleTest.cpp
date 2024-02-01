@@ -14,10 +14,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
-
-#define EXPECT_NEAR_REL(A, B, eps) EXPECT_NEAR(A, B, eps*(abs(A) < abs(B) ? abs(B) : abs(A)))
-
-#define EXPECT_FAR(A, B, eps) EXPECT_FALSE(abs(A - B) < eps)
+#include "unit-test.hh"
 
 struct Performance
 {
@@ -344,8 +341,7 @@ TEST(ScaleTest, getCompressorSPCapacity)
                    60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
-                    capacity_BTU,
-                    tol); // relative cmp since in btu's these will be large numbers
+                    capacity_BTU); // relative cmp since in btu's these will be large numbers
 }
 
 TEST(ScaleTest, getCompressorMPCapacity)
@@ -377,8 +373,7 @@ TEST(ScaleTest, getCompressorMPCapacity)
                           60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
-                    capacity_BTU,
-                    tol); // relative cmp since in btu's these will be large numbers
+                    capacity_BTU); // relative cmp since in btu's these will be large numbers
 }
 
 TEST(ScaleTest, getCompressorMPOutputCapacity)
@@ -465,7 +460,7 @@ TEST(ScaleTest, setCompressorSPOutputCapacity)
                                                              C_TO_F(setpointC),
                                                              HPWH::UNITS_BTUperHr,
                                                              HPWH::UNITS_F);
-    EXPECT_NEAR_REL(num, newCapacity_BTUperHr, tol);
+    EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
 void testChipsCaseWithIPUnits()
@@ -489,7 +484,7 @@ void testChipsCaseWithIPUnits()
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
         airT_F, waterT_F, setpointT_F, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
 
-    EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr, tol);
+    EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
 
 void testScaleRestank()
@@ -516,9 +511,9 @@ void testResistanceScales()
 
     double elementPower = 30.; // KW
 
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower, tol);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower, tol);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * elementPower, tol);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * elementPower);
 
     // check units convert
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr),
@@ -528,18 +523,18 @@ void testResistanceScales()
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower, tol);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower, tol);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
     EXPECT_NEAR_REL(
-        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), factor * elementPower + elementPower, tol);
+        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower, tol);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower, tol);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
     EXPECT_NEAR_REL(
-        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower, tol);
+        hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
 }
 
 void testStorageTankErrors()

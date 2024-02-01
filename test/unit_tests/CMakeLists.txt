@@ -1,4 +1,5 @@
-set(library_sources
+set(library_files
+		unit-test.hh
 		scaleTest.cpp
 		energyBalanceTest.cpp
 		fixedTankSizeTest.cpp
@@ -8,10 +9,11 @@ set(library_sources
 		stateOfChargeFncsTest.cpp
 		resistanceFncsTest.cpp
 		compressorFncsTest.cpp
+		performanceMapTest.cpp
 		unit-test-main.cpp
 	)
 
-add_executable(${PROJECT_NAME}_tests ${library_sources})
+add_executable(${PROJECT_NAME}_tests ${library_files})
 
 target_compile_features(${PROJECT_NAME}_tests PRIVATE cxx_std_17)
 

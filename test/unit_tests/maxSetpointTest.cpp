@@ -14,10 +14,7 @@
 
 // HPWHsim
 #include "HPWH.hh"
-
-#define EXPECT_NEAR_REL(A, B, eps) EXPECT_NEAR(A, B, eps*(abs(A) < abs(B) ? abs(B) : abs(A)))
-
-constexpr double tol = 1.e-4;
+#include "unit-test.hh"
 
 const double REMaxShouldBe = 100.;
 
@@ -210,15 +207,15 @@ TEST(UtilityTest, resample)
     EXPECT_TRUE(resampleExtensive(values, sampleValues));
 
     // Check some expected values.
-    EXPECT_NEAR_REL(values[1], 10., tol); //
-    EXPECT_NEAR_REL(values[5], 30., tol); //
+    EXPECT_NEAR_REL(values[1], 10.); //
+    EXPECT_NEAR_REL(values[5], 30.); //
 
     // test intensive resampling
     EXPECT_TRUE(resampleIntensive(values, sampleValues));
 
     // Check some expected values.
-    EXPECT_NEAR_REL(values[1], 20., tol); //
-    EXPECT_NEAR_REL(values[5], 60., tol); //
+    EXPECT_NEAR_REL(values[1], 20.); //
+    EXPECT_NEAR_REL(values[5], 60.); //
 }
 
 TEST(UtilityTest, setTemperatures)
@@ -237,8 +234,8 @@ TEST(UtilityTest, setTemperatures)
         hpwh.getTankTemps(newT_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[0], 10., tol);  //
-        EXPECT_NEAR_REL(newT_C[11], 60., tol); //
+        EXPECT_NEAR_REL(newT_C[0], 10.);  //
+        EXPECT_NEAR_REL(newT_C[11], 60.); //
     }
 
     // test 2
@@ -250,10 +247,10 @@ TEST(UtilityTest, setTemperatures)
         hpwh.getTankTemps(newT_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[0], 10., tol);  //
-        EXPECT_NEAR_REL(newT_C[5], 30., tol);  //
-        EXPECT_NEAR_REL(newT_C[6], 40., tol);  //
-        EXPECT_NEAR_REL(newT_C[11], 60., tol); //
+        EXPECT_NEAR_REL(newT_C[0], 10.);  //
+        EXPECT_NEAR_REL(newT_C[5], 30.);  //
+        EXPECT_NEAR_REL(newT_C[6], 40.);  //
+        EXPECT_NEAR_REL(newT_C[11], 60.); //
     }
 
     // test 3
@@ -266,8 +263,8 @@ TEST(UtilityTest, setTemperatures)
         hpwh.getTankTemps(newT_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[2], 25.2941, tol); //
-        EXPECT_NEAR_REL(newT_C[8], 67.6471, tol); //
+        EXPECT_NEAR_REL(newT_C[2], 25.2941); //
+        EXPECT_NEAR_REL(newT_C[8], 67.6471); //
     }
 
     // test 4
@@ -283,8 +280,8 @@ TEST(UtilityTest, setTemperatures)
         hpwh.getTankTemps(newT_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[4], 37., tol);  //
-        EXPECT_NEAR_REL(newT_C[10], 61., tol); //
+        EXPECT_NEAR_REL(newT_C[4], 37.);  //
+        EXPECT_NEAR_REL(newT_C[10], 61.); //
     }
 
     // test 5
@@ -300,7 +297,7 @@ TEST(UtilityTest, setTemperatures)
         hpwh.getTankTemps(newT_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[3], 32., tol);  //
-        EXPECT_NEAR_REL(newT_C[11], 64., tol); //
+        EXPECT_NEAR_REL(newT_C[3], 32.);  //
+        EXPECT_NEAR_REL(newT_C[11], 64.); //
     }
 }
