@@ -2690,6 +2690,11 @@ int HPWH::isNthHeatSourceRunning(int N) const
     }
 }
 
+int HPWH::isCompressorRunning() const
+{
+    return isNthHeatSourceRunning(getCompressorIndex());
+}
+
 HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)

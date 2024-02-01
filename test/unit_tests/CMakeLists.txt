@@ -4,6 +4,7 @@ set(library_sources
 		fixedTankSizeTest.cpp
 		sizingFractionsTest.cpp
 		maxSetpointTest.cpp
+		heatingLogicsTest.cpp
 		unit-test-main.cpp
 	)
 

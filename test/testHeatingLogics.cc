@@ -166,7 +166,7 @@ void testSetEnteringWaterHighTempShutOffAbsolute(string& input)
 
     // run a step and check we're heating
     hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-    ASSERTTRUE(compressorIsRunning(hpwh));
+    ASSERTTRUE(hpwh.isCompressorRunning());
 
     // change entering water temp to below temp
     ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(
@@ -174,13 +174,13 @@ void testSetEnteringWaterHighTempShutOffAbsolute(string& input)
 
     // run a step and check we're not heating.
     hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-    ASSERTFALSE(compressorIsRunning(hpwh));
+    ASSERTFALSE(hpwh.isCompressorRunning());
 
     // and reverse it
     ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(
                    highT_C + delta, doAbsolute, hpwh.getCompressorIndex()) == 0);
     hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-    ASSERTTRUE(compressorIsRunning(hpwh));
+    ASSERTTRUE(hpwh.isCompressorRunning());
 }
 
 /* Tests we can set the entering water high temp shutt off with relative values and it works turns

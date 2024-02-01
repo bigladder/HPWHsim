@@ -877,6 +877,8 @@ class HPWH
     /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
      */
 
+    int isCompressorRunning() const;
+ 
     bool hasExternalHeatSource() const;
     /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
      * resistance element. */
