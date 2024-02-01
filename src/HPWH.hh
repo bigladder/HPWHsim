@@ -870,7 +870,11 @@ class HPWH
     /**< get the model number of the HPWHsim model number of the hpwh */
 
     int getCompressorCoilConfig() const;
+
+    /// returns 1 if compressor is multipass, 0 if compressor is not multipass, ABORT if no compressor
     int isCompressorMultipass() const;
+
+    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass, ABORT if no compressor
     int isCompressorExternalMultipass() const;
 
     bool hasACompressor() const;
