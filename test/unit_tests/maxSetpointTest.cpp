@@ -151,7 +151,7 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(100., num, why));  // Can go to boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));   // Can go low, albiet dumb
-    EXPECT_EQ(expectedRE_maxT_C, num);                            // Max is boiling
+    EXPECT_EQ(expectedRE_maxT_C, num);                        // Max is boiling
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
