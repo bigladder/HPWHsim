@@ -202,7 +202,7 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
             return 1. / (double)hpwh->getNumNodes();
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
+        else if (nodeWeight.nodeNum == LOGIC_SIZE + 1)
         {
             return 1.;
         }
@@ -215,7 +215,7 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 
     logicNode = calcNodes / totWeight;
 
-    return logicNode / static_cast<double>(LOGIC_NODE_SIZE);
+    return logicNode / static_cast<double>(LOGIC_SIZE);
 }
 
 double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
@@ -227,12 +227,12 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
+    std::vector<double> resampledTankTemps(LOGIC_SIZE);
     resample(resampledTankTemps, hpwh->tankTemps_C);
     double comparison = getComparisonValue();
     comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
 
-    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_NODE_SIZE;
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
     for (auto nodeWeight : nodeWeights)
     {
 
@@ -245,7 +245,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             totWeight = nodeWeight.weight;
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
+        else if (nodeWeight.nodeNum == LOGIC_SIZE + 1)
         { // top-most tank node only
             calcNode = firstNode = hpwh->getNumNodes() - 1;
             double nodeTemp = hpwh->tankTemps_C.back();

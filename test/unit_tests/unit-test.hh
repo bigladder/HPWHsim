@@ -5,6 +5,8 @@
 #ifndef HPWH_UNIT_TEST_hh
 #define HPWH_UNIT_TEST_hh
 
+// vendor
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 #define EXPECT_NEAR_REL_TOL(A, B, eps) EXPECT_NEAR(A, B, eps*(abs(A) < abs(B) ? abs(B) : abs(A)))

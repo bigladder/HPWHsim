@@ -2195,7 +2195,7 @@ std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc,
 
 //-----------------------------------------------------------------------------
 ///	@brief	Builds a vector of logic node weights referred to a fixed number of
-/// nodes given by LOGIC_NODE_SIZE.
+/// nodes given by LOGIC_SIZE.
 /// @param[in]	bottomFraction	Lower bounding fraction (0 to 1)
 ///	@param[in]	topFraction		Upper bounding fraction (0 to 1)
 /// @return	vector of node weights
@@ -2205,8 +2205,8 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
     std::vector<NodeWeight> nodeWeights;
     if (topFraction < bottomFraction)
         std::swap(bottomFraction, topFraction);
-    auto bottomIndex = static_cast<std::size_t>(bottomFraction * LOGIC_NODE_SIZE);
-    auto topIndex = static_cast<std::size_t>(topFraction * LOGIC_NODE_SIZE);
+    auto bottomIndex = static_cast<std::size_t>(bottomFraction * LOGIC_SIZE);
+    auto topIndex = static_cast<std::size_t>(topFraction * LOGIC_SIZE);
     for (auto index = bottomIndex; index < topIndex; ++index)
     {
         nodeWeights.emplace_back(static_cast<int>(index) + 1);
@@ -2321,7 +2321,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decision
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 {
     std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
+    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "standby", nodeWeights, decisionPoint, this);
 }
@@ -2329,7 +2329,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
     std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(LOGIC_NODE_SIZE + 1); // uses very top computation node
+    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top node", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
@@ -3841,7 +3841,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
+    std::vector<double> resampledTankTemps(LOGIC_SIZE);
     resample(resampledTankTemps, tankTemps_C);
 
     for (auto& nodeWeight : nodeWeights)
@@ -3851,7 +3851,7 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
             sum += tankTemps_C.front() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
-        else if (nodeWeight.nodeNum > LOGIC_NODE_SIZE)
+        else if (nodeWeight.nodeNum > LOGIC_SIZE)
         { // top node only
             sum += tankTemps_C.back() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
@@ -4054,6 +4054,452 @@ void HPWH::mapResRelativePosToHeatSources()
               {
                   return a.position < b.position; // (5 < 5)      // evaluates to false
               });
+}
+
+bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const
+{
+
+    if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0)
+    {
+        return true;
+    }
+    else if (hs == TYPE_resistance && (DR_signal & DR_LOR) != 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+void HPWH::resetTopOffTimer() { timerTOT = 0.; }
+
+//-----------------------------------------------------------------------------
+///	@brief	Checks whether energy is balanced during a simulation step.
+/// @note	Used in test/main.cc
+/// @param[in]	drawVol_L				Water volume drawn during simulation step
+///	@param[in]	prevHeatContent_kJ		Heat content of tank prior to simulation step
+///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
+/// @return	true if balanced; false otherwise.
+//-----------------------------------------------------------------------------
+bool HPWH::isEnergyBalanced(const double drawVol_L,
+                            const double prevHeatContent_kJ,
+                            const double fracEnergyTolerance /* = 0.001 */)
+{
+    double drawCp_kJperC =
+        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
+
+    // Check energy balancing.
+    double qInElectrical_kJ = 0.;
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+    }
+
+    double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
+    double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
+    double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
+    double qOutWater_kJ =
+        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
+    double expectedTankHeatContent_kJ =
+        prevHeatContent_kJ        // previous heat content
+        + qInElectrical_kJ        // electrical energy delivered to heat sources
+        + qInExtra_kJ             // extra energy delivered to heat sources
+        + qInHeatSourceEnviron_kJ // heat extracted from environment by condenser
+        - qOutTankEnviron_kJ      // heat released from tank to environment
+        - qOutWater_kJ;           // heat expelled to outlet by water flow
+
+    double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
+    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+    if (fracEnergyDiff > fracEnergyTolerance)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Energy-balance error: %f kJ, %f %% \n", qBal_kJ, 100. * fracEnergyDiff);
+        }
+        return false;
+    }
+    return true;
+}
+
+bool compressorIsRunning(HPWH& hpwh)
+{
+    return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
+}
+
+/* static */ bool HPWH::mapStringToPreset(const std::string& modelName, HPWH::MODELS& hpwhModel)
+{
+
+    if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithPHPT60;
+    }
+    else if (modelName == "Voltex80" || modelName == "AOSmith80")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithPHPT80;
+    }
+    else if (modelName == "GEred" || modelName == "GE")
+    {
+        hpwhModel = HPWH::MODELS_GE2012;
+    }
+    else if (modelName == "SandenGAU" || modelName == "Sanden80" || modelName == "SandenGen3")
+    {
+        hpwhModel = HPWH::MODELS_Sanden80;
+    }
+    else if (modelName == "Sanden120")
+    {
+        hpwhModel = HPWH::MODELS_Sanden120;
+    }
+    else if (modelName == "SandenGES" || modelName == "Sanden40")
+    {
+        hpwhModel = HPWH::MODELS_Sanden40;
+    }
+    else if (modelName == "AOSmithHPTU50")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTU50;
+    }
+    else if (modelName == "AOSmithHPTU66")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTU66;
+    }
+    else if (modelName == "AOSmithHPTU80")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTU80;
+    }
+    else if (modelName == "AOSmithHPTS50")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTS50;
+    }
+    else if (modelName == "AOSmithHPTS66")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTS66;
+    }
+    else if (modelName == "AOSmithHPTS80")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTS80;
+    }
+    else if (modelName == "AOSmithHPTU80DR")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithHPTU80_DR;
+    }
+    else if (modelName == "GE502014STDMode" || modelName == "GE2014STDMode")
+    {
+        hpwhModel = HPWH::MODELS_GE2014STDMode;
+    }
+    else if (modelName == "GE502014" || modelName == "GE2014")
+    {
+        hpwhModel = HPWH::MODELS_GE2014;
+    }
+    else if (modelName == "GE802014")
+    {
+        hpwhModel = HPWH::MODELS_GE2014_80DR;
+    }
+    else if (modelName == "RheemHB50")
+    {
+        hpwhModel = HPWH::MODELS_RheemHB50;
+    }
+    else if (modelName == "Stiebel220e" || modelName == "Stiebel220E")
+    {
+        hpwhModel = HPWH::MODELS_Stiebel220E;
+    }
+    else if (modelName == "Generic1")
+    {
+        hpwhModel = HPWH::MODELS_Generic1;
+    }
+    else if (modelName == "Generic2")
+    {
+        hpwhModel = HPWH::MODELS_Generic2;
+    }
+    else if (modelName == "Generic3")
+    {
+        hpwhModel = HPWH::MODELS_Generic3;
+    }
+    else if (modelName == "custom")
+    {
+        hpwhModel = HPWH::MODELS_CustomFile;
+    }
+    else if (modelName == "restankRealistic")
+    {
+        hpwhModel = HPWH::MODELS_restankRealistic;
+    }
+    else if (modelName == "StorageTank")
+    {
+        hpwhModel = HPWH::MODELS_StorageTank;
+    }
+    else if (modelName == "BWC2020_65")
+    {
+        hpwhModel = HPWH::MODELS_BWC2020_65;
+    }
+    // New Rheems
+    else if (modelName == "Rheem2020Prem40")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Prem40;
+    }
+    else if (modelName == "Rheem2020Prem50")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Prem50;
+    }
+    else if (modelName == "Rheem2020Prem65")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Prem65;
+    }
+    else if (modelName == "Rheem2020Prem80")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Prem80;
+    }
+    else if (modelName == "Rheem2020Build40")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Build40;
+    }
+    else if (modelName == "Rheem2020Build50")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Build50;
+    }
+    else if (modelName == "Rheem2020Build65")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Build65;
+    }
+    else if (modelName == "Rheem2020Build80")
+    {
+        hpwhModel = HPWH::MODELS_Rheem2020Build80;
+    }
+    else if (modelName == "RheemPlugInDedicated40")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInDedicated40;
+    }
+    else if (modelName == "RheemPlugInDedicated50")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInDedicated50;
+    }
+    else if (modelName == "RheemPlugInShared40")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInShared40;
+    }
+    else if (modelName == "RheemPlugInShared50")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInShared50;
+    }
+    else if (modelName == "RheemPlugInShared65")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInShared65;
+    }
+    else if (modelName == "RheemPlugInShared80")
+    {
+        hpwhModel = HPWH::MODELS_RheemPlugInShared80;
+    }
+    // Large HPWH's
+    else if (modelName == "AOSmithCAHP120")
+    {
+        hpwhModel = HPWH::MODELS_AOSmithCAHP120;
+    }
+    else if (modelName == "ColmacCxV_5_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxV_5_SP;
+    }
+    else if (modelName == "ColmacCxA_10_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_10_SP;
+    }
+    else if (modelName == "ColmacCxA_15_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_15_SP;
+    }
+    else if (modelName == "ColmacCxA_20_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_20_SP;
+    }
+    else if (modelName == "ColmacCxA_25_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_25_SP;
+    }
+    else if (modelName == "ColmacCxA_30_SP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_30_SP;
+    }
+
+    else if (modelName == "ColmacCxV_5_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxV_5_MP;
+    }
+    else if (modelName == "ColmacCxA_10_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_10_MP;
+    }
+    else if (modelName == "ColmacCxA_15_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_15_MP;
+    }
+    else if (modelName == "ColmacCxA_20_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_20_MP;
+    }
+    else if (modelName == "ColmacCxA_25_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_25_MP;
+    }
+    else if (modelName == "ColmacCxA_30_MP")
+    {
+        hpwhModel = HPWH::MODELS_ColmacCxA_30_MP;
+    }
+
+    else if (modelName == "RheemHPHD60")
+    {
+        hpwhModel = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
+    }
+    else if (modelName == "RheemHPHD135")
+    {
+        hpwhModel = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
+    }
+    // Nyle Single pass models
+    else if (modelName == "NyleC25A_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC25A_SP;
+    }
+    else if (modelName == "NyleC60A_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC60A_SP;
+    }
+    else if (modelName == "NyleC90A_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC90A_SP;
+    }
+    else if (modelName == "NyleC185A_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC185A_SP;
+    }
+    else if (modelName == "NyleC250A_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC250A_SP;
+    }
+    else if (modelName == "NyleC60A_C_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC60A_C_SP;
+    }
+    else if (modelName == "NyleC90A_C_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC90A_C_SP;
+    }
+    else if (modelName == "NyleC185A_C_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC185A_C_SP;
+    }
+    else if (modelName == "NyleC250A_C_SP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC250A_C_SP;
+    }
+    // Nyle MP models
+    else if (modelName == "NyleC60A_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC60A_MP;
+    }
+    else if (modelName == "NyleC90A_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC90A_MP;
+    }
+    else if (modelName == "NyleC125A_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC125A_MP;
+    }
+    else if (modelName == "NyleC185A_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC185A_MP;
+    }
+    else if (modelName == "NyleC250A_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC250A_MP;
+    }
+    else if (modelName == "NyleC60A_C_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC60A_C_MP;
+    }
+    else if (modelName == "NyleC90A_C_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC90A_C_MP;
+    }
+    else if (modelName == "NyleC125A_C_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC125A_C_MP;
+    }
+    else if (modelName == "NyleC185A_C_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC185A_C_MP;
+    }
+    else if (modelName == "NyleC250A_C_MP")
+    {
+        hpwhModel = HPWH::MODELS_NyleC250A_C_MP;
+    }
+    else if (modelName == "QAHV_N136TAU_HPB_SP")
+    {
+        hpwhModel = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
+    }
+    // Stack in a couple scalable models
+    else if (modelName == "TamScalable_SP")
+    {
+        hpwhModel = HPWH::MODELS_TamScalable_SP;
+    }
+    else if (modelName == "TamScalable_SP_2X")
+    {
+        hpwhModel = HPWH::MODELS_TamScalable_SP;
+    }
+    else if (modelName == "TamScalable_SP_Half")
+    {
+        hpwhModel = HPWH::MODELS_TamScalable_SP;
+    }
+    else if (modelName == "Scalable_MP")
+    {
+        hpwhModel = HPWH::MODELS_Scalable_MP;
+    }
+    else if (modelName == "AWHSTier3Generic40")
+    {
+        hpwhModel = HPWH::MODELS_AWHSTier3Generic40;
+    }
+    else if (modelName == "AWHSTier3Generic50")
+    {
+        hpwhModel = HPWH::MODELS_AWHSTier3Generic50;
+    }
+    else if (modelName == "AWHSTier3Generic65")
+    {
+        hpwhModel = HPWH::MODELS_AWHSTier3Generic65;
+    }
+    else if (modelName == "AWHSTier3Generic80")
+    {
+        hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
+    }
+    else if (modelName == "AquaThermAire")
+    {
+        hpwhModel = HPWH::MODELS_AquaThermAire;
+    }
+    else
+    {
+        hpwhModel = HPWH::MODELS_basicIntegrated;
+        cout << "Couldn't find model " << modelName << ".  Exiting...\n";
+        return false;
+    }
+    return true;
+}
+
+bool HPWH::getObject(const std::string& modelName)
+{
+    /**Sets up the preset HPWH object with modelName */
+    bool result = false;
+    HPWH::MODELS model;
+
+    if (mapStringToPreset(modelName, model))
+    {
+        if (initPresets(model) == 0)
+        {
+            if (modelName == "TamScalable_SP_2X")
+            {
+                setScaleCapacityCOP(2., 1.); // Scale the compressor
+                setResistanceCapacity(60.);  // Reset resistance elements in kW
+            }
+            else if (modelName == "TamScalable_SP_Half")
+            {
+                setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
+                setResistanceCapacity(15.);      // Reset resistance elements in kW
+            }
+            result = true;
+        }
+    }
+    return result;
 }
 
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
@@ -4331,72 +4777,8 @@ int HPWH::checkInputs()
     return returnVal;
 }
 
-bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const
-{
-
-    if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0)
-    {
-        return true;
-    }
-    else if (hs == TYPE_resistance && (DR_signal & DR_LOR) != 0)
-    {
-        return true;
-    }
-    return false;
-}
-
-void HPWH::resetTopOffTimer() { timerTOT = 0.; }
-
-//-----------------------------------------------------------------------------
-///	@brief	Checks whether energy is balanced during a simulation step.
-/// @note	Used in test/main.cc
-/// @param[in]	drawVol_L				Water volume drawn during simulation step
-///	@param[in]	prevHeatContent_kJ		Heat content of tank prior to simulation step
-///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
-/// @return	true if balanced; false otherwise.
-//-----------------------------------------------------------------------------
-bool HPWH::isEnergyBalanced(const double drawVol_L,
-                            const double prevHeatContent_kJ,
-                            const double fracEnergyTolerance /* = 0.001 */)
-{
-    double drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
-
-    // Check energy balancing.
-    double qInElectrical_kJ = 0.;
-    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
-    {
-        qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
-    }
-
-    double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
-    double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
-    double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-    double qOutWater_kJ =
-        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
-    double expectedTankHeatContent_kJ =
-        prevHeatContent_kJ        // previous heat content
-        + qInElectrical_kJ        // electrical energy delivered to heat sources
-        + qInExtra_kJ             // extra energy delivered to heat sources
-        + qInHeatSourceEnviron_kJ // heat extracted from environment by condenser
-        - qOutTankEnviron_kJ      // heat released from tank to environment
-        - qOutWater_kJ;           // heat expelled to outlet by water flow
-
-    double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
-    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
-    if (fracEnergyDiff > fracEnergyTolerance)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Energy-balance error: %f kJ, %f %% \n", qBal_kJ, 100. * fracEnergyDiff);
-        }
-        return false;
-    }
-    return true;
-}
-
 #ifndef HPWH_ABRIDGED
-int HPWH::initFile(string configFile)
+int HPWH::initFromFile(string configFile)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -4730,7 +5112,7 @@ int HPWH::initFile(string configFile)
                     while (std::regex_match(nextToken, std::regex("\\d+")))
                     {
                         int nodeNum = std::stoi(nextToken);
-                        if (nodeNum > LOGIC_NODE_SIZE + 1 || nodeNum < 0)
+                        if (nodeNum > LOGIC_SIZE + 1 || nodeNum < 0)
                         {
                             if (hpwhVerbosity >= VRB_reluctant)
                             {
@@ -4738,7 +5120,7 @@ int HPWH::initFile(string configFile)
                                     "\n",
                                     heatsource,
                                     token.c_str(),
-                                    LOGIC_NODE_SIZE + 1);
+                                    LOGIC_SIZE + 1);
                             }
                             return HPWH_ABORT;
                         }
@@ -5328,385 +5710,3 @@ int HPWH::initFile(string configFile)
     return 0;
 }
 #endif
-
-bool compressorIsRunning(HPWH& hpwh)
-{
-    return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
-}
-
-/* static */ bool HPWH::mapStringToPreset(const std::string& modelName, HPWH::MODELS& hpwhModel)
-{
-
-    if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithPHPT60;
-    }
-    else if (modelName == "Voltex80" || modelName == "AOSmith80")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithPHPT80;
-    }
-    else if (modelName == "GEred" || modelName == "GE")
-    {
-        hpwhModel = HPWH::MODELS_GE2012;
-    }
-    else if (modelName == "SandenGAU" || modelName == "Sanden80" || modelName == "SandenGen3")
-    {
-        hpwhModel = HPWH::MODELS_Sanden80;
-    }
-    else if (modelName == "Sanden120")
-    {
-        hpwhModel = HPWH::MODELS_Sanden120;
-    }
-    else if (modelName == "SandenGES" || modelName == "Sanden40")
-    {
-        hpwhModel = HPWH::MODELS_Sanden40;
-    }
-    else if (modelName == "AOSmithHPTU50")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU50;
-    }
-    else if (modelName == "AOSmithHPTU66")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU66;
-    }
-    else if (modelName == "AOSmithHPTU80")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU80;
-    }
-    else if (modelName == "AOSmithHPTS50")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS50;
-    }
-    else if (modelName == "AOSmithHPTS66")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS66;
-    }
-    else if (modelName == "AOSmithHPTS80")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS80;
-    }
-    else if (modelName == "AOSmithHPTU80DR")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU80_DR;
-    }
-    else if (modelName == "GE502014STDMode" || modelName == "GE2014STDMode")
-    {
-        hpwhModel = HPWH::MODELS_GE2014STDMode;
-    }
-    else if (modelName == "GE502014" || modelName == "GE2014")
-    {
-        hpwhModel = HPWH::MODELS_GE2014;
-    }
-    else if (modelName == "GE802014")
-    {
-        hpwhModel = HPWH::MODELS_GE2014_80DR;
-    }
-    else if (modelName == "RheemHB50")
-    {
-        hpwhModel = HPWH::MODELS_RheemHB50;
-    }
-    else if (modelName == "Stiebel220e" || modelName == "Stiebel220E")
-    {
-        hpwhModel = HPWH::MODELS_Stiebel220E;
-    }
-    else if (modelName == "Generic1")
-    {
-        hpwhModel = HPWH::MODELS_Generic1;
-    }
-    else if (modelName == "Generic2")
-    {
-        hpwhModel = HPWH::MODELS_Generic2;
-    }
-    else if (modelName == "Generic3")
-    {
-        hpwhModel = HPWH::MODELS_Generic3;
-    }
-    else if (modelName == "custom")
-    {
-        hpwhModel = HPWH::MODELS_CustomFile;
-    }
-    else if (modelName == "restankRealistic")
-    {
-        hpwhModel = HPWH::MODELS_restankRealistic;
-    }
-    else if (modelName == "StorageTank")
-    {
-        hpwhModel = HPWH::MODELS_StorageTank;
-    }
-    else if (modelName == "BWC2020_65")
-    {
-        hpwhModel = HPWH::MODELS_BWC2020_65;
-    }
-    // New Rheems
-    else if (modelName == "Rheem2020Prem40")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem40;
-    }
-    else if (modelName == "Rheem2020Prem50")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem50;
-    }
-    else if (modelName == "Rheem2020Prem65")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem65;
-    }
-    else if (modelName == "Rheem2020Prem80")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem80;
-    }
-    else if (modelName == "Rheem2020Build40")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Build40;
-    }
-    else if (modelName == "Rheem2020Build50")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Build50;
-    }
-    else if (modelName == "Rheem2020Build65")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Build65;
-    }
-    else if (modelName == "Rheem2020Build80")
-    {
-        hpwhModel = HPWH::MODELS_Rheem2020Build80;
-    }
-    else if (modelName == "RheemPlugInDedicated40")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInDedicated40;
-    }
-    else if (modelName == "RheemPlugInDedicated50")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInDedicated50;
-    }
-    else if (modelName == "RheemPlugInShared40")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared40;
-    }
-    else if (modelName == "RheemPlugInShared50")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared50;
-    }
-    else if (modelName == "RheemPlugInShared65")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared65;
-    }
-    else if (modelName == "RheemPlugInShared80")
-    {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared80;
-    }
-    // Large HPWH's
-    else if (modelName == "AOSmithCAHP120")
-    {
-        hpwhModel = HPWH::MODELS_AOSmithCAHP120;
-    }
-    else if (modelName == "ColmacCxV_5_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxV_5_SP;
-    }
-    else if (modelName == "ColmacCxA_10_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_10_SP;
-    }
-    else if (modelName == "ColmacCxA_15_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_15_SP;
-    }
-    else if (modelName == "ColmacCxA_20_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_20_SP;
-    }
-    else if (modelName == "ColmacCxA_25_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_25_SP;
-    }
-    else if (modelName == "ColmacCxA_30_SP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_30_SP;
-    }
-
-    else if (modelName == "ColmacCxV_5_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxV_5_MP;
-    }
-    else if (modelName == "ColmacCxA_10_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_10_MP;
-    }
-    else if (modelName == "ColmacCxA_15_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_15_MP;
-    }
-    else if (modelName == "ColmacCxA_20_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_20_MP;
-    }
-    else if (modelName == "ColmacCxA_25_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_25_MP;
-    }
-    else if (modelName == "ColmacCxA_30_MP")
-    {
-        hpwhModel = HPWH::MODELS_ColmacCxA_30_MP;
-    }
-
-    else if (modelName == "RheemHPHD60")
-    {
-        hpwhModel = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
-    }
-    else if (modelName == "RheemHPHD135")
-    {
-        hpwhModel = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
-    }
-    // Nyle Single pass models
-    else if (modelName == "NyleC25A_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC25A_SP;
-    }
-    else if (modelName == "NyleC60A_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC60A_SP;
-    }
-    else if (modelName == "NyleC90A_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC90A_SP;
-    }
-    else if (modelName == "NyleC185A_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC185A_SP;
-    }
-    else if (modelName == "NyleC250A_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC250A_SP;
-    }
-    else if (modelName == "NyleC60A_C_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC60A_C_SP;
-    }
-    else if (modelName == "NyleC90A_C_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC90A_C_SP;
-    }
-    else if (modelName == "NyleC185A_C_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC185A_C_SP;
-    }
-    else if (modelName == "NyleC250A_C_SP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC250A_C_SP;
-    }
-    // Nyle MP models
-    else if (modelName == "NyleC60A_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC60A_MP;
-    }
-    else if (modelName == "NyleC90A_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC90A_MP;
-    }
-    else if (modelName == "NyleC125A_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC125A_MP;
-    }
-    else if (modelName == "NyleC185A_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC185A_MP;
-    }
-    else if (modelName == "NyleC250A_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC250A_MP;
-    }
-    else if (modelName == "NyleC60A_C_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC60A_C_MP;
-    }
-    else if (modelName == "NyleC90A_C_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC90A_C_MP;
-    }
-    else if (modelName == "NyleC125A_C_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC125A_C_MP;
-    }
-    else if (modelName == "NyleC185A_C_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC185A_C_MP;
-    }
-    else if (modelName == "NyleC250A_C_MP")
-    {
-        hpwhModel = HPWH::MODELS_NyleC250A_C_MP;
-    }
-    else if (modelName == "QAHV_N136TAU_HPB_SP")
-    {
-        hpwhModel = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
-    }
-    // Stack in a couple scalable models
-    else if (modelName == "TamScalable_SP")
-    {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
-    }
-    else if (modelName == "TamScalable_SP_2X")
-    {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
-    }
-    else if (modelName == "TamScalable_SP_Half")
-    {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
-    }
-    else if (modelName == "Scalable_MP")
-    {
-        hpwhModel = HPWH::MODELS_Scalable_MP;
-    }
-    else if (modelName == "AWHSTier3Generic40")
-    {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic40;
-    }
-    else if (modelName == "AWHSTier3Generic50")
-    {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic50;
-    }
-    else if (modelName == "AWHSTier3Generic65")
-    {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic65;
-    }
-    else if (modelName == "AWHSTier3Generic80")
-    {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
-    }
-    else if (modelName == "AquaThermAire")
-    {
-        hpwhModel = HPWH::MODELS_AquaThermAire;
-    }
-    else
-    {
-        hpwhModel = HPWH::MODELS_basicIntegrated;
-        cout << "Couldn't find model " << modelName << ".  Exiting...\n";
-        return false;
-    }
-    return true;
-}
-
-bool HPWH::getObject(const std::string& modelName)
-{
-    /**Sets up the preset HPWH object with modelName */
-    bool result = false;
-    HPWH::MODELS model;
-
-    if (mapStringToPreset(modelName, model))
-    {
-        if (initPresets(model) == 0)
-        {
-            if (modelName == "TamScalable_SP_2X")
-            {
-                setScaleCapacityCOP(2., 1.); // Scale the compressor
-                setResistanceCapacity(60.);  // Reset resistance elements in kW
-            }
-            else if (modelName == "TamScalable_SP_Half")
-            {
-                setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
-                setResistanceCapacity(15.);      // Reset resistance elements in kW
-            }
-            result = true;
-        }
-    }
-    return result;
-}

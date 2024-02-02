@@ -1,25 +1,17 @@
 /* Copyright (c) 2023 Big Ladder Software LLC. All rights reserved.
  * See the LICENSE file for additional terms and conditions. */
 
-// Standard
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <filesystem>
-
-// vendor
-#include <fmt/format.h>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 // HPWHsim
 #include "HPWH.hh"
 #include "unit-test.hh"
 
-#define SIZE static_cast<double>(HPWH::CONDENSITY_SIZE)
+constexpr double logicSize = static_cast<double>(HPWH::LOGIC_SIZE);
 
 constexpr double tol = 1.e-4;
 
+/*
+ * TamScalable_SP_SizingFract tests
+ */
 TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
 {
     // get preset model
@@ -28,13 +20,16 @@ TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = 4. / SIZE;
+    const double aquaFrac_answer = 4. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
-    EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
+    EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
 
+/*
+ * Sanden80_SizingFract tests
+ */
 TEST(SizingFractionsTest, Sanden80_SizingFract)
 {
     // get preset model
@@ -43,13 +38,16 @@ TEST(SizingFractionsTest, Sanden80_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = 8. / SIZE;
+    const double aquaFrac_answer = 8. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
-    EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
+    EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
 
+/*
+ * ColmacCxV_5_SP_SizingFract tests
+ */
 TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
 {
     // get preset model
@@ -58,13 +56,16 @@ TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = 4. / SIZE;
+    const double aquaFrac_answer = 4. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
-    EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
+    EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
 
+/*
+ * AOSmithHPTU50_SizingFract tests
+ */
 TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
 {
     // get preset model
@@ -73,13 +74,16 @@ TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / SIZE;
+    const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1., tol);
 }
 
+/*
+ * GE_SizingFract tests
+ */
 TEST(SizingFractionsTest, GE_SizingFract)
 {
     // get preset model
@@ -88,13 +92,16 @@ TEST(SizingFractionsTest, GE_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / SIZE;
+    const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1., tol);
 }
 
+/*
+ * Stiebel220e_SizingFract tests
+ */
 TEST(SizingFractionsTest, Stiebel220e_SizingFract)
 {
     // get preset model
@@ -103,13 +110,16 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
     EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
-    const double aquaFrac_answer = (5. + 6.) / 2. / SIZE;
+    const double aquaFrac_answer = (5. + 6.) / 2. / logicSize;
 
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
-    EXPECT_NEAR(useableFrac, 1. - 1. / SIZE, tol);
+    EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
 
+/*
+ * resTankRealistic_SizingFract tests
+ */
 TEST(SizingFractionsTest, resTankRealistic_SizingFract)
 {
     // get preset model
@@ -121,6 +131,9 @@ TEST(SizingFractionsTest, resTankRealistic_SizingFract)
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), HPWH::HPWH_ABORT);
 }
 
+/*
+ * storageTank_SizingFract tests
+ */
 TEST(SizingFractionsTest, storageTank_SizingFract)
 {
     // get preset model
@@ -132,6 +145,9 @@ TEST(SizingFractionsTest, storageTank_SizingFract)
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), HPWH::HPWH_ABORT);
 }
 
+/*
+ * getCompressorMinRuntime tests
+ */
 TEST(SizingFractionsTest, getCompressorMinRuntime)
 {
     // get preset model
