@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
     else if (input1 == "File")
     {
         inputFile = input2 + ".txt";
-        if (hpwh.initFile(inputFile) != 0)
+        if (hpwh.initFromFile(inputFile) != 0)
             exit(1);
     }
     else

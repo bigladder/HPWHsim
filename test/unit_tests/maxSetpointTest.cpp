@@ -1,23 +1,15 @@
 /* Copyright (c) 2023 Big Ladder Software LLC. All rights reserved.
  * See the LICENSE file for additional terms and conditions. */
 
-// Standard
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <filesystem>
-
-// vendor
-#include <fmt/format.h>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 // HPWHsim
 #include "HPWH.hh"
 #include "unit-test.hh"
 
-const double REMaxShouldBe = 100.;
+const double expectedRE_maxT_C = 100.;
 
+/*
+ * resistanceTank tests
+ */
 TEST(MaxSetpointTest, resistanceTank)
 {
     HPWH hpwh;
@@ -30,13 +22,16 @@ TEST(MaxSetpointTest, resistanceTank)
     EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(100., num, why));  // Can go to boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));   // Can go low, albiet dumb
-    EXPECT_EQ(REMaxShouldBe, num);
+    EXPECT_EQ(expectedRE_maxT_C, num);
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
     EXPECT_EQ(hpwh.setSetpoint(99.), 0);
 }
 
+/*
+ * scalableCompressor tests
+ */
 TEST(MaxSetpointTest, scalableCompressor)
 {
     // get preset model
@@ -57,6 +52,9 @@ TEST(MaxSetpointTest, scalableCompressor)
     EXPECT_EQ(hpwh.setSetpoint(50.), 0);
 }
 
+/*
+ * NyleC90A_SP tests
+ */
 TEST(MaxSetpointTest, NyleC90A_SP)
 {
     // get preset model
@@ -79,6 +77,9 @@ TEST(MaxSetpointTest, NyleC90A_SP)
     EXPECT_EQ(hpwh.setSetpoint(50.), 0);
 }
 
+/*
+ * ColmacCxV_5_SP tests
+ */
 TEST(MaxSetpointTest, ColmacCxV_5_SP)
 {
     // get preset model
@@ -101,6 +102,9 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
     EXPECT_EQ(hpwh.setSetpoint(50.), 0);
 }
 
+/*
+ * QAHV_N136TAU_HPB_SP tests
+ */
 TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
 {
     // get preset model
@@ -130,6 +134,9 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
     EXPECT_EQ(hpwh.setSetpoint(maxQAHVSetpoint - qAHVHotSideTemepratureOffset), 0);
 }
 
+/*
+ * AOSmithCAHP120 tests
+ */
 TEST(MaxSetpointTest, AOSmithCAHP120)
 {
     // get preset model
@@ -144,13 +151,16 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(100., num, why));  // Can go to boiling
     EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));   // Can go low, albiet dumb
-    EXPECT_EQ(REMaxShouldBe, num);                            // Max is boiling
+    EXPECT_EQ(expectedRE_maxT_C, num);                            // Max is boiling
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
     EXPECT_EQ(hpwh.setSetpoint(99.), 0);                 // Can go lower than boiling though
 }
 
+/*
+ * StorageTank tests
+ */
 TEST(MaxSetpointTest, StorageTank)
 {
     // get preset model
@@ -172,6 +182,9 @@ TEST(MaxSetpointTest, StorageTank)
     EXPECT_EQ(hpwh.setSetpoint(99.), 0);  // Can go lower than boiling though
 }
 
+/*
+ * Sanden80 tests
+ */
 TEST(MaxSetpointTest, Sanden80)
 {
     // get preset model
@@ -199,6 +212,9 @@ TEST(MaxSetpointTest, Sanden80)
     EXPECT_EQ(hpwh.setSetpoint(10.), HPWH::HPWH_ABORT);  // Can't go low, albiet dumb
 }
 
+/*
+ * resample tests
+ */
 TEST(UtilityTest, resample)
 {
     // test extensive resampling
@@ -218,6 +234,9 @@ TEST(UtilityTest, resample)
     EXPECT_NEAR_REL(values[5], 60.); //
 }
 
+/*
+ * setTemperatures tests
+ */
 TEST(UtilityTest, setTemperatures)
 {
     // get preset model

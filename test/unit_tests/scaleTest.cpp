@@ -1,17 +1,6 @@
 /* Copyright (c) 2023 Big Ladder Software LLC. All rights reserved.
  * See the LICENSE file for additional terms and conditions. */
 
-// Standard
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <filesystem>
-
-// vendor
-#include <fmt/format.h>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 // HPWHsim
 #include "HPWH.hh"
 #include "unit-test.hh"
@@ -62,7 +51,7 @@ bool scaleCapacityCOP(HPWH& hpwh,
                       double airTempC = F_TO_C(77),
                       double setpointC = F_TO_C(135))
 {
-    // Get peformance unscalled
+    // Get peformance unscaled
     getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC);
 
     // Scale the compressor
@@ -97,7 +86,10 @@ TEST(ScaleTest, noScaleOutOfBounds)
     EXPECT_EQ(hpwh.setScaleCapacityCOP(1., num), HPWH::HPWH_ABORT);
 }
 
-TEST(ScaleTest, noneScalable)
+/*
+ * nonScalable tests
+ */
+TEST(ScaleTest, nonScalable)
 { // Test a model that is not scalable
 
     const std::string sModelName = "AOSmithCAHP120";
@@ -109,8 +101,11 @@ TEST(ScaleTest, noneScalable)
     EXPECT_EQ(hpwh.setScaleCapacityCOP(1., 1.), HPWH::HPWH_ABORT);
 }
 
+/*
+ * scalableScales tests
+ */
 TEST(ScaleTest, scalableScales)
-{ // Test the scalable hpwh can scale
+{ // Test that scalable hpwh can scale
 
     // get preset model
     HPWH hpwh;
@@ -209,8 +204,11 @@ TEST(ScaleTest, scalableScales)
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 }
 
-TEST(ScaleTest, scalableMPScales)
-{ // Test the scalable MP hpwh can scale
+/*
+ * scalableMP_scales tests
+ */
+TEST(ScaleTest, scalableMP_scales)
+{ // Test that scalable MP hpwh can scale
 
     // get preset model
     HPWH hpwh;
@@ -310,7 +308,10 @@ TEST(ScaleTest, scalableMPScales)
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 }
 
-TEST(ScaleTest, getCompressorSPCapacity)
+/*
+ * getCompressorSP_capacity tests
+ */
+TEST(ScaleTest, getCompressorSP_capacity)
 {
     // get preset model
     HPWH hpwh;
@@ -342,7 +343,10 @@ TEST(ScaleTest, getCompressorSPCapacity)
                     capacity_BTU); // relative cmp since in btu's these will be large numbers
 }
 
-TEST(ScaleTest, getCompressorMPCapacity)
+/*
+ * getCompressorMP_capacity tests
+ */
+TEST(ScaleTest, getCompressorMP_capacity)
 {
     // get preset model
     HPWH hpwh;
@@ -372,7 +376,10 @@ TEST(ScaleTest, getCompressorMPCapacity)
                     capacity_BTU); // relative cmp since in btu's these will be large numbers
 }
 
-TEST(ScaleTest, getCompressorMPOutputCapacity)
+/*
+ * getCompressorMP_outputCapacity tests
+ */
+TEST(ScaleTest, getCompressorMP_outputCapacity)
 {
     // get preset model
     HPWH hpwh;
@@ -402,14 +409,17 @@ TEST(ScaleTest, getCompressorMPOutputCapacity)
     newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
-    // Check again with changed setpoint, for MP it should affect output capacity since it looks at
+    // Check again with changed setpoint. For MP it should affect output capacity since it looks at
     // the mean temperature for the cycle.
     setpointC = F_TO_C(100);
     newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
     EXPECT_FAR(num, newCapacity_kW, tol);
 }
 
-TEST(ScaleTest, setCompressorSPOutputCapacity)
+/*
+ * setCompressorSP_outputCapacity tests
+ */
+TEST(ScaleTest, setCompressorSP_outputCapacity)
 {
     // get preset model
     HPWH hpwh;
@@ -439,7 +449,7 @@ TEST(ScaleTest, setCompressorSPOutputCapacity)
     newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
-    // Scale output to 1000 kW but let's use do the calc in other units
+    // Scale output to 1000 kW but let's do the calc in other units
     num = KW_TO_BTUperH(num);
     hpwh.setCompressorOutputCapacity(num,
                                      C_TO_F(airTempC),
@@ -456,9 +466,9 @@ TEST(ScaleTest, setCompressorSPOutputCapacity)
 }
 
 /*
- * chipsCaseWithIPUnits tests
+ * chipsCaseWithIP_units tests
  */
-TEST(ScaleTest, chipsCaseWithIPUnits)
+TEST(ScaleTest, chipsCaseWithIP_units)
 {
     // get preset model
     HPWH hpwh;

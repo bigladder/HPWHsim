@@ -19,9 +19,8 @@ class RegularGridInterpolator;
 }
 
 // #define HPWH_ABRIDGED
-/**<  If HPWH_ABRIDGED is defined, then some function definitions will be
- *  excluded from compiling.  This is done in order to reduce the size of the
- * final compiled code.  */
+/**<  Definition of HPWH_ABRIDGED excludes some functions to reduce the size of the
+ * compiled library.  */
 
 #include "HPWHversion.hh"
 
@@ -35,7 +34,7 @@ class HPWH
 
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
-    static const int LOGIC_NODE_SIZE =
+    static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
     static const int MAXOUTSTRING =
         200; /**< this is the maximum length for a debuging output string */
@@ -476,16 +475,6 @@ class HPWH
      * but not quite as versatile.
      * My impression is that this could be a useful input paradigm for CSE
      *
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
-     */
-
-    int initFile(std::string configFile);
-    /**< This function will load in a set of parameters from a file
-     * The file name is the input - there should be at most one set of parameters per file
-     * This is useful for testing new variations, and for the sort of variability
-     * that we typically do when creating SEEM runs
-     * Appropriate use of this function can be found in the documentation
-
      * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
@@ -958,6 +947,17 @@ class HPWH
     static bool mapStringToPreset(const std::string& modelName, MODELS& model);
 
     bool getObject(const std::string& modelName);
+
+#ifndef HPWH_ABRIDGED
+    int initFromFile(std::string configFile);
+#endif
+    /**< Loads a HPWH model from a file
+     * The file name is the input - there should be at most one set of parameters per file
+     * This is useful for testing new variations, and for the sort of variability
+     * that we typically do when creating SEEM runs
+     * Appropriate use of this function can be found in the documentation
+     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
+     */
 
   private:
     class HeatSource;

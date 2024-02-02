@@ -1,23 +1,12 @@
 /* Copyright (c) 2023 Big Ladder Software LLC. All rights reserved.
  * See the LICENSE file for additional terms and conditions. */
 
-// Standard
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <filesystem>
-
-// vendor
-#include <fmt/format.h>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 // HPWHsim
 #include "HPWH.hh"
 #include "unit-test.hh"
 
 /*
- * setResistanceCapacityErrorChecks test
+ * setResistanceCapacityErrorChecks tests
  */
 TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
 {
@@ -45,7 +34,7 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
 }
 
 /*
- * getSetResistanceErrors test
+ * getSetResistanceErrors tests
  */
 TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 {
@@ -67,7 +56,7 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 }
 
 /*
- * commercialTankInitErrors test
+ * commercialTankInitErrors tests
  */
 TEST(ResistanceFunctionsTest, commercialTankInitErrors)
 {
@@ -88,7 +77,7 @@ TEST(ResistanceFunctionsTest, commercialTankInitErrors)
 }
 
 /*
- * getNumResistanceElements test
+ * getNumResistanceElements tests
  */
 TEST(ResistanceFunctionsTest, getNumResistanceElements)
 {
@@ -105,9 +94,9 @@ TEST(ResistanceFunctionsTest, getNumResistanceElements)
 }
 
 /*
- * getResistancePositionInRETank test
+ * getResistancePositionInRE_tank tests
  */
-TEST(ResistanceFunctionsTest, getResistancePositionInRETank)
+TEST(ResistanceFunctionsTest, getResistancePositionInRE_tank)
 {
     HPWH hpwh;
 
@@ -150,7 +139,7 @@ TEST(ResistanceFunctionsTest, getResistancePositionInCompressorTank)
  */
 TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 {
-    const double elementPower_kW = 10.; // KW
+    const double elementPower_kW = 10.; // kW
 
     // init model
     HPWH hpwh;
@@ -185,7 +174,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 }
 
 /*
- * commercialTankErrorsWithTopElement test
+ * commercialTankErrorsWithTopElement tests
  */
 TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 {
@@ -237,7 +226,7 @@ struct InsulationPoint
                                  elementPower_kW * 1000.)
 
 /*
- * commercialTankInit test
+ * commercialTankInit tests
  */
 TEST(ResistanceFunctionsTest, commercialTankInit)
 {
