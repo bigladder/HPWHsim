@@ -75,7 +75,7 @@ TEST(ScaleTest, noScaleOutOfBounds)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num = 0;
     EXPECT_EQ(hpwh.setScaleCapacityCOP(num, 1.), HPWH::HPWH_ABORT);
@@ -96,7 +96,7 @@ TEST(ScaleTest, nonScalable)
 
     // get preset model
     HPWH hpwh;
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     EXPECT_EQ(hpwh.setScaleCapacityCOP(1., 1.), HPWH::HPWH_ABORT);
 }
@@ -110,7 +110,7 @@ TEST(ScaleTest, scalableScales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0, point1;
     double num, anotherNum;
@@ -213,7 +213,7 @@ TEST(ScaleTest, scalableMP_scales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Scalable_MP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0, point1;
     double num, anotherNum;
@@ -316,7 +316,7 @@ TEST(ScaleTest, getCompressorSP_capacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_20_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0;
 
@@ -351,7 +351,7 @@ TEST(ScaleTest, getCompressorMP_capacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_20_MP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     Performance point0;
 
@@ -384,7 +384,7 @@ TEST(ScaleTest, getCompressorMP_outputCapacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Scalable_MP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
     double waterTempC = F_TO_C(44);
@@ -424,7 +424,7 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
     double waterTempC = F_TO_C(44);
@@ -473,7 +473,7 @@ TEST(ScaleTest, chipsCaseWithIP_units)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     const double waterT_F = 50;
     const double airT_F = 50;
@@ -498,7 +498,7 @@ TEST(ScaleTest, scaleRestank)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "restankRealistic";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     // Scale COP for restank fails.
     EXPECT_EQ(hpwh.setScaleCapacityCOP(2., 2.), HPWH::HPWH_ABORT);
@@ -512,7 +512,7 @@ TEST(ScaleTest, resistanceScales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double elementPower = 30.; // KW
 
@@ -548,7 +548,7 @@ TEST(ScaleTest, storageTankErrors)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     EXPECT_EQ(hpwh.setResistanceCapacity(1000.), HPWH::HPWH_ABORT);
     EXPECT_EQ(hpwh.setScaleCapacityCOP(1., 1.), HPWH::HPWH_ABORT);

@@ -136,13 +136,13 @@ int main(int argc, char* argv[])
     {
         inputFile = "";
 
-        if (!hpwh.getObject(input2))
+        if (!hpwh.initPreset(input2))
         {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
         }
 
-        model = static_cast<HPWH::MODELS>(hpwh.getHPWHModel());
+        model = static_cast<HPWH::MODELS>(hpwh.getModel());
 
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
@@ -152,8 +152,11 @@ int main(int argc, char* argv[])
     else if (input1 == "File")
     {
         inputFile = input2 + ".txt";
-        if (hpwh.initFromFile(inputFile) != 0)
+        if (!hpwh.initFromFile(inputFile))
+        {
+            cout << "Error, file model did not initialize.\n";
             exit(1);
+        }
     }
     else
     {
@@ -283,19 +286,15 @@ int main(int argc, char* argv[])
         if (!allSchedules[5].empty())
         {
             hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
-            if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
-            else
-                hpwh.resetTankToSetpoint();
         }
         else
         {
             hpwh.setSetpoint(newSetpoint);
-            if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
-            else
-                hpwh.resetTankToSetpoint();
         }
+        if (hasInitialTankTemp)
+            hpwh.setTankToTemperature(initialTankT_C);
+        else
+            hpwh.resetTankToSetpoint();
     }
     if (inletH > 0)
     {
@@ -404,7 +403,7 @@ int main(int argc, char* argv[])
         }
 
         // Mix down for yearly tests with large compressors
-        if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.)
+        if (hpwh.getModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpoint() <= 125.)

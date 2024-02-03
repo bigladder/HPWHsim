@@ -17,7 +17,7 @@ TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
@@ -35,7 +35,7 @@ TEST(SizingFractionsTest, Sanden80_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Sanden80";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 8. / logicSize;
@@ -53,7 +53,7 @@ TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_SP";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
@@ -71,7 +71,7 @@ TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTU50";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
@@ -89,7 +89,7 @@ TEST(SizingFractionsTest, GE_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "GE";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
@@ -107,7 +107,7 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Stiebel220e";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (5. + 6.) / 2. / logicSize;
@@ -125,7 +125,7 @@ TEST(SizingFractionsTest, resTankRealistic_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "restankRealistic";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), HPWH::HPWH_ABORT);
@@ -139,7 +139,7 @@ TEST(SizingFractionsTest, storageTank_SizingFract)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank";
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double aquaFrac, useableFrac;
     EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), HPWH::HPWH_ABORT);
@@ -153,7 +153,7 @@ TEST(SizingFractionsTest, getCompressorMinRuntime)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
-    EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+    EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double expectedRunTime_min = 10.;
     double expectedRunTime_sec = expectedRunTime_min * 60.;
