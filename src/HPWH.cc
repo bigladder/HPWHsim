@@ -1345,7 +1345,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         }
         else if (lowestElementIndex == -1 && !hasACompressor())
         { // There are no heat sources here!
-            if (hpwhModel == MODELS_StorageTank)
+            if (model == MODELS_StorageTank)
             {
                 returnVal = true; // The one pass the storage tank doesn't have any heating elements
                                   // so sure change the setpoint it does nothing!
@@ -2872,7 +2872,7 @@ double HPWH::getTankHeatContent_kJ() const
 
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
 
-int HPWH::getHPWHModel() const { return hpwhModel; }
+int HPWH::getModel() const { return model; }
 
 int HPWH::getCompressorCoilConfig() const
 {
@@ -4125,381 +4125,366 @@ bool compressorIsRunning(HPWH& hpwh)
     return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
 }
 
-/* static */ bool HPWH::mapStringToPreset(const std::string& modelName, HPWH::MODELS& hpwhModel)
+/* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
 {
 
     if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
     {
-        hpwhModel = HPWH::MODELS_AOSmithPHPT60;
+        model = HPWH::MODELS_AOSmithPHPT60;
     }
     else if (modelName == "Voltex80" || modelName == "AOSmith80")
     {
-        hpwhModel = HPWH::MODELS_AOSmithPHPT80;
+        model = HPWH::MODELS_AOSmithPHPT80;
     }
     else if (modelName == "GEred" || modelName == "GE")
     {
-        hpwhModel = HPWH::MODELS_GE2012;
+        model = HPWH::MODELS_GE2012;
     }
     else if (modelName == "SandenGAU" || modelName == "Sanden80" || modelName == "SandenGen3")
     {
-        hpwhModel = HPWH::MODELS_Sanden80;
+        model = HPWH::MODELS_Sanden80;
     }
     else if (modelName == "Sanden120")
     {
-        hpwhModel = HPWH::MODELS_Sanden120;
+        model = HPWH::MODELS_Sanden120;
     }
     else if (modelName == "SandenGES" || modelName == "Sanden40")
     {
-        hpwhModel = HPWH::MODELS_Sanden40;
+        model = HPWH::MODELS_Sanden40;
     }
     else if (modelName == "AOSmithHPTU50")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU50;
+        model = HPWH::MODELS_AOSmithHPTU50;
     }
     else if (modelName == "AOSmithHPTU66")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU66;
+        model = HPWH::MODELS_AOSmithHPTU66;
     }
     else if (modelName == "AOSmithHPTU80")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU80;
+        model = HPWH::MODELS_AOSmithHPTU80;
     }
     else if (modelName == "AOSmithHPTS50")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS50;
+        model = HPWH::MODELS_AOSmithHPTS50;
     }
     else if (modelName == "AOSmithHPTS66")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS66;
+        model = HPWH::MODELS_AOSmithHPTS66;
     }
     else if (modelName == "AOSmithHPTS80")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTS80;
+        model = HPWH::MODELS_AOSmithHPTS80;
     }
     else if (modelName == "AOSmithHPTU80DR")
     {
-        hpwhModel = HPWH::MODELS_AOSmithHPTU80_DR;
+        model = HPWH::MODELS_AOSmithHPTU80_DR;
     }
     else if (modelName == "GE502014STDMode" || modelName == "GE2014STDMode")
     {
-        hpwhModel = HPWH::MODELS_GE2014STDMode;
+        model = HPWH::MODELS_GE2014STDMode;
     }
     else if (modelName == "GE502014" || modelName == "GE2014")
     {
-        hpwhModel = HPWH::MODELS_GE2014;
+        model = HPWH::MODELS_GE2014;
     }
     else if (modelName == "GE802014")
     {
-        hpwhModel = HPWH::MODELS_GE2014_80DR;
+        model = HPWH::MODELS_GE2014_80DR;
     }
     else if (modelName == "RheemHB50")
     {
-        hpwhModel = HPWH::MODELS_RheemHB50;
+        model = HPWH::MODELS_RheemHB50;
     }
     else if (modelName == "Stiebel220e" || modelName == "Stiebel220E")
     {
-        hpwhModel = HPWH::MODELS_Stiebel220E;
+        model = HPWH::MODELS_Stiebel220E;
     }
     else if (modelName == "Generic1")
     {
-        hpwhModel = HPWH::MODELS_Generic1;
+        model = HPWH::MODELS_Generic1;
     }
     else if (modelName == "Generic2")
     {
-        hpwhModel = HPWH::MODELS_Generic2;
+        model = HPWH::MODELS_Generic2;
     }
     else if (modelName == "Generic3")
     {
-        hpwhModel = HPWH::MODELS_Generic3;
+        model = HPWH::MODELS_Generic3;
     }
     else if (modelName == "custom")
     {
-        hpwhModel = HPWH::MODELS_CustomFile;
+        model = HPWH::MODELS_CustomFile;
     }
     else if (modelName == "restankRealistic")
     {
-        hpwhModel = HPWH::MODELS_restankRealistic;
+        model = HPWH::MODELS_restankRealistic;
     }
     else if (modelName == "StorageTank")
     {
-        hpwhModel = HPWH::MODELS_StorageTank;
+        model = HPWH::MODELS_StorageTank;
     }
     else if (modelName == "BWC2020_65")
     {
-        hpwhModel = HPWH::MODELS_BWC2020_65;
+        model = HPWH::MODELS_BWC2020_65;
     }
     // New Rheems
     else if (modelName == "Rheem2020Prem40")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem40;
+        model = HPWH::MODELS_Rheem2020Prem40;
     }
     else if (modelName == "Rheem2020Prem50")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem50;
+        model = HPWH::MODELS_Rheem2020Prem50;
     }
     else if (modelName == "Rheem2020Prem65")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem65;
+        model = HPWH::MODELS_Rheem2020Prem65;
     }
     else if (modelName == "Rheem2020Prem80")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Prem80;
+        model = HPWH::MODELS_Rheem2020Prem80;
     }
     else if (modelName == "Rheem2020Build40")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Build40;
+        model = HPWH::MODELS_Rheem2020Build40;
     }
     else if (modelName == "Rheem2020Build50")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Build50;
+        model = HPWH::MODELS_Rheem2020Build50;
     }
     else if (modelName == "Rheem2020Build65")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Build65;
+        model = HPWH::MODELS_Rheem2020Build65;
     }
     else if (modelName == "Rheem2020Build80")
     {
-        hpwhModel = HPWH::MODELS_Rheem2020Build80;
+        model = HPWH::MODELS_Rheem2020Build80;
     }
     else if (modelName == "RheemPlugInDedicated40")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInDedicated40;
+        model = HPWH::MODELS_RheemPlugInDedicated40;
     }
     else if (modelName == "RheemPlugInDedicated50")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInDedicated50;
+        model = HPWH::MODELS_RheemPlugInDedicated50;
     }
     else if (modelName == "RheemPlugInShared40")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared40;
+        model = HPWH::MODELS_RheemPlugInShared40;
     }
     else if (modelName == "RheemPlugInShared50")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared50;
+        model = HPWH::MODELS_RheemPlugInShared50;
     }
     else if (modelName == "RheemPlugInShared65")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared65;
+        model = HPWH::MODELS_RheemPlugInShared65;
     }
     else if (modelName == "RheemPlugInShared80")
     {
-        hpwhModel = HPWH::MODELS_RheemPlugInShared80;
+        model = HPWH::MODELS_RheemPlugInShared80;
     }
     // Large HPWH's
     else if (modelName == "AOSmithCAHP120")
     {
-        hpwhModel = HPWH::MODELS_AOSmithCAHP120;
+        model = HPWH::MODELS_AOSmithCAHP120;
     }
     else if (modelName == "ColmacCxV_5_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxV_5_SP;
+        model = HPWH::MODELS_ColmacCxV_5_SP;
     }
     else if (modelName == "ColmacCxA_10_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_10_SP;
+        model = HPWH::MODELS_ColmacCxA_10_SP;
     }
     else if (modelName == "ColmacCxA_15_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_15_SP;
+        model = HPWH::MODELS_ColmacCxA_15_SP;
     }
     else if (modelName == "ColmacCxA_20_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_20_SP;
+        model = HPWH::MODELS_ColmacCxA_20_SP;
     }
     else if (modelName == "ColmacCxA_25_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_25_SP;
+        model = HPWH::MODELS_ColmacCxA_25_SP;
     }
     else if (modelName == "ColmacCxA_30_SP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_30_SP;
+        model = HPWH::MODELS_ColmacCxA_30_SP;
     }
 
     else if (modelName == "ColmacCxV_5_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxV_5_MP;
+        model = HPWH::MODELS_ColmacCxV_5_MP;
     }
     else if (modelName == "ColmacCxA_10_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_10_MP;
+        model = HPWH::MODELS_ColmacCxA_10_MP;
     }
     else if (modelName == "ColmacCxA_15_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_15_MP;
+        model = HPWH::MODELS_ColmacCxA_15_MP;
     }
     else if (modelName == "ColmacCxA_20_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_20_MP;
+        model = HPWH::MODELS_ColmacCxA_20_MP;
     }
     else if (modelName == "ColmacCxA_25_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_25_MP;
+        model = HPWH::MODELS_ColmacCxA_25_MP;
     }
     else if (modelName == "ColmacCxA_30_MP")
     {
-        hpwhModel = HPWH::MODELS_ColmacCxA_30_MP;
+        model = HPWH::MODELS_ColmacCxA_30_MP;
     }
 
     else if (modelName == "RheemHPHD60")
     {
-        hpwhModel = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
+        model = HPWH::MODELS_RHEEM_HPHD60VNU_201_MP;
     }
     else if (modelName == "RheemHPHD135")
     {
-        hpwhModel = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
+        model = HPWH::MODELS_RHEEM_HPHD135VNU_483_MP;
     }
     // Nyle Single pass models
     else if (modelName == "NyleC25A_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC25A_SP;
+        model = HPWH::MODELS_NyleC25A_SP;
     }
     else if (modelName == "NyleC60A_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC60A_SP;
+        model = HPWH::MODELS_NyleC60A_SP;
     }
     else if (modelName == "NyleC90A_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC90A_SP;
+        model = HPWH::MODELS_NyleC90A_SP;
     }
     else if (modelName == "NyleC185A_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC185A_SP;
+        model = HPWH::MODELS_NyleC185A_SP;
     }
     else if (modelName == "NyleC250A_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC250A_SP;
+        model = HPWH::MODELS_NyleC250A_SP;
     }
     else if (modelName == "NyleC60A_C_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC60A_C_SP;
+        model = HPWH::MODELS_NyleC60A_C_SP;
     }
     else if (modelName == "NyleC90A_C_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC90A_C_SP;
+        model = HPWH::MODELS_NyleC90A_C_SP;
     }
     else if (modelName == "NyleC185A_C_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC185A_C_SP;
+        model = HPWH::MODELS_NyleC185A_C_SP;
     }
     else if (modelName == "NyleC250A_C_SP")
     {
-        hpwhModel = HPWH::MODELS_NyleC250A_C_SP;
+        model = HPWH::MODELS_NyleC250A_C_SP;
     }
     // Nyle MP models
     else if (modelName == "NyleC60A_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC60A_MP;
+        model = HPWH::MODELS_NyleC60A_MP;
     }
     else if (modelName == "NyleC90A_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC90A_MP;
+        model = HPWH::MODELS_NyleC90A_MP;
     }
     else if (modelName == "NyleC125A_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC125A_MP;
+        model = HPWH::MODELS_NyleC125A_MP;
     }
     else if (modelName == "NyleC185A_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC185A_MP;
+        model = HPWH::MODELS_NyleC185A_MP;
     }
     else if (modelName == "NyleC250A_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC250A_MP;
+        model = HPWH::MODELS_NyleC250A_MP;
     }
     else if (modelName == "NyleC60A_C_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC60A_C_MP;
+        model = HPWH::MODELS_NyleC60A_C_MP;
     }
     else if (modelName == "NyleC90A_C_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC90A_C_MP;
+        model = HPWH::MODELS_NyleC90A_C_MP;
     }
     else if (modelName == "NyleC125A_C_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC125A_C_MP;
+        model = HPWH::MODELS_NyleC125A_C_MP;
     }
     else if (modelName == "NyleC185A_C_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC185A_C_MP;
+        model = HPWH::MODELS_NyleC185A_C_MP;
     }
     else if (modelName == "NyleC250A_C_MP")
     {
-        hpwhModel = HPWH::MODELS_NyleC250A_C_MP;
+        model = HPWH::MODELS_NyleC250A_C_MP;
     }
     else if (modelName == "QAHV_N136TAU_HPB_SP")
     {
-        hpwhModel = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
+        model = HPWH::MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP;
     }
     // Stack in a couple scalable models
     else if (modelName == "TamScalable_SP")
     {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
+        model = HPWH::MODELS_TamScalable_SP;
     }
     else if (modelName == "TamScalable_SP_2X")
     {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
+        model = HPWH::MODELS_TamScalable_SP_2X;
     }
     else if (modelName == "TamScalable_SP_Half")
     {
-        hpwhModel = HPWH::MODELS_TamScalable_SP;
+        model = HPWH::MODELS_TamScalable_SP_Half;
     }
     else if (modelName == "Scalable_MP")
     {
-        hpwhModel = HPWH::MODELS_Scalable_MP;
+        model = HPWH::MODELS_Scalable_MP;
     }
     else if (modelName == "AWHSTier3Generic40")
     {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic40;
+        model = HPWH::MODELS_AWHSTier3Generic40;
     }
     else if (modelName == "AWHSTier3Generic50")
     {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic50;
+        model = HPWH::MODELS_AWHSTier3Generic50;
     }
     else if (modelName == "AWHSTier3Generic65")
     {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic65;
+        model = HPWH::MODELS_AWHSTier3Generic65;
     }
     else if (modelName == "AWHSTier3Generic80")
     {
-        hpwhModel = HPWH::MODELS_AWHSTier3Generic80;
+        model = HPWH::MODELS_AWHSTier3Generic80;
     }
     else if (modelName == "AquaThermAire")
     {
-        hpwhModel = HPWH::MODELS_AquaThermAire;
+        model = HPWH::MODELS_AquaThermAire;
     }
     else
     {
-        hpwhModel = HPWH::MODELS_basicIntegrated;
+        model = HPWH::MODELS_basicIntegrated;
         cout << "Couldn't find model " << modelName << ".  Exiting...\n";
         return false;
     }
     return true;
 }
 
-bool HPWH::getObject(const std::string& modelName)
+bool HPWH::initPreset(const std::string& modelName)
 {
-    /**Sets up the preset HPWH object with modelName */
-    bool result = false;
-    HPWH::MODELS model;
-
-    if (mapStringToPreset(modelName, model))
+    // Initializes a preset from the modelName
+    HPWH::MODELS targetModel;
+    if (mapNameToPreset(modelName, targetModel))
     {
-        if (initPresets(model) == 0)
-        {
-            if (modelName == "TamScalable_SP_2X")
-            {
-                setScaleCapacityCOP(2., 1.); // Scale the compressor
-                setResistanceCapacity(60.);  // Reset resistance elements in kW
-            }
-            else if (modelName == "TamScalable_SP_Half")
-            {
-                setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
-                setResistanceCapacity(15.);      // Reset resistance elements in kW
-            }
-            result = true;
-        }
+        return initPreset(targetModel);
     }
-    return result;
+    return false;
 }
 
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
@@ -4508,7 +4493,7 @@ int HPWH::checkInputs()
     int returnVal = 0;
     // use a returnVal so that all checks are processed and error messages written
 
-    if (getNumHeatSources() <= 0 && hpwhModel != MODELS_StorageTank)
+    if (getNumHeatSources() <= 0 && model != MODELS_StorageTank)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -4778,7 +4763,7 @@ int HPWH::checkInputs()
 }
 
 #ifndef HPWH_ABRIDGED
-int HPWH::initFromFile(string configFile)
+bool HPWH::initFromFile(string configFile)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -4793,7 +4778,7 @@ int HPWH::initFromFile(string configFile)
         {
             msg("Input file failed to open.  \n");
         }
-        return HPWH_ABORT;
+        return false;
     }
 
     // some variables that will be handy
@@ -4838,7 +4823,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
             tankVolume_L = tempDouble;
         }
@@ -4851,7 +4836,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
             tankUA_kJperHrC = tempDouble;
         }
@@ -4872,7 +4857,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
         }
         else if (token == "mixOnDraw")
@@ -4892,7 +4877,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
         }
         else if (token == "mixBelowFractionOnDraw")
@@ -4904,7 +4889,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Out of bounds value for %s. Should be between 0 and 1. \n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
             mixBelowFractionOnDraw = tempDouble;
         }
@@ -4921,7 +4906,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
             setpoint_C = tempDouble;
             // tank will be set to setpoint at end of function
@@ -4939,7 +4924,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
         }
         else if (token == "initialTankTemp")
@@ -4955,7 +4940,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
             initalTankT_C = tempDouble;
             hasInitialTankTemp = true;
@@ -4974,7 +4959,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return HPWH_ABORT;
+                return false;
             }
         }
         else if (token == "heatExchangerEffectiveness")
@@ -5008,7 +4993,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect verbosity on input.  \n");
                 }
-                return HPWH_ABORT;
+                return false;
             }
         }
 
@@ -5027,7 +5012,7 @@ int HPWH::initFromFile(string configFile)
             {
                 msg("You must specify the number of heatsources before setting their properties.  "
                     "\n");
-                return HPWH_ABORT;
+                return false;
             }
             line_ss >> heatsource >> token;
             if (token == "isVIP")
@@ -5045,7 +5030,7 @@ int HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
             else if (token == "isOn")
@@ -5063,7 +5048,7 @@ int HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
             else if (token == "minT")
@@ -5079,7 +5064,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Incorrect units specification for %s.  \n", token.c_str());
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
                 heatSources[heatsource].minT = tempDouble;
             }
@@ -5096,7 +5081,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Incorrect units specification for %s.  \n", token.c_str());
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
                 heatSources[heatsource].maxT = tempDouble;
             }
@@ -5122,7 +5107,7 @@ int HPWH::initFromFile(string configFile)
                                     token.c_str(),
                                     LOGIC_SIZE + 1);
                             }
-                            return HPWH_ABORT;
+                            return false;
                         }
                         nodeNums.push_back(nodeNum);
                         line_ss >> nextToken;
@@ -5155,7 +5140,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 nodeNums.size());
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     if (nextToken != "absolute" && nextToken != "relative")
                     {
@@ -5167,7 +5152,7 @@ int HPWH::initFromFile(string configFile)
                                 heatsource,
                                 token.c_str());
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     bool absolute = (nextToken == "absolute");
                     std::string compareStr;
@@ -5187,7 +5172,7 @@ int HPWH::initFromFile(string configFile)
                                 heatsource,
                                 token.c_str());
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     if (units == "F")
                     {
@@ -5210,7 +5195,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     std::vector<NodeWeight> nodeWeights;
                     for (size_t i = 0; i < nodeNums.size(); i++)
@@ -5259,7 +5244,7 @@ int HPWH::initFromFile(string configFile)
                                     heatsource,
                                     token.c_str());
                             }
-                            return HPWH_ABORT;
+                            return false;
                         }
                         line_ss >> tempDouble;
                     }
@@ -5289,7 +5274,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     if (tempString == "wholeTank")
                     {
@@ -5342,7 +5327,7 @@ int HPWH::initFromFile(string configFile)
                         {
                             msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                 }
                 else if (token == "offlogic")
@@ -5360,7 +5345,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     if (tempString == "topNodeMaxTemp")
                     {
@@ -5395,7 +5380,7 @@ int HPWH::initFromFile(string configFile)
                         {
                             msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                 }
             }
@@ -5416,7 +5401,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
             else if (token == "coilConfig")
@@ -5440,7 +5425,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
             else if (token == "heatCycle")
@@ -5460,7 +5445,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
 
@@ -5477,7 +5462,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
             else if (token == "externalOutlet")
@@ -5493,7 +5478,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
             }
 
@@ -5527,7 +5512,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     else
                     {
@@ -5540,7 +5525,7 @@ int HPWH::initFromFile(string configFile)
                                 maxTemps,
                                 nTemps);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                 }
                 line_ss >> tempDouble >> units;
@@ -5558,7 +5543,7 @@ int HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
                 heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
             }
@@ -5599,7 +5584,7 @@ int HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                     else
                     {
@@ -5612,7 +5597,7 @@ int HPWH::initFromFile(string configFile)
                                 maxTemps,
                                 nTemps);
                         }
-                        return HPWH_ABORT;
+                        return false;
                     }
                 }
                 line_ss >> tempDouble;
@@ -5642,7 +5627,7 @@ int HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return HPWH_ABORT;
+                    return false;
                 }
                 heatSources[heatsource].hysteresis_dC = tempDouble;
             }
@@ -5673,13 +5658,13 @@ int HPWH::initFromFile(string configFile)
         else
         {
             msg("Improper keyword: %s  \n", token.c_str());
-            return HPWH_ABORT;
+            return false;
         }
 
     } // end while over lines
 
     // take care of the non-input processing
-    hpwhModel = MODELS_CustomFile;
+    model = MODELS_CustomFile;
 
     tankTemps_C.resize(num_nodes);
 
@@ -5704,9 +5689,9 @@ int HPWH::initFromFile(string configFile)
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return HPWH_ABORT;
+        return false;
     }
     simHasFailed = false;
-    return 0;
+    return true;
 }
 #endif

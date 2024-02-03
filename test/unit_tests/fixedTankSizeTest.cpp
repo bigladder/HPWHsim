@@ -33,7 +33,7 @@ TEST_F(FixedSizeTest, tankSizeFixed)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_TRUE(hpwh.getObject(sModelName)) << "Could not initialize model " << sModelName;
+        EXPECT_TRUE(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
         // get the initial tank size
         double intitialTankSize_gal = hpwh.getTankSize(HPWH::UNITS_GAL);

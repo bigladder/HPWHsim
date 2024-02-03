@@ -7,15 +7,16 @@ File Containing all of the presets available in HPWHsim
 
 #include <algorithm>
 
-int HPWH::initResistanceTank()
+bool HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
     return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
-int HPWH::initResistanceTank(double tankVol_L,
-                             double energyFactor,
-                             double upperPower_W,
-                             double lowerPower_W)
+
+bool HPWH::initResistanceTank(double tankVol_L,
+                              double energyFactor,
+                              double upperPower_W,
+                              double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -31,7 +32,7 @@ int HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Resistance tank lower element wattage below 550 W.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
     if (upperPower_W < 0.)
     {
@@ -39,7 +40,7 @@ int HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
     if (energyFactor <= 0.)
     {
@@ -47,17 +48,16 @@ int HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
 
     setNumNodes(12);
 
     // use tank size setting function since it has bounds checking
     tankSizeFixed = false;
-    int failure = this->setTankSize(tankVol_L);
-    if (failure == HPWH_ABORT)
+    if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
-        return failure;
+        return false;
     }
 
     setpoint_C = F_TO_C(127.0);
@@ -118,13 +118,13 @@ int HPWH::initResistanceTank(double tankVol_L,
         tankUA_kJperHrC = 0.0;
     }
 
-    hpwhModel = MODELS_CustomResTank;
+    model = MODELS_CustomResTank;
 
     // calculate oft-used derived values
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
-        return HPWH_ABORT;
+        return false;
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -146,13 +146,13 @@ int HPWH::initResistanceTank(double tankVol_L,
     }
 
     simHasFailed = false;
-    return 0; // successful init returns 0
+    return true; // successful init returns true
 }
 
-int HPWH::initResistanceTankGeneric(double tankVol_L,
-                                    double rValue_M2KperW,
-                                    double upperPower_W,
-                                    double lowerPower_W)
+bool HPWH::initResistanceTankGeneric(double tankVol_L,
+                                     double rValue_m2KperW,
+                                     double upperPower_W,
+                                     double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -167,7 +167,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             msg("Lower resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
     if (upperPower_W < 0.)
     {
@@ -175,24 +175,24 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
-    if (rValue_M2KperW <= 0.)
+    if (rValue_m2KperW <= 0.)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
         }
-        return HPWH_ABORT;
+        return false;
     }
 
     setNumNodes(12);
 
     // set tank size function has bounds checking
     tankSizeFixed = false;
-    if (this->setTankSize(tankVol_L) == HPWH_ABORT)
+    if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
-        return HPWH_ABORT;
+        return false;
     }
     canScale = true;
 
@@ -236,8 +236,8 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
 
     // Calc UA
     double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
-    double tankUA_WperK = SA_M2 / rValue_M2KperW;
-    tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
+    double tankUA_WperK = SA_M2 / rValue_m2KperW;
+    tankUA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
 
     if (tankUA_kJperHrC < 0.)
     {
@@ -248,13 +248,13 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         tankUA_kJperHrC = 0.0;
     }
 
-    hpwhModel = HPWH::MODELS_CustomResTankGeneric;
+    model = HPWH::MODELS_CustomResTankGeneric;
 
     // calculate oft-used derived values
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
-        return HPWH_ABORT;
+        return false;
 
     isHeating = false;
     for (auto& source : heatSources)
@@ -276,10 +276,10 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     }
 
     simHasFailed = false;
-    return 0; // successful init returns 0
+    return true; // successful init returns 0
 }
 
-int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
+bool HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -417,14 +417,14 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // standard finishing up init, borrowed from init function
 
-    hpwhModel = MODELS_genericCustomUEF;
+    model = MODELS_genericCustomUEF;
 
     // calculate oft-used derived values
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return HPWH_ABORT;
+        return false;
     }
 
     isHeating = false;
@@ -447,13 +447,11 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     }
 
     simHasFailed = false;
-
-    return 0;
+    return true;
 }
 
-int HPWH::initPresets(MODELS presetNum)
+bool HPWH::initPreset(MODELS presetNum)
 {
-
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure
@@ -4229,7 +4227,7 @@ int HPWH::initPresets(MODELS presetNum)
             {
                 msg("Incorrect model specification.  \n");
             }
-            return HPWH_ABORT;
+            return false;
         }
 
         doTempDepression = false;
@@ -4301,7 +4299,7 @@ int HPWH::initPresets(MODELS presetNum)
         heatSources[1].followedByHeatSource = &heatSources[2];
     }
     // If a the model is the TamOMatic, HotTam, Generic... This model is scalable.
-    else if (presetNum == MODELS_TamScalable_SP)
+    else if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -4404,6 +4402,17 @@ int HPWH::initPresets(MODELS presetNum)
         heatSources[1].followedByHeatSource = &heatSources[2];
 
         heatSources[0].companionHeatSource = &heatSources[2];
+
+        if (presetNum == MODELS_TamScalable_SP_2X)
+        {
+            setScaleCapacityCOP(2., 1.); // Scale the compressor
+            setResistanceCapacity(60.);  // Reset resistance elements in kW
+        }
+        else if (presetNum == MODELS_TamScalable_SP_Half)
+        {
+            setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
+            setResistanceCapacity(15.);      // Reset resistance elements in kW
+        }
     }
     else if (presetNum == MODELS_Scalable_MP)
     {
@@ -4560,7 +4569,7 @@ int HPWH::initPresets(MODELS presetNum)
         {
             msg("You have tried to select a preset model which does not exist.  \n");
         }
-        return HPWH_ABORT;
+        return false;
     }
 
     if (hasInitialTankTemp)
@@ -4568,14 +4577,14 @@ int HPWH::initPresets(MODELS presetNum)
     else // start tank off at setpoint
         resetTankToSetpoint();
 
-    hpwhModel = presetNum;
+    model = presetNum;
 
     // calculate oft-used derived values
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return HPWH_ABORT;
+        return false;
     }
 
     isHeating = false;
@@ -4598,5 +4607,5 @@ int HPWH::initPresets(MODELS presetNum)
     }
 
     simHasFailed = false;
-    return 0; // successful init returns 0
+    return true; // successful init returns true
 } // end HPWHinit_presets
