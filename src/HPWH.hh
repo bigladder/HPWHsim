@@ -478,11 +478,11 @@ class HPWH
      * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
-    int HPWHinit_resTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
-    int HPWHinit_resTank(double tankVol_L,
-                         double energyFactor,
-                         double upperPower_W,
-                         double lowerPower_W);
+    int initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
+    int initResistanceTank(double tankVol_L,
+                           double energyFactor,
+                           double upperPower_W,
+                           double lowerPower_W);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -494,10 +494,10 @@ class HPWH
      * to standard setting, with upper as VIP activating when the top third is too cold.
      */
 
-    int HPWHinit_resTankGeneric(double tankVol_L,
-                                double rValue_M2KperW,
-                                double upperPower_W,
-                                double lowerPower_W);
+    int initResistanceTankGeneric(double tankVol_L,
+                                  double rValue_M2KperW,
+                                  double upperPower_W,
+                                  double lowerPower_W);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -506,11 +506,26 @@ class HPWH
      * controls for the HPWHinit_resTank()
      */
 
-    int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
+    int initGeneric(double tankVol_L, double energyFactor, double resUse_C);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
      * are taken from the GE2015_STDMode model.
+     */
+
+    static bool mapStringToPreset(const std::string& modelName, MODELS& model);
+
+    bool getObject(const std::string& modelName);
+
+#ifndef HPWH_ABRIDGED
+    int initFromFile(std::string configFile);
+#endif
+    /**< Loads a HPWH model from a file
+     * The file name is the input - there should be at most one set of parameters per file
+     * This is useful for testing new variations, and for the sort of variability
+     * that we typically do when creating SEEM runs
+     * Appropriate use of this function can be found in the documentation
+     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
     int runOneStep(double drawVolume_L,
@@ -943,21 +958,6 @@ class HPWH
 
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
-
-    static bool mapStringToPreset(const std::string& modelName, MODELS& model);
-
-    bool getObject(const std::string& modelName);
-
-#ifndef HPWH_ABRIDGED
-    int initFromFile(std::string configFile);
-#endif
-    /**< Loads a HPWH model from a file
-     * The file name is the input - there should be at most one set of parameters per file
-     * This is useful for testing new variations, and for the sort of variability
-     * that we typically do when creating SEEM runs
-     * Appropriate use of this function can be found in the documentation
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
-     */
 
   private:
     class HeatSource;

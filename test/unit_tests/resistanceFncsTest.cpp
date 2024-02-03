@@ -41,7 +41,7 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
     HPWH hpwh;
     double lowerElementPower_W = 1000;
     double lowerElementPower = lowerElementPower_W / 1000;
-    hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
+    hpwh.initResistanceTank(100., 0.95, 0., lowerElementPower_W);
 
     double returnVal;
 
@@ -63,16 +63,16 @@ TEST(ResistanceFunctionsTest, commercialTankInitErrors)
     HPWH hpwh;
 
     // init model
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(-800., 10., 100., 100.),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(-800., 10., 100., 100.),
               HPWH::HPWH_ABORT); // negative volume
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(800., 10., -100., 100.),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., -100., 100.),
               HPWH::HPWH_ABORT); // negative element
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(800., 10., 100., -100.),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., 100., -100.),
               HPWH::HPWH_ABORT); // negative element
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(800., -10., 100., 100.),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., -10., 100., 100.),
               HPWH::HPWH_ABORT); // negative r value
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(800., 0., 100., 100.), HPWH::HPWH_ABORT); // 0 r value
-    EXPECT_EQ(hpwh.HPWHinit_resTankGeneric(800., 10., 0., 0.),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 0., 100., 100.), HPWH::HPWH_ABORT); // 0 r value
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., 0., 0.),
               HPWH::HPWH_ABORT); // Check needs one element
 }
 
@@ -83,13 +83,13 @@ TEST(ResistanceFunctionsTest, getNumResistanceElements)
 {
     HPWH hpwh;
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 0., 1000.);
+    hpwh.initResistanceTankGeneric(800., 10., 0., 1000.);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 1000., 0.);
+    hpwh.initResistanceTankGeneric(800., 10., 1000., 0.);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 1000., 1000.);
+    hpwh.initResistanceTankGeneric(800., 10., 1000., 1000.);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 2); // Check 2 elements
 }
 
@@ -100,17 +100,17 @@ TEST(ResistanceFunctionsTest, getResistancePositionInRE_tank)
 {
     HPWH hpwh;
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 0., 1000.);
+    hpwh.initResistanceTankGeneric(800., 10., 0., 1000.);
     EXPECT_EQ(hpwh.getResistancePosition(0), 0);                // Check lower element is there
     EXPECT_EQ(hpwh.getResistancePosition(1), HPWH::HPWH_ABORT); // Check no element
     EXPECT_EQ(hpwh.getResistancePosition(2), HPWH::HPWH_ABORT); // Check no element
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 1000., 0.);
+    hpwh.initResistanceTankGeneric(800., 10., 1000., 0.);
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);                // Check upper element there
     EXPECT_EQ(hpwh.getResistancePosition(1), HPWH::HPWH_ABORT); // Check no elements
     EXPECT_EQ(hpwh.getResistancePosition(2), HPWH::HPWH_ABORT); // Check no elements
 
-    hpwh.HPWHinit_resTankGeneric(800., 10., 1000., 1000.);
+    hpwh.initResistanceTankGeneric(800., 10., 1000., 1000.);
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);                // Check upper element there
     EXPECT_EQ(hpwh.getResistancePosition(1), 0);                // Check lower element is there
     EXPECT_EQ(hpwh.getResistancePosition(2), HPWH::HPWH_ABORT); // Check 0 elements}
@@ -143,7 +143,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // init model
     HPWH hpwh;
-    hpwh.HPWHinit_resTankGeneric(800., 10., 0., elementPower_kW * 1000.);
+    hpwh.initResistanceTankGeneric(800., 10., 0., elementPower_kW * 1000.);
 
     // Check only lowest setting works
     double factor = 3.;
@@ -182,7 +182,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    hpwh.HPWHinit_resTankGeneric(800., 10., elementPower_kW * 1000., 0.);
+    hpwh.initResistanceTankGeneric(800., 10., elementPower_kW * 1000., 0.);
 
     // Check only bottom setting works
     double factor = 3.;
@@ -220,10 +220,10 @@ struct InsulationPoint
 
 #define R_TO_RSI(rvalue) rvalue * 0.176110
 #define INITGEN(point)                                                                             \
-    hpwh.HPWHinit_resTankGeneric(point.volume_L,                                                   \
-                                 R_TO_RSI(point.rValue_IP),                                        \
-                                 elementPower_kW * 1000.,                                          \
-                                 elementPower_kW * 1000.)
+    hpwh.initResistanceTankGeneric(point.volume_L,                                                 \
+                                   R_TO_RSI(point.rValue_IP),                                      \
+                                   elementPower_kW * 1000.,                                        \
+                                   elementPower_kW * 1000.)
 
 /*
  * commercialTankInit tests
@@ -249,7 +249,7 @@ TEST(ResistanceFunctionsTest, commercialTankInit)
     EXPECT_NEAR_REL(UA, testPoint800.expectedUA_SI);
 
     // Check UA independent of elements
-    hpwh.HPWHinit_resTankGeneric(
+    hpwh.initResistanceTankGeneric(
         testPoint800.volume_L, R_TO_RSI(testPoint800.rValue_IP), elementPower_kW, elementPower_kW);
     hpwh.getUA(UA);
     EXPECT_NEAR_REL(UA, testPoint800.expectedUA_SI);

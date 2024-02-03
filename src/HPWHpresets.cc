@@ -7,15 +7,15 @@ File Containing all of the presets available in HPWHsim
 
 #include <algorithm>
 
-int HPWH::HPWHinit_resTank()
+int HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
-    return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
+    return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
-int HPWH::HPWHinit_resTank(double tankVol_L,
-                           double energyFactor,
-                           double upperPower_W,
-                           double lowerPower_W)
+int HPWH::initResistanceTank(double tankVol_L,
+                             double energyFactor,
+                             double upperPower_W,
+                             double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -149,10 +149,10 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
-                                  double rValue_M2KperW,
-                                  double upperPower_W,
-                                  double lowerPower_W)
+int HPWH::initResistanceTankGeneric(double tankVol_L,
+                                    double rValue_M2KperW,
+                                    double upperPower_W,
+                                    double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -279,7 +279,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C)
+int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing

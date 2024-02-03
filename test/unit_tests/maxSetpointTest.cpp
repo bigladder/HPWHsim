@@ -13,7 +13,7 @@ const double expectedRE_maxT_C = 100.;
 TEST(MaxSetpointTest, resistanceTank)
 {
     HPWH hpwh;
-    EXPECT_EQ(hpwh.HPWHinit_resTank(), 0);
+    EXPECT_EQ(hpwh.initResistanceTank(), 0);
 
     double num;
     std::string why;
