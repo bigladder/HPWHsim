@@ -4334,17 +4334,17 @@ bool HPWH::initPreset(MODELS presetNum)
 
         // Perfmap for input power and COP made from data for poor preforming modeled to be scalled
         // for this model
-        std::vector<double> inputPwr_coeffs = {13.6,
-                                               0.00995,
-                                               -0.0342,
-                                               -0.014,
-                                               -0.000110,
-                                               0.00026,
-                                               0.000232,
-                                               0.000195,
-                                               -0.00034,
-                                               5.30E-06,
-                                               2.3600E-06};
+        std::vector<double> inputPower_coeffs = {13.6,
+                                                 0.00995,
+                                                 -0.0342,
+                                                 -0.014,
+                                                 -0.000110,
+                                                 0.00026,
+                                                 0.000232,
+                                                 0.000195,
+                                                 -0.00034,
+                                                 5.30E-06,
+                                                 2.3600E-06};
         std::vector<double> COP_coeffs = {1.945,
                                           0.0412,
                                           -0.0112,
@@ -4357,10 +4357,29 @@ bool HPWH::initPreset(MODELS presetNum)
                                           0.0000392,
                                           -3.52E-07};
 
+        // Scale the compressor capacity
+        double capacityScale = 1.;
+        if (presetNum == MODELS_TamScalable_SP_2X)
+        {
+            capacityScale = 2.;
+        }
+        else if (presetNum == MODELS_TamScalable_SP_Half)
+        {
+            capacityScale /= 2.;
+        }
+        if (capacityScale != 1.)
+        {
+            std::transform(
+                inputPower_coeffs.begin(),
+                inputPower_coeffs.end(),
+                inputPower_coeffs.begin(),
+                std::bind(std::multiplies<double>(), std::placeholders::_1, capacityScale));
+        }
+
         compressor.perfMap.push_back({
-            105,             // Temperature (T_F)
-            inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs
-            COP_coeffs       // COP Coefficients (COP_coeffs)
+            105,               // Temperature (T_F)
+            inputPower_coeffs, // Input Power Coefficients (inputPower_coeffs
+            COP_coeffs         // COP Coefficients (COP_coeffs)
         });
 
         // logic conditions
@@ -4379,8 +4398,18 @@ bool HPWH::initPreset(MODELS presetNum)
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
-        resistiveElementBottom.setupAsResistiveElement(0, 30000);
-        resistiveElementTop.setupAsResistiveElement(9, 30000);
+        // Set and scale the resistance-element power
+        double elementPower_W = 30000.;
+        if (presetNum == MODELS_TamScalable_SP_2X)
+        {
+            elementPower_W *= 2.;
+        }
+        else if (presetNum == MODELS_TamScalable_SP_Half)
+        {
+            elementPower_W /= 2.;
+        }
+        resistiveElementBottom.setupAsResistiveElement(0, elementPower_W);
+        resistiveElementTop.setupAsResistiveElement(9, elementPower_W);
 
         // top resistor values
         // standard logic conditions
@@ -4402,17 +4431,6 @@ bool HPWH::initPreset(MODELS presetNum)
         heatSources[1].followedByHeatSource = &heatSources[2];
 
         heatSources[0].companionHeatSource = &heatSources[2];
-
-        if (presetNum == MODELS_TamScalable_SP_2X)
-        {
-            setScaleCapacityCOP(2., 1.); // Scale the compressor
-            setResistanceCapacity(60.);  // Reset resistance elements in kW
-        }
-        else if (presetNum == MODELS_TamScalable_SP_Half)
-        {
-            setScaleCapacityCOP(1 / 2., 1.); // Scale the compressor
-            setResistanceCapacity(15.);      // Reset resistance elements in kW
-        }
     }
     else if (presetNum == MODELS_Scalable_MP)
     {
