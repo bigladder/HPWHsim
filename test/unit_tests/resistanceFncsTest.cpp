@@ -216,8 +216,7 @@ struct InsulationPoint
     double expectedUA_SI;
 };
 
-#define FT2HFperBTU_TO_M2CperKW(r_ft2hFperBTU) BTUperKWH* r_ft2hFperBTU / ft2_per_m2 / FperC
-#define FT2HFperBTU_TO_M2CperW(r_ft2hFperBTU) FT2HFperBTU_TO_M2CperKW(r_ft2hFperBTU) / 1000.
+#define FT2HFperBTU_TO_M2CperW(r_ft2hFperBTU) BTUm2C_per_kWhft2F* r_ft2hFperBTU / 1000.
 
 // #define R_TO_RSI(rvalue) rvalue * 0.176110
 #define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower_W)                                   \

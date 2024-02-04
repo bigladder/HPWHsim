@@ -4357,23 +4357,24 @@ bool HPWH::initPreset(MODELS presetNum)
                                           0.0000392,
                                           -3.52E-07};
 
-        // Scale the compressor capacity
-        double capacityScale = 1.;
+        // Set model scale
+        double scale = 1.;
         if (presetNum == MODELS_TamScalable_SP_2X)
         {
-            capacityScale = 2.;
+            scale = 2.;
         }
         else if (presetNum == MODELS_TamScalable_SP_Half)
         {
-            capacityScale /= 2.;
+            scale = 0.5;
         }
-        if (capacityScale != 1.)
+
+        // Scale the compressor capacity
+        if (scale != 1.)
         {
-            std::transform(
-                inputPower_coeffs.begin(),
-                inputPower_coeffs.end(),
-                inputPower_coeffs.begin(),
-                std::bind(std::multiplies<double>(), std::placeholders::_1, capacityScale));
+            std::transform(inputPower_coeffs.begin(),
+                           inputPower_coeffs.end(),
+                           inputPower_coeffs.begin(),
+                           std::bind(std::multiplies<double>(), std::placeholders::_1, scale));
         }
 
         compressor.perfMap.push_back({
@@ -4398,16 +4399,8 @@ bool HPWH::initPreset(MODELS presetNum)
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
-        // Set and scale the resistance-element power
-        double elementPower_W = 30000.;
-        if (presetNum == MODELS_TamScalable_SP_2X)
-        {
-            elementPower_W *= 2.;
-        }
-        else if (presetNum == MODELS_TamScalable_SP_Half)
-        {
-            elementPower_W /= 2.;
-        }
+        // Scale the resistance-element power
+        double elementPower_W = scale * 30000.;
         resistiveElementBottom.setupAsResistiveElement(0, elementPower_W);
         resistiveElementTop.setupAsResistiveElement(9, elementPower_W);
 

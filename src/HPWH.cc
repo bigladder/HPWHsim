@@ -4476,9 +4476,9 @@ bool compressorIsRunning(HPWH& hpwh)
     return true;
 }
 
+/// Initializes a preset from the modelName
 bool HPWH::initPreset(const std::string& modelName)
 {
-    // Initializes a preset from the modelName
     HPWH::MODELS targetModel;
     if (mapNameToPreset(modelName, targetModel))
     {
