@@ -1521,6 +1521,8 @@ constexpr double sec_per_hr = sec_per_min * min_per_hr; // s / hr
 constexpr double L_per_gal = 3.78541;                   // liters / gal
 constexpr double ft_per_m = 3.2808;                     // ft / m
 constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // ft^2 / m^2
+constexpr double BTUm2C_per_kWhft2F =
+    BTUperKWH / ft2_per_m2 / FperC; // BTU m^2 degC / kW h ft^2 degC
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
