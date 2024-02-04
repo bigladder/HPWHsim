@@ -178,6 +178,14 @@ class HPWH
 
         MODELS_StorageTank = 180, /**< Generic Tank without heaters */
 
+        MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that
+                                        has scalable input capacity and COP  */
+        MODELS_TamScalable_SP_2X = 191,
+        MODELS_TamScalable_SP_Half = 192,
+
+        MODELS_Scalable_MP =
+            193, /** < Lower performance MP model that has scalable input capacity and COP  */
+
         // Non-preset models
         MODELS_CustomFile = 200,    /**< HPWH parameters were input via file */
         MODELS_CustomResTank = 201, /**< HPWH parameters were input via HPWHinit_resTank */
@@ -239,14 +247,6 @@ class HPWH
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
         MODELS_AquaThermAire = 400, // heat exchanger model
-
-        MODELS_Scalable_MP =
-            1080, /** < Lower performance MP model that has scalable input capacity and COP  */
-
-        MODELS_TamScalable_SP = 1090, /** < HPWH input passed off a poor preforming SP model that
-                                        has scalable input capacity and COP  */
-        MODELS_TamScalable_SP_2X = 1091,
-        MODELS_TamScalable_SP_Half = 1092
     };
 
     /// specifies the modes for writing output
