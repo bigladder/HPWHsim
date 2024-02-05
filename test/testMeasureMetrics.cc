@@ -4,12 +4,14 @@
 #include "HPWH.hh"
 #include "testUtilityFcts.cc"
 
+#include <fstream>
 #include <string>
 
 /* Measure metrics using 24-hr test based on model name (preset only) */
 static bool testMeasureMetrics(const std::string& sModelName,
                                HPWH::FirstHourRating& firstHourRating,
-                               HPWH::StandardTestSummary& standardTestSummary)
+                               HPWH::StandardTestSummary& standardTestSummary,
+                               HPWH::StandardTestOptions& standardTestOptions)
 {
     HPWH hpwh;
 
@@ -19,12 +21,12 @@ static bool testMeasureMetrics(const std::string& sModelName,
         return false;
     }
 
-    if (!hpwh.findFirstHourRating(firstHourRating))
+    if (!hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
         return false;
     }
 
-    return hpwh.run24hrTest(firstHourRating, standardTestSummary);
+    return hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
 }
 
 int main(int argc, char* argv[])
@@ -33,9 +35,16 @@ int main(int argc, char* argv[])
     bool validNumArgs = false;
     bool runUnitTests = false;
 
+    HPWH::StandardTestOptions standardTestOptions;
+    standardTestOptions.saveOutput = false;
+    standardTestOptions.changeSetpoint = true;
+    standardTestOptions.nTestTCouples = 6;
+    standardTestOptions.setpointT_C = 51.7;
+
     // process command line arguments
     std::string sPresetOrFile = "Preset";
     std::string sModelName;
+    std::string sOutputDirectory;
     if (argc == 1)
     {
         runUnitTests = true;
@@ -53,23 +62,35 @@ int main(int argc, char* argv[])
         validNumArgs = true;
         runUnitTests = false;
     }
+    else if (argc == 4)
+    {
+        sPresetOrFile = argv[1];
+        sModelName = argv[2];
+        sOutputDirectory = argv[3];
+        validNumArgs = true;
+        runUnitTests = false;
+        standardTestOptions.saveOutput = true;
+    }
 
     if (runUnitTests)
     {
         HPWH::FirstHourRating firstHourRating;
-        ASSERTTRUE(testMeasureMetrics("AquaThermAire", firstHourRating, standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics(
+            "AquaThermAire", firstHourRating, standardTestSummary, standardTestOptions));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 272.5659));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Medium);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.2212));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", firstHourRating, standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics(
+            "AOSmithHPTS50", firstHourRating, standardTestSummary, standardTestOptions));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 188.0432));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Low);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
 
-        ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", firstHourRating, standardTestSummary));
+        ASSERTTRUE(testMeasureMetrics(
+            "AOSmithHPTS80", firstHourRating, standardTestSummary, standardTestOptions));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 310.9384));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::High);
@@ -82,9 +103,10 @@ int main(int argc, char* argv[])
     {
         cout << "Invalid input:\n\
             To run all unit tests, provide ZERO arguments.\n\
-            To determine performance metrics for a particular model spec, provide ONE or TWO arguments:\n\
+            To determine performance metrics for a particular model spec, provide ONE, TWO, or THREE arguments:\n\
             \t[model spec Type, i.e., Preset (default) or File]\n\
-            \t[model spec Name, i.e., Sanden80]\n";
+            \t[model spec Name, i.e., Sanden80]\n\
+            \t[output Directory, i.e., ..\\build\\test\\output]\n";
         exit(1);
     }
 
@@ -123,8 +145,31 @@ int main(int argc, char* argv[])
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
+    if (standardTestOptions.saveOutput)
+    {
+        std::string sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+
+        std::string sFullOutputFilename = sOutputDirectory + "/" + sOutputFilename;
+        standardTestOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
+        if (!standardTestOptions.outputFile.is_open())
+        {
+            cout << "Could not open output file " << sFullOutputFilename << "\n";
+            exit(1);
+        }
+        std::cout << "Output file: " << sFullOutputFilename << "\n";
+
+        string strPreamble;
+        string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
+
+        int csvOptions = HPWH::CSVOPT_NONE;
+        hpwh.WriteCSVHeading(standardTestOptions.outputFile,
+                             sHeader.c_str(),
+                             standardTestOptions.nTestTCouples,
+                             csvOptions);
+    }
+
     HPWH::FirstHourRating firstHourRating;
-    if (hpwh.findFirstHourRating(firstHourRating))
+    if (hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
         std::string sFirstHourRatingDesig = "";
         switch (firstHourRating.desig)
@@ -154,7 +199,7 @@ int main(int argc, char* argv[])
         std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
         std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 
-        if (hpwh.run24hrTest(firstHourRating, standardTestSummary))
+        if (hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         {
 
             if (!standardTestSummary.qualifies)
@@ -183,6 +228,11 @@ int main(int argc, char* argv[])
     else
     {
         std::cout << "Unable to complete first-hour rating test.\n";
+    }
+
+    if (standardTestOptions.saveOutput)
+    {
+        standardTestOptions.outputFile.close();
     }
 
     return 0;

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -977,28 +978,38 @@ class HPWH
     /// collection of information derived from standard test
     struct StandardTestSummary
     {
-        double UEF;
-        double recoveryEfficiency;
-        double dailyHeatingEnergyConsumption_kJ;
-        double adjustedDailyWaterHeatingEnergyConsumption_kJ;
-        double modifiedDailyWaterHeatingEnergyConsumption_kJ;
-        double energyUsedToHeatWater_kJ;
-        double standardEnergyUsedToHeatWater_kJ;
-        double annualElectricalEnergyConsumption_kJ;
-        double annualEnergyConsumption_kJ;
+        double UEF = 0.;
+        double recoveryEfficiency = 0.;
+        double dailyHeatingEnergyConsumption_kJ = 0.;
+        double adjustedDailyWaterHeatingEnergyConsumption_kJ = 0.;
+        double modifiedDailyWaterHeatingEnergyConsumption_kJ = 0.;
+        double energyUsedToHeatWater_kJ = 0.;
+        double standardEnergyUsedToHeatWater_kJ = 0.;
+        double annualElectricalEnergyConsumption_kJ = 0.;
+        double annualEnergyConsumption_kJ = 0.;
         bool qualifies = false;
     };
 
+    struct StandardTestOptions
+    {
+        bool saveOutput = false;
+        bool changeSetpoint = false;
+        std::ofstream outputFile;
+        int nTestTCouples = 6;
+        double setpointT_C = 51.7;
+    };
+
     /// perform a draw/heat cycle to prepare for test
-    bool prepForTest();
+    bool prepForTest(StandardTestOptions& standardTestOptions);
 
     /// determine first-hour rating
-    bool findFirstHourRating(FirstHourRating& firstHourRating, const double setpointT_C = 51.7);
+    bool findFirstHourRating(FirstHourRating& firstHourRating,
+                             StandardTestOptions& standardTestOptions);
 
     /// run 24-hr draw pattern and compute metrics
     bool run24hrTest(const FirstHourRating firstHourRating,
                      StandardTestSummary& standardTestSummary,
-                     const double setpointT_C = 51.7);
+                     StandardTestOptions& standardTestOptions);
 
     /// specific information for a single draw
     struct Draw
