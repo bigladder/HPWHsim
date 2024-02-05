@@ -960,12 +960,18 @@ class HPWH
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
     /// first-hour rating designations to determine draw pattern for 24-hr test
-    enum class FirstHourRating
+    enum class FirstHourRatingDesig
     {
         VerySmall,
         Low,
         Medium,
         High
+    };
+
+    struct FirstHourRating
+    {
+        FirstHourRatingDesig desig;
+        double drawVolume_L;
     };
 
     /// collection of information derived from standard test
@@ -1015,7 +1021,7 @@ class HPWH
     typedef std::vector<Draw> DrawPattern;
 
     /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRating, DrawPattern> drawPatterns;
+    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
 
   private:
     class HeatSource;

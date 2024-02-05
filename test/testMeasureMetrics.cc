@@ -59,17 +59,20 @@ int main(int argc, char* argv[])
         HPWH::FirstHourRating firstHourRating;
         ASSERTTRUE(testMeasureMetrics("AquaThermAire", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::Medium);
+        ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 272.5659));
+        ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Medium);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.2212));
 
         ASSERTTRUE(testMeasureMetrics("AOSmithHPTS50", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::Low);
+        ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 188.0432));
+        ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Low);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
 
         ASSERTTRUE(testMeasureMetrics("AOSmithHPTS80", firstHourRating, standardTestSummary));
         ASSERTTRUE(standardTestSummary.qualifies);
-        ASSERTTRUE(firstHourRating == HPWH::FirstHourRating::High);
+        ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 310.9384));
+        ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::High);
         ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.5230));
 
         return 0;
@@ -123,31 +126,33 @@ int main(int argc, char* argv[])
     HPWH::FirstHourRating firstHourRating;
     if (hpwh.findFirstHourRating(firstHourRating))
     {
-        std::string sFirstHourRating = "";
-        switch (firstHourRating)
+        std::string sFirstHourRatingDesig = "";
+        switch (firstHourRating.desig)
         {
-        case HPWH::FirstHourRating::VerySmall:
+        case HPWH::FirstHourRatingDesig::VerySmall:
         {
-            sFirstHourRating = "Very Small";
+            sFirstHourRatingDesig = "Very Small";
             break;
         }
-        case HPWH::FirstHourRating::Low:
+        case HPWH::FirstHourRatingDesig::Low:
         {
-            sFirstHourRating = "Low";
+            sFirstHourRatingDesig = "Low";
             break;
         }
-        case HPWH::FirstHourRating::Medium:
+        case HPWH::FirstHourRatingDesig::Medium:
         {
-            sFirstHourRating = "Medium";
+            sFirstHourRatingDesig = "Medium";
             break;
         }
-        case HPWH::FirstHourRating::High:
+        case HPWH::FirstHourRatingDesig::High:
         {
-            sFirstHourRating = "High";
+            sFirstHourRatingDesig = "High";
             break;
         }
         }
-        std::cout << "\tFirst-Hour Rating: " << sFirstHourRating << "\n";
+        std::cout << "\tFirst-Hour Rating:\n";
+        std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+        std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 
         if (hpwh.run24hrTest(firstHourRating, standardTestSummary))
         {
