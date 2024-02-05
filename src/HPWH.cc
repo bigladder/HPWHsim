@@ -65,8 +65,8 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-std::unordered_map<HPWH::FirstHourRating, HPWH::DrawPattern> HPWH::drawPatterns = {
-    {HPWH::FirstHourRating::VerySmall,
+std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatterns = {
+    {HPWH::FirstHourRatingDesig::VerySmall,
      {{HM_TO_MIN(0, 00), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
       {HM_TO_MIN(1, 05), 1.9, 3.8},
@@ -77,7 +77,7 @@ std::unordered_map<HPWH::FirstHourRating, HPWH::DrawPattern> HPWH::drawPatterns 
       {HM_TO_MIN(9, 00), 5.7, 3.8},
       {HM_TO_MIN(9, 15), 3.8, 3.8}}},
 
-    {HPWH::FirstHourRating::Low,
+    {HPWH::FirstHourRatingDesig::Low,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
@@ -90,7 +90,7 @@ std::unordered_map<HPWH::FirstHourRating, HPWH::DrawPattern> HPWH::drawPatterns 
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 11.4, 6.4}}},
 
-    {HPWH::FirstHourRating::Medium,
+    {HPWH::FirstHourRatingDesig::Medium,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 40), 34.1, 6.4},
@@ -104,7 +104,7 @@ std::unordered_map<HPWH::FirstHourRating, HPWH::DrawPattern> HPWH::drawPatterns 
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 26.5, 6.4}}},
 
-    {HPWH::FirstHourRating::High,
+    {HPWH::FirstHourRatingDesig::High,
      {{HM_TO_MIN(0, 00), 102, 11.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(0, 40), 3.8, 3.8},
@@ -5532,7 +5532,8 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
 
     DRMODES drMode = DR_ALLOW;
     double drawVolume_L = 0.;
-    double totalDrawVolume_L = 0.;
+
+    firstHourRating.drawVolume_L = 0.;
 
     double sumOutletVolumeT_LC = 0.;
     double sumOutletVolume_L = 0.;
@@ -5600,12 +5601,12 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
                         fac = (avgOutletT_C - prevMinOutletT_C) /
                               (prevAvgOutletT_C - prevMinOutletT_C);
                     }
-                    totalDrawVolume_L += fac * drawVolume_L;
+                    firstHourRating.drawVolume_L += fac * drawVolume_L;
                     done = true;
                 }
                 else
                 {
-                    totalDrawVolume_L += drawVolume_L;
+                    firstHourRating.drawVolume_L += drawVolume_L;
                     drawVolume_L = 0.;
                     isDrawing = false;
                     drMode = DR_ALLOW;
@@ -5652,21 +5653,21 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
     }
 
     //
-    if (totalDrawVolume_L < GAL_TO_L(18.))
+    if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
-        firstHourRating = FirstHourRating::VerySmall;
+        firstHourRating.desig = FirstHourRatingDesig::VerySmall;
     }
-    else if (totalDrawVolume_L < GAL_TO_L(51.))
+    else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
     {
-        firstHourRating = FirstHourRating::Low;
+        firstHourRating.desig = FirstHourRatingDesig::Low;
     }
-    else if (totalDrawVolume_L < GAL_TO_L(75.))
+    else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
     {
-        firstHourRating = FirstHourRating::Medium;
+        firstHourRating.desig = FirstHourRatingDesig::Medium;
     }
     else
     {
-        firstHourRating = FirstHourRating::High;
+        firstHourRating.desig = FirstHourRatingDesig::High;
     }
 
     return true;
@@ -5685,7 +5686,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        const double setpointT_C /* = 51.7 */)
 {
     // select the draw pattern
-    DrawPattern& drawPattern = drawPatterns[firstHourRating];
+    DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
