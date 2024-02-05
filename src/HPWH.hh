@@ -471,11 +471,11 @@ class HPWH
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
-    bool initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
-    bool initResistanceTank(double tankVol_L,
-                            double energyFactor,
-                            double upperPower_W,
-                            double lowerPower_W);
+    int initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
+    int initResistanceTank(double tankVol_L,
+                           double energyFactor,
+                           double upperPower_W,
+                           double lowerPower_W);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -487,10 +487,10 @@ class HPWH
      * to standard setting, with upper as VIP activating when the top third is too cold.
      */
 
-    bool initResistanceTankGeneric(double tankVol_L,
-                                   double rValue_M2KperW,
-                                   double upperPower_W,
-                                   double lowerPower_W);
+    int initResistanceTankGeneric(double tankVol_L,
+                                  double rValue_M2KperW,
+                                  double upperPower_W,
+                                  double lowerPower_W);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -499,7 +499,7 @@ class HPWH
      * controls for the HPWHinit_resTank()
      */
 
-    bool initGeneric(double tankVol_L, double energyFactor, double resUse_C);
+    int initGeneric(double tankVol_L, double energyFactor, double resUse_C);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
@@ -508,7 +508,7 @@ class HPWH
 
     static bool mapNameToPreset(const std::string& modelName, MODELS& model);
 
-    bool initPreset(MODELS presetNum);
+    int initPreset(MODELS presetNum);
     /**< This function will reset all member variables to defaults and then
      * load in a set of parameters that are hardcoded in this function -
      * which particular set of parameters is selected by presetNum.
@@ -519,10 +519,10 @@ class HPWH
      * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
-    bool initPreset(const std::string& modelName);
+    int initPreset(const std::string& modelName);
 
 #ifndef HPWH_ABRIDGED
-    bool initFromFile(std::string configFile);
+    int initFromFile(std::string configFile);
     /**< Loads a HPWH model from a file
      * The file name is the input - there should be at most one set of parameters per file
      * This is useful for testing new variations, and for the sort of variability

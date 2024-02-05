@@ -47,7 +47,7 @@ TEST_F(CompressorFncsTest, compressorSpecs)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_TRUE(hpwh.initPreset(modelSpec.sModelName))
+        EXPECT_EQ(hpwh.initPreset(modelSpec.sModelName), 0)
             << "Could not initialize model " << modelSpec.sModelName;
 
         EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.sModelName;

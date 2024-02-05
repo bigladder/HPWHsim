@@ -4477,14 +4477,14 @@ bool compressorIsRunning(HPWH& hpwh)
 }
 
 /// Initializes a preset from the modelName
-bool HPWH::initPreset(const std::string& modelName)
+int HPWH::initPreset(const std::string& modelName)
 {
     HPWH::MODELS targetModel;
     if (mapNameToPreset(modelName, targetModel))
     {
         return initPreset(targetModel);
     }
-    return false;
+    return HPWH_ABORT;
 }
 
 // Used to check a few inputs after the initialization of a tank model from a preset or a file.
@@ -4763,7 +4763,7 @@ int HPWH::checkInputs()
 }
 
 #ifndef HPWH_ABRIDGED
-bool HPWH::initFromFile(string configFile)
+int HPWH::initFromFile(string configFile)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -4778,7 +4778,7 @@ bool HPWH::initFromFile(string configFile)
         {
             msg("Input file failed to open.  \n");
         }
-        return false;
+        return HPWH_ABORT;
     }
 
     // some variables that will be handy
@@ -4823,7 +4823,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
             tankVolume_L = tempDouble;
         }
@@ -4836,7 +4836,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
             tankUA_kJperHrC = tempDouble;
         }
@@ -4857,7 +4857,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
         }
         else if (token == "mixOnDraw")
@@ -4877,7 +4877,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
         }
         else if (token == "mixBelowFractionOnDraw")
@@ -4889,7 +4889,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Out of bounds value for %s. Should be between 0 and 1. \n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
             mixBelowFractionOnDraw = tempDouble;
         }
@@ -4906,7 +4906,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
             setpoint_C = tempDouble;
             // tank will be set to setpoint at end of function
@@ -4924,7 +4924,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
         }
         else if (token == "initialTankTemp")
@@ -4940,7 +4940,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect units specification for %s.  \n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
             initalTankT_C = tempDouble;
             hasInitialTankTemp = true;
@@ -4959,7 +4959,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Improper value for %s\n", token.c_str());
                 }
-                return false;
+                return HPWH_ABORT;
             }
         }
         else if (token == "heatExchangerEffectiveness")
@@ -4993,7 +4993,7 @@ bool HPWH::initFromFile(string configFile)
                 {
                     msg("Incorrect verbosity on input.  \n");
                 }
-                return false;
+                return HPWH_ABORT;
             }
         }
 
@@ -5012,7 +5012,7 @@ bool HPWH::initFromFile(string configFile)
             {
                 msg("You must specify the number of heatsources before setting their properties.  "
                     "\n");
-                return false;
+                return HPWH_ABORT;
             }
             line_ss >> heatsource >> token;
             if (token == "isVIP")
@@ -5030,7 +5030,7 @@ bool HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
             else if (token == "isOn")
@@ -5048,7 +5048,7 @@ bool HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
             else if (token == "minT")
@@ -5064,7 +5064,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Incorrect units specification for %s.  \n", token.c_str());
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
                 heatSources[heatsource].minT = tempDouble;
             }
@@ -5081,7 +5081,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Incorrect units specification for %s.  \n", token.c_str());
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
                 heatSources[heatsource].maxT = tempDouble;
             }
@@ -5107,7 +5107,7 @@ bool HPWH::initFromFile(string configFile)
                                     token.c_str(),
                                     LOGIC_SIZE + 1);
                             }
-                            return false;
+                            return HPWH_ABORT;
                         }
                         nodeNums.push_back(nodeNum);
                         line_ss >> nextToken;
@@ -5140,7 +5140,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 nodeNums.size());
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     if (nextToken != "absolute" && nextToken != "relative")
                     {
@@ -5152,7 +5152,7 @@ bool HPWH::initFromFile(string configFile)
                                 heatsource,
                                 token.c_str());
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     bool absolute = (nextToken == "absolute");
                     std::string compareStr;
@@ -5172,7 +5172,7 @@ bool HPWH::initFromFile(string configFile)
                                 heatsource,
                                 token.c_str());
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     if (units == "F")
                     {
@@ -5195,7 +5195,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     std::vector<NodeWeight> nodeWeights;
                     for (size_t i = 0; i < nodeNums.size(); i++)
@@ -5244,7 +5244,7 @@ bool HPWH::initFromFile(string configFile)
                                     heatsource,
                                     token.c_str());
                             }
-                            return false;
+                            return HPWH_ABORT;
                         }
                         line_ss >> tempDouble;
                     }
@@ -5274,7 +5274,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     if (tempString == "wholeTank")
                     {
@@ -5327,7 +5327,7 @@ bool HPWH::initFromFile(string configFile)
                         {
                             msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                 }
                 else if (token == "offlogic")
@@ -5345,7 +5345,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     if (tempString == "topNodeMaxTemp")
                     {
@@ -5380,7 +5380,7 @@ bool HPWH::initFromFile(string configFile)
                         {
                             msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                 }
             }
@@ -5401,7 +5401,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
             else if (token == "coilConfig")
@@ -5425,7 +5425,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
             else if (token == "heatCycle")
@@ -5445,7 +5445,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
 
@@ -5462,7 +5462,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
             else if (token == "externalOutlet")
@@ -5478,7 +5478,7 @@ bool HPWH::initFromFile(string configFile)
                     {
                         msg("Improper %s for heat source %d\n", token.c_str(), heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
             }
 
@@ -5512,7 +5512,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     else
                     {
@@ -5525,7 +5525,7 @@ bool HPWH::initFromFile(string configFile)
                                 maxTemps,
                                 nTemps);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                 }
                 line_ss >> tempDouble >> units;
@@ -5543,7 +5543,7 @@ bool HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
                 heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
             }
@@ -5584,7 +5584,7 @@ bool HPWH::initFromFile(string configFile)
                                 token.c_str(),
                                 heatsource);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                     else
                     {
@@ -5597,7 +5597,7 @@ bool HPWH::initFromFile(string configFile)
                                 maxTemps,
                                 nTemps);
                         }
-                        return false;
+                        return HPWH_ABORT;
                     }
                 }
                 line_ss >> tempDouble;
@@ -5627,7 +5627,7 @@ bool HPWH::initFromFile(string configFile)
                             token.c_str(),
                             heatsource);
                     }
-                    return false;
+                    return HPWH_ABORT;
                 }
                 heatSources[heatsource].hysteresis_dC = tempDouble;
             }
@@ -5658,7 +5658,7 @@ bool HPWH::initFromFile(string configFile)
         else
         {
             msg("Improper keyword: %s  \n", token.c_str());
-            return false;
+            return HPWH_ABORT;
         }
 
     } // end while over lines
@@ -5689,9 +5689,9 @@ bool HPWH::initFromFile(string configFile)
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return false;
+        return HPWH_ABORT;
     }
     simHasFailed = false;
-    return true;
+    return 0;
 }
 #endif
