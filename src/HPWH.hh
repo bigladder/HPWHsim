@@ -1044,9 +1044,9 @@ class HPWH
     /**< caller context pointer for external message processing  */
 
     MODELS model;
-    /**< The model enum id */
+    /**< The model id */
 
-    // a std::vector containing the HeatSources, in order of priority
+    /// a std::vector containing the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
     int compressorIndex;
@@ -1586,5 +1586,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const int lowestNode,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
+void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 #endif
