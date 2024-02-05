@@ -4357,25 +4357,19 @@ int HPWH::initPreset(MODELS presetNum)
                                           0.0000392,
                                           -3.52E-07};
 
-        // Set model scale
-        double scale = 1.;
+        // Set model scale factor
+        double scaleFactor = 1.;
         if (presetNum == MODELS_TamScalable_SP_2X)
         {
-            scale = 2.;
+            scaleFactor = 2.;
         }
         else if (presetNum == MODELS_TamScalable_SP_Half)
         {
-            scale = 0.5;
+            scaleFactor = 0.5;
         }
 
         // Scale the compressor capacity
-        if (scale != 1.)
-        {
-            std::transform(inputPower_coeffs.begin(),
-                           inputPower_coeffs.end(),
-                           inputPower_coeffs.begin(),
-                           std::bind(std::multiplies<double>(), std::placeholders::_1, scale));
-        }
+        scaleVector(inputPower_coeffs, scaleFactor);
 
         compressor.perfMap.push_back({
             105,               // Temperature (T_F)
@@ -4400,7 +4394,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.depressesTemperature = false; // no temp depression
 
         // Scale the resistance-element power
-        double elementPower_W = scale * 30000.;
+        double elementPower_W = scaleFactor * 30000.;
         resistiveElementBottom.setupAsResistiveElement(0, elementPower_W);
         resistiveElementTop.setupAsResistiveElement(9, elementPower_W);
 

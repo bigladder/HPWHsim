@@ -317,6 +317,22 @@ void calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
+//-----------------------------------------------------------------------------
+///	@brief	Scales all values of a std::vector<double> by a common factor.
+/// @param[in/out]	coeffs		values to be scaled
+/// @param[in]	scaleFactor 	scaling factor
+//-----------------------------------------------------------------------------
+void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
+{
+    if (scaleFactor != 1.)
+    {
+        std::transform(coeffs.begin(),
+                       coeffs.end(),
+                       coeffs.begin(),
+                       std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
+    }
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -3109,21 +3125,8 @@ int HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=
 
     for (auto& perfP : heatSources[compressorIndex].perfMap)
     {
-        if (scaleCapacity != 1.)
-        {
-            std::transform(
-                perfP.inputPower_coeffs.begin(),
-                perfP.inputPower_coeffs.end(),
-                perfP.inputPower_coeffs.begin(),
-                std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCapacity));
-        }
-        if (scaleCOP != 1.)
-        {
-            std::transform(perfP.COP_coeffs.begin(),
-                           perfP.COP_coeffs.end(),
-                           perfP.COP_coeffs.begin(),
-                           std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCOP));
-        }
+        scaleVector(perfP.inputPower_coeffs, scaleCapacity);
+        scaleVector(perfP.COP_coeffs, scaleCOP);
     }
 
     return 0;
@@ -4127,7 +4130,6 @@ bool compressorIsRunning(HPWH& hpwh)
 
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
 {
-
     if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
     {
         model = HPWH::MODELS_AOSmithPHPT60;
