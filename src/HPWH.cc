@@ -5426,7 +5426,7 @@ int HPWH::HPWHinit_file(string configFile)
 ///	@brief	Performs a draw/heat cycle to prep for test
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::prepForTest()
+bool HPWH::prepForTest(StandardTestOptions& standardTestOptions)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5435,6 +5435,17 @@ bool HPWH::prepForTest()
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
+
+    if (standardTestOptions.changeSetpoint)
+    {
+        if (!isSetpointFixed())
+        {
+            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
+        }
+    }
 
     DRMODES drMode = DR_ALLOW;
     bool isDrawing = false;
@@ -5508,7 +5519,7 @@ bool HPWH::prepForTest()
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
-                               const double setpointT_C /* = 51.7 */)
+                               StandardTestOptions& standardTestOptions)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5518,11 +5529,14 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
-    if (!isSetpointFixed())
+    if (standardTestOptions.changeSetpoint)
     {
-        if (setSetpoint(setpointT_C, UNITS_C) == HPWH_ABORT)
+        if (!isSetpointFixed())
         {
-            return false;
+            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
         }
     }
 
@@ -5547,7 +5561,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
     bool done = false;
     int step = 0;
 
-    if (!prepForTest())
+    if (!prepForTest(standardTestOptions))
     {
         return false;
     }
@@ -5683,7 +5697,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
 //-----------------------------------------------------------------------------
 bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& standardTestSummary,
-                       const double setpointT_C /* = 51.7 */)
+                       StandardTestOptions& standardTestOptions)
 {
     // select the draw pattern
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
@@ -5693,15 +5707,18 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     constexpr double externalT_C = 19.7;
     constexpr DRMODES drMode = DR_ALLOW;
 
-    if (!isSetpointFixed())
+    if (standardTestOptions.changeSetpoint)
     {
-        if (setSetpoint(setpointT_C, UNITS_C) == HPWH_ABORT)
+        if (!isSetpointFixed())
         {
-            return false;
+            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
         }
     }
 
-    if (!prepForTest())
+    if (!prepForTest(standardTestOptions))
     {
         return false;
     }
@@ -5831,6 +5848,24 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                             tankHeatCapacity_kJperC * (tankT_C - initialTankT_C);
                     }
                 }
+            }
+
+            if (standardTestOptions.saveOutput)
+            {
+                std::string sPreamble =
+                    std::to_string(runTime_min) + ", " + std::to_string(ambientT_C) + ", " +
+                    std::to_string(getSetpoint()) + ", " + std::to_string(inletT_C) + ", " +
+                    std::to_string(incrementalDrawVolume_L) + ", ";
+
+                int csvOptions = HPWH::CSVOPT_NONE;
+                if (incrementalDrawVolume_L > 0.)
+                {
+                    csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+                }
+                WriteCSVRow(standardTestOptions.outputFile,
+                            sPreamble.c_str(),
+                            standardTestOptions.nTestTCouples,
+                            csvOptions);
             }
 
             drawVolume_L += incrementalDrawVolume_L;
