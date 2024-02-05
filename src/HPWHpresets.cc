@@ -7,16 +7,16 @@ File Containing all of the presets available in HPWHsim
 
 #include <algorithm>
 
-bool HPWH::initResistanceTank()
+int HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
     return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
 
-bool HPWH::initResistanceTank(double tankVol_L,
-                              double energyFactor,
-                              double upperPower_W,
-                              double lowerPower_W)
+int HPWH::initResistanceTank(double tankVol_L,
+                             double energyFactor,
+                             double upperPower_W,
+                             double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -32,7 +32,7 @@ bool HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Resistance tank lower element wattage below 550 W.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
     if (upperPower_W < 0.)
     {
@@ -40,7 +40,7 @@ bool HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
     if (energyFactor <= 0.)
     {
@@ -48,7 +48,7 @@ bool HPWH::initResistanceTank(double tankVol_L,
         {
             msg("Energy Factor less than zero.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
 
     setNumNodes(12);
@@ -57,7 +57,7 @@ bool HPWH::initResistanceTank(double tankVol_L,
     tankSizeFixed = false;
     if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
-        return false;
+        return HPWH_ABORT;
     }
 
     setpoint_C = F_TO_C(127.0);
@@ -124,7 +124,7 @@ bool HPWH::initResistanceTank(double tankVol_L,
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
-        return false;
+        return HPWH_ABORT;
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -146,13 +146,13 @@ bool HPWH::initResistanceTank(double tankVol_L,
     }
 
     simHasFailed = false;
-    return true; // successful init returns true
+    return 0; // successful init returns 0
 }
 
-bool HPWH::initResistanceTankGeneric(double tankVol_L,
-                                     double rValue_m2KperW,
-                                     double upperPower_W,
-                                     double lowerPower_W)
+int HPWH::initResistanceTankGeneric(double tankVol_L,
+                                    double rValue_m2KperW,
+                                    double upperPower_W,
+                                    double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -167,7 +167,7 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             msg("Lower resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
     if (upperPower_W < 0.)
     {
@@ -175,7 +175,7 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             msg("Upper resistance tank wattage below 0 W.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
     if (rValue_m2KperW <= 0.)
     {
@@ -183,7 +183,7 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             msg("R-Value is equal to or below 0.  DOES NOT COMPUTE\n");
         }
-        return false;
+        return HPWH_ABORT;
     }
 
     setNumNodes(12);
@@ -192,7 +192,7 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
     tankSizeFixed = false;
     if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
-        return false;
+        return HPWH_ABORT;
     }
     canScale = true;
 
@@ -254,7 +254,7 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
-        return false;
+        return HPWH_ABORT;
 
     isHeating = false;
     for (auto& source : heatSources)
@@ -276,10 +276,10 @@ bool HPWH::initResistanceTankGeneric(double tankVol_L,
     }
 
     simHasFailed = false;
-    return true; // successful init returns 0
+    return 0; // successful init returns 0
 }
 
-bool HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
+int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -424,7 +424,7 @@ bool HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return false;
+        return HPWH_ABORT;
     }
 
     isHeating = false;
@@ -447,10 +447,10 @@ bool HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     }
 
     simHasFailed = false;
-    return true;
+    return 0;
 }
 
-bool HPWH::initPreset(MODELS presetNum)
+int HPWH::initPreset(MODELS presetNum)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -4227,7 +4227,7 @@ bool HPWH::initPreset(MODELS presetNum)
             {
                 msg("Incorrect model specification.  \n");
             }
-            return false;
+            return HPWH_ABORT;
         }
 
         doTempDepression = false;
@@ -4580,7 +4580,7 @@ bool HPWH::initPreset(MODELS presetNum)
         {
             msg("You have tried to select a preset model which does not exist.  \n");
         }
-        return false;
+        return HPWH_ABORT;
     }
 
     if (hasInitialTankTemp)
@@ -4595,7 +4595,7 @@ bool HPWH::initPreset(MODELS presetNum)
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return false;
+        return HPWH_ABORT;
     }
 
     isHeating = false;
@@ -4618,5 +4618,5 @@ bool HPWH::initPreset(MODELS presetNum)
     }
 
     simHasFailed = false;
-    return true; // successful init returns true
+    return 0; // successful init returns 0
 } // end HPWHinit_presets
