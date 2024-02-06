@@ -5814,12 +5814,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
         // iterate until 1) specified draw volume has been reached and 2) next draw has started
         // do not exceed specified draw volume
-        if ((!isDrawComplete) && (stepDrawVolume_L >= remainingDrawVolume_L))
+        if (stepDrawVolume_L >= remainingDrawVolume_L)
         {
             stepDrawVolume_L = remainingDrawVolume_L;
-            remainingDrawVolume_L = 0.;
-            isDrawComplete = true;
-            needCalc = true;
         }
 
         // run a step
@@ -5856,6 +5853,12 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         }
 
         remainingDrawVolume_L -= stepDrawVolume_L;
+
+        if (remainingDrawVolume_L <= 0.)
+        {
+            isDrawComplete = true;
+            needCalc = true;
+        }
 
         tankT_C = getAverageTankTemp_C();
         hasHeated |= isHeating;
