@@ -1236,6 +1236,52 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     return 0;
 }
 
+int HPWH::writeRowAsCSV(std::ofstream& outFILE,
+                        OutputData& outputData,
+                        const CSVOPTIONS& options /* = CSVOPTIONS::CSVOPT_NONE */) const
+{
+    bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
+    //
+    outFILE << fmt::format("{}", outputData.time_min);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
+    outFILE << fmt::format(",{}", outputData.drMode);
+
+    //
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
+                               outputData.h_srcIn_kWh[iHS] * 1000.,
+                               outputData.h_srcOut_kWh[iHS] * 1000.);
+    }
+
+    //
+    for (auto thermocoupleT_C : outputData.thermocoupleT_C)
+    {
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
+    }
+
+    //
+    if (outputData.drawVolume_L > 0.)
+    {
+        outFILE << fmt::format(",{:0.2f}",
+                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
+    }
+    else
+    {
+        outFILE << ",";
+    }
+
+    outFILE << std::endl;
+    return 0;
+}
+
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
@@ -5723,6 +5769,8 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         return false;
     }
 
+    std::vector<OutputData> outputDataSet;
+
     // idle for 1 hr
     int preTime_min = 0;
     bool heatersAreOn = false;
@@ -5747,7 +5795,39 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
             heatersAreOn |= heatSource.isEngaged();
         }
 
+        {
+            OutputData outputData;
+            outputData.time_min = preTime_min;
+            outputData.ambientT_C = ambientT_C;
+            outputData.setpointT_C = getSetpoint();
+            outputData.inletT_C = inletT_C;
+            outputData.drawVolume_L = 0.;
+            outputData.drMode = drMode;
+
+            for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
+            {
+                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcOut_kWh.push_back(
+                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+            }
+
+            for (int iTC = 0; iTC < standardTestOptions.nTestTCouples; ++iTC)
+            {
+                outputData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, standardTestOptions.nTestTCouples, UNITS_C));
+            }
+            outputData.outletT_C = 0.;
+
+            outputDataSet.push_back(outputData);
+        }
+
         ++preTime_min;
+    }
+
+    // correct time to start test at 0 min
+    for (auto& outputData : outputDataSet)
+    {
+        outputData.time_min -= preTime_min;
     }
 
     double tankT_C = getAverageTankTemp_C();
@@ -5830,22 +5910,30 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
             return false;
         }
 
-        if (standardTestOptions.saveOutput)
         {
-            std::string sPreamble =
-                std::to_string(runTime_min) + ", " + std::to_string(ambientT_C) + ", " +
-                std::to_string(getSetpoint()) + ", " + std::to_string(inletT_C) + ", " +
-                std::to_string(stepDrawVolume_L) + ", ";
+            OutputData outputData;
+            outputData.time_min = runTime_min;
+            outputData.ambientT_C = ambientT_C;
+            outputData.setpointT_C = getSetpoint();
+            outputData.inletT_C = inletT_C;
+            outputData.drawVolume_L = stepDrawVolume_L;
+            outputData.drMode = drMode;
 
-            int csvOptions = HPWH::CSVOPT_NONE;
-            if (stepDrawVolume_L > 0.)
+            for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                csvOptions |= HPWH::CSVOPT_IS_DRAWING;
+                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcOut_kWh.push_back(
+                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
-            WriteCSVRow(standardTestOptions.outputFile,
-                        sPreamble.c_str(),
-                        standardTestOptions.nTestTCouples,
-                        csvOptions);
+
+            for (int iTC = 0; iTC < standardTestOptions.nTestTCouples; ++iTC)
+            {
+                outputData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, standardTestOptions.nTestTCouples, UNITS_C));
+            }
+            outputData.outletT_C = outletTemp_C;
+
+            outputDataSet.push_back(outputData);
         }
 
         remainingDrawVolume_L -= stepDrawVolume_L;
@@ -5917,6 +6005,14 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     nextDraw = true;
                 }
             }
+        }
+    }
+
+    if (standardTestOptions.saveOutput)
+    {
+        for (auto& outputData : outputDataSet)
+        {
+            writeRowAsCSV(standardTestOptions.outputFile, outputData);
         }
     }
 
