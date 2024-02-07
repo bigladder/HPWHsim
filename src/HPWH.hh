@@ -1034,6 +1034,25 @@ class HPWH
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
 
+    /// fields for test output to csv
+    struct OutputData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
+    int writeRowAsCSV(std::ofstream& outFILE,
+                      OutputData& outputData,
+                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
+
   private:
     class HeatSource;
 
