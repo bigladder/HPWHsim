@@ -5839,17 +5839,25 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     double tankT_C = getAverageTankTemp_C();
     double initialTankT_C = tankT_C;
 
-    double deliveredEnergy_kJ = 0.; // total energy delivered to water
-    testSummary.removedVolume_L = 0.;
-    testSummary.usedEnergy_kJ = 0.;           // Q
-    testSummary.usedFossilFuelEnergy_kJ = 0.; // total fossil-fuel energy consumed, Qf
-    testSummary.usedElectricalEnergy_kJ = 0.; // total electrical energy consumed, Qe
+    // used to find average draw temperatures
+    double drawSumOutletVolumeT_LC = 0.;
+    double drawSumInletVolumeT_LC = 0.;
+
+    // used to find average 24-hr test temperatures
+    double sumOutletVolumeT_LC = 0.;
+    double sumInletVolumeT_LC = 0.;
 
     // first-recovery info
     bool isFirstRecoveryPeriod = true;
     testSummary.recoveryStoredEnergy_kJ = 0.;
     testSummary.recoveryDeliveredEnergy_kJ = 0.;
     testSummary.recoveryUsedEnergy_kJ = 0.;
+
+    double deliveredEnergy_kJ = 0.; // total energy delivered to water
+    testSummary.removedVolume_L = 0.;
+    testSummary.usedEnergy_kJ = 0.;           // Q
+    testSummary.usedFossilFuelEnergy_kJ = 0.; // total fossil-fuel energy consumed, Qf
+    testSummary.usedElectricalEnergy_kJ = 0.; // total electrical energy consumed, Qe
 
     bool hasHeated = false;
 
@@ -5863,10 +5871,6 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     bool isDrawComplete = false;
     bool needCalc = false;
     bool isFirstDraw = true;
-
-    double drawSumOutletVolumeT_LC = 0.;
-    double drawSumInletVolumeT_LC = 0.;
-    int drawSumTimeT_minC = 0;
 
     bool inLastHour = false;
     double stepDrawVolume_L = 0.;
@@ -5898,7 +5902,6 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
                 drawSumOutletVolumeT_LC = 0.;
                 drawSumInletVolumeT_LC = 0.;
-                drawSumTimeT_minC = 0;
             }
         }
 
@@ -5960,7 +5963,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
         drawSumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
         drawSumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
-        ++drawSumTimeT_minC;
+
+        sumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
+        sumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
 
         // collect energy added to water
         double stepDrawMass_kg = DENSITYWATER_kgperL * stepDrawVolume_L;
@@ -6026,6 +6031,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 
     double finalTankT_C = tankT_C;
+
+    testSummary.avgOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
+    testSummary.avgInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
 
     if (testOptions.saveOutput)
     {
