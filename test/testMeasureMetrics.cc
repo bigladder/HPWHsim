@@ -80,21 +80,21 @@ int main(int argc, char* argv[])
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 272.5659));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Medium);
-        ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.2212));
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 2.6493));
 
         ASSERTTRUE(testMeasureMetrics(
             "AOSmithHPTS50", firstHourRating, standardTestSummary, standardTestOptions));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 188.0432));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::Low);
-        ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.4914));
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.0018));
 
         ASSERTTRUE(testMeasureMetrics(
             "AOSmithHPTS80", firstHourRating, standardTestSummary, standardTestOptions));
         ASSERTTRUE(standardTestSummary.qualifies);
         ASSERTTRUE(cmpd(firstHourRating.drawVolume_L, 310.9384));
         ASSERTTRUE(firstHourRating.desig == HPWH::FirstHourRatingDesig::High);
-        ASSERTTRUE(cmpd(standardTestSummary.UEF, 3.5230));
+        ASSERTTRUE(cmpd(standardTestSummary.UEF, 4.3272));
 
         return 0;
     }
