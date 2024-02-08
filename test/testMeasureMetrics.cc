@@ -210,15 +210,15 @@ int main(int argc, char* argv[])
             std::cout << "\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
                       << "\n";
             std::cout << "\tUEF: " << standardTestSummary.UEF << "\n";
+            std::cout << "\tDaily Water Heating Energy Consumption (kWh): "
+                      << standardTestSummary.waterHeatingEnergy_kJ << "\n";
             std::cout << "\tAdjusted Daily Water Heating Energy Consumption (kWh): "
-                      << KJ_TO_KWH(
-                             standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ)
+                      << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ)
                       << "\n";
             std::cout << "\tAnnual Electrical Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.annualElectricalEnergyConsumption_kJ)
-                      << "\n";
+                      << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
             std::cout << "\tAnnual Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.annualEnergyConsumption_kJ) << "\n";
+                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
         }
         else
         {
