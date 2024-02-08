@@ -978,15 +978,29 @@ class HPWH
     /// collection of information derived from standard test
     struct StandardTestSummary
     {
+        // first recovery values
+        double recoveryEfficiency = 0.; // eta_r
+        double recoveryDeliveredEnergy_kJ = 0.;
+        double recoveryStoredEnergy_kJ = 0.;
+        double recoveryUsedEnergy_kJ = 0.; // Q_r
+
+        double standardWaterHeatingEnergy_kJ = 0.; // Q_HW,T
+
+        // 24-hr values
+        double removedVolume_L = 0.;
+        double waterHeatingEnergy_kJ = 0.;                 // Q_HW
+        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
+        double usedElectricalEnergy_kJ = 0.;               // Q_e
+        double usedEnergy_kJ = 0.;                         // Q
+        double consumedHeatingEnergy_kJ = 0.;              // Q_d
+        double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
+        double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
         double UEF = 0.;
-        double recoveryEfficiency = 0.;
-        double dailyHeatingEnergyConsumption_kJ = 0.;
-        double adjustedDailyWaterHeatingEnergyConsumption_kJ = 0.;
-        double modifiedDailyWaterHeatingEnergyConsumption_kJ = 0.;
-        double energyUsedToHeatWater_kJ = 0.;
-        double standardEnergyUsedToHeatWater_kJ = 0.;
-        double annualElectricalEnergyConsumption_kJ = 0.;
-        double annualEnergyConsumption_kJ = 0.;
+
+        // (calculated) annual totals
+        double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
+        double annualConsumedEnergy_kJ = 0.;           // E_annual
+
         bool qualifies = false;
     };
 
@@ -1030,6 +1044,8 @@ class HPWH
 
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
+
+    static std::unordered_map<FirstHourRatingDesig, int> firstDrawClusterSizes;
 
     /// collection of standard draw patterns
     static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;

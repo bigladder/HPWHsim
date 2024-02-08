@@ -65,6 +65,12 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+std::unordered_map<HPWH::FirstHourRatingDesig, int> HPWH::firstDrawClusterSizes = {
+    {HPWH::FirstHourRatingDesig::VerySmall, 5},
+    {HPWH::FirstHourRatingDesig::Low, 3},
+    {HPWH::FirstHourRatingDesig::Medium, 3},
+    {HPWH::FirstHourRatingDesig::High, 4}};
+
 std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatterns = {
     {HPWH::FirstHourRatingDesig::VerySmall,
      {{HM_TO_MIN(0, 00), 7.6, 3.8},
@@ -5472,7 +5478,7 @@ int HPWH::HPWHinit_file(string configFile)
 ///	@brief	Performs a draw/heat cycle to prep for test
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::prepForTest(StandardTestOptions& standardTestOptions)
+bool HPWH::prepForTest(StandardTestOptions& testOptions)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5482,11 +5488,11 @@ bool HPWH::prepForTest(StandardTestOptions& standardTestOptions)
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
-    if (standardTestOptions.changeSetpoint)
+    if (testOptions.changeSetpoint)
     {
         if (!isSetpointFixed())
         {
-            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
             {
                 return false;
             }
@@ -5564,8 +5570,7 @@ bool HPWH::prepForTest(StandardTestOptions& standardTestOptions)
 ///	@param[in]	setpointT_C		    setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
-bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
-                               StandardTestOptions& standardTestOptions)
+bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOptions& testOptions)
 {
     double flowRate_Lper_min = GAL_TO_L(3.);
     if (tankVolume_L < GAL_TO_L(20.))
@@ -5575,11 +5580,11 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
-    if (standardTestOptions.changeSetpoint)
+    if (testOptions.changeSetpoint)
     {
         if (!isSetpointFixed())
         {
-            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
             {
                 return false;
             }
@@ -5607,7 +5612,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
     bool done = false;
     int step = 0;
 
-    if (!prepForTest(standardTestOptions))
+    if (!prepForTest(testOptions))
     {
         return false;
     }
@@ -5737,34 +5742,35 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating,
 ///	@brief	Performs standard 24-hr test
 /// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058
 /// @param[in] firstHourRating          specifies first-hour rating
-/// @param[out] standardTestSummary	    contains test metrics on output
+/// @param[out] testSummary	            contains test metrics on output
 ///	@param[in]	setpointT_C		        setpoint temperature (optional)
 /// @return	true (success), false (failure).
 //-----------------------------------------------------------------------------
 bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
-                       StandardTestSummary& standardTestSummary,
-                       StandardTestOptions& standardTestOptions)
+                       StandardTestSummary& testSummary,
+                       StandardTestOptions& testOptions)
 {
-    // select the draw pattern
+    // select the first draw cluster size and pattern
+    int firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
-    constexpr DRMODES drMode = DR_ALLOW;
+    DRMODES drMode = DR_ALLOW;
 
-    if (standardTestOptions.changeSetpoint)
+    if (testOptions.changeSetpoint)
     {
         if (!isSetpointFixed())
         {
-            if (setSetpoint(standardTestOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
             {
                 return false;
             }
         }
     }
 
-    if (!prepForTest(standardTestOptions))
+    if (!prepForTest(testOptions))
     {
         return false;
     }
@@ -5811,10 +5817,10 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < standardTestOptions.nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
             {
                 outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, standardTestOptions.nTestTCouples, UNITS_C));
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
             }
             outputData.outletT_C = 0.;
 
@@ -5833,18 +5839,22 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     double tankT_C = getAverageTankTemp_C();
     double initialTankT_C = tankT_C;
 
-    double dailyRemovedVolume_L = 0.;
-    double dailyUsedEnergy_kJ = 0.;
-    double dailyUsedHeatingEnergy_kJ = 0.;    // total energy added to water over 24-hr test
-    double dailyUsedElectricalEnergy_kJ = 0.; // total electrical energy consumed over 24-hr test
+    double deliveredEnergy_kJ = 0.; // total energy delivered to water
+    testSummary.removedVolume_L = 0.;
+    testSummary.usedEnergy_kJ = 0.;           // Q
+    testSummary.usedFossilFuelEnergy_kJ = 0.; // total fossil-fuel energy consumed, Qf
+    testSummary.usedElectricalEnergy_kJ = 0.; // total electrical energy consumed, Qe
 
     // first-recovery info
     bool isFirstRecoveryPeriod = true;
-    double firstRecoveryUsedEnergy_kJ = 0.;
-    double recoveryHeatingEnergy_kJ = 0.;
+    testSummary.recoveryStoredEnergy_kJ = 0.;
+    testSummary.recoveryDeliveredEnergy_kJ = 0.;
+    testSummary.recoveryUsedEnergy_kJ = 0.;
+
     bool hasHeated = false;
 
     int endTime_min = 24 * min_per_hr;
+    int standbyStartTime_min = 23 * min_per_hr;
     std::size_t iDraw = 0;
     double remainingDrawVolume_L = 0.;
     double drawVolume_L = 0.;
@@ -5858,9 +5868,16 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     double drawSumInletVolumeT_LC = 0.;
     int drawSumTimeT_minC = 0;
 
+    bool inLastHour = false;
     double stepDrawVolume_L = 0.;
     for (int runTime_min = 0; runTime_min <= endTime_min; ++runTime_min)
     {
+        if ((runTime_min >= standbyStartTime_min) && (!inLastHour))
+        {
+            inLastHour = true;
+            drMode = DR_LOC | DR_LOR;
+        }
+
         if (nextDraw)
         {
             auto& draw = drawPattern[iDraw];
@@ -5926,10 +5943,10 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
             }
 
-            for (int iTC = 0; iTC < standardTestOptions.nTestTCouples; ++iTC)
+            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
             {
                 outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, standardTestOptions.nTestTCouples, UNITS_C));
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
             }
             outputData.outletT_C = outletTemp_C;
 
@@ -5945,10 +5962,10 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         drawSumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
         ++drawSumTimeT_minC;
 
-        // collect heating energy
+        // collect energy added to water
         double stepDrawMass_kg = DENSITYWATER_kgperL * stepDrawVolume_L;
         double stepDrawHeatCapacity_kJperC = CPWATER_kJperkgC * stepDrawMass_kg;
-        double usedHeatingEnergy_kJ = stepDrawHeatCapacity_kJperC * (outletTemp_C - inletT_C);
+        deliveredEnergy_kJ += stepDrawHeatCapacity_kJperC * (outletTemp_C - inletT_C);
 
         // collect used-energy info
         double usedFossilFuelEnergy_kJ = 0.;
@@ -5959,14 +5976,14 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         }
 
         // collect 24-hr test info
-        dailyRemovedVolume_L += stepDrawVolume_L;
-        dailyUsedHeatingEnergy_kJ += usedHeatingEnergy_kJ;
-        dailyUsedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
-        dailyUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+        testSummary.removedVolume_L += stepDrawVolume_L;
+        testSummary.usedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
+        testSummary.usedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
+        testSummary.usedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
 
         if (isFirstRecoveryPeriod)
         {
-            firstRecoveryUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+            testSummary.recoveryUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
         }
 
         if (isDrawComplete)
@@ -5980,7 +5997,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
                     double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
                     double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
-                    recoveryHeatingEnergy_kJ +=
+                    testSummary.recoveryStoredEnergy_kJ =
                         tankHeatCapacity_kJperC * (tankT_C - initialTankT_C);
                 }
 
@@ -5992,7 +6009,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     double drawMass_kg = DENSITYWATER_kgperL * drawVolume_L;
                     double drawHeatCapacity_kJperC = CPWATER_kJperkgC * drawMass_kg;
 
-                    recoveryHeatingEnergy_kJ +=
+                    testSummary.recoveryDeliveredEnergy_kJ +=
                         drawHeatCapacity_kJperC * (meanDrawOutletT_C - meanDrawInletT_C);
                 }
             }
@@ -6008,112 +6025,105 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
         }
     }
 
-    if (standardTestOptions.saveOutput)
+    double finalTankT_C = tankT_C;
+
+    if (testOptions.saveOutput)
     {
         for (auto& outputData : outputDataSet)
         {
-            writeRowAsCSV(standardTestOptions.outputFile, outputData);
+            writeRowAsCSV(testOptions.outputFile, outputData);
         }
     }
 
     // require heating during 24-hr test for unit to qualify as consumer water heater
     if (hasHeated && isDrawComplete)
     {
-        standardTestSummary.qualifies = true;
+        testSummary.qualifies = true;
     }
 
     // find the "Recovery Efficiency" (6.3.3)
-    standardTestSummary.recoveryEfficiency = 0.;
-    if (firstRecoveryUsedEnergy_kJ > 0.)
+    testSummary.recoveryEfficiency = 0.;
+    if (testSummary.recoveryUsedEnergy_kJ > 0.)
     {
-        standardTestSummary.recoveryEfficiency =
-            recoveryHeatingEnergy_kJ / firstRecoveryUsedEnergy_kJ;
+        testSummary.recoveryEfficiency =
+            (testSummary.recoveryStoredEnergy_kJ + testSummary.recoveryDeliveredEnergy_kJ) /
+            testSummary.recoveryUsedEnergy_kJ;
     }
 
-    // find the standard daily heating energy
+    // find the standard delivered daily energy
     constexpr double standardSetpointT_C = 51.7;
     constexpr double standardInletT_C = 14.4;
-    double dailyMassRemoved_kg = HPWH::DENSITYWATER_kgperL * dailyRemovedVolume_L;
-    double dailyHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * dailyMassRemoved_kg;
-    double standardDailyHeatingEnergy_kJ =
-        dailyHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+    double removedMass_kg = HPWH::DENSITYWATER_kgperL * testSummary.removedVolume_L;
+    double removedHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * removedMass_kg;
+    double standardDeliveredEnergy_kJ =
+        removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
 
-    // find the "Daily Water Heating Energy Consumption (Qd)" (6.3.5)
-    standardTestSummary.dailyHeatingEnergyConsumption_kJ = dailyUsedEnergy_kJ;
-    if (standardTestSummary.recoveryEfficiency > 0.)
+    // find the "Daily Water Heating Energy Consumption (Q_d)" (6.3.5)
+    testSummary.consumedHeatingEnergy_kJ = testSummary.usedEnergy_kJ;
+    if (testSummary.recoveryEfficiency > 0.)
     {
         double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
         double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
-        double finalTankT_C = tankT_C;
-        standardTestSummary.dailyHeatingEnergyConsumption_kJ -=
-            tankHeatCapacity_kJperC * (finalTankT_C - initialTankT_C) /
-            standardTestSummary.recoveryEfficiency;
+        testSummary.consumedHeatingEnergy_kJ -= tankHeatCapacity_kJperC *
+                                                (finalTankT_C - initialTankT_C) /
+                                                testSummary.recoveryEfficiency;
     }
 
-    // find the "Adjusted Daily Water Heating Energy Consumption (Qda)" (6.3.6a)
+    // find the "Adjusted Daily Water Heating Energy Consumption (Q_da)" (6.3.6)
     // same as above, because simulation induces no change in ambient temperature
-    standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ =
-        standardTestSummary.dailyHeatingEnergyConsumption_kJ;
+    testSummary.adjustedConsumedWaterHeatingEnergy_kJ = testSummary.consumedHeatingEnergy_kJ;
 
-    // find the "Energy Used to Heat Water (Q_HW)" (6.3.6a)
-    standardTestSummary.energyUsedToHeatWater_kJ = 0.;
-    if (standardTestSummary.recoveryEfficiency > 0.)
+    // find the "Energy Used to Heat Water (Q_HW)" (6.3.6)
+    testSummary.waterHeatingEnergy_kJ = 0.;
+    if (testSummary.recoveryEfficiency > 0.)
     {
-        standardTestSummary.energyUsedToHeatWater_kJ =
-            dailyUsedHeatingEnergy_kJ / standardTestSummary.recoveryEfficiency;
+        testSummary.waterHeatingEnergy_kJ = deliveredEnergy_kJ / testSummary.recoveryEfficiency;
     }
 
-    // find the "Standard Energy Used to Heat Water (Q_HW,T)" (6.3.6b)
-    standardTestSummary.standardEnergyUsedToHeatWater_kJ = 0.;
-    if (standardTestSummary.recoveryEfficiency > 0.)
+    // find the "Standard Energy Used to Heat Water (Q_HW,T)" (6.3.6)
+    testSummary.standardWaterHeatingEnergy_kJ = 0.;
+    if (testSummary.recoveryEfficiency > 0.)
     {
-        double removedMass_kg = DENSITYWATER_kgperL * dailyRemovedVolume_L;
+        double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
         double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
         double standardRemovedEnergy_kJ =
             removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
-        standardTestSummary.standardEnergyUsedToHeatWater_kJ =
-            standardRemovedEnergy_kJ / standardTestSummary.recoveryEfficiency;
+        testSummary.standardWaterHeatingEnergy_kJ =
+            standardRemovedEnergy_kJ / testSummary.recoveryEfficiency;
     }
 
-    // add to the adjusted daily water heating energy consumption (p. 40487)
-    double energyUsedToHeatWaterDifference_kJ =
-        standardTestSummary.standardEnergyUsedToHeatWater_kJ -
-        standardTestSummary.energyUsedToHeatWater_kJ;
-    standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ +=
-        energyUsedToHeatWaterDifference_kJ;
-
-    // find the "Modified Daily Water Heating Energy Consumption (Qdm = Qda - QHWD) (p. 40487)
+    // find the "Modified Daily Water Heating Energy Consumption (Q_dm = Q_da - Q_HWD) (p. 40487)
     // note: same as Q_HW,T
-    standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ =
-        standardTestSummary.adjustedDailyWaterHeatingEnergyConsumption_kJ -
-        energyUsedToHeatWaterDifference_kJ;
+    double waterHeatingDifferenceEnergy_kJ =
+        testSummary.standardWaterHeatingEnergy_kJ - testSummary.waterHeatingEnergy_kJ; // Q_HWD
+    testSummary.modifiedConsumedWaterHeatingEnergy_kJ =
+        testSummary.adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ;
 
     // find the "Uniform Energy Factor" (6.4.4)
-    standardTestSummary.UEF = 0.;
-    if (standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ > 0.)
+    testSummary.UEF = 0.;
+    if (testSummary.modifiedConsumedWaterHeatingEnergy_kJ > 0.)
     {
-        standardTestSummary.UEF = standardDailyHeatingEnergy_kJ /
-                                  standardTestSummary.modifiedDailyWaterHeatingEnergyConsumption_kJ;
+        testSummary.UEF =
+            standardDeliveredEnergy_kJ / testSummary.modifiedConsumedWaterHeatingEnergy_kJ;
     }
 
     // find the "Annual Energy Consumption" (6.4.5)
-    standardTestSummary.annualEnergyConsumption_kJ = 0.;
-    if (standardTestSummary.UEF > 0.)
+    testSummary.annualConsumedEnergy_kJ = 0.;
+    if (testSummary.UEF > 0.)
     {
         constexpr double days_per_year = 365.;
         const double nominalDifferenceT_C = F_TO_C(67.);
-        standardTestSummary.annualEnergyConsumption_kJ = days_per_year * dailyHeatCapacity_kJperC *
-                                                         nominalDifferenceT_C /
-                                                         standardTestSummary.UEF;
+        testSummary.annualConsumedEnergy_kJ =
+            days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.UEF;
     }
 
     // find the "Annual Electrical Energy Consumption" (6.4.6)
-    standardTestSummary.annualElectricalEnergyConsumption_kJ = 0.;
-    if (dailyUsedEnergy_kJ > 0.)
+    testSummary.annualConsumedElectricalEnergy_kJ = 0.;
+    if (testSummary.usedEnergy_kJ > 0.)
     {
-        standardTestSummary.annualElectricalEnergyConsumption_kJ =
-            (dailyUsedElectricalEnergy_kJ / dailyUsedEnergy_kJ) *
-            standardTestSummary.annualEnergyConsumption_kJ;
+        testSummary.annualConsumedElectricalEnergy_kJ =
+            (testSummary.usedElectricalEnergy_kJ / testSummary.usedEnergy_kJ) *
+            testSummary.annualConsumedEnergy_kJ;
     }
 
     return true;
