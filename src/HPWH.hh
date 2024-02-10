@@ -984,7 +984,21 @@ class HPWH
         double recoveryStoredEnergy_kJ = 0.;
         double recoveryUsedEnergy_kJ = 0.; // Q_r
 
-        double standardWaterHeatingEnergy_kJ = 0.; // Q_HW,T
+        //
+        double standbyPeriodTime_h = 0; // tau_stby,1
+
+        double standbyStartTankT_C = 0.; // T_su,0
+        double standbyEndTankT_C = 0.;   // T_su,f
+
+        double standbyStartEnergy_kJ = 0.; // Q_su,0
+        double standbyEndEnergy_kJ = 0.;   // Q_su,f
+        double standbyUsedEnergy_kJ = 0.;  // Q_stby
+
+        double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
+        double standbyLossCoefficient_kJperhC = 0.; // UA
+
+        double noDrawTotalTime_h = 0;        // tau_stby,2
+        double noDrawAverageAmbientT_C = 0.; // <T_a,stby,2>
 
         // 24-hr values
         double removedVolume_L = 0.;
@@ -996,6 +1010,7 @@ class HPWH
         double usedElectricalEnergy_kJ = 0.;               // Q_e
         double usedEnergy_kJ = 0.;                         // Q
         double consumedHeatingEnergy_kJ = 0.;              // Q_d
+        double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
         double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
         double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
         double UEF = 0.;

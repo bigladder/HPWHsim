@@ -213,6 +213,9 @@ int main(int argc, char* argv[])
             std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
                       << "\n";
 
+            std::cout << "\t\tStandby Loss Coefficient (kJ/h" << sDeg
+                      << "C): " << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+
             std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
             std::cout << "\t\tAverage Inlet Temperature (" << sDeg
