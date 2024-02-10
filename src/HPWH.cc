@@ -380,7 +380,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
     secondsPerStep = sec_per_min * minutesPerStep;
-    hoursPerStep = minutesPerStep / min_per_hr;
+    hoursPerStep = minutesPerStep / min_per_h;
 }
 
 // public HPWH functions
@@ -3977,13 +3977,13 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
         if (heatDistribution_W[i] != 0)
         {
             double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
-            double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
+            double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_h);
             addExtraHeatAboveNode(qAdd_KJ, i);
             tot_qAdded_BTUperHr += qAdd_BTUperHr;
         }
     }
     // Write the input & output energy
-    extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
+    extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_h);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -5860,7 +5860,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
     bool hasHeated = false;
 
-    int endTime_min = 24 * min_per_hr;
+    int endTime_min = 24 * static_cast<int>(min_per_h);
     std::size_t iDraw = 0;
     double remainingDrawVolume_L = 0.;
     double drawVolume_L = 0.;
@@ -5885,7 +5885,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     double standbySumTimeTankT_minC = 0.;
     double standbySumTimeAmbientT_minC = 0.;
 
-    int noDrawTotalTime_min = 0.;
+    int noDrawTotalTime_min = 0;
     double noDrawSumTimeAmbientT_minC = 0.;
 
     bool inLastHour = false;
@@ -6059,7 +6059,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     standbySumTimeTankT_minC += (1.) * tankT_C;
                     standbySumTimeAmbientT_minC += (1.) * ambientT_C;
 
-                    if (runTime_min >= standbyStartTime_min + 8 * min_per_hr)
+                    if (runTime_min >= standbyStartTime_min + 8 * min_per_h)
                     {
                         hasStandbyPeriodEnded = true;
                         standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
@@ -6086,9 +6086,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                                 standbyStartT_C = tankT_C;                             // Tsu,0
 
                                 if (isDrawPatternComplete &&
-                                    (runTime_min + 8 * min_per_hr > endTime_min))
+                                    (runTime_min + 8 * min_per_h > endTime_min))
                                 {
-                                    endTime_min = runTime_min + 8 * min_per_hr;
+                                    endTime_min = runTime_min + 8 * static_cast<int>(min_per_h);
                                 }
                             }
                         }
@@ -6140,6 +6140,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
     double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
 
+    double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
+    double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
+
     // require heating during 24-hr test for unit to qualify as consumer water heater
     if (hasHeated && !isDrawing)
     {
@@ -6159,7 +6162,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     testSummary.standbyUsedEnergy_kJ = standbyEndTankEnergy_kJ - standbyStartTankEnergy_kJ;
 
     int standbyPeriodTime_min = standbyEndTime_min - standbyStartTime_min - 1;
-    testSummary.standbyPeriodTime_h = standbyPeriodTime_min / min_per_hr; // tau_stby,1
+    testSummary.standbyPeriodTime_h = standbyPeriodTime_min / min_per_h; // tau_stby,1
     if ((testSummary.standbyPeriodTime_h > 0) && (testSummary.recoveryEfficiency > 0.))
     {
         double standardTankEnergy_kJ = tankHeatCapacity_kJperC * (standbyEndT_C - standbyStartT_C) /
@@ -6180,7 +6183,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 
     //
-    testSummary.noDrawTotalTime_h = noDrawTotalTime_min / min_per_hr; // tau_stby,2
+    testSummary.noDrawTotalTime_h = noDrawTotalTime_min / min_per_h; // tau_stby,2
     if (noDrawTotalTime_min > 0)
     {
         testSummary.noDrawAverageAmbientT_C =
@@ -6188,8 +6191,6 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 
     // find the standard delivered daily energy
-    double removedMass_kg = HPWH::DENSITYWATER_kgperL * testSummary.removedVolume_L;
-    double removedHeatCapacity_kJperC = HPWH::CPWATER_kJperkgC * removedMass_kg;
     double standardDeliveredEnergy_kJ =
         removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
 
@@ -6219,8 +6220,6 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     testSummary.standardWaterHeatingEnergy_kJ = 0.;
     if (testSummary.recoveryEfficiency > 0.)
     {
-        double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
-        double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
         double standardRemovedEnergy_kJ =
             removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
         testSummary.standardWaterHeatingEnergy_kJ =
