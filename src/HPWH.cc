@@ -65,7 +65,7 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-std::unordered_map<HPWH::FirstHourRatingDesig, int> HPWH::firstDrawClusterSizes = {
+std::unordered_map<HPWH::FirstHourRatingDesig, std::size_t> HPWH::firstDrawClusterSizes = {
     {HPWH::FirstHourRatingDesig::VerySmall, 5},
     {HPWH::FirstHourRatingDesig::Low, 3},
     {HPWH::FirstHourRatingDesig::Medium, 3},
@@ -5751,7 +5751,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestOptions& testOptions)
 {
     // select the first draw cluster size and pattern
-    int firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
+    auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
     constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
