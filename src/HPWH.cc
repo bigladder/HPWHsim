@@ -1257,7 +1257,7 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
     outFILE << fmt::format(",{:0.2f}",
                            doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
-    outFILE << fmt::format(",{}", outputData.drMode);
+    outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
 
     //
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
