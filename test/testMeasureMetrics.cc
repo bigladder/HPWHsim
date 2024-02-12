@@ -168,8 +168,6 @@ int main(int argc, char* argv[])
                              csvOptions);
     }
 
-    const std::string sDeg = "\370";
-
     HPWH::FirstHourRating firstHourRating;
     if (hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
@@ -213,16 +211,16 @@ int main(int argc, char* argv[])
             std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
                       << "\n";
 
-            std::cout << "\t\tStandby Loss Coefficient (kJ/h" << sDeg
-                      << "C): " << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+            std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
 
             std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
-            std::cout << "\t\tAverage Inlet Temperature (" << sDeg
-                      << "C): " << standardTestSummary.avgInletT_C << "\n";
+            std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+                      << "\n";
 
-            std::cout << "\t\tAverage Outlet Temperature (" << sDeg
-                      << "C): " << standardTestSummary.avgOutletT_C << "\n";
+            std::cout << "\t\tAverage Outlet Temperature (degC): "
+                      << standardTestSummary.avgOutletT_C << "\n";
 
             std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L
                       << "\n";
