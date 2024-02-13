@@ -2278,7 +2278,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoin
                                                              const UNITS units /* = UNITS_C */,
                                                              const bool absolute /* = false */)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1.);
+    auto nodeWeights = getNodeWeightRange(0., 1.);
     double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "whole tank", nodeWeights, decisionPoint_C, this, absolute);
@@ -2286,14 +2286,14 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoin
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2. / 3., 1.);
+    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top third", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2. / 3., 1.);
+    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top third absolute", nodeWeights, decisionPoint, this, true);
 }
@@ -2302,7 +2302,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPo
                                                                const UNITS units /* = UNITS_C */,
                                                                const bool absolute /* = false */)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
+    auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
     double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "second third", nodeWeights, decisionPoint_C, this, absolute);
@@ -2310,70 +2310,70 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPo
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 3.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 3.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom third", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 6.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth_absolute(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 6.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom sixth absolute", nodeWeights, decisionPoint, this, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
+    auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "second sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::thirdSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2. / 6., 3. / 6.);
+    auto nodeWeights = getNodeWeightRange(2. / 6., 3. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "third sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fourthSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(3. / 6., 4. / 6.);
+    auto nodeWeights = getNodeWeightRange(3. / 6., 4. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "fourth sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
+    auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "fifth sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(5. / 6., 1.);
+    auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top sixth", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 2.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom half", nodeWeights, decisionPoint, this);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 12.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom twelfth", nodeWeights, decisionPoint, this);
 }
@@ -2410,56 +2410,56 @@ HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutof
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfthMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 12.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom twelfth", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(2. / 3., 1.);
+    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top third", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixthMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 6.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "bottom sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixthMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
+    auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "second sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixthMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
+    auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixthMaxTemp(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(5. / 6., 1.);
+    auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 4.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 4.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "large draw", nodeWeights, decisionPoint, this, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoint)
 {
-    std::vector<NodeWeight> nodeWeights = getNodeWeightRange(0., 1. / 2.);
+    auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "larger draw", nodeWeights, decisionPoint, this, true);
 }
@@ -3643,7 +3643,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
         if (tankMixesOnDraw && drawVolume_L > 0.)
         {
             int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
-            mixTankNodes(0, mixedBelowNode, 3.0);
+            mixTankNodes(0, mixedBelowNode, 1. / 3.);
         }
 
     } // end if(draw_volume_L > 0)
@@ -4010,20 +4010,19 @@ bool HPWH::areAllHeatSourcesOff() const
     return allOff;
 }
 
-void HPWH::mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor)
+void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {
-    double ave = 0.;
-    double numAvgNodes = (double)(mixedBelowNode - mixedAboveNode);
-    for (int i = mixedAboveNode; i < mixedBelowNode; i++)
+    double avgT_C = 0.;
+    double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
+    for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        ave += tankTemps_C[i];
+        avgT_C += tankTemps_C[i];
     }
-    ave /= numAvgNodes;
+    avgT_C /= numAvgNodes;
 
-    for (int i = mixedAboveNode; i < mixedBelowNode; i++)
+    for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        tankTemps_C[i] += ((ave - tankTemps_C[i]) / mixFactor);
-        // tankTemps_C[i] = tankTemps_C[i] * (1.0 - 1.0 / mixFactor) + ave / mixFactor;
+        tankTemps_C[i] += mixFactor * (avgT_C - tankTemps_C[i]);
     }
 }
 
