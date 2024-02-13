@@ -1113,9 +1113,9 @@ class HPWH
     ///  "extra" heat added during a simulation step
     double extraEnergyInput_kWh;
 
-    void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
-    /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed
-     * below node. */
+    /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
+    /// by a factor mixFactor towards their average temperature
+    void mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void calcDerivedValues();
     /**< a helper function for the inits, calculating condentropy and the lowest node  */
@@ -1594,6 +1594,13 @@ class HPWH::HeatSource
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
+    /// Add heat from external source using a multi-pass configuration
+    double addHeatExternalMP(double externalT_C,
+                             double minutesToRun,
+                             double& cap_BTUperHr,
+                             double& input_BTUperHr,
+                             double& cop);
+
     /**  I wrote some methods to help with the add heat interface - MJL  */
     void getCapacity(double externalT_C,
                      double condenserTemp_C,
@@ -1618,9 +1625,6 @@ class HPWH::HeatSource
                        double& input_BTUperHr,
                        double& cap_BTUperHr,
                        double& cop);
-
-    double calcMPOutletTemperature(double heatingCapacity_KW);
-    /**< returns the temperature of outlet of a external multipass hpwh */
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 
