@@ -956,15 +956,21 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
 
     // Populate the vector of heat distribution
-    if (configuration == CONFIG_SUBMERGED)
+    switch (configuration)
+    {
+    case CONFIG_SUBMERGED:
+    case CONFIG_EXTERNAL:
     {
         heatDistribution.resize(hpwh->getNumNodes());
         resampleExtensive(heatDistribution, condensity);
+        break;
     }
-    else if (configuration == CONFIG_WRAPPED)
+    case CONFIG_WRAPPED:
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
             heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpoint_C);
+        break;
+    }
     }
 }
 
