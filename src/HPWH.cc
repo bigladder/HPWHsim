@@ -658,7 +658,7 @@ int HPWH::runOneStep(double drawVolume_L,
         double minutesToRun = minutesPerStep;
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            heatSources[i].addTransientHeat();
+            heatSources[i].addRetainedHeat();
             // check/apply lock-outs
             if (hpwhVerbosity >= VRB_emetic)
             {

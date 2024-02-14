@@ -565,7 +565,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
     energyRemovedFromEnvironment_kWh += KJ_TO_KWH(removedEnergy_kJ);
 }
 
-void HPWH::HeatSource::addTransientHeat()
+void HPWH::HeatSource::addRetainedHeat()
 {
     if (energyRetained_kWh > 0.)
     {

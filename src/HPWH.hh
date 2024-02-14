@@ -1252,8 +1252,8 @@ class HPWH::HeatSource
     /**< adds heat to the hpwh - this is the function that interprets the
         various configurations (internal/external, resistance/heat pump) to add heat */
 
-    /// Add some retained heat to the tank
-    void addTransientHeat();
+    /// Add a portion of the retained heat to the tank
+    void addRetainedHeat();
 
     /// Assign new condensity values from supplied vector. Note the input vector is currently
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.
@@ -1314,7 +1314,7 @@ class HPWH::HeatSource
     double energyRemovedFromEnvironment_kWh;
     /**< the energy removed from the environment  */
 
-    /// the energy retained by the heat source, released as transient heat
+    /// the energy retained by the heat source
     double energyRetained_kWh;
 
     /// coefficient [0,1) specifying fraction of heat-source capacity retained each pass
