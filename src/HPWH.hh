@@ -828,6 +828,9 @@ class HPWH
     /// returns the total energy removed from the environment by all heat sources, in kJ
     double getEnergyRemovedFromEnvironment_kJ() const;
 
+    /// get the heat released from the tank to the environment, in kJ
+    double getStandbyLosses_kJ() const;
+
     /// get the heat content of the tank (relative to 0 degC), in kJ
     double getTankHeatContent_kJ() const;
 
@@ -1552,6 +1555,7 @@ inline double KW_TO_BTUperH(double kw) { return (kw * BTUperKWH); }
 inline double W_TO_BTUperH(double w) { return (w * BTUperKWH / 1000.); }
 inline double KJ_TO_KWH(double kj) { return (kj / sec_per_hr); }
 inline double BTU_TO_KJ(double btu) { return (btu * sec_per_hr / BTUperKWH); }
+inline double KJ_TO_BTU(double kj) { return (kj / sec_per_hr * BTUperKWH); }
 inline double GAL_TO_L(double gallons) { return (gallons * L_per_gal); }
 inline double L_TO_GAL(double liters) { return (liters / L_per_gal); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }

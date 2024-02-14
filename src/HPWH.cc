@@ -317,25 +317,15 @@ void calcThermalDist(std::vector<double>& thermalDist,
 
 double getEnergy(const double energy_kWh, const HPWH::UNITS units /*=UNITS_KWH*/)
 {
-    switch (units)
-    {
-
-    case HPWH::UNITS_KWH:
+    if (units == HPWH::UNITS_KWH)
     {
         return energy_kWh;
     }
-
-    case HPWH::UNITS_BTU:
+    else if (units == HPWH::UNITS_BTU)
     {
         return KWH_TO_BTU(energy_kWh);
     }
-
-    case HPWH::UNITS_KJ:
-    {
-        return KWH_TO_KJ(energy_kWh);
-    }
-    }
-    return 0.;
+    return KWH_TO_KJ(energy_kWh);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -2658,6 +2648,33 @@ double HPWH::getEnergyRemovedFromEnvironment_kJ() const
     return KWH_TO_KJ(energy_kWh);
 }
 
+double HPWH::getStandbyLosses_kJ() const { return KWH_TO_KJ(standbyLosses_kWh); }
+
+double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
+{
+    // moving heat from the water to the space is the positive direction
+    if (units == UNITS_KWH)
+    {
+        return standbyLosses_kWh;
+    }
+    else if (units == UNITS_BTU)
+    {
+        return KWH_TO_BTU(standbyLosses_kWh);
+    }
+    else if (units == UNITS_KJ)
+    {
+        return KWH_TO_KJ(standbyLosses_kWh);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getStandbyLosses.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
 double HPWH::getHeatContent_kJ() const
 {
     double energy_kWh = 0.;
@@ -2800,31 +2817,6 @@ double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("Incorrect unit specification for getExternalVolumeHeated.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
-double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
-{
-    // moving heat from the water to the space is the positive direction
-    if (units == UNITS_KWH)
-    {
-        return standbyLosses_kWh;
-    }
-    else if (units == UNITS_BTU)
-    {
-        return KWH_TO_BTU(standbyLosses_kWh);
-    }
-    else if (units == UNITS_KJ)
-    {
-        return KWH_TO_KJ(standbyLosses_kWh);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getStandbyLosses.  \n");
         }
         return double(HPWH_ABORT);
     }
