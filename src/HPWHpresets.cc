@@ -4550,8 +4550,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.addTurnOnLogic(HPWH::wholeTank(111, UNITS_F, true));
         compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
-        compressor.heatRetentionCoef = 0.2;
-        compressor.energyRetained_kWh = KJ_TO_KWH(2000.);
+        // retain heat in condenser
+        compressor.heatRetentionCoef = 0.;
+        compressor.energyRetained_kWh = KJ_TO_KWH(0.);
 
         // set everything in its places
         heatSources.resize(1);

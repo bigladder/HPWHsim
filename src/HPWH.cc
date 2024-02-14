@@ -5105,6 +5105,13 @@ int HPWH::HPWHinit_file(string configFile)
                 line_ss >> tempDouble;
                 heatSources[heatsource].heatRetentionCoef = tempDouble;
             }
+            else if (token == "initialHeatRetained")
+            {
+                line_ss >> tempDouble >> units;
+                if (units == "kJ")
+                    tempDouble = KWH_TO_KJ(tempDouble);
+                heatSources[heatsource].energyRetained_kWh = tempDouble;
+            }
             else if (token == "condensity")
             {
                 double x;

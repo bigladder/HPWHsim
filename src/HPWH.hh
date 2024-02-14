@@ -1298,8 +1298,10 @@ class HPWH::HeatSource
     // some outputs
     double runtime_min;
     /**< this is the percentage of the step that the heat source was running */
+
     double energyInput_kWh;
     /**< the energy used by the heat source */
+
     double energyOutput_kWh;
     /**< the energy put into the water by the heat source */
 
@@ -1308,6 +1310,8 @@ class HPWH::HeatSource
 
     /// the energy retained by the heat source, released as transient heat
     double energyRetained_kWh;
+
+    /// coefficient [0,1) specifying fraction of heat-source capacity retained each pass
     double heatRetentionCoef;
 
     // these are the heat source property variables
