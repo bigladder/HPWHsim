@@ -16,8 +16,8 @@ heatsource 0 isVIP false
 heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 1
-heatsource 0 heatRetentionCoef 0.1
-heatsource 0 initialHeatRetained 20.3 kJ
+heatsource 0 heatRetentionCoef 0.
+heatsource 0 initialHeatRetained 0. kJ
 
 #we have input power and COP equations at for ambient temperatures
 heatsource 0 nTemps 4

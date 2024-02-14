@@ -883,7 +883,6 @@ int HPWH::runNSteps(int N,
     // returns 0 on successful completion, HPWH_ABORT on failure
 
     // these are all the accumulating variables we'll need
-    double energyRemovedFromEnvironment_kWh_SUM = 0;
     double standbyLosses_kWh_SUM = 0;
     double outletTemp_C_AVG = 0;
     double totalDrawVolume_L = 0;
@@ -4360,7 +4359,6 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
         - qOutStandbyLosses_kJ    // heat released from tank to environment
         - qOutWater_kJ;           // heat expelled to outlet by water flow
 
-    double currentTankHeatContent_kJ = getTankHeatContent_kJ();
     double currentHeatContent_kJ = getHeatContent_kJ();
     double qBal_kJ = currentHeatContent_kJ - expectedHeatContent_kJ;
 
