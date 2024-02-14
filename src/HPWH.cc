@@ -2628,7 +2628,6 @@ bool HPWH::isNthHeatSourceValid(const int n) const
     return true;
 }
 
-//
 double HPWH::getInputEnergy_kJ() const
 {
     double energy_kWh = 0.;
@@ -2639,7 +2638,6 @@ double HPWH::getInputEnergy_kJ() const
     return KWH_TO_KJ(energy_kWh);
 }
 
-//
 double HPWH::getOutputEnergy_kJ() const
 {
     double energy_kWh = 0.;
@@ -2650,7 +2648,6 @@ double HPWH::getOutputEnergy_kJ() const
     return KWH_TO_KJ(energy_kWh);
 }
 
-//
 double HPWH::getEnergyRemovedFromEnvironment_kJ() const
 {
     double energy_kWh = 0.;
@@ -2660,7 +2657,7 @@ double HPWH::getEnergyRemovedFromEnvironment_kJ() const
     }
     return KWH_TO_KJ(energy_kWh);
 }
-//
+
 double HPWH::getHeatContent_kJ() const
 {
     double energy_kWh = 0.;
@@ -2671,25 +2668,21 @@ double HPWH::getHeatContent_kJ() const
     return KWH_TO_KJ(energy_kWh) + getTankHeatContent_kJ();
 }
 
-// energy used by the heat source is positive - this should always be positive
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyInput_kWh, units) : 0.;
 }
 
-// returns energy from the heat source into the water - this should always be positive
 double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyOutput_kWh, units) : 0.;
 }
 
-// returns energy from the heat source into the water - this should always be positive
 double HPWH::getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyRetained_kWh, units) : 0.;
 }
 
-// returns energy from the heat source into the water - this should always be positive
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return isNthHeatSourceValid(N)

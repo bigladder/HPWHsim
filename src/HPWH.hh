@@ -815,34 +815,46 @@ class HPWH
 
     int getResistancePosition(int elementIndex) const;
 
+    /// check whether a valid het source with index n exists
     bool isNthHeatSourceValid(const int n) const;
 
+    /// returns the total input energy to all heat sources in the previous time step, in kJ
     double getInputEnergy_kJ() const;
+
+    /// returns the total energy from all heat sources to the tank in the previous time
+    /// step, in kJ
     double getOutputEnergy_kJ() const;
-    double getHeatContent_kJ() const;
+
+    /// returns the total energy removed from the environment by all heat sources, in kJ
     double getEnergyRemovedFromEnvironment_kJ() const;
 
+    /// get the heat content of the tank (relative to 0 degC), in kJ
+    double getTankHeatContent_kJ() const;
+
+    /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
+    double getHeatContent_kJ() const;
+
+    /// returns the energy input to the Nth heat source, with the specified units
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
-    /**< returns the energy input to the Nth heat source, with the specified units
-      energy used by the heat source is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
 
+    /// returns energy transferred from the Nth heat source to the water, with the specified units
     double getNthHeatSourceEnergyOutput(int N, UNITS units = UNITS_KWH) const;
-    /**< returns the energy output from the Nth heat source, with the specified units
-      energy put into the water is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
 
+    /// returns energy removed from the environment into the heat source, with the specified units
     double getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units = UNITS_KWH) const;
 
+    /// returns energy retained by the heat source, with the specified units
     double getNthHeatSourceEnergyRetained(int N, UNITS units = UNITS_KWH) const;
 
     double getNthHeatSourceRunTime(int N) const;
     /**< returns the run time for the Nth heat source, in minutes
       note: they may sum to more than 1 time step for concurrently running heat sources
       returns HPWH_ABORT for N out of bounds  */
+
     int isNthHeatSourceRunning(int N) const;
     /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
         returns HPWH_ABORT for N out of bounds  */
+
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
@@ -872,12 +884,6 @@ class HPWH
       moving heat from the water to the space is the positive direction
       negative should occur seldom
       returns HPWH_ABORT for incorrect units  */
-
-    double getTankHeatContent_kJ() const;
-    /**< get the heat content of the tank, relative to zero celsius
-     * returns using kilojoules */
-
-    double getTotalHeatContent_kJ() const;
 
     int getHPWHModel() const;
     /**< get the model number of the HPWHsim model number of the hpwh */
