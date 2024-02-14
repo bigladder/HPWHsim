@@ -1450,7 +1450,7 @@ class HPWH::HeatSource
       when the heat source is engaged, it is subtracted from lowT cutoffs and
       added to lowTreheat cutoffs */
 
-    bool depressesTemperature;
+    bool depressesTemperature = false;
     /**<  heat pumps can depress the temperature of their space in certain instances -
       whether or not this occurs is a bool in HPWH, but a heat source must
       know if it is capable of contributing to this effect or not

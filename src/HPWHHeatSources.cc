@@ -36,6 +36,14 @@ HPWH::HeatSource::HeatSource(HPWH* parentInput)
     , secondaryHeatExchanger {0., 0., 0.}
     , heatRetentionCoef(0.)
     , energyRetained_kWh(0.)
+    , Tshrinkage_C(1.)
+    , energyInput_kWh(0.)
+    , energyOutput_kWh(0.)
+    , energyRemovedFromEnvironment_kWh(0.)
+    , runtime_min(0.)
+    , isVIP(false)
+    , lowestNode(0)
+    , configuration(CONFIG_SUBMERGED)
 {
 }
 
@@ -56,6 +64,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     runtime_min = hSource.runtime_min;
     energyInput_kWh = hSource.energyInput_kWh;
     energyOutput_kWh = hSource.energyOutput_kWh;
+    energyRemovedFromEnvironment_kWh = hSource.energyRemovedFromEnvironment_kWh;
 
     isVIP = hSource.isVIP;
 
@@ -150,7 +159,6 @@ void HPWH::HeatSource::unlockHeatSource() { lockedOut = false; }
 
 bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 {
-
     // if it's already locked out, keep it locked out
     if (isLockedOut() == true)
     {
@@ -232,7 +240,6 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 
 bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 {
-
     // if it's already unlocked, keep it unlocked
     if (isLockedOut() == false)
     {
@@ -294,7 +301,6 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 
 bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C)
 {
-
     if (shouldLockOut(heatSourceAmbientT_C))
     {
         lockOutHeatSource();
@@ -607,7 +613,6 @@ void HPWH::HeatSource::sortPerformanceMap()
 
 double HPWH::HeatSource::getTankTemp() const
 {
-
     std::vector<double> resampledTankTemps(getCondensitySize());
     resample(resampledTankTemps, hpwh->tankTemps_C);
 
@@ -945,7 +950,6 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-
     std::vector<double> result = perfRGI->get_values_at_target(target);
 
     input_BTUperHr = result[0];
@@ -954,7 +958,6 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vec
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
-
     // Populate the vector of heat distribution
     switch (configuration)
     {
@@ -1246,7 +1249,6 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
                                                double Watts,
                                                int condensitySize /* = CONDENSITY_SIZE*/)
 {
-
     isOn = false;
     isVIP = false;
     condensity = std::vector<double>(condensitySize, 0.);
