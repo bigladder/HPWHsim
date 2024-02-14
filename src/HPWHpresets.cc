@@ -1459,7 +1459,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(15), this, false));
+            "fourth node", nodeWeights, dF_TO_dC(15.), this, false));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
@@ -1843,8 +1843,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         }
 
         // Set up regular grid interpolator.
-        compressor.perfRGI =
-            new Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues);
+        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues));
         compressor.useBtwxtGrid = true;
 
         // set everything in its places
@@ -2214,7 +2214,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
 
-        compressor.perfRGI = new Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues);
+        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues));
+
         compressor.useBtwxtGrid = true;
 
         compressor.secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
@@ -4516,27 +4518,27 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.perfMap.reserve(4);
 
         compressor.perfMap.push_back({
-            5,                       // Temperature (T_F)
-            {-1423, 38.70, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.13839, 0.012319, 0.} // COP Coefficients (COP_coeffs)
+            5,                     // Temperature (T_F)
+            {-1356, 39.80, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {2.003, -0.003637, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            34,                      // Temperature (T_F)
-            {-1558, 42.40, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.19375, 0.017247, 0.} // COP Coefficients (COP_coeffs)
+            34,                    // Temperature (T_F)
+            {-1485, 43.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {2.805, -0.005092, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            67,                      // Temperature (T_F)
-            {-1713, 46.60, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.239326, 0.02882, 0.} // COP Coefficients (COP_coeffs)
+            67,                    // Temperature (T_F)
+            {-1632, 47.93, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {4.076, -0.007400, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.perfMap.push_back({
-            95,                      // Temperature (T_F)
-            {-1844, 50.17, 0.},      // Input Power Coefficients (inputPower_coeffs)
-            {-0.47273, 0.042082, 0.} // COP Coefficients (COP_coeffs)
+            95,                    // Temperature (T_F)
+            {-1757, 51.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
+            {6.843, -0.012424, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor.minT = F_TO_C(-25);

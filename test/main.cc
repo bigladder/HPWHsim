@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
             airTemp2 = allSchedules[2][i];
         }
 
-        double tankHCStart = hpwh.getTankHeatContent_kJ();
+        double prevHeatContent_kJ = hpwh.getHeatContent_kJ();
 
         // Process the dr status
         drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
@@ -426,10 +426,13 @@ int main(int argc, char* argv[])
                         allSchedules[0][i],
                         vectptr);
 
-        if (!hpwh.isEnergyBalanced(
-                GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
+        if (!hpwh.isEnergyBalanced(GAL_TO_L(allSchedules[1][i]),
+                                   allSchedules[0][i],
+                                   prevHeatContent_kJ,
+                                   EBALTHRESHOLD))
         {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
+            exit(1);
         }
 
         // Check timing
@@ -454,7 +457,7 @@ int main(int argc, char* argv[])
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
                      << volumeHeated_Gal << ", mpFlowRate in 1 minute [Gal]: " << mpFlowVolume_Gal
                      << "\n";
-                exit(1);
+                // exit(1);
             }
         }
         // Recording

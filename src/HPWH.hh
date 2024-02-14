@@ -31,19 +31,21 @@ class HPWH
     static const int version_major = HPWHVRSN_MAJOR;
     static const int version_minor = HPWHVRSN_MINOR;
     static const int version_patch = HPWHVRSN_PATCH;
-    static const std::string version_maint; // Initialized in source file (HPWH.cc)
+    static const std::string version_maint;
 
-    static const float DENSITYWATER_kgperL;
-    static const float KWATER_WpermC;
-    static const float CPWATER_kJperkgC;
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
     static const int LOGIC_NODE_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
     static const int MAXOUTSTRING =
-        200;                         /**< this is the maximum length for a debuging output string */
-    static const float TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
-                                        to 0 this saves on computations */
+        200; /**< this is the maximum length for a debuging output string */
+
+    static const double DENSITYWATER_kgperL; /// mass density of water
+    static const double KWATER_WpermC;       /// thermal conductivity of water
+    static const double CPWATER_kJperkgC;    /// specific heat capcity of water
+    static const double TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
+                                         to 0 this saves on computations */
+
     static const float UNINITIALIZED_LOCATIONTEMP; /**< this is used to tell the
    simulation when the location temperature has not been initialized */
     static const float
@@ -813,6 +815,13 @@ class HPWH
 
     int getResistancePosition(int elementIndex) const;
 
+    bool isNthHeatSourceValid(const int n) const;
+
+    double getInputEnergy_kJ() const;
+    double getOutputEnergy_kJ() const;
+    double getHeatContent_kJ() const;
+    double getEnergyRemovedFromEnvironment_kJ() const;
+
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
     /**< returns the energy input to the Nth heat source, with the specified units
       energy used by the heat source is positive - should always be positive
@@ -823,7 +832,9 @@ class HPWH
       energy put into the water is positive - should always be positive
       returns HPWH_ABORT for N out of bounds or incorrect units  */
 
-    double getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const;
+    double getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units = UNITS_KWH) const;
+
+    double getNthHeatSourceEnergyRetained(int N, UNITS units = UNITS_KWH) const;
 
     double getNthHeatSourceRunTime(int N) const;
     /**< returns the run time for the Nth heat source, in minutes
@@ -977,9 +988,9 @@ class HPWH
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
     /**< functions to calculate what the temperature in a portion of the tank is  */
 
-    void mixTankNodes(int mixedAboveNode, int mixedBelowNode, double mixFactor);
-    /**< function to average the nodes in a tank together bewtween the mixed abovenode and mixed
-     * below node. */
+    /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
+    /// by a factor mixFactor towards their average temperature
+    void mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void calcDerivedValues();
     /**< a helper function for the inits, calculating condentropy and the lowest node  */
@@ -1069,10 +1080,8 @@ class HPWH
     /**< the volume (L) of a single node  */
     double nodeVolume_L;
 
-    /**< the mass of water (kg) in a single node  */
-    double nodeMass_kg;
-
-    /**< the heat capacity of the water (kJ/�C) in a single node  */
+    /**< heat capacity (kJ/degC) of the fluid (water, except for heat-exchange models) in a single
+     * node  */
     double nodeCp_kJperC;
 
     /**< the height in meters of the one node  */
@@ -1121,8 +1130,6 @@ class HPWH
     /**< the volume of water heated by an external source, 0 if no flow or no external heat source
      */
 
-    double energyRemovedFromEnvironment_kWh;
-    /**< the total energy removed from the environment, to heat the water  */
     double standbyLosses_kWh;
     /**< the amount of heat lost to standby  */
 
@@ -1296,6 +1303,9 @@ class HPWH::HeatSource
     double energyOutput_kWh;
     /**< the energy put into the water by the heat source */
 
+    double energyRemovedFromEnvironment_kWh;
+    /**< the energy removed from the environment  */
+
     /// the energy retained by the heat source, released as transient heat
     double energyRetained_kWh;
     double heatRetentionCoef;
@@ -1345,7 +1355,7 @@ class HPWH::HeatSource
     /**< The values for input power and cop use matching to the grid. Should be long format with { {
      * inputPower_W }, { COP } }. */
 
-    class Btwxt::RegularGridInterpolator* perfRGI;
+    std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI;
     /**< The grid interpolator used for mapping performance*/
 
     bool useBtwxtGrid;
@@ -1467,6 +1477,13 @@ class HPWH::HeatSource
     /**<  Add heat from a source outside of the tank. Assume the condensity is where
         the water is drawn from and hot water is put at the top of the tank. */
 
+    /// Add heat from external source using a multi-pass configuration
+    double addHeatExternalMP(double externalT_C,
+                             double minutesToRun,
+                             double& cap_BTUperHr,
+                             double& input_BTUperHr,
+                             double& cop);
+
     /**  I wrote some methods to help with the add heat interface - MJL  */
     void getCapacity(double externalT_C,
                      double condenserTemp_C,
@@ -1492,9 +1509,6 @@ class HPWH::HeatSource
                        double& cap_BTUperHr,
                        double& cop);
 
-    double calcMPOutletTemperature(double heatingCapacity_KW);
-    /**< returns the temperature of outlet of a external multipass hpwh */
-
     void calcHeatDist(std::vector<double>& heatDistribution);
 
     double getTankTemp() const;
@@ -1512,6 +1526,9 @@ constexpr double offsetF = 32.;     // degF offset
 constexpr double sec_per_min = 60.; // seconds / min
 constexpr double min_per_hr = 60.;  // min / hr
 constexpr double sec_per_hr = sec_per_min * min_per_hr; // seconds / hr
+constexpr double L_per_gal = 3.78541;                   // liters / gal
+constexpr double ft_per_m = 3.2808;                     // feet / meter
+constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
@@ -1525,15 +1542,15 @@ inline double KW_TO_BTUperH(double kw) { return (kw * BTUperKWH); }
 inline double W_TO_BTUperH(double w) { return (w * BTUperKWH / 1000.); }
 inline double KJ_TO_KWH(double kj) { return (kj / sec_per_hr); }
 inline double BTU_TO_KJ(double btu) { return (btu * sec_per_hr / BTUperKWH); }
-inline double GAL_TO_L(double gallons) { return (gallons * 3.78541); }
-inline double L_TO_GAL(double liters) { return (liters / 3.78541); }
+inline double GAL_TO_L(double gallons) { return (gallons * L_per_gal); }
+inline double L_TO_GAL(double liters) { return (liters / L_per_gal); }
 inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
-inline double GPM_TO_LPS(double gpm) { return (gpm * 3.78541 / sec_per_min); }
-inline double LPS_TO_GPM(double lps) { return (lps * sec_per_min / 3.78541); }
+inline double GPM_TO_LPS(double gpm) { return (gpm * L_per_gal / sec_per_min); }
+inline double LPS_TO_GPM(double lps) { return (lps * sec_per_min / L_per_gal); }
 
-inline double FT_TO_M(double feet) { return (feet / 3.2808); }
-inline double FT2_TO_M2(double feet2) { return (feet2 / 10.7640); }
+inline double FT_TO_M(double feet) { return (feet / ft_per_m); }
+inline double FT2_TO_M2(double feet2) { return (feet2 / ft2_per_m2); }
 
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
@@ -1575,5 +1592,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const int lowestNode,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
+double getEnergy(const double energy_kWh, const HPWH::UNITS units = HPWH::UNITS::UNITS_KWH);
 
 #endif
