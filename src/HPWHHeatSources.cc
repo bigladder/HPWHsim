@@ -481,10 +481,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 {
     double input_BTUperHr = 0., cap_BTUperHr = 0., cop = 0.;
 
-    double powerInput_kW = 0.;
-    double powerOutput_kW = 0.;
-    double heatAdded_kJ = 0.;
-
     switch (configuration)
     {
     case CONFIG_SUBMERGED:
@@ -506,23 +502,11 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
             getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
         }
 
-        powerInput_kW = BTUperH_TO_KW(input_BTUperHr);
-        powerOutput_kW = BTUperH_TO_KW(cap_BTUperHr);
-
-        // some outputs for debugging
-        if (hpwh->hpwhVerbosity >= VRB_typical)
-        {
-            hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",
-                      BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_hr,
-                      cap_BTUperHr);
-        }
-
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
         // maybe start from the top and go down?  test this with graphs
-
-        double cap_kJ = powerOutput_kW * minutesToRun * sec_per_min;
-        double effectiveCap_kJ = (1. - heatRetentionCoef) * cap_kJ;
+        double effectiveCap_kJ =
+            (1. - heatRetentionCoef) * BTUperH_TO_KW(cap_BTUperHr) * minutesToRun * sec_per_min;
 
         // set the leftover capacity to 0
         double leftoverCap_kJ = 0.;
@@ -534,7 +518,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
                 double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
                 // add leftoverCap to the next run, and keep passing it on
                 leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpoint_C);
-                heatAdded_kJ += heatToAdd_kJ - leftoverCap_kJ;
             }
         }
 
@@ -550,18 +533,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
             if (hpwh->hpwhVerbosity >= VRB_reluctant)
                 hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
 #endif
-        // Accumulate the input & output energy
-        double inputEnergy_kJ = powerInput_kW * runtime_min * sec_per_min;
-        double outputEnergy_kJ = powerOutput_kW * runtime_min * sec_per_min;
-        double retainedEnergy_kJ = heatRetentionCoef / (1. - heatRetentionCoef) * heatAdded_kJ;
-        double removedEnergy_kJ = outputEnergy_kJ - inputEnergy_kJ;
-
-        energyInput_kWh += KJ_TO_KWH(inputEnergy_kJ);
-        energyOutput_kWh += KJ_TO_KWH(heatAdded_kJ);
-        energyRetained_kWh += KJ_TO_KWH(retainedEnergy_kJ);
-        energyRemovedFromEnvironment_kWh += KJ_TO_KWH(removedEnergy_kJ);
+        break;
     }
-    break;
 
     case CONFIG_EXTERNAL:
         // Else the heat source is external. SANCO2 system is only current example
@@ -579,6 +552,17 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         }
         break;
     }
+    // Accumulate the energies
+    double heatingEnergy_kJ = BTUperH_TO_KW(cap_BTUperHr) * runtime_min * sec_per_min;
+    double inputEnergy_kJ = BTUperH_TO_KW(input_BTUperHr) * runtime_min * sec_per_min;
+    double outputEnergy_kJ = (1. - heatRetentionCoef) * heatingEnergy_kJ;
+    double retainedEnergy_kJ = heatRetentionCoef * heatingEnergy_kJ;
+    double removedEnergy_kJ = outputEnergy_kJ + retainedEnergy_kJ - inputEnergy_kJ;
+
+    energyInput_kWh += KJ_TO_KWH(inputEnergy_kJ);
+    energyOutput_kWh += KJ_TO_KWH(outputEnergy_kJ);
+    energyRetained_kWh += KJ_TO_KWH(retainedEnergy_kJ);
+    energyRemovedFromEnvironment_kWh += KJ_TO_KWH(removedEnergy_kJ);
 }
 
 void HPWH::HeatSource::addTransientHeat()
@@ -1021,7 +1005,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         // how much heat is available in remaining time
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
-        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double outputPower_kW = (1. - heatRetentionCoef) * BTUperH_TO_KW(tempCap_BTUperHr);
 
         double targetT_C = setpointT_C;
 
@@ -1034,7 +1018,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         }
 
         // maximum heat that can be added in remaining time
-        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
+        double outputEnergy_kJ = outputPower_kW * (remainingTime_min * sec_per_min);
 
         // heat for outlet node to reach target temperature
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
@@ -1044,10 +1028,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // reduce node fraction to heat if limited by capacity
         double nodeFrac = 1.;
-        if (heatingCapacity_kJ < nodeHeat_kJ)
+        if (outputEnergy_kJ < nodeHeat_kJ)
         {
-            nodeFrac = heatingCapacity_kJ / nodeHeat_kJ;
-            neededHeat_kJ = heatingCapacity_kJ;
+            nodeFrac = outputEnergy_kJ / nodeHeat_kJ;
+            neededHeat_kJ = outputEnergy_kJ;
         }
 
         // limit node fraction to heat by comparison criterion
@@ -1060,9 +1044,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // heat for less than remaining time if full capacity will not be used
         double heatingTime_min = remainingTime_min;
-        if (heatingCapacity_kJ > neededHeat_kJ)
+        if (outputEnergy_kJ > neededHeat_kJ)
         {
-            heatingTime_min *= neededHeat_kJ / heatingCapacity_kJ;
+            heatingTime_min *= neededHeat_kJ / outputEnergy_kJ;
             remainingTime_min -= heatingTime_min;
         }
         else
@@ -1169,26 +1153,26 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         getCapacityMP(
             externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
-        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double outputPower_kW = (1. - heatRetentionCoef) * BTUperH_TO_KW(tempCap_BTUperHr);
 
         // temperature increase at this power and flow rate
         double deltaT_C =
-            heatingPower_kW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
+            outputPower_kW / (mpFlowRate_LPS * CPWATER_kJperkgC * DENSITYWATER_kgperL);
 
         // find target temperature
         double targetT_C = externalOutletT_C + deltaT_C;
 
         // maximum heat that can be added in remaining time
-        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
+        double outputEnergy_kJ = outputPower_kW * (remainingTime_min * sec_per_min);
 
         // heat needed to raise temperature of one node by deltaT_C
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
 
         // heat no more than one node this step
         double heatingTime_min = remainingTime_min;
-        if (heatingCapacity_kJ > nodeHeat_kJ)
+        if (outputEnergy_kJ > nodeHeat_kJ)
         {
-            heatingTime_min *= nodeHeat_kJ / heatingCapacity_kJ;
+            heatingTime_min *= nodeHeat_kJ / outputEnergy_kJ;
             remainingTime_min -= heatingTime_min;
         }
         else
