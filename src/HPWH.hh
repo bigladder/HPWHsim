@@ -1290,31 +1290,32 @@ class HPWH::HeatSource
         CONFIG_EXTERNAL
     };
 
-    /** the creator of the heat source, necessary to access HPWH variables */
+    /// owner of the heat source, necessary to access HPWH variables
     HPWH* hpwh;
 
-    // these are the heat source state/output variables
-    bool isOn;
-    /**< is the heat source running or not	 */
+    HEATSOURCE_TYPE typeOfHeatSource; /**< compressor, resistance, extra, none */
+    COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
 
-    bool lockedOut;
-    /**< is the heat source locked out	 */
+    // state/output variables
 
+    bool isOn; /// whether heat source is running
+
+    bool lockedOut; /// whether the heat source locked out
+
+    /// iff true will derate the COP of a compressor to simulate a defrost cycle
     bool doDefrost;
-    /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
-    // some outputs
+    /// tracks the time that heat source was running
     double runtime_min;
-    /**< this is the percentage of the step that the heat source was running */
 
+    /// energy supplied to the heat source
     double energyInput_kWh;
-    /**< the energy used by the heat source */
 
+    /// energy put transferred to the tank by the heat source
     double energyOutput_kWh;
-    /**< the energy put into the water by the heat source */
 
+    /// energy removed from the environment
     double energyRemovedFromEnvironment_kWh;
-    /**< the energy removed from the environment  */
 
     /// the energy retained by the heat source
     double energyRetained_kWh;
@@ -1322,32 +1323,33 @@ class HPWH::HeatSource
     /// coefficient [0,1) specifying fraction of heat-source capacity retained each pass
     double heatRetentionCoef;
 
-    // these are the heat source property variables
+    // property variables
+
+    /// is this heat source a high priority heat source? (e.g., upper resistor)
     bool isVIP;
-    /**< is this heat source a high priority heat source? (e.g. upper resisitor) */
+
+    /// pointer to heat source that serves as backup to this one (NULL if none).
     HeatSource* backupHeatSource;
-    /**< a pointer to the heat source which serves as backup to this one
-      should be NULL if no backup exists */
+
+    /// pointer to the heat source that runs concurrently with this one
+    /// it still will only turn on if shutsOff is false.
     HeatSource* companionHeatSource;
-    /**< a pointer to the heat source which will run concurrently with this one
-      it still will only turn on if shutsOff is false */
 
+    /// pointer to the heat source which will attempt to run after this one
     HeatSource* followedByHeatSource;
-    /**< a pointer to the heat source which will attempt to run after this one */
 
-    //	condensity is represented as a std::vector of size CONDENSITY_SIZE.
-    //  It represents the location within the tank where heat will be distributed,
-    //  and it also is used to calculate the condenser temperature for inputPower/COP calcs.
-    //  It is conceptually linked to the way condenser coils are wrapped around
-    //  (or within) the tank, however a resistance heat source can also be simulated
-    //  by specifying the entire condensity in one node. */
+    /// condensity represents the location within the tank where heat will be distributed,
+    /// and it also is used to calculate the condenser temperature for inputPower/COP calcs.
+    /// It is conceptually linked to the way condenser coils are wrapped around
+    /// (or within) the tank, however a resistance heat source can also be simulated
+    /// by specifying the entire condensity in one node.
     std::vector<double> condensity;
 
+    /// Tshrinkage_C is a derived from the condentropy (conditional entropy),
+    /// using the condensity and fixed parameters Talpha_C and Tbeta_C.
+    /// Talpha_C and Tbeta_C are not intended to be settable
+    /// see the hpwh_init functions for calculation of shrinkage.
     double Tshrinkage_C;
-    /**< Tshrinkage_C is a derived from the condentropy (conditional entropy),
-        using the condensity and fixed parameters Talpha_C and Tbeta_C.
-        Talpha_C and Tbeta_C are not intended to be settable
-        see the hpwh_init functions for calculation of shrinkage */
 
     struct perfPoint
     {
@@ -1356,138 +1358,142 @@ class HPWH::HeatSource
         std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
     };
 
+    /// A map with input/COP quadratic curve coefficients at a given external temperature
     std::vector<perfPoint> perfMap;
-    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
+    /// The axis values defining the regular grid for the performance data.
+    /// SP would have 3 axis, MP would have 2 axis
     std::vector<std::vector<double>> perfGrid;
-    /**< The axis values defining the regular grid for the performance data.
-    SP would have 3 axis, MP would have 2 axis*/
 
+    /// The values for input power and cop use matching to the grid. Should be long format with
+    /// { { * inputPower_W }, { COP } }.
     std::vector<std::vector<double>> perfGridValues;
-    /**< The values for input power and cop use matching to the grid. Should be long format with { {
-     * inputPower_W }, { COP } }. */
 
+    /// The grid interpolator used for mapping performance
     std::shared_ptr<Btwxt::RegularGridInterpolator> perfRGI;
-    /**< The grid interpolator used for mapping performance*/
 
     bool useBtwxtGrid;
 
-    /** a vector to hold the set of logical choices for turning this element on */
+    EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
+
+    /// a vector to hold the set of logical choices for turning this element on
     std::vector<std::shared_ptr<HeatingLogic>> turnOnLogicSet;
-    /** a vector to hold the set of logical choices that can cause an element to turn off */
+
+    /// a vector to hold the set of logical choices that can cause an element to turn off
     std::vector<std::shared_ptr<HeatingLogic>> shutOffLogicSet;
-    /** a single logic that checks the bottom point is below a temperature so the system doesn't
-     * short cycle*/
+
+    /// a single logic that checks the bottom point is below a temperature so the system doesn't
+    /// short cycle
     std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
-    /** some compressors have a resistance element for defrost*/
+    /// some compressors have a resistance element for defrost
     struct resistanceElementDefrost
     {
         double inputPwr_kW {0.0};
         double constTempLift_dF {0.0};
         double onBelowT_F {-999};
-    };
-    resistanceElementDefrost resDefrost;
+    } resDefrost;
 
     struct defrostPoint
     {
         double T_F;
         double derate_fraction;
     };
+
+    /// A list of points for the defrost derate factor ordered by increasing external temperature
     std::vector<defrostPoint> defrostMap;
-    /**< A list of points for the defrost derate factor ordered by increasing external temperature
-     */
 
     struct maxOut_minAir
     {
         double outT_C;
         double airT_C;
     };
-    maxOut_minAir maxOut_at_LowT;
-    /**<  maximum output temperature at the minimum operating temperature of HPWH environment
-     * (minT)*/
 
+    ///  maximum output temperature at the minimum operating temperature (minT) of HPWH environment
+    maxOut_minAir maxOut_at_LowT;
+
+    /// approximate a secondary
+    /// heat exchanger by adding extra input energy for the pump and an increase in the water to the
+    /// incoming waater temperature to the heatpump
     struct SecondaryHeatExchanger
     {
         double coldSideTemperatureOffest_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
-    };
-
-    SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary
-      heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-      incoming waater temperature to the heatpump*/
+    } secondaryHeatExchanger;
 
     void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
     void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
-    /**< these are two small functions to remove some of the cruft in initiation functions */
+
+    /// small functions to remove some of the cruft in initiation functions
     void clearAllTurnOnLogic();
     void clearAllShutOffLogic();
     void clearAllLogic();
-    /**< these are two small functions to remove some of the cruft in initiation functions */
 
+    /// change the resistance wattage
     void changeResistanceWatts(double watts);
-    /**< function to change the resistance wattage */
 
+    /// returns if the heat source uses a compressor or not
     bool isACompressor() const;
-    /**< returns if the heat source uses a compressor or not */
+
+    /// returns whether the heat source uses a resistance element or not
     bool isAResistance() const;
-    /**< returns if the heat source uses a resistance element or not */
+
     bool isExternalMultipass() const;
 
+    ///  minimum operating temperature
     double minT;
-    /**<  minimum operating temperature of HPWH environment */
 
+    ///  maximum operating temperature
     double maxT;
-    /**<  maximum operating temperature of HPWH environment */
 
+    /// maximum setpoint of the heat source can create, used for compressors predominately
     double maxSetpoint_C;
-    /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
+    /// a hysteresis term that prevents short cycling due to heat pump self-interaction
+    /// when the heat source is engaged, it is subtracted from lowT cutoffs and
+    /// added to lowTreheat cutoffs
     double hysteresis_dC;
-    /**< a hysteresis term that prevents short cycling due to heat pump self-interaction
-      when the heat source is engaged, it is subtracted from lowT cutoffs and
-      added to lowTreheat cutoffs */
 
-    bool depressesTemperature = false;
-    /**<  heat pumps can depress the temperature of their space in certain instances -
-      whether or not this occurs is a bool in HPWH, but a heat source must
-      know if it is capable of contributing to this effect or not
-      NOTE: this only works for 1 minute steps
-      ALSO:  this is set according the the heat source type, not user-specified */
+    ///  heat pumps can depress the temperature of their space in certain instances -
+    /// whether or not this occurs is a bool in HPWH, but a heat source must
+    ///  know if it is capable of contributing to this effect or not
+    ///  NOTE: this only works for 1 minute steps
+    ///  ALSO:  this is set according the the heat source type, not user-specified
+    bool depressesTemperature;
 
+    /// airflowFreedom is the fraction of full flow. This is used to de-rate compressor
+    /// cop (not capacity) for cases where the air flow is restricted - typically ducting
     double airflowFreedom;
-    /**< airflowFreedom is the fraction of full flow.  This is used to de-rate compressor
-        cop (not capacity) for cases where the air flow is restricted - typically ducting */
 
-    int externalInletHeight; /**<The node height at which the external multipass or single pass HPWH
-                                adds heated water to the storage tank, defaults to top for single
-                                pass. */
-    int externalOutletHeight; /**<The node height at which the external multipass or single pass
-                                 HPWH adds takes cold water out of the storage tank, defaults to
-                                 bottom for single pass.  */
+    /// The node height at which the external multipass or single pass HPWH
+    /// adds heated water to the storage tank, defaults to top for single pass.
+    int externalInletHeight;
 
-    double mpFlowRate_LPS; /**< The multipass flow rate */
-
-    COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
-    HEATSOURCE_TYPE typeOfHeatSource; /**< compressor, resistance, extra, none */
-    bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
-                         pass is multipass*/
-
+    /// number of the first non-zero condensity entry
     int lowestNode;
-    /**< hold the number of the first non-zero condensity entry */
 
-    EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
+    /// The node height at which the external multipass or single pass
+    /// HPWH takes cold water out of the storage tank, defaults to
+    /// bottom for single pass.
+    int externalOutletHeight;
 
-    // some private functions, mostly used for heating the water with the addHeat function
+    /// The multipass flow rate
+    double mpFlowRate_LPS;
 
+    /// single pass or multi-pass. Anything not obviously split system single
+    /// pass is multipass
+    bool isMultipass;
+
+    // private functions, mostly used for heating the water with the addHeat function
+
+    ///  Add heat from a source outside of the tank. Assume the condensity is where
+    /// the water is drawn from and hot water is put at the top of the tank.
     double addHeatExternal(double externalT_C,
                            double minutesToRun,
                            double& cap_BTUperHr,
                            double& input_BTUperHr,
                            double& cop);
-    /**<  Add heat from a source outside of the tank. Assume the condensity is where
-        the water is drawn from and hot water is put at the top of the tank. */
 
     /// Add heat from external source using a multi-pass configuration
     double addHeatExternalMP(double externalT_C,
@@ -1496,7 +1502,7 @@ class HPWH::HeatSource
                              double& input_BTUperHr,
                              double& cop);
 
-    /**  I wrote some methods to help with the add heat interface - MJL  */
+    /// some methods to help with the add heat interface - MJL
     void getCapacity(double externalT_C,
                      double condenserTemp_C,
                      double setpointTemp_C,
@@ -1504,7 +1510,7 @@ class HPWH::HeatSource
                      double& cap_BTUperHr,
                      double& cop);
 
-    /** An overloaded function that uses uses the setpoint temperature  */
+    /// An overloaded function that uses uses the setpoint temperature
     void getCapacity(double externalT_C,
                      double condenserTemp_C,
                      double& input_BTUperHr,
@@ -1514,7 +1520,8 @@ class HPWH::HeatSource
         getCapacity(
             externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
     };
-    /** An equivalent getCapcity function just for multipass external (or split) HPWHs  */
+
+    /// An equivalent getCapacity function just for multipass external (or split) HPWHs
     void getCapacityMP(double externalT_C,
                        double condenserTemp_C,
                        double& input_BTUperHr,
@@ -1523,11 +1530,11 @@ class HPWH::HeatSource
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 
+    /// returns the tank temperature weighted by the condensity for this heat source
     double getTankTemp() const;
-    /**< returns the tank temperature weighted by the condensity for this heat source */
 
+    /// sorts the Performance Map by increasing external temperatures
     void sortPerformanceMap();
-    /**< sorts the Performance Map by increasing external temperatures */
 
 }; // end of HeatSource class
 

@@ -14,37 +14,43 @@
 
 HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     : hpwh(hpwh_in)
+    , typeOfHeatSource(TYPE_none)
+    , configuration(CONFIG_SUBMERGED)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
-    , backupHeatSource(NULL)
-    , companionHeatSource(NULL)
-    , followedByHeatSource(NULL)
-    , minT(-273.15)
-    , maxT(100)
-    , hysteresis_dC(0)
-    , airflowFreedom(1.0)
-    , maxSetpoint_C(100.)
-    , typeOfHeatSource(TYPE_none)
-    , extrapolationMethod(EXTRAP_LINEAR)
-    , maxOut_at_LowT {100, -273.15}
-    , standbyLogic(NULL)
-    , isMultipass(true)
-    , mpFlowRate_LPS(0.)
-    , externalInletHeight(-1)
-    , externalOutletHeight(-1)
-    , useBtwxtGrid(false)
-    , secondaryHeatExchanger {0., 0., 0.}
-    , heatRetentionCoef(0.)
-    , energyRetained_kWh(0.)
-    , Tshrinkage_C(1.)
+    , runtime_min(0.)
     , energyInput_kWh(0.)
     , energyOutput_kWh(0.)
     , energyRemovedFromEnvironment_kWh(0.)
-    , runtime_min(0.)
+    , energyRetained_kWh(0.)
+    , heatRetentionCoef(0.)
     , isVIP(false)
+    , backupHeatSource(NULL)
+    , companionHeatSource(NULL)
+    , followedByHeatSource(NULL)
+    , Tshrinkage_C(1.)
+
+    , useBtwxtGrid(false)
+    , extrapolationMethod(EXTRAP_LINEAR)
+
+    , standbyLogic(NULL)
+    , maxOut_at_LowT {100, -273.15}
+
+    , secondaryHeatExchanger {0., 0., 0.}
+    , minT(-273.15)
+    , maxT(100)
+    , maxSetpoint_C(100.)
+    , hysteresis_dC(0)
+    , depressesTemperature(false)
+    , airflowFreedom(1.)
+
+    , externalInletHeight(-1)
+    , externalOutletHeight(-1)
     , lowestNode(0)
-    , configuration(CONFIG_SUBMERGED)
+
+    , mpFlowRate_LPS(0.)
+    , isMultipass(true)
 {
 }
 
