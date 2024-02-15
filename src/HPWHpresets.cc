@@ -330,7 +330,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
     compressor.minT_C = F_TO_C(45.);
     compressor.maxT_C = F_TO_C(120.);
-    compressor.hysteresis_dC = dF_TO_dC(2);
+    compressor.hysteresisOffsetT_C = dF_TO_dC(2);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
     compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -341,7 +341,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     // bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4000);
     resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+    resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
     // logic conditions
     // this is set customly, from input
@@ -605,7 +605,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
 
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // standard logic conditions
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
@@ -642,7 +642,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = 0;
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(4);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -706,7 +706,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         });
 
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = 0; // no hysteresis
+        compressor.hysteresisOffsetT_C = 0; // no hysteresis
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
@@ -766,7 +766,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(4);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -776,7 +776,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2000);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
@@ -846,7 +846,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(4);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -856,7 +856,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2000);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
@@ -925,7 +925,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(4);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -935,7 +935,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4200);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
         //     double compStart = dF_TO_dC(24.4);
@@ -989,10 +989,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.perfMap.reserve(1);
-        compressor.hysteresis_dC = 0;
+        compressor.hysteresisOffsetT_C = 0;
 
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getNumNodes() - 1;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getNumNodes() - 1;
 
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
@@ -1239,9 +1239,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.perfMap.reserve(1);
-        compressor.hysteresis_dC = 0;
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
+        compressor.hysteresisOffsetT_C = 0;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = static_cast<int>(getNumNodes() / 3) - 1;
 
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
@@ -1436,8 +1436,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.perfMap.reserve(1);
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getNumNodes() - 1;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getNumNodes() - 1;
 
         // logic conditions
         if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
@@ -1449,7 +1449,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             compressor.minT_C = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
         }
         compressor.maxT_C = F_TO_C(120.0); // Max air temperature
-        compressor.hysteresis_dC = 0;
+        compressor.hysteresisOffsetT_C = 0;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // Defines the maximum outlet temperature at the a low air temperature
@@ -1686,9 +1686,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.extrapolationMethod = EXTRAP_NEAREST;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
-        compressor.hysteresis_dC = 0;
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
+        compressor.hysteresisOffsetT_C = 0;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = static_cast<int>(getNumNodes() / 3.) - 1;
 
         // logic conditions//logic conditions
         if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
@@ -1873,9 +1873,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.perfMap.reserve(1);
-        compressor.hysteresis_dC = 0;
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
+        compressor.hysteresisOffsetT_C = 0;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = static_cast<int>(getNumNodes() / 3.) - 1;
 
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
@@ -1968,11 +1968,11 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.minT_C = F_TO_C(-13.);
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getNumNodes() - 1;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getNumNodes() - 1;
 
         // What to do about these?!
-        compressor.hysteresis_dC = 4;
+        compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.maxSetpointT_C = F_TO_C(176.1);
@@ -2258,8 +2258,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.minT_C = F_TO_C(-25.);
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getNumNodes() - 1;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getNumNodes() - 1;
 
         compressor.perfMap.reserve(5);
 
@@ -2293,7 +2293,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
         });
 
-        compressor.hysteresis_dC = 4;
+        compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.maxSetpointT_C = MAXOUTLET_R744;
@@ -2353,8 +2353,8 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.minT_C = F_TO_C(-25.);
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getIndexTopNode();
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getIndexTopNode();
 
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
@@ -2390,7 +2390,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
         });
 
-        compressor.hysteresis_dC = 4;
+        compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.maxSetpointT_C = MAXOUTLET_R744;
@@ -2474,7 +2474,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2498,7 +2498,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2585,7 +2585,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2609,7 +2609,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2690,7 +2690,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
 
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2280)
@@ -2712,7 +2712,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500);
         }
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2786,7 +2786,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
@@ -2795,7 +2795,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(34.1636);
@@ -2868,7 +2868,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.minT_C =
             F_TO_C(47.0); // Product documentation says 45F doesn't look like it in CMP-T test//
         compressor.maxT_C = F_TO_C(110.0);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2880,7 +2880,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, wattRE);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
         resistiveElementBottom.setCondensity(
             {0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
 
@@ -2970,7 +2970,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(1.);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1.);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2978,7 +2978,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         resistiveElementTop.isVIP = true;
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(30.2);
@@ -3043,7 +3043,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3054,7 +3054,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
@@ -3122,7 +3122,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
@@ -3188,7 +3188,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3199,7 +3199,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
@@ -3265,7 +3265,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3276,7 +3276,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
@@ -3342,7 +3342,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3353,7 +3353,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         //  resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
@@ -3421,7 +3421,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3432,7 +3432,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
@@ -3513,7 +3513,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3523,7 +3523,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(32);
@@ -3605,7 +3605,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             {8.45936, -0.04539, 0.0}   // COP Coefficients (COP_coeffs)
         });
 
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
@@ -3618,7 +3618,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(30);
@@ -3701,7 +3701,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3754,7 +3754,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             {5.48189, -0.01604, 0.0} // COP Coefficients (COP_coeffs)
         });
 
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
@@ -3808,7 +3808,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             {6.3, -0.03, 0.0}    // COP Coefficients (COP_coeffs)
         });
 
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(40.0);
         compressor.maxT_C = F_TO_C(120.0);
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
@@ -3821,7 +3821,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2250);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(38);
@@ -3867,7 +3867,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.typeOfHeatSource = TYPE_compressor;
 
         resistiveElement.setupAsResistiveElement(0, 1500);
-        resistiveElement.hysteresis_dC = dF_TO_dC(0);
+        resistiveElement.hysteresisOffsetT_C = dF_TO_dC(0);
 
         compressor.setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
@@ -3887,7 +3887,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(32.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = 0; // no hysteresis
+        compressor.hysteresisOffsetT_C = 0; // no hysteresis
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3941,7 +3941,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3951,7 +3951,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.0)));
@@ -4013,7 +4013,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(40.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4023,7 +4023,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
@@ -4090,7 +4090,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(35.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
@@ -4100,7 +4100,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
@@ -4163,7 +4163,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4174,7 +4174,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(18.6605)));
@@ -4265,7 +4265,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4276,7 +4276,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
@@ -4326,10 +4326,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.perfMap.reserve(1);
-        compressor.hysteresis_dC = 0;
+        compressor.hysteresisOffsetT_C = 0;
 
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = getIndexTopNode();
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = getIndexTopNode();
 
         // Defrost Derate
         compressor.setupDefrostMap();
@@ -4427,9 +4427,9 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.perfMap.reserve(1);
-        compressor.hysteresis_dC = 0;
-        compressor.externalOutletHeight = 0;
-        compressor.externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
+        compressor.hysteresisOffsetT_C = 0;
+        compressor.externalOutletNodeIndex = 0;
+        compressor.externalInletNodeIndex = static_cast<int>(getNumNodes() / 3.) - 1;
 
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
@@ -4543,7 +4543,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         compressor.minT_C = F_TO_C(-25);
         compressor.maxT_C = F_TO_C(125.);
-        compressor.hysteresis_dC = dF_TO_dC(1);
+        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.configuration = HeatSource::CONFIG_SUBMERGED;
 
         // logic conditions

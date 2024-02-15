@@ -94,9 +94,9 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     // node below up to tempMinUseful.
     double maxSoC = hpwh->getNumNodes() *
                     hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpointT_C);
-    double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tankT_C[calcNode] - getMainsT_C()) /
-                                                        (tempMinUseful_C - getMainsT_C());
-    targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
+    double targetT_C = deltaSoCFraction * maxSoC + (hpwh->tankT_C[calcNode] - getMainsT_C()) /
+                                                       (tempMinUseful_C - getMainsT_C());
+    targetT_C = targetT_C * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
     // Catch case where node temperature == setpoint
     double fractCalcNode;
@@ -107,7 +107,7 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     else
     {
         fractCalcNode =
-            (targetTemp - hpwh->tankT_C[calcNode]) / (hpwh->setpointT_C - hpwh->tankT_C[calcNode]);
+            (targetT_C - hpwh->tankT_C[calcNode]) / (hpwh->setpointT_C - hpwh->tankT_C[calcNode]);
     }
 
     // If we're at the bottom node there's not another node to heat so case 2 doesn't apply.

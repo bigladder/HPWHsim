@@ -1006,7 +1006,7 @@ class HPWH
     void addExtraHeat(std::vector<double>& extraHeatDist_W);
 
     ///  "extra" heat added during a simulation step
-    double extraEnergyInput_kWh;
+    double extraEnergyInput_kJ;
 
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
     /**< functions to calculate what the temperature in a portion of the tank is  */
@@ -1086,11 +1086,11 @@ class HPWH
 
     /// index of the tank node where the inlet water enters
     /// must be between 0 and numNodes-1
-    int inletHeight;
+    int inletIndex;
 
     /// index of the tank node where the water from a 2nd inlet enters
     /// must be between 0 and numNodes-1
-    int inlet2Height;
+    int inlet2Index;
 
     /// the volume (L) of the tank
     double tankVolume_L;
@@ -1366,11 +1366,11 @@ class HPWH::HeatSource
     /// by specifying the entire condensity in one node.
     std::vector<double> condensity;
 
-    /// Tshrinkage_C is a derived from the condentropy (conditional entropy),
+    /// shrinkageT_C is a derived from the condentropy (conditional entropy),
     /// using the condensity and fixed parameters Talpha_C and Tbeta_C.
     /// Talpha_C and Tbeta_C are not intended to be settable
     /// see the hpwh_init functions for calculation of shrinkage.
-    double Tshrinkage_C;
+    double shrinkageT_C;
 
     struct perfPoint
     {
@@ -1437,8 +1437,8 @@ class HPWH::HeatSource
     /// incoming waater temperature to the heatpump
     struct SecondaryHeatExchanger
     {
-        double coldSideTemperatureOffest_dC;
-        double hotSideTemperatureOffset_dC;
+        double coldSideOffsetT_C;
+        double hotSideOffsetT_C;
         double extraPumpPower_W;
     } secondaryHeatExchanger;
 
@@ -1473,7 +1473,7 @@ class HPWH::HeatSource
     /// a hysteresis term that prevents short cycling due to heat pump self-interaction
     /// when the heat source is engaged, it is subtracted from lowT cutoffs and
     /// added to lowTreheat cutoffs
-    double hysteresis_dC;
+    double hysteresisOffsetT_C;
 
     ///  heat pumps can depress the temperature of their space in certain instances -
     /// whether or not this occurs is a bool in HPWH, but a heat source must
@@ -1488,11 +1488,11 @@ class HPWH::HeatSource
 
     /// The node height at which the external HPWH adds heated water to the storage tank.
     /// Defaults to top for single pass.
-    int externalInletHeight;
+    int externalInletNodeIndex;
 
     /// The node height at which the external HPWH takes cold water out of the storage tank.
     /// Defaults to bottom for single pass.
-    int externalOutletHeight;
+    int externalOutletNodeIndex;
 
     /// number of the first non-zero condensity entry
     int lowestNode;

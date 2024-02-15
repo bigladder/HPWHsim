@@ -368,8 +368,8 @@ void HPWH::setAllDefaults()
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
-    inletHeight = 0;
-    inlet2Height = 0;
+    inletIndex = 0;
+    inlet2Index = 0;
     fittingsUA_kJperHrC = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
@@ -414,8 +414,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     tankT_C = hpwh.tankT_C;
     nextTankT_C = hpwh.nextTankT_C;
 
-    inletHeight = hpwh.inletHeight;
-    inlet2Height = hpwh.inlet2Height;
+    inletIndex = hpwh.inletIndex;
+    inlet2Index = hpwh.inlet2Index;
 
     outletT_C = hpwh.outletT_C;
     condenserInletT_C = hpwh.condenserInletT_C;
@@ -514,7 +514,7 @@ int HPWH::runOneStep(double drawVolume_L,
         heatSources[i].energyOutput_kJ = 0.;
         heatSources[i].energyRemovedFromEnvironment_kJ = 0.;
     }
-    extraEnergyInput_kWh = 0.;
+    extraEnergyInput_kJ = 0.;
 
     // if you are doing temp. depression, set tank and heatSource ambient temps
     // to the tracked locationTemperature
@@ -1332,7 +1332,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 
             maxAllowedSetpoint_C =
                 heatSources[compressorIndex].maxSetpointT_C -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
 
             if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
             {
@@ -1797,11 +1797,11 @@ int HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 
 int HPWH::setInletByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
+    return setNodeNumFromFractionalHeight(fractionalHeight, inletIndex);
 }
 int HPWH::setInlet2ByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
+    return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Index);
 }
 
 int HPWH::setExternalInletHeightByFraction(double fractionalHeight)
@@ -1832,12 +1832,12 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
             if (whichExternalPort == 1)
             {
                 returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalInletHeight);
+                                                           heatSources[i].externalInletNodeIndex);
             }
             else
             {
                 returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalOutletHeight);
+                                                           heatSources[i].externalOutletNodeIndex);
             }
 
             if (returnVal == HPWH_ABORT)
@@ -1880,8 +1880,8 @@ int HPWH::getExternalInletHeight() const
     {
         if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
         {
-            return heatSources[i].externalInletHeight; // Return the first one since all
-                                                       // external sources have some ports
+            return heatSources[i].externalInletNodeIndex; // Return the first one since all
+                                                          // external sources have some ports
         }
     }
     return HPWH_ABORT;
@@ -1900,8 +1900,8 @@ int HPWH::getExternalOutletHeight() const
     {
         if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
         {
-            return heatSources[i].externalOutletHeight; // Return the first one since all
-                                                        // external sources have some ports
+            return heatSources[i].externalOutletNodeIndex; // Return the first one since all
+                                                           // external sources have some ports
         }
     }
     return HPWH_ABORT;
@@ -1929,11 +1929,11 @@ int HPWH::getInletHeight(int whichInlet) const
 {
     if (whichInlet == 1)
     {
-        return inletHeight;
+        return inletIndex;
     }
     else if (whichInlet == 2)
     {
-        return inlet2Height;
+        return inlet2Index;
     }
     else
     {
@@ -2570,7 +2570,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 
     double maxAllowedSetpoint_C =
         heatSources[compressorIndex].maxSetpointT_C -
-        heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+        heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
     if (outTemp_C > maxAllowedSetpoint_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -3304,21 +3304,21 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double lowInletT_C;
         double lowInletFraction; // fraction of draw from low inlet
 
-        if (inletHeight > inlet2Height)
+        if (inletIndex > inlet2Index)
         {
-            highInletNodeIndex = inletHeight;
+            highInletNodeIndex = inletIndex;
             highInletFraction = 1. - inletVol2_L / drawVolume_L;
             highInletT_C = inletT_C;
-            lowInletNodeIndex = inlet2Height;
+            lowInletNodeIndex = inlet2Index;
             lowInletT_C = inletT2_C;
             lowInletFraction = inletVol2_L / drawVolume_L;
         }
         else
         {
-            highInletNodeIndex = inlet2Height;
+            highInletNodeIndex = inlet2Index;
             highInletFraction = inletVol2_L / drawVolume_L;
             highInletT_C = inletT2_C;
-            lowInletNodeIndex = inletHeight;
+            lowInletNodeIndex = inletIndex;
             lowInletT_C = inletT_C;
             lowInletFraction = 1. - inletVol2_L / drawVolume_L;
         }
@@ -3746,7 +3746,7 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
         }
     }
     // Write the input & output energy
-    extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
+    extraEnergyInput_kJ = BTU_TO_KJ(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -3876,12 +3876,12 @@ void HPWH::calcDerivedHeatingValues()
     // find condentropy/shrinkage
     for (int i = 0; i < getNumHeatSources(); ++i)
     {
-        heatSources[i].Tshrinkage_C = findShrinkageT_C(heatSources[i].condensity);
+        heatSources[i].shrinkageT_C = findShrinkageT_C(heatSources[i].condensity);
 
         if (hpwhVerbosity >= VRB_emetic)
         {
             msg(outputString, "Heat Source %d \n", i);
-            msg(outputString, "shrinkage %.2lf \n\n", heatSources[i].Tshrinkage_C);
+            msg(outputString, "shrinkage %.2lf \n\n", heatSources[i].shrinkageT_C);
         }
     }
 
@@ -4116,8 +4116,8 @@ int HPWH::checkInputs()
                 }
                 returnVal = HPWH_ABORT;
             }
-            if (0 > heatSources[i].externalOutletHeight ||
-                heatSources[i].externalOutletHeight > getNumNodes() - 1)
+            if (0 > heatSources[i].externalOutletNodeIndex ||
+                heatSources[i].externalOutletNodeIndex > getNumNodes() - 1)
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
@@ -4127,8 +4127,8 @@ int HPWH::checkInputs()
                 }
                 returnVal = HPWH_ABORT;
             }
-            if (0 > heatSources[i].externalInletHeight ||
-                heatSources[i].externalInletHeight > getNumNodes() - 1)
+            if (0 > heatSources[i].externalInletNodeIndex ||
+                heatSources[i].externalInletNodeIndex > getNumNodes() - 1)
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
@@ -4302,7 +4302,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
 {
     // Check energy balancing.
     double qInElectrical_kJ = getInputEnergy_kJ();
-    double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
+    double qInExtra_kJ = extraEnergyInput_kJ;
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment_kJ();
     double qOutStandbyLosses_kJ = standbyLosses_kJ;
     double qOutWater_kJ = drawVol_L * (outletT_C - member_inletT_C) * DENSITYWATER_kgperL *
@@ -5027,7 +5027,7 @@ int HPWH::HPWHinit_file(string configFile)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalInletHeight = static_cast<int>(tempInt);
+                    heatSources[heatsource].externalInletNodeIndex = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -5043,7 +5043,7 @@ int HPWH::HPWHinit_file(string configFile)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalOutletHeight = static_cast<int>(tempInt);
+                    heatSources[heatsource].externalOutletNodeIndex = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -5217,7 +5217,7 @@ int HPWH::HPWHinit_file(string configFile)
                     }
                     return HPWH_ABORT;
                 }
-                heatSources[heatsource].hysteresis_dC = tempDouble;
+                heatSources[heatsource].hysteresisOffsetT_C = tempDouble;
             }
             else if (token == "backupSource")
             {
