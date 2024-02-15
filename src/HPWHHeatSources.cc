@@ -35,9 +35,9 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , standbyLogic(NULL)
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
-    , minT(-273.15)
-    , maxT(100)
-    , maxSetpoint_C(100.)
+    , minT_C(-273.15)
+    , maxT_C(100)
+    , maxSetpointT_C(100.)
     , hysteresis_dC(0)
     , depressesTemperature(false)
     , airflowFreedom(1.)
@@ -107,11 +107,11 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     shutOffLogicSet = hSource.shutOffLogicSet;
     standbyLogic = hSource.standbyLogic;
 
-    minT = hSource.minT;
-    maxT = hSource.maxT;
+    minT_C = hSource.minT_C;
+    maxT_C = hSource.maxT_C;
     maxOut_at_LowT = hSource.maxOut_at_LowT;
     hysteresis_dC = hSource.hysteresis_dC;
-    maxSetpoint_C = hSource.maxSetpoint_C;
+    maxSetpointT_C = hSource.maxSetpointT_C;
 
     depressesTemperature = hSource.depressesTemperature;
     airflowFreedom = hSource.airflowFreedom;
@@ -171,49 +171,49 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C < minT_C - hysteresis_dC)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C < minT)
+        else if (isEngaged() == false && heatSourceAmbientT_C < minT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
         // when running, use hysteresis
-        if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C > maxT_C + hysteresis_dC)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
+        else if (isEngaged() == false && heatSourceAmbientT_C > maxT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
 
@@ -222,7 +222,8 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
-                hpwh->msg("\tlock-out: condenser water temperature above max: %.2f", maxSetpoint_C);
+                hpwh->msg("\tlock-out: condenser water temperature above max: %.2f",
+                          maxSetpointT_C);
             }
         }
         //	if (lock == true && backupHeatSource == NULL) {
@@ -257,40 +258,41 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
         // when the "external" temperature is no longer too cold or too warm
         // when running, use hysteresis
         bool unlock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C > minT + hysteresis_dC &&
-            heatSourceAmbientT_C < maxT - hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C > minT_C + hysteresis_dC &&
+            heatSourceAmbientT_C < maxT_C - hysteresis_dC)
         {
             unlock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C > minT + hysteresis_dC)
+                heatSourceAmbientT_C > minT_C + hysteresis_dC)
             {
                 hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C < maxT - hysteresis_dC)
+                heatSourceAmbientT_C < maxT_C - hysteresis_dC)
             {
                 hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > minT && heatSourceAmbientT_C < maxT)
+        else if (isEngaged() == false && heatSourceAmbientT_C > minT_C &&
+                 heatSourceAmbientT_C < maxT_C)
         {
             unlock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT)
+            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT_C)
             {
                 hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT)
+            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT_C)
             {
                 hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         if (hpwh->hpwhVerbosity >= VRB_typical)
@@ -455,9 +457,9 @@ bool HPWH::HeatSource::maxedOut() const
 
     // If the heat source can't produce water at the setpoint and the control logics are saying to
     // shut off
-    if (hpwh->setpointT_C > maxSetpoint_C)
+    if (hpwh->setpointT_C > maxSetpointT_C)
     {
-        if (hpwh->tankT_C[0] >= maxSetpoint_C || shutsOff())
+        if (hpwh->tankT_C[0] >= maxSetpointT_C || shutsOff())
         {
             maxed = true;
         }
@@ -502,7 +504,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // calculate capacity btu/hr, input btu/hr, and cop
         if (isACompressor())
         {
-            hpwh->condenserInlet_C = getTankTemp();
+            hpwh->condenserInletT_C = getTankTemp();
             getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
         }
         else
@@ -525,13 +527,13 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
             {
                 double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
                 // add leftoverCap to the next run, and keep passing it on
-                leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpoint_C);
+                leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpointT_C);
             }
         }
 
         if (isACompressor())
         { // outlet temperature is the condenser temperature after heat has been added
-            hpwh->condenserOutlet_C = getTankTemp();
+            hpwh->condenserOutletT_C = getTankTemp();
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
@@ -597,7 +599,7 @@ void HPWH::HeatSource::addRetainedHeat()
             {
                 // add leftoverCap to the next run, and keep passing it on
                 double nodeHeatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
-                leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ, i, maxSetpoint_C);
+                leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ, i, maxSetpointT_C);
                 heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
             }
         }
@@ -1008,7 +1010,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     cap_BTUperHr = 0.;
     cop = 0.;
 
-    double targetT_C = std::min(maxSetpoint_C, hpwh->setpointT_C);
+    double targetT_C = std::min(maxSetpointT_C, hpwh->setpointT_C);
     double remainingTime_min = stepTime_min;
     do
     {
@@ -1068,8 +1070,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            hpwh->condenserInlet_C += externalOutletT_C * heatingTime_min;
-            hpwh->condenserOutlet_C += targetT_C * heatingTime_min;
+            hpwh->condenserInletT_C += externalOutletT_C * heatingTime_min;
+            hpwh->condenserOutletT_C += targetT_C * heatingTime_min;
         }
 
         // mix with node above from outlet to inlet
@@ -1111,8 +1113,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         input_BTUperHr /= runTime_min;
         cap_BTUperHr /= runTime_min;
         cop /= runTime_min;
-        hpwh->condenserInlet_C /= runTime_min;
-        hpwh->condenserOutlet_C /= runTime_min;
+        hpwh->condenserInletT_C /= runTime_min;
+        hpwh->condenserOutletT_C /= runTime_min;
     }
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)
@@ -1194,8 +1196,8 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            hpwh->condenserInlet_C += externalOutletT_C * heatingTime_min;
-            hpwh->condenserOutlet_C += targetT_C * heatingTime_min;
+            hpwh->condenserInletT_C += externalOutletT_C * heatingTime_min;
+            hpwh->condenserOutletT_C += targetT_C * heatingTime_min;
         }
 
         // mix with node above from outlet to inlet
@@ -1234,8 +1236,8 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         input_BTUperHr /= elapsedTime_min;
         cap_BTUperHr /= elapsedTime_min;
         cop /= elapsedTime_min;
-        hpwh->condenserInlet_C /= elapsedTime_min;
-        hpwh->condenserOutlet_C /= elapsedTime_min;
+        hpwh->condenserInletT_C /= elapsedTime_min;
+        hpwh->condenserOutletT_C /= elapsedTime_min;
     }
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)

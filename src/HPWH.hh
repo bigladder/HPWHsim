@@ -1128,7 +1128,7 @@ class HPWH
 
     /// future temperature of each node for the conduction calculation
     /// 0 is the bottom node
-    std::vector<double> nextTankTemps_C;
+    std::vector<double> nextTankT_C;
 
     /// the DRstatus of the tank in the previous time step and at the end of runOneStep
     DRMODES prevDRstatus;
@@ -1145,15 +1145,15 @@ class HPWH
     // Some outputs
 
     /// the temperature of the outlet water - taken from top of tank, 0 if no flow
-    double outletTemp_C;
+    double outletT_C;
 
     /// the temperature of the inlet water to the condensor either an average of tank nodes or
     /// taken from the bottom, 0 if no flow or no compressor
-    double condenserInlet_C;
+    double condenserInletT_C;
 
     /// the temperature of the outlet water from the condenser either
     /// 0 if no flow or no compressor
-    double condenserOutlet_C;
+    double condenserOutletT_C;
 
     /// the volume of water heated by an external source, 0 if no flow or no external heat source
     double externalVolumeHeated_L;
@@ -1177,14 +1177,13 @@ class HPWH
 
     /// special location temperature that stands in for the
     /// ambient temperature if you are doing temp. depression
-    double locationTemperature_C;
+    double locationT_C;
 
-    double maxDepression_C = 2.5;
+    double maxDepressionT_C = 2.5;
 
     /// values which are typically inputs
     double member_inletT_C;
-    double minutesPerStep = 1.;
-    double secondsPerStep, hoursPerStep;
+    double minutesPerStep = 1., secondsPerStep, hoursPerStep;
 
     /// iff true will model temperature inversion mixing in the tank
     bool doInversionMixing;
@@ -1425,7 +1424,8 @@ class HPWH::HeatSource
     /// A list of points for the defrost derate factor ordered by increasing external temperature
     std::vector<defrostPoint> defrostMap;
 
-    ///  maximum output temperature at the minimum operating temperature (minT) of HPWH environment
+    ///  maximum output temperature at the minimum operating temperature (minT_C) of HPWH
+    ///  environment
     struct maxOut_minAir
     {
         double outT_C;
@@ -1462,13 +1462,13 @@ class HPWH::HeatSource
     bool isExternalMultipass() const;
 
     ///  minimum operating temperature
-    double minT;
+    double minT_C;
 
     ///  maximum operating temperature
-    double maxT;
+    double maxT_C;
 
     /// maximum setpoint of the heat source can create, used for compressors predominately
-    double maxSetpoint_C;
+    double maxSetpointT_C;
 
     /// a hysteresis term that prevents short cycling due to heat pump self-interaction
     /// when the heat source is engaged, it is subtracted from lowT cutoffs and
