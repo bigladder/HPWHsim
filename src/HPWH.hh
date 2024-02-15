@@ -1139,8 +1139,8 @@ class HPWH
     /**< the volume of water heated by an external source, 0 if no flow or no external heat source
      */
 
-    double standbyLosses_kWh;
-    /**< the amount of heat lost to standby  */
+    /// the amount of heat lost to standby
+    double standbyLosses_kJ;
 
     // special variables for adding abilities
     bool tankMixesOnDraw;
@@ -1307,16 +1307,16 @@ class HPWH::HeatSource
     double runtime_min;
 
     /// energy supplied to the heat source
-    double energyInput_kWh;
+    double energyInput_kJ;
 
     /// energy put transferred to the tank by the heat source
-    double energyOutput_kWh;
+    double energyOutput_kJ;
 
     /// energy removed from the environment
-    double energyRemovedFromEnvironment_kWh;
+    double energyRemovedFromEnvironment_kJ;
 
     /// the energy retained by the heat source
-    double energyRetained_kWh;
+    double energyRetained_kJ;
 
     /// coefficient [0,1) specifying fraction of heat-source capacity retained each pass
     double heatRetentionCoef;

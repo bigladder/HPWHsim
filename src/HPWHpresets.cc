@@ -4552,7 +4552,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // retain heat in condenser
         compressor.heatRetentionCoef = 0.;
-        compressor.energyRetained_kWh = KJ_TO_KWH(0.);
+        compressor.energyRetained_kJ = 0.;
 
         // set everything in its places
         heatSources.resize(1);

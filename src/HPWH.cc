@@ -315,17 +315,17 @@ void calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
-double getEnergy(const double energy_kWh, const HPWH::UNITS units /*=UNITS_KWH*/)
+double getEnergy(const double energy_kJ, const HPWH::UNITS units /*=UNITS_KWH*/)
 {
     if (units == HPWH::UNITS_KWH)
     {
-        return energy_kWh;
+        return KJ_TO_KWH(energy_kJ);
     }
     else if (units == HPWH::UNITS_BTU)
     {
-        return KWH_TO_BTU(energy_kWh);
+        return KJ_TO_BTU(energy_kJ);
     }
-    return KWH_TO_KJ(energy_kWh);
+    return energy_kJ;
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -366,7 +366,7 @@ void HPWH::setAllDefaults()
     timerLimitTOT = 60.;
     timerTOT = 0.;
     usesSoCLogic = false;
-    setMinutesPerStep(1.0);
+    setMinutesPerStep(1.);
     hpwhVerbosity = VRB_minuteOut;
     hasHeatExchanger = false;
     heatExchangerEffectiveness = 0.9;
@@ -382,7 +382,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     }
 
     simHasFailed = hpwh.simHasFailed;
-
     hpwhVerbosity = hpwh.hpwhVerbosity;
 
     // these should actually be the same pointers
@@ -395,12 +394,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     for (auto& heatSource : heatSources)
     {
         heatSource.hpwh = this;
-        // HeatSource assignment will fail (causing the simulation to fail) if a
-        // HeatSource has backups/companions.
-        // This could be dealt with in this function (tricky), but the HeatSource
-        // assignment can't know where its backup/companion pointer goes so it either
-        // fails or silently does something that's not at all useful.
-        // I prefer it to fail.  -NDK  1/2016
     }
 
     tankVolume_L = hpwh.tankVolume_L;
@@ -419,7 +412,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     condenserInlet_C = hpwh.condenserInlet_C;
     condenserOutlet_C = hpwh.condenserOutlet_C;
     externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
-    standbyLosses_kWh = hpwh.standbyLosses_kWh;
+    standbyLosses_kJ = hpwh.standbyLosses_kJ;
 
     tankMixesOnDraw = hpwh.tankMixesOnDraw;
     mixBelowFractionOnDraw = hpwh.mixBelowFractionOnDraw;
@@ -501,14 +494,14 @@ int HPWH::runOneStep(double drawVolume_L,
     condenserInlet_C = 0.;
     condenserOutlet_C = 0.;
     externalVolumeHeated_L = 0.;
-    standbyLosses_kWh = 0.;
+    standbyLosses_kJ = 0.;
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         heatSources[i].runtime_min = 0;
-        heatSources[i].energyInput_kWh = 0.;
-        heatSources[i].energyOutput_kWh = 0.;
-        heatSources[i].energyRemovedFromEnvironment_kWh = 0.;
+        heatSources[i].energyInput_kJ = 0.;
+        heatSources[i].energyOutput_kJ = 0.;
+        heatSources[i].energyRemovedFromEnvironment_kJ = 0.;
     }
     extraEnergyInput_kWh = 0.;
 
@@ -873,7 +866,7 @@ int HPWH::runNSteps(int N,
     // returns 0 on successful completion, HPWH_ABORT on failure
 
     // these are all the accumulating variables we'll need
-    double standbyLosses_kWh_SUM = 0;
+    double standbyLosses_kJ_SUM = 0;
     double outletTemp_C_AVG = 0;
     double totalDrawVolume_L = 0;
     std::vector<double> heatSources_runTimes_SUM(getNumHeatSources());
@@ -885,6 +878,7 @@ int HPWH::runNSteps(int N,
     {
         msg("Begin runNSteps.  \n");
     }
+
     // run the sim one step at a time, accumulating the outputs as you go
     for (int i = 0; i < N; i++)
     {
@@ -903,7 +897,7 @@ int HPWH::runNSteps(int N,
             return HPWH_ABORT;
         }
 
-        standbyLosses_kWh_SUM += standbyLosses_kWh;
+        standbyLosses_kJ_SUM += standbyLosses_kJ;
 
         outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
         totalDrawVolume_L += drawVolume_L[i];
@@ -956,14 +950,14 @@ int HPWH::runNSteps(int N,
     outletTemp_C_AVG /= totalDrawVolume_L;
 
     // now, reassign all of the accumulated values to their original spots
-    standbyLosses_kWh = standbyLosses_kWh_SUM;
+    standbyLosses_kJ = standbyLosses_kJ_SUM;
     outletTemp_C = outletTemp_C_AVG;
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         heatSources[i].runtime_min = heatSources_runTimes_SUM[i];
-        heatSources[i].energyInput_kWh = heatSources_energyInputs_SUM[i];
-        heatSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
+        heatSources[i].energyInput_kJ = heatSources_energyInputs_SUM[i];
+        heatSources[i].energyOutput_kJ = heatSources_energyOutputs_SUM[i];
     }
 
     if (hpwhVerbosity >= VRB_typical)
@@ -2620,50 +2614,50 @@ bool HPWH::isNthHeatSourceValid(const int n) const
 
 double HPWH::getInputEnergy_kJ() const
 {
-    double energy_kWh = 0.;
+    double energy_kJ = 0.;
     for (auto& heatSource : heatSources)
     {
-        energy_kWh += heatSource.energyInput_kWh;
+        energy_kJ += heatSource.energyInput_kJ;
     }
-    return KWH_TO_KJ(energy_kWh);
+    return energy_kJ;
 }
 
 double HPWH::getOutputEnergy_kJ() const
 {
-    double energy_kWh = 0.;
+    double energy_kJ = 0.;
     for (auto& heatSource : heatSources)
     {
-        energy_kWh += heatSource.energyInput_kWh;
+        energy_kJ += heatSource.energyInput_kJ;
     }
-    return KWH_TO_KJ(energy_kWh);
+    return energy_kJ;
 }
 
 double HPWH::getEnergyRemovedFromEnvironment_kJ() const
 {
-    double energy_kWh = 0.;
+    double energy_kJ = 0.;
     for (auto& heatSource : heatSources)
     {
-        energy_kWh += heatSource.energyRemovedFromEnvironment_kWh;
+        energy_kJ += heatSource.energyRemovedFromEnvironment_kJ;
     }
-    return KWH_TO_KJ(energy_kWh);
+    return energy_kJ;
 }
 
-double HPWH::getStandbyLosses_kJ() const { return KWH_TO_KJ(standbyLosses_kWh); }
+double HPWH::getStandbyLosses_kJ() const { return standbyLosses_kJ; }
 
 double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
 {
     // moving heat from the water to the space is the positive direction
     if (units == UNITS_KWH)
     {
-        return standbyLosses_kWh;
+        return KJ_TO_KWH(standbyLosses_kJ);
     }
     else if (units == UNITS_BTU)
     {
-        return KWH_TO_BTU(standbyLosses_kWh);
+        return KJ_TO_BTU(standbyLosses_kJ);
     }
     else if (units == UNITS_KJ)
     {
-        return KWH_TO_KJ(standbyLosses_kWh);
+        return standbyLosses_kJ;
     }
     else
     {
@@ -2677,33 +2671,33 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
 
 double HPWH::getHeatContent_kJ() const
 {
-    double energy_kWh = 0.;
+    double energy_kJ = 0.;
     for (auto& heatSource : heatSources)
     {
-        energy_kWh += heatSource.energyRetained_kWh;
+        energy_kJ += heatSource.energyRetained_kJ;
     }
-    return KWH_TO_KJ(energy_kWh) + getTankHeatContent_kJ();
+    return energy_kJ + getTankHeatContent_kJ();
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyInput_kWh, units) : 0.;
+    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyInput_kJ, units) : 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyOutput_kWh, units) : 0.;
+    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyOutput_kJ, units) : 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyRetained_kWh, units) : 0.;
+    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyRetained_kJ, units) : 0.;
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return isNthHeatSourceValid(N)
-               ? getEnergy(heatSources[N].energyRemovedFromEnvironment_kWh, units)
+               ? getEnergy(heatSources[N].energyRemovedFromEnvironment_kJ, units)
                : 0.;
 }
 
@@ -3464,11 +3458,11 @@ void HPWH::updateTankTemps(double drawVolume_L,
             (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
         for (int i = 0; i < getNumNodes(); i++)
         {
-            double standbyLosses_kJ =
+            double standbyLossesNodeSides_kJ =
                 standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[i] - tankAmbientT_C);
-            standbyLossesSides_kJ += standbyLosses_kJ;
+            standbyLossesSides_kJ += standbyLossesNodeSides_kJ;
 
-            nextTankTemps_C[i] -= standbyLosses_kJ / nodeCp_kJperC;
+            nextTankTemps_C[i] -= standbyLossesNodeSides_kJ / nodeCp_kJperC;
         }
     }
 
@@ -3511,8 +3505,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
     // Update tankTemps_C
     tankTemps_C = nextTankTemps_C;
 
-    standbyLosses_kWh +=
-        KJ_TO_KWH(standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
+    standbyLosses_kJ += standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ;
 
     // check for inverted temperature profile
     mixTankInversions();
@@ -4333,7 +4326,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double qInElectrical_kJ = getInputEnergy_kJ();
     double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment_kJ();
-    double qOutStandbyLosses_kJ = KWH_TO_KJ(standbyLosses_kWh);
+    double qOutStandbyLosses_kJ = standbyLosses_kJ;
     double qOutWater_kJ = drawVol_L * (outletTemp_C - member_inletT_C) * DENSITYWATER_kgperL *
                           CPWATER_kJperkgC; // assumes only one inlet
     double expectedHeatContent_kJ =
@@ -5091,9 +5084,9 @@ int HPWH::HPWHinit_file(string configFile)
             else if (token == "initialHeatRetained")
             {
                 line_ss >> tempDouble >> units;
-                if (units == "kJ")
+                if (units == "kWh")
                     tempDouble = KWH_TO_KJ(tempDouble);
-                heatSources[heatsource].energyRetained_kWh = tempDouble;
+                heatSources[heatsource].energyRetained_kJ = tempDouble;
             }
             else if (token == "condensity")
             {

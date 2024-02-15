@@ -20,10 +20,10 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , lockedOut(false)
     , doDefrost(false)
     , runtime_min(0.)
-    , energyInput_kWh(0.)
-    , energyOutput_kWh(0.)
-    , energyRemovedFromEnvironment_kWh(0.)
-    , energyRetained_kWh(0.)
+    , energyInput_kJ(0.)
+    , energyOutput_kJ(0.)
+    , energyRemovedFromEnvironment_kJ(0.)
+    , energyRetained_kJ(0.)
     , heatRetentionCoef(0.)
     , isVIP(false)
     , backupHeatSource(NULL)
@@ -64,9 +64,10 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     doDefrost = hSource.doDefrost;
 
     runtime_min = hSource.runtime_min;
-    energyInput_kWh = hSource.energyInput_kWh;
-    energyOutput_kWh = hSource.energyOutput_kWh;
-    energyRemovedFromEnvironment_kWh = hSource.energyRemovedFromEnvironment_kWh;
+    energyInput_kJ = hSource.energyInput_kJ;
+    energyOutput_kJ = hSource.energyOutput_kJ;
+    energyRemovedFromEnvironment_kJ = hSource.energyRemovedFromEnvironment_kJ;
+    energyRetained_kJ = hSource.energyRetained_kJ;
 
     isVIP = hSource.isVIP;
 
@@ -128,7 +129,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     secondaryHeatExchanger = hSource.secondaryHeatExchanger;
 
     heatRetentionCoef = hSource.heatRetentionCoef;
-    energyRetained_kWh = hSource.energyRetained_kWh;
     return *this;
 }
 
@@ -496,7 +496,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
     {
         std::vector<double> heatDistribution;
 
-        // calcHeatDist takes care of the swooping for wrapped configurations
+        // takes care of the swooping for wrapped configurations
         calcHeatDist(heatDistribution);
 
         // calculate capacity btu/hr, input btu/hr, and cop
@@ -536,11 +536,13 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         // after you've done everything, any leftover capacity is time that didn't run
         runtime_min = (1. - (leftoverCap_kJ / effectiveCap_kJ)) * minutesToRun;
-#if 1 // error check, 1-22-2017; updated 12-6-2023
         if (runtime_min < -TOL_MINVALUE)
+        {
             if (hpwh->hpwhVerbosity >= VRB_reluctant)
+            {
                 hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
-#endif
+            }
+        }
         break;
     }
 
@@ -567,23 +569,23 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
     double retainedEnergy_kJ = heatRetentionCoef * heatingEnergy_kJ;
     double removedEnergy_kJ = outputEnergy_kJ + retainedEnergy_kJ - inputEnergy_kJ;
 
-    energyInput_kWh += KJ_TO_KWH(inputEnergy_kJ);
-    energyOutput_kWh += KJ_TO_KWH(outputEnergy_kJ);
-    energyRetained_kWh += KJ_TO_KWH(retainedEnergy_kJ);
-    energyRemovedFromEnvironment_kWh += KJ_TO_KWH(removedEnergy_kJ);
+    energyInput_kJ += inputEnergy_kJ;
+    energyOutput_kJ += outputEnergy_kJ;
+    energyRetained_kJ += retainedEnergy_kJ;
+    energyRemovedFromEnvironment_kJ += removedEnergy_kJ;
 }
 
 void HPWH::HeatSource::addRetainedHeat()
 {
-    if (energyRetained_kWh > 0.)
+    if (energyRetained_kJ > 0.)
     {
         double heatAdded_kJ = 0.;
 
-        // calcHeatDist takes care of the swooping for wrapped configurations
+        // takes care of the swooping for wrapped configurations
         std::vector<double> heatDistribution;
         calcHeatDist(heatDistribution);
 
-        double cap_kJ = KWH_TO_KJ(energyRetained_kWh);
+        double cap_kJ = energyRetained_kJ;
         double effectiveCap_kJ = (1. - heatRetentionCoef) * cap_kJ;
 
         // set the leftover capacity to 0
@@ -599,8 +601,8 @@ void HPWH::HeatSource::addRetainedHeat()
                 heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
             }
         }
-        energyOutput_kWh += KJ_TO_KWH(heatAdded_kJ);
-        energyRetained_kWh -= KJ_TO_KWH(heatAdded_kJ);
+        energyOutput_kJ += heatAdded_kJ;
+        energyRetained_kJ -= heatAdded_kJ;
     }
 }
 
