@@ -315,6 +315,15 @@ void calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
+double getTemperature(const double temperature_C, const HPWH::UNITS units /*=UNITS_C*/)
+{
+    if (units == HPWH::UNITS_C)
+    {
+        return temperature_C;
+    }
+    return C_TO_F(temperature_C);
+}
+
 double getEnergy(const double energy_kJ, const HPWH::UNITS units /*=UNITS_KWH*/)
 {
     if (units == HPWH::UNITS_KWH)
@@ -437,6 +446,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 }
 
 HPWH::~HPWH() {}
+
+int HPWH::getHPWHModel() const { return hpwhModel; }
 
 int HPWH::runOneStep(double drawVolume_L,
                      double tankAmbientT_C,
@@ -2612,6 +2623,32 @@ bool HPWH::isNthHeatSourceValid(const int n) const
     return true;
 }
 
+bool HPWH::areEnergyUnitsValid(const HPWH::UNITS units) const
+{
+    if ((units == HPWH::UNITS_KJ) || (units == HPWH::UNITS_KWH) || (units == HPWH::UNITS_BTU))
+    {
+        return true;
+    }
+    if (hpwhVerbosity >= VRB_reluctant)
+    {
+        msg("Incorrect energy-unit specification.\n");
+    }
+    return false;
+}
+
+bool HPWH::areTemperatureUnitsValid(const HPWH::UNITS units) const
+{
+    if ((units == HPWH::UNITS_C) || (units == HPWH::UNITS_F))
+    {
+        return true;
+    }
+    if (hpwhVerbosity >= VRB_reluctant)
+    {
+        msg("Incorrect temperature-unit specification.\n");
+    }
+    return false;
+}
+
 double HPWH::getInputEnergy_kJ() const
 {
     double energy_kJ = 0.;
@@ -2647,26 +2684,7 @@ double HPWH::getStandbyLosses_kJ() const { return standbyLosses_kJ; }
 double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
 {
     // moving heat from the water to the space is the positive direction
-    if (units == UNITS_KWH)
-    {
-        return KJ_TO_KWH(standbyLosses_kJ);
-    }
-    else if (units == UNITS_BTU)
-    {
-        return KJ_TO_BTU(standbyLosses_kJ);
-    }
-    else if (units == UNITS_KJ)
-    {
-        return standbyLosses_kJ;
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getStandbyLosses.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+    return areEnergyUnitsValid(units) ? getEnergy(standbyLosses_kJ, units) : double(HPWH_ABORT);
 }
 
 double HPWH::getHeatContent_kJ() const
@@ -2681,34 +2699,40 @@ double HPWH::getHeatContent_kJ() const
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyInput_kJ, units) : 0.;
+    return (isNthHeatSourceValid(N) && areEnergyUnitsValid(units))
+               ? getEnergy(heatSources[N].energyInput_kJ, units)
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyOutput_kJ, units) : 0.;
+    return (isNthHeatSourceValid(N) && areEnergyUnitsValid(units))
+               ? getEnergy(heatSources[N].energyOutput_kJ, units)
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N) ? getEnergy(heatSources[N].energyRetained_kJ, units) : 0.;
+    return (isNthHeatSourceValid(N) && areEnergyUnitsValid(units))
+               ? getEnergy(heatSources[N].energyRetained_kJ, units)
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units /*=UNITS_KWH*/) const
 {
-    return isNthHeatSourceValid(N)
+    return (isNthHeatSourceValid(N) && areEnergyUnitsValid(units))
                ? getEnergy(heatSources[N].energyRemovedFromEnvironment_kJ, units)
-               : 0.;
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceRunTime(int N) const
 {
-    return isNthHeatSourceValid(N) ? heatSources[N].runtime_min : 0.;
+    return isNthHeatSourceValid(N) ? heatSources[N].runtime_min : double(HPWH_ABORT);
 }
 
 int HPWH::isNthHeatSourceRunning(int N) const
 {
-    return isNthHeatSourceValid(N) ? (heatSources[N].isEngaged() ? 1 : 0) : 0;
+    return isNthHeatSourceValid(N) ? (heatSources[N].isEngaged() ? 1 : 0) : HPWH_ABORT;
 }
 
 HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
@@ -2738,62 +2762,20 @@ double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
 
 double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
 {
-    if (units == UNITS_C)
-    {
-        return outletTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(outletTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getOutletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+    return areTemperatureUnitsValid(units) ? getTemperature(outletTemp_C, units)
+                                           : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
 {
-    if (units == UNITS_C)
-    {
-        return condenserInlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserInlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+    return areTemperatureUnitsValid(units) ? getTemperature(condenserInlet_C, units)
+                                           : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
 {
-    if (units == UNITS_C)
-    {
-        return condenserOutlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserOutlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+    return areTemperatureUnitsValid(units) ? getTemperature(condenserOutlet_C, units)
+                                           : double(HPWH_ABORT);
 }
 
 double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
@@ -2816,6 +2798,8 @@ double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
     }
 }
 
+double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
+
 double HPWH::getTankHeatContent_kJ() const
 {
     // returns tank heat content relative to 0 C using kJ
@@ -2829,9 +2813,6 @@ double HPWH::getTankHeatContent_kJ() const
     return nodeCp_kJperC * totalT_C;
 }
 
-double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
-
-int HPWH::getHPWHModel() const { return hpwhModel; }
 int HPWH::getCompressorCoilConfig() const
 {
     if (!hasACompressor())

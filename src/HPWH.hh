@@ -815,8 +815,14 @@ class HPWH
 
     int getResistancePosition(int elementIndex) const;
 
-    /// check whether a valid het source with index n exists
+    /// check whether a valid heat source with index n exists
     bool isNthHeatSourceValid(const int n) const;
+
+    /// check whether energy units are valid (kJ, kWh, or BTU)
+    bool areEnergyUnitsValid(const HPWH::UNITS units) const;
+
+    /// check whether temperature units are valid (C or F)
+    bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
 
     /// returns the total input energy to all heat sources in the previous time step, in kJ
     double getInputEnergy_kJ() const;
@@ -1025,155 +1031,165 @@ class HPWH
     void msg(const char* fmt, ...) const;
     void msgV(const char* fmt, va_list ap = NULL) const;
 
+    /// did an internal error cause the simulation to fail?
     bool simHasFailed;
-    /**< did an internal error cause the simulation to fail?  */
 
+    /// is the hpwh currently heating or not?
     bool isHeating;
-    /**< is the hpwh currently heating or not?  */
 
+    /// does the HPWH allow the setpoint to vary
     bool setpointFixed;
-    /**< does the HPWH allow the setpoint to vary  */
 
+    /// does the HPWH have a constant tank size or can it be changed
     bool tankSizeFixed;
-    /**< does the HPWH have a constant tank size or can it be changed  */
 
+    /// can the HPWH scale capactiy and COP or not
     bool canScale;
-    /**< can the HPWH scale capactiy and COP or not  */
 
+    /// an enum to let the sim know how much output to say
     VERBOSITY hpwhVerbosity;
-    /**< an enum to let the sim know how much output to say  */
 
+    /// function pointer to indicate an external message processing function
     void (*messageCallback)(const std::string message, void* contextPtr);
-    /**< function pointer to indicate an external message processing function  */
+
+    /// caller context pointer for external message processing
     void* messageCallbackContextPtr;
-    /**< caller context pointer for external message processing  */
 
+    /// The hpwh should know which preset initialized it, or if it was from a fileget
     MODELS hpwhModel;
-    /**< The hpwh should know which preset initialized it, or if it was from a fileget */
 
-    // a std::vector containing the HeatSources, in order of priority
+    /// contains the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
+    /// index of the compressor heat source (set to -1 if no compressor)
     int compressorIndex;
-    /**< The index of the compressor heat source (set to -1 if no compressor)*/
 
+    /// The index of the lowest resistance element heat source
+    /// (-1 if no resistance elements)
     int lowestElementIndex;
-    /**< The index of the lowest resistance element heat source (set to -1 if no resistance
-     * elements)*/
 
+    /// index of the highest resistance element heat source. if only one element it equals
+    /// lowestElementIndex (-1 if no resistance elements)
     int highestElementIndex;
-    /**< The index of the highest resistance element heat source. if only one element it equals
-     * lowestElementIndex (set to -1 if no resistance elements)*/
 
+    /// index of the VIP resistance element heat source
+    /// (-1 if no VIP resistance elements)
     int VIPIndex;
-    /**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance
-     * elements)*/
 
+    /// index of the tank node where the inlet water enters
+    /// must be between 0 and numNodes-1
     int inletHeight;
-    /**< the number of a node in the tank that the inlet water enters the tank at, must be between 0
-     * and numNodes-1  */
 
+    /// index of the tank node where the water from a 2nd inlet enters
+    /// must be between 0 and numNodes-1
     int inlet2Height;
-    /**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be
-     * between 0 and numNodes-1  */
 
-    /**< the volume in liters of the tank  */
+    /// the volume (L) of the tank
     double tankVolume_L;
 
-    /**< the UA of the tank, in metric units  */
+    /// the UA of the tank, in metric units
     double tankUA_kJperHrC;
 
-    /**< the UA of the fittings for the tank, in metric units  */
+    /// the UA of the fittings for the tank, in metric units
     double fittingsUA_kJperHrC;
 
-    /**< the volume (L) of a single node  */
+    /// the volume (L) of a single node
     double nodeVolume_L;
 
-    /**< heat capacity (kJ/degC) of the fluid (water, except for heat-exchange models) in a single
-     * node  */
+    /// heat capacity (kJ/degC) of the fluid (water, except for heat-exchange models)
+    /// in a single node
     double nodeCp_kJperC;
 
-    /**< the height in meters of the one node  */
+    /// the height in meters of the one node
     double nodeHeight_m;
 
+    /// fraction of the UA on the top and bottom of the tank (cylinder assumed)
     double fracAreaTop;
-    /**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
+
+    /// fraction of the UA on the sides of the tank (cylinder assumed)
     double fracAreaSide;
-    /**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
 
+    /// the current state of charge according to the logic
     double currentSoCFraction;
-    /**< the current state of charge according to the logic */
 
+    /// setpoint temperature of the tank
     double setpoint_C;
-    /**< the setpoint of the tank  */
 
-    /**< holds the temperature of each node - 0 is the bottom node  */
+    /// node temperatures - 0 is the bottom node
     std::vector<double> tankTemps_C;
 
-    /**< holds the future temperature of each node for the conduction calculation - 0 is the bottom
-     * node  */
+    /// future temperature of each node for the conduction calculation
+    /// 0 is the bottom node
     std::vector<double> nextTankTemps_C;
 
+    /// the DRstatus of the tank in the previous time step and at the end of runOneStep
     DRMODES prevDRstatus;
-    /**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
 
+    /// the time limit in minutes on the timer when the compressor and resistance elements are
+    /// turned back on, used with DR_TOT.
     double timerLimitTOT;
-    /**< the time limit in minutes on the timer when the compressor and resistance elements are
-     * turned back on, used with DR_TOT. */
+
+    /// the timer used for DR_TOT to turn on the compressor and resistance elements.
     double timerTOT;
-    /**< the timer used for DR_TOT to turn on the compressor and resistance elements. */
 
     bool usesSoCLogic;
 
     // Some outputs
-    double outletTemp_C;
-    /**< the temperature of the outlet water - taken from top of tank, 0 if no flow  */
 
+    /// the temperature of the outlet water - taken from top of tank, 0 if no flow
+    double outletTemp_C;
+
+    /// the temperature of the inlet water to the condensor either an average of tank nodes or
+    /// taken from the bottom, 0 if no flow or no compressor
     double condenserInlet_C;
-    /**< the temperature of the inlet water to the condensor either an average of tank nodes or
-     * taken from the bottom, 0 if no flow or no compressor  */
+
+    /// the temperature of the outlet water from the condenser either
+    /// 0 if no flow or no compressor
     double condenserOutlet_C;
-    /**< the temperature of the outlet water from the condensor either, 0 if no flow or no
-     * compressor  */
+
+    /// the volume of water heated by an external source, 0 if no flow or no external heat source
     double externalVolumeHeated_L;
-    /**< the volume of water heated by an external source, 0 if no flow or no external heat source
-     */
 
     /// the amount of heat lost to standby
     double standbyLosses_kJ;
 
     // special variables for adding abilities
+
+    /// whether the bottom fraction (defined by mixBelowFraction)
+    /// of the tank should mix during draws
     bool tankMixesOnDraw;
-    /**<  whether or not the bottom fraction (defined by mixBelowFraction)
-    of the tank should mix during draws  */
+
+    ///  mixes the tank below this fraction on draws iff tankMixesOnDraw
     double mixBelowFractionOnDraw;
-    /**<  mixes the tank below this fraction on draws iff tankMixesOnDraw  */
 
+    /// whether the HPWH should use the alternate ambient temperature that
+    /// gets depressed when a compressor is running
+    /// NOTE: this only works for 1 minute steps
     bool doTempDepression;
-    /**<  whether the HPWH should use the alternate ambient temperature that
-        gets depressed when a compressor is running
-        NOTE: this only works for 1 minute steps  */
-    double locationTemperature_C;
-    /**<  this is the special location temperature that stands in for the the
-        ambient temperature if you are doing temp. depression  */
-    double maxDepression_C = 2.5;
-    /** a couple variables to hold values which are typically inputs  */
-    double member_inletT_C;
 
+    /// special location temperature that stands in for the
+    /// ambient temperature if you are doing temp. depression
+    double locationTemperature_C;
+
+    double maxDepression_C = 2.5;
+
+    /// values which are typically inputs
+    double member_inletT_C;
     double minutesPerStep = 1.;
     double secondsPerStep, hoursPerStep;
 
+    /// iff true will model temperature inversion mixing in the tank
     bool doInversionMixing;
-    /**<  If and only if true will model temperature inversion mixing in the tank  */
 
+    /// iff true will model conduction between the internal nodes of the tank
     bool doConduction;
-    /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
     struct resPoint
     {
         int index;
         int position;
     };
+
     std::vector<resPoint> resistanceHeightMap;
     /**< A map from index of an resistance element in heatSources to position in the tank, its
     is sorted by height from lowest to highest*/
