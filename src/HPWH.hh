@@ -1199,9 +1199,8 @@ class HPWH::HeatSource
   public:
     friend class HPWH;
 
-    HeatSource() {} /**< default constructor, does not create a useful HeatSource */
-    HeatSource(HPWH* parentHPWH);
-    /**< constructor assigns a pointer to the hpwh that owns this heat source  */
+    HeatSource(HPWH* hpwh_in = nullptr);
+
     HeatSource(const HeatSource& hSource);            /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
     /**< the copy constructor and assignment operator basically just checks if there

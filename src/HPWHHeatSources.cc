@@ -11,8 +11,9 @@
 #include "HPWH.hh"
 
 // public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(HPWH* parentInput)
-    : hpwh(parentInput)
+
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
+    : hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
