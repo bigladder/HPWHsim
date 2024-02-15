@@ -1124,7 +1124,7 @@ class HPWH
     double setpointT_C;
 
     /// node temperatures - 0 is the bottom node
-    std::vector<double> tankTemps_C;
+    std::vector<double> tankT_C;
 
     /// future temperature of each node for the conduction calculation
     /// 0 is the bottom node

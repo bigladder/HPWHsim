@@ -410,12 +410,12 @@ bool HPWH::HeatSource::shutsOff() const
 {
     bool shutOff = false;
 
-    if (hpwh->tankTemps_C[0] >= hpwh->setpointT_C)
+    if (hpwh->tankT_C[0] >= hpwh->setpointT_C)
     {
         shutOff = true;
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
+            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankT_C[0]);
         }
         return shutOff;
     }
@@ -457,7 +457,7 @@ bool HPWH::HeatSource::maxedOut() const
     // shut off
     if (hpwh->setpointT_C > maxSetpoint_C)
     {
-        if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff())
+        if (hpwh->tankT_C[0] >= maxSetpoint_C || shutsOff())
         {
             maxed = true;
         }
@@ -618,7 +618,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 double HPWH::HeatSource::getTankTemp() const
 {
     std::vector<double> resampledTankTemps(getCondensitySize());
-    resample(resampledTankTemps, hpwh->tankTemps_C);
+    resample(resampledTankTemps, hpwh->tankT_C);
 
     double tankTemp_C = 0.;
 
@@ -975,7 +975,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     case CONFIG_WRAPPED:
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpointT_C);
+            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankT_C, hpwh->setpointT_C);
         break;
     }
     }
@@ -1008,19 +1008,17 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     cap_BTUperHr = 0.;
     cop = 0.;
 
-    double setpointT_C = std::min(maxSetpoint_C, hpwh->setpointT_C);
+    double targetT_C = std::min(maxSetpoint_C, hpwh->setpointT_C);
     double remainingTime_min = stepTime_min;
     do
     {
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tankT_C[externalOutletHeight];
 
         // how much heat is available in remaining time
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
         double outputPower_kW = (1. - heatRetentionCoef) * BTUperH_TO_KW(tempCap_BTUperHr);
-
-        double targetT_C = setpointT_C;
 
         // temperature increase
         double deltaT_C = targetT_C - externalOutletT_C;
@@ -1082,9 +1080,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         {
             double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tankT_C[nodeIndex + 1];
+            hpwh->tankT_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankT_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -1160,7 +1158,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tankT_C[externalOutletHeight];
 
         // find heating capacity
         getCapacityMP(
@@ -1208,9 +1206,9 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         {
             double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tankT_C[nodeIndex + 1];
+            hpwh->tankT_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankT_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
