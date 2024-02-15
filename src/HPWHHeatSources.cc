@@ -30,13 +30,10 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , companionHeatSource(NULL)
     , followedByHeatSource(NULL)
     , Tshrinkage_C(1.)
-
     , useBtwxtGrid(false)
     , extrapolationMethod(EXTRAP_LINEAR)
-
     , standbyLogic(NULL)
     , maxOut_at_LowT {100, -273.15}
-
     , secondaryHeatExchanger {0., 0., 0.}
     , minT(-273.15)
     , maxT(100)
@@ -44,11 +41,9 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , hysteresis_dC(0)
     , depressesTemperature(false)
     , airflowFreedom(1.)
-
     , externalInletHeight(-1)
     , externalOutletHeight(-1)
     , lowestNode(0)
-
     , mpFlowRate_LPS(0.)
     , isMultipass(true)
 {

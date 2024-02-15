@@ -1203,12 +1203,10 @@ class HPWH::HeatSource
 
     HeatSource(const HeatSource& hSource);            /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
-    /**< the copy constructor and assignment operator basically just checks if there
-        are backup/companion pointers - these can't be copied */
 
     void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
-    /**< configure the heat source to be a resisive element, positioned at the
-        specified node, with the specified power in watts */
+    /// configure the heat source to be a resisive element, positioned at the
+    /// specified node, with the specified power in watts
 
     bool isEngaged() const;
     /**< return whether or not the heat source is engaged */
@@ -1293,8 +1291,8 @@ class HPWH::HeatSource
     /// owner of the heat source, necessary to access HPWH variables
     HPWH* hpwh;
 
-    HEATSOURCE_TYPE typeOfHeatSource; /**< compressor, resistance, extra, none */
-    COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
+    HEATSOURCE_TYPE typeOfHeatSource; /// compressor, resistance, extra, none
+    COIL_CONFIG configuration;        /// submerged, wrapped, external
 
     // state/output variables
 
@@ -1403,14 +1401,12 @@ class HPWH::HeatSource
     /// A list of points for the defrost derate factor ordered by increasing external temperature
     std::vector<defrostPoint> defrostMap;
 
+    ///  maximum output temperature at the minimum operating temperature (minT) of HPWH environment
     struct maxOut_minAir
     {
         double outT_C;
         double airT_C;
-    };
-
-    ///  maximum output temperature at the minimum operating temperature (minT) of HPWH environment
-    maxOut_minAir maxOut_at_LowT;
+    } maxOut_at_LowT;
 
     /// approximate a secondary
     /// heat exchanger by adding extra input energy for the pump and an increase in the water to the
@@ -1466,17 +1462,16 @@ class HPWH::HeatSource
     /// cop (not capacity) for cases where the air flow is restricted - typically ducting
     double airflowFreedom;
 
-    /// The node height at which the external multipass or single pass HPWH
-    /// adds heated water to the storage tank, defaults to top for single pass.
+    /// The node height at which the external HPWH adds heated water to the storage tank.
+    /// Defaults to top for single pass.
     int externalInletHeight;
+
+    /// The node height at which the external HPWH takes cold water out of the storage tank.
+    /// Defaults to bottom for single pass.
+    int externalOutletHeight;
 
     /// number of the first non-zero condensity entry
     int lowestNode;
-
-    /// The node height at which the external multipass or single pass
-    /// HPWH takes cold water out of the storage tank, defaults to
-    /// bottom for single pass.
-    int externalOutletHeight;
 
     /// The multipass flow rate
     double mpFlowRate_LPS;
