@@ -376,7 +376,7 @@ bool HPWH::HeatSource::shouldHeat() const
                 hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t "
                           "comparison: %2.1f\n",
                           average,
-                          hpwh->setpoint_C,
+                          hpwh->setpointT_C,
                           turnOnLogicSet[i]->getDecisionPoint(),
                           comparison);
             }
@@ -410,7 +410,7 @@ bool HPWH::HeatSource::shutsOff() const
 {
     bool shutOff = false;
 
-    if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C)
+    if (hpwh->tankTemps_C[0] >= hpwh->setpointT_C)
     {
         shutOff = true;
         if (hpwh->hpwhVerbosity >= VRB_emetic)
@@ -455,7 +455,7 @@ bool HPWH::HeatSource::maxedOut() const
 
     // If the heat source can't produce water at the setpoint and the control logics are saying to
     // shut off
-    if (hpwh->setpoint_C > maxSetpoint_C)
+    if (hpwh->setpointT_C > maxSetpoint_C)
     {
         if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff())
         {
@@ -975,7 +975,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     case CONFIG_WRAPPED:
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpoint_C);
+            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpointT_C);
         break;
     }
     }
@@ -1008,7 +1008,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     cap_BTUperHr = 0.;
     cop = 0.;
 
-    double setpointT_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
+    double setpointT_C = std::min(maxSetpoint_C, hpwh->setpointT_C);
     double remainingTime_min = stepTime_min;
     do
     {

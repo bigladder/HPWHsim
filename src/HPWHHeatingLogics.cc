@@ -93,21 +93,21 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     // Find the fraction to heat the calc node to meet the target SoC fraction without heating the
     // node below up to tempMinUseful.
     double maxSoC = hpwh->getNumNodes() *
-                    hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpoint_C);
+                    hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpointT_C);
     double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tankTemps_C[calcNode] - getMainsT_C()) /
                                                         (tempMinUseful_C - getMainsT_C());
     targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
     // Catch case where node temperature == setpoint
     double fractCalcNode;
-    if (hpwh->tankTemps_C[calcNode] >= hpwh->setpoint_C)
+    if (hpwh->tankTemps_C[calcNode] >= hpwh->setpointT_C)
     {
         fractCalcNode = 1;
     }
     else
     {
         fractCalcNode = (targetTemp - hpwh->tankTemps_C[calcNode]) /
-                        (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]);
+                        (hpwh->setpointT_C - hpwh->tankTemps_C[calcNode]);
     }
 
     // If we're at the bottom node there's not another node to heat so case 2 doesn't apply.
@@ -125,7 +125,7 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
-            (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
+            (1. + fractNextNode * (hpwh->setpointT_C - hpwh->tankTemps_C[calcNode]) /
                       (tempMinUseful_C - getMainsT_C()));
         hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
                   "deltaSoCFraction: %.6f\n",

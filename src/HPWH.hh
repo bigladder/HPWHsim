@@ -33,41 +33,45 @@ class HPWH
     static const int version_patch = HPWHVRSN_PATCH;
     static const std::string version_maint;
 
-    static const int CONDENSITY_SIZE =
-        12; /**<number of condensity nodes associated with each heat source */
-    static const int LOGIC_NODE_SIZE =
-        12; /**< number of logic nodes associated with temperature-based heating logic */
-    static const int MAXOUTSTRING =
-        200; /**< this is the maximum length for a debuging output string */
+    /// number of condensity nodes associated with each heat source
+    static const int CONDENSITY_SIZE = 12;
+
+    /// number of logic nodes associated with temperature-based heating logic
+    static const int LOGIC_NODE_SIZE = 12;
+
+    static const int MAXOUTSTRING = 200; /// maximum length for a debuging output string
 
     static const double DENSITYWATER_kgperL; /// mass density of water
     static const double KWATER_WpermC;       /// thermal conductivity of water
     static const double CPWATER_kJperkgC;    /// specific heat capcity of water
-    static const double TOL_MINVALUE; /**< any amount of heat distribution less than this is reduced
-                                         to 0 this saves on computations */
+    static const double TOL_MINVALUE;        /// tolerance
 
-    static const float UNINITIALIZED_LOCATIONTEMP; /**< this is used to tell the
-   simulation when the location temperature has not been initialized */
+    /// tells the simulation when the location temperature has not been initialized
+    static const float UNINITIALIZED_LOCATIONTEMP;
+
     static const float
         ASPECTRATIO; /**< A constant to define the aspect ratio between the tank height and
                      radius (H/R). Used to find the radius and tank height from the volume and then
                      find the surface area. It is derived from the median value of 88
                      insulated storage tanks currently available on the market from
                      Sanden, AOSmith, HTP, Rheem, and Niles,  */
-    static const double
-        MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
-    static const double
-        MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
-    static const double
-        MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
-    static const double
-        MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH();                            /**< default constructor */
-    HPWH(const HPWH& hpwh);            /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh); /**< assignment operator  */
-    ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
-                eventually?   */
+    /// max oulet temperature for compressors with the refrigerant R134a
+    static const double MAXOUTLET_R134A;
+
+    /// max oulet temperature for compressors with the refrigerant R410a
+    static const double MAXOUTLET_R410A;
+
+    /// max oulet temperature for compressors with the refrigerant R744*/
+    static const double MAXOUTLET_R744;
+
+    /// minimum temperature lift for single-pass compressors
+    static const double MINSINGLEPASSLIFT;
+
+    HPWH();                            /// default constructor
+    HPWH(const HPWH& hpwh);            /// copy constructor
+    HPWH& operator=(const HPWH& hpwh); /// assignment operator
+    ~HPWH();                           /// destructor
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -281,7 +285,7 @@ class HPWH
         UNITS_LPS        /**< liters per second  */
     };
 
-    /** specifies the type of heat source  */
+    /// specifies the type of heat source
     enum HEATSOURCE_TYPE
     {
         TYPE_none,       /**< a default to check to make sure it's been set  */
@@ -289,7 +293,7 @@ class HPWH
         TYPE_compressor  /**< a vapor cycle compressor  */
     };
 
-    /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
+    /// specifies the extrapolation method based on Tair, from the perfmap for a heat source
     enum EXTRAP_METHOD
     {
         EXTRAP_LINEAR, /**< the default extrapolates linearly */
@@ -297,7 +301,7 @@ class HPWH
                           point  */
     };
 
-    /** specifies the unit type for outputs in the CSV file-s  */
+    /// specifies the unit type for CSV file outputs
     enum CSVOPTIONS
     {
         CSVOPT_NONE = 0,
@@ -333,15 +337,19 @@ class HPWH
 
         virtual ~HeatingLogic() = default;
 
-        /**< checks that the input is all valid. */
+        /// check that the input is valid.
         virtual bool isValid() = 0;
-        /**< gets the value for comparing the tank value to, i.e. the target SoC */
+
+        /// get the value for comparing the tank value to, i.e. the target SoC
         virtual double getComparisonValue() = 0;
-        /**< gets the calculated value from the tank, i.e. SoC or tank average of node weights*/
+
+        /// get the calculated value from the tank, i.e. SoC or tank average of node weights
         virtual double getTankValue() = 0;
-        /**< function to calculate where the average node for a logic set is. */
+
+        /// calculate where the average node for a logic set is.
         virtual double nodeWeightAvgFract() = 0;
-        /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
+
+        /// gets the fraction of a node that has to be heated up to met the turnoff condition
         virtual double getFractToMeetComparisonExternal() = 0;
 
         virtual int setDecisionPoint(double value) = 0;
@@ -1113,7 +1121,7 @@ class HPWH
     double currentSoCFraction;
 
     /// setpoint temperature of the tank
-    double setpoint_C;
+    double setpointT_C;
 
     /// node temperatures - 0 is the bottom node
     std::vector<double> tankTemps_C;

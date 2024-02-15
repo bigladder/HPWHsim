@@ -409,7 +409,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
     fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
-    setpoint_C = hpwh.setpoint_C;
+    setpointT_C = hpwh.setpointT_C;
 
     tankTemps_C = hpwh.tankTemps_C;
     nextTankTemps_C = hpwh.nextTankTemps_C;
@@ -989,9 +989,9 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
     if (heatSourcePtr->isACompressor())
     {
         if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
-            setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
+            setpointT_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
         {
-            tempSetpoint_C = setpoint_C; // Store setpoint
+            tempSetpoint_C = setpointT_C; // Store setpoint
             setSetpoint(heatSourcePtr->maxOut_at_LowT
                             .outT_C); // Reset to new setpoint as this is used in the add heat calc
         }
@@ -1235,7 +1235,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
         return HPWH_ABORT;
     }
 
-    setpoint_C = newSetpoint_C;
+    setpointT_C = newSetpoint_C;
 
     return 0;
 }
@@ -1244,11 +1244,11 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
 {
     if (units == UNITS_C)
     {
-        return setpoint_C;
+        return setpointT_C;
     }
     else if (units == UNITS_F)
     {
-        return C_TO_F(setpoint_C);
+        return C_TO_F(setpointT_C);
     }
     else
     {
@@ -1316,8 +1316,8 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 
     if (isSetpointFixed())
     {
-        returnVal = (newSetpoint == setpoint_C);
-        maxAllowedSetpoint_C = setpoint_C;
+        returnVal = (newSetpoint == setpointT_C);
+        maxAllowedSetpoint_C = setpointT_C;
         if (!returnVal)
         {
             why = "The set point is fixed for the currently selected model.";
@@ -1467,7 +1467,7 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
     }
 }
 
-int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpoint_C); }
+int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpointT_C); }
 
 int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
 
@@ -2025,7 +2025,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     if (tempIsAbsolute)
     {
         // check differnce with setpoint
-        if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT)
+        if (setpointT_C - highTemp_C < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
@@ -3558,7 +3558,7 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 {
 
     // Do not exceed maxT_C or setpoint
-    double maxHeatToT_C = std::min(maxT_C, setpoint_C);
+    double maxHeatToT_C = std::min(maxT_C, setpointT_C);
 
     if (hpwhVerbosity >= VRB_emetic)
     {
@@ -3716,7 +3716,7 @@ void HPWH::modifyHeatDistribution(std::vector<double>& heatDistribution_W)
     int lowestNode = findLowestNode(heatDistribution_W, getNumNodes());
 
     std::vector<double> modHeatDistribution_W;
-    calcThermalDist(modHeatDistribution_W, shrinkageT_C, lowestNode, tankTemps_C, setpoint_C);
+    calcThermalDist(modHeatDistribution_W, shrinkageT_C, lowestNode, tankTemps_C, setpointT_C);
 
     heatDistribution_W = modHeatDistribution_W;
     for (auto& heatDist_W : heatDistribution_W)
@@ -4239,7 +4239,7 @@ int HPWH::checkInputs()
 
     double maxTemp;
     string why;
-    double tempSetpoint = setpoint_C;
+    double tempSetpoint = setpointT_C;
     if (!isNewSetpointPossible(tempSetpoint, maxTemp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -4480,7 +4480,7 @@ int HPWH::HPWHinit_file(string configFile)
                 }
                 return HPWH_ABORT;
             }
-            setpoint_C = tempDouble;
+            setpointT_C = tempDouble;
             // tank will be set to setpoint at end of function
         }
         else if (token == "setpointFixed")

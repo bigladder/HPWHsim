@@ -60,7 +60,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
         return failure;
     }
 
-    setpoint_C = F_TO_C(127.0);
+    setpointT_C = F_TO_C(127.0);
 
     // start tank off at setpoint
     resetTankToSetpoint();
@@ -196,7 +196,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     }
     canScale = true;
 
-    setpoint_C = F_TO_C(127.0);
+    setpointT_C = F_TO_C(127.0);
     resetTankToSetpoint(); // start tank off at setpoint
 
     doTempDepression = false;
@@ -289,7 +289,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
     // except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
     setNumNodes(12);
-    setpoint_C = F_TO_C(127.0);
+    setpointT_C = F_TO_C(127.0);
 
     // start tank off at setpoint
     resetTankToSetpoint();
@@ -467,7 +467,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     if (presetNum == MODELS_restankNoUA)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankSizeFixed = false;
         tankVolume_L = GAL_TO_L(50);
@@ -502,7 +502,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_restankHugeUA)
     {
         setNumNodes(12);
-        setpoint_C = 50;
+        setpointT_C = 50;
 
         tankSizeFixed = false;
         tankVolume_L = 120;
@@ -537,7 +537,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_restankRealistic)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankSizeFixed = false;
         tankVolume_L = GAL_TO_L(50);
@@ -571,7 +571,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_StorageTank)
     {
         setNumNodes(12);
-        setpoint_C = 800.;
+        setpointT_C = 800.;
 
         initialTankT_C = F_TO_C(127.);
         hasInitialTankTemp = true;
@@ -588,7 +588,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_basicIntegrated)
     {
         setNumNodes(12);
-        setpoint_C = 50;
+        setpointT_C = 50;
 
         tankSizeFixed = false;
         tankVolume_L = 120;
@@ -668,7 +668,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_externalTest)
     {
         setNumNodes(96);
-        setpoint_C = 50;
+        setpointT_C = 50;
 
         tankSizeFixed = false;
         tankVolume_L = 120;
@@ -725,7 +725,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithPHPT60)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 215.8;
         tankUA_kJperHrC = 7.31;
@@ -805,7 +805,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithPHPT80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 283.9;
         tankUA_kJperHrC = 8.8;
@@ -885,7 +885,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2012)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 172;
         tankUA_kJperHrC = 6.8;
@@ -971,7 +971,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
     {
         setNumNodes(96);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1222,7 +1222,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1417,7 +1417,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
     {
         setNumNodes(96);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
 
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
@@ -1669,7 +1669,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1856,7 +1856,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1952,7 +1952,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
         setNumNodes(96);
-        setpoint_C = 65;
+        setpointT_C = 65;
 
         tankVolume_L = GAL_TO_L(500);
         tankUA_kJperHrC = 12;
@@ -2230,7 +2230,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum == MODELS_SANCO2_119)
     {
         setNumNodes(96);
-        setpoint_C = 65;
+        setpointT_C = 65;
         setpointFixed = true;
 
         if (presetNum == MODELS_SANCO2_119)
@@ -2337,7 +2337,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_SANCO2_43)
     {
         setNumNodes(96);
-        setpoint_C = 65;
+        setpointT_C = 65;
         setpointFixed = true;
 
         tankVolume_L = 160;
@@ -2431,7 +2431,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4550)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 171;
         tankUA_kJperHrC = 6;
@@ -2535,7 +2535,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4565)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTU66)
         {
@@ -2646,7 +2646,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 299.5;
         tankUA_kJperHrC = 9;
@@ -2749,7 +2749,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithHPTU80_DR)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = 283.9;
         tankUA_kJperHrC = 9;
@@ -2825,7 +2825,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(150.0);
+        setpointT_C = F_TO_C(150.0);
 
         tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
         tankUA_kJperHrC = UAf_TO_UAc(3.94);
@@ -2918,7 +2918,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AOSmithHPTS50)
         {
@@ -3008,7 +3008,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2014STDMode)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(45);
         tankUA_kJperHrC = 6.5;
@@ -3082,7 +3082,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2014STDMode_80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(75.4);
         tankUA_kJperHrC = 10.;
@@ -3152,7 +3152,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2014)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(45);
         tankUA_kJperHrC = 6.5;
@@ -3229,7 +3229,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2014_80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(75.4);
         tankUA_kJperHrC = 10.;
@@ -3306,7 +3306,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_GE2014_80DR)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(75.4);
         tankUA_kJperHrC = 10.;
@@ -3385,7 +3385,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_BWC2020_65)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(64);
         tankUA_kJperHrC = 7.6;
@@ -3460,7 +3460,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_Rheem2020Prem40)
         {
@@ -3555,7 +3555,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_Rheem2020Build40)
         {
@@ -3653,25 +3653,25 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         {
             tankVolume_L = GAL_TO_L(36.0);
             tankUA_kJperHrC = 9.5;
-            setpoint_C = F_TO_C(140.0);
+            setpointT_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
             tankVolume_L = GAL_TO_L(45.0);
             tankUA_kJperHrC = 8.55;
-            setpoint_C = F_TO_C(140.0);
+            setpointT_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
             tankVolume_L = GAL_TO_L(58.5);
             tankUA_kJperHrC = 10.64;
-            setpoint_C = F_TO_C(127.0);
+            setpointT_C = F_TO_C(127.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
             tankVolume_L = GAL_TO_L(72.0);
             tankUA_kJperHrC = 10.83;
-            setpoint_C = F_TO_C(127.0);
+            setpointT_C = F_TO_C(127.0);
         }
 
         doTempDepression = false;
@@ -3719,7 +3719,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
              presetNum == MODELS_RheemPlugInDedicated50)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
         if (presetNum == MODELS_RheemPlugInDedicated40)
         {
             tankVolume_L = GAL_TO_L(36);
@@ -3774,7 +3774,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_RheemHB50)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(45);
         tankUA_kJperHrC = 7;
@@ -3850,7 +3850,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_Stiebel220E)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127);
+        setpointT_C = F_TO_C(127);
 
         tankVolume_L = GAL_TO_L(56);
         // tankUA_kJperHrC = 10; //0 to turn off
@@ -3908,7 +3908,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_Generic1)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(50);
         tankUA_kJperHrC = 9;
@@ -3978,7 +3978,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_Generic2)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(50);
         tankUA_kJperHrC = 7.5;
@@ -4052,7 +4052,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_Generic3)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(50);
         tankUA_kJperHrC = 5;
@@ -4128,7 +4128,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_UEF2generic)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         tankVolume_L = GAL_TO_L(45);
         tankUA_kJperHrC = 6.5;
@@ -4201,7 +4201,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80)
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT_C = F_TO_C(127.0);
 
         if (presetNum == MODELS_AWHSTier3Generic40)
         {
@@ -4304,7 +4304,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_TamScalable_SP)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
         canScale = true; // a fully scallable model
 
@@ -4408,7 +4408,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_Scalable_MP)
     {
         setNumNodes(24);
-        setpoint_C = F_TO_C(135.0);
+        setpointT_C = F_TO_C(135.0);
         tankSizeFixed = false;
         canScale = true; // a fully scallable model
 
@@ -4490,7 +4490,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else if (presetNum == MODELS_AquaThermAire)
     { // AquaThermAire
         setNumNodes(12);
-        setpoint_C = 50.;
+        setpointT_C = 50.;
 
         initialTankT_C = 49.32;
         hasInitialTankTemp = true;
