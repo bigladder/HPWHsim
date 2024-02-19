@@ -612,6 +612,9 @@ class HPWH
     /// check whether temperature units are valid (C or F)
     bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
 
+    /// check whether volume units are valid (L or gal)
+    bool areVolumeUnitsValid(const HPWH::UNITS units) const;
+
     ///////////////////////////////////////////////
     /* The following functions return energies (kJ) */
 
@@ -900,7 +903,7 @@ class HPWH
     int getResistancePosition(int elementIndex) const;
 
     /// check whether a valid heat source with index n exists
-    bool isNthHeatSourceValid(const int n) const;
+    bool isHeatSourceIndexValid(const int n) const;
 
     /// returns the energy input to the Nth heat source, with the specified units
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
@@ -914,10 +917,10 @@ class HPWH
     /// returns energy retained by the heat source, with the specified units
     double getNthHeatSourceEnergyRetained(int N, UNITS units = UNITS_KWH) const;
 
+    /// return the run time for the Nth heat source (min)
+    /// note: they may sum to more than 1 time step for concurrently running heat sources
+    /// returns HPWH_ABORT for N out of bounds  */
     double getNthHeatSourceRunTime(int N) const;
-    /**< returns the run time for the Nth heat source, in minutes
-      note: they may sum to more than 1 time step for concurrently running heat sources
-      returns HPWH_ABORT for N out of bounds  */
 
     int isNthHeatSourceRunning(int N) const;
     /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
@@ -929,8 +932,8 @@ class HPWH
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
 
+    /// return model identifier
     int getHPWHModel() const;
-    /**< get the model number of the HPWHsim model number of the hpwh */
 
     int getCompressorCoilConfig() const;
     bool isCompressorMultipass() const;
@@ -938,15 +941,14 @@ class HPWH
 
     bool hasCompressor() const;
 
+    /// report whether the HPWH model has a compressor (false if storage or resistance tank)
     bool hasACompressor() const;
-    /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
-     */
 
+    /// report whether the HPWH has any external heat sources, (compressor or resistance element)
     bool hasExternalHeatSource() const;
-    /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
-     * resistance element. */
+
+    /// return the constant flow rate for an external multipass heat source
     double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
-    /**< Returns the constant flow rate for an external multipass heat sources. */
 
     double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 
@@ -956,22 +958,23 @@ class HPWH
     where the shut off logic is for the compressor. If the logic spans multiple nodes it
     returns the weighted average of the nodes */
 
+    /// report whether the HPWH is scalable
     bool isHPWHScalable() const;
-    /**< returns if the HPWH is scalable or not*/
 
+    /// check the demand-response signal against the different heat source types
     bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
-    /**< Checks the demand response signal against the different heat source types  */
 
+    /// reset variables for timer associated with the DR_TOT call
     void resetTopOffTimer();
-    /**< resets variables for timer associated with the DR_TOT call  */
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
+
+    /// check for and set specific high temperature shut off logics.
+    /// HPWHs can only have one of these, which is at least typical
     int setEnteringWaterHighTempShutOff(double highTemp,
                                         bool tempIsAbsolute,
                                         int heatSourceIndex,
                                         UNITS units = UNITS_C);
-    /**< functions to check for and set specific high temperature shut off logics.
-    HPWHs can only have one of these, which is at least typical */
 
     int setTargetSoCFraction(double target);
 
@@ -1011,19 +1014,22 @@ class HPWH
   private:
     class HeatSource;
 
-    void setAllDefaults(); /**< sets all the defaults default */
+    /// sets all the values to defaults
+    void setAllDefaults();
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
 
+    /// mix to remove any temperature inversions in the tank
     void mixTankInversions();
-    /**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
+
     void updateSoCIfNecessary();
 
+    /// report whether all the heat sources are off
     bool areAllHeatSourcesOff() const;
-    /**< test if all the heat sources are off  */
+
+    /// disengage all heat sources
     void turnAllHeatSourcesOff();
-    /**< disengage each heat source  */
 
     void addHeatParent(HeatSource* heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun);
 
@@ -1042,18 +1048,20 @@ class HPWH
     /// by a factor mixFactor towards their average temperature
     void mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
+    /// calculate condentropy and the lowest node
     void calcDerivedValues();
-    /**< a helper function for the inits, calculating condentropy and the lowest node  */
-    void calcSizeConstants();
-    /**< a helper function to set constants for the UA and tank size*/
-    void calcDerivedHeatingValues();
-    /**< a helper for the helper, calculating condentropy and the lowest node*/
-    void mapResRelativePosToHeatSources();
-    /**< a helper function for the inits, creating a mapping function for the position of the
-    resistance elements to their indexes in heatSources. */
 
+    /// set constants for the UA and tank size
+    void calcSizeConstants();
+
+    /// calculate condentropy and the lowest node
+    void calcDerivedHeatingValues();
+
+    /// map positions of the resistance elements to their indices in heatSources
+    void mapResRelativePosToHeatSources();
+
+    /// run checks on the HPWH input parameters
     int checkInputs();
-    /**< a helper function to run a few checks on the HPWH input parameters  */
 
     double getChargePerNode(double tCold, double tMix, double tHot) const;
 
@@ -1659,6 +1667,5 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const int lowestNode,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
-double getEnergy(const double energy_kWh, const HPWH::UNITS units = HPWH::UNITS::UNITS_KWH);
 
 #endif
