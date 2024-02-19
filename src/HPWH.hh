@@ -662,7 +662,9 @@ class HPWH
 
     bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
 
-    int setSetpointT(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
+    int setSetpointT_C(const double setpointT_C_in);
+
+    int setSetpointT(const double setpointT, const UNITS units = UNITS_C); /**<default units C*/
     /**< a function to change the setpoint - useful for dynamically setting it
         The return value is 0 for successful setting, HPWH_ABORT for units failure  */
 

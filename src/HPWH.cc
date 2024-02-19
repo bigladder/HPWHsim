@@ -2515,6 +2515,25 @@ int HPWH::setTankT_C(double temp_C) { return setTankTs({temp_C}); }
 
 void HPWH::getTankTs_C(std::vector<double>& tankTemps) const { tankTemps = tankTs_C; }
 
+int HPWH::setSetpointT_C(const double setpointT_C_in)
+{
+    double maxSetpointT_C = -273.15;
+    std::string why;
+    if (!canSetSetpointT_C(setpointT_C_in, maxSetpointT_C, why))
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Unwilling to set this setpoint, max setpoint is %f C. %s\n",
+                maxSetpointT_C,
+                why.c_str());
+        }
+        return HPWH_ABORT;
+    }
+
+    setpointT_C = setpointT_C_in;
+    return 0;
+}
+
 //-----------------------------------------------------------------------------
 ///	@brief	Assigns new temps provided from a std::vector to tankTs_C.
 /// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
@@ -2554,43 +2573,9 @@ int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
     return 0;
 }
 
-int HPWH::setSetpointT(double newSetpoint, UNITS units /*=UNITS_C*/)
+int HPWH::setSetpointT(const double setpointT, const UNITS units /*=UNITS_C*/)
 {
-
-    double newSetpoint_C, temp;
-    string why;
-    if (units == UNITS_C)
-    {
-        newSetpoint_C = newSetpoint;
-    }
-    else if (units == UNITS_F)
-    {
-        newSetpoint_C = F_TO_C(newSetpoint);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpointT.  \n");
-        }
-        return HPWH_ABORT;
-    }
-    if (!canSetSetpointT_C(newSetpoint_C, temp, why))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Unwilling to set this setpoint for the currently selected model, max setpoint "
-                "is "
-                "%f C. %s\n",
-                temp,
-                why.c_str());
-        }
-        return HPWH_ABORT;
-    }
-
-    setpointT_C = newSetpoint_C;
-
-    return 0;
+    return areTemperatureUnitsValid(units) ? setSetpointT_C(setT_C(setpointT, units)) : HPWH_ABORT;
 }
 
 double HPWH::getSetpointT(UNITS units /*=UNITS_C*/) const
