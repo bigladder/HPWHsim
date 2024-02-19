@@ -316,84 +316,84 @@ void calcThermalDist(std::vector<double>& thermalDist,
 }
 
 /* temperature-unit conversion */
-static double temperatureFrom_C(const double T_C, const HPWH::UNITS units)
+static double getFromT_C(const double T_C, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_C) ? T_C : C_TO_F(T_C);
 }
 
-static double temperatureFrom_F(const double T_F, const HPWH::UNITS units)
+static double getFromT_F(const double T_F, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_F) ? T_F : F_TO_C(T_F);
 }
 
-static double temperatureTo_C(const double T, const HPWH::UNITS units)
+static double setToT_C(const double T, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_C) ? T : F_TO_C(T);
 }
 
-static double temperatureTo_F(const double T, const HPWH::UNITS units)
+static double setToT_F(const double T, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_F) ? T : C_TO_F(T);
 }
 
 /* energy-unit conversion */
-static double energyFrom_kJ(const double energy_kJ, const HPWH::UNITS units)
+static double getFromEnergy_kJ(const double energy_kJ, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_KJ)
                ? energy_kJ
                : ((units == HPWH::UNITS_KWH) ? KJ_TO_KWH(energy_kJ) : KJ_TO_BTU(energy_kJ));
 }
 
-static double energyFrom_kWh(const double energy_kWh, const HPWH::UNITS units)
+static double getFromEnergy_kWh(const double energy_kWh, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_KJ)
                ? KWH_TO_KJ(energy_kWh)
                : ((units == HPWH::UNITS_KWH) ? energy_kWh : KWH_TO_BTU(energy_kWh));
 }
 
-static double energyFrom_BTU(const double energy_BTU, const HPWH::UNITS units)
+static double getFromEnergy_BTU(const double energy_BTU, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_KJ)
                ? BTU_TO_KJ(energy_BTU)
                : ((units == HPWH::UNITS_KWH) ? BTU_TO_KWH(energy_BTU) : energy_BTU);
 }
 
-static double energyTo_kJ(const double energy, const HPWH::UNITS units)
+static double setToEnergy_kJ(const double energy, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_KJ)
                ? energy
                : ((units == HPWH::UNITS_KWH) ? KWH_TO_KJ(energy) : BTU_TO_KJ(energy));
 }
 
-static double energyTo_kWh(const double energy, const HPWH::UNITS units /*=UNITS_C*/)
+static double setToEnergy_kWh(const double energy, const HPWH::UNITS units /*=UNITS_C*/)
 {
     return (units == HPWH::UNITS_KJ) ? KJ_TO_KWH(energy)
                                      : ((units == HPWH::UNITS_KWH) ? energy : BTU_TO_KWH(energy));
 }
 
-static double energyTo_BTU(const double energy, const HPWH::UNITS units)
+static double setToEnergy_BTU(const double energy, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_KJ) ? KJ_TO_BTU(energy)
                                      : ((units == HPWH::UNITS_KWH) ? KWH_TO_BTU(energy) : energy);
 }
 
 /* volume-unit conversion */
-static double volumeFrom_L(const double volume_L, const HPWH::UNITS units)
+static double getFromVolume_L(const double volume_L, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_L) ? volume_L : L_TO_GAL(volume_L);
 }
 
-static double volumeFrom_gal(const double volume_gal, const HPWH::UNITS units)
+static double getFromVolume_gal(const double volume_gal, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_L) ? GAL_TO_L(volume_gal) : volume_gal;
 }
 
-static double volumeTo_L(const double volume, const HPWH::UNITS units)
+static double setToVolume_L(const double volume, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_L) ? volume : GAL_TO_L(volume);
 }
 
-static double volumeTo_gal(const double volume, const HPWH::UNITS units)
+static double setToVolume_gal(const double volume, const HPWH::UNITS units)
 {
     return (units == HPWH::UNITS_GAL) ? volume : L_TO_GAL(volume);
 }
@@ -2438,58 +2438,59 @@ double HPWH::getHeatContent_kJ() const
 
 double HPWH::getInputEnergy(const UNITS units /*=UNITS_KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? energyFrom_kJ(getInputEnergy_kJ(), units)
+    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getInputEnergy_kJ(), units)
                                         : double(HPWH_ABORT);
 }
 
 double HPWH::getOutputEnergy(const UNITS units /*=UNITS_KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? energyFrom_kJ(getOutputEnergy_kJ(), units)
+    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getOutputEnergy_kJ(), units)
                                         : double(HPWH_ABORT);
 }
 
 double HPWH::getTankHeatContent(const UNITS units /*=UNITS_KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? energyFrom_kJ(getTankHeatContent_kJ(), units)
+    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getTankHeatContent_kJ(), units)
                                         : double(HPWH_ABORT);
 }
 
 double HPWH::getHeatContent(const UNITS units /*=UNITS_KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? energyFrom_kJ(getHeatContent_kJ(), units)
+    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getHeatContent_kJ(), units)
                                         : double(HPWH_ABORT);
 }
 
 double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
 {
-    return areEnergyUnitsValid(units) ? energyFrom_kJ(standbyLosses_kJ, units) : double(HPWH_ABORT);
+    return areEnergyUnitsValid(units) ? getFromEnergy_kJ(standbyLosses_kJ, units)
+                                      : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? energyFrom_kJ(heatSources[N].energyInput_kJ, units)
+               ? getFromEnergy_kJ(heatSources[N].energyInput_kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? energyFrom_kJ(heatSources[N].energyOutput_kJ, units)
+               ? getFromEnergy_kJ(heatSources[N].energyOutput_kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? energyFrom_kJ(heatSources[N].energyRetained_kJ, units)
+               ? getFromEnergy_kJ(heatSources[N].energyRetained_kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units /*=UNITS_KWH*/) const
 {
     return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? energyFrom_kJ(heatSources[N].energyRemovedFromEnvironment_kJ, units)
+               ? getFromEnergy_kJ(heatSources[N].energyRemovedFromEnvironment_kJ, units)
                : double(HPWH_ABORT);
 }
 
@@ -2674,25 +2675,24 @@ void HPWH::printTankTs_C()
 
 double HPWH::getOutletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(getOutletT_C(), units)
-                                           : double(HPWH_ABORT);
+    return areTemperatureUnitsValid(units) ? getFromT_C(getOutletT_C(), units) : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserInletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(getCondenserInletT_C(), units)
+    return areTemperatureUnitsValid(units) ? getFromT_C(getCondenserInletT_C(), units)
                                            : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserOutletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(getCondenserOutletT_C(), units)
+    return areTemperatureUnitsValid(units) ? getFromT_C(getCondenserOutletT_C(), units)
                                            : double(HPWH_ABORT);
 }
 
 double HPWH::getSetpointT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(getSetpointT_C(), units)
+    return areTemperatureUnitsValid(units) ? getFromT_C(getSetpointT_C(), units)
                                            : double(HPWH_ABORT);
 }
 
@@ -2709,7 +2709,7 @@ double HPWH::getMaxCompressorSetpointT(const UNITS units /*=UNITS_C*/) const
     }
 
     return areTemperatureUnitsValid(units)
-               ? temperatureFrom_C(heatSources[compressorIndex].maxSetpointT_C, units)
+               ? getFromT_C(heatSources[compressorIndex].maxSetpointT_C, units)
                : double(HPWH_ABORT);
 }
 
@@ -2725,7 +2725,7 @@ double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) con
         }
         return double(HPWH_ABORT);
     }
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(getTankNodeT_C(nodeNum), units)
+    return areTemperatureUnitsValid(units) ? getFromT_C(getTankNodeT_C(nodeNum), units)
                                            : double(HPWH_ABORT);
 }
 
@@ -2746,14 +2746,14 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
 
-    return areTemperatureUnitsValid(units) ? temperatureFrom_C(simTcoupleTemp_C, units)
+    return areTemperatureUnitsValid(units) ? getFromT_C(simTcoupleTemp_C, units)
                                            : double(HPWH_ABORT);
 }
 
 double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
 {
     return (areTemperatureUnitsValid(units) && hasCompressor())
-               ? temperatureFrom_C(heatSources[compressorIndex].minT_C, units)
+               ? getFromT_C(heatSources[compressorIndex].minT_C, units)
                : double(HPWH_ABORT);
 }
 
@@ -2798,7 +2798,7 @@ int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
 
 int HPWH::setSetpointT(const double setpointT, const UNITS units /*=UNITS_C*/)
 {
-    return areTemperatureUnitsValid(units) ? setSetpointT_C(temperatureTo_C(setpointT, units))
+    return areTemperatureUnitsValid(units) ? setSetpointT_C(setToT_C(setpointT, units))
                                            : HPWH_ABORT;
 }
 
@@ -2852,10 +2852,10 @@ bool HPWH::canSetSetpointT(const double newSetpointT,
         return false;
     }
 
-    double newSetpointT_C = temperatureTo_C(newSetpointT, units);
+    double newSetpointT_C = setToT_C(newSetpointT, units);
     double maxSetpointT_C = -273.15;
     bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
-    maxSetpointT = temperatureFrom_C(maxSetpointT_C, units);
+    maxSetpointT = getFromT_C(maxSetpointT_C, units);
     return result;
 }
 
