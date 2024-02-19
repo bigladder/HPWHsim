@@ -4568,7 +4568,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     }
 
     if (hasInitialTankTemp)
-        setTankToTemperature(initialTankT_C);
+        setTankT_C(initialTankT_C);
     else // start tank off at setpoint
         resetTankToSetpoint();
 

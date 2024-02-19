@@ -971,7 +971,7 @@ int HPWH::runNSteps(int N,
                 else
                     msg(",");
 
-                msg("%f", getNthSimTcouple(k, 6));
+                msg("%f", getNthThermocoupleT(k, 6));
             }
 
             msg("\n");
@@ -1137,21 +1137,6 @@ void HPWH::printHeatSourceInfo()
     msg(ss.str().c_str());
 }
 
-void HPWH::printTankTemps()
-{
-    std::stringstream ss;
-
-    ss << std::left;
-
-    for (int i = 0; i < getNumNodes(); i++)
-    {
-        ss << std::setw(9) << getTankNodeTemp(i) << " ";
-    }
-    ss << endl;
-
-    msg(ss.str().c_str());
-}
-
 // public members to write to CSV file
 int HPWH::WriteCSVHeading(std::ofstream& outFILE,
                           const char* preamble,
@@ -1202,7 +1187,7 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+                               getNthThermocoupleT(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
@@ -1217,193 +1202,6 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     outFILE << std::endl;
 
     return 0;
-}
-
-bool HPWH::isSetpointFixed() const { return setpointFixed; }
-
-int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
-{
-
-    double newSetpoint_C, temp;
-    string why;
-    if (units == UNITS_C)
-    {
-        newSetpoint_C = newSetpoint;
-    }
-    else if (units == UNITS_F)
-    {
-        newSetpoint_C = F_TO_C(newSetpoint);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpoint.  \n");
-        }
-        return HPWH_ABORT;
-    }
-    if (!isNewSetpointPossible(newSetpoint_C, temp, why))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Unwilling to set this setpoint for the currently selected model, max setpoint "
-                "is "
-                "%f C. %s\n",
-                temp,
-                why.c_str());
-        }
-        return HPWH_ABORT;
-    }
-
-    setpointT_C = newSetpoint_C;
-
-    return 0;
-}
-
-double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return setpointT_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(setpointT_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getSetpoint. \n");
-        }
-        return HPWH_ABORT;
-    }
-}
-
-double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
-{
-
-    if (!hasACompressor())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Unit does not have a compressor \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    double returnVal = heatSources[compressorIndex].maxSetpointT_C;
-
-    if (units == UNITS_F)
-    {
-        returnVal = C_TO_F(returnVal);
-    }
-    else if (units != UNITS_C)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getMaxCompressorSetpoint. \n");
-        }
-        return HPWH_ABORT;
-    }
-    return returnVal;
-}
-
-bool HPWH::isNewSetpointPossible(double newSetpoint,
-                                 double& maxAllowedSetpoint,
-                                 string& why,
-                                 UNITS units /*=UNITS_C*/) const
-{
-    double newSetpoint_C;
-    double maxAllowedSetpoint_C = -273.15;
-    if (units == UNITS_C)
-    {
-        newSetpoint_C = newSetpoint;
-    }
-    else if (units == UNITS_F)
-    {
-        newSetpoint_C = F_TO_C(newSetpoint);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for isNewSetpointPossible. \n");
-        }
-        return false;
-    }
-    bool returnVal = false;
-
-    if (isSetpointFixed())
-    {
-        returnVal = (newSetpoint == setpointT_C);
-        maxAllowedSetpoint_C = setpointT_C;
-        if (!returnVal)
-        {
-            why = "The set point is fixed for the currently selected model.";
-        }
-    }
-    else
-    {
-
-        if (hasACompressor())
-        { // If there's a compressor lets check the new setpoint against the compressor's max
-          // setpoint
-
-            maxAllowedSetpoint_C =
-                heatSources[compressorIndex].maxSetpointT_C -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
-
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
-            {
-                why = "The compressor cannot meet the setpoint temperature and there is no "
-                      "resistance backup.";
-                returnVal = false;
-            }
-            else
-            {
-                returnVal = true;
-            }
-        }
-        if (lowestElementIndex >= 0)
-        { // If there's a resistance element lets check the new setpoint against the its max
-          // setpoint
-            maxAllowedSetpoint_C = heatSources[lowestElementIndex].maxSetpointT_C;
-
-            if (newSetpoint_C > maxAllowedSetpoint_C)
-            {
-                why = "The resistance elements cannot produce water this hot.";
-                returnVal = false;
-            }
-            else
-            {
-                returnVal = true;
-            }
-        }
-        else if (lowestElementIndex == -1 && !hasACompressor())
-        { // There are no heat sources here!
-            if (hpwhModel == MODELS_StorageTank)
-            {
-                returnVal = true; // The one pass the storage tank doesn't have any heating
-                                  // elements so sure change the setpoint it does nothing!
-            }
-            else
-            {
-                why = "There aren't any heat sources to check the new setpoint against!";
-                returnVal = false;
-            }
-        }
-    }
-
-    if (units == UNITS_C)
-    {
-        maxAllowedSetpoint = maxAllowedSetpoint_C;
-    }
-    else if (units == UNITS_F)
-    {
-        maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
-    }
-    return returnVal;
 }
 
 double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
@@ -1458,79 +1256,6 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const
     }
     return (tHot - tCold) / (tMix - tCold);
 }
-
-double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (!hasACompressor())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("No compressor found in this HPWH. \n");
-        }
-        return HPWH_ABORT;
-    }
-    if (units == UNITS_C)
-    {
-        return heatSources[compressorIndex].minT_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(heatSources[compressorIndex].minT_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getMinOperatingTemp.\n");
-        }
-        return HPWH_ABORT;
-    }
-}
-
-int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpointT_C); }
-
-int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
-
-//-----------------------------------------------------------------------------
-///	@brief	Assigns new temps provided from a std::vector to tankTs_C.
-/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
-///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
-/// @return	Success: 0; Failure: HPWH_ABORT
-//-----------------------------------------------------------------------------
-int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
-{
-    if ((units != UNITS_C) && (units != UNITS_F))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpoint.  \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    std::size_t numSetNodes = setTankTemps.size();
-    if (numSetNodes == 0)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("No temperatures provided.\n");
-        }
-        return HPWH_ABORT;
-    }
-
-    // convert setTankTemps to �C, if necessary
-    if (units == UNITS_F)
-        for (auto& T : setTankTemps)
-            T = F_TO_C(T);
-
-    // set node temps
-    if (!resampleIntensive(tankTs_C, setTankTemps))
-        return HPWH_ABORT;
-
-    return 0;
-}
-
-void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTs_C; }
 
 int HPWH::setAirFlowFreedom(double fanFraction)
 {
@@ -2454,76 +2179,6 @@ int HPWH::getNumNodes() const { return static_cast<int>(tankTs_C.size()); }
 
 int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
 
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
-{
-    if (tankTs_C.empty())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access the temperature of a tank node that does not "
-                "exist.  "
-                "\n");
-        }
-        return double(HPWH_ABORT);
-    }
-    else
-    {
-        double result = tankTs_C[nodeNum];
-        // if (result == double(HPWH_ABORT)) { can't happen?
-        //	return result;
-        // }
-        if (units == UNITS_C)
-        {
-            return result;
-        }
-        else if (units == UNITS_F)
-        {
-            return C_TO_F(result);
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for getTankNodeTemp.  \n");
-            }
-            return double(HPWH_ABORT);
-        }
-    }
-}
-
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
-{
-    if (iTCouple > nTCouple || iTCouple < 1)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access a simulated thermocouple that does not exist.  "
-                "\n");
-        }
-        return double(HPWH_ABORT);
-    }
-    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
-    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-
-    double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
-    if (units == UNITS_C)
-    {
-        return simTcoupleTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(simTcoupleTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getNthSimTcouple.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
@@ -2817,7 +2472,351 @@ double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
     }
 }
 
-double HPWH::getLocationTemp_C() const { return locationT_C; }
+void HPWH::printTankTemps()
+{
+    std::stringstream ss;
+
+    ss << std::left;
+
+    for (int i = 0; i < getNumNodes(); i++)
+    {
+        ss << std::setw(9) << getTankNodeT(i) << " ";
+    }
+    ss << endl;
+
+    msg(ss.str().c_str());
+}
+
+int HPWH::setTankT_C(double temp_C) { return setTankTs({temp_C}); }
+
+void HPWH::getTankTs_C(std::vector<double>& tankTemps) const { tankTemps = tankTs_C; }
+
+double HPWH::getLocationT_C() const { return locationT_C; }
+
+//-----------------------------------------------------------------------------
+///	@brief	Assigns new temps provided from a std::vector to tankTs_C.
+/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
+/// @return	Success: 0; Failure: HPWH_ABORT
+//-----------------------------------------------------------------------------
+int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
+{
+    if ((units != UNITS_C) && (units != UNITS_F))
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setSetpoint.  \n");
+        }
+        return HPWH_ABORT;
+    }
+
+    std::size_t numSetNodes = setTankTemps.size();
+    if (numSetNodes == 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("No temperatures provided.\n");
+        }
+        return HPWH_ABORT;
+    }
+
+    // convert setTankTemps to �C, if necessary
+    if (units == UNITS_F)
+        for (auto& T : setTankTemps)
+            T = F_TO_C(T);
+
+    // set node temps
+    if (!resampleIntensive(tankTs_C, setTankTemps))
+        return HPWH_ABORT;
+
+    return 0;
+}
+
+int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
+{
+
+    double newSetpoint_C, temp;
+    string why;
+    if (units == UNITS_C)
+    {
+        newSetpoint_C = newSetpoint;
+    }
+    else if (units == UNITS_F)
+    {
+        newSetpoint_C = F_TO_C(newSetpoint);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setSetpoint.  \n");
+        }
+        return HPWH_ABORT;
+    }
+    if (!isNewSetpointPossible(newSetpoint_C, temp, why))
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Unwilling to set this setpoint for the currently selected model, max setpoint "
+                "is "
+                "%f C. %s\n",
+                temp,
+                why.c_str());
+        }
+        return HPWH_ABORT;
+    }
+
+    setpointT_C = newSetpoint_C;
+
+    return 0;
+}
+
+double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return setpointT_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(setpointT_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getSetpoint. \n");
+        }
+        return HPWH_ABORT;
+    }
+}
+
+double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
+{
+
+    if (!hasACompressor())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Unit does not have a compressor \n");
+        }
+        return HPWH_ABORT;
+    }
+
+    double returnVal = heatSources[compressorIndex].maxSetpointT_C;
+
+    if (units == UNITS_F)
+    {
+        returnVal = C_TO_F(returnVal);
+    }
+    else if (units != UNITS_C)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getMaxCompressorSetpoint. \n");
+        }
+        return HPWH_ABORT;
+    }
+    return returnVal;
+}
+
+double HPWH::getTankNodeT(int nodeNum, UNITS units /*=UNITS_C*/) const
+{
+    if (tankTs_C.empty())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access the temperature of a tank node that does not "
+                "exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+    else
+    {
+        double result = tankTs_C[nodeNum];
+        // if (result == double(HPWH_ABORT)) { can't happen?
+        //	return result;
+        // }
+        if (units == UNITS_C)
+        {
+            return result;
+        }
+        else if (units == UNITS_F)
+        {
+            return C_TO_F(result);
+        }
+        else
+        {
+            if (hpwhVerbosity >= VRB_reluctant)
+            {
+                msg("Incorrect unit specification for getTankNodeT.  \n");
+            }
+            return double(HPWH_ABORT);
+        }
+    }
+}
+
+double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
+{
+    if (iTCouple > nTCouple || iTCouple < 1)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access a simulated thermocouple that does not exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+
+    double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
+    if (units == UNITS_C)
+    {
+        return simTcoupleTemp_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(simTcoupleTemp_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getNthThermocoupleT.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
+{
+    if (!hasACompressor())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("No compressor found in this HPWH. \n");
+        }
+        return HPWH_ABORT;
+    }
+    if (units == UNITS_C)
+    {
+        return heatSources[compressorIndex].minT_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(heatSources[compressorIndex].minT_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getMinOperatingT.\n");
+        }
+        return HPWH_ABORT;
+    }
+}
+
+bool HPWH::isNewSetpointPossible(double newSetpoint,
+                                 double& maxAllowedSetpoint,
+                                 string& why,
+                                 UNITS units /*=UNITS_C*/) const
+{
+    double newSetpoint_C;
+    double maxAllowedSetpoint_C = -273.15;
+    if (units == UNITS_C)
+    {
+        newSetpoint_C = newSetpoint;
+    }
+    else if (units == UNITS_F)
+    {
+        newSetpoint_C = F_TO_C(newSetpoint);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for isNewSetpointPossible. \n");
+        }
+        return false;
+    }
+    bool returnVal = false;
+
+    if (isSetpointFixed())
+    {
+        returnVal = (newSetpoint == setpointT_C);
+        maxAllowedSetpoint_C = setpointT_C;
+        if (!returnVal)
+        {
+            why = "The set point is fixed for the currently selected model.";
+        }
+    }
+    else
+    {
+
+        if (hasACompressor())
+        { // If there's a compressor lets check the new setpoint against the compressor's max
+          // setpoint
+
+            maxAllowedSetpoint_C =
+                heatSources[compressorIndex].maxSetpointT_C -
+                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
+
+            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
+            {
+                why = "The compressor cannot meet the setpoint temperature and there is no "
+                      "resistance backup.";
+                returnVal = false;
+            }
+            else
+            {
+                returnVal = true;
+            }
+        }
+        if (lowestElementIndex >= 0)
+        { // If there's a resistance element lets check the new setpoint against the its max
+          // setpoint
+            maxAllowedSetpoint_C = heatSources[lowestElementIndex].maxSetpointT_C;
+
+            if (newSetpoint_C > maxAllowedSetpoint_C)
+            {
+                why = "The resistance elements cannot produce water this hot.";
+                returnVal = false;
+            }
+            else
+            {
+                returnVal = true;
+            }
+        }
+        else if (lowestElementIndex == -1 && !hasACompressor())
+        { // There are no heat sources here!
+            if (hpwhModel == MODELS_StorageTank)
+            {
+                returnVal = true; // The one pass the storage tank doesn't have any heating
+                                  // elements so sure change the setpoint it does nothing!
+            }
+            else
+            {
+                why = "There aren't any heat sources to check the new setpoint against!";
+                returnVal = false;
+            }
+        }
+    }
+
+    if (units == UNITS_C)
+    {
+        maxAllowedSetpoint = maxAllowedSetpoint_C;
+    }
+    else if (units == UNITS_F)
+    {
+        maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
+    }
+    return returnVal;
+}
+
+bool HPWH::isSetpointFixed() const { return setpointFixed; }
+
+int HPWH::resetTankToSetpoint() { return setTankT_C(setpointT_C); }
 
 double HPWH::getTankHeatContent_kJ() const
 {
@@ -2856,6 +2855,7 @@ bool HPWH::isCompressorMultipass() const
     }
     return heatSources[compressorIndex].isMultipass;
 }
+
 bool HPWH::isCompressoExternalMultipass() const
 {
     if (!hasACompressor())
@@ -5277,7 +5277,7 @@ int HPWH::HPWHinit_file(string configFile)
     tankTs_C.resize(num_nodes);
 
     if (hasInitialTankTemp)
-        setTankToTemperature(initalTankT_C);
+        setTankT_C(initalTankT_C);
     else
         resetTankToSetpoint();
 

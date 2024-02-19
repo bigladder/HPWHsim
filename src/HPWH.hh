@@ -555,7 +555,7 @@ class HPWH
                    double inletT2_C = 0.,
                    std::vector<double>* extraHeatDist_W = NULL)
     {
-        setInletT(inletT_C);
+        setInletT_C(inletT_C);
         return runOneStep(drawVolume_L,
                           ambientT_C,
                           externalT_C,
@@ -579,7 +579,6 @@ class HPWH
      */
 
     /** Setters for the what are typically input variables  */
-    void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
     void setMinutesPerStep(double newMinutesPerStep);
 
     void setVerbosity(VERBOSITY hpwhVrb);
@@ -591,9 +590,6 @@ class HPWH
     /**< this prints out the heat source info, nicely formatted
         specifically input/output energy/power, and runtime
         will print to cout if messageCallback pointer is unspecified
-        does not use verbosity, as it is public and expected to be called only when needed  */
-    void printTankTemps();
-    /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
 
     int WriteCSVHeading(std::ofstream& outFILE,
@@ -609,10 +605,17 @@ class HPWH
         the preamble should be supplied with a trailing comma, as these functions do
         not add one.  Additionally, a newline is written with each call.  */
 
+    void getTankTs_C(std::vector<double>& tankTemps) const;
+
+    void setInletT_C(double newInletT_C) { member_inletT_C = newInletT_C; }
+
+    void printTankTemps();
+    /**< this prints out all the node temps, kind of nicely formatted
+        does not use verbosity, as it is public and expected to be called only when needed  */
+
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
-        existing nodes, regardless of numNodes. */
-    int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
-    void getTankTemps(std::vector<double>& tankTemps);
+         existing nodes, regardless of numNodes. */
+    int setTankTs(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
     int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
@@ -647,14 +650,14 @@ class HPWH
     /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
     double getSoCFraction() const;
 
-    double getMinOperatingTemp(UNITS units = UNITS_C) const;
+    double getMinOperatingT(UNITS units = UNITS_C) const;
     /**< a function to return the minimum operating temperature of the compressor  */
 
     int resetTankToSetpoint();
     /**< this function resets the tank temperature profile to be completely at setpoint
         The return value is 0 for successful completion  */
 
-    int setTankToTemperature(double temp_C);
+    int setTankT_C(double tankT_C_C);
     /**< helper function for testing */
 
     int setAirFlowFreedom(double fanFraction);
@@ -747,11 +750,11 @@ class HPWH
     /**< returns the index of the top node  */
     int getIndexTopNode() const;
 
-    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
+    double getTankNodeT(int nodeNum, UNITS units = UNITS_C) const;
     /**< returns the temperature of the water at the specified node - with specified units
       or HPWH_ABORT for incorrect node number or unit failure  */
 
-    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    double getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
     /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
         which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
         1 at the bottom using specified units
@@ -936,7 +939,7 @@ class HPWH
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
 
-    double getLocationTemp_C() const;
+    double getLocationT_C() const;
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
@@ -971,7 +974,7 @@ class HPWH
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance)
     {
-        setInletT(inletT_C_in);
+        setInletT_C(inletT_C_in);
         return isEnergyBalanced(drawVol_L, prevHeatContent_kJ, fracEnergyTolerance);
     }
 

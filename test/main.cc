@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
         {
             hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
             if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
+                hpwh.setTankT_C(initialTankT_C);
             else
                 hpwh.resetTankToSetpoint();
         }
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
         {
             hpwh.setSetpoint(newSetpoint);
             if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
+                hpwh.setTankT_C(initialTankT_C);
             else
                 hpwh.resetTankToSetpoint();
         }
@@ -410,9 +410,9 @@ int main(int argc, char* argv[])
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpoint() <= 125.)
             {
-                allSchedules[1][i] *= (125. - allSchedules[0][i]) /
-                                      (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) -
-                                       allSchedules[0][i]);
+                allSchedules[1][i] *=
+                    (125. - allSchedules[0][i]) /
+                    (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
             }
         }
 
@@ -466,7 +466,7 @@ int main(int argc, char* argv[])
             // Copy current status into the output file
             if (HPWH_doTempDepress)
             {
-                airTemp2 = hpwh.getLocationTemp_C();
+                airTemp2 = hpwh.getLocationT_C();
             }
             strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
                           std::to_string(hpwh.getSetpoint()) + ", " +

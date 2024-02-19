@@ -162,7 +162,7 @@ void testSetEnteringWaterHighTempShutOffAbsolute(string& input)
     getHPWHObject(hpwh, input);
 
     // make tank cold to force on
-    hpwh.setTankToTemperature(highT_C);
+    hpwh.setTankT_C(highT_C);
 
     // run a step and check we're heating
     hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
@@ -197,7 +197,7 @@ void testSetEnteringWaterHighTempShutOffRelative(string& input)
 
     const double relativeHighT_C = hpwh.getSetpoint() - highT_C;
     // make tank cold to force on
-    hpwh.setTankToTemperature(highT_C);
+    hpwh.setTankT_C(highT_C);
 
     // run a step and check we're heating
     hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
@@ -257,22 +257,22 @@ void testChangeToStateofChargeControlled(string& input)
                        setpointT_C - HPWH::MINSINGLEPASSLIFT, true, hpwh.getCompressorIndex()) ==
                    0); // Force to ignore this part.
     }
-    ASSERTTRUE(hpwh.setTankToTemperature(F_TO_C(100.)) == 0); // .51
+    ASSERTTRUE(hpwh.setTankT_C(F_TO_C(100.)) == 0); // .51
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTTRUE(compressorIsRunning(hpwh));
 
     // Test if we're on and in band stay on
-    hpwh.setTankToTemperature(F_TO_C(125)); // .76 (current target)
+    hpwh.setTankT_C(F_TO_C(125)); // .76 (current target)
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTTRUE(compressorIsRunning(hpwh));
 
     // Test we can change the SoC and turn off
-    hpwh.setTankToTemperature(F_TO_C(133)); // .84
+    hpwh.setTankT_C(F_TO_C(133)); // .84
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTFALSE(compressorIsRunning(hpwh));
 
     // Test if off and in band stay off
-    hpwh.setTankToTemperature(F_TO_C(125)); // .76  (current target)
+    hpwh.setTankT_C(F_TO_C(125)); // .76  (current target)
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTFALSE(compressorIsRunning(hpwh));
 }
@@ -301,7 +301,7 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
     ASSERTTRUE(hpwh.isSoCControlled());
 
     // Test if we're on and in band stay on
-    hpwh.setTankToTemperature(F_TO_C(tankTAt76SoC)); // .76
+    hpwh.setTankT_C(F_TO_C(tankTAt76SoC)); // .76
     hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
     ASSERTTRUE(compressorIsRunning(hpwh));
 
@@ -337,7 +337,7 @@ void testExtraHeat()
 
     //
     hpwh.setUA(0.);
-    hpwh.setTankToTemperature(20.);
+    hpwh.setTankT_C(20.);
 
     double Q_init = hpwh.getTankHeatContent_kJ();
     hpwh.runOneStep(

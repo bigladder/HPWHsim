@@ -61,20 +61,20 @@ void testChargeBelowSetpoint()
     ASSERTTRUE(cmpd(chargeFraction, 1.));
 
     // Check state of charge returns 0 when tank below useful
-    hpwh.setTankToTemperature(F_TO_C(109.));
+    hpwh.setTankT_C(F_TO_C(109.));
     chargeFraction = hpwh.calcSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
     ASSERTTRUE(cmpd(chargeFraction, 0.));
 
     // Check some lower values with tank set at constant temperatures
-    hpwh.setTankToTemperature(F_TO_C(110.));
+    hpwh.setTankT_C(F_TO_C(110.));
     chargeFraction = hpwh.calcSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
     ASSERTTRUE(cmpd(chargeFraction, 0.625));
 
-    hpwh.setTankToTemperature(F_TO_C(120.));
+    hpwh.setTankT_C(F_TO_C(120.));
     chargeFraction = hpwh.calcSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
     ASSERTTRUE(cmpd(chargeFraction, 0.75));
 
-    hpwh.setTankToTemperature(F_TO_C(130.));
+    hpwh.setTankT_C(F_TO_C(130.));
     chargeFraction = hpwh.calcSoCFraction(tMains_C, tMinUseful_C, F_TO_C(140.));
     ASSERTTRUE(cmpd(chargeFraction, 0.875));
 }
