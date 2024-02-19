@@ -605,24 +605,100 @@ class HPWH
         the preamble should be supplied with a trailing comma, as these functions do
         not add one.  Additionally, a newline is written with each call.  */
 
+    ///////////////////////////////////////////////
+    /// check whether energy units are valid (kJ, kWh, or BTU)
+    bool areEnergyUnitsValid(const HPWH::UNITS units) const;
+
+    /// check whether temperature units are valid (C or F)
+    bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
+
+    /// returns the total input energy to all heat sources in the previous time step, in kJ
+    double getInputEnergy_kJ() const;
+
+    /// returns the total energy from all heat sources to the tank in the previous time
+    /// step, in kJ
+    double getOutputEnergy_kJ() const;
+
+    /// returns the total energy removed from the environment by all heat sources, in kJ
+    double getEnergyRemovedFromEnvironment_kJ() const;
+
+    /// get the heat released from the tank to the environment, in kJ
+    double getStandbyLosses_kJ() const;
+
+    /// get the heat content of the tank (relative to 0 degC), in kJ
+    double getTankHeatContent_kJ() const;
+
+    /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
+    double getHeatContent_kJ() const;
+
     void getTankTs_C(std::vector<double>& tankTemps) const;
 
+    int setTankT_C(double tankT_C);
+    /**< helper function for testing */
+
     void setInletT_C(double newInletT_C) { member_inletT_C = newInletT_C; }
+
+    double getLocationT_C() const;
 
     void printTankTemps();
     /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
 
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
-         existing nodes, regardless of numNodes. */
+        existing nodes, regardless of numNodes. */
     int setTankTs(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
-    bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
-    int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
+    int setSetpointT(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
     /**< a function to change the setpoint - useful for dynamically setting it
         The return value is 0 for successful setting, HPWH_ABORT for units failure  */
-    double getSetpoint(UNITS units = UNITS_C) const;
+
+    double getSetpointT(UNITS units = UNITS_C) const;
     /**< a function to check the setpoint - returns setpoint in celcius  */
+
+    double getMinOperatingT(UNITS units = UNITS_C) const;
+    /**< a function to return the minimum operating temperature of the compressor  */
+
+    double getTankNodeT(int nodeNum, UNITS units = UNITS_C) const;
+    /**< returns the temperature of the water at the specified node - with specified units
+      or HPWH_ABORT for incorrect node number or unit failure  */
+
+    double getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
+        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
+        1 at the bottom using specified units
+        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+
+    double getOutletT(UNITS units = UNITS_C) const;
+    /**< returns the outlet temperature in the specified units
+      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserInletT(UNITS units = UNITS_C) const;
+    /**< returns the condenser inlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserOutletT(UNITS units = UNITS_C) const;
+    /**< returns the condenser outlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getMaxCompressorSetpointT(UNITS units = UNITS_C) const;
+    /**< a function to return the max operating temperature of the compressor which can be different
+       than the value returned in isNewSetpointPossible() if there are resistance elements. */
+
+    /** Returns State of Charge where
+       tMains = current mains (cold) water temp,
+       tMinUseful = minimum useful temp,
+       tMax = nominal maximum temp.*/
+
+    int resetTankToSetpoint();
+    /**< this function resets the tank temperature profile to be completely at setpoint
+        The return value is 0 for successful completion  */
+
+    int setDoTempDepression(bool doTempDepress);
+    /**< This is a simple setter for the temperature depression option */
+
+    int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
+
+    bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
 
     bool isNewSetpointPossible(double newSetpoint_C,
                                double& maxAllowedSetpoint_C,
@@ -634,37 +710,16 @@ class HPWH
        element, but the compressor will not operate above this temperature. maxAllowedSetpoint_C
        returns the */
 
-    double getMaxCompressorSetpoint(UNITS units = UNITS_C) const;
-    /**< a function to return the max operating temperature of the compressor which can be different
-       than the value returned in isNewSetpointPossible() if there are resistance elements. */
-
-    /** Returns State of Charge where
-       tMains = current mains (cold) water temp,
-       tMinUseful = minimum useful temp,
-       tMax = nominal maximum temp.*/
     double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
     double calcSoCFraction(double tMains_C, double tMinUseful_C) const
     {
-        return calcSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
+        return calcSoCFraction(tMains_C, tMinUseful_C, getSetpointT());
     };
     /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
     double getSoCFraction() const;
 
-    double getMinOperatingT(UNITS units = UNITS_C) const;
-    /**< a function to return the minimum operating temperature of the compressor  */
-
-    int resetTankToSetpoint();
-    /**< this function resets the tank temperature profile to be completely at setpoint
-        The return value is 0 for successful completion  */
-
-    int setTankT_C(double tankT_C_C);
-    /**< helper function for testing */
-
     int setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
-
-    int setDoTempDepression(bool doTempDepress);
-    /**< This is a simple setter for the temperature depression option */
 
     int setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
@@ -750,16 +805,6 @@ class HPWH
     /**< returns the index of the top node  */
     int getIndexTopNode() const;
 
-    double getTankNodeT(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
-
-    double getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
-    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
-
     int getNumHeatSources() const;
     /**< returns the number of heat sources  */
 
@@ -829,31 +874,6 @@ class HPWH
     /// check whether a valid heat source with index n exists
     bool isNthHeatSourceValid(const int n) const;
 
-    /// check whether energy units are valid (kJ, kWh, or BTU)
-    bool areEnergyUnitsValid(const HPWH::UNITS units) const;
-
-    /// check whether temperature units are valid (C or F)
-    bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
-
-    /// returns the total input energy to all heat sources in the previous time step, in kJ
-    double getInputEnergy_kJ() const;
-
-    /// returns the total energy from all heat sources to the tank in the previous time
-    /// step, in kJ
-    double getOutputEnergy_kJ() const;
-
-    /// returns the total energy removed from the environment by all heat sources, in kJ
-    double getEnergyRemovedFromEnvironment_kJ() const;
-
-    /// get the heat released from the tank to the environment, in kJ
-    double getStandbyLosses_kJ() const;
-
-    /// get the heat content of the tank (relative to 0 degC), in kJ
-    double getTankHeatContent_kJ() const;
-
-    /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
-    double getHeatContent_kJ() const;
-
     /// returns the energy input to the Nth heat source, with the specified units
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
 
@@ -877,18 +897,6 @@ class HPWH
 
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
-
-    double getOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
-    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
-    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
@@ -938,9 +946,6 @@ class HPWH
 
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
-
-    double getLocationT_C() const;
-    int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
     int setEnteringWaterHighTempShutOff(double highTemp,
@@ -1540,7 +1545,7 @@ class HPWH::HeatSource
                      double& cop)
     {
         getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
+            externalT_C, condenserTemp_C, hpwh->getSetpointT(), input_BTUperHr, cap_BTUperHr, cop);
     };
 
     /// An equivalent getCapacity function just for multipass external (or split) HPWHs

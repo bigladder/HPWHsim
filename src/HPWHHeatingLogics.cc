@@ -172,7 +172,7 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
     else
     {
-        return hpwh->getSetpoint() - value;
+        return hpwh->getSetpointT() - value;
     }
 }
 
@@ -261,7 +261,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     double averageT_C = sum / totWeight;
     double targetT_C =
-        (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs_C[calcNode + 1] : hpwh->getSetpoint();
+        (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs_C[calcNode + 1] : hpwh->getSetpointT();
 
     double nodeDiffT_C = targetT_C - hpwh->tankTs_C[firstNode];
     double logicNodeDiffT_C = comparisonT_C - averageT_C;

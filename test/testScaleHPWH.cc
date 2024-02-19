@@ -25,14 +25,14 @@ void getCompressorPerformance(
     if (hpwh.isCompressorMultipass())
     { // Multipass capacity looks at the average of the
       // temperature of the lift
-        hpwh.setSetpoint((waterTempC + setpointC) / 2.);
+        hpwh.setSetpointT((waterTempC + setpointC) / 2.);
     }
     else
     {
-        hpwh.setSetpoint(waterTempC);
+        hpwh.setSetpointT(waterTempC);
     }
     hpwh.resetTankToSetpoint(); // Force tank cold
-    hpwh.setSetpoint(setpointC);
+    hpwh.setSetpointT(setpointC);
 
     // Run the step
     hpwh.runOneStep(waterTempC, // Inlet water temperature (C )

@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
     tempDepressThresh = 4;
-    hpwh.setMaxTempDepression(tempDepressThresh);
+    hpwh.setMaxDepressionT(tempDepressThresh);
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
     {
         if (!allSchedules[5].empty())
         {
-            hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
+            hpwh.setSetpointT(allSchedules[5][0]); // expect this to fail sometimes
             if (hasInitialTankTemp)
                 hpwh.setTankT_C(initialTankT_C);
             else
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            hpwh.setSetpoint(newSetpoint);
+            hpwh.setSetpointT(newSetpoint);
             if (hasInitialTankTemp)
                 hpwh.setTankT_C(initialTankT_C);
             else
@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
         // Change setpoint if there is a setpoint schedule.
         if (!allSchedules[5].empty() && !hpwh.isSetpointFixed())
         {
-            hpwh.setSetpoint(allSchedules[5][i]); // expect this to fail sometimes
+            hpwh.setSetpointT(allSchedules[5][i]); // expect this to fail sometimes
         }
 
         // Change SoC schedule
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
         if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
-            if (hpwh.getSetpoint() <= 125.)
+            if (hpwh.getSetpointT() <= 125.)
             {
                 allSchedules[1][i] *=
                     (125. - allSchedules[0][i]) /
@@ -469,14 +469,14 @@ int main(int argc, char* argv[])
                 airTemp2 = hpwh.getLocationT_C();
             }
             strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-                          std::to_string(hpwh.getSetpoint()) + ", " +
+                          std::to_string(hpwh.getSetpointT()) + ", " +
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
             if (hpwh.isCompressoExternalMultipass())
             {
-                strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
-                               std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
+                strPreamble += std::to_string(hpwh.getCondenserInletT()) + ", " +
+                               std::to_string(hpwh.getCondenserOutletT()) + ", " +
                                std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
             }
             if (useSoC)

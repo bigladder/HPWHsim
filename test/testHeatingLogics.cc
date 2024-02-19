@@ -141,11 +141,11 @@ void testSetEnteringWaterShuffOffDeadbandToSmall(string& input)
     value = HPWH::MINSINGLEPASSLIFT;
     ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()) == 0);
 
-    value = hpwh.getSetpoint() - (HPWH::MINSINGLEPASSLIFT - 1);
+    value = hpwh.getSetpointT() - (HPWH::MINSINGLEPASSLIFT - 1);
     ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()) ==
                HPWH::HPWH_ABORT);
 
-    value = hpwh.getSetpoint() - HPWH::MINSINGLEPASSLIFT;
+    value = hpwh.getSetpointT() - HPWH::MINSINGLEPASSLIFT;
     ASSERTTRUE(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()) == 0);
 }
 
@@ -195,7 +195,7 @@ void testSetEnteringWaterHighTempShutOffRelative(string& input)
     HPWH hpwh;
     getHPWHObject(hpwh, input);
 
-    const double relativeHighT_C = hpwh.getSetpoint() - highT_C;
+    const double relativeHighT_C = hpwh.getSetpointT() - highT_C;
     // make tank cold to force on
     hpwh.setTankT_C(highT_C);
 
@@ -236,7 +236,7 @@ void testChangeToStateofChargeControlled(string& input)
         {
             return; // Numbers don't aline for this type
         }
-        hpwh.setSetpoint(setpointT_C);
+        hpwh.setSetpointT(setpointT_C);
     }
 
     // Just created so should be fasle
@@ -293,7 +293,7 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
         {
             return; // Numbers don't aline for this type
         }
-        hpwh.setSetpoint(setpointT_C);
+        hpwh.setSetpointT(setpointT_C);
     }
 
     // change to SOC control;

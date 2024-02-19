@@ -46,7 +46,7 @@ void testGetMaxCompressorSetpoint(string input, double expected)
 {
     HPWH hpwh;
     getHPWHObject(hpwh, input); // get preset model
-    ASSERTTRUE(hpwh.getMaxCompressorSetpoint() == expected);
+    ASSERTTRUE(hpwh.getMaxCompressorSetpointT() == expected);
 }
 
 void testGetMinOperatingTemp(string input, double expected)

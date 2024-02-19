@@ -1012,8 +1012,8 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
             setpointT_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
         {
             tempSetpoint_C = setpointT_C; // Store setpoint
-            setSetpoint(heatSourcePtr->maxOut_at_LowT
-                            .outT_C); // Reset to new setpoint as this is used in the add heat calc
+            setSetpointT(heatSourcePtr->maxOut_at_LowT
+                             .outT_C); // Reset to new setpoint as this is used in the add heat calc
         }
     }
     // and add heat if it is
@@ -1022,7 +1022,7 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
     // Change the setpoint back to what it was pre-compressor depression
     if (tempSetpoint_C > -273.15)
     {
-        setSetpoint(tempSetpoint_C);
+        setSetpointT(tempSetpoint_C);
     }
 }
 
@@ -1690,7 +1690,7 @@ int HPWH::getInletHeight(int whichInlet) const
     }
 }
 
-int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
+int HPWH::setMaxDepressionT(double maxDepression, UNITS units /*=UNITS_C*/)
 {
     if (units == UNITS_C)
     {
@@ -2435,18 +2435,18 @@ double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
     }
 }
 
-double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
+double HPWH::getOutletT(UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(outletT_C, units) : double(HPWH_ABORT);
 }
 
-double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserInletT(UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(condenserInletT_C, units)
                                            : double(HPWH_ABORT);
 }
 
-double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserOutletT(UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(condenserOutletT_C, units)
                                            : double(HPWH_ABORT);
@@ -2505,7 +2505,7 @@ int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for setSetpoint.  \n");
+            msg("Incorrect unit specification for setSetpointT.  \n");
         }
         return HPWH_ABORT;
     }
@@ -2532,7 +2532,7 @@ int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
     return 0;
 }
 
-int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
+int HPWH::setSetpointT(double newSetpoint, UNITS units /*=UNITS_C*/)
 {
 
     double newSetpoint_C, temp;
@@ -2549,7 +2549,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for setSetpoint.  \n");
+            msg("Incorrect unit specification for setSetpointT.  \n");
         }
         return HPWH_ABORT;
     }
@@ -2571,7 +2571,7 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
     return 0;
 }
 
-double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
+double HPWH::getSetpointT(UNITS units /*=UNITS_C*/) const
 {
     if (units == UNITS_C)
     {
@@ -2585,13 +2585,13 @@ double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for getSetpoint. \n");
+            msg("Incorrect unit specification for getSetpointT. \n");
         }
         return HPWH_ABORT;
     }
 }
 
-double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
+double HPWH::getMaxCompressorSetpointT(UNITS units /*=UNITS_C*/) const
 {
 
     if (!hasACompressor())
@@ -2613,7 +2613,7 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for getMaxCompressorSetpoint. \n");
+            msg("Incorrect unit specification for getMaxCompressorSetpointT. \n");
         }
         return HPWH_ABORT;
     }
