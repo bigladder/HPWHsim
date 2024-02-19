@@ -1583,6 +1583,8 @@ class HPWH::HeatSource
 
 }; // end of HeatSource class
 
+const double Pi = 4. * atan(1.);
+
 constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
 constexpr double FperC = 9. / 5.;   // degF / degC

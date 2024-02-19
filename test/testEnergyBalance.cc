@@ -22,7 +22,6 @@ void testEnergyBalanceAOSmithHPTS50()
     hpwh.setTankT_C(20.);
     hpwh.setInletT_C(5.);
 
-    const double Pi = 4. * atan(1.);
     double testDuration_min = 60.;
     for (int i_min = 0; i_min < testDuration_min; ++i_min)
     {
@@ -55,7 +54,6 @@ void testEnergyBalanceSolar()
     hpwh.setTankT_C(20.);
     hpwh.setInletT_C(5.);
 
-    const double Pi = 4. * atan(1.);
     double testDuration_min = 60.;
     for (int i_min = 0; i_min < testDuration_min; ++i_min)
     {

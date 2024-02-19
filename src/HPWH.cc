@@ -1327,7 +1327,7 @@ HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUni
     // whole unit.
     double radius = getTankRadius(vol, volUnits, UNITS_FT);
 
-    double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
+    double value = 2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.);
 
     if (value >= 0.)
     {
@@ -1370,7 +1370,7 @@ HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /
     double value = -1.;
     if (volft3 >= 0.)
     {
-        value = pow(volft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
+        value = pow(volft3 / Pi / ASPECTRATIO, 1. / 3.);
         if (radiusUnits == UNITS_M)
             value = FT_TO_M(value);
         else if (radiusUnits != UNITS_FT)
