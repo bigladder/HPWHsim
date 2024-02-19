@@ -2692,32 +2692,21 @@ double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units /*=UNIT
         return double(HPWH_ABORT);
     }
 }
-double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
+
+double HPWH::getMinOperatingT_C() const
 {
-    if (!hasACompressor())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("No compressor found in this HPWH. \n");
-        }
-        return HPWH_ABORT;
-    }
-    if (units == UNITS_C)
+    if (hasCompressor())
     {
         return heatSources[compressorIndex].minT_C;
     }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(heatSources[compressorIndex].minT_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getMinOperatingT.\n");
-        }
-        return HPWH_ABORT;
-    }
+    return double(HPWH_ABORT);
+}
+
+double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
+{
+    return (areTemperatureUnitsValid(units) && hasCompressor())
+               ? getTemperature(heatSources[compressorIndex].minT_C, units)
+               : double(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2861,6 +2850,19 @@ bool HPWH::isCompressoExternalMultipass() const
         return HPWH_ABORT;
     }
     return heatSources[compressorIndex].isExternalMultipass();
+}
+
+bool HPWH::hasCompressor() const
+{
+    if (compressorIndex < 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("No compressor found in this HPWH. \n");
+        }
+        return false;
+    }
+    return true;
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }

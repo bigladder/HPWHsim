@@ -654,6 +654,8 @@ class HPWH
 
     double getLocationT_C() const { return locationT_C; }
 
+    double getMinOperatingT_C() const;
+
     void getTankTs_C(std::vector<double>& tankTemps) const;
 
     void printTankTs_C();
@@ -918,6 +920,8 @@ class HPWH
     int getCompressorCoilConfig() const;
     bool isCompressorMultipass() const;
     bool isCompressoExternalMultipass() const;
+
+    bool hasCompressor() const;
 
     bool hasACompressor() const;
     /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
