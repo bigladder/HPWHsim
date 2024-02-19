@@ -1124,11 +1124,11 @@ class HPWH
     double setpointT_C;
 
     /// node temperatures - 0 is the bottom node
-    std::vector<double> tankT_C;
+    std::vector<double> tankTs_C;
 
     /// future temperature of each node for the conduction calculation
     /// 0 is the bottom node
-    std::vector<double> nextTankT_C;
+    std::vector<double> nextTankTs_C;
 
     /// the DRstatus of the tank in the previous time step and at the end of runOneStep
     DRMODES prevDRstatus;
