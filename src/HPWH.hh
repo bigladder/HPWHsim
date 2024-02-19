@@ -546,7 +546,7 @@ class HPWH
      */
 
     /** An overloaded function that uses takes inletT_C  */
-    int runOneStep(double inletT_C,
+    int runOneStep(double inletT_C_in,
                    double drawVolume_L,
                    double ambientT_C,
                    double externalT_C,
@@ -555,7 +555,7 @@ class HPWH
                    double inletT2_C = 0.,
                    std::vector<double>* extraHeatDist_W = NULL)
     {
-        setInletT_C(inletT_C);
+        setInletT_C(inletT_C_in);
         return runOneStep(drawVolume_L,
                           ambientT_C,
                           externalT_C,
@@ -566,7 +566,7 @@ class HPWH
     };
 
     int runNSteps(int N,
-                  double* inletT_C,
+                  double* inletTs_C,
                   double* drawVolume_L,
                   double* tankAmbientT_C,
                   double* heatSourceAmbientT_C,
@@ -630,25 +630,37 @@ class HPWH
 
     /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
     double getHeatContent_kJ() const;
+    ///////////////////////////////////////////////
 
-    void getTankTs_C(std::vector<double>& tankTemps) const;
+    double getInputEnergy(const UNITS units = UNITS_KWH) const;
 
+    double getOutputEnergy(const UNITS units = UNITS_KWH) const;
+
+    double getTankHeatContent(const UNITS units = UNITS_KWH) const;
+
+    double getHeatContent(const UNITS units = UNITS_KWH) const;
+
+    /// total energy removed from the environment by all heat sources in specified units
+    /// (not net energy - does not include standby)
+    /// moving heat from the space to the water is the positive direction
+    /// returns HPWH_ABORT for incorrect units
+    double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
+
+    /// heat lost through the tank in specified units
+    /// moving heat from the water to the space is the positive direction
+    /// negative should occur seldom
+    /// returns HPWH_ABORT for incorrect units
+    double getStandbyLosses(UNITS units = UNITS_KWH) const;
+
+    ///////////////////////////////////////////////
+    /// assign uniform tank temperature
     int setTankT_C(double tankT_C);
-    /**< helper function for testing */
 
-    void setInletT_C(double newInletT_C) { member_inletT_C = newInletT_C; }
+    void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
-    double getLocationT_C() const;
+    double getLocationT_C() const { return locationT_C; }
 
     bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
-
-    void printTankTemps();
-    /**< this prints out all the node temps, kind of nicely formatted
-        does not use verbosity, as it is public and expected to be called only when needed  */
-
-    /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
-        existing nodes, regardless of numNodes. */
-    int setTankTs(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
     int setSetpointT(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
     /**< a function to change the setpoint - useful for dynamically setting it
@@ -686,10 +698,17 @@ class HPWH
     /**< a function to return the max operating temperature of the compressor which can be different
        than the value returned in canSetSetpointT() if there are resistance elements. */
 
-    /** Returns State of Charge where
-       tMains = current mains (cold) water temp,
-       tMinUseful = minimum useful temp,
-       tMax = nominal maximum temp.*/
+    int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
+
+    void getTankTs_C(std::vector<double>& tankTemps) const;
+
+    void printTankTs_C();
+    /**< this prints out all the node temps, kind of nicely formatted
+        does not use verbosity, as it is public and expected to be called only when needed  */
+
+    /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
+        existing nodes, regardless of numNodes. */
+    int setTankTs(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
     bool canSetSetpointT(const double newSetpointT,
                          double& maxSetpointT,
@@ -708,9 +727,13 @@ class HPWH
     int setDoTempDepression(bool doTempDepress);
     /**< This is a simple setter for the temperature depression option */
 
-    int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
-
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
+
+    ///////////////////////////////////////////////
+    /** Returns State of Charge where
+        tMains = current mains (cold) water temp,
+        tMinUseful = minimum useful temp,
+        tMax = nominal maximum temp.*/
 
     double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
     double calcSoCFraction(double tMains_C, double tMinUseful_C) const
@@ -903,18 +926,6 @@ class HPWH
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
 
-    double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
-    /**< get the total energy removed from the environment by all heat sources in specified units
-      (not net energy - does not include standby)
-      moving heat from the space to the water is the positive direction
-      returns HPWH_ABORT for incorrect units  */
-
-    double getStandbyLosses(UNITS units = UNITS_KWH) const;
-    /**< get the amount of heat lost through the tank in specified units
-      moving heat from the water to the space is the positive direction
-      negative should occur seldom
-      returns HPWH_ABORT for incorrect units  */
-
     int getHPWHModel() const;
     /**< get the model number of the HPWHsim model number of the hpwh */
 
@@ -999,6 +1010,7 @@ class HPWH
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
+
     void mixTankInversions();
     /**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
     void updateSoCIfNecessary();
@@ -1140,19 +1152,8 @@ class HPWH
     /// 0 is the bottom node
     std::vector<double> nextTankTs_C;
 
-    /// the DRstatus of the tank in the previous time step and at the end of runOneStep
-    DRMODES prevDRstatus;
-
-    /// the time limit in minutes on the timer when the compressor and resistance elements are
-    /// turned back on, used with DR_TOT.
-    double timerLimitTOT;
-
-    /// the timer used for DR_TOT to turn on the compressor and resistance elements.
-    double timerTOT;
-
-    bool usesSoCLogic;
-
-    // Some outputs
+    /// the temperature of the inlet water; typically an input parameter
+    double inletT_C;
 
     /// the temperature of the outlet water - taken from top of tank, 0 if no flow
     double outletT_C;
@@ -1191,8 +1192,18 @@ class HPWH
 
     double maxDepressionT_C = 2.5;
 
+    /// the DRstatus of the tank in the previous time step and at the end of runOneStep
+    DRMODES prevDRstatus;
+
+    /// the time limit in minutes on the timer when the compressor and resistance elements are
+    /// turned back on, used with DR_TOT.
+    double timerLimitTOT;
+
+    /// the timer used for DR_TOT to turn on the compressor and resistance elements.
+    double timerTOT;
+
+    bool usesSoCLogic;
     /// values which are typically inputs
-    double member_inletT_C;
     double minutesPerStep = 1., secondsPerStep, hoursPerStep;
 
     /// iff true will model temperature inversion mixing in the tank

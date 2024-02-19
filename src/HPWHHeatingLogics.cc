@@ -23,7 +23,7 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
     double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if (hpwh->inletT_C == HPWH_ABORT && !useCostantMains)
     {
         soCFraction = HPWH_ABORT;
     }
@@ -42,7 +42,7 @@ double HPWH::SoCBasedHeatingLogic::getMainsT_C()
     }
     else
     {
-        return hpwh->member_inletT_C;
+        return hpwh->inletT_C;
     }
 }
 

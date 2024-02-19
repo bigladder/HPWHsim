@@ -381,7 +381,7 @@ void HPWH::setAllDefaults()
     setpointFixed = false;
     tankSizeFixed = true;
     canScale = false;
-    member_inletT_C = HPWH_ABORT;
+    inletT_C = HPWH_ABORT;
     currentSoCFraction = 1.;
     doTempDepression = false;
     locationT_C = UNINITIALIZED_LOCATIONTEMP;
@@ -500,10 +500,10 @@ int HPWH::runOneStep(double drawVolume_L,
     if (hpwhVerbosity >= VRB_typical)
     {
         msg("Beginning runOneStep.  \nTank Temps: ");
-        printTankTemps();
+        printTankTs_C();
         msg("Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, "
             "heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
-            member_inletT_C,
+            inletT_C,
             drawVolume_L,
             tankAmbientT_C,
             heatSourceAmbientT_C,
@@ -550,7 +550,7 @@ int HPWH::runOneStep(double drawVolume_L,
     }
 
     // process draws and standby losses
-    updateTankTemps(drawVolume_L, member_inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
+    updateTankTemps(drawVolume_L, inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
 
     updateSoCIfNecessary();
 
@@ -888,7 +888,7 @@ int HPWH::runOneStep(double drawVolume_L,
 } // end runOneStep
 
 int HPWH::runNSteps(int N,
-                    double* inletT_C,
+                    double* inletTs_C,
                     double* drawVolume_L,
                     double* tankAmbientT_C,
                     double* heatSourceAmbientT_C,
@@ -914,7 +914,7 @@ int HPWH::runNSteps(int N,
     for (int i = 0; i < N; i++)
     {
         runOneStep(
-            inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i], DRstatus[i]);
+            inletTs_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i], DRstatus[i]);
 
         if (simHasFailed)
         {
@@ -945,7 +945,7 @@ int HPWH::runNSteps(int N,
         // print minutely output
         if (hpwhVerbosity == VRB_minuteOut)
         {
-            msg("%f,%f,%f,", tankAmbientT_C[i], drawVolume_L[i], inletT_C[i]);
+            msg("%f,%f,%f,", tankAmbientT_C[i], drawVolume_L[i], inletTs_C[i]);
             for (int j = 0; j < getNumHeatSources(); j++)
             {
                 msg("%f,%f,", getNthHeatSourceEnergyInput(j), getNthHeatSourceEnergyOutput(j));
@@ -2356,12 +2356,6 @@ double HPWH::getEnergyRemovedFromEnvironment_kJ() const
 
 double HPWH::getStandbyLosses_kJ() const { return standbyLosses_kJ; }
 
-double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
-{
-    // moving heat from the water to the space is the positive direction
-    return areEnergyUnitsValid(units) ? getEnergy(standbyLosses_kJ, units) : double(HPWH_ABORT);
-}
-
 double HPWH::getHeatContent_kJ() const
 {
     double energy_kJ = 0.;
@@ -2370,6 +2364,36 @@ double HPWH::getHeatContent_kJ() const
         energy_kJ += heatSource.energyRetained_kJ;
     }
     return energy_kJ + getTankHeatContent_kJ();
+}
+
+double HPWH::getInputEnergy(const UNITS units /*=UNITS_KWH*/) const
+{
+    return (areEnergyUnitsValid(units)) ? getEnergy(getInputEnergy_kJ(), units)
+                                        : double(HPWH_ABORT);
+}
+
+double HPWH::getOutputEnergy(const UNITS units /*=UNITS_KWH*/) const
+{
+    return (areEnergyUnitsValid(units)) ? getEnergy(getOutputEnergy_kJ(), units)
+                                        : double(HPWH_ABORT);
+}
+
+double HPWH::getTankHeatContent(const UNITS units /*=UNITS_KWH*/) const
+{
+    return (areEnergyUnitsValid(units)) ? getEnergy(getTankHeatContent_kJ(), units)
+                                        : double(HPWH_ABORT);
+}
+
+double HPWH::getHeatContent(const UNITS units /*=UNITS_KWH*/) const
+{
+    return (areEnergyUnitsValid(units)) ? getEnergy(getHeatContent_kJ(), units)
+                                        : double(HPWH_ABORT);
+}
+
+double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
+{
+    // moving heat from the water to the space is the positive direction
+    return areEnergyUnitsValid(units) ? getEnergy(standbyLosses_kJ, units) : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
@@ -2472,7 +2496,7 @@ double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
     }
 }
 
-void HPWH::printTankTemps()
+void HPWH::printTankTs_C()
 {
     std::stringstream ss;
 
@@ -2490,8 +2514,6 @@ void HPWH::printTankTemps()
 int HPWH::setTankT_C(double temp_C) { return setTankTs({temp_C}); }
 
 void HPWH::getTankTs_C(std::vector<double>& tankTemps) const { tankTemps = tankTs_C; }
-
-double HPWH::getLocationT_C() const { return locationT_C; }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Assigns new temps provided from a std::vector to tankTs_C.
@@ -3255,7 +3277,7 @@ int HPWH::getResistancePosition(int elementIndex) const
 
 // the privates
 void HPWH::updateTankTemps(double drawVolume_L,
-                           double inletT_C,
+                           double inletT_C_in,
                            double tankAmbientT_C,
                            double inletVol2_L,
                            double inletT2_C)
@@ -3288,7 +3310,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
         {
             highInletNodeIndex = inletIndex;
             highInletFraction = 1. - inletVol2_L / drawVolume_L;
-            highInletT_C = inletT_C;
+            highInletT_C = inletT_C_in;
             lowInletNodeIndex = inlet2Index;
             lowInletT_C = inletT2_C;
             lowInletFraction = inletVol2_L / drawVolume_L;
@@ -3299,7 +3321,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
             highInletFraction = inletVol2_L / drawVolume_L;
             highInletT_C = inletT2_C;
             lowInletNodeIndex = inletIndex;
-            lowInletT_C = inletT_C;
+            lowInletT_C = inletT_C_in;
             lowInletFraction = 1. - inletVol2_L / drawVolume_L;
         }
 
@@ -3310,7 +3332,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
         // heat-exchange models
         if (hasHeatExchanger)
         {
-            outletT_C = inletT_C;
+            outletT_C = inletT_C_in;
             for (auto& nodeT_C : tankTs_C)
             {
                 double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletT_C);
@@ -3329,7 +3351,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 {
                     outletT_C += tankTs_C[i];
                     tankTs_C[i] =
-                        (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
+                        (inletT_C_in * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
                         drawVolume_L;
                 }
                 outletT_C = (outletT_C / getNumNodes() * tankVolume_L +
@@ -4285,7 +4307,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double qInExtra_kJ = extraEnergyInput_kJ;
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment_kJ();
     double qOutStandbyLosses_kJ = standbyLosses_kJ;
-    double qOutWater_kJ = drawVol_L * (outletT_C - member_inletT_C) * DENSITYWATER_kgperL *
+    double qOutWater_kJ = drawVol_L * (outletT_C - inletT_C) * DENSITYWATER_kgperL *
                           CPWATER_kJperkgC; // assumes only one inlet
     double expectedHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
