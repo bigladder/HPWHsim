@@ -2542,6 +2542,30 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
     return sum / totWeight;
 }
 
+double HPWH::getTankNodeT_C(const int nodeNum) const
+{
+    if (tankTs_C.empty())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access the temperature of a tank node that does not "
+                "exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+    return tankTs_C[nodeNum];
+}
+
+double HPWH::getMinOperatingT_C() const
+{
+    if (hasCompressor())
+    {
+        return heatSources[compressorIndex].minT_C;
+    }
+    return double(HPWH_ABORT);
+}
+
 void HPWH::printTankTs_C()
 {
     std::stringstream ss;
@@ -2557,44 +2581,30 @@ void HPWH::printTankTs_C()
     msg(ss.str().c_str());
 }
 
-double HPWH::getOutletT(UNITS units /*=UNITS_C*/) const
+double HPWH::getOutletT(const UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(outletT_C, units) : double(HPWH_ABORT);
 }
 
-double HPWH::getCondenserInletT(UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserInletT(const UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(condenserInletT_C, units)
                                            : double(HPWH_ABORT);
 }
 
-double HPWH::getCondenserOutletT(UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserOutletT(const UNITS units /*=UNITS_C*/) const
 {
     return areTemperatureUnitsValid(units) ? getTemperature(condenserOutletT_C, units)
                                            : double(HPWH_ABORT);
 }
 
-double HPWH::getSetpointT(UNITS units /*=UNITS_C*/) const
+double HPWH::getSetpointT(const UNITS units /*=UNITS_C*/) const
 {
-    if (units == UNITS_C)
-    {
-        return setpointT_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(setpointT_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getSetpointT. \n");
-        }
-        return HPWH_ABORT;
-    }
+    return areTemperatureUnitsValid(units) ? getTemperature(getSetpointT_C(), units)
+                                           : double(HPWH_ABORT);
 }
 
-double HPWH::getMaxCompressorSetpointT(UNITS units /*=UNITS_C*/) const
+double HPWH::getMaxCompressorSetpointT(const UNITS units /*=UNITS_C*/) const
 {
 
     if (!hasACompressor())
@@ -2623,7 +2633,7 @@ double HPWH::getMaxCompressorSetpointT(UNITS units /*=UNITS_C*/) const
     return returnVal;
 }
 
-double HPWH::getTankNodeT(int nodeNum, UNITS units /*=UNITS_C*/) const
+double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) const
 {
     if (tankTs_C.empty())
     {
@@ -2635,32 +2645,11 @@ double HPWH::getTankNodeT(int nodeNum, UNITS units /*=UNITS_C*/) const
         }
         return double(HPWH_ABORT);
     }
-    else
-    {
-        double result = tankTs_C[nodeNum];
-        // if (result == double(HPWH_ABORT)) { can't happen?
-        //	return result;
-        // }
-        if (units == UNITS_C)
-        {
-            return result;
-        }
-        else if (units == UNITS_F)
-        {
-            return C_TO_F(result);
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for getTankNodeT.  \n");
-            }
-            return double(HPWH_ABORT);
-        }
-    }
+    return areTemperatureUnitsValid(units) ? getTemperature(getTankNodeT_C(nodeNum), units)
+                                           : double(HPWH_ABORT);
 }
 
-double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
+double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, const UNITS units /*=UNITS_C*/) const
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
@@ -2691,15 +2680,6 @@ double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units /*=UNIT
         }
         return double(HPWH_ABORT);
     }
-}
-
-double HPWH::getMinOperatingT_C() const
-{
-    if (hasCompressor())
-    {
-        return heatSources[compressorIndex].minT_C;
-    }
-    return double(HPWH_ABORT);
 }
 
 double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const

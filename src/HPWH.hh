@@ -650,11 +650,15 @@ class HPWH
     double getStandbyLosses(UNITS units = UNITS_KWH) const;
 
     ///////////////////////////////////////////////
-    /* The following functionsreturn, assign, or display temperatures (degC) */
+    /* The following functions return, assign, or display temperatures (degC) */
+
+    double getSetpointT_C() const { return setpointT_C; }
 
     double getLocationT_C() const { return locationT_C; }
 
     double getMinOperatingT_C() const;
+
+    double getTankNodeT_C(const int nodeNum) const;
 
     void getTankTs_C(std::vector<double>& tankTemps) const;
 
@@ -679,23 +683,23 @@ class HPWH
     /* The following functions return temperatures in user-specified units
      * HPWH_ABORT is returned for incorrect units */
 
-    double getSetpointT(UNITS units = UNITS_C) const;
+    double getSetpointT(const UNITS units = UNITS_C) const;
 
-    double getMinOperatingT(UNITS units = UNITS_C) const;
+    double getMinOperatingT(const UNITS units = UNITS_C) const;
 
-    double getTankNodeT(int nodeNum, UNITS units = UNITS_C) const;
+    double getTankNodeT(const int nodeNum, const UNITS units = UNITS_C) const;
 
-    double getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    double getNthThermocoupleT(int iTCouple, int nTCouple, const UNITS units = UNITS_C) const;
 
-    double getOutletT(UNITS units = UNITS_C) const;
+    double getOutletT(const UNITS units = UNITS_C) const;
 
-    double getCondenserInletT(UNITS units = UNITS_C) const;
+    double getCondenserInletT(const UNITS units = UNITS_C) const;
 
-    double getCondenserOutletT(UNITS units = UNITS_C) const;
+    double getCondenserOutletT(const UNITS units = UNITS_C) const;
 
-    double getMaxCompressorSetpointT(UNITS units = UNITS_C) const;
+    double getMaxCompressorSetpointT(const UNITS units = UNITS_C) const;
 
-    int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
+    int setMaxDepressionT(double maxDepression, const UNITS units = UNITS_C);
 
     int setTankTs(std::vector<double> tankTs_in, const UNITS units = UNITS_C);
 
