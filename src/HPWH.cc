@@ -2553,7 +2553,7 @@ int HPWH::setSetpointT(double newSetpoint, UNITS units /*=UNITS_C*/)
         }
         return HPWH_ABORT;
     }
-    if (!isNewSetpointPossible(newSetpoint_C, temp, why))
+    if (!canSetSetpointT_C(newSetpoint_C, temp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2717,101 +2717,61 @@ double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
     }
 }
 
-bool HPWH::isNewSetpointPossible(double newSetpoint,
-                                 double& maxAllowedSetpoint,
-                                 string& why,
-                                 UNITS units /*=UNITS_C*/) const
+bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
 {
-    double newSetpoint_C;
-    double maxAllowedSetpoint_C = -273.15;
-    if (units == UNITS_C)
-    {
-        newSetpoint_C = newSetpoint;
-    }
-    else if (units == UNITS_F)
-    {
-        newSetpoint_C = F_TO_C(newSetpoint);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for isNewSetpointPossible. \n");
-        }
-        return false;
-    }
-    bool returnVal = false;
-
+    maxSetpointT_C = -273.15;
     if (isSetpointFixed())
     {
-        returnVal = (newSetpoint == setpointT_C);
-        maxAllowedSetpoint_C = setpointT_C;
-        if (!returnVal)
+        maxSetpointT_C = setpointT_C;
+        if (newSetpointT_C == maxSetpointT_C)
+        {
+            return true;
+        }
+        else
         {
             why = "The set point is fixed for the currently selected model.";
+            return false;
         }
     }
-    else
+
+    if (hasACompressor())
+    { // check the new setpoint against the compressor's max setpoint
+        maxSetpointT_C = heatSources[compressorIndex].maxSetpointT_C -
+                         heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
+    }
+
+    if (lowestElementIndex >= 0)
+    { // check the new setpoint against the resistor's max setpoint
+        maxSetpointT_C = std::max(heatSources[lowestElementIndex].maxSetpointT_C, maxSetpointT_C);
+    }
+
+    if (newSetpointT_C > maxSetpointT_C)
     {
-
-        if (hasACompressor())
-        { // If there's a compressor lets check the new setpoint against the compressor's max
-          // setpoint
-
-            maxAllowedSetpoint_C =
-                heatSources[compressorIndex].maxSetpointT_C -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
-
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
-            {
-                why = "The compressor cannot meet the setpoint temperature and there is no "
-                      "resistance backup.";
-                returnVal = false;
-            }
-            else
-            {
-                returnVal = true;
-            }
+        if (hpwhModel == MODELS_StorageTank)
+        {
+            return true; // no effect
         }
-        if (lowestElementIndex >= 0)
-        { // If there's a resistance element lets check the new setpoint against the its max
-          // setpoint
-            maxAllowedSetpoint_C = heatSources[lowestElementIndex].maxSetpointT_C;
-
-            if (newSetpoint_C > maxAllowedSetpoint_C)
-            {
-                why = "The resistance elements cannot produce water this hot.";
-                returnVal = false;
-            }
-            else
-            {
-                returnVal = true;
-            }
-        }
-        else if (lowestElementIndex == -1 && !hasACompressor())
-        { // There are no heat sources here!
-            if (hpwhModel == MODELS_StorageTank)
-            {
-                returnVal = true; // The one pass the storage tank doesn't have any heating
-                                  // elements so sure change the setpoint it does nothing!
-            }
-            else
-            {
-                why = "There aren't any heat sources to check the new setpoint against!";
-                returnVal = false;
-            }
-        }
+        why = "No heat sources can meet meet the setpoint temperature.";
+        return false;
     }
+    return true;
+}
 
-    if (units == UNITS_C)
+bool HPWH::canSetSetpointT(const double newSetpointT,
+                           double& maxSetpointT,
+                           std::string& why,
+                           UNITS units /*=UNITS_C*/) const
+{
+    if (!areTemperatureUnitsValid(units))
     {
-        maxAllowedSetpoint = maxAllowedSetpoint_C;
+        return false;
     }
-    else if (units == UNITS_F)
-    {
-        maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
-    }
-    return returnVal;
+
+    double newSetpointT_C = getT_C(newSetpointT, units);
+    double maxSetpointT_C = -273.15;
+    bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
+    maxSetpointT = setT_C(maxSetpointT_C, units);
+    return result;
 }
 
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
@@ -4257,7 +4217,7 @@ int HPWH::checkInputs()
     double maxTemp;
     string why;
     double tempSetpoint = setpointT_C;
-    if (!isNewSetpointPossible(tempSetpoint, maxTemp, why))
+    if (!canSetSetpointT(tempSetpoint, maxTemp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {

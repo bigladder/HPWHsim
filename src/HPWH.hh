@@ -640,6 +640,8 @@ class HPWH
 
     double getLocationT_C() const;
 
+    bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
+
     void printTankTemps();
     /**< this prints out all the node temps, kind of nicely formatted
         does not use verbosity, as it is public and expected to be called only when needed  */
@@ -682,12 +684,22 @@ class HPWH
 
     double getMaxCompressorSetpointT(UNITS units = UNITS_C) const;
     /**< a function to return the max operating temperature of the compressor which can be different
-       than the value returned in isNewSetpointPossible() if there are resistance elements. */
+       than the value returned in canSetSetpointT() if there are resistance elements. */
 
     /** Returns State of Charge where
        tMains = current mains (cold) water temp,
        tMinUseful = minimum useful temp,
        tMax = nominal maximum temp.*/
+
+    bool canSetSetpointT(const double newSetpointT,
+                         double& maxSetpointT,
+                         std::string& why,
+                         UNITS units = UNITS_C) const;
+    /**< This function returns if the new setpoint is physically possible for the compressor. If
+       there is no compressor then checks that the new setpoint is less than boiling. The setpoint
+       can be set higher than the compressor max outlet temperature if there is a  backup resistance
+       element, but the compressor will not operate above this temperature. maxAllowedSetpoint_C
+       returns the */
 
     int resetTankToSetpoint();
     /**< this function resets the tank temperature profile to be completely at setpoint
@@ -699,16 +711,6 @@ class HPWH
     int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
-
-    bool isNewSetpointPossible(double newSetpoint_C,
-                               double& maxAllowedSetpoint_C,
-                               std::string& why,
-                               UNITS units = UNITS_C) const;
-    /**< This function returns if the new setpoint is physically possible for the compressor. If
-       there is no compressor then checks that the new setpoint is less than boiling. The setpoint
-       can be set higher than the compressor max outlet temperature if there is a  backup resistance
-       element, but the compressor will not operate above this temperature. maxAllowedSetpoint_C
-       returns the */
 
     double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
     double calcSoCFraction(double tMains_C, double tMinUseful_C) const

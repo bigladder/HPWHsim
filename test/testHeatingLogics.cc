@@ -232,7 +232,7 @@ void testChangeToStateofChargeControlled(string& input)
     {
         double temp;
         string tempStr;
-        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+        if (!hpwh.canSetSetpointT(setpointT_C, temp, tempStr))
         {
             return; // Numbers don't aline for this type
         }
@@ -289,7 +289,7 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
     {
         double temp;
         string tempStr;
-        if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+        if (!hpwh.canSetSetpointT(setpointT_C, temp, tempStr))
         {
             return; // Numbers don't aline for this type
         }
