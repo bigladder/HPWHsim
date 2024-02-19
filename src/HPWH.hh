@@ -656,9 +656,19 @@ class HPWH
 
     double getLocationT_C() const { return locationT_C; }
 
+    double getOutletT_C() const { return outletT_C; }
+
+    double getCondenserInletT_C() const { return condenserInletT_C; }
+
+    double getCondenserOutletT_C() const { return condenserOutletT_C; }
+
+    double getMaxCompressorSetpointT_C() const;
+
     double getMinOperatingT_C() const;
 
     double getTankNodeT_C(const int nodeNum) const;
+
+    double getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const;
 
     void getTankTs_C(std::vector<double>& tankTemps) const;
 
@@ -689,7 +699,8 @@ class HPWH
 
     double getTankNodeT(const int nodeNum, const UNITS units = UNITS_C) const;
 
-    double getNthThermocoupleT(int iTCouple, int nTCouple, const UNITS units = UNITS_C) const;
+    double
+    getNthThermocoupleT(const int iTCouple, const int nTCouple, const UNITS units = UNITS_C) const;
 
     double getOutletT(const UNITS units = UNITS_C) const;
 

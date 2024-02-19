@@ -2566,6 +2566,39 @@ double HPWH::getMinOperatingT_C() const
     return double(HPWH_ABORT);
 }
 
+double HPWH::getMaxCompressorSetpointT_C() const
+{
+
+    if (!hasACompressor())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Unit does not have a compressor \n");
+        }
+        return HPWH_ABORT;
+    }
+
+    return heatSources[compressorIndex].maxSetpointT_C;
+}
+
+double HPWH::getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const
+{
+    if (iTCouple > nTCouple || iTCouple < 1)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access a simulated thermocouple that does not exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+
+    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+
+    return getResampledValue(tankTs_C, beginFraction, endFraction);
+}
+
 void HPWH::printTankTs_C()
 {
     std::stringstream ss;
@@ -2583,18 +2616,19 @@ void HPWH::printTankTs_C()
 
 double HPWH::getOutletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getTemperature(outletT_C, units) : double(HPWH_ABORT);
+    return areTemperatureUnitsValid(units) ? getTemperature(getOutletT_C(), units)
+                                           : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserInletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getTemperature(condenserInletT_C, units)
+    return areTemperatureUnitsValid(units) ? getTemperature(getCondenserInletT_C(), units)
                                            : double(HPWH_ABORT);
 }
 
 double HPWH::getCondenserOutletT(const UNITS units /*=UNITS_C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getTemperature(condenserOutletT_C, units)
+    return areTemperatureUnitsValid(units) ? getTemperature(getCondenserOutletT_C(), units)
                                            : double(HPWH_ABORT);
 }
 
@@ -2616,21 +2650,9 @@ double HPWH::getMaxCompressorSetpointT(const UNITS units /*=UNITS_C*/) const
         return HPWH_ABORT;
     }
 
-    double returnVal = heatSources[compressorIndex].maxSetpointT_C;
-
-    if (units == UNITS_F)
-    {
-        returnVal = C_TO_F(returnVal);
-    }
-    else if (units != UNITS_C)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getMaxCompressorSetpointT. \n");
-        }
-        return HPWH_ABORT;
-    }
-    return returnVal;
+    return areTemperatureUnitsValid(units)
+               ? getTemperature(heatSources[compressorIndex].maxSetpointT_C, units)
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) const
@@ -2649,7 +2671,9 @@ double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) con
                                            : double(HPWH_ABORT);
 }
 
-double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, const UNITS units /*=UNITS_C*/) const
+double HPWH::getNthThermocoupleT(const int iTCouple,
+                                 const int nTCouple,
+                                 const UNITS units /*=UNITS_C*/) const
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
@@ -2662,24 +2686,10 @@ double HPWH::getNthThermocoupleT(int iTCouple, int nTCouple, const UNITS units /
     }
     double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
-    if (units == UNITS_C)
-    {
-        return simTcoupleTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(simTcoupleTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getNthThermocoupleT.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+
+    return areTemperatureUnitsValid(units) ? getTemperature(simTcoupleTemp_C, units)
+                                           : double(HPWH_ABORT);
 }
 
 double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
