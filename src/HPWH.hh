@@ -613,26 +613,30 @@ class HPWH
     bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
 
     ///////////////////////////////////////////////
-    /// returns the total input energy to all heat sources in the previous time step, in kJ
+    /* The following functions return energies (kJ) */
+
+    /// total input energy supplied to all heat sources in the previous time step
     double getInputEnergy_kJ() const;
 
-    /// returns the total energy from all heat sources to the tank in the previous time
-    /// step, in kJ
+    /// total energy transferred from all heat sources to the tank in the previous time step
     double getOutputEnergy_kJ() const;
 
-    /// returns the total energy removed from the environment by all heat sources, in kJ
+    /// total energy removed from the environment by all heat source in the previous time step
     double getEnergyRemovedFromEnvironment_kJ() const;
 
-    /// get the heat released from the tank to the environment, in kJ
+    /// energy released from the tank to the environment in the previous time step
     double getStandbyLosses_kJ() const { return standbyLosses_kJ; }
 
-    /// get the heat content of the tank (relative to 0 degC), in kJ
+    /// heat content of the tank (relative to 0 degC)
     double getTankHeatContent_kJ() const;
 
-    /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
+    /// total heat content of the tank (relative to 0 degC) and energy retained by heat sources
     double getHeatContent_kJ() const;
 
     ///////////////////////////////////////////////
+    /* The following functions return energies in user-specified units
+     * HPWH_ABORT is returned for incorrect units */
+
     double getInputEnergy(const UNITS units = UNITS_KWH) const;
 
     double getOutputEnergy(const UNITS units = UNITS_KWH) const;
@@ -641,100 +645,75 @@ class HPWH
 
     double getHeatContent(const UNITS units = UNITS_KWH) const;
 
-    /// total energy removed from the environment by all heat sources in specified units
-    /// (not net energy - does not include standby)
-    /// moving heat from the space to the water is the positive direction
-    /// returns HPWH_ABORT for incorrect units
     double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
 
-    /// heat lost through the tank in specified units
-    /// moving heat from the water to the space is the positive direction
-    /// negative should occur seldom
-    /// returns HPWH_ABORT for incorrect units
     double getStandbyLosses(UNITS units = UNITS_KWH) const;
 
     ///////////////////////////////////////////////
+    /* The following functionsreturn, assign, or display temperatures (degC) */
+
+    double getLocationT_C() const { return locationT_C; }
+
+    void getTankTs_C(std::vector<double>& tankTemps) const;
+
+    void printTankTs_C();
+
     /// assign uniform tank temperature
     int setTankT_C(double tankT_C);
 
     void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
-    double getLocationT_C() const { return locationT_C; }
-
     bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
 
     int setSetpointT_C(const double setpointT_C_in);
 
+    /// change the setpoint T, if possible
     int setSetpointT(const double setpointT, const UNITS units = UNITS_C); /**<default units C*/
-    /**< a function to change the setpoint - useful for dynamically setting it
-        The return value is 0 for successful setting, HPWH_ABORT for units failure  */
 
-    /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
-        existing nodes, regardless of numNodes. */
+    /// assign tank node temperatures by mapping the provided non-empty vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
 
+    ///////////////////////////////////////////////
+    /* The following functions return temperatures in user-specified units
+     * HPWH_ABORT is returned for incorrect units */
+
     double getSetpointT(UNITS units = UNITS_C) const;
-    /**< a function to check the setpoint - returns setpoint in celcius  */
 
     double getMinOperatingT(UNITS units = UNITS_C) const;
-    /**< a function to return the minimum operating temperature of the compressor  */
 
     double getTankNodeT(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
 
     double getNthThermocoupleT(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
-    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
 
     double getOutletT(UNITS units = UNITS_C) const;
-    /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
 
     double getCondenserInletT(UNITS units = UNITS_C) const;
-    /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
 
     double getCondenserOutletT(UNITS units = UNITS_C) const;
-    /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
 
     double getMaxCompressorSetpointT(UNITS units = UNITS_C) const;
-    /**< a function to return the max operating temperature of the compressor which can be different
-       than the value returned in canSetSetpointT() if there are resistance elements. */
 
     int setMaxDepressionT(double maxDepression, UNITS units = UNITS_C);
 
-    void getTankTs_C(std::vector<double>& tankTemps) const;
+    int setTankTs(std::vector<double> tankTs_in, const UNITS units = UNITS_C);
 
-    void printTankTs_C();
-    /**< this prints out all the node temps, kind of nicely formatted
-        does not use verbosity, as it is public and expected to be called only when needed  */
-
-    /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
-        existing nodes, regardless of numNodes. */
-    int setTankTs(std::vector<double> setTemps, const UNITS units = UNITS_C);
-
+    /// returns whether specified new setpoint is physically possible for the compressor. If
+    /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
+    /// can be set higher than the compressor max outlet temperature if there is a  backup
+    /// resistance element, but the compressor will not operate above this temperature.
     bool canSetSetpointT(const double newSetpointT,
                          double& maxSetpointT,
                          std::string& why,
                          UNITS units = UNITS_C) const;
-    /**< This function returns if the new setpoint is physically possible for the compressor. If
-       there is no compressor then checks that the new setpoint is less than boiling. The setpoint
-       can be set higher than the compressor max outlet temperature if there is a  backup resistance
-       element, but the compressor will not operate above this temperature. maxAllowedSetpoint_C
-       returns the */
 
+    /// resets the tank temperature to the setpoint temperature
     int resetTankToSetpoint();
-    /**< this function resets the tank temperature profile to be completely at setpoint
-        The return value is 0 for successful completion  */
 
+    /// change the temperature-depression option
     int setDoTempDepression(bool doTempDepress);
-    /**< This is a simple setter for the temperature depression option */
 
-    bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
+    /// indicates whether the setpoint temperature can be changed
+    bool isSetpointFixed() const;
 
     ///////////////////////////////////////////////
     /** Returns State of Charge where
