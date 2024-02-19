@@ -612,6 +612,7 @@ class HPWH
     /// check whether temperature units are valid (C or F)
     bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
 
+    ///////////////////////////////////////////////
     /// returns the total input energy to all heat sources in the previous time step, in kJ
     double getInputEnergy_kJ() const;
 
@@ -623,15 +624,15 @@ class HPWH
     double getEnergyRemovedFromEnvironment_kJ() const;
 
     /// get the heat released from the tank to the environment, in kJ
-    double getStandbyLosses_kJ() const;
+    double getStandbyLosses_kJ() const { return standbyLosses_kJ; }
 
     /// get the heat content of the tank (relative to 0 degC), in kJ
     double getTankHeatContent_kJ() const;
 
     /// returns the total heat content of the tank and heat sources (relative to 0 degC), in kJ
     double getHeatContent_kJ() const;
-    ///////////////////////////////////////////////
 
+    ///////////////////////////////////////////////
     double getInputEnergy(const UNITS units = UNITS_KWH) const;
 
     double getOutputEnergy(const UNITS units = UNITS_KWH) const;
@@ -667,6 +668,10 @@ class HPWH
     int setSetpointT(const double setpointT, const UNITS units = UNITS_C); /**<default units C*/
     /**< a function to change the setpoint - useful for dynamically setting it
         The return value is 0 for successful setting, HPWH_ABORT for units failure  */
+
+    /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
+        existing nodes, regardless of numNodes. */
+    int setTankTs_C(std::vector<double> tankTs_C_in);
 
     double getSetpointT(UNITS units = UNITS_C) const;
     /**< a function to check the setpoint - returns setpoint in celcius  */
