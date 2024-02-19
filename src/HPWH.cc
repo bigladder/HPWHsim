@@ -337,6 +337,26 @@ double getEnergy(const double energy_kJ, const HPWH::UNITS units /*=UNITS_KWH*/)
     return energy_kJ;
 }
 
+double setT_C(const double T_C, const HPWH::UNITS units /*=UNITS_C*/)
+{
+    return (units == HPWH::UNITS_C) ? T_C : C_TO_F(T_C);
+}
+
+double setT_F(const double T_F, const HPWH::UNITS units /*=UNITS_C*/)
+{
+    return (units == HPWH::UNITS_F) ? T_F : F_TO_C(T_F);
+}
+
+double getT_C(const double T, const HPWH::UNITS units /*=UNITS_C*/)
+{
+    return (units == HPWH::UNITS_C) ? T : F_TO_C(T);
+}
+
+double getT_F(const double T, const HPWH::UNITS units /*=UNITS_C*/)
+{
+    return (units == HPWH::UNITS_F) ? T : C_TO_F(T);
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
