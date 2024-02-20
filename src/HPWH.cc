@@ -2709,24 +2709,9 @@ bool HPWH::hasExternalHeatSource() const
     return false;
 }
 
-double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
+double HPWH::getExternalVolumeHeated(V_UNITS units /*L*/) const
 {
-    if (units == UNITS_L)
-    {
-        return externalVolumeHeated_L;
-    }
-    else if (units == UNITS_GAL)
-    {
-        return L_TO_GAL(externalVolumeHeated_L);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getExternalVolumeHeated.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
+    return convV(externalVolumeHeated_L, V_UNITS::L, units);
 }
 
 double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const

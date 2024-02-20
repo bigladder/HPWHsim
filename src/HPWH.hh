@@ -263,15 +263,11 @@ class HPWH
 
     enum UNITS
     {
-        // UNITS_C,         /**< celsius  */
-        // UNITS_F,         /**< fahrenheit  */
         UNITS_KWH,       /**< kilowatt hours  */
         UNITS_BTU,       /**< british thermal units  */
         UNITS_KJ,        /**< kilojoules  */
         UNITS_KW,        /**< kilowatt  */
         UNITS_BTUperHr,  /**< british thermal units per Hour  */
-        UNITS_GAL,       /**< gallons  */
-        UNITS_L,         /**< liters  */
         UNITS_kJperHrC,  /**< UA, metric units  */
         UNITS_BTUperHrF, /**< UA, imperial units  */
         UNITS_FT,        /**< feet  */
@@ -953,12 +949,12 @@ class HPWH
     /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
         returns HPWH_ABORT for N out of bounds  */
 
+    /// returns the enum value for what type of heat source the Nth heat source is/
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
-    /**< returns the enum value for what type of heat source the Nth heat source is  */
 
-    double getExternalVolumeHeated(UNITS units = UNITS_L) const;
-    /**< returns the volume of water heated in an external in the specified units
-      returns 0 when no external heat source is running  */
+    /// return the volume of water heated in an external in the specified units
+    /// returns 0 when no external heat source is running
+    double getExternalVolumeHeated(V_UNITS units = V_UNITS::L) const;
 
     /// return model identifier
     int getHPWHModel() const;

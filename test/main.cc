@@ -449,7 +449,7 @@ int main(int argc, char* argv[])
         // Check flow for external MP
         if (hpwh.isCompressoExternalMultipass())
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::V_UNITS::GAL);
             double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
@@ -477,7 +477,8 @@ int main(int argc, char* argv[])
             {
                 strPreamble += std::to_string(hpwh.getCondenserInletT()) + ", " +
                                std::to_string(hpwh.getCondenserOutletT()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::V_UNITS::GAL)) +
+                               ", ";
             }
             if (useSoC)
             {
