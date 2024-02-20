@@ -788,13 +788,14 @@ class HPWH
     double getTankSurfaceArea(UNITS units = UNITS_FT2) const;
 
     static double
-    getTankSurfaceArea(double vol, UNITS volUnits = UNITS_L, UNITS surfAUnits = UNITS_FT2);
+    getTankSurfaceArea(double vol, V_UNITS volUnits = V_UNITS::L, UNITS surfAUnits = UNITS_FT2);
 
     /**< Returns the tank surface area based off of real storage tanks*/
     double getTankRadius(UNITS units = UNITS_FT) const;
 
-    static double getTankRadius(double vol, UNITS volUnits = UNITS_L, UNITS radiusUnits = UNITS_FT);
-    /**< Returns the tank surface radius based off of real storage tanks*/
+    /// returns the tank surface radius based off of real storage tanks
+    static double
+    getTankRadius(double vol, V_UNITS volUnits = V_UNITS::L, UNITS radiusUnits = UNITS_FT);
 
     /// report whether the tank size can be changed
     bool isTankSizeFixed() const;

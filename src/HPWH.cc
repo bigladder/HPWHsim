@@ -1324,7 +1324,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size,
 }
 
 /*static*/ double
-HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUnits /*=UNITS_FT2*/)
+HPWH::getTankSurfaceArea(double vol, V_UNITS volUnits /*L*/, UNITS surfAUnits /*=UNITS_FT2*/)
 {
     // returns tank surface area, old defualt was in ft2
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
@@ -1352,7 +1352,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
     // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
-    double value = getTankSurfaceArea(tankVolume_L, UNITS_L, units);
+    double value = getTankSurfaceArea(tankVolume_L, V_UNITS::L, units);
     if (value < 0.)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -1363,15 +1363,15 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 }
 
 /*static*/ double
-HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /*=UNITS_FT*/)
+HPWH::getTankRadius(double vol, V_UNITS volUnits /*L*/, UNITS radiusUnits /*=UNITS_FT*/)
 { // returns tank radius, ft for use in calculation of heat loss in the bottom and top of
   // the tank.
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
     // is the same is the actual tank.
-    double volft3 = volUnits == UNITS_L     ? L_TO_FT3(vol)
-                    : volUnits == UNITS_GAL ? L_TO_FT3(GAL_TO_L(vol))
-                                            : -1.;
+    double volft3 = volUnits == V_UNITS::L     ? L_TO_FT3(vol)
+                    : volUnits == V_UNITS::GAL ? L_TO_FT3(GAL_TO_L(vol))
+                                               : -1.;
 
     double value = -1.;
     if (volft3 >= 0.)
@@ -1392,7 +1392,7 @@ double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
     // Sanden, AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer
     // measurements is the same is the actual tank.
 
-    double value = getTankRadius(tankVolume_L, UNITS_L, units);
+    double value = getTankRadius(tankVolume_L, V_UNITS::L, units);
 
     if (value < 0.)
     {

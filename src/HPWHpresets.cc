@@ -235,7 +235,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     }
 
     // Calc UA
-    double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
+    double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::V_UNITS::L, HPWH::UNITS_M2);
     double tankUA_WperK = SA_M2 / rValue_M2KperW;
     tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
 
