@@ -39,7 +39,7 @@ else ()
     add_library(libHPWHsim SHARED ${library_sources})
 endif ()
 
-target_include_directories(libHPWHsim PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(libHPWHsim PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_BINARY_DIR}/src)
 
 target_link_libraries(libHPWHsim PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
 target_compile_features(libHPWHsim PRIVATE cxx_std_17)
