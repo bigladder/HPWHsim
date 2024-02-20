@@ -263,8 +263,8 @@ class HPWH
 
     enum UNITS
     {
-        UNITS_C,         /**< celsius  */
-        UNITS_F,         /**< fahrenheit  */
+        // UNITS_C,         /**< celsius  */
+        // UNITS_F,         /**< fahrenheit  */
         UNITS_KWH,       /**< kilowatt hours  */
         UNITS_BTU,       /**< british thermal units  */
         UNITS_KJ,        /**< kilojoules  */
@@ -306,6 +306,8 @@ class HPWH
 
     /// temperature-unit conversion
     double convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
+    double
+    convDelT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
 
     /// energy-unit conversion
     double convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const;
@@ -467,11 +469,12 @@ class HPWH
                                                           double mains_C);
 
     std::shared_ptr<TempBasedHeatingLogic>
-    wholeTank(double decisionPoint, const UNITS units = UNITS_C, const bool absolute = false);
+    wholeTank(double decisionPoint, const T_UNITS units = T_UNITS::C, const bool absolute = false);
     std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic>
-    secondThird(double decisionPoint, const UNITS units = UNITS_C, const bool absolute = false);
+    std::shared_ptr<TempBasedHeatingLogic> secondThird(double decisionPoint,
+                                                       const T_UNITS units = T_UNITS::C,
+                                                       const bool absolute = false);
     std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
@@ -634,16 +637,6 @@ class HPWH
         not add one.  Additionally, a newline is written with each call.  */
 
     ///////////////////////////////////////////////
-    /// check whether energy units are valid (kJ, kWh, or BTU)
-    bool areEnergyUnitsValid(const HPWH::UNITS units) const;
-
-    /// check whether temperature units are valid (C or F)
-    bool areTemperatureUnitsValid(const HPWH::UNITS units) const;
-
-    /// check whether volume units are valid (L or gal)
-    bool areVolumeUnitsValid(const HPWH::UNITS units) const;
-
-    ///////////////////////////////////////////////
     /* The following functions return energies (kJ) */
 
     /// total input energy supplied to all heat sources in the previous time step
@@ -781,7 +774,8 @@ class HPWH
     int setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
 
-    int setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
+    int
+    setTankSize_adjustUA(double HPWH_size, V_UNITS units = V_UNITS::L, bool forceChange = false);
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
        but a new A. A is found via getTankSurfaceArea()*/
 
@@ -884,7 +878,7 @@ class HPWH
                                  double inletTemp = 14.444,
                                  double outTemp = 57.222,
                                  UNITS pwrUnit = UNITS_KW,
-                                 UNITS tempUnit = UNITS_C);
+                                 T_UNITS tempUnit = T_UNITS::C);
     /**< Returns the heating output capacity of the compressor for the current HPWH model.
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor. Outlet temperatures greater than the max allowable setpoints will return an
@@ -895,7 +889,7 @@ class HPWH
                                     double inletTemp = 14.444,
                                     double outTemp = 57.222,
                                     UNITS pwrUnit = UNITS_KW,
-                                    UNITS tempUnit = UNITS_C);
+                                    T_UNITS tempUnit = T_UNITS::C);
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
     inletTemp and outTemp since multi-pass models will increase the water temperature only a few
@@ -1008,7 +1002,7 @@ class HPWH
     int setEnteringWaterHighTempShutOff(double highTemp,
                                         bool tempIsAbsolute,
                                         int heatSourceIndex,
-                                        UNITS units = UNITS_C);
+                                        T_UNITS units = T_UNITS::C);
 
     int setTargetSoCFraction(double target);
 
@@ -1019,7 +1013,7 @@ class HPWH
                             double tempMinUseful = 43.333,
                             bool constantMainsT = false,
                             double mainsT = 18.333,
-                            UNITS tempUnit = UNITS_C);
+                            T_UNITS tempUnit = T_UNITS::C);
 
     bool isSoCControlled() const;
 
@@ -1640,6 +1634,7 @@ constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
+inline double dC_TO_dF(double temperature) { return (FperC * temperature); }
 inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
 inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
 inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
@@ -1676,9 +1671,10 @@ inline bool aboutEqual(T a, T b)
 }
 
 /// Generate an absolute or relative temperature in degC.
-inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, const bool absolute)
+inline double convertTempToC(const double T_F_or_C, const HPWH::T_UNITS units, const bool absolute)
 {
-    return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+    return (units == HPWH::T_UNITS::C) ? T_F_or_C
+                                       : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
 }
 
 // resampling utility functions

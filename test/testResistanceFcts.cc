@@ -31,7 +31,7 @@ void testSetResistanceCapacityErrorChecks()
     ASSERTTRUE(hpwhR.setResistanceCapacity(100., 3) == HPWH::HPWH_ABORT);
     ASSERTTRUE(hpwhR.setResistanceCapacity(100., 30000) == HPWH::HPWH_ABORT);
     ASSERTTRUE(hpwhR.setResistanceCapacity(100., -3) == HPWH::HPWH_ABORT);
-    ASSERTTRUE(hpwhR.setResistanceCapacity(100., 0, HPWH::UNITS_F) == HPWH::HPWH_ABORT);
+    ASSERTTRUE(hpwhR.setResistanceCapacity(100., 0) == HPWH::HPWH_ABORT);
 }
 
 void testGetSetResistanceErrors()

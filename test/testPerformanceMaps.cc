@@ -24,7 +24,7 @@ struct performancePointMP
 double getCapacityMP_F_KW(HPWH& hpwh, performancePointMP& point)
 {
     return hpwh.getCompressorCapacity(
-        point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::UNITS_F);
+        point.tairF, point.tinF, point.tinF, HPWH::UNITS_KW, HPWH::T_UNITS::F);
 }
 
 struct performancePointSP
@@ -38,7 +38,7 @@ struct performancePointSP
 double getCapacitySP_F_BTUHR(HPWH& hpwh, performancePointSP& point)
 {
     return hpwh.getCompressorCapacity(
-        point.tairF, point.tinF, point.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        point.tairF, point.tinF, point.toutF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
 }
 
 double getCapacitySP_F_BTUHR(HPWH& hpwh,
@@ -50,7 +50,7 @@ double getCapacitySP_F_BTUHR(HPWH& hpwh,
                                       point.tinF - tInOffSet_dF,
                                       point.toutF - tOutOffSet_dF,
                                       HPWH::UNITS_BTUperHr,
-                                      HPWH::UNITS_F);
+                                      HPWH::T_UNITS::F);
 }
 
 void testCXA15MatchesDataMap()
@@ -68,7 +68,7 @@ void testCXA15MatchesDataMap()
     double capacityData_kW = 52.779317;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -82,7 +82,7 @@ void testCXA15MatchesDataMap()
     capacityData_kW = 44.962957379;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -96,7 +96,7 @@ void testCXA15MatchesDataMap()
     capacityData_kW = 37.5978306881;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -119,7 +119,7 @@ void testCXA30MatchesDataMap()
     double capacityData_kW = 105.12836804;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -133,7 +133,7 @@ void testCXA30MatchesDataMap()
     capacityData_kW = 89.186101453;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -147,7 +147,7 @@ void testCXA30MatchesDataMap()
     capacityData_kW = 74.2437689948;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -633,20 +633,29 @@ void testSanden()
 
     // nominal
     checkPoint = {60, 149.0, 41.0, 15059.59167};
-    outputBTUH = hpwh.getCompressorCapacity(
-        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+    outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
+                                            checkPoint.tinF,
+                                            checkPoint.toutF,
+                                            HPWH::UNITS_BTUperHr,
+                                            HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
 
     // Cold outlet temperature
     checkPoint = {60, 125.0, 41.0, 15059.59167};
-    outputBTUH = hpwh.getCompressorCapacity(
-        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+    outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
+                                            checkPoint.tinF,
+                                            checkPoint.toutF,
+                                            HPWH::UNITS_BTUperHr,
+                                            HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(checkPoint.outputBTUH, outputBTUH));
 
     // tests fails when output high
     checkPoint = {60, 200, 41.0, 15059.59167};
-    outputBTUH = hpwh.getCompressorCapacity(
-        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+    outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
+                                            checkPoint.tinF,
+                                            checkPoint.toutF,
+                                            HPWH::UNITS_BTUperHr,
+                                            HPWH::T_UNITS::F);
     ASSERTTRUE(outputBTUH == HPWH::HPWH_ABORT);
 }
 

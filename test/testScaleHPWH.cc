@@ -330,7 +330,7 @@ void testSPGetCompressorCapacity()
                                               C_TO_F(waterTempC),
                                               C_TO_F(setpointC),
                                               HPWH::UNITS_BTUperHr,
-                                              HPWH::UNITS_F) /
+                                              HPWH::T_UNITS::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
     ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output),
                        capacity_BTU)); // relative cmp since in btu's these will be large numbers
@@ -361,7 +361,7 @@ void testMPGetCompressorCapacity()
                                               C_TO_F(waterTempC),
                                               C_TO_F(setpointC),
                                               HPWH::UNITS_BTUperHr,
-                                              HPWH::UNITS_F) /
+                                              HPWH::T_UNITS::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
     ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output),
                        capacity_BTU,
@@ -446,12 +446,12 @@ void testSetCompressorOutputCapacity()
                                      C_TO_F(waterTempC),
                                      C_TO_F(setpointC),
                                      HPWH::UNITS_BTUperHr,
-                                     HPWH::UNITS_F);
+                                     HPWH::T_UNITS::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                                              C_TO_F(waterTempC),
                                                              C_TO_F(setpointC),
                                                              HPWH::UNITS_BTUperHr,
-                                                             HPWH::UNITS_F);
+                                                             HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(num, newCapacity_BTUperHr));
 }
 
@@ -471,9 +471,9 @@ void testChipsCaseWithIPUnits()
 
     // Scale output to 20000 btu/hr but let's use do the calc in other units
     hpwh.setCompressorOutputCapacity(
-        wh_heatingCap, airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        wh_heatingCap, airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(wh_heatingCap, newCapacity_BTUperHr));
 }
 

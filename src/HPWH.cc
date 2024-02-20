@@ -325,6 +325,17 @@ double HPWH::convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_
     return (toUnits == HPWH::T_UNITS::F) ? T : F_TO_C(T);
 }
 
+/* difference-temperature-unit conversion */
+double
+HPWH::convDelT(const double dT, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+{
+    if (fromUnits == HPWH::T_UNITS::C)
+    {
+        return (toUnits == HPWH::T_UNITS::C) ? dT : dC_TO_dF(dT);
+    }
+    return (toUnits == HPWH::T_UNITS::F) ? dT : dF_TO_dC(dT);
+}
+
 /* energy-unit conversion */
 double HPWH::convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
 {
@@ -1288,36 +1299,14 @@ int HPWH::setDoTempDepression(bool doTempDepress)
     return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size,
-                               UNITS units /*=UNITS_L*/,
-                               bool forceChange /*=false*/)
+int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool forceChange /*=false*/)
 {
-    if (!areVolumeUnitsValid(units))
-    {
-        return HPWH_ABORT;
-    }
 
     // Uses the UA before the function is called and adjusts the A part of the UA to match
     // the input volume given getTankSurfaceArea().
-    double HPWH_size_L;
+    double HPWH_size_L = convV(HPWH_size, units, V_UNITS::L);
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
-    if (units == UNITS_L)
-    {
-        HPWH_size_L = HPWH_size;
-    }
-    else if (units == UNITS_GAL)
-    {
-        HPWH_size_L = GAL_TO_L(HPWH_size);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setTankSize_adjustUA.  \n");
-        }
-        return HPWH_ABORT;
-    }
     setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
     setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
     return 0;
@@ -1710,7 +1699,7 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
 int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
                                           bool tempIsAbsolute,
                                           int heatSourceIndex,
-                                          UNITS unit /*=UNITS_C*/)
+                                          T_UNITS unit /*_C*/)
 {
     if (!hasEnteringWaterHighTempShutOff(heatSourceIndex))
     {
@@ -1721,24 +1710,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         return HPWH_ABORT;
     }
 
-    double highTemp_C;
-    if (unit == UNITS_C)
-    {
-        highTemp_C = highTemp;
-    }
-    else if (unit == UNITS_F)
-    {
-        highTemp_C = F_TO_C(highTemp);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for set Entering Water High Temp Shut Off.  "
-                "\n");
-        }
-        return HPWH_ABORT;
-    }
+    double highTemp_C = convT(highTemp, unit, T_UNITS::C);
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
@@ -1834,7 +1806,7 @@ int HPWH::switchToSoCControls(double targetSoC,
                               double tempMinUseful /*= 43.333*/,
                               bool constantMainsT /*= false*/,
                               double mainsT /*= 18.333*/,
-                              UNITS tempUnit /*= UNITS_C*/)
+                              T_UNITS tempUnit /*C*/)
 {
     if (!canUseSoCControls())
     {
@@ -1846,26 +1818,8 @@ int HPWH::switchToSoCControls(double targetSoC,
         return HPWH_ABORT;
     }
 
-    double tempMinUseful_C, mainsT_C;
-    if (tempUnit == UNITS_C)
-    {
-        tempMinUseful_C = tempMinUseful;
-        mainsT_C = mainsT;
-    }
-    else if (tempUnit == UNITS_F)
-    {
-        tempMinUseful_C = F_TO_C(tempMinUseful);
-        mainsT_C = F_TO_C(mainsT);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for set Enterinh Water High Temp Shut "
-                "Off.\n");
-        }
-        return HPWH_ABORT;
-    }
+    double tempMinUseful_C = convT(tempMinUseful, tempUnit, T_UNITS::C);
+    double mainsT_C = convT(mainsT, tempUnit, T_UNITS::C);
 
     if (mainsT_C >= tempMinUseful_C)
     {
@@ -1957,9 +1911,8 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
     return nodeWeights;
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,
-                                                             const UNITS units /* = UNITS_C */,
-                                                             const bool absolute /* = false */)
+std::shared_ptr<HPWH::TempBasedHeatingLogic>
+HPWH::wholeTank(double decisionPoint, const T_UNITS units /*C */, const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(0., 1.);
     double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
@@ -1982,7 +1935,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double deci
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,
-                                                               const UNITS units /* = UNITS_C */,
+                                                               const T_UNITS units /*C*/,
                                                                const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
@@ -2175,7 +2128,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
                                    double inletTemp /*=14.444*/,
                                    double outTemp /*=57.222*/,
                                    UNITS pwrUnit /*=UNITS_KW*/,
-                                   UNITS tempUnit /*=UNITS_C*/)
+                                   T_UNITS tempUnit /*C*/)
 {
     // calculate capacity btu/hr, input btu/hr, and cop
     double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
@@ -2190,27 +2143,9 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         return double(HPWH_ABORT);
     }
 
-    if (tempUnit == UNITS_C)
-    {
-        airTemp_C = airTemp;
-        inletTemp_C = inletTemp;
-        outTemp_C = outTemp;
-    }
-    else if (tempUnit == UNITS_F)
-    {
-        airTemp_C = F_TO_C(airTemp);
-        inletTemp_C = F_TO_C(inletTemp);
-        outTemp_C = F_TO_C(outTemp);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for temperatures in getCompressorCapacity.  "
-                "\n");
-        }
-        return double(HPWH_ABORT);
-    }
+    airTemp_C = convT(airTemp, tempUnit, T_UNITS::C);
+    inletTemp_C = convT(inletTemp, tempUnit, T_UNITS::C);
+    outTemp_C = convT(outTemp, tempUnit, T_UNITS::C);
 
     if (airTemp_C < heatSources[compressorIndex].minT_C ||
         airTemp_C > heatSources[compressorIndex].maxT_C)
@@ -2275,45 +2210,6 @@ bool HPWH::isHeatSourceIndexValid(const int n) const
         return false;
     }
     return true;
-}
-
-bool HPWH::areEnergyUnitsValid(const HPWH::UNITS units) const
-{
-    if ((units == HPWH::UNITS_KJ) || (units == HPWH::UNITS_KWH) || (units == HPWH::UNITS_BTU))
-    {
-        return true;
-    }
-    if (hpwhVerbosity >= VRB_reluctant)
-    {
-        msg("Incorrect energy-unit specification.\n");
-    }
-    return false;
-}
-
-bool HPWH::areTemperatureUnitsValid(const HPWH::UNITS units) const
-{
-    if ((units == HPWH::UNITS_C) || (units == HPWH::UNITS_F))
-    {
-        return true;
-    }
-    if (hpwhVerbosity >= VRB_reluctant)
-    {
-        msg("Incorrect temperature-unit specification.\n");
-    }
-    return false;
-}
-
-bool HPWH::areVolumeUnitsValid(const HPWH::UNITS units) const
-{
-    if ((units == HPWH::UNITS_L) || (units == HPWH::UNITS_GAL))
-    {
-        return true;
-    }
-    if (hpwhVerbosity >= VRB_reluctant)
-    {
-        msg("Incorrect volume-unit specification.\n");
-    }
-    return false;
 }
 
 double HPWH::getInputEnergy_kJ() const
@@ -3042,7 +2938,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
                                       double inletTemp /*=14.444*/,
                                       double outTemp /*=57.222*/,
                                       UNITS pwrUnit /*=UNITS_KW*/,
-                                      UNITS tempUnit /*=UNITS_C*/)
+                                      T_UNITS tempUnit /*C*/)
 {
 
     double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
@@ -4809,7 +4705,7 @@ int HPWH::HPWHinit_file(string configFile)
                     if (tempString == "wholeTank")
                     {
                         heatSources[heatsource].addTurnOnLogic(
-                            HPWH::wholeTank(tempDouble, UNITS_C, absolute));
+                            HPWH::wholeTank(tempDouble, T_UNITS::C, absolute));
                     }
                     else if (tempString == "topThird")
                     {

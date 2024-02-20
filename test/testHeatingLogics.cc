@@ -243,7 +243,7 @@ void testChangeToStateofChargeControlled(string& input)
     ASSERTFALSE(hpwh.isSoCControlled());
 
     // change to SOC control;
-    hpwh.switchToSoCControls(.76, .05, 99, true, 49, HPWH::UNITS_F);
+    hpwh.switchToSoCControls(.76, .05, 99, true, 49, HPWH::T_UNITS::F);
     ASSERTTRUE(hpwh.isSoCControlled());
 
     // check entering water high temp shut off controll unchanged
@@ -297,7 +297,7 @@ void testSetStateOfCharge(string& input, double coldWater_F, double minTUse_F, d
     }
 
     // change to SOC control;
-    hpwh.switchToSoCControls(.85, .05, minTUse_F, true, coldWater_F, HPWH::UNITS_F);
+    hpwh.switchToSoCControls(.85, .05, minTUse_F, true, coldWater_F, HPWH::T_UNITS::F);
     ASSERTTRUE(hpwh.isSoCControlled());
 
     // Test if we're on and in band stay on
