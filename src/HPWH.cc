@@ -316,86 +316,42 @@ void calcThermalDist(std::vector<double>& thermalDist,
 }
 
 /* temperature-unit conversion */
-static double getFromT_C(const double T_C, const HPWH::UNITS units)
+double HPWH::convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
 {
-    return (units == HPWH::UNITS_C) ? T_C : C_TO_F(T_C);
-}
-
-static double getFromT_F(const double T_F, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_F) ? T_F : F_TO_C(T_F);
-}
-
-static double setToT_C(const double T, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_C) ? T : F_TO_C(T);
-}
-
-static double setToT_F(const double T, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_F) ? T : C_TO_F(T);
+    if (fromUnits == HPWH::T_UNITS::C)
+    {
+        return (toUnits == HPWH::T_UNITS::C) ? T : C_TO_F(T);
+    }
+    return (toUnits == HPWH::T_UNITS::F) ? T : F_TO_C(T);
 }
 
 /* energy-unit conversion */
-static double getFromEnergy_kJ(const double energy_kJ, const HPWH::UNITS units)
+double HPWH::convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
 {
-    return (units == HPWH::UNITS_KJ)
-               ? energy_kJ
-               : ((units == HPWH::UNITS_KWH) ? KJ_TO_KWH(energy_kJ) : KJ_TO_BTU(energy_kJ));
-}
-
-static double getFromEnergy_kWh(const double energy_kWh, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_KJ)
-               ? KWH_TO_KJ(energy_kWh)
-               : ((units == HPWH::UNITS_KWH) ? energy_kWh : KWH_TO_BTU(energy_kWh));
-}
-
-static double getFromEnergy_BTU(const double energy_BTU, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_KJ)
-               ? BTU_TO_KJ(energy_BTU)
-               : ((units == HPWH::UNITS_KWH) ? BTU_TO_KWH(energy_BTU) : energy_BTU);
-}
-
-static double setToEnergy_kJ(const double energy, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_KJ)
-               ? energy
-               : ((units == HPWH::UNITS_KWH) ? KWH_TO_KJ(energy) : BTU_TO_KJ(energy));
-}
-
-static double setToEnergy_kWh(const double energy, const HPWH::UNITS units /*=UNITS_C*/)
-{
-    return (units == HPWH::UNITS_KJ) ? KJ_TO_KWH(energy)
-                                     : ((units == HPWH::UNITS_KWH) ? energy : BTU_TO_KWH(energy));
-}
-
-static double setToEnergy_BTU(const double energy, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_KJ) ? KJ_TO_BTU(energy)
-                                     : ((units == HPWH::UNITS_KWH) ? KWH_TO_BTU(energy) : energy);
+    if (fromUnits == HPWH::E_UNITS::KJ)
+    {
+        return (toUnits == HPWH::E_UNITS::KJ)
+                   ? E
+                   : ((toUnits == HPWH::E_UNITS::KWH) ? KJ_TO_KWH(E) : KJ_TO_BTU(E));
+    }
+    else if (fromUnits == HPWH::E_UNITS::KWH)
+    {
+        return (toUnits == HPWH::E_UNITS::KJ)
+                   ? KWH_TO_KJ(E)
+                   : ((toUnits == HPWH::E_UNITS::KWH) ? E : KWH_TO_BTU(E));
+    }
+    return (toUnits == HPWH::E_UNITS::KJ) ? BTU_TO_KJ(E)
+                                          : ((toUnits == HPWH::E_UNITS::KWH) ? BTU_TO_KWH(E) : E);
 }
 
 /* volume-unit conversion */
-static double getFromVolume_L(const double volume_L, const HPWH::UNITS units)
+double HPWH::convV(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
 {
-    return (units == HPWH::UNITS_L) ? volume_L : L_TO_GAL(volume_L);
-}
-
-static double getFromVolume_gal(const double volume_gal, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_L) ? GAL_TO_L(volume_gal) : volume_gal;
-}
-
-static double setToVolume_L(const double volume, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_L) ? volume : GAL_TO_L(volume);
-}
-
-static double setToVolume_gal(const double volume, const HPWH::UNITS units)
-{
-    return (units == HPWH::UNITS_GAL) ? volume : L_TO_GAL(volume);
+    if (fromUnits == HPWH::V_UNITS::L)
+    {
+        return (toUnits == HPWH::V_UNITS::L) ? V : L_TO_GAL(V);
+    }
+    return (toUnits == HPWH::V_UNITS::GAL) ? V : GAL_TO_L(V);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -532,7 +488,8 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         if (hpwhVerbosity >= VRB_typical)
         {
-            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT "
+            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a "
+                "DR_TOT "
                 "scheme "
                 " \n");
         }
@@ -595,7 +552,8 @@ int HPWH::runOneStep(double drawVolume_L,
 
     updateSoCIfNecessary();
 
-    // First Logic DR checks //////////////////////////////////////////////////////////////////
+    // First Logic DR checks
+    // //////////////////////////////////////////////////////////////////
 
     // If the DR signal includes a top off but the previous signal did not, then top it off!
     if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0)
@@ -635,7 +593,8 @@ int HPWH::runOneStep(double drawVolume_L,
         {
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and "
+                msg("Heat source choice:\theatsource %d can choose from %lu turn on logics "
+                    "and "
                     "%lu "
                     "shut off logics\n",
                     i,
@@ -644,8 +603,9 @@ int HPWH::runOneStep(double drawVolume_L,
             }
             if (isHeating == true)
             {
-                // check if anything that is on needs to turn off (generally for lowT cutoffs)
-                // things that just turn on later this step are checked for this in shouldHeat
+                // check if anything that is on needs to turn off (generally for lowT
+                // cutoffs) things that just turn on later this step are checked for this in
+                // shouldHeat
                 if (heatSources[i].isEngaged() && heatSources[i].shutsOff())
                 {
                     heatSources[i].disengageHeatSource();
@@ -692,8 +652,8 @@ int HPWH::runOneStep(double drawVolume_L,
                 if (heatSources[i].shouldHeat())
                 {
                     heatSources[i].engageHeatSource(DRstatus);
-                    // engaging a heat source sets isHeating to true, so this will only trigger
-                    // once
+                    // engaging a heat source sets isHeating to true, so this will only
+                    // trigger once
                 }
             }
 
@@ -766,7 +726,8 @@ int HPWH::runOneStep(double drawVolume_L,
                     {
                         if (hpwhVerbosity >= VRB_typical)
                         {
-                            msg("Locked out back up heat source AND the engaged heat source "
+                            msg("Locked out back up heat source AND the engaged heat "
+                                "source "
                                 "%i, "
                                 "DRstatus = %i\n",
                                 i,
@@ -801,19 +762,19 @@ int HPWH::runOneStep(double drawVolume_L,
                     // subtract time it ran and turn it off
                     minutesToRun -= heatSourcePtr->runtime_min;
                     heatSources[i].disengageHeatSource();
-                    // and if there's a heat source that follows this heat source (regardless of
-                    // lockout) that's able to come on,
+                    // and if there's a heat source that follows this heat source
+                    // (regardless of lockout) that's able to come on,
                     if (heatSources[i].followedByHeatSource != NULL &&
                         heatSources[i].followedByHeatSource->shutsOff() == false)
                     {
                         // turn it on
                         heatSources[i].followedByHeatSource->engageHeatSource(DRstatus);
                     }
-                    // or if there heat source can't produce hotter water (i.e. it's maxed out)
-                    // and the tank still isn't at setpoint. the compressor should get locked
-                    // out when the maxedOut is true but have to run the resistance first during
-                    // this timestep to make sure tank is above the max temperature for the
-                    // compressor.
+                    // or if there heat source can't produce hotter water (i.e. it's maxed
+                    // out) and the tank still isn't at setpoint. the compressor should get
+                    // locked out when the maxedOut is true but have to run the resistance
+                    // first during this timestep to make sure tank is above the max
+                    // temperature for the compressor.
                     else if (heatSources[i].maxedOut() && heatSources[i].backupHeatSource != NULL)
                     {
 
@@ -1149,8 +1110,7 @@ void HPWH::printHeatSourceInfo()
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        ss << "output energy kWh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i, UNITS_KWH)
-           << "\t";
+        ss << "output energy kWh: " << std::setw(7) << getNthHeatSourceEnergyOutput(i) << "\t";
     }
     ss << endl;
 
@@ -1159,7 +1119,7 @@ void HPWH::printHeatSourceInfo()
         runtime = getNthHeatSourceRunTime(i);
         if (runtime != 0)
         {
-            outputVar = getNthHeatSourceEnergyOutput(i, UNITS_KWH) / (runtime / 60.0);
+            outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0);
         }
         else
         {
@@ -1221,14 +1181,14 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+                               getNthHeatSourceEnergyInput(iHS) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        outFILE << fmt::format(",{:0.2f}",
-                               getNthThermocoupleT(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+        outFILE << fmt::format(
+            ",{:0.2f}", getNthThermocoupleT(iTC + 1, nTCouples, doIP ? T_UNITS::F : T_UNITS::C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
@@ -1337,8 +1297,8 @@ int HPWH::setTankSize_adjustUA(double HPWH_size,
         return HPWH_ABORT;
     }
 
-    // Uses the UA before the function is called and adjusts the A part of the UA to match the
-    // input volume given getTankSurfaceArea().
+    // Uses the UA before the function is called and adjusts the A part of the UA to match
+    // the input volume given getTankSurfaceArea().
     double HPWH_size_L;
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
@@ -1358,7 +1318,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size,
         }
         return HPWH_ABORT;
     }
-    setTankSize(HPWH_size_L, UNITS_L, forceChange);
+    setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
     setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
     return 0;
 }
@@ -1368,9 +1328,9 @@ HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUni
 {
     // returns tank surface area, old defualt was in ft2
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
-    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume tankVolume_L
-    // with the assumption that the aspect ratio is the same as the outer dimenisions of the
-    // whole unit.
+    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
+    // tankVolume_L with the assumption that the aspect ratio is the same as the outer
+    // dimenisions of the whole unit.
     double radius = getTankRadius(vol, volUnits, UNITS_FT);
 
     double value = 2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.);
@@ -1389,9 +1349,9 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 {
     // returns tank surface area, old defualt was in ft2
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
-    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume tankVolume_L
-    // with the assumption that the aspect ratio is the same as the outer dimenisions of the
-    // whole unit.
+    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
+    // tankVolume_L with the assumption that the aspect ratio is the same as the outer
+    // dimenisions of the whole unit.
     double value = getTankSurfaceArea(tankVolume_L, UNITS_L, units);
     if (value < 0.)
     {
@@ -1404,11 +1364,11 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 
 /*static*/ double
 HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /*=UNITS_FT*/)
-{ // returns tank radius, ft for use in calculation of heat loss in the bottom and top of the
-  // tank.
+{ // returns tank radius, ft for use in calculation of heat loss in the bottom and top of
+  // the tank.
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
-    // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is
-    // the same is the actual tank.
+    // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
+    // is the same is the actual tank.
     double volft3 = volUnits == UNITS_L     ? L_TO_FT3(vol)
                     : volUnits == UNITS_GAL ? L_TO_FT3(GAL_TO_L(vol))
                                             : -1.;
@@ -1427,10 +1387,10 @@ HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /
 
 double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
 {
-    // returns tank radius, ft for use in calculation of heat loss in the bottom and top of the
-    // tank. Based off 88 insulated storage tanks currently available on the market from Sanden,
-    // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is
-    // the same is the actual tank.
+    // returns tank radius, ft for use in calculation of heat loss in the bottom and top of
+    // the tank. Based off 88 insulated storage tanks currently available on the market from
+    // Sanden, AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer
+    // measurements is the same is the actual tank.
 
     double value = getTankRadius(tankVolume_L, UNITS_L, units);
 
@@ -1445,7 +1405,7 @@ double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
 
 bool HPWH::isTankSizeFixed() const { return tankSizeFixed; }
 
-int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
+int HPWH::setTankSize(const double volume, V_UNITS units /*L*/, bool forceChange /*=false*/)
 {
     if (isTankSizeFixed() && !forceChange)
     {
@@ -1455,7 +1415,7 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChan
         }
         return HPWH_ABORT;
     }
-    if (HPWH_size <= 0)
+    if (volume <= 0)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -1464,35 +1424,17 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChan
         simHasFailed = true;
         return HPWH_ABORT;
     }
-    else
-    {
-        if (units == UNITS_L)
-        {
-            this->tankVolume_L = HPWH_size;
-        }
-        else if (units == UNITS_GAL)
-        {
-            this->tankVolume_L = (GAL_TO_L(HPWH_size));
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for setTankSize.  \n");
-            }
-            return HPWH_ABORT;
-        }
-    }
-
+    tankVolume_L = convV(volume, units, V_UNITS::L);
     calcSizeConstants();
-
     return 0;
 }
+
 int HPWH::setDoInversionMixing(bool doInvMix)
 {
     this->doInversionMixing = doInvMix;
     return 0;
 }
+
 int HPWH::setDoConduction(bool doCondu)
 {
     this->doConduction = doCondu;
@@ -1736,24 +1678,9 @@ int HPWH::getInletHeight(int whichInlet) const
     }
 }
 
-int HPWH::setMaxDepressionT(double maxDepression, UNITS units /*=UNITS_C*/)
+int HPWH::setMaxDepressionT(double maxDepressionT, T_UNITS units /*C*/)
 {
-    if (units == UNITS_C)
-    {
-        maxDepressionT_C = maxDepression;
-    }
-    else if (units == UNITS_F)
-    {
-        maxDepressionT_C = F_TO_C(maxDepression);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for max Temp Depression.  \n");
-        }
-        return HPWH_ABORT;
-    }
+    maxDepressionT_C = convT(maxDepressionT, units, T_UNITS::C);
     return 0;
 }
 
@@ -1807,7 +1734,8 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for set Entering Water High Temp Shut Off.  \n");
+            msg("Incorrect unit specification for set Entering Water High Temp Shut Off.  "
+                "\n");
         }
         return HPWH_ABORT;
     }
@@ -1832,7 +1760,8 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("High temperature shut off is too close to the setpoint, excpected a minimum "
+            msg("High temperature shut off is too close to the setpoint, excpected a "
+                "minimum "
                 "difference of %.2lf.\n",
                 MINSINGLEPASSLIFT);
         }
@@ -1911,7 +1840,8 @@ int HPWH::switchToSoCControls(double targetSoC,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Cannot set up state of charge controls for integrated or wrapped HPWHs.\n");
+            msg("Cannot set up state of charge controls for integrated or wrapped "
+                "HPWHs.\n");
         }
         return HPWH_ABORT;
     }
@@ -1931,7 +1861,8 @@ int HPWH::switchToSoCControls(double targetSoC,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for set Enterinh Water High Temp Shut Off.\n");
+            msg("Incorrect unit specification for set Enterinh Water High Temp Shut "
+                "Off.\n");
         }
         return HPWH_ABORT;
     }
@@ -1940,7 +1871,8 @@ int HPWH::switchToSoCControls(double targetSoC,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("The mains temperature can't be equal to or greater than the minimum useful "
+            msg("The mains temperature can't be equal to or greater than the minimum "
+                "useful "
                 "temperature.\n");
         }
         return HPWH_ABORT;
@@ -2274,7 +2206,8 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Incorrect unit specification for temperatures in getCompressorCapacity.  \n");
+            msg("Incorrect unit specification for temperatures in getCompressorCapacity.  "
+                "\n");
         }
         return double(HPWH_ABORT);
     }
@@ -2436,61 +2369,53 @@ double HPWH::getHeatContent_kJ() const
     return energy_kJ + getTankHeatContent_kJ();
 }
 
-double HPWH::getInputEnergy(const UNITS units /*=UNITS_KWH*/) const
+double HPWH::getInputEnergy(const E_UNITS units /*KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getInputEnergy_kJ(), units)
-                                        : double(HPWH_ABORT);
+    return convE(getInputEnergy_kJ(), E_UNITS::KJ, units);
 }
 
-double HPWH::getOutputEnergy(const UNITS units /*=UNITS_KWH*/) const
+double HPWH::getOutputEnergy(const E_UNITS units /*KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getOutputEnergy_kJ(), units)
-                                        : double(HPWH_ABORT);
+    return convE(getOutputEnergy_kJ(), E_UNITS::KJ, units);
 }
 
-double HPWH::getTankHeatContent(const UNITS units /*=UNITS_KWH*/) const
+double HPWH::getTankHeatContent(const E_UNITS units /*KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getTankHeatContent_kJ(), units)
-                                        : double(HPWH_ABORT);
+    return convE(getTankHeatContent_kJ(), E_UNITS::KJ, units);
 }
 
-double HPWH::getHeatContent(const UNITS units /*=UNITS_KWH*/) const
+double HPWH::getHeatContent(const E_UNITS units /*KWH*/) const
 {
-    return (areEnergyUnitsValid(units)) ? getFromEnergy_kJ(getHeatContent_kJ(), units)
-                                        : double(HPWH_ABORT);
+    return convE(getHeatContent_kJ(), E_UNITS::KJ, units);
 }
 
-double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
+double HPWH::getStandbyLosses(E_UNITS units /*KWH*/) const
 {
-    return areEnergyUnitsValid(units) ? getFromEnergy_kJ(standbyLosses_kJ, units)
-                                      : double(HPWH_ABORT);
+    return convE(getStandbyLosses_kJ(), E_UNITS::KJ, units);
 }
 
-double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
+double HPWH::getNthHeatSourceEnergyInput(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? getFromEnergy_kJ(heatSources[N].energyInput_kJ, units)
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyInput_kJ, E_UNITS::KJ, units)
+                                       : double(HPWH_ABORT);
 }
 
-double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
+double HPWH::getNthHeatSourceEnergyOutput(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? getFromEnergy_kJ(heatSources[N].energyOutput_kJ, units)
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyOutput_kJ, E_UNITS::KJ, units)
+                                       : double(HPWH_ABORT);
 }
 
-double HPWH::getNthHeatSourceEnergyRetained(int N, UNITS units /*=UNITS_KWH*/) const
+double HPWH::getNthHeatSourceEnergyRetained(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? getFromEnergy_kJ(heatSources[N].energyRetained_kJ, units)
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyRetained_kJ, E_UNITS::KJ, units)
+                                       : double(HPWH_ABORT);
 }
 
-double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units /*=UNITS_KWH*/) const
+double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N) && areEnergyUnitsValid(units))
-               ? getFromEnergy_kJ(heatSources[N].energyRemovedFromEnvironment_kJ, units)
+    return (isHeatSourceIndexValid(N))
+               ? convE(heatSources[N].energyRemovedFromEnvironment_kJ, E_UNITS::KJ, units)
                : double(HPWH_ABORT);
 }
 
@@ -2509,24 +2434,9 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
     return isHeatSourceIndexValid(N) ? heatSources[N].typeOfHeatSource : HEATSOURCE_TYPE::TYPE_none;
 }
 
-double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
+double HPWH::getTankSize(V_UNITS units /*L*/) const
 {
-    if (units == UNITS_L)
-    {
-        return tankVolume_L;
-    }
-    else if (units == UNITS_GAL)
-    {
-        return L_TO_GAL(tankVolume_L);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getTankSize.  \n");
-        }
-        return HPWH_ABORT;
-    }
+    return convV(tankVolume_L, V_UNITS::L, units);
 }
 
 int HPWH::setSetpointT_C(const double setpointT_C_in)
@@ -2646,7 +2556,8 @@ double HPWH::getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("You have attempted to access a simulated thermocouple that does not exist.  "
+            msg("You have attempted to access a simulated thermocouple that does not "
+                "exist.  "
                 "\n");
         }
         return double(HPWH_ABORT);
@@ -2673,47 +2584,40 @@ void HPWH::printTankTs_C()
     msg(ss.str().c_str());
 }
 
-double HPWH::getOutletT(const UNITS units /*=UNITS_C*/) const
+double HPWH::getOutletT(const T_UNITS units /*C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getFromT_C(getOutletT_C(), units) : double(HPWH_ABORT);
+    return convT(getOutletT_C(), T_UNITS::C, units);
 }
 
-double HPWH::getCondenserInletT(const UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserInletT(const T_UNITS units /*C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getFromT_C(getCondenserInletT_C(), units)
-                                           : double(HPWH_ABORT);
+    return convT(getCondenserInletT_C(), T_UNITS::C, units);
 }
 
-double HPWH::getCondenserOutletT(const UNITS units /*=UNITS_C*/) const
+double HPWH::getCondenserOutletT(const T_UNITS units /*C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getFromT_C(getCondenserOutletT_C(), units)
-                                           : double(HPWH_ABORT);
+    return convT(getCondenserOutletT_C(), T_UNITS::C, units);
 }
 
-double HPWH::getSetpointT(const UNITS units /*=UNITS_C*/) const
+double HPWH::getSetpointT(const T_UNITS units /*C*/) const
 {
-    return areTemperatureUnitsValid(units) ? getFromT_C(getSetpointT_C(), units)
-                                           : double(HPWH_ABORT);
+    return convT(getSetpointT_C(), T_UNITS::C, units);
 }
 
-double HPWH::getMaxCompressorSetpointT(const UNITS units /*=UNITS_C*/) const
+double HPWH::getMaxCompressorSetpointT(const T_UNITS units /*C*/) const
 {
-
     if (!hasACompressor())
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("Unit does not have a compressor \n");
         }
-        return HPWH_ABORT;
+        return double(HPWH_ABORT);
     }
-
-    return areTemperatureUnitsValid(units)
-               ? getFromT_C(heatSources[compressorIndex].maxSetpointT_C, units)
-               : double(HPWH_ABORT);
+    return convT(heatSources[compressorIndex].maxSetpointT_C, T_UNITS::C, units);
 }
 
-double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) const
+double HPWH::getTankNodeT(const int nodeNum, const T_UNITS units /*C*/) const
 {
     if (tankTs_C.empty())
     {
@@ -2725,20 +2629,18 @@ double HPWH::getTankNodeT(const int nodeNum, const UNITS units /*=UNITS_C*/) con
         }
         return double(HPWH_ABORT);
     }
-    return areTemperatureUnitsValid(units) ? getFromT_C(getTankNodeT_C(nodeNum), units)
-                                           : double(HPWH_ABORT);
+    return convT(getTankNodeT_C(nodeNum), T_UNITS::C, units);
 }
 
-double HPWH::getNthThermocoupleT(const int iTCouple,
-                                 const int nTCouple,
-                                 const UNITS units /*=UNITS_C*/) const
+double
+HPWH::getNthThermocoupleT(const int iTCouple, const int nTCouple, const T_UNITS units /*C*/) const
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("You have attempted to access a simulated thermocouple that does not exist.  "
-                "\n");
+            msg("You have attempted to access a simulated thermocouple that does not "
+                "exist.\n");
         }
         return double(HPWH_ABORT);
     }
@@ -2746,15 +2648,13 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
 
-    return areTemperatureUnitsValid(units) ? getFromT_C(simTcoupleTemp_C, units)
-                                           : double(HPWH_ABORT);
+    return convT(simTcoupleTemp_C, T_UNITS::C, units);
 }
 
-double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
+double HPWH::getMinOperatingT(const T_UNITS units /*C*/) const
 {
-    return (areTemperatureUnitsValid(units) && hasCompressor())
-               ? getFromT_C(heatSources[compressorIndex].minT_C, units)
-               : double(HPWH_ABORT);
+    return hasCompressor() ? convT(heatSources[compressorIndex].minT_C, T_UNITS::C, units)
+                           : double(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2763,18 +2663,9 @@ double HPWH::getMinOperatingT(UNITS units /*=UNITS_C*/) const
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
 /// @return	Success: 0; Failure: HPWH_ABORT
 //-----------------------------------------------------------------------------
-int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
+int HPWH::setTankTs(std::vector<double> setTankTs, const T_UNITS units /*C*/)
 {
-    if ((units != UNITS_C) && (units != UNITS_F))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpointT.  \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    std::size_t numSetNodes = setTankTemps.size();
+    std::size_t numSetNodes = setTankTs.size();
     if (numSetNodes == 0)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -2784,22 +2675,21 @@ int HPWH::setTankTs(std::vector<double> setTankTemps, const UNITS units)
         return HPWH_ABORT;
     }
 
-    // convert setTankTemps to �C, if necessary
-    if (units == UNITS_F)
-        for (auto& T : setTankTemps)
+    // convert setTankTemps to degC, if necessary
+    if (units == T_UNITS::F)
+        for (auto& T : setTankTs)
             T = F_TO_C(T);
 
     // set node temps
-    if (!resampleIntensive(tankTs_C, setTankTemps))
+    if (!resampleIntensive(tankTs_C, setTankTs))
         return HPWH_ABORT;
 
     return 0;
 }
 
-int HPWH::setSetpointT(const double setpointT, const UNITS units /*=UNITS_C*/)
+int HPWH::setSetpointT(const double setpointT, const T_UNITS units /*C*/)
 {
-    return areTemperatureUnitsValid(units) ? setSetpointT_C(setToT_C(setpointT, units))
-                                           : HPWH_ABORT;
+    return setSetpointT_C(convT(setpointT, units, T_UNITS::C));
 }
 
 bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
@@ -2845,17 +2735,12 @@ bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std:
 bool HPWH::canSetSetpointT(const double newSetpointT,
                            double& maxSetpointT,
                            std::string& why,
-                           UNITS units /*=UNITS_C*/) const
+                           T_UNITS units /*C*/) const
 {
-    if (!areTemperatureUnitsValid(units))
-    {
-        return false;
-    }
-
-    double newSetpointT_C = setToT_C(newSetpointT, units);
+    double newSetpointT_C = convT(newSetpointT, units, T_UNITS::C);
     double maxSetpointT_C = -273.15;
     bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
-    maxSetpointT = getFromT_C(maxSetpointT_C, units);
+    maxSetpointT = convT(maxSetpointT_C, T_UNITS::C, units);
     return result;
 }
 
@@ -3089,9 +2974,9 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
         useableFract = 1.;
     }
 
-    // Check if double's are approximately equally and adjust the relationship so it follows the
-    // relationship we expect. The tolerance plays with 0.1 mm in position if the tank is 1m
-    // tall...
+    // Check if double's are approximately equally and adjust the relationship so it follows
+    // the relationship we expect. The tolerance plays with 0.1 mm in position if the tank
+    // is 1m tall...
     double temp = 1. - useableFract;
     if (aboutEqual(aquaFract, temp))
     {
@@ -3602,8 +3487,8 @@ void HPWH::mixTankInversions()
                     // Temperature inversion!
                     hasInversion = true;
 
-                    // Mix this inversion mixing temperature by averaging all of the inverted
-                    // nodes together together.
+                    // Mix this inversion mixing temperature by averaging all of the
+                    // inverted nodes together together.
                     double Tmixed = 0.0;
                     double massMixed = 0.0;
                     int m;
@@ -3876,12 +3761,12 @@ void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 
 void HPWH::calcSizeConstants()
 {
-    // calculate conduction between the nodes AND heat loss by node with top and bottom having
-    // greater surface area. model uses explicit finite difference to find conductive heat
-    // exchange between the tank nodes with the boundary conditions on the top and bottom node
-    // being the fraction of UA that corresponds to the top and bottom of the tank. The
-    // assumption is that the aspect ratio is the same for all tanks and is the same for the
-    // outside measurements of the unit and the inner water tank.
+    // calculate conduction between the nodes AND heat loss by node with top and bottom
+    // having greater surface area. model uses explicit finite difference to find conductive
+    // heat exchange between the tank nodes with the boundary conditions on the top and
+    // bottom node being the fraction of UA that corresponds to the top and bottom of the
+    // tank. The assumption is that the aspect ratio is the same for all tanks and is the
+    // same for the outside measurements of the unit and the inner water tank.
     const double tankRad_m = getTankRadius(UNITS_M);
     const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
@@ -4047,7 +3932,8 @@ void HPWH::mapResRelativePosToHeatSources()
               });
 }
 
-// Used to check a few inputs after the initialization of a tank model from a preset or a file.
+// Used to check a few inputs after the initialization of a tank model from a preset or a
+// file.
 int HPWH::checkInputs()
 {
     int returnVal = 0;
@@ -4071,7 +3957,9 @@ int HPWH::checkInputs()
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("Heat source %d does not have a specified type.  Initialization failed.\n", i);
+                msg("Heat source %d does not have a specified type.  Initialization "
+                    "failed.\n",
+                    i);
             }
             returnVal = HPWH_ABORT;
         }
@@ -4082,8 +3970,10 @@ int HPWH::checkInputs()
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("You must specify at least one logic to turn on the element or the element "
-                    "must be set as a backup for another heat source with at least one logic.");
+                msg("You must specify at least one logic to turn on the element or the "
+                    "element "
+                    "must be set as a backup for another heat source with at least one "
+                    "logic.");
             }
             returnVal = HPWH_ABORT;
         }
@@ -4145,7 +4035,8 @@ int HPWH::checkInputs()
                 {
                     if (hpwhVerbosity >= VRB_reluctant)
                     {
-                        msg("Defrost logic set to true but no valid defrost map of length 3 or "
+                        msg("Defrost logic set to true but no valid defrost map of length "
+                            "3 or "
                             "greater set. \n");
                     }
                     returnVal = HPWH_ABORT;
@@ -4187,7 +4078,8 @@ int HPWH::checkInputs()
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
-                    msg("External heat sources need an external inlet height within the bounds "
+                    msg("External heat sources need an external inlet height within the "
+                        "bounds "
                         "from from 0 to numNodes-1. \n");
                 }
                 returnVal = HPWH_ABORT;
@@ -4209,8 +4101,8 @@ int HPWH::checkInputs()
         }
 
         // Check performance map
-        // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal
-        // and that ;
+        // perfGrid and perfGridValues, and the length of vectors in perfGridValues are
+        // equal and that ;
         if (heatSources[i].useBtwxtGrid)
         {
             // If useBtwxtGrid is true that the perfMap is empty
@@ -4232,15 +4124,16 @@ int HPWH::checkInputs()
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
-                    msg("When using grid lookups for perfmance the vectors in perfGridValues "
+                    msg("When using grid lookups for perfmance the vectors in "
+                        "perfGridValues "
                         "must "
                         "be the same length. \n");
                 }
                 returnVal = HPWH_ABORT;
             }
 
-            // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
-            // lengths
+            // Check perfGrid's vectors lengths multiplied together == the perfGridValues
+            // vector lengths
             size_t expLength = 1;
             for (const auto& v : heatSources[i].perfGrid)
             {
@@ -4250,7 +4143,8 @@ int HPWH::checkInputs()
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
-                    msg("When using grid lookups for perfmance the vectors in perfGridValues "
+                    msg("When using grid lookups for perfmance the vectors in "
+                        "perfGridValues "
                         "must "
                         "be the same length. \n");
                 }
@@ -4264,7 +4158,8 @@ int HPWH::checkInputs()
             {
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
-                    msg("External multipass heat sources must have a perfMap of only one point "
+                    msg("External multipass heat sources must have a perfMap of only one "
+                        "point "
                         "with regression equations. \n");
                 }
                 returnVal = HPWH_ABORT;
@@ -4281,7 +4176,8 @@ int HPWH::checkInputs()
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("The relationship between the on logic and off logic is not supported. The "
+                msg("The relationship between the on logic and off logic is not supported. "
+                    "The "
                     "off "
                     "logic is beneath the on logic.");
             }
@@ -4726,7 +4622,8 @@ int HPWH::HPWHinit_file(string configFile)
                         {
                             if (hpwhVerbosity >= VRB_reluctant)
                             {
-                                msg("Node number for heatsource %d %s must be between 0 and "
+                                msg("Node number for heatsource %d %s must be between 0 "
+                                    "and "
                                     "%d.  "
                                     "\n",
                                     heatsource,
@@ -4758,7 +4655,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Number of weights for heatsource %d %s (%d) does not match "
+                            msg("Number of weights for heatsource %d %s (%d) does not "
+                                "match "
                                 "number "
                                 "of nodes for %s (%d).  \n",
                                 heatsource,
@@ -4773,7 +4671,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Improper definition, \"%s\", for heat source %d %s. Should be "
+                            msg("Improper definition, \"%s\", for heat source %d %s. "
+                                "Should be "
                                 "\"relative\" or \"absoute\".\n",
                                 nextToken.c_str(),
                                 heatsource,
@@ -4793,7 +4692,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Improper comparison, \"%s\", for heat source %d %s. Should be "
+                            msg("Improper comparison, \"%s\", for heat source %d %s. "
+                                "Should be "
                                 "\"<\" or \">\".\n",
                                 compareStr.c_str(),
                                 heatsource,
@@ -4818,7 +4718,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Incorrect units specification for %s from heatsource %d.  \n",
+                            msg("Incorrect units specification for %s from heatsource %d.  "
+                                "\n",
                                 token.c_str(),
                                 heatsource);
                         }
@@ -4898,7 +4799,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Incorrect units specification for %s from heatsource %d.  \n",
+                            msg("Incorrect units specification for %s from heatsource %d.  "
+                                "\n",
                                 token.c_str(),
                                 heatsource);
                         }
@@ -4969,7 +4871,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Incorrect units specification for %s from heatsource %d.  \n",
+                            msg("Incorrect units specification for %s from heatsource %d.  "
+                                "\n",
                                 token.c_str(),
                                 heatsource);
                         }
@@ -5147,7 +5050,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("%s specified for heatsource %d before definition of nTemps.  "
+                            msg("%s specified for heatsource %d before definition of "
+                                "nTemps.  "
                                 "\n",
                                 token.c_str(),
                                 heatsource);
@@ -5158,7 +5062,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Incorrect specification for %s from heatsource %d. nTemps, "
+                            msg("Incorrect specification for %s from heatsource %d. "
+                                "nTemps, "
                                 "%d, is "
                                 "less than %d.  \n",
                                 token.c_str(),
@@ -5197,9 +5102,8 @@ int HPWH::HPWHinit_file(string configFile)
                 string coeff = match[3].str();
 
                 /*
-                // TODO: Currently relies on the coefficients being defined in the correct order
-                int coeff_num;
-                if (coeff == "const")
+                // TODO: Currently relies on the coefficients being defined in the correct
+                order int coeff_num; if (coeff == "const")
                 {
                     coeff_num = 0;
                 }
@@ -5221,7 +5125,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("%s specified for heatsource %d before definition of nTemps.  "
+                            msg("%s specified for heatsource %d before definition of "
+                                "nTemps.  "
                                 "\n",
                                 token.c_str(),
                                 heatsource);
@@ -5232,7 +5137,8 @@ int HPWH::HPWHinit_file(string configFile)
                     {
                         if (hpwhVerbosity >= VRB_reluctant)
                         {
-                            msg("Incorrect specification for %s from heatsource %d. nTemps, "
+                            msg("Incorrect specification for %s from heatsource %d. "
+                                "nTemps, "
                                 "%d, is "
                                 "less than %d.  \n",
                                 token.c_str(),

@@ -53,7 +53,7 @@ void testGetMinOperatingTemp(string input, double expected)
 {
     HPWH hpwh;
     getHPWHObject(hpwh, input); // get preset model
-    ASSERTTRUE(hpwh.getMinOperatingT(HPWH::UNITS_F) == expected);
+    ASSERTTRUE(hpwh.getMinOperatingT(HPWH::T_UNITS::F) == expected);
 }
 
 int main(int, char**)

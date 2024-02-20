@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL);
+        hpwh.setTankSize(newTankSize, HPWH::V_UNITS::GAL);
     }
     if (tot_limit > 0)
     {
@@ -410,9 +410,9 @@ int main(int argc, char* argv[])
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpointT() <= 125.)
             {
-                allSchedules[1][i] *=
-                    (125. - allSchedules[0][i]) /
-                    (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, HPWH::UNITS_F) - allSchedules[0][i]);
+                allSchedules[1][i] *= (125. - allSchedules[0][i]) /
+                                      (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, HPWH::T_UNITS::F) -
+                                       allSchedules[0][i]);
             }
         }
 
@@ -495,8 +495,9 @@ int main(int argc, char* argv[])
         {
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
-                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
+                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::E_UNITS::KWH) * 1000.;
+                cumHeatOut[iHS] +=
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::E_UNITS::KWH) * 1000.;
             }
         }
     }

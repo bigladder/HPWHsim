@@ -285,6 +285,34 @@ class HPWH
         UNITS_LPS        /**< liters per second  */
     };
 
+    enum class T_UNITS
+    {
+        C, // celsius
+        F  // fahrenheit
+    };
+
+    enum class E_UNITS
+    {
+        KJ,  // kilojoules
+        KWH, // kilowatt hours
+        BTU  // british thermal units
+    };
+
+    enum class V_UNITS
+    {
+        L,  // liters
+        GAL // gallons
+    };
+
+    /// temperature-unit conversion
+    double convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
+
+    /// energy-unit conversion
+    double convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const;
+
+    /// volume-unit conversion
+    double convV(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const;
+
     /// specifies the type of heat source
     enum HEATSOURCE_TYPE
     {
@@ -640,17 +668,17 @@ class HPWH
     /* The following functions return energies in user-specified units
      * HPWH_ABORT is returned for incorrect units */
 
-    double getInputEnergy(const UNITS units = UNITS_KWH) const;
+    double getInputEnergy(const E_UNITS units = E_UNITS::KWH) const;
 
-    double getOutputEnergy(const UNITS units = UNITS_KWH) const;
+    double getOutputEnergy(const E_UNITS units = E_UNITS::KWH) const;
 
-    double getTankHeatContent(const UNITS units = UNITS_KWH) const;
+    double getTankHeatContent(const E_UNITS units = E_UNITS::KWH) const;
 
-    double getHeatContent(const UNITS units = UNITS_KWH) const;
+    double getHeatContent(const E_UNITS units = E_UNITS::KWH) const;
 
-    double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
+    double getEnergyRemovedFromEnvironment(const E_UNITS units = E_UNITS::KWH) const;
 
-    double getStandbyLosses(UNITS units = UNITS_KWH) const;
+    double getStandbyLosses(const E_UNITS units = E_UNITS::KWH) const;
 
     ///////////////////////////////////////////////
     /* The following functions return, assign, or display temperatures (degC) */
@@ -687,7 +715,7 @@ class HPWH
     int setSetpointT_C(const double setpointT_C_in);
 
     /// change the setpoint T, if possible
-    int setSetpointT(const double setpointT, const UNITS units = UNITS_C); /**<default units C*/
+    int setSetpointT(const double setpointT, const T_UNITS units = T_UNITS::C);
 
     /// assign tank node temperatures by mapping the provided non-empty vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
@@ -696,26 +724,27 @@ class HPWH
     /* The following functions return temperatures in user-specified units
      * HPWH_ABORT is returned for incorrect units */
 
-    double getSetpointT(const UNITS units = UNITS_C) const;
+    double getSetpointT(const T_UNITS units = T_UNITS::C) const;
 
-    double getMinOperatingT(const UNITS units = UNITS_C) const;
+    double getMinOperatingT(const T_UNITS units = T_UNITS::C) const;
 
-    double getTankNodeT(const int nodeNum, const UNITS units = UNITS_C) const;
+    double getTankNodeT(const int nodeNum, const T_UNITS units = T_UNITS::C) const;
 
-    double
-    getNthThermocoupleT(const int iTCouple, const int nTCouple, const UNITS units = UNITS_C) const;
+    double getNthThermocoupleT(const int iTCouple,
+                               const int nTCouple,
+                               const T_UNITS units = T_UNITS::C) const;
 
-    double getOutletT(const UNITS units = UNITS_C) const;
+    double getOutletT(const T_UNITS units = T_UNITS::C) const;
 
-    double getCondenserInletT(const UNITS units = UNITS_C) const;
+    double getCondenserInletT(const T_UNITS units = T_UNITS::C) const;
 
-    double getCondenserOutletT(const UNITS units = UNITS_C) const;
+    double getCondenserOutletT(const T_UNITS units = T_UNITS::C) const;
 
-    double getMaxCompressorSetpointT(const UNITS units = UNITS_C) const;
+    double getMaxCompressorSetpointT(const T_UNITS units = T_UNITS::C) const;
 
-    int setMaxDepressionT(double maxDepression, const UNITS units = UNITS_C);
+    int setMaxDepressionT(double maxDepression, const T_UNITS units = T_UNITS::C);
 
-    int setTankTs(std::vector<double> tankTs_in, const UNITS units = UNITS_C);
+    int setTankTs(std::vector<double> tankTs_in, const T_UNITS units = T_UNITS::C);
 
     /// returns whether specified new setpoint is physically possible for the compressor. If
     /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
@@ -724,7 +753,7 @@ class HPWH
     bool canSetSetpointT(const double newSetpointT,
                          double& maxSetpointT,
                          std::string& why,
-                         UNITS units = UNITS_C) const;
+                         T_UNITS units = T_UNITS::C) const;
 
     /// resets the tank temperature to the setpoint temperature
     int resetTankToSetpoint();
@@ -757,23 +786,28 @@ class HPWH
        but a new A. A is found via getTankSurfaceArea()*/
 
     double getTankSurfaceArea(UNITS units = UNITS_FT2) const;
+
     static double
     getTankSurfaceArea(double vol, UNITS volUnits = UNITS_L, UNITS surfAUnits = UNITS_FT2);
+
     /**< Returns the tank surface area based off of real storage tanks*/
     double getTankRadius(UNITS units = UNITS_FT) const;
+
     static double getTankRadius(double vol, UNITS volUnits = UNITS_L, UNITS radiusUnits = UNITS_FT);
     /**< Returns the tank surface radius based off of real storage tanks*/
 
-    bool isTankSizeFixed() const; /**< is the tank size allowed to be changed */
-    int setTankSize(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
-    /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
+    /// report whether the tank size can be changed
+    bool isTankSizeFixed() const;
 
-    double getTankSize(UNITS units = UNITS_L) const;
-    /**< returns the tank volume in L or GAL  */
+    /// set the tank volume
+    int
+    setTankSize(const double volume, const V_UNITS units = V_UNITS::L, bool forceChange = false);
 
+    /// returns the tank volume
+    double getTankSize(const V_UNITS units = V_UNITS::L) const;
+
+    /// set whether to run the inversion mixing method, default is true
     int setDoInversionMixing(bool doInvMix);
-    /**< This is a simple setter for the logical for running the inversion mixing method, default is
-     * true */
 
     int setDoConduction(bool doCondu);
     /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
@@ -830,22 +864,20 @@ class HPWH
     /**< resizes the tankTemp_C and nextTankTemp_C node vectors  */
     void setNumNodes(const std::size_t num_nodes);
 
-    /**< returns the number of nodes  */
+    /// returns the number of nodes
     int getNumNodes() const;
 
-    /**< returns the index of the top node  */
+    /// returns the index of the top node
     int getIndexTopNode() const;
 
+    /// returns the number of heat sources
     int getNumHeatSources() const;
-    /**< returns the number of heat sources  */
 
+    /// returns the number of resistance elements
     int getNumResistanceElements() const;
-    /**< returns the number of resistance elements  */
 
+    /// returns the index of the last compressor in the heat source array.
     int getCompressorIndex() const;
-    /**< returns the index of the compressor in the heat source array.
-    Note only supports HPWHs with one compressor, if multiple will return the last index
-    of a compressor */
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
@@ -906,16 +938,16 @@ class HPWH
     bool isHeatSourceIndexValid(const int n) const;
 
     /// returns the energy input to the Nth heat source, with the specified units
-    double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
+    double getNthHeatSourceEnergyInput(int N, E_UNITS units = E_UNITS::KWH) const;
 
     /// returns energy transferred from the Nth heat source to the water, with the specified units
-    double getNthHeatSourceEnergyOutput(int N, UNITS units = UNITS_KWH) const;
+    double getNthHeatSourceEnergyOutput(int N, E_UNITS units = E_UNITS::KWH) const;
 
     /// returns energy removed from the environment into the heat source, with the specified units
-    double getNthHeatSourceEnergyRemovedFromEnvironment(int N, UNITS units = UNITS_KWH) const;
+    double getNthHeatSourceEnergyRemovedFromEnvironment(int N, E_UNITS units = E_UNITS::KWH) const;
 
     /// returns energy retained by the heat source, with the specified units
-    double getNthHeatSourceEnergyRetained(int N, UNITS units = UNITS_KWH) const;
+    double getNthHeatSourceEnergyRetained(int N, E_UNITS units = E_UNITS::KWH) const;
 
     /// return the run time for the Nth heat source (min)
     /// note: they may sum to more than 1 time step for concurrently running heat sources
@@ -928,6 +960,7 @@ class HPWH
 
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
+
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */

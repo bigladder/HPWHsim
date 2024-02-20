@@ -110,7 +110,7 @@ int testForceChangeTankSize(HPWH::MODELS model)
     double newTankSize = 133.312; // No way a tank has this size originally
 
     // change the tank size
-    int result = hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL, true);
+    int result = hpwh.setTankSize(newTankSize, HPWH::V_UNITS::GAL, true);
 
     if (result != 0 && result != HPWH::HPWH_ABORT)
     {
@@ -124,11 +124,11 @@ int testForceChangeTankSize(HPWH::MODELS model)
         cout << "Error, setTankSize() returned HPWH_ABORT when it should be 0\n";
         return 1;
     }
-    if (newTankSize != hpwh.getTankSize(HPWH::UNITS_GAL))
+    if (newTankSize != hpwh.getTankSize(HPWH::V_UNITS::GAL))
     {
         cout << "Error, the tank size hasn't changed to the new tank size when it should have. New "
                 "Size: "
-             << newTankSize << ". Returned Value: " << hpwh.getTankSize(HPWH::UNITS_GAL) << "\n";
+             << newTankSize << ". Returned Value: " << hpwh.getTankSize(HPWH::V_UNITS::GAL) << "\n";
         return 1;
     }
     return 0;

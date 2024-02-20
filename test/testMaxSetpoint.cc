@@ -51,15 +51,15 @@ void testMaxSetpointResistanceTank()
     string why;
     hpwh.HPWHinit_resTank();
 
-    ASSERTFALSE(hpwh.canSetSetpointT(101., num, why)); // Can't go above boiling
-    ASSERTTRUE(hpwh.canSetSetpointT(99., num, why));   // Can go to near boiling
-    ASSERTTRUE(hpwh.canSetSetpointT(100., num, why));  // Can go to boiling
-    ASSERTTRUE(hpwh.canSetSetpointT(10., num, why));   // Can go low, albiet dumb
+    ASSERTFALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    ASSERTTRUE(hpwh.canSetSetpointT_C(99., num, why));   // Can go to near boiling
+    ASSERTTRUE(hpwh.canSetSetpointT_C(100., num, why));  // Can go to boiling
+    ASSERTTRUE(hpwh.canSetSetpointT_C(10., num, why));   // Can go low, albiet dumb
     ASSERTTRUE(REMaxShouldBe == num);
 
     // Check this carries over into setting the setpoint
-    ASSERTTRUE(hpwh.setSetpointT(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
-    ASSERTTRUE(hpwh.setSetpointT(99.) == 0)
+    ASSERTTRUE(hpwh.setSetpointT_C(101.) == HPWH::HPWH_ABORT); // Can't go above boiling
+    ASSERTTRUE(hpwh.setSetpointT_C(99.) == 0)
 }
 
 void testScalableCompressor()
