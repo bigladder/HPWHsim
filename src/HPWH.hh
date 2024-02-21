@@ -272,9 +272,7 @@ class HPWH
         UNITS_M2,        /**< square meters  */
         UNITS_MIN,       /**< minutes  */
         UNITS_SEC,       /**< seconds  */
-        UNITS_HR,        /**< hours  */
-        UNITS_GPM,       /**< gallons per minute  */
-        UNITS_LPS        /**< liters per second  */
+        UNITS_HR         /**< hours  */
     };
 
     struct PairHash
@@ -358,6 +356,21 @@ class HPWH
     convert(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
     {
         return convertV[{fromUnits, toUnits}](V);
+    }
+
+    /* flow-rate units and conversion */
+    enum class R_UNITS
+    {
+        LperS,    // liters per second
+        GALperMIN // gallons per minute
+    };
+
+    static ConversionMap<R_UNITS> convertR;
+
+    inline double
+    convert(const double R, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits) const
+    {
+        return convertR[{fromUnits, toUnits}](R);
     }
 
     /// specifies the type of heat source
@@ -1021,7 +1034,7 @@ class HPWH
     bool hasExternalHeatSource() const;
 
     /// return the constant flow rate for an external multipass heat source
-    double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
+    double getExternalMPFlowRate(R_UNITS units = R_UNITS::GALperMIN) const;
 
     double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 

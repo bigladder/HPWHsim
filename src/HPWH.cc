@@ -100,6 +100,12 @@ HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), &L_TO_GAL},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L}};
 
+HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
+    {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
+    {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::GALperMIN), &ident},
+    {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::GALperMIN), &LPS_TO_GPM},
+    {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::LperS), &GPM_TO_LPS}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -2683,7 +2689,7 @@ double HPWH::getExternalVolumeHeated(V_UNITS units /*L*/) const
     return convert(externalVolumeHeated_L, V_UNITS::L, units);
 }
 
-double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
+double HPWH::getExternalMPFlowRate(R_UNITS units /*GALperMIN*/) const
 {
     if (!isCompressoExternalMultipass())
     {
@@ -2694,22 +2700,7 @@ double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
         return HPWH_ABORT;
     }
 
-    if (units == HPWH::UNITS_LPS)
-    {
-        return heatSources[compressorIndex].mpFlowRate_LPS;
-    }
-    else if (units == HPWH::UNITS_GPM)
-    {
-        return LPS_TO_GPM(heatSources[compressorIndex].mpFlowRate_LPS);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getExternalMPFlowRate.  \n");
-        }
-        return (double)HPWH_ABORT;
-    }
+    return convert(heatSources[compressorIndex].mpFlowRate_LPS, R_UNITS::LperS, units);
 }
 
 double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const

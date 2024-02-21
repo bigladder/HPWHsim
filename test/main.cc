@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
         if (hpwh.isCompressoExternalMultipass())
         {
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::V_UNITS::GAL);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
+            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::R_UNITS::GALperMIN) *
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
