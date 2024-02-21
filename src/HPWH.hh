@@ -269,10 +269,7 @@ class HPWH
         UNITS_FT,        /**< feet  */
         UNITS_M,         /**< meters  */
         UNITS_FT2,       /**< square feet  */
-        UNITS_M2,        /**< square meters  */
-        UNITS_MIN,       /**< minutes  */
-        UNITS_SEC,       /**< seconds  */
-        UNITS_HR         /**< hours  */
+        UNITS_M2         /**< square meters  */
     };
 
     struct PairHash
@@ -338,9 +335,9 @@ class HPWH
     static ConversionMap<P_UNITS> convertP;
 
     inline double
-    convert(const double P, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits) const
+    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits) const
     {
-        return convertP[{fromUnits, toUnits}](P);
+        return convertP[{fromUnits, toUnits}](p);
     }
 
     /* volume units and conversion */
@@ -353,9 +350,9 @@ class HPWH
     static ConversionMap<V_UNITS> convertV;
 
     inline double
-    convert(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
+    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
     {
-        return convertV[{fromUnits, toUnits}](V);
+        return convertV[{fromUnits, toUnits}](v);
     }
 
     /* flow-rate units and conversion */
@@ -368,9 +365,26 @@ class HPWH
     static ConversionMap<R_UNITS> convertR;
 
     inline double
-    convert(const double R, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits) const
+    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits) const
     {
-        return convertR[{fromUnits, toUnits}](R);
+        return convertR[{fromUnits, toUnits}](r);
+    }
+
+    /* time units and conversion */
+    enum class TIME_UNITS
+    {
+        H,   // hours
+        MIN, // minutes
+        S    // seconds
+    };
+
+    static ConversionMap<TIME_UNITS> convertTime;
+
+    inline double convert(const double time,
+                          const HPWH::TIME_UNITS fromUnits,
+                          const HPWH::TIME_UNITS toUnits) const
+    {
+        return convertTime[{fromUnits, toUnits}](time);
     }
 
     /// specifies the type of heat source
@@ -1034,9 +1048,9 @@ class HPWH
     bool hasExternalHeatSource() const;
 
     /// return the constant flow rate for an external multipass heat source
-    double getExternalMPFlowRate(R_UNITS units = R_UNITS::GALperMIN) const;
+    double getExternalMPFlowRate(const R_UNITS units = R_UNITS::GALperMIN) const;
 
-    double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
+    double getCompressorMinRuntime(const TIME_UNITS units = TIME_UNITS::MIN) const;
 
     int getSizingFractions(double& aquafract, double& percentUseable) const;
     /**< returns the fraction of total tank volume from the bottom up where the aquastat is
@@ -1714,8 +1728,12 @@ inline double LPS_TO_GPM(const double lps) { return (lps * sec_per_min / L_per_g
 inline double FT_TO_M(const double feet) { return (feet / ft_per_m); }
 inline double FT2_TO_M2(const double feet2) { return (feet2 / ft2_per_m2); }
 
-inline double MIN_TO_SEC(const double minute) { return minute * sec_per_min; }
-inline double MIN_TO_HR(const double minute) { return minute / min_per_hr; }
+inline double H_TO_MIN(const double t_h) { return min_per_hr * t_h; }
+inline double H_TO_S(const double t_h) { return sec_per_hr * t_h; }
+inline double MIN_TO_S(const double t_min) { return sec_per_min * t_min; }
+inline double MIN_TO_H(const double t_min) { return t_min / min_per_hr; }
+inline double S_TO_H(const double t_s) { return t_s / sec_per_hr; }
+inline double S_TO_MIN(const double t_s) { return t_s / sec_per_min; }
 
 inline double ident(const double x) { return x; }
 

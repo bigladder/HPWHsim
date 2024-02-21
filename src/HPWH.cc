@@ -106,6 +106,17 @@ HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::GALperMIN), &LPS_TO_GPM},
     {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::LperS), &GPM_TO_LPS}};
 
+HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
+    {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::H), &ident},
+    {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::MIN), &ident},
+    {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::S), &ident},
+    {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::MIN), &H_TO_MIN},
+    {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::S), &H_TO_S},
+    {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::H), &MIN_TO_H},
+    {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::S), &MIN_TO_S},
+    {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::H), &S_TO_H},
+    {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -2689,7 +2700,7 @@ double HPWH::getExternalVolumeHeated(V_UNITS units /*L*/) const
     return convert(externalVolumeHeated_L, V_UNITS::L, units);
 }
 
-double HPWH::getExternalMPFlowRate(R_UNITS units /*GALperMIN*/) const
+double HPWH::getExternalMPFlowRate(const R_UNITS units /*GALperMIN*/) const
 {
     if (!isCompressoExternalMultipass())
     {
@@ -2703,32 +2714,12 @@ double HPWH::getExternalMPFlowRate(R_UNITS units /*GALperMIN*/) const
     return convert(heatSources[compressorIndex].mpFlowRate_LPS, R_UNITS::LperS, units);
 }
 
-double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const
+double HPWH::getCompressorMinRuntime(const TIME_UNITS units /*MIN*/) const
 {
     if (hasACompressor())
     {
-        double min_minutes = 10.;
-
-        if (units == UNITS_MIN)
-        {
-            return min_minutes;
-        }
-        else if (units == UNITS_SEC)
-        {
-            return MIN_TO_SEC(min_minutes);
-        }
-        else if (units == UNITS_HR)
-        {
-            return MIN_TO_HR(min_minutes);
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for getCompressorMinRunTime.  \n");
-            }
-            return (double)HPWH_ABORT;
-        }
+        const double time_min = 10.;
+        return convert(time_min, TIME_UNITS::MIN, units);
     }
     else
     {

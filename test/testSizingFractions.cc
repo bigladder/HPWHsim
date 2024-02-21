@@ -168,9 +168,9 @@ void testGetCompressorMinRuntime()
     double mins = hpwh.getCompressorMinRuntime();
     ASSERTTRUE(mins == expected_mins);
 
-    double secs = hpwh.getCompressorMinRuntime(HPWH::UNITS_SEC);
+    double secs = hpwh.getCompressorMinRuntime(HPWH::TIME_UNITS::S);
     ASSERTTRUE(secs == expected_secs);
 
-    double hrs = hpwh.getCompressorMinRuntime(HPWH::UNITS_HR);
+    double hrs = hpwh.getCompressorMinRuntime(HPWH::TIME_UNITS::H);
     ASSERTTRUE(hrs == expected_hrs);
 }
