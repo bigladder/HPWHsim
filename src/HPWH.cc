@@ -117,6 +117,12 @@ HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::H), &S_TO_H},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
 
+HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::convertUA = {
+    {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::KJperHC), &ident},
+    {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::BTUperHF), &ident},
+    {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::BTUperHF), &KJperHC_TO_BTUperHF},
+    {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::KJperHC), &BTUperHF_TO_KJperHC}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -1306,7 +1312,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool force
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
     setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
-    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
+    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UA_UNITS::KJperHC);
     return 0;
 }
 
@@ -1428,90 +1434,27 @@ int HPWH::setDoConduction(bool doCondu)
     return 0;
 }
 
-int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
+int HPWH::setUA(const double UA, const UA_UNITS units /*KJperHC*/)
 {
-    if (units == UNITS_kJperHrC)
-    {
-        tankUA_kJperHrC = UA;
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        tankUA_kJperHrC = UAf_TO_UAc(UA);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setUA.  \n");
-        }
-        return HPWH_ABORT;
-    }
+    tankUA_kJperHrC = convert(UA, units, UA_UNITS::KJperHC);
     return 0;
 }
 
-int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
+int HPWH::getUA(double& UA, const UA_UNITS units /*KJperHC*/) const
 {
-    UA = tankUA_kJperHrC;
-    if (units == UNITS_kJperHrC)
-    {
-        // UA is already in correct units
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UA / UAf_TO_UAc(1.);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getUA.  \n");
-        }
-        UA = -1.;
-        return HPWH_ABORT;
-    }
+    UA = convert(tankUA_kJperHrC, UA_UNITS::KJperHC, units);
     return 0;
 }
 
-int HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
+int HPWH::setFittingsUA(const double UA, const UA_UNITS units /*KJperHC*/)
 {
-    if (units == UNITS_kJperHrC)
-    {
-        fittingsUA_kJperHrC = UA;
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        fittingsUA_kJperHrC = UAf_TO_UAc(UA);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setFittingsUA.  \n");
-        }
-        return HPWH_ABORT;
-    }
+    fittingsUA_kJperHrC = convert(UA, units, UA_UNITS::KJperHC);
     return 0;
 }
-int HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
+
+int HPWH::getFittingsUA(double& UA, const UA_UNITS units /*KJperHC*/) const
 {
-    UA = fittingsUA_kJperHrC;
-    if (units == UNITS_kJperHrC)
-    {
-        // UA is already in correct units
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UA / UAf_TO_UAc(1.);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getUA.  \n");
-        }
-        UA = -1.;
-        return HPWH_ABORT;
-    }
+    UA = convert(fittingsUA_kJperHrC, UA_UNITS::KJperHC, units);
     return 0;
 }
 
@@ -1519,6 +1462,7 @@ int HPWH::setInletByFraction(double fractionalHeight)
 {
     return setNodeNumFromFractionalHeight(fractionalHeight, inletIndex);
 }
+
 int HPWH::setInlet2ByFraction(double fractionalHeight)
 {
     return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Index);
