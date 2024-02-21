@@ -1902,7 +1902,8 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic>
 HPWH::wholeTank(double decisionPoint, const T_UNITS units /*C */, const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(0., 1.);
-    double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
+    double decisionPoint_C = absolute ? convert(decisionPoint, units, T_UNITS::C)
+                                      : convertDelta(decisionPoint, units, T_UNITS::C);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "whole tank", nodeWeights, decisionPoint_C, this, absolute);
 }
@@ -1926,7 +1927,8 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPo
                                                                const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
-    double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
+    double decisionPoint_C = absolute ? convert(decisionPoint, units, T_UNITS::C)
+                                      : convertDelta(decisionPoint, units, T_UNITS::C);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
         "second third", nodeWeights, decisionPoint_C, this, absolute);
 }

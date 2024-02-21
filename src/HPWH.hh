@@ -1695,13 +1695,6 @@ inline bool aboutEqual(T a, T b)
     return fabs(a - b) < HPWH::TOL_MINVALUE;
 }
 
-/// Generate an absolute or relative temperature in degC.
-inline double convertTempToC(const double T_F_or_C, const HPWH::T_UNITS units, const bool absolute)
-{
-    return (units == HPWH::T_UNITS::C) ? T_F_or_C
-                                       : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
-}
-
 // resampling utility functions
 double
 getResampledValue(const std::vector<double>& values, double beginFraction, double endFraction);
