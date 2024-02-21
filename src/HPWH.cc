@@ -88,6 +88,12 @@ HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), &BTU_TO_KJ},
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), &BTU_TO_KWH}};
 
+HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), &ident},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), &ident},
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), &L_TO_GAL},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -336,16 +342,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
     {
         thermalDist.assign(thermalDist.size(), 1. / static_cast<double>(thermalDist.size()));
     }
-}
-
-/* volume-unit conversion */
-double HPWH::convV(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
-{
-    if (fromUnits == HPWH::V_UNITS::L)
-    {
-        return (toUnits == HPWH::V_UNITS::L) ? V : L_TO_GAL(V);
-    }
-    return (toUnits == HPWH::V_UNITS::GAL) ? V : GAL_TO_L(V);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -1283,7 +1279,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool force
 {
     // Uses the UA before the function is called and adjusts the A part of the UA to match
     // the input volume given getTankSurfaceArea().
-    double HPWH_size_L = convV(HPWH_size, units, V_UNITS::L);
+    double HPWH_size_L = convert(HPWH_size, units, V_UNITS::L);
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
     setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
@@ -1392,7 +1388,7 @@ int HPWH::setTankSize(const double volume, V_UNITS units /*L*/, bool forceChange
         simHasFailed = true;
         return HPWH_ABORT;
     }
-    tankVolume_L = convV(volume, units, V_UNITS::L);
+    tankVolume_L = convert(volume, units, V_UNITS::L);
     calcSizeConstants();
     return 0;
 }
@@ -2314,7 +2310,7 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 
 double HPWH::getTankSize(V_UNITS units /*L*/) const
 {
-    return convV(tankVolume_L, V_UNITS::L, units);
+    return convert(tankVolume_L, V_UNITS::L, units);
 }
 
 int HPWH::setSetpointT_C(const double setpointT_C_in)
@@ -2692,7 +2688,7 @@ bool HPWH::hasExternalHeatSource() const
 
 double HPWH::getExternalVolumeHeated(V_UNITS units /*L*/) const
 {
-    return convV(externalVolumeHeated_L, V_UNITS::L, units);
+    return convert(externalVolumeHeated_L, V_UNITS::L, units);
 }
 
 double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const

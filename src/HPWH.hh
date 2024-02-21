@@ -335,14 +335,20 @@ class HPWH
         return convertE[{fromUnits, toUnits}](E);
     }
 
+    /* volume units and conversion */
     enum class V_UNITS
     {
         L,  // liters
         GAL // gallons
     };
 
-    /// volume-unit conversion
-    double convV(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const;
+    static ConversionMap<V_UNITS> convertV;
+
+    inline double
+    convert(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
+    {
+        return convertV[{fromUnits, toUnits}](V);
+    }
 
     /// specifies the type of heat source
     enum HEATSOURCE_TYPE
