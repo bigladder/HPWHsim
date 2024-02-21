@@ -282,11 +282,42 @@ class HPWH
         UNITS_LPS        /**< liters per second  */
     };
 
+    struct PairHash
+    {
+        template <class T>
+        std::size_t operator()(const std::pair<T, T>& p) const
+        {
+            auto h1 = std::hash<T> {}(p.first);
+            auto h2 = std::hash<T> {}(p.second);
+            return h1 ^ h2;
+        }
+    };
+
+    template <typename T>
+    using ConversionMap =
+        std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
+
+    /* temperature-unit conversion */
     enum class T_UNITS
     {
         C, // celsius
         F  // fahrenheit
     };
+
+    static ConversionMap<T_UNITS> convertT;
+
+    inline double
+    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+    {
+        return convertT[{fromUnits, toUnits}](T);
+    }
+
+    static ConversionMap<T_UNITS> convertDeltaT;
+    inline double
+    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+    {
+        return convertT[{fromUnits, toUnits}](T);
+    }
 
     enum class E_UNITS
     {
@@ -300,30 +331,6 @@ class HPWH
         L,  // liters
         GAL // gallons
     };
-
-    typedef double (*ConversionFuncPtr)(double);
-    typedef std::pair<T_UNITS, T_UNITS> T_Pair;
-    struct PairHash
-    {
-        template <class T>
-        std::size_t operator()(const std::pair<T, T>& p) const
-        {
-            auto h1 = std::hash<T> {}(p.first);
-            auto h2 = std::hash<T> {}(p.second);
-
-            // Mainly for demonstration purposes, i.e. works but is overly simple
-            // In the real world, use sth. like boost.hash_combine
-            return h1 ^ h2;
-        }
-    };
-    static std::unordered_map<T_Pair, ConversionFuncPtr, PairHash> convertT;
-
-    /// temperature-unit conversion
-    double
-    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
-
-    double
-    convDelT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
 
     /// energy-unit conversion
     double convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const;

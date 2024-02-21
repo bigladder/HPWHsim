@@ -65,11 +65,17 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-std::unordered_map<HPWH::T_Pair, HPWH::ConversionFuncPtr, HPWH::PairHash> HPWH::convertT = {
+HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertT = {
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &C_TO_F},
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &F_TO_C}};
+
+HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertDeltaT = {
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &dC_TO_dF},
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &dF_TO_dC}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
@@ -319,24 +325,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
     {
         thermalDist.assign(thermalDist.size(), 1. / static_cast<double>(thermalDist.size()));
     }
-}
-
-/* temperature-unit conversion */
-double
-HPWH::convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
-{
-    return convertT[{fromUnits, toUnits}](T);
-}
-
-/* difference-temperature-unit conversion */
-double
-HPWH::convDelT(const double dT, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
-{
-    if (fromUnits == HPWH::T_UNITS::C)
-    {
-        return (toUnits == HPWH::T_UNITS::C) ? dT : dC_TO_dF(dT);
-    }
-    return (toUnits == HPWH::T_UNITS::F) ? dT : dF_TO_dC(dT);
 }
 
 /* energy-unit conversion */
