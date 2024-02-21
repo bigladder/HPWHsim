@@ -329,7 +329,7 @@ void testSPGetCompressorCapacity()
     capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                               C_TO_F(waterTempC),
                                               C_TO_F(setpointC),
-                                              HPWH::UNITS_BTUperHr,
+                                              HPWH::P_UNITS::BTUperH,
                                               HPWH::T_UNITS::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
     ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output),
@@ -360,7 +360,7 @@ void testMPGetCompressorCapacity()
     capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                               C_TO_F(waterTempC),
                                               C_TO_F(setpointC),
-                                              HPWH::UNITS_BTUperHr,
+                                              HPWH::P_UNITS::BTUperH,
                                               HPWH::T_UNITS::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
     ASSERTTRUE(relcmpd(KWH_TO_BTU(point0.output),
@@ -445,12 +445,12 @@ void testSetCompressorOutputCapacity()
                                      C_TO_F(airTempC),
                                      C_TO_F(waterTempC),
                                      C_TO_F(setpointC),
-                                     HPWH::UNITS_BTUperHr,
+                                     HPWH::P_UNITS::BTUperH,
                                      HPWH::T_UNITS::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                                              C_TO_F(waterTempC),
                                                              C_TO_F(setpointC),
-                                                             HPWH::UNITS_BTUperHr,
+                                                             HPWH::P_UNITS::BTUperH,
                                                              HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(num, newCapacity_BTUperHr));
 }
@@ -471,9 +471,9 @@ void testChipsCaseWithIPUnits()
 
     // Scale output to 20000 btu/hr but let's use do the calc in other units
     hpwh.setCompressorOutputCapacity(
-        wh_heatingCap, airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
+        wh_heatingCap, airTempF, waterTempF, setpointF, HPWH::P_UNITS::BTUperH, HPWH::T_UNITS::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::UNITS_BTUperHr, HPWH::T_UNITS::F);
+        airTempF, waterTempF, setpointF, HPWH::P_UNITS::BTUperH, HPWH::T_UNITS::F);
     ASSERTTRUE(relcmpd(wh_heatingCap, newCapacity_BTUperHr));
 }
 
@@ -501,35 +501,35 @@ void testResistanceScales()
     getHPWHObject(hpwh, input);
 
     double returnVal;
-    returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, elementPower));
-    returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, elementPower));
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, 2. * elementPower));
 
     // check units convert
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr);
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::BTUperH);
     ASSERTTRUE(relcmpd(returnVal, 2. * elementPower * 3412.14));
 
     // Check setting bottom works
     double factor = 2.0;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-    returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, elementPower));
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, factor * elementPower + elementPower));
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-    returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, factor * elementPower));
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW);
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW);
     ASSERTTRUE(relcmpd(returnVal, 2. * factor * elementPower));
 }
 

@@ -42,11 +42,11 @@ void testGetSetResistanceErrors()
     hpwh.HPWHinit_resTank(100., 0.95, 0., lowerElementPower_W);
 
     double returnVal;
-    returnVal = hpwh.getResistanceCapacity(0, HPWH::UNITS_KW); // lower
+    returnVal = hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW); // lower
     ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW); // both,
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW); // both,
     ASSERTTRUE(relcmpd(returnVal, lowerElementPower));
-    returnVal = hpwh.getResistanceCapacity(1, HPWH::UNITS_KW); // higher doesn't exist
+    returnVal = hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW); // higher doesn't exist
     ASSERTTRUE(returnVal == HPWH::HPWH_ABORT);
 }
 
@@ -124,27 +124,27 @@ void testCommercialTankErrorsWithBottomElement()
     // Check only lowest setting works
     double factor = 3.;
     // set both, but really only one
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::P_UNITS::KW) ==
                0); // Check sets
-    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
                        factor * elementPower_kW)); // Check gets just bottom with both
-    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW),
+    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
                        factor * elementPower_kW)); // Check gets bottom with bottom
-    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT); // only have one element
 
     // set lowest
     factor = 4.;
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::P_UNITS::KW) ==
                0); // Set just bottom
-    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
                        factor * elementPower_kW)); // Check gets just bottom with both
-    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW),
+    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
                        factor * elementPower_kW)); // Check gets bottom with bottom
-    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT); // only have one element
 
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 1, HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT); // set top returns error
 }
 void testCommercialTankErrorsWithTopElement()
@@ -157,28 +157,28 @@ void testCommercialTankErrorsWithTopElement()
     // Check only bottom setting works
     double factor = 3.;
     // set both, but only bottom really.
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::P_UNITS::KW) ==
                0); // Check sets
     ASSERTTRUE(
-        relcmpd(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+        relcmpd(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
                 factor * elementPower_kW)); // Check gets just bottom which is now top with both
-    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW),
+    ASSERTTRUE(relcmpd(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
                        factor * elementPower_kW)); // Check the lower and only element
-    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT); //  error on non existant element
 
     // set top
     factor = 4.;
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::P_UNITS::KW) ==
                0); // only one element to set
     ASSERTTRUE(
-        relcmpd(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW),
+        relcmpd(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
                 factor * elementPower_kW)); // Check gets just bottom which is now top with both
-    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT); // error on non existant bottom
 
     // set bottom returns error
-    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::UNITS_KW) ==
+    ASSERTTRUE(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::HPWH::P_UNITS::KW) ==
                HPWH::HPWH_ABORT);
 }
 

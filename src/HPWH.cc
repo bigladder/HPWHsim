@@ -88,6 +88,12 @@ HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), &BTU_TO_KJ},
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), &BTU_TO_KWH}};
 
+HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
+    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::KW), &ident},
+    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::BTUperH), &ident},
+    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::BTUperH), &KW_TO_BTUperH},
+    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::KW), &BTUperH_TO_KW}};
+
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), &ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), &ident},
@@ -2104,7 +2110,7 @@ int HPWH::getNumResistanceElements() const
 double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
                                    double inletTemp /*=14.444*/,
                                    double outTemp /*=57.222*/,
-                                   UNITS pwrUnit /*=UNITS_KW*/,
+                                   P_UNITS pwrUnit /*KW*/,
                                    T_UNITS tempUnit /*C*/)
 {
     // calculate capacity btu/hr, input btu/hr, and cop
@@ -2159,21 +2165,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
             airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
-    double outputCapacity = capTemp_BTUperHr;
-    if (pwrUnit == UNITS_KW)
-    {
-        outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
-    }
-    else if (pwrUnit != UNITS_BTUperHr)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for capacity in getCompressorCapacity.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-
-    return outputCapacity;
+    return convert(capTemp_BTUperHr, P_UNITS::BTUperH, pwrUnit);
 }
 
 bool HPWH::isHeatSourceIndexValid(const int n) const
@@ -2898,7 +2890,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
                                       double airTemp /*=19.722*/,
                                       double inletTemp /*=14.444*/,
                                       double outTemp /*=57.222*/,
-                                      UNITS pwrUnit /*=UNITS_KW*/,
+                                      P_UNITS pwrUnit /*KW*/,
                                       T_UNITS tempUnit /*C*/)
 {
     double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
@@ -2911,7 +2903,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
     return setScaleHPWHCapacityCOP(scale, 1.); // Scale the compressor capacity
 }
 
-int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
+int HPWH::setResistanceCapacity(double power, int which /*=-1*/, P_UNITS pwrUnit /*KW*/)
 {
     // Input checks
     if (!isHPWHScalable())
@@ -2946,24 +2938,9 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /
         }
         return HPWH_ABORT;
     }
+
     // Unit conversion
-    double watts;
-    if (pwrUnit == UNITS_KW)
-    {
-        watts = power * 1000; // kW to W
-    }
-    else if (pwrUnit == UNITS_BTUperHr)
-    {
-        watts = BTU_TO_KWH(power) * 1000; // BTU to kW then kW to W
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for capacity in setResistanceCapacity.  \n");
-        }
-        return HPWH_ABORT;
-    }
+    double watts = 1000. * convert(power, pwrUnit, P_UNITS::KW);
 
     // Whew so many checks...
     if (which == -1)
@@ -2995,7 +2972,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /
     return 0;
 }
 
-double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
+double HPWH::getResistanceCapacity(int which /*=-1*/, P_UNITS pwrUnit /*KW*/)
 {
     // Input checks
     if (getNumResistanceElements() == 0)
@@ -3045,25 +3022,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         }
     }
 
-    // Unit conversion
-    if (pwrUnit == UNITS_KW)
-    {
-        returnPower /= 1000.; // W to KW
-    }
-    else if (pwrUnit == UNITS_BTUperHr)
-    {
-        returnPower = KWH_TO_BTU(returnPower / 1000.); // W to BTU/hr
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for capacity in getResistanceCapacity.  \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    return returnPower;
+    // Unit conversion to kW
+    return convert(returnPower / 1000., P_UNITS::KW, pwrUnit);
 }
 
 int HPWH::getResistancePosition(int elementIndex) const

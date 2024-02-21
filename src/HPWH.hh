@@ -264,11 +264,6 @@ class HPWH
 
     enum UNITS
     {
-        UNITS_KWH,       /**< kilowatt hours  */
-        UNITS_BTU,       /**< british thermal units  */
-        UNITS_KJ,        /**< kilojoules  */
-        UNITS_KW,        /**< kilowatt  */
-        UNITS_BTUperHr,  /**< british thermal units per Hour  */
         UNITS_kJperHrC,  /**< UA, metric units  */
         UNITS_BTUperHrF, /**< UA, imperial units  */
         UNITS_FT,        /**< feet  */
@@ -333,6 +328,21 @@ class HPWH
     convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
     {
         return convertE[{fromUnits, toUnits}](E);
+    }
+
+    /* power units and conversion */
+    enum class P_UNITS
+    {
+        KW,     // kilowatts
+        BTUperH // BTU per hour
+    };
+
+    static ConversionMap<P_UNITS> convertP;
+
+    inline double
+    convert(const double P, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits) const
+    {
+        return convertP[{fromUnits, toUnits}](P);
     }
 
     /* volume units and conversion */
@@ -912,7 +922,7 @@ class HPWH
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
                                  double outTemp = 57.222,
-                                 UNITS pwrUnit = UNITS_KW,
+                                 P_UNITS pwrUnit = P_UNITS::KW,
                                  T_UNITS tempUnit = T_UNITS::C);
     /**< Returns the heating output capacity of the compressor for the current HPWH model.
     Note only supports HPWHs with one compressor, if multiple will return the last index
@@ -923,7 +933,7 @@ class HPWH
                                     double airTemp = 19.722,
                                     double inletTemp = 14.444,
                                     double outTemp = 57.222,
-                                    UNITS pwrUnit = UNITS_KW,
+                                    P_UNITS pwrUnit = P_UNITS::KW,
                                     T_UNITS tempUnit = T_UNITS::C);
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
@@ -936,7 +946,7 @@ class HPWH
     int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
     /**< Scales the heatpump water heater input capacity and COP*/
 
-    int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
+    int setResistanceCapacity(double power, int which = -1, P_UNITS pwrUNIT = P_UNITS::KW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
     changes is given by "which"
     - If which (-1) sets all the resisistance elements in the tank.
@@ -949,7 +959,7 @@ class HPWH
     defined as the by the ordered height of the resistance elements it cannot refer to a compressor.
     */
 
-    double getResistanceCapacity(int which = -1, UNITS pwrUNIT = UNITS_KW);
+    double getResistanceCapacity(int which = -1, P_UNITS pwrUNIT = P_UNITS::KW);
     /**< Returns the resistance elements capacity. Which heat source is chosen is changes is given
     by "which"
     - If which (-1) gets all the resisistance elements in the tank.
