@@ -65,6 +65,12 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+std::unordered_map<HPWH::T_Pair, HPWH::ConversionFunc> HPWH::convertT = {
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), C_TO_F},
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), F_TO_C}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -316,13 +322,10 @@ void calcThermalDist(std::vector<double>& thermalDist,
 }
 
 /* temperature-unit conversion */
-double HPWH::convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+double
+HPWH::convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
 {
-    if (fromUnits == HPWH::T_UNITS::C)
-    {
-        return (toUnits == HPWH::T_UNITS::C) ? T : C_TO_F(T);
-    }
-    return (toUnits == HPWH::T_UNITS::F) ? T : F_TO_C(T);
+    return convertT[{fromUnits, toUnits}](T);
 }
 
 /* difference-temperature-unit conversion */
@@ -1015,7 +1018,6 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
                          double heatSourceAmbientT_C,
                          double minutesToRun)
 {
-
     double tempSetpoint_C = -273.15;
 
     // Check the air temprature and setpoint against maxOut_at_LowT
@@ -1155,7 +1157,6 @@ int HPWH::WriteCSVHeading(std::ofstream& outFILE,
                           int nTCouples,
                           int options) const
 {
-
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     outFILE << preamble;
@@ -1182,7 +1183,6 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
                       int nTCouples,
                       int options) const
 {
-
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     outFILE << preamble;
@@ -1301,7 +1301,6 @@ int HPWH::setDoTempDepression(bool doTempDepress)
 
 int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool forceChange /*=false*/)
 {
-
     // Uses the UA before the function is called and adjusts the A part of the UA to match
     // the input volume given getTankSurfaceArea().
     double HPWH_size_L = convV(HPWH_size, units, V_UNITS::L);
@@ -1669,7 +1668,7 @@ int HPWH::getInletHeight(int whichInlet) const
 
 int HPWH::setMaxDepressionT(double maxDepressionT, T_UNITS units /*C*/)
 {
-    maxDepressionT_C = convT(maxDepressionT, units, T_UNITS::C);
+    maxDepressionT_C = convert(maxDepressionT, units, T_UNITS::C);
     return 0;
 }
 
@@ -1710,7 +1709,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         return HPWH_ABORT;
     }
 
-    double highTemp_C = convT(highTemp, unit, T_UNITS::C);
+    double highTemp_C = convert(highTemp, unit, T_UNITS::C);
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
@@ -1818,8 +1817,8 @@ int HPWH::switchToSoCControls(double targetSoC,
         return HPWH_ABORT;
     }
 
-    double tempMinUseful_C = convT(tempMinUseful, tempUnit, T_UNITS::C);
-    double mainsT_C = convT(mainsT, tempUnit, T_UNITS::C);
+    double tempMinUseful_C = convert(tempMinUseful, tempUnit, T_UNITS::C);
+    double mainsT_C = convert(mainsT, tempUnit, T_UNITS::C);
 
     if (mainsT_C >= tempMinUseful_C)
     {
@@ -2143,9 +2142,9 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         return double(HPWH_ABORT);
     }
 
-    airTemp_C = convT(airTemp, tempUnit, T_UNITS::C);
-    inletTemp_C = convT(inletTemp, tempUnit, T_UNITS::C);
-    outTemp_C = convT(outTemp, tempUnit, T_UNITS::C);
+    airTemp_C = convert(airTemp, tempUnit, T_UNITS::C);
+    inletTemp_C = convert(inletTemp, tempUnit, T_UNITS::C);
+    outTemp_C = convert(outTemp, tempUnit, T_UNITS::C);
 
     if (airTemp_C < heatSources[compressorIndex].minT_C ||
         airTemp_C > heatSources[compressorIndex].maxT_C)
@@ -2433,7 +2432,6 @@ double HPWH::getMinOperatingT_C() const
 
 double HPWH::getMaxCompressorSetpointT_C() const
 {
-
     if (!hasACompressor())
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -2482,22 +2480,22 @@ void HPWH::printTankTs_C()
 
 double HPWH::getOutletT(const T_UNITS units /*C*/) const
 {
-    return convT(getOutletT_C(), T_UNITS::C, units);
+    return convert(getOutletT_C(), T_UNITS::C, units);
 }
 
 double HPWH::getCondenserInletT(const T_UNITS units /*C*/) const
 {
-    return convT(getCondenserInletT_C(), T_UNITS::C, units);
+    return convert(getCondenserInletT_C(), T_UNITS::C, units);
 }
 
 double HPWH::getCondenserOutletT(const T_UNITS units /*C*/) const
 {
-    return convT(getCondenserOutletT_C(), T_UNITS::C, units);
+    return convert(getCondenserOutletT_C(), T_UNITS::C, units);
 }
 
 double HPWH::getSetpointT(const T_UNITS units /*C*/) const
 {
-    return convT(getSetpointT_C(), T_UNITS::C, units);
+    return convert(getSetpointT_C(), T_UNITS::C, units);
 }
 
 double HPWH::getMaxCompressorSetpointT(const T_UNITS units /*C*/) const
@@ -2510,7 +2508,7 @@ double HPWH::getMaxCompressorSetpointT(const T_UNITS units /*C*/) const
         }
         return double(HPWH_ABORT);
     }
-    return convT(heatSources[compressorIndex].maxSetpointT_C, T_UNITS::C, units);
+    return convert(heatSources[compressorIndex].maxSetpointT_C, T_UNITS::C, units);
 }
 
 double HPWH::getTankNodeT(const int nodeNum, const T_UNITS units /*C*/) const
@@ -2525,7 +2523,7 @@ double HPWH::getTankNodeT(const int nodeNum, const T_UNITS units /*C*/) const
         }
         return double(HPWH_ABORT);
     }
-    return convT(getTankNodeT_C(nodeNum), T_UNITS::C, units);
+    return convert(getTankNodeT_C(nodeNum), T_UNITS::C, units);
 }
 
 double
@@ -2544,12 +2542,12 @@ HPWH::getNthThermocoupleT(const int iTCouple, const int nTCouple, const T_UNITS 
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
 
-    return convT(simTcoupleTemp_C, T_UNITS::C, units);
+    return convert(simTcoupleTemp_C, T_UNITS::C, units);
 }
 
 double HPWH::getMinOperatingT(const T_UNITS units /*C*/) const
 {
-    return hasCompressor() ? convT(heatSources[compressorIndex].minT_C, T_UNITS::C, units)
+    return hasCompressor() ? convert(heatSources[compressorIndex].minT_C, T_UNITS::C, units)
                            : double(HPWH_ABORT);
 }
 
@@ -2585,7 +2583,7 @@ int HPWH::setTankTs(std::vector<double> setTankTs, const T_UNITS units /*C*/)
 
 int HPWH::setSetpointT(const double setpointT, const T_UNITS units /*C*/)
 {
-    return setSetpointT_C(convT(setpointT, units, T_UNITS::C));
+    return setSetpointT_C(convert(setpointT, units, T_UNITS::C));
 }
 
 bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
@@ -2633,10 +2631,10 @@ bool HPWH::canSetSetpointT(const double newSetpointT,
                            std::string& why,
                            T_UNITS units /*C*/) const
 {
-    double newSetpointT_C = convT(newSetpointT, units, T_UNITS::C);
+    double newSetpointT_C = convert(newSetpointT, units, T_UNITS::C);
     double maxSetpointT_C = -273.15;
     bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
-    maxSetpointT = convT(maxSetpointT_C, T_UNITS::C, units);
+    maxSetpointT = convert(maxSetpointT_C, T_UNITS::C, units);
     return result;
 }
 
@@ -2745,7 +2743,6 @@ double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
 
 double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const
 {
-
     if (hasACompressor())
     {
         double min_minutes = 10.;
@@ -2925,7 +2922,6 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
                                       UNITS pwrUnit /*=UNITS_KW*/,
                                       T_UNITS tempUnit /*C*/)
 {
-
     double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
     if (oldCapacity == double(HPWH_ABORT))
     {
@@ -2938,7 +2934,6 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
 
 int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
 {
-
     // Input checks
     if (!isHPWHScalable())
     {
@@ -3023,7 +3018,6 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /
 
 double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
 {
-
     // Input checks
     if (getNumResistanceElements() == 0)
     {
@@ -3095,7 +3089,6 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
 
 int HPWH::getResistancePosition(int elementIndex) const
 {
-
     if (elementIndex < 0 || elementIndex > getNumHeatSources() - 1)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -3131,7 +3124,6 @@ void HPWH::updateTankTemps(double drawVolume_L,
                            double inletVol2_L,
                            double inletT2_C)
 {
-
     /////////////////////////////////////////////////////////////////////////////////////////////////
     if (drawVolume_L > 0.)
     {
@@ -3404,7 +3396,6 @@ void HPWH::mixTankInversions()
 //-----------------------------------------------------------------------------
 double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 {
-
     // Do not exceed maxT_C or setpoint
     double maxHeatToT_C = std::min(maxT_C, setpointT_C);
 
@@ -3483,7 +3474,6 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 //-----------------------------------------------------------------------------
 void HPWH::addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum)
 {
-
     if (hpwhVerbosity >= VRB_emetic)
     {
         msg("node %2d   cap_kwh %.4lf \n", nodeNum, KJ_TO_KWH(qAdd_kJ));
@@ -3577,7 +3567,6 @@ void HPWH::modifyHeatDistribution(std::vector<double>& heatDistribution_W)
 //-----------------------------------------------------------------------------
 void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
 {
-
     auto modHeatDistribution_W = extraHeatDist_W;
     modifyHeatDistribution(modHeatDistribution_W);
 
@@ -4106,7 +4095,6 @@ int HPWH::checkInputs()
 
 bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const
 {
-
     if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0)
     {
         return true;
@@ -4165,7 +4153,6 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
 #ifndef HPWH_ABRIDGED
 int HPWH::HPWHinit_file(string configFile)
 {
-
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure

@@ -300,8 +300,15 @@ class HPWH
         GAL // gallons
     };
 
+    typedef double (*ConversionFunc)(double);
+
+    typedef std::pair<T_UNITS, T_UNITS> T_Pair;
+    static std::unordered_map<T_Pair, ConversionFunc> convertT;
+
     /// temperature-unit conversion
-    double convT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
+    double
+    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
+
     double
     convDelT(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const;
 
@@ -1629,31 +1636,33 @@ constexpr double ft_per_m = 3.2808;                     // feet / meter
 constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
 
 // a few extra functions for unit conversion
-inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
-inline double dC_TO_dF(double temperature) { return (FperC * temperature); }
-inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
-inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
-inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
-inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
-inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }
-inline double BTUperH_TO_KW(double btu) { return (btu / BTUperKWH); }
-inline double KW_TO_BTUperH(double kw) { return (kw * BTUperKWH); }
-inline double W_TO_BTUperH(double w) { return (w * BTUperKWH / 1000.); }
-inline double KJ_TO_KWH(double kj) { return (kj / sec_per_hr); }
-inline double BTU_TO_KJ(double btu) { return (btu * sec_per_hr / BTUperKWH); }
-inline double KJ_TO_BTU(double kj) { return (kj / sec_per_hr * BTUperKWH); }
-inline double GAL_TO_L(double gallons) { return (gallons * L_per_gal); }
-inline double L_TO_GAL(double liters) { return (liters / L_per_gal); }
-inline double L_TO_FT3(double liters) { return (liters / 28.31685); }
-inline double UAf_TO_UAc(double UAf) { return (UAf * 1.8 / 0.9478); }
-inline double GPM_TO_LPS(double gpm) { return (gpm * L_per_gal / sec_per_min); }
-inline double LPS_TO_GPM(double lps) { return (lps * sec_per_min / L_per_gal); }
+inline double dF_TO_dC(const double temperature) { return (temperature / FperC); }
+inline double dC_TO_dF(const double temperature) { return (FperC * temperature); }
+inline double F_TO_C(const double temperature) { return ((temperature - offsetF) / FperC); }
+inline double C_TO_F(const double temperature) { return ((FperC * temperature) + offsetF); }
+inline double KWH_TO_BTU(const double kwh) { return (BTUperKWH * kwh); }
+inline double KWH_TO_KJ(const double kwh) { return (kwh * sec_per_hr); }
+inline double BTU_TO_KWH(const double btu) { return (btu / BTUperKWH); }
+inline double BTUperH_TO_KW(const double btu) { return (btu / BTUperKWH); }
+inline double KW_TO_BTUperH(const double kw) { return (kw * BTUperKWH); }
+inline double W_TO_BTUperH(const double w) { return (w * BTUperKWH / 1000.); }
+inline double KJ_TO_KWH(const double kj) { return (kj / sec_per_hr); }
+inline double BTU_TO_KJ(const double btu) { return (btu * sec_per_hr / BTUperKWH); }
+inline double KJ_TO_BTU(const double kj) { return (kj / sec_per_hr * BTUperKWH); }
+inline double GAL_TO_L(const double gallons) { return (gallons * L_per_gal); }
+inline double L_TO_GAL(const double liters) { return (liters / L_per_gal); }
+inline double L_TO_FT3(const double liters) { return (liters / 28.31685); }
+inline double UAf_TO_UAc(const double UAf) { return (UAf * 1.8 / 0.9478); }
+inline double GPM_TO_LPS(const double gpm) { return (gpm * L_per_gal / sec_per_min); }
+inline double LPS_TO_GPM(const double lps) { return (lps * sec_per_min / L_per_gal); }
 
-inline double FT_TO_M(double feet) { return (feet / ft_per_m); }
-inline double FT2_TO_M2(double feet2) { return (feet2 / ft2_per_m2); }
+inline double FT_TO_M(const double feet) { return (feet / ft_per_m); }
+inline double FT2_TO_M2(const double feet2) { return (feet2 / ft2_per_m2); }
 
-inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
-inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
+inline double MIN_TO_SEC(const double minute) { return minute * sec_per_min; }
+inline double MIN_TO_HR(const double minute) { return minute / min_per_hr; }
+
+inline double ident(const double x) { return x; }
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {
