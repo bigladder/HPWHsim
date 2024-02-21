@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib> //for exit
 #include <vector>
+#include <unordered_map>
 
 namespace Btwxt
 {
@@ -300,10 +301,22 @@ class HPWH
         GAL // gallons
     };
 
-    typedef double (*ConversionFunc)(double);
-
+    typedef double (*ConversionFuncPtr)(double);
     typedef std::pair<T_UNITS, T_UNITS> T_Pair;
-    static std::unordered_map<T_Pair, ConversionFunc> convertT;
+    struct PairHash
+    {
+        template <class T>
+        std::size_t operator()(const std::pair<T, T>& p) const
+        {
+            auto h1 = std::hash<T> {}(p.first);
+            auto h2 = std::hash<T> {}(p.second);
+
+            // Mainly for demonstration purposes, i.e. works but is overly simple
+            // In the real world, use sth. like boost.hash_combine
+            return h1 ^ h2;
+        }
+    };
+    static std::unordered_map<T_Pair, ConversionFuncPtr, PairHash> convertT;
 
     /// temperature-unit conversion
     double

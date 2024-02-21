@@ -65,11 +65,11 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-std::unordered_map<HPWH::T_Pair, HPWH::ConversionFunc> HPWH::convertT = {
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), C_TO_F},
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), F_TO_C}};
+std::unordered_map<HPWH::T_Pair, HPWH::ConversionFuncPtr, HPWH::PairHash> HPWH::convertT = {
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &C_TO_F},
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &F_TO_C}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
