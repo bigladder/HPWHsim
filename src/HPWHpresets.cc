@@ -2198,17 +2198,20 @@ int HPWH::initPreset(MODELS presetNum)
 
         // Set up regular grid interpolator.
         Btwxt::GridAxis g0(compressor.perfGrid[0],
-                           "TAir",
                            Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::constant);
+                           Btwxt::ExtrapolationMethod::constant,
+                           {-DBL_MAX, DBL_MAX},
+                           "TAir");
         Btwxt::GridAxis g1(compressor.perfGrid[1],
-                           "TOut",
                            Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::constant);
+                           Btwxt::ExtrapolationMethod::constant,
+                           {-DBL_MAX, DBL_MAX},
+                           "TOut");
         Btwxt::GridAxis g2(compressor.perfGrid[2],
-                           "TIn",
                            Btwxt::InterpolationMethod::linear,
-                           Btwxt::ExtrapolationMethod::linear);
+                           Btwxt::ExtrapolationMethod::linear,
+                           {-DBL_MAX, DBL_MAX},
+                           "Tin");
 
         std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
 
