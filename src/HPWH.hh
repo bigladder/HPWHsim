@@ -297,7 +297,7 @@ class HPWH
     using ConversionMap =
         std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
 
-    /* temperature-unit conversion */
+    /* temperature units and conversion */
     enum class T_UNITS
     {
         C, // celsius
@@ -319,6 +319,7 @@ class HPWH
         return convertT[{fromUnits, toUnits}](T);
     }
 
+    /* energy units and conversion */
     enum class E_UNITS
     {
         KJ,  // kilojoules
@@ -326,14 +327,19 @@ class HPWH
         BTU  // british thermal units
     };
 
+    static ConversionMap<E_UNITS> convertE;
+
+    inline double
+    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
+    {
+        return convertE[{fromUnits, toUnits}](E);
+    }
+
     enum class V_UNITS
     {
         L,  // liters
         GAL // gallons
     };
-
-    /// energy-unit conversion
-    double convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const;
 
     /// volume-unit conversion
     double convV(const double V, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const;

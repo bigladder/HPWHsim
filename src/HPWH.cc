@@ -77,6 +77,17 @@ HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertDeltaT = {
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &dC_TO_dF},
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &dF_TO_dC}};
 
+HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KJ), &ident},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KWH), &ident},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::BTU), &ident},
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KWH), &KJ_TO_KWH},
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::BTU), &KJ_TO_BTU},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KJ), &KWH_TO_KJ},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::BTU), &KWH_TO_BTU},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), &BTU_TO_KJ},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), &BTU_TO_KWH}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -325,25 +336,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
     {
         thermalDist.assign(thermalDist.size(), 1. / static_cast<double>(thermalDist.size()));
     }
-}
-
-/* energy-unit conversion */
-double HPWH::convE(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
-{
-    if (fromUnits == HPWH::E_UNITS::KJ)
-    {
-        return (toUnits == HPWH::E_UNITS::KJ)
-                   ? E
-                   : ((toUnits == HPWH::E_UNITS::KWH) ? KJ_TO_KWH(E) : KJ_TO_BTU(E));
-    }
-    else if (fromUnits == HPWH::E_UNITS::KWH)
-    {
-        return (toUnits == HPWH::E_UNITS::KJ)
-                   ? KWH_TO_KJ(E)
-                   : ((toUnits == HPWH::E_UNITS::KWH) ? E : KWH_TO_BTU(E));
-    }
-    return (toUnits == HPWH::E_UNITS::KJ) ? BTU_TO_KJ(E)
-                                          : ((toUnits == HPWH::E_UNITS::KWH) ? BTU_TO_KWH(E) : E);
 }
 
 /* volume-unit conversion */
@@ -2256,51 +2248,52 @@ double HPWH::getHeatContent_kJ() const
 
 double HPWH::getInputEnergy(const E_UNITS units /*KWH*/) const
 {
-    return convE(getInputEnergy_kJ(), E_UNITS::KJ, units);
+    return convert(getInputEnergy_kJ(), E_UNITS::KJ, units);
 }
 
 double HPWH::getOutputEnergy(const E_UNITS units /*KWH*/) const
 {
-    return convE(getOutputEnergy_kJ(), E_UNITS::KJ, units);
+    return convert(getOutputEnergy_kJ(), E_UNITS::KJ, units);
 }
 
 double HPWH::getTankHeatContent(const E_UNITS units /*KWH*/) const
 {
-    return convE(getTankHeatContent_kJ(), E_UNITS::KJ, units);
+    return convert(getTankHeatContent_kJ(), E_UNITS::KJ, units);
 }
 
 double HPWH::getHeatContent(const E_UNITS units /*KWH*/) const
 {
-    return convE(getHeatContent_kJ(), E_UNITS::KJ, units);
+    return convert(getHeatContent_kJ(), E_UNITS::KJ, units);
 }
 
 double HPWH::getStandbyLosses(E_UNITS units /*KWH*/) const
 {
-    return convE(getStandbyLosses_kJ(), E_UNITS::KJ, units);
+    return convert(getStandbyLosses_kJ(), E_UNITS::KJ, units);
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyInput_kJ, E_UNITS::KJ, units)
+    return (isHeatSourceIndexValid(N)) ? convert(heatSources[N].energyInput_kJ, E_UNITS::KJ, units)
                                        : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyOutput_kJ, E_UNITS::KJ, units)
+    return (isHeatSourceIndexValid(N)) ? convert(heatSources[N].energyOutput_kJ, E_UNITS::KJ, units)
                                        : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, E_UNITS units /*KWH*/) const
 {
-    return (isHeatSourceIndexValid(N)) ? convE(heatSources[N].energyRetained_kJ, E_UNITS::KJ, units)
-                                       : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N))
+               ? convert(heatSources[N].energyRetained_kJ, E_UNITS::KJ, units)
+               : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, E_UNITS units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convE(heatSources[N].energyRemovedFromEnvironment_kJ, E_UNITS::KJ, units)
+               ? convert(heatSources[N].energyRemovedFromEnvironment_kJ, E_UNITS::KJ, units)
                : double(HPWH_ABORT);
 }
 
