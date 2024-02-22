@@ -97,8 +97,17 @@ HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), &ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), &ident},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), &ident},
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), &L_TO_GAL},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L}};
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::FT3), &L_TO_FT3},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::FT3),
+     [](const double v_gal) { return L_TO_FT3(GAL_TO_L(v_gal)); }},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::L),
+     [](const double v_ft3) { return FT3_TO_L(v_ft3); }},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL),
+     [](const double v_ft3) { return L_TO_GAL(FT3_TO_L(v_ft3)); }},
+};
 
 HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
@@ -1356,14 +1365,13 @@ HPWH::getTankRadius(double vol, V_UNITS volUnits /*L*/, UNITS radiusUnits /*=UNI
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
     // is the same is the actual tank.
-    double volft3 = volUnits == V_UNITS::L     ? L_TO_FT3(vol)
-                    : volUnits == V_UNITS::GAL ? L_TO_FT3(GAL_TO_L(vol))
-                                               : -1.;
+
+    double vol_ft3 = convert(vol, volUnits, V_UNITS::FT3);
 
     double value = -1.;
-    if (volft3 >= 0.)
+    if (vol_ft3 >= 0.)
     {
-        value = pow(volft3 / Pi / ASPECTRATIO, 1. / 3.);
+        value = pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.);
         if (radiusUnits == UNITS_M)
             value = FT_TO_M(value);
         else if (radiusUnits != UNITS_FT)

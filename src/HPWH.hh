@@ -293,18 +293,15 @@ class HPWH
         C, // celsius
         F  // fahrenheit
     };
-
     static ConversionMap<T_UNITS> convertT;
-
-    inline double
-    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+    inline static double
+    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
     {
         return convertT[{fromUnits, toUnits}](T);
     }
-
     static ConversionMap<T_UNITS> convertDeltaT;
-    inline double
-    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
+    inline static double
+    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
     {
         return convertT[{fromUnits, toUnits}](T);
     }
@@ -316,11 +313,9 @@ class HPWH
         KWH, // kilowatt hours
         BTU  // british thermal units
     };
-
     static ConversionMap<E_UNITS> convertE;
-
-    inline double
-    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
+    inline static double
+    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits)
     {
         return convertE[{fromUnits, toUnits}](E);
     }
@@ -331,11 +326,9 @@ class HPWH
         KW,     // kilowatts
         BTUperH // BTU per hour
     };
-
     static ConversionMap<P_UNITS> convertP;
-
-    inline double
-    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits) const
+    inline static double
+    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits)
     {
         return convertP[{fromUnits, toUnits}](p);
     }
@@ -343,14 +336,13 @@ class HPWH
     /* volume units and conversion */
     enum class V_UNITS
     {
-        L,  // liters
-        GAL // gallons
+        L,   // liters
+        GAL, // gallons
+        FT3  // cubic feet
     };
-
     static ConversionMap<V_UNITS> convertV;
-
-    inline double
-    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
+    inline static double
+    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits)
     {
         return convertV[{fromUnits, toUnits}](v);
     }
@@ -361,11 +353,9 @@ class HPWH
         LperS,    // liters per second
         GALperMIN // gallons per minute
     };
-
     static ConversionMap<R_UNITS> convertR;
-
-    inline double
-    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits) const
+    inline static double
+    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits)
     {
         return convertR[{fromUnits, toUnits}](r);
     }
@@ -377,12 +367,9 @@ class HPWH
         MIN, // minutes
         S    // seconds
     };
-
     static ConversionMap<TIME_UNITS> convertTime;
-
-    inline double convert(const double time,
-                          const HPWH::TIME_UNITS fromUnits,
-                          const HPWH::TIME_UNITS toUnits) const
+    inline static double
+    convert(const double time, const HPWH::TIME_UNITS fromUnits, const HPWH::TIME_UNITS toUnits)
     {
         return convertTime[{fromUnits, toUnits}](time);
     }
@@ -1699,10 +1686,11 @@ constexpr double FperC = 9. / 5.;   // degF / degC
 constexpr double offsetF = 32.;     // degF offset
 constexpr double sec_per_min = 60.; // seconds / min
 constexpr double min_per_hr = 60.;  // min / hr
-constexpr double sec_per_hr = sec_per_min * min_per_hr; // seconds / hr
-constexpr double L_per_gal = 3.78541;                   // liters / gal
-constexpr double ft_per_m = 3.2808;                     // feet / meter
-constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
+constexpr double sec_per_hr = sec_per_min * min_per_hr;              // seconds / hr
+constexpr double L_per_gal = 3.78541;                                // liters / gal
+constexpr double ft_per_m = 3.2808;                                  // feet / meter
+constexpr double ft2_per_m2 = ft_per_m * ft_per_m;                   // feet / meter
+constexpr double L_per_ft3 = 1000. / ft_per_m / ft_per_m / ft_per_m; // L / ft^3
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(const double temperature) { return (temperature / FperC); }
@@ -1721,6 +1709,7 @@ inline double KJ_TO_BTU(const double kj) { return (kj / sec_per_hr * BTUperKWH);
 inline double GAL_TO_L(const double gallons) { return (gallons * L_per_gal); }
 inline double L_TO_GAL(const double liters) { return (liters / L_per_gal); }
 inline double L_TO_FT3(const double liters) { return (liters / 28.31685); }
+inline double FT3_TO_L(const double liters) { return (28.31685 * liters); }
 inline double UAf_TO_UAc(const double UAf) { return (UAf * 1.8 / 0.9478); }
 inline double GPM_TO_LPS(const double gpm) { return (gpm * L_per_gal / sec_per_min); }
 inline double LPS_TO_GPM(const double lps) { return (lps * sec_per_min / L_per_gal); }
