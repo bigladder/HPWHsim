@@ -759,7 +759,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                          perfMap[i_next].T_F,
                          inputPower_T1_Watts,
                          inputPower_T2_Watts);
-            input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0); // 1000 converts w to kw);
+            input_BTUperHr = W_TO_BTUperH(input_BTUperHr);
         }
         else
         { // perfMap.size() == 1 or we've got an issue.

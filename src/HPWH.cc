@@ -72,42 +72,40 @@ HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertT = {
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &F_TO_C}};
 
 HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertDeltaT = {
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &dC_TO_dF},
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &dF_TO_dC}};
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), ident},
+    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), dC_TO_dF},
+    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), dF_TO_dC}};
 
 HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
-    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KJ), &ident},
-    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KWH), &ident},
-    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::BTU), &ident},
-    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KWH), &KJ_TO_KWH},
-    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::BTU), &KJ_TO_BTU},
-    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KJ), &KWH_TO_KJ},
-    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::BTU), &KWH_TO_BTU},
-    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), &BTU_TO_KJ},
-    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), &BTU_TO_KWH}};
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KJ), ident},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KWH), ident},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::BTU), ident},
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KWH), KJ_TO_KWH},
+    {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::BTU), KJ_TO_BTU},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KJ), KWH_TO_KJ},
+    {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::BTU), KWH_TO_BTU},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), BTU_TO_KJ},
+    {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), BTU_TO_KWH}};
 
 HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
-    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::KW), &ident},
-    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::BTUperH), &ident},
-    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::BTUperH), &KW_TO_BTUperH},
-    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::KW), &BTUperH_TO_KW}};
+    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::KW), ident},
+    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::BTUperH), ident},
+    {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::BTUperH), KW_TO_BTUperH},
+    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::KW), BTUperH_TO_KW},
+    {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::W), BTUperH_TO_W},
+    {std::make_pair(HPWH::P_UNITS::W, HPWH::P_UNITS::BTUperH), W_TO_BTUperH}};
 
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
-    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), &ident},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), &ident},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), &ident},
-    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), &L_TO_GAL},
-    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::FT3), &L_TO_FT3},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::FT3),
-     [](const double v_gal) { return L_TO_FT3(GAL_TO_L(v_gal)); }},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::L),
-     [](const double v_ft3) { return FT3_TO_L(v_ft3); }},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL),
-     [](const double v_ft3) { return L_TO_GAL(FT3_TO_L(v_ft3)); }},
-};
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), ident},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), ident},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), ident},
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), L_TO_GAL},
+    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::FT3), L_TO_FT3},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), GAL_TO_L},
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::FT3), GAL_TO_FT3},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::L), FT3_TO_L},
+    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL), FT3_TO_GAL}};
 
 HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
@@ -119,9 +117,9 @@ HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
     {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::H), &ident},
     {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::MIN), &ident},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::S), &ident},
-    {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::MIN), &H_TO_MIN},
+    {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::MIN), H_TO_MIN},
     {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::S), &H_TO_S},
-    {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::H), &MIN_TO_H},
+    {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::H), MIN_TO_H},
     {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::S), &MIN_TO_S},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::H), &S_TO_H},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
@@ -3503,19 +3501,19 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
     resampleExtensive(heatDistribution_W, modHeatDistribution_W);
 
     // Unnecessary unit conversions used here to match former method
-    double tot_qAdded_BTUperHr = 0.;
+    double tot_qAdded_kJ = 0.;
     for (int i = getNumNodes() - 1; i >= 0; i--)
     {
         if (heatDistribution_W[i] != 0)
         {
-            double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
-            double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
-            addExtraHeatAboveNode(qAdd_KJ, i);
-            tot_qAdded_BTUperHr += qAdd_BTUperHr;
+            double powerAdd_kW = heatDistribution_W[i] / 1000.;
+            double qAdd_kJ = KWH_TO_KJ(powerAdd_kW * minutesPerStep / min_per_hr);
+            addExtraHeatAboveNode(qAdd_kJ, i);
+            tot_qAdded_kJ += qAdd_kJ;
         }
     }
     // Write the input & output energy
-    extraEnergyInput_kJ = BTU_TO_KJ(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
+    extraEnergyInput_kJ = tot_qAdded_kJ;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

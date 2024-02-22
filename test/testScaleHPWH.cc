@@ -440,7 +440,7 @@ void testSetCompressorOutputCapacity()
     ASSERTTRUE(cmpd(num, newCapacity_kW));
 
     // Scale output to 1000 kW but let's use do the calc in other units
-    num = KW_TO_BTUperHR(num);
+    num = KW_TO_BTUperH(num);
     hpwh.setCompressorOutputCapacity(num,
                                      C_TO_F(airTempC),
                                      C_TO_F(waterTempC),
