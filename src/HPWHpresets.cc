@@ -107,7 +107,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
     double temp = 1.0 / (recoveryEfficiency * lowerPower_W * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-    tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator);
+    tankUA_kJperHrC = BTUperHF_TO_KJperHC(numerator / denominator);
 
     if (tankUA_kJperHrC < 0.)
     {
@@ -2831,7 +2831,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         setpointT_C = F_TO_C(150.0);
 
         tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-        tankUA_kJperHrC = UAf_TO_UAc(3.94);
+        tankUA_kJperHrC = BTUperHF_TO_KJperHC(3.94);
 
         doTempDepression = false;
         tankMixesOnDraw = false;
@@ -2931,12 +2931,12 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
             tankVolume_L = GAL_TO_L(67.63);
-            tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
+            tankUA_kJperHrC = BTUperHF_TO_KJperHC(1.5) * 6.403 / BTUperHF_TO_KJperHC(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
             tankVolume_L = GAL_TO_L(81.94);
-            tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
+            tankUA_kJperHrC = BTUperHF_TO_KJperHC(1.73) * 6.403 / BTUperHF_TO_KJperHC(1.16);
         }
         doTempDepression = false;
         tankMixesOnDraw = true;
