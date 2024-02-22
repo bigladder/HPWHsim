@@ -102,6 +102,12 @@ HPWH::ConversionMap<HPWH::L_UNITS> HPWH::convertL = {
     {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::FT), &M_TO_FT},
     {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::M), &FT_TO_M}};
 
+HPWH::ConversionMap<HPWH::A_UNITS> HPWH::convertA = {
+    {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::M2), &ident},
+    {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::FT2), &ident},
+    {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::FT2), &M2_TO_FT2},
+    {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::M2), &FT2_TO_M2}};
+
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), ident},
@@ -1322,15 +1328,15 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool force
     // Uses the UA before the function is called and adjusts the A part of the UA to match
     // the input volume given getTankSurfaceArea().
     double HPWH_size_L = convert(HPWH_size, units, V_UNITS::L);
-    double oldA = getTankSurfaceArea(UNITS_FT2);
+    double oldA_ft2 = getTankSurfaceArea(A_UNITS::FT2);
 
     setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
-    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UA_UNITS::KJperHC);
+    setUA(tankUA_kJperHrC * getTankSurfaceArea(A_UNITS::FT2) / oldA_ft2, UA_UNITS::KJperHC);
     return 0;
 }
 
 /*static*/ double
-HPWH::getTankSurfaceArea(double vol, V_UNITS volUnits /*L*/, UNITS surfAUnits /*=UNITS_FT2*/)
+HPWH::getTankSurfaceArea(double vol, const V_UNITS volUnits /*L*/, const A_UNITS surfAUnits /*FT2*/)
 {
     // returns tank surface area, old defualt was in ft2
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
@@ -1338,34 +1344,12 @@ HPWH::getTankSurfaceArea(double vol, V_UNITS volUnits /*L*/, UNITS surfAUnits /*
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
     double radius = getTankRadius(vol, volUnits, L_UNITS::FT);
-
-    double value = 2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.);
-
-    if (value >= 0.)
-    {
-        if (surfAUnits == UNITS_M2)
-            value = FT2_TO_M2(value);
-        else if (surfAUnits != UNITS_FT2)
-            value = -1.;
-    }
-    return value;
+    return convert(2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.), A_UNITS::FT2, surfAUnits);
 }
 
-double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
+double HPWH::getTankSurfaceArea(const A_UNITS units /*FT2*/) const
 {
-    // returns tank surface area, old defualt was in ft2
-    // Based off 88 insulated storage tanks currently available on the market from Sanden,
-    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
-    // tankVolume_L with the assumption that the aspect ratio is the same as the outer
-    // dimenisions of the whole unit.
-    double value = getTankSurfaceArea(tankVolume_L, V_UNITS::L, units);
-    if (value < 0.)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-            msg("Incorrect unit specification for getTankSurfaceArea.  \n");
-        value = HPWH_ABORT;
-    }
-    return value;
+    return getTankSurfaceArea(tankVolume_L, V_UNITS::L, units);
 }
 
 /*static*/ double

@@ -262,12 +262,6 @@ class HPWH
         VRB_emetic = 30     /**< print all the things  */
     };
 
-    enum UNITS
-    {
-        UNITS_FT2, /**< square feet  */
-        UNITS_M2   /**< square meters  */
-    };
-
     struct PairHash
     {
         template <class T>
@@ -347,7 +341,7 @@ class HPWH
     /* length units and conversion */
     enum class L_UNITS
     {
-        M, // meteres
+        M, // meters
         FT // feet
     };
     static ConversionMap<L_UNITS> convertL;
@@ -355,6 +349,19 @@ class HPWH
     convert(const double length, const HPWH::L_UNITS fromUnits, const HPWH::L_UNITS toUnits)
     {
         return convertL[{fromUnits, toUnits}](length);
+    }
+
+    /* area units and conversion */
+    enum class A_UNITS
+    {
+        M2, // square meters
+        FT2 // square feet
+    };
+    static ConversionMap<A_UNITS> convertA;
+    inline static double
+    convert(const double length, const HPWH::A_UNITS fromUnits, const HPWH::A_UNITS toUnits)
+    {
+        return convertA[{fromUnits, toUnits}](length);
     }
 
     /* volume units and conversion */
@@ -862,10 +869,11 @@ class HPWH
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
        but a new A. A is found via getTankSurfaceArea()*/
 
-    double getTankSurfaceArea(UNITS units = UNITS_FT2) const;
+    double getTankSurfaceArea(const A_UNITS units = A_UNITS::FT2) const;
 
-    static double
-    getTankSurfaceArea(double vol, V_UNITS volUnits = V_UNITS::L, UNITS surfAUnits = UNITS_FT2);
+    static double getTankSurfaceArea(double vol,
+                                     V_UNITS volUnits = V_UNITS::L,
+                                     A_UNITS surfAUnits = A_UNITS::FT2);
 
     /**< Returns the tank surface area based off of real storage tanks*/
     double getTankRadius(const L_UNITS units = L_UNITS::FT) const;
@@ -1765,6 +1773,10 @@ inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
 inline double M_TO_FT(const double m) { return ft_per_m * m; }
 inline double FT_TO_M(const double ft) { return ft / ft_per_m; }
 
+// area conversion
+inline double M2_TO_FT2(const double m2) { return (ft_per_m * ft_per_m * m2); }
+inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); }
+
 // volume conversion
 inline double L_TO_GAL(const double L) { return gal_per_L * L; }
 inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
@@ -1778,9 +1790,6 @@ inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
 // flow-rate conversion
 inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / sec_per_min); }
 inline double LPS_TO_GPM(const double lps) { return (gal_per_L * lps * sec_per_min); }
-
-// area conversion
-inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); }
 
 // UA conversion
 inline double KJperHC_TO_BTUperHF(const double UA_kJperhC)
