@@ -264,10 +264,12 @@ class HPWH
 
     enum UNITS
     {
-        UNITS_FT,  /**< feet  */
-        UNITS_M,   /**< meters  */
-        UNITS_FT2, /**< square feet  */
-        UNITS_M2   /**< square meters  */
+        UNITS_kJperHrC,  /**< UA, metric units  */
+        UNITS_BTUperHrF, /**< UA, imperial units  */
+        UNITS_FT,        /**< feet  */
+        UNITS_M,         /**< meters  */
+        UNITS_FT2,       /**< square feet  */
+        UNITS_M2         /**< square meters  */
     };
 
     struct PairHash
@@ -294,15 +296,15 @@ class HPWH
 
     static ConversionMap<T_UNITS> convertT;
 
-    inline static double
-    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
+    inline double
+    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
     {
         return convertT[{fromUnits, toUnits}](T);
     }
 
     static ConversionMap<T_UNITS> convertDeltaT;
-    inline static double
-    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
+    inline double
+    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits) const
     {
         return convertT[{fromUnits, toUnits}](T);
     }
@@ -317,8 +319,8 @@ class HPWH
 
     static ConversionMap<E_UNITS> convertE;
 
-    inline static double
-    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits)
+    inline double
+    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits) const
     {
         return convertE[{fromUnits, toUnits}](E);
     }
@@ -327,13 +329,13 @@ class HPWH
     enum class P_UNITS
     {
         KW,     // kilowatts
-        BTUperH // british thermal units per hour
+        BTUperH // BTU per hour
     };
 
     static ConversionMap<P_UNITS> convertP;
 
-    inline static double
-    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits)
+    inline double
+    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits) const
     {
         return convertP[{fromUnits, toUnits}](p);
     }
@@ -341,15 +343,14 @@ class HPWH
     /* volume units and conversion */
     enum class V_UNITS
     {
-        L,   // liters
-        GAL, // gallons
-        FT3  // cubic feet
+        L,  // liters
+        GAL // gallons
     };
 
     static ConversionMap<V_UNITS> convertV;
 
-    inline static double
-    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits)
+    inline double
+    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits) const
     {
         return convertV[{fromUnits, toUnits}](v);
     }
@@ -363,8 +364,8 @@ class HPWH
 
     static ConversionMap<R_UNITS> convertR;
 
-    inline static double
-    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits)
+    inline double
+    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits) const
     {
         return convertR[{fromUnits, toUnits}](r);
     }
@@ -379,25 +380,11 @@ class HPWH
 
     static ConversionMap<TIME_UNITS> convertTime;
 
-    inline static double
-    convert(const double time, const HPWH::TIME_UNITS fromUnits, const HPWH::TIME_UNITS toUnits)
+    inline double convert(const double time,
+                          const HPWH::TIME_UNITS fromUnits,
+                          const HPWH::TIME_UNITS toUnits) const
     {
         return convertTime[{fromUnits, toUnits}](time);
-    }
-
-    /* UA units and conversion */
-    enum class UA_UNITS
-    {
-        KJperHC, // kilojoules per hour degree celsius
-        BTUperHF // british thermal units per hour degree fahrenheit
-    };
-
-    static ConversionMap<UA_UNITS> convertUA;
-
-    inline static double
-    convert(const double UA, const HPWH::UA_UNITS fromUnits, const HPWH::UA_UNITS toUnits)
-    {
-        return convertUA[{fromUnits, toUnits}](UA);
     }
 
     /// specifies the type of heat source
@@ -892,18 +879,18 @@ class HPWH
     int setDoConduction(bool doCondu);
     /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
-    int setUA(const double UA, const UA_UNITS units = UA_UNITS::KJperHC);
+    int setUA(double UA, UNITS units = UNITS_kJperHrC);
     /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC
      */
 
-    int getUA(double& UA, const UA_UNITS units = UA_UNITS::KJperHC) const;
+    int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
-    int getFittingsUA(double& UA, const UA_UNITS units = UA_UNITS::KJperHC) const;
+    int getFittingsUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UAof just the fittings, with or without units specified - default is metric,
      * kJperHrC  */
 
-    int setFittingsUA(const double UA, const UA_UNITS units = UA_UNITS::KJperHC);
+    int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
     /**< This is a setter for the UA of just the fittings, with or without units specified - default
      * is metric, kJperHrC */
 
@@ -1712,12 +1699,10 @@ constexpr double FperC = 9. / 5.;   // degF / degC
 constexpr double offsetF = 32.;     // degF offset
 constexpr double sec_per_min = 60.; // seconds / min
 constexpr double min_per_hr = 60.;  // min / hr
-constexpr double sec_per_hr = sec_per_min * min_per_hr;              // seconds / hr
-constexpr double L_per_gal = 3.78541;                                // liters / gal
-constexpr double ft_per_m = 3.2808;                                  // feet / meter
-constexpr double ft2_per_m2 = ft_per_m * ft_per_m;                   // feet / meter
-constexpr double BTU_per_hF = BTUperKWH / FperC / sec_per_hr;        // BTU degC / kJ degF
-constexpr double L_per_ft3 = 1000. / ft_per_m / ft_per_m / ft_per_m; // L / ft^3
+constexpr double sec_per_hr = sec_per_min * min_per_hr; // seconds / hr
+constexpr double L_per_gal = 3.78541;                   // liters / gal
+constexpr double ft_per_m = 3.2808;                     // feet / meter
+constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(const double temperature) { return (temperature / FperC); }
@@ -1735,7 +1720,7 @@ inline double BTU_TO_KJ(const double btu) { return (btu * sec_per_hr / BTUperKWH
 inline double KJ_TO_BTU(const double kj) { return (kj / sec_per_hr * BTUperKWH); }
 inline double GAL_TO_L(const double gallons) { return (gallons * L_per_gal); }
 inline double L_TO_GAL(const double liters) { return (liters / L_per_gal); }
-inline double L_TO_FT3(const double v_L) { return (v_L / L_per_ft3); }
+inline double L_TO_FT3(const double liters) { return (liters / 28.31685); }
 inline double UAf_TO_UAc(const double UAf) { return (UAf * 1.8 / 0.9478); }
 inline double GPM_TO_LPS(const double gpm) { return (gpm * L_per_gal / sec_per_min); }
 inline double LPS_TO_GPM(const double lps) { return (lps * sec_per_min / L_per_gal); }
@@ -1749,9 +1734,6 @@ inline double MIN_TO_S(const double t_min) { return sec_per_min * t_min; }
 inline double MIN_TO_H(const double t_min) { return t_min / min_per_hr; }
 inline double S_TO_H(const double t_s) { return t_s / sec_per_hr; }
 inline double S_TO_MIN(const double t_s) { return t_s / sec_per_min; }
-
-inline double KJperHC_TO_BTUperHF(const double UA_kJperhC) { return (BTU_per_hF * UA_kJperhC); }
-inline double BTUperHF_TO_KJperHC(const double UA_BTUperhF) { return (UA_BTUperhF / BTU_per_hF); }
 
 inline double ident(const double x) { return x; }
 

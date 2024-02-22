@@ -97,17 +97,8 @@ HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), &ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), &ident},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), &ident},
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::GAL), &L_TO_GAL},
-    {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::FT3), &L_TO_FT3},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L},
-    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::FT3),
-     [](const double v_gal) { return L_per_gal * v_gal / L_per_ft3; }},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::L),
-     [](const double v_ft3) { return L_per_ft3 * v_ft3; }},
-    {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL),
-     [](const double v_ft3) { return L_per_ft3 * v_ft3 / L_per_gal; }},
-};
+    {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::L), &GAL_TO_L}};
 
 HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
@@ -125,12 +116,6 @@ HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
     {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::S), &MIN_TO_S},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::H), &S_TO_H},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
-
-HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::convertUA = {
-    {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::KJperHC), &ident},
-    {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::BTUperHF), &ident},
-    {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::BTUperHF), &KJperHC_TO_BTUperHF},
-    {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::KJperHC), &BTUperHF_TO_KJperHC}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
@@ -1321,7 +1306,7 @@ int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool force
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
     setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
-    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UA_UNITS::KJperHC);
+    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
     return 0;
 }
 
@@ -1371,13 +1356,14 @@ HPWH::getTankRadius(double vol, V_UNITS volUnits /*L*/, UNITS radiusUnits /*=UNI
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
     // is the same is the actual tank.
-
-    double vol_ft3 = convert(vol, volUnits, V_UNITS::FT3);
+    double volft3 = volUnits == V_UNITS::L     ? L_TO_FT3(vol)
+                    : volUnits == V_UNITS::GAL ? L_TO_FT3(GAL_TO_L(vol))
+                                               : -1.;
 
     double value = -1.;
-    if (vol_ft3 >= 0.)
+    if (volft3 >= 0.)
     {
-        value = pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.);
+        value = pow(volft3 / Pi / ASPECTRATIO, 1. / 3.);
         if (radiusUnits == UNITS_M)
             value = FT_TO_M(value);
         else if (radiusUnits != UNITS_FT)
@@ -1442,27 +1428,90 @@ int HPWH::setDoConduction(bool doCondu)
     return 0;
 }
 
-int HPWH::setUA(const double UA, const UA_UNITS units /*KJperHC*/)
+int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
-    tankUA_kJperHrC = convert(UA, units, UA_UNITS::KJperHC);
+    if (units == UNITS_kJperHrC)
+    {
+        tankUA_kJperHrC = UA;
+    }
+    else if (units == UNITS_BTUperHrF)
+    {
+        tankUA_kJperHrC = UAf_TO_UAc(UA);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setUA.  \n");
+        }
+        return HPWH_ABORT;
+    }
     return 0;
 }
 
-int HPWH::getUA(double& UA, const UA_UNITS units /*KJperHC*/) const
+int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 {
-    UA = convert(tankUA_kJperHrC, UA_UNITS::KJperHC, units);
+    UA = tankUA_kJperHrC;
+    if (units == UNITS_kJperHrC)
+    {
+        // UA is already in correct units
+    }
+    else if (units == UNITS_BTUperHrF)
+    {
+        UA = UA / UAf_TO_UAc(1.);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getUA.  \n");
+        }
+        UA = -1.;
+        return HPWH_ABORT;
+    }
     return 0;
 }
 
-int HPWH::setFittingsUA(const double UA, const UA_UNITS units /*KJperHC*/)
+int HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
-    fittingsUA_kJperHrC = convert(UA, units, UA_UNITS::KJperHC);
+    if (units == UNITS_kJperHrC)
+    {
+        fittingsUA_kJperHrC = UA;
+    }
+    else if (units == UNITS_BTUperHrF)
+    {
+        fittingsUA_kJperHrC = UAf_TO_UAc(UA);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setFittingsUA.  \n");
+        }
+        return HPWH_ABORT;
+    }
     return 0;
 }
-
-int HPWH::getFittingsUA(double& UA, const UA_UNITS units /*KJperHC*/) const
+int HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 {
-    UA = convert(fittingsUA_kJperHrC, UA_UNITS::KJperHC, units);
+    UA = fittingsUA_kJperHrC;
+    if (units == UNITS_kJperHrC)
+    {
+        // UA is already in correct units
+    }
+    else if (units == UNITS_BTUperHrF)
+    {
+        UA = UA / UAf_TO_UAc(1.);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getUA.  \n");
+        }
+        UA = -1.;
+        return HPWH_ABORT;
+    }
     return 0;
 }
 
@@ -1470,7 +1519,6 @@ int HPWH::setInletByFraction(double fractionalHeight)
 {
     return setNodeNumFromFractionalHeight(fractionalHeight, inletIndex);
 }
-
 int HPWH::setInlet2ByFraction(double fractionalHeight)
 {
     return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Index);
