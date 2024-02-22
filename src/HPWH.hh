@@ -264,8 +264,6 @@ class HPWH
 
     enum UNITS
     {
-        UNITS_FT,  /**< feet  */
-        UNITS_M,   /**< meters  */
         UNITS_FT2, /**< square feet  */
         UNITS_M2   /**< square meters  */
     };
@@ -344,6 +342,19 @@ class HPWH
     convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits)
     {
         return convertP[{fromUnits, toUnits}](p);
+    }
+
+    /* length units and conversion */
+    enum class L_UNITS
+    {
+        M, // meteres
+        FT // feet
+    };
+    static ConversionMap<L_UNITS> convertL;
+    inline static double
+    convert(const double length, const HPWH::L_UNITS fromUnits, const HPWH::L_UNITS toUnits)
+    {
+        return convertL[{fromUnits, toUnits}](length);
     }
 
     /* volume units and conversion */
@@ -857,11 +868,12 @@ class HPWH
     getTankSurfaceArea(double vol, V_UNITS volUnits = V_UNITS::L, UNITS surfAUnits = UNITS_FT2);
 
     /**< Returns the tank surface area based off of real storage tanks*/
-    double getTankRadius(UNITS units = UNITS_FT) const;
+    double getTankRadius(const L_UNITS units = L_UNITS::FT) const;
 
     /// returns the tank surface radius based off of real storage tanks
-    static double
-    getTankRadius(double vol, V_UNITS volUnits = V_UNITS::L, UNITS radiusUnits = UNITS_FT);
+    static double getTankRadius(double vol,
+                                const V_UNITS volUnits = V_UNITS::L,
+                                const L_UNITS radiusUnits = L_UNITS::FT);
 
     /// report whether the tank size can be changed
     bool isTankSizeFixed() const;
@@ -1749,6 +1761,10 @@ inline double W_TO_KW(const double W) { return W / 1000.; }
 inline double BTUperH_TO_W(const double Btu_per_h) { return KW_TO_W(BTUperH_TO_KW(Btu_per_h)); }
 inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
 
+// length conversion
+inline double M_TO_FT(const double m) { return ft_per_m * m; }
+inline double FT_TO_M(const double ft) { return ft / ft_per_m; }
+
 // volume conversion
 inline double L_TO_GAL(const double L) { return gal_per_L * L; }
 inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
@@ -1763,8 +1779,7 @@ inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
 inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / sec_per_min); }
 inline double LPS_TO_GPM(const double lps) { return (gal_per_L * lps * sec_per_min); }
 
-// length conversion
-inline double FT_TO_M(const double ft) { return (ft / ft_per_m); }
+// area conversion
 inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); }
 
 // UA conversion

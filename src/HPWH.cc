@@ -96,6 +96,12 @@ HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
     {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::W), BTUperH_TO_W},
     {std::make_pair(HPWH::P_UNITS::W, HPWH::P_UNITS::BTUperH), W_TO_BTUperH}};
 
+HPWH::ConversionMap<HPWH::L_UNITS> HPWH::convertL = {
+    {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::M), &ident},
+    {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::FT), &ident},
+    {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::FT), &M_TO_FT},
+    {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::M), &FT_TO_M}};
+
 HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), ident},
@@ -1331,7 +1337,7 @@ HPWH::getTankSurfaceArea(double vol, V_UNITS volUnits /*L*/, UNITS surfAUnits /*
     // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
-    double radius = getTankRadius(vol, volUnits, UNITS_FT);
+    double radius = getTankRadius(vol, volUnits, L_UNITS::FT);
 
     double value = 2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.);
 
@@ -1363,7 +1369,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 }
 
 /*static*/ double
-HPWH::getTankRadius(double vol, V_UNITS volUnits /*L*/, UNITS radiusUnits /*=UNITS_FT*/)
+HPWH::getTankRadius(double vol, const V_UNITS volUnits /*L*/, const L_UNITS radiusUnits /*FT*/)
 { // returns tank radius, ft for use in calculation of heat loss in the bottom and top of
   // the tank.
     // Based off 88 insulated storage tanks currently available on the market from Sanden,
@@ -1372,19 +1378,15 @@ HPWH::getTankRadius(double vol, V_UNITS volUnits /*L*/, UNITS radiusUnits /*=UNI
 
     double vol_ft3 = convert(vol, volUnits, V_UNITS::FT3);
 
-    double value = -1.;
+    double radius_ft = -1.;
     if (vol_ft3 >= 0.)
     {
-        value = pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.);
-        if (radiusUnits == UNITS_M)
-            value = FT_TO_M(value);
-        else if (radiusUnits != UNITS_FT)
-            value = -1.;
+        radius_ft = convert(pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.), L_UNITS::FT, radiusUnits);
     }
-    return value;
+    return radius_ft;
 }
 
-double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
+double HPWH::getTankRadius(const L_UNITS units /*FT*/) const
 {
     // returns tank radius, ft for use in calculation of heat loss in the bottom and top of
     // the tank. Based off 88 insulated storage tanks currently available on the market from
@@ -1392,7 +1394,6 @@ double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
     // measurements is the same is the actual tank.
 
     double value = getTankRadius(tankVolume_L, V_UNITS::L, units);
-
     if (value < 0.)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -3508,7 +3509,7 @@ void HPWH::calcSizeConstants()
     // bottom node being the fraction of UA that corresponds to the top and bottom of the
     // tank. The assumption is that the aspect ratio is the same for all tanks and is the
     // same for the outside measurements of the unit and the inner water tank.
-    const double tankRad_m = getTankRadius(UNITS_M);
+    const double tankRad_m = getTankRadius(L_UNITS::M);
     const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
     nodeVolume_L = tankVolume_L / getNumNodes();
