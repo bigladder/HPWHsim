@@ -3389,8 +3389,10 @@ int HPWH::getResistancePosition(int elementIndex) const
     return HPWH_ABORT;
 }
 
-double
-HPWH::getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& inlet1, Inlet& inlet2)
+double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
+                          const double drawVolume_L,
+                          const Inlet& inlet1,
+                          const Inlet& inlet2)
 {
     double outletT_C = 0.;
     if (drawVolume_L > 0.)
@@ -3400,25 +3402,22 @@ HPWH::getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& in
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("Volume in inlet 2 is greater than the draw volume.  \n");
+                msg("Volume in high inlet is greater than the draw volume.  \n");
             }
             simHasFailed = true;
             return 0.;
         }
 
-        if (inlet1.nodeIndex > inlet2.nodeIndex)
+        // sort the inlets by height
+        Inlet lowInlet = inlet1;
+        Inlet highInlet = inlet2;
+        if (lowInlet.nodeIndex > highInlet.nodeIndex)
         {
-            std::swap(inlet1,inlet2);
+            std::swap(lowInlet, highInlet);
         }
 
-        // sort the inlets by height
-        int lowInletNodeIndex = inlet2.nodeIndex;
-        double lowInletT_C = inlet2.drawT_C;
-        double lowInletFraction = inlet2.volume_L / drawVolume_L; // fraction of draw from low inlet
-
-        int highInletNodeIndex = inlet1.nodeIndex;
-        double highInletT_C= inlet1.drawT_C;
-        double highInletFraction = 1. - inlet2.volume_L / drawVolume_L; // fraction of draw from high inlet
+        double highInletFraction =
+            highInlet.volume_L / drawVolume_L; // fraction of draw from low inlet
 
         // calculate number of nodes to draw
         double drawVolume_N = drawVolume_L / nodeVolume_L;
@@ -3427,7 +3426,7 @@ HPWH::getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& in
         // heat-exchange models
         if (hasHeatExchanger)
         {
-            outletT_C = inlet1.drawT_C;
+            outletT_C = lowInlet.drawT_C;
             for (auto& nodeT_C : tempTs_C)
             {
                 double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletT_C);
@@ -3445,9 +3444,8 @@ HPWH::getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& in
                 for (int i = 0; i < numNodes; i++)
                 {
                     outletT_C += tempTs_C[i];
-                    tempTs_C[i] = (inlet1.drawT_C * (drawVolume_L - inlet2.volume_L) +
-                                   inlet2.drawT_C * inlet2.volume_L) /
-                                  drawVolume_L;
+                    tempTs_C[i] = (1. - highInletFraction) * lowInlet.drawT_C +
+                                  highInletFraction * highInlet.drawT_C;
                 }
                 outletT_C = (outletT_C / numNodes * tankVolume_L +
                              tempTs_C[0] * (drawVolume_L - tankVolume_L)) /
@@ -3471,15 +3469,17 @@ HPWH::getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& in
                 for (int i = numNodes - 1; i >= 0; --i)
                 {
                     double inletFraction = 0.;
-                    if (i == highInletNodeIndex)
+                    if (i == lowInlet.nodeIndex)
+                    {
+                        inletFraction += 1. - highInletFraction;
+                        tempTs_C[i] +=
+                            incrementalDrawVolume_N * (1. - highInletFraction) * lowInlet.drawT_C;
+                    }
+                    if (i == highInlet.nodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        tempTs_C[i] += incrementalDrawVolume_N * highInletFraction * highInletT_C;
-                    }
-                    if (i == lowInletNodeIndex)
-                    {
-                        inletFraction += lowInletFraction;
-                        tempTs_C[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT_C;
+                        tempTs_C[i] +=
+                            incrementalDrawVolume_N * highInletFraction * highInlet.drawT_C;
                     }
 
                     if (i > 0)

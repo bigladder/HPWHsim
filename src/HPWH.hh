@@ -959,7 +959,7 @@ class HPWH
     };
 
     double
-    getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& inlet1, Inlet& inlet2);
+    getOutletT_C(std::vector<double>& tempTs_C, const double drawVolume_L, const Inlet& inlet1, const Inlet& inlet2);
 
     double getOutletT_C(const double inletT_C, const double drawVolume_L, const double inletVol2_L, const double inletT2_C);
 
