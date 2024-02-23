@@ -317,7 +317,7 @@ class HPWH
     }
 
     /* energy units and conversion */
-    enum class E_UNITS:std::size_t
+    enum class E_UNITS : std::size_t
     {
         KJ,  // kilojoules
         KWH, // kilowatt hours
@@ -331,7 +331,7 @@ class HPWH
     }
 
     /* power units and conversion */
-    enum class P_UNITS:std::size_t
+    enum class P_UNITS : std::size_t
     {
         KW,      // kilowatts
         BTUperH, // BTU per hour
