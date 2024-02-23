@@ -3455,7 +3455,7 @@ double HPWH::getOutletT_C(const double inletT_C,
                 {
                     outletT_C += tankTemps_C[i];
                     tankTemps_C[i] = (1. - highInletFraction) * lowInlet.drawT_C +
-                                  highInletFraction * highInlet.drawT_C;
+                                     highInletFraction * highInlet.drawT_C;
                 }
                 outletT_C = (outletT_C / numNodes * tankVolume_L +
                              tankTemps_C[0] * (drawVolume_L - tankVolume_L)) /
@@ -3522,9 +3522,9 @@ double HPWH::getOutletT_C(const double inletT_C,
 }
 
 double HPWH::getExpectedOutletT_C(const double inletT_C,
-                          const double drawVolume_L,
-                          const double inletVol2_L,
-                          const double inletT2_C)
+                                  const double drawVolume_L,
+                                  const double inletVol2_L,
+                                  const double inletT2_C)
 {
     nextTankTemps_C = tankTemps_C;
     double outletT_C = getOutletT_C(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
