@@ -3389,20 +3389,30 @@ int HPWH::getResistancePosition(int elementIndex) const
     return HPWH_ABORT;
 }
 
-double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
+double HPWH::getOutletT_C(const double inletT_C,
                           const double drawVolume_L,
-                          const Inlet& inlet1,
-                          const Inlet& inlet2)
+                          const double inletVol2_L,
+                          const double inletT2_C)
 {
+    struct Inlet
+    {
+        int nodeIndex;
+        double drawT_C;
+        double volume_L;
+    };
+
+    Inlet inlet1 = {inletHeight, inletT_C, tankVolume_L};
+    Inlet inlet2 = {inlet2Height, inletT2_C, inletVol2_L};
+
     double outletT_C = 0.;
     if (drawVolume_L > 0.)
     {
-        int numNodes = static_cast<int>(tempTs_C.size());
+        int numNodes = getNumNodes();
         if (inlet2.volume_L > drawVolume_L)
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("Volume in high inlet is greater than the draw volume.  \n");
+                msg("Volume in inlet 2 is greater than the draw volume.  \n");
             }
             simHasFailed = true;
             return 0.;
@@ -3417,7 +3427,7 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
         }
 
         double highInletFraction =
-            highInlet.volume_L / drawVolume_L; // fraction of draw from low inlet
+            highInlet.volume_L / drawVolume_L; // fraction of draw from high inlet
 
         // calculate number of nodes to draw
         double drawVolume_N = drawVolume_L / nodeVolume_L;
@@ -3427,7 +3437,7 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
         if (hasHeatExchanger)
         {
             outletT_C = lowInlet.drawT_C;
-            for (auto& nodeT_C : tempTs_C)
+            for (auto& nodeT_C : tankTemps_C)
             {
                 double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletT_C);
                 double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
@@ -3443,12 +3453,12 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
             {
                 for (int i = 0; i < numNodes; i++)
                 {
-                    outletT_C += tempTs_C[i];
-                    tempTs_C[i] = (1. - highInletFraction) * lowInlet.drawT_C +
+                    outletT_C += tankTemps_C[i];
+                    tankTemps_C[i] = (1. - highInletFraction) * lowInlet.drawT_C +
                                   highInletFraction * highInlet.drawT_C;
                 }
                 outletT_C = (outletT_C / numNodes * tankVolume_L +
-                             tempTs_C[0] * (drawVolume_L - tankVolume_L)) /
+                             tankTemps_C[0] * (drawVolume_L - tankVolume_L)) /
                             drawVolume_L * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
@@ -3457,14 +3467,13 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
             double totalExpelledHeat_kJ = 0.;
             while (remainingDrawVolume_N > 0.)
             {
-
                 // draw no more than one node at a time
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tempTs_C.back();
+                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tankTemps_C.back();
                 totalExpelledHeat_kJ += outputHeat_kJ;
-                tempTs_C.back() -= outputHeat_kJ / nodeCp_kJperC;
+                tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
 
                 for (int i = numNodes - 1; i >= 0; --i)
                 {
@@ -3472,29 +3481,29 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
                     if (i == lowInlet.nodeIndex)
                     {
                         inletFraction += 1. - highInletFraction;
-                        tempTs_C[i] +=
+                        tankTemps_C[i] +=
                             incrementalDrawVolume_N * (1. - highInletFraction) * lowInlet.drawT_C;
                     }
                     if (i == highInlet.nodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        tempTs_C[i] +=
+                        tankTemps_C[i] +=
                             incrementalDrawVolume_N * highInletFraction * highInlet.drawT_C;
                     }
 
                     if (i > 0)
                     {
                         double transferT_C =
-                            incrementalDrawVolume_N * (1. - inletFraction) * tempTs_C[i - 1];
-                        tempTs_C[i] += transferT_C;
-                        tempTs_C[i - 1] -= transferT_C;
+                            incrementalDrawVolume_N * (1. - inletFraction) * tankTemps_C[i - 1];
+                        tankTemps_C[i] += transferT_C;
+                        tankTemps_C[i - 1] -= transferT_C;
                     }
                 }
 
                 remainingDrawVolume_N -= incrementalDrawVolume_N;
                 if (doInversionMixing)
                 {
-                    ::mixTankInversions(tempTs_C, nodeVolume_L);
+                    ::mixTankInversions(tankTemps_C, nodeVolume_L);
                 }
             }
 
@@ -3505,22 +3514,22 @@ double HPWH::getOutletT_C(std::vector<double>& tempTs_C,
         if (tankMixesOnDraw && drawVolume_L > 0.)
         {
             int mixedBelowNode = (int)(numNodes * mixBelowFractionOnDraw);
-            ::mixTankNodes(tempTs_C, 0, mixedBelowNode, 1. / 3.);
+            ::mixTankNodes(tankTemps_C, 0, mixedBelowNode, 1. / 3.);
         }
 
     } // end if(draw_volume_L > 0)
     return outletT_C;
 }
 
-double HPWH::getOutletT_C(const double inletT_C,
+double HPWH::getExpectedOutletT_C(const double inletT_C,
                           const double drawVolume_L,
                           const double inletVol2_L,
                           const double inletT2_C)
 {
     nextTankTemps_C = tankTemps_C;
-    Inlet inlet1 = {inletHeight, inletT_C, tankVolume_L};
-    Inlet inlet2 = {inlet2Height, inletT2_C, inletVol2_L};
-    return getOutletT_C(nextTankTemps_C, drawVolume_L, inlet1, inlet2);
+    double outletT_C = getOutletT_C(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
+    tankTemps_C = nextTankTemps_C;
+    return outletT_C;
 }
 
 void HPWH::updateTankTemps(double drawVolume_L,
@@ -3529,9 +3538,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                            double inletVol2_L,
                            double inletT2_C)
 {
-    Inlet inlet1 = {inletHeight, inletT_C, tankVolume_L};
-    Inlet inlet2 = {inlet2Height, inletT2_C, inletVol2_L};
-    outletTemp_C = getOutletT_C(tankTemps_C, drawVolume_L, inlet1, inlet2);
+    outletTemp_C = getOutletT_C(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
 
     // Initialize newTankTemps_C
     nextTankTemps_C = tankTemps_C;
