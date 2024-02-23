@@ -958,14 +958,12 @@ class HPWH
         double volume_L;
     };
 
-     //double getOutletT_C(std::vector<double> &testTankTs_C, const double drawVolume_L, Inlet &inlet1, Inlet &inlet2);
+    double
+    getOutletT_C(std::vector<double>& tempTs_C, double drawVolume_L, Inlet& inlet1, Inlet& inlet2);
 
-     double getOutletT_C(std::vector<double> &tempTs_C, double inletT_C,
-                         double drawVolume_L,
-                         double inletVol2_L = 0.,
-                         double inletT2_C = 0.);
+    double getOutletT_C(const double inletT_C, const double drawVolume_L, const double inletVol2_L, const double inletT2_C);
 
-     void updateTankTemps(
+    void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
     void mixTankInversions();
     /**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
