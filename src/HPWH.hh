@@ -951,17 +951,16 @@ class HPWH
 
     void setAllDefaults(); /**< sets all the defaults default */
 
-    struct Inlet
-    {
-        int nodeIndex;
-        double drawT_C;
-        double volume_L;
-    };
+    double getOutletT_C(const double inletT_C,
+                        const double drawVolume_L,
+                        const double inletVol2_L,
+                        const double inletT2_C);
 
-    double
-    getOutletT_C(std::vector<double>& tempTs_C, const double drawVolume_L, const Inlet& inlet1, const Inlet& inlet2);
-
-    double getOutletT_C(const double inletT_C, const double drawVolume_L, const double inletVol2_L, const double inletT2_C);
+    /// Compute the next outlet temperature while preserving tank state
+    double getExpectedOutletT_C(const double inletT_C,
+                                const double drawVolume_L,
+                                const double inletVol2_L,
+                                const double inletT2_C);
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
