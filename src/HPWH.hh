@@ -13,6 +13,11 @@
 #include <cstdlib> //for exit
 #include <vector>
 #include <unordered_map>
+#include <cstdint>
+#include <iomanip>
+#include <iostream>
+#include <type_traits>
+#include <utility>
 
 namespace Btwxt
 {
@@ -267,8 +272,8 @@ class HPWH
         template <class T>
         std::size_t operator()(const std::pair<T, T>& p) const
         {
-            auto h1 = std::hash<T> {}(p.first);
-            auto h2 = std::hash<T> {}(p.second);
+            auto h1 = static_cast<std::size_t>(p.first);
+            auto h2 = static_cast<std::size_t>(p.second);
             return h1 ^ h2;
         }
     };
@@ -284,6 +289,7 @@ class HPWH
         MIN, // minutes
         S    // seconds
     };
+
     static ConversionMap<TIME_UNITS> convertTime;
     inline static double
     convert(const double time, const HPWH::TIME_UNITS fromUnits, const HPWH::TIME_UNITS toUnits)
@@ -311,7 +317,7 @@ class HPWH
     }
 
     /* energy units and conversion */
-    enum class E_UNITS
+    enum class E_UNITS:std::size_t
     {
         KJ,  // kilojoules
         KWH, // kilowatt hours
@@ -325,7 +331,7 @@ class HPWH
     }
 
     /* power units and conversion */
-    enum class P_UNITS
+    enum class P_UNITS:std::size_t
     {
         KW,      // kilowatts
         BTUperH, // BTU per hour
