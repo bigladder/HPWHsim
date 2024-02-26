@@ -1,56 +1,19 @@
+
 # Build test tool
 add_executable(testTool main.cc)
 
-# TODO: Migrate to googletest framework
-add_executable(testTankSizeFixed testTankSizeFixed.cc)
-add_executable(testScaleHPWH testScaleHPWH.cc)
-add_executable(testMaxSetpoint testMaxSetpoint.cc)
-add_executable(testSizingFractions testSizingFractions.cc)
-add_executable(testResistanceFcts testResistanceFcts.cc)
-add_executable(testCompressorFcts testCompressorFcts.cc)
-add_executable(testPerformanceMaps testPerformanceMaps.cc)
-add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
-add_executable(testHeatingLogics testHeatingLogics.cc)
-add_executable(testEnergyBalance testEnergyBalance.cc)
-
-set(libs libHPWHsim ${PROJECT_NAME}_common_interface)
+set(libs ${PROJECT_NAME} ${PROJECT_NAME}_common_interface)
 
 target_link_libraries(testTool PRIVATE ${libs})
-target_link_libraries(testTankSizeFixed PRIVATE ${libs})
-target_link_libraries(testScaleHPWH PRIVATE ${libs})
-target_link_libraries(testMaxSetpoint PRIVATE ${libs})
-target_link_libraries(testSizingFractions PRIVATE ${libs})
-target_link_libraries(testResistanceFcts PRIVATE ${libs})
-target_link_libraries(testCompressorFcts PRIVATE ${libs})
-target_link_libraries(testPerformanceMaps PRIVATE ${libs})
-target_link_libraries(testStateOfChargeFcts PRIVATE ${libs})
-target_link_libraries(testHeatingLogics PRIVATE ${libs})
-target_link_libraries(testEnergyBalance PRIVATE ${libs})
 
 target_compile_features(testTool PRIVATE cxx_std_17)
+
+add_subdirectory(unit_tests)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
-# Clear output file for yearly tests
-#add_custom_target(do_always ALL COMMAND ${CMAKE_COMMAND} file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") )
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
-
-# Run Unit tests
-add_test(NAME "testScaleHPWH" COMMAND $<TARGET_FILE:testScaleHPWH> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testMaxSetpoint" COMMAND $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testSizingFractions" COMMAND $<TARGET_FILE:testSizingFractions> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testResistanceFcts" COMMAND $<TARGET_FILE:testResistanceFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testCompressorFcts" COMMAND $<TARGET_FILE:testCompressorFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testPerformanceMaps" COMMAND $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testStateOfChargeFcts" COMMAND $<TARGET_FILE:testStateOfChargeFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testHeatingLogics" COMMAND $<TARGET_FILE:testHeatingLogics> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testEnergyBalance" COMMAND $<TARGET_FILE:testEnergyBalance> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-#add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
-#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-#add_test(NAME "testREGoesTo99CCold.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99CCold"
-#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Run model tests and unit tests on models
 set(testNames
@@ -211,28 +174,6 @@ set(stateOfChargeCompressorNames
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
-
-# Unit tests
-function(add_TankSizeFixed_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    set(testArgs "${ARG_MODEL_NAME}")
-
-    set(TEST_TITLE "TankSizeFixed.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTankSizeFixed> ${testArgs}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-endfunction()
-
-foreach (model ${extendedModelNames})
-    add_TankSizeFixed_test(MODEL_NAME "${model}")
-endforeach (model)
-foreach (model ${largeCompressorNames})
-    add_TankSizeFixed_test(MODEL_NAME "${model}")
-endforeach (model)
 
 #Tests for successful runs
 function(add_model_test)

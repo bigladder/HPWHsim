@@ -7,15 +7,16 @@ File Containing all of the presets available in HPWHsim
 
 #include <algorithm>
 
-int HPWH::HPWHinit_resTank()
+int HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
-    return this->HPWHinit_resTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
+    return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
-int HPWH::HPWHinit_resTank(double tankVol_L,
-                           double energyFactor,
-                           double upperPower_W,
-                           double lowerPower_W)
+
+int HPWH::initResistanceTank(double tankVol_L,
+                             double energyFactor,
+                             double upperPower_W,
+                             double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -54,10 +55,9 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
 
     // use tank size setting function since it has bounds checking
     tankSizeFixed = false;
-    int failure = this->setTankSize(tankVol_L);
-    if (failure == HPWH_ABORT)
+    if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
-        return failure;
+        return HPWH_ABORT;
     }
 
     setpoint_C = F_TO_C(127.0);
@@ -118,7 +118,7 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
         tankUA_kJperHrC = 0.0;
     }
 
-    hpwhModel = MODELS_CustomResTank;
+    model = MODELS_CustomResTank;
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -149,10 +149,10 @@ int HPWH::HPWHinit_resTank(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
-                                  double rValue_M2KperW,
-                                  double upperPower_W,
-                                  double lowerPower_W)
+int HPWH::initResistanceTankGeneric(double tankVol_L,
+                                    double rValue_m2KperW,
+                                    double upperPower_W,
+                                    double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -177,7 +177,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
         }
         return HPWH_ABORT;
     }
-    if (rValue_M2KperW <= 0.)
+    if (rValue_m2KperW <= 0.)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -190,7 +190,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
 
     // set tank size function has bounds checking
     tankSizeFixed = false;
-    if (this->setTankSize(tankVol_L) == HPWH_ABORT)
+    if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
         return HPWH_ABORT;
     }
@@ -236,8 +236,8 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
 
     // Calc UA
     double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
-    double tankUA_WperK = SA_M2 / rValue_M2KperW;
-    tankUA_kJperHrC = tankUA_WperK * 3.6; // 3.6 = 3600 S/Hr and 1/1000 kJ/J
+    double tankUA_WperK = SA_M2 / rValue_m2KperW;
+    tankUA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
 
     if (tankUA_kJperHrC < 0.)
     {
@@ -248,7 +248,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
         tankUA_kJperHrC = 0.0;
     }
 
-    hpwhModel = HPWH::MODELS_CustomResTankGeneric;
+    model = HPWH::MODELS_CustomResTankGeneric;
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -279,7 +279,7 @@ int HPWH::HPWHinit_resTankGeneric(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C)
+int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -417,7 +417,7 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
 
     // standard finishing up init, borrowed from init function
 
-    hpwhModel = MODELS_genericCustomUEF;
+    model = MODELS_genericCustomUEF;
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -447,13 +447,11 @@ int HPWH::HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double res
     }
 
     simHasFailed = false;
-
     return 0;
 }
 
-int HPWH::HPWHinit_presets(MODELS presetNum)
+int HPWH::initPreset(MODELS presetNum)
 {
-
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure
@@ -4304,7 +4302,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
         heatSources[1].followedByHeatSource = &heatSources[2];
     }
     // If a the model is the TamOMatic, HotTam, Generic... This model is scalable.
-    else if (presetNum == MODELS_TamScalable_SP)
+    else if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
@@ -4339,17 +4337,17 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
 
         // Perfmap for input power and COP made from data for poor preforming modeled to be scalled
         // for this model
-        std::vector<double> inputPwr_coeffs = {13.6,
-                                               0.00995,
-                                               -0.0342,
-                                               -0.014,
-                                               -0.000110,
-                                               0.00026,
-                                               0.000232,
-                                               0.000195,
-                                               -0.00034,
-                                               5.30E-06,
-                                               2.3600E-06};
+        std::vector<double> inputPower_coeffs = {13.6,
+                                                 0.00995,
+                                                 -0.0342,
+                                                 -0.014,
+                                                 -0.000110,
+                                                 0.00026,
+                                                 0.000232,
+                                                 0.000195,
+                                                 -0.00034,
+                                                 5.30E-06,
+                                                 2.3600E-06};
         std::vector<double> COP_coeffs = {1.945,
                                           0.0412,
                                           -0.0112,
@@ -4362,10 +4360,24 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
                                           0.0000392,
                                           -3.52E-07};
 
+        // Set model scale factor
+        double scaleFactor = 1.;
+        if (presetNum == MODELS_TamScalable_SP_2X)
+        {
+            scaleFactor = 2.;
+        }
+        else if (presetNum == MODELS_TamScalable_SP_Half)
+        {
+            scaleFactor = 0.5;
+        }
+
+        // Scale the compressor capacity
+        scaleVector(inputPower_coeffs, scaleFactor);
+
         compressor.perfMap.push_back({
-            105,             // Temperature (T_F)
-            inputPwr_coeffs, // Input Power Coefficients (inputPower_coeffs
-            COP_coeffs       // COP Coefficients (COP_coeffs)
+            105,               // Temperature (T_F)
+            inputPower_coeffs, // Input Power Coefficients (inputPower_coeffs
+            COP_coeffs         // COP Coefficients (COP_coeffs)
         });
 
         // logic conditions
@@ -4384,8 +4396,10 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
-        resistiveElementBottom.setupAsResistiveElement(0, 30000);
-        resistiveElementTop.setupAsResistiveElement(9, 30000);
+        // Scale the resistance-element power
+        double elementPower_W = scaleFactor * 30000.;
+        resistiveElementBottom.setupAsResistiveElement(0, elementPower_W);
+        resistiveElementTop.setupAsResistiveElement(9, elementPower_W);
 
         // top resistor values
         // standard logic conditions
@@ -4571,7 +4585,7 @@ int HPWH::HPWHinit_presets(MODELS presetNum)
     else // start tank off at setpoint
         resetTankToSetpoint();
 
-    hpwhModel = presetNum;
+    model = presetNum;
 
     // calculate oft-used derived values
     calcDerivedValues();
