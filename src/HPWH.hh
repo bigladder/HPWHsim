@@ -963,24 +963,25 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    /// Compute the next outlet temperature while preserving tank state
+    double getExpectedOutletT_C(const double inletT_C,
+                                const double drawVolume_L,
+                                const double inletVol2_L = 0.,
+                                const double inletT2_C = 0.);
+
   private:
     class HeatSource;
 
     void setAllDefaults(); /**< sets all the defaults default */
 
-    double getOutletT_C(const double inletT_C,
-                        const double drawVolume_L,
-                        const double inletVol2_L,
-                        const double inletT2_C);
-
-    /// Compute the next outlet temperature while preserving tank state
-    double getExpectedOutletT_C(const double inletT_C,
-                                const double drawVolume_L,
-                                const double inletVol2_L,
-                                const double inletT2_C);
+    double performDraw(const double inletT_C,
+                       const double drawVolume_L,
+                       const double inletVol2_L,
+                       const double inletT2_C);
 
     void updateTankTemps(
-        double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
+        double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_C);
+
     void mixTankInversions();
     /**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
     void updateSoCIfNecessary();
