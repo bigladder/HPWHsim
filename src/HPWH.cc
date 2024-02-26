@@ -3338,10 +3338,10 @@ int HPWH::getResistancePosition(int elementIndex) const
     return HPWH_ABORT;
 }
 
-double HPWH::getOutletT_C(const double inletT_C,
-                          const double drawVolume_L,
-                          const double inletVol2_L,
-                          const double inletT2_C)
+double HPWH::performDraw(const double inletT_C,
+                         const double drawVolume_L,
+                         const double inletVol2_L,
+                         const double inletT2_C)
 {
     struct Inlet
     {
@@ -3472,11 +3472,11 @@ double HPWH::getOutletT_C(const double inletT_C,
 
 double HPWH::getExpectedOutletT_C(const double inletT_C,
                                   const double drawVolume_L,
-                                  const double inletVol2_L,
-                                  const double inletT2_C)
+                                  const double inletVol2_L /*0.*/,
+                                  const double inletT2_C /*0.*/)
 {
     nextTankTemps_C = tankTemps_C;
-    double outletT_C = getOutletT_C(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
+    double outletT_C = performDraw(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
     tankTemps_C = nextTankTemps_C;
     return outletT_C;
 }
@@ -3487,7 +3487,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
                            double inletVol2_L,
                            double inletT2_C)
 {
-    outletTemp_C = getOutletT_C(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
+    outletTemp_C = performDraw(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
 
     // Initialize newTankTemps_C
     nextTankTemps_C = tankTemps_C;

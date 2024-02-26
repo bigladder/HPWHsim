@@ -10,6 +10,7 @@ set(library_files
 		resistanceFncsTest.cpp
 		compressorFncsTest.cpp
 		performanceMapTest.cpp
+		expectedOutletT_Test.cpp
 		unit-test-main.cpp
 	)
 
