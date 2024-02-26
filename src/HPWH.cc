@@ -315,45 +315,42 @@ void calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
-//
+// Inversion mixing modeled after bigladder EnergyPlus code PK
 void mixTankInversions(std::vector<double>& tankTs_C, const double nodeVolume_L)
 {
     bool hasInversion;
-    int nNodes = static_cast<int>(tankTs_C.size());
-
+    auto nNodes = static_cast<int>(tankTs_C.size());
     do
     {
         hasInversion = false;
-        // Start from the top and check downwards
+        // start from the top and progress downwards
         for (int i = nNodes - 1; i > 0; i--)
         {
             if (tankTs_C[i] < tankTs_C[i - 1])
             {
-                // Temperature inversion!
+                // temperature inversion!
                 hasInversion = true;
 
-                // Mix this inversion mixing temperature by averaging all of the inverted nodes
-                // together together.
-                double Tmixed = 0.0;
-                double massMixed = 0.0;
+                // mix by averaging all inverted nodes
+                double mixedT_C = 0.;
+                double mixedMass_kg = 0.;
                 int m;
                 for (m = i; m >= 0; m--)
                 {
-                    Tmixed += tankTs_C[m] * (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
-                    massMixed += (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
-                    if ((m == 0) || (Tmixed / massMixed > tankTs_C[m - 1]))
+                    mixedT_C += tankTs_C[m] * (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
+                    mixedMass_kg += (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
+                    if ((m == 0) || (mixedT_C / mixedMass_kg > tankTs_C[m - 1]))
                     {
                         break;
                     }
                 }
-                Tmixed /= massMixed;
+                mixedT_C /= mixedMass_kg;
 
                 // Assign the tank temps from i to k
                 for (int k = i; k >= m; k--)
-                    tankTs_C[k] = Tmixed;
+                    tankTs_C[k] = mixedT_C;
             }
         }
-
     } while (hasInversion);
 }
 
@@ -3407,7 +3404,7 @@ double HPWH::getOutletT_C(const double inletT_C,
     double outletT_C = 0.;
     if (drawVolume_L > 0.)
     {
-        int numNodes = getNumNodes();
+        const int numNodes = getNumNodes();
         if (inlet2.volume_L > drawVolume_L)
         {
             if (hpwhVerbosity >= VRB_reluctant)
@@ -3627,7 +3624,7 @@ void HPWH::updateSoCIfNecessary()
         calcAndSetSoCFraction();
     }
 }
-// Inversion mixing modeled after bigladder EnergyPlus code PK
+
 void HPWH::mixTankInversions()
 {
     if (doInversionMixing)
