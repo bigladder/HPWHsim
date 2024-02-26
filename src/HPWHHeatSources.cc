@@ -498,7 +498,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
             hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",
-                      BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_h,
+                      BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_hr,
                       cap_BTUperHr);
         }
 
@@ -512,7 +512,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         {
             // for(int i = 0; i < hpwh->numNodes; i++){
             double nodeCap_kJ =
-                BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_h * heatDistribution[i]);
+                BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr * heatDistribution[i]);
             if (nodeCap_kJ != 0.)
             {
                 double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
@@ -527,7 +527,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
-        double cap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_h);
+        double cap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
         runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
 #if 1 // error check, 1-22-2017; updated 12-6-2023
         if (runtime_min < -TOL_MINVALUE)
@@ -555,8 +555,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
     }
 
     // Write the input & output energy
-    energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_h);
-    energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_h);
+    energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
+    energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
 }
 
 // private HPWH::HeatSource functions
