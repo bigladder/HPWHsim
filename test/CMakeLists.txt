@@ -343,3 +343,8 @@ add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_file
 
 # Add unit tests
 add_subdirectory(unit_tests)
+
+# Build measureMetrics
+add_executable(measureMetrics measureMetrics.cc)
+target_link_libraries(measureMetrics PRIVATE ${libs})
+target_compile_features(measureMetrics PRIVATE cxx_std_17)
