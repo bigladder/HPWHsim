@@ -9,7 +9,6 @@
  *
  */
 #include "HPWH.hh"
-#include "testUtilityFcts.cc"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -137,13 +136,13 @@ int main(int argc, char* argv[])
     {
         inputFile = "";
 
-        if (getHPWHObject(hpwh, input2) == HPWH::HPWH_ABORT)
+        if (hpwh.initPreset(input2) != 0)
         {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
         }
 
-        model = static_cast<HPWH::MODELS>(hpwh.getHPWHModel());
+        model = static_cast<HPWH::MODELS>(hpwh.getModel());
 
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
@@ -153,8 +152,11 @@ int main(int argc, char* argv[])
     else if (input1 == "File")
     {
         inputFile = input2 + ".txt";
-        if (hpwh.HPWHinit_file(inputFile) != 0)
+        if (hpwh.initFromFile(inputFile) != 0)
+        {
+            cout << "Error, file model did not initialize.\n";
             exit(1);
+        }
     }
     else
     {
@@ -284,19 +286,15 @@ int main(int argc, char* argv[])
         if (!allSchedules[5].empty())
         {
             hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
-            if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
-            else
-                hpwh.resetTankToSetpoint();
         }
         else
         {
             hpwh.setSetpoint(newSetpoint);
-            if (hasInitialTankTemp)
-                hpwh.setTankToTemperature(initialTankT_C);
-            else
-                hpwh.resetTankToSetpoint();
         }
+        if (hasInitialTankTemp)
+            hpwh.setTankToTemperature(initialTankT_C);
+        else
+            hpwh.resetTankToSetpoint();
     }
     if (inletH > 0)
     {
@@ -349,7 +347,7 @@ int main(int argc, char* argv[])
         }
 
         string header = strHead;
-        if (hpwh.isCompressoExternalMultipass())
+        if (hpwh.isCompressorExternalMultipass() == 1)
         {
             header += strHeadMP;
         }
@@ -405,7 +403,7 @@ int main(int argc, char* argv[])
         }
 
         // Mix down for yearly tests with large compressors
-        if (hpwh.getHPWHModel() >= 210 && minutesToRun > 500000.)
+        if (hpwh.getModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpoint() <= 125.)
@@ -445,7 +443,7 @@ int main(int argc, char* argv[])
             }
         }
         // Check flow for external MP
-        if (hpwh.isCompressoExternalMultipass())
+        if (hpwh.isCompressorExternalMultipass() == 1)
         {
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
             double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
@@ -471,7 +469,7 @@ int main(int argc, char* argv[])
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
-            if (hpwh.isCompressoExternalMultipass())
+            if (hpwh.isCompressorExternalMultipass() == 1)
             {
                 strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
                                std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
