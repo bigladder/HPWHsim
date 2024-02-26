@@ -176,7 +176,10 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
 }
 
-double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->tankAvg_C(nodeWeights); }
+double HPWH::TempBasedHeatingLogic::getTankValue()
+{
+    return hpwh->getAverageTankTemp_C(nodeWeights);
+}
 
 int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
 {
