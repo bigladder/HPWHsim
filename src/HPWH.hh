@@ -19,9 +19,8 @@ class RegularGridInterpolator;
 }
 
 // #define HPWH_ABRIDGED
-/**<  If HPWH_ABRIDGED is defined, then some function definitions will be
- *  excluded from compiling.  This is done in order to reduce the size of the
- * final compiled code.  */
+/**<  Definition of HPWH_ABRIDGED excludes some functions to reduce the size of the
+ * compiled library.  */
 
 #include "HPWHversion.hh"
 
@@ -35,7 +34,7 @@ class HPWH
 
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
-    static const int LOGIC_NODE_SIZE =
+    static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
     static const int MAXOUTSTRING =
         200; /**< this is the maximum length for a debuging output string */
@@ -177,11 +176,15 @@ class HPWH
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
-        MODELS_StorageTank = 180,    /**< Generic Tank without heaters */
-        MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that has
-                                        scalable input capacity and COP  */
+        MODELS_StorageTank = 180, /**< Generic Tank without heaters */
+
+        MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that
+                                        has scalable input capacity and COP  */
+        MODELS_TamScalable_SP_2X = 191,
+        MODELS_TamScalable_SP_Half = 192,
+
         MODELS_Scalable_MP =
-            191, /** < Lower performance MP model that has scalable input capacity and COP  */
+            193, /** < Lower performance MP model that has scalable input capacity and COP  */
 
         // Non-preset models
         MODELS_CustomFile = 200,    /**< HPWH parameters were input via file */
@@ -243,7 +246,7 @@ class HPWH
         MODELS_RHEEM_HPHD135HNU_483_MP = 352, // really bad fit to data due to inconsistency in data
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
-        MODELS_AquaThermAire = 400 // heat exchanger model
+        MODELS_AquaThermAire = 400, // heat exchanger model
     };
 
     /// specifies the modes for writing output
@@ -463,37 +466,16 @@ class HPWH
 
     /// this is the value that the public functions will return in case of a simulation
     /// destroying error
-    static const int HPWH_ABORT = -274000;
+    static const int HPWH_ABORT;
 
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
-    int HPWHinit_presets(MODELS presetNum);
-    /**< This function will reset all member variables to defaults and then
-     * load in a set of parameters that are hardcoded in this function -
-     * which particular set of parameters is selected by presetNum.
-     * This is similar to the way the HPWHsim currently operates, as used in SEEM,
-     * but not quite as versatile.
-     * My impression is that this could be a useful input paradigm for CSE
-     *
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
-     */
-
-    int HPWHinit_file(std::string configFile);
-    /**< This function will load in a set of parameters from a file
-     * The file name is the input - there should be at most one set of parameters per file
-     * This is useful for testing new variations, and for the sort of variability
-     * that we typically do when creating SEEM runs
-     * Appropriate use of this function can be found in the documentation
-
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
-     */
-
-    int HPWHinit_resTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
-    int HPWHinit_resTank(double tankVol_L,
-                         double energyFactor,
-                         double upperPower_W,
-                         double lowerPower_W);
+    int initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
+    int initResistanceTank(double tankVol_L,
+                           double energyFactor,
+                           double upperPower_W,
+                           double lowerPower_W);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -505,10 +487,10 @@ class HPWH
      * to standard setting, with upper as VIP activating when the top third is too cold.
      */
 
-    int HPWHinit_resTankGeneric(double tankVol_L,
-                                double rValue_M2KperW,
-                                double upperPower_W,
-                                double lowerPower_W);
+    int initResistanceTankGeneric(double tankVol_L,
+                                  double rValue_M2KperW,
+                                  double upperPower_W,
+                                  double lowerPower_W);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -517,12 +499,38 @@ class HPWH
      * controls for the HPWHinit_resTank()
      */
 
-    int HPWHinit_genericHPWH(double tankVol_L, double energyFactor, double resUse_C);
+    int initGeneric(double tankVol_L, double energyFactor, double resUse_C);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
      * are taken from the GE2015_STDMode model.
      */
+
+    static bool mapNameToPreset(const std::string& modelName, MODELS& model);
+
+    int initPreset(MODELS presetNum);
+    /**< This function will reset all member variables to defaults and then
+     * load in a set of parameters that are hardcoded in this function -
+     * which particular set of parameters is selected by presetNum.
+     * This is similar to the way the HPWHsim currently operates, as used in SEEM,
+     * but not quite as versatile.
+     * My impression is that this could be a useful input paradigm for CSE
+     *
+     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
+     */
+
+    int initPreset(const std::string& modelName);
+
+#ifndef HPWH_ABRIDGED
+    int initFromFile(std::string configFile);
+    /**< Loads a HPWH model from a file
+     * The file name is the input - there should be at most one set of parameters per file
+     * This is useful for testing new variations, and for the sort of variability
+     * that we typically do when creating SEEM runs
+     * Appropriate use of this function can be found in the documentation
+     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
+     */
+#endif
 
     int runOneStep(double drawVolume_L,
                    double ambientT_C,
@@ -784,8 +792,8 @@ class HPWH
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    int setScaleHPWHCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
-    /**< Scales the heatpump water heater input capacity and COP*/
+    int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+    /**< Scales the input capacity and COP*/
 
     int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
@@ -866,16 +874,25 @@ class HPWH
     /**< get the heat content of the tank, relative to zero celsius
      * returns using kilojoules */
 
-    int getHPWHModel() const;
-    /**< get the model number of the HPWHsim model number of the hpwh */
+    int getModel() const;
+    /**< get the model number */
 
     int getCompressorCoilConfig() const;
-    bool isCompressorMultipass() const;
-    bool isCompressoExternalMultipass() const;
+
+    /// returns 1 if compressor is multipass, 0 if compressor is not multipass, ABORT if no
+    /// compressor
+    int isCompressorMultipass() const;
+
+    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass,
+    /// ABORT if no compressor
+    int isCompressorExternalMultipass() const;
 
     bool hasACompressor() const;
     /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
      */
+
+    /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
+    int isCompressorRunning() const;
 
     bool hasExternalHeatSource() const;
     /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
@@ -1009,7 +1026,7 @@ class HPWH
 
     void sayMessage(const std::string message) const;
     /**< if the messagePriority is >= the hpwh verbosity,
-    either pass your message out to the callback function or print it to cout
+    either pass your message out to the callback functtargetModelion or print it to cout
     otherwise do nothing  */
     void msg(const char* fmt, ...) const;
     void msgV(const char* fmt, va_list ap = NULL) const;
@@ -1037,10 +1054,10 @@ class HPWH
     void* messageCallbackContextPtr;
     /**< caller context pointer for external message processing  */
 
-    MODELS hpwhModel;
-    /**< The hpwh should know which preset initialized it, or if it was from a fileget */
+    MODELS model;
+    /**< The model id */
 
-    // a std::vector containing the HeatSources, in order of priority
+    /// a std::vector containing the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
     int compressorIndex;
@@ -1513,12 +1530,14 @@ constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
 constexpr double FperC = 9. / 5.;   // degF / degC
 constexpr double offsetF = 32.;     // degF offset
-constexpr double sec_per_min = 60.; // seconds / min
+constexpr double sec_per_min = 60.; // s / min
 constexpr double min_per_hr = 60.;  // min / hr
-constexpr double sec_per_hr = sec_per_min * min_per_hr; // seconds / hr
+constexpr double sec_per_hr = sec_per_min * min_per_hr; // s / hr
 constexpr double L_per_gal = 3.78541;                   // liters / gal
-constexpr double ft_per_m = 3.2808;                     // feet / meter
-constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // feet / meter
+constexpr double ft_per_m = 3.2808;                     // ft / m
+constexpr double ft2_per_m2 = ft_per_m * ft_per_m;      // ft^2 / m^2
+constexpr double BTUm2C_per_kWhft2F =
+    BTUperKWH / ft2_per_m2 / FperC; // BTU m^2 degC / kW h ft^2 degC
 
 // a few extra functions for unit conversion
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
@@ -1582,5 +1601,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const int lowestNode,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
+void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 #endif
