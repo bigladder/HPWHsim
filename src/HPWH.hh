@@ -974,10 +974,10 @@ class HPWH
 
     void setAllDefaults(); /**< sets all the defaults default */
 
-    double performDraw(const double inletT_C,
-                       const double drawVolume_L,
-                       const double inletVol2_L,
-                       const double inletT2_C);
+    bool performDraw(const double inletT_C,
+                     const double drawVolume_L,
+                     const double inletVol2_L,
+                     const double inletT2_C);
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_C);
