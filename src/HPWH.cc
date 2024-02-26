@@ -315,64 +315,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
-// Inversion mixing modeled after bigladder EnergyPlus code PK
-void mixTankInversions(std::vector<double>& tankTs_C, const double nodeVolume_L)
-{
-    bool hasInversion;
-    auto nNodes = static_cast<int>(tankTs_C.size());
-    do
-    {
-        hasInversion = false;
-        // start from the top and progress downwards
-        for (int i = nNodes - 1; i > 0; i--)
-        {
-            if (tankTs_C[i] < tankTs_C[i - 1])
-            {
-                // temperature inversion!
-                hasInversion = true;
-
-                // mix by averaging all inverted nodes
-                double mixedT_C = 0.;
-                double mixedMass_kg = 0.;
-                int m;
-                for (m = i; m >= 0; m--)
-                {
-                    mixedT_C += tankTs_C[m] * (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
-                    mixedMass_kg += (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
-                    if ((m == 0) || (mixedT_C / mixedMass_kg > tankTs_C[m - 1]))
-                    {
-                        break;
-                    }
-                }
-                mixedT_C /= mixedMass_kg;
-
-                // Assign the tank temps from i to k
-                for (int k = i; k >= m; k--)
-                    tankTs_C[k] = mixedT_C;
-            }
-        }
-    } while (hasInversion);
-}
-
-void mixTankNodes(std::vector<double>& tankTs_C,
-                  int mixBottomNode,
-                  int mixBelowNode,
-                  double mixFactor)
-{
-    double avgT_C = 0.;
-    double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
-    for (int i = mixBottomNode; i < mixBelowNode; i++)
-    {
-        avgT_C += tankTs_C[i];
-    }
-    avgT_C /= numAvgNodes;
-
-    for (int i = mixBottomNode; i < mixBelowNode; i++)
-    {
-        tankTs_C[i] += mixFactor * (avgT_C - tankTs_C[i]);
-    }
-}
-
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -3500,7 +3442,7 @@ double HPWH::getOutletT_C(const double inletT_C,
                 remainingDrawVolume_N -= incrementalDrawVolume_N;
                 if (doInversionMixing)
                 {
-                    ::mixTankInversions(tankTemps_C, nodeVolume_L);
+                    mixTankInversions();
                 }
             }
 
@@ -3511,7 +3453,7 @@ double HPWH::getOutletT_C(const double inletT_C,
         if (tankMixesOnDraw && drawVolume_L > 0.)
         {
             int mixedBelowNode = (int)(numNodes * mixBelowFractionOnDraw);
-            ::mixTankNodes(tankTemps_C, 0, mixedBelowNode, 1. / 3.);
+            mixTankNodes(0, mixedBelowNode, 1. / 3.);
         }
 
     } // end if(draw_volume_L > 0)
@@ -3627,10 +3569,40 @@ void HPWH::updateSoCIfNecessary()
 
 void HPWH::mixTankInversions()
 {
-    if (doInversionMixing)
+    bool hasInversion;
+    auto nNodes = static_cast<int>(tankTemps_C.size());
+    do
     {
-        ::mixTankInversions(tankTemps_C, nodeVolume_L);
-    }
+        hasInversion = false;
+        // start from the top and progress downwards
+        for (int i = nNodes - 1; i > 0; i--)
+        {
+            if (tankTemps_C[i] < tankTemps_C[i - 1])
+            {
+                // temperature inversion!
+                hasInversion = true;
+
+                // mix by averaging all inverted nodes
+                double mixedT_C = 0.;
+                double mixedMass_kg = 0.;
+                int m;
+                for (m = i; m >= 0; m--)
+                {
+                    mixedT_C += tankTemps_C[m] * (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
+                    mixedMass_kg += (nodeVolume_L * HPWH::DENSITYWATER_kgperL);
+                    if ((m == 0) || (mixedT_C / mixedMass_kg > tankTemps_C[m - 1]))
+                    {
+                        break;
+                    }
+                }
+                mixedT_C /= mixedMass_kg;
+
+                // Assign the tank temps from i to k
+                for (int k = i; k >= m; k--)
+                    tankTemps_C[k] = mixedT_C;
+            }
+        }
+    } while (hasInversion);
 }
 
 //-----------------------------------------------------------------------------
@@ -3894,7 +3866,18 @@ double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
 
 void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {
-    ::mixTankNodes(tankTemps_C, mixBottomNode, mixBelowNode, mixFactor);
+    double avgT_C = 0.;
+    double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
+    for (int i = mixBottomNode; i < mixBelowNode; ++i)
+    {
+        avgT_C += tankTemps_C[i];
+    }
+    avgT_C /= numAvgNodes;
+
+    for (int i = mixBottomNode; i < mixBelowNode; ++i)
+    {
+        tankTemps_C[i] += mixFactor * (avgT_C - tankTemps_C[i]);
+    }
 }
 
 void HPWH::calcSizeConstants()
