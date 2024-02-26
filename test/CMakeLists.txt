@@ -8,6 +8,8 @@ target_link_libraries(testTool PRIVATE ${libs})
 
 target_compile_features(testTool PRIVATE cxx_std_17)
 
+add_subdirectory(unit_tests)
+
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
