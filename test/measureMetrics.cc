@@ -8,7 +8,6 @@ int main(int argc, char* argv[])
 {
     HPWH::StandardTestSummary standardTestSummary;
     bool validNumArgs = false;
-    bool runUnitTests = false;
 
     HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = false;
@@ -24,14 +23,12 @@ int main(int argc, char* argv[])
     {
         sModelName = argv[1];
         validNumArgs = true;
-        runUnitTests = false;
     }
     else if (argc == 3)
     {
         sPresetOrFile = argv[1];
         sModelName = argv[2];
         validNumArgs = true;
-        runUnitTests = false;
     }
     else if (argc == 4)
     {
@@ -39,7 +36,6 @@ int main(int argc, char* argv[])
         sModelName = argv[2];
         sOutputDirectory = argv[3];
         validNumArgs = true;
-        runUnitTests = false;
         standardTestOptions.saveOutput = true;
     }
 
