@@ -3345,34 +3345,25 @@ int HPWH::getResistancePosition(int elementIndex) const
 /// @param[in]	inletVol2_L		Secondary inlet volume (L) (optional)
 /// @param[in]	inletT_C		Secondary inlet temperature (degC) (optional)
 //-----------------------------------------------------------------------------
-bool HPWH::performDraw(const double inletT_C,
+void HPWH::performDraw(const double inletT_C,
                        const double drawVolume_L,
                        const double inletVol2_L,
                        const double inletT2_C)
 {
-    struct Inlet
-    {
-        int nodeIndex;
-        double drawT_C;
-        double volume_L;
-    };
-
-    Inlet inlet1 = {inletHeight, inletT_C, tankVolume_L};
-    Inlet inlet2 = {inlet2Height, inletT2_C, inletVol2_L};
-
     outletTemp_C = 0.;
     if (drawVolume_L > 0.)
     {
         const int numNodes = getNumNodes();
-        if (inlet2.volume_L > drawVolume_L)
+
+        struct Inlet
         {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Volume in inlet 2 is greater than the draw volume.  \n");
-            }
-            simHasFailed = true;
-            return false;
-        }
+            int nodeIndex;
+            double drawT_C;
+            double volume_L;
+        };
+
+        Inlet inlet1 = {inletHeight, inletT_C, tankVolume_L};
+        Inlet inlet2 = {inlet2Height, inletT2_C, inletVol2_L};
 
         // sort the inlets by height
         Inlet lowInlet = inlet1;
@@ -3474,7 +3465,6 @@ bool HPWH::performDraw(const double inletT_C,
         }
 
     } // end if(draw_volume_L > 0)
-    return true;
 }
 
 double HPWH::getExpectedOutletT_C(const double inletT_C,
@@ -3484,10 +3474,7 @@ double HPWH::getExpectedOutletT_C(const double inletT_C,
 {
     double prevOutletT_C = outletTemp_C; // preserve initial outlet temperature
     nextTankTemps_C = tankTemps_C;       // preserve initial tank temperatures
-    if (!performDraw(inletT_C, drawVolume_L, inletVol2_L, inletT2_C))
-    {
-        return 0.;
-    }
+    performDraw(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
     double newOutletT_C = outletTemp_C;
     outletTemp_C = prevOutletT_C;  // restore initial outlet temperature
     tankTemps_C = nextTankTemps_C; // restore initial tank temperatures
@@ -3500,6 +3487,8 @@ void HPWH::updateTankTemps(double drawVolume_L,
                            double inletVol2_L,
                            double inletT2_C)
 {
+    const int numNodes = getNumNodes();
+
     performDraw(inletT_C, drawVolume_L, inletVol2_L, inletT2_C);
 
     // Initialize newTankTemps_C
@@ -3515,8 +3504,8 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
         standbyLossesBottom_kJ =
             standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[0] - tankAmbientT_C);
-        standbyLossesTop_kJ = standbyLossRate_kJperHrC * hoursPerStep *
-                              (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C);
+        standbyLossesTop_kJ =
+            standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[numNodes - 1] - tankAmbientT_C);
 
         nextTankTemps_C.front() -= standbyLossesBottom_kJ / nodeCp_kJperC;
         nextTankTemps_C.back() -= standbyLossesTop_kJ / nodeCp_kJperC;
@@ -3525,8 +3514,8 @@ void HPWH::updateTankTemps(double drawVolume_L,
     // Standby losses from the sides of the tank
     {
         auto standbyLossRate_kJperHrC =
-            (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
-        for (int i = 0; i < getNumNodes(); i++)
+            (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / numNodes;
+        for (int i = 0; i < numNodes; i++)
         {
             double standbyLosses_kJ =
                 standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[i] - tankAmbientT_C);
@@ -3540,7 +3529,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
     if (doConduction)
     {
 
-        // Get the "constant" tau for the stability condition and the conduction calculation
+        // Get the "constant" tau for the conduction calculation
         const double tau = 2. * KWATER_WpermC /
                            ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *
                             (nodeHeight_m * nodeHeight_m)) *
@@ -3549,22 +3538,21 @@ void HPWH::updateTankTemps(double drawVolume_L,
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("The stability condition for conduction has failed, these results are going to "
-                    "be interesting!\n");
+                msg("The stability condition for conduction has failed.\n");
             }
             simHasFailed = true;
             return;
         }
 
         // End nodes
-        if (getNumNodes() > 1)
+        if (numNodes > 1)
         { // inner edges of top and bottom nodes
             nextTankTemps_C.front() += tau * (tankTemps_C[1] - tankTemps_C.front());
-            nextTankTemps_C.back() += tau * (tankTemps_C[getNumNodes() - 2] - tankTemps_C.back());
+            nextTankTemps_C.back() += tau * (tankTemps_C[numNodes - 2] - tankTemps_C.back());
         }
 
         // Internal nodes
-        for (int i = 1; i < getNumNodes() - 1; i++)
+        for (int i = 1; i < numNodes - 1; i++)
         {
             nextTankTemps_C[i] +=
                 tau * (tankTemps_C[i + 1] - 2. * tankTemps_C[i] + tankTemps_C[i - 1]);
@@ -3577,7 +3565,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
     standbyLosses_kWh +=
         KJ_TO_KWH(standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
 
-    // check for inverted temperature profile
+    // Check for inverted temperature profile
     mixTankInversions();
 
 } // end updateTankTemps

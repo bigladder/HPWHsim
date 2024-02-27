@@ -974,7 +974,7 @@ class HPWH
 
     void setAllDefaults(); /**< sets all the defaults default */
 
-    bool performDraw(const double inletT_C,
+    void performDraw(const double inletT_C,
                      const double drawVolume_L,
                      const double inletVol2_L,
                      const double inletT2_C);
