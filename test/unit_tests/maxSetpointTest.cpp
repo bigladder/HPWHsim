@@ -18,15 +18,15 @@ TEST(MaxSetpointTest, resistanceTank)
     double num;
     std::string why;
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(100., num, why));  // Can go to boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));   // Can go low, albiet dumb
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(99., num, why));   // Can go to near boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(100., num, why));  // Can go to boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(10., num, why));   // Can go low, albiet dumb
     EXPECT_EQ(expectedRE_maxT_C, num);
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(99.), 0);
 }
 
 /*
@@ -42,14 +42,14 @@ TEST(MaxSetpointTest, scalableCompressor)
     double num;
     std::string why;
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(60., num, why));   // Can go to normal
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(100, num, why));   // Can go to programed max
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(99., num, why));   // Can go to near boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(60., num, why));   // Can go to normal
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(100, num, why));   // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(50.), 0);
 }
 
 /*
@@ -65,16 +65,15 @@ TEST(MaxSetpointTest, NyleC90A_SP)
     double num;
     std::string why;
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling
-    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num);                  // Assert we're getting the right number
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
-    EXPECT_TRUE(
-        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(99., num, why));  // Can't go to near boiling
+    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num);                // Assert we're getting the right number
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(60., num, why));   // Can go to normal
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(50.), 0);
 }
 
 /*
@@ -90,16 +89,15 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
     double num;
     std::string why;
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling
-    EXPECT_TRUE(HPWH::MAXOUTLET_R410A == num);              // Assert we're getting the right number
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(50., num, why)); // Can go to normal
-    EXPECT_TRUE(
-        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(99., num, why));  // Can't go to near boiling
+    EXPECT_TRUE(HPWH::MAXOUTLET_R410A == num);            // Assert we're getting the right number
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(50., num, why));   // Can go to normal
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(50.), 0);
 }
 
 /*
@@ -118,20 +116,19 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
     const double maxQAHVSetpoint = F_TO_C(176.1);
     const double qAHVHotSideTemepratureOffset = dF_TO_dC(15.);
 
-    // isNewSetpointPossible should be fine, we aren't changing the setpoint of the Sanden.
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling
+    // canSetSetpointT_C should be fine, we aren't changing the setpoint of the Sanden.
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(99., num, why));  // Can't go to near boiling
 
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(60., num, why)); // Can go to normal
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(60., num, why)); // Can go to normal
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(maxQAHVSetpoint, num, why));
-    EXPECT_TRUE(
-        hpwh.isNewSetpointPossible(maxQAHVSetpoint - qAHVHotSideTemepratureOffset, num, why));
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(maxQAHVSetpoint, num, why));
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(maxQAHVSetpoint - qAHVHotSideTemepratureOffset, num, why));
 
     // Check this carries over into setting the setpoint.
-    EXPECT_EQ(hpwh.setSetpoint(101), HPWH::HPWH_ABORT);
-    EXPECT_EQ(hpwh.setSetpoint(maxQAHVSetpoint), HPWH::HPWH_ABORT);
-    EXPECT_EQ(hpwh.setSetpoint(maxQAHVSetpoint - qAHVHotSideTemepratureOffset), 0);
+    EXPECT_EQ(hpwh.setSetpointT_C(101), HPWH::HPWH_ABORT);
+    EXPECT_EQ(hpwh.setSetpointT_C(maxQAHVSetpoint), HPWH::HPWH_ABORT);
+    EXPECT_EQ(hpwh.setSetpointT_C(maxQAHVSetpoint - qAHVHotSideTemepratureOffset), 0);
 }
 
 /*
@@ -147,15 +144,15 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     double num;
     std::string why;
 
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));   // Can go to near boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(100., num, why));  // Can go to boiling
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));   // Can go low, albiet dumb
-    EXPECT_EQ(expectedRE_maxT_C, num);                        // Max is boiling
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(99., num, why));   // Can go to near boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(100., num, why));  // Can go to boiling
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(10., num, why));   // Can go low, albiet dumb
+    EXPECT_EQ(expectedRE_maxT_C, num);                    // Max is boiling
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);                 // Can go lower than boiling though
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(99.), 0);                 // Can go lower than boiling though
 }
 
 /*
@@ -173,13 +170,13 @@ TEST(MaxSetpointTest, StorageTank)
     std::string why;
 
     // Storage tanks have free reign!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(101., num, why)); // Can go above boiling!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));  // Can go to near boiling!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));  // Can go low, albiet dumb
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(101., num, why)); // Can go above boiling!
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(99., num, why));  // Can go to near boiling!
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(10., num, why));  // Can go low, albiet dumb
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), 0); // Can go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);  // Can go lower than boiling though
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), 0); // Can go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(99.), 0);  // Can go lower than boiling though
 }
 
 /*
@@ -196,20 +193,20 @@ TEST(MaxSetpointTest, Sanden80)
     std::string why;
 
     // Storage tanks have free reign!
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(101., num, why)); // Can't go above boiling!
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(99., num, why));  // Can't go to near boiling!
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(60., num, why));  // Can't go to normalish
-    EXPECT_FALSE(hpwh.isNewSetpointPossible(10., num, why));  // Can't go low, albiet dumb
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(101., num, why)); // Can't go above boiling!
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(99., num, why));  // Can't go to near boiling!
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(60., num, why));  // Can't go to normalish
+    EXPECT_FALSE(hpwh.canSetSetpointT_C(10., num, why));  // Can't go low, albiet dumb
 
-    EXPECT_EQ(num, hpwh.getSetpoint()); // Make sure it thinks the max is the setpoint
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(
+    EXPECT_EQ(num, hpwh.getSetpointT_C()); // Make sure it thinks the max is the setpoint
+    EXPECT_TRUE(hpwh.canSetSetpointT_C(
         num, num1, why)); // Check that the setpoint can be set to the setpoint.
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), HPWH::HPWH_ABORT);  // Can go lower than boiling though
-    EXPECT_EQ(hpwh.setSetpoint(60.), HPWH::HPWH_ABORT);  // Can't go to normalish
-    EXPECT_EQ(hpwh.setSetpoint(10.), HPWH::HPWH_ABORT);  // Can't go low, albiet dumb
+    EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
+    EXPECT_EQ(hpwh.setSetpointT_C(99.), HPWH::HPWH_ABORT);  // Can go lower than boiling though
+    EXPECT_EQ(hpwh.setSetpointT_C(60.), HPWH::HPWH_ABORT);  // Can't go to normalish
+    EXPECT_EQ(hpwh.setSetpointT_C(10.), HPWH::HPWH_ABORT);  // Can't go low, albiet dumb
 }
 
 /*
@@ -246,44 +243,44 @@ TEST(UtilityTest, setTemperatures)
 
     // test 1
     {
-        std::vector<double> setT_C {10., 60.};
-        hpwh.setTankLayerTemperatures(setT_C);
+        std::vector<double> setTs_C {10., 60.};
+        hpwh.setTankTs_C(setTs_C);
 
-        std::vector<double> newT_C;
-        hpwh.getTankTemps(newT_C);
+        std::vector<double> newTs_C;
+        hpwh.getTankTs_C(newTs_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[0], 10.);  //
-        EXPECT_NEAR_REL(newT_C[11], 60.); //
+        EXPECT_NEAR_REL(newTs_C[0], 10.);  //
+        EXPECT_NEAR_REL(newTs_C[11], 60.); //
     }
 
     // test 2
     {
-        std::vector<double> setT_C = {10., 20., 30., 40., 50., 60.};
-        hpwh.setTankLayerTemperatures(setT_C);
+        std::vector<double> setTs_C = {10., 20., 30., 40., 50., 60.};
+        hpwh.setTankTs_C(setTs_C);
 
-        std::vector<double> newT_C;
-        hpwh.getTankTemps(newT_C);
+        std::vector<double> newTs_C;
+        hpwh.getTankTs_C(newTs_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[0], 10.);  //
-        EXPECT_NEAR_REL(newT_C[5], 30.);  //
-        EXPECT_NEAR_REL(newT_C[6], 40.);  //
-        EXPECT_NEAR_REL(newT_C[11], 60.); //
+        EXPECT_NEAR_REL(newTs_C[0], 10.);  //
+        EXPECT_NEAR_REL(newTs_C[5], 30.);  //
+        EXPECT_NEAR_REL(newTs_C[6], 40.);  //
+        EXPECT_NEAR_REL(newTs_C[11], 60.); //
     }
 
     // test 3
     {
-        std::vector<double> setT_C = {
+        std::vector<double> setTs_C = {
             10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90.};
-        hpwh.setTankLayerTemperatures(setT_C);
+        hpwh.setTankTs_C(setTs_C);
 
-        std::vector<double> newT_C;
-        hpwh.getTankTemps(newT_C);
+        std::vector<double> newTs_C;
+        hpwh.getTankTs_C(newTs_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[2], 25.2941); //
-        EXPECT_NEAR_REL(newT_C[8], 67.6471); //
+        EXPECT_NEAR_REL(newTs_C[2], 25.2941); //
+        EXPECT_NEAR_REL(newTs_C[8], 67.6471); //
     }
 
     // test 4
@@ -293,10 +290,10 @@ TEST(UtilityTest, setTemperatures)
         double initialT_C = 20., finalT_C = 66.;
         for (std::size_t i = 0; i < nSet; ++i)
             setT_C[i] = initialT_C + (finalT_C - initialT_C) * i / static_cast<double>(nSet - 1);
-        hpwh.setTankLayerTemperatures(setT_C);
+        hpwh.setTankTs_C(setT_C);
 
         std::vector<double> newT_C;
-        hpwh.getTankTemps(newT_C);
+        hpwh.getTankTs_C(newT_C);
 
         // Check some expected values.
         EXPECT_NEAR_REL(newT_C[4], 37.);  //
@@ -306,17 +303,17 @@ TEST(UtilityTest, setTemperatures)
     // test 5
     {
         const std::size_t nSet = 12;
-        std::vector<double> setT_C(nSet);
+        std::vector<double> setTs_C(nSet);
         double initialT_C = 20., finalT_C = 64.;
         for (std::size_t i = 0; i < nSet; ++i)
-            setT_C[i] = initialT_C + (finalT_C - initialT_C) * i / static_cast<double>(nSet - 1);
-        hpwh.setTankLayerTemperatures(setT_C);
+            setTs_C[i] = initialT_C + (finalT_C - initialT_C) * i / static_cast<double>(nSet - 1);
+        hpwh.setTankTs_C(setTs_C);
 
-        std::vector<double> newT_C;
-        hpwh.getTankTemps(newT_C);
+        std::vector<double> newTs_C;
+        hpwh.getTankTs_C(newTs_C);
 
         // Check some expected values.
-        EXPECT_NEAR_REL(newT_C[3], 32.);  //
-        EXPECT_NEAR_REL(newT_C[11], 64.); //
+        EXPECT_NEAR_REL(newTs_C[3], 32.);  //
+        EXPECT_NEAR_REL(newTs_C[11], 64.); //
     }
 }

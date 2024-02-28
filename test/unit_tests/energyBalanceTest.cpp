@@ -27,8 +27,8 @@ TEST(EnergyBalanceTest, energyBalance)
         const double externalT_C = 20.;
 
         //
-        hpwh.setTankToTemperature(20.);
-        hpwh.setInletT(5.);
+        hpwh.setTankT_C(20.);
+        hpwh.setInletT_C(5.);
 
         constexpr double testDuration_min = 60.;
         bool result = true;
@@ -64,8 +64,8 @@ TEST(EnergyBalanceTest, energyBalance)
 
         //
         std::vector<double> nodePowerExtra_W = {1000.};
-        hpwh.setTankToTemperature(20.);
-        hpwh.setInletT(5.);
+        hpwh.setTankT_C(20.);
+        hpwh.setInletT_C(5.);
 
         constexpr double testDuration_min = 60.;
         bool result = true;

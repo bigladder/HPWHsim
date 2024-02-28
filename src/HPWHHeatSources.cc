@@ -11,29 +11,40 @@
 #include "HPWH.hh"
 
 // public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(HPWH* parentInput)
-    : hpwh(parentInput)
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
+    : hpwh(hpwh_in)
+    , typeOfHeatSource(TYPE_none)
+    , configuration(CONFIG_SUBMERGED)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
+    , runtime_min(0.)
+    , energyInput_kJ(0.)
+    , energyOutput_kJ(0.)
+    , energyRemovedFromEnvironment_kJ(0.)
+    , energyRetained_kJ(0.)
+    , heatRetentionCoef(0.)
+    , isVIP(false)
     , backupHeatSource(NULL)
     , companionHeatSource(NULL)
     , followedByHeatSource(NULL)
+    , shrinkageT_C(1.)
     , useBtwxtGrid(false)
+    , extrapolationMethod(EXTRAP_LINEAR)
     , standbyLogic(NULL)
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
-    , minT(-273.15)
-    , maxT(100)
-    , maxSetpoint_C(100.)
-    , hysteresis_dC(0)
-    , airflowFreedom(1.0)
-    , externalInletHeight(-1)
-    , externalOutletHeight(-1)
+    , minT_C(-273.15)
+    , maxT_C(100)
+    , maxSetpointT_C(100.)
+    , hysteresisOffsetT_C(0)
+    , depressesTemperature(false)
+    , airflowFreedom(1.)
+    , externalInletNodeIndex(-1)
+    , externalOutletNodeIndex(-1)
+    , lowestNode(0)
     , mpFlowRate_LPS(0.)
-    , typeOfHeatSource(TYPE_none)
     , isMultipass(true)
-    , extrapolationMethod(EXTRAP_LINEAR)
 {
 }
 
@@ -52,8 +63,10 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     doDefrost = hSource.doDefrost;
 
     runtime_min = hSource.runtime_min;
-    energyInput_kWh = hSource.energyInput_kWh;
-    energyOutput_kWh = hSource.energyOutput_kWh;
+    energyInput_kJ = hSource.energyInput_kJ;
+    energyOutput_kJ = hSource.energyOutput_kJ;
+    energyRemovedFromEnvironment_kJ = hSource.energyRemovedFromEnvironment_kJ;
+    // energyRetained_kJ = hSource.energyRetained_kJ;
 
     isVIP = hSource.isVIP;
 
@@ -76,7 +89,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 
     condensity = hSource.condensity;
 
-    Tshrinkage_C = hSource.Tshrinkage_C;
+    shrinkageT_C = hSource.shrinkageT_C;
 
     perfMap = hSource.perfMap;
 
@@ -88,16 +101,16 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     defrostMap = hSource.defrostMap;
     resDefrost = hSource.resDefrost;
 
-    // i think vector assignment works correctly here
+    // note vector assignments
     turnOnLogicSet = hSource.turnOnLogicSet;
     shutOffLogicSet = hSource.shutOffLogicSet;
     standbyLogic = hSource.standbyLogic;
 
-    minT = hSource.minT;
-    maxT = hSource.maxT;
+    minT_C = hSource.minT_C;
+    maxT_C = hSource.maxT_C;
     maxOut_at_LowT = hSource.maxOut_at_LowT;
-    hysteresis_dC = hSource.hysteresis_dC;
-    maxSetpoint_C = hSource.maxSetpoint_C;
+    hysteresisOffsetT_C = hSource.hysteresisOffsetT_C;
+    maxSetpointT_C = hSource.maxSetpointT_C;
 
     depressesTemperature = hSource.depressesTemperature;
     airflowFreedom = hSource.airflowFreedom;
@@ -107,13 +120,14 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     isMultipass = hSource.isMultipass;
     mpFlowRate_LPS = hSource.mpFlowRate_LPS;
 
-    externalInletHeight = hSource.externalInletHeight;
-    externalOutletHeight = hSource.externalOutletHeight;
+    externalInletNodeIndex = hSource.externalInletNodeIndex;
+    externalOutletNodeIndex = hSource.externalOutletNodeIndex;
 
     lowestNode = hSource.lowestNode;
     extrapolationMethod = hSource.extrapolationMethod;
     secondaryHeatExchanger = hSource.secondaryHeatExchanger;
 
+    heatRetentionCoef = hSource.heatRetentionCoef;
     return *this;
 }
 
@@ -157,49 +171,49 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C < minT_C - hysteresisOffsetT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C < minT)
+        else if (isEngaged() == false && heatSourceAmbientT_C < minT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
         // when running, use hysteresis
-        if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C > maxT_C + hysteresisOffsetT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
+        else if (isEngaged() == false && heatSourceAmbientT_C > maxT_C)
         {
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
                 hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
 
@@ -208,16 +222,10 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
             lock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
             {
-                hpwh->msg("\tlock-out: condenser water temperature above max: %.2f", maxSetpoint_C);
+                hpwh->msg("\tlock-out: condenser water temperature above max: %.2f",
+                          maxSetpointT_C);
             }
         }
-        //	if (lock == true && backupHeatSource == NULL) {
-        //		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
-        //			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined.
-        // Simulation will continue without lock-out");
-        //		}
-        //		lock = false;
-        //	}
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
             hpwh->msg("\n");
@@ -244,40 +252,41 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
         // when the "external" temperature is no longer too cold or too warm
         // when running, use hysteresis
         bool unlock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C > minT + hysteresis_dC &&
-            heatSourceAmbientT_C < maxT - hysteresis_dC)
+        if (isEngaged() == true && heatSourceAmbientT_C > minT_C + hysteresisOffsetT_C &&
+            heatSourceAmbientT_C < maxT_C - hysteresisOffsetT_C)
         {
             unlock = true;
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C > minT + hysteresis_dC)
+                heatSourceAmbientT_C > minT_C + hysteresisOffsetT_C)
             {
                 hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
             if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C < maxT - hysteresis_dC)
+                heatSourceAmbientT_C < maxT_C - hysteresisOffsetT_C)
             {
                 hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > minT && heatSourceAmbientT_C < maxT)
+        else if (isEngaged() == false && heatSourceAmbientT_C > minT_C &&
+                 heatSourceAmbientT_C < maxT_C)
         {
             unlock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT)
+            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT_C)
             {
                 hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT_C);
             }
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT)
+            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT_C)
             {
                 hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT_C);
             }
         }
         if (hpwh->hpwhVerbosity >= VRB_typical)
@@ -364,7 +373,7 @@ bool HPWH::HeatSource::shouldHeat() const
                 hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t "
                           "comparison: %2.1f\n",
                           average,
-                          hpwh->setpoint_C,
+                          hpwh->setpointT_C,
                           turnOnLogicSet[i]->getDecisionPoint(),
                           comparison);
             }
@@ -398,12 +407,12 @@ bool HPWH::HeatSource::shutsOff() const
 {
     bool shutOff = false;
 
-    if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C)
+    if (hpwh->tankTs_C[0] >= hpwh->setpointT_C)
     {
         shutOff = true;
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
+            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTs_C[0]);
         }
         return shutOff;
     }
@@ -443,9 +452,9 @@ bool HPWH::HeatSource::maxedOut() const
 
     // If the heat source can't produce water at the setpoint and the control logics are saying to
     // shut off
-    if (hpwh->setpoint_C > maxSetpoint_C)
+    if (hpwh->setpointT_C > maxSetpointT_C)
     {
-        if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff())
+        if (hpwh->tankTs_C[0] >= maxSetpointT_C || shutsOff())
         {
             maxed = true;
         }
@@ -490,7 +499,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // calculate capacity btu/hr, input btu/hr, and cop
         if (isACompressor())
         {
-            hpwh->condenserInlet_C = getTankTemp();
+            hpwh->condenserInletT_C = getTankTemp();
             getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
         }
         else
@@ -508,37 +517,39 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
         // maybe start from the top and go down?  test this with graphs
+        double effectiveCap_kJ =
+            /*(1. - heatRetentionCoef) * */ BTUperH_TO_KW(cap_BTUperHr) * minutesToRun *
+            sec_per_min;
 
         // set the leftover capacity to 0
         double leftoverCap_kJ = 0.;
         for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
         {
-            // for(int i = 0; i < hpwh->numNodes; i++){
-            double nodeCap_kJ =
-                BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr * heatDistribution[i]);
+            double nodeCap_kJ = heatDistribution[i] * effectiveCap_kJ;
             if (nodeCap_kJ != 0.)
             {
                 double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
                 // add leftoverCap to the next run, and keep passing it on
-                leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpoint_C);
+                leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpointT_C);
             }
         }
 
         if (isACompressor())
         { // outlet temperature is the condenser temperature after heat has been added
-            hpwh->condenserOutlet_C = getTankTemp();
+            hpwh->condenserOutletT_C = getTankTemp();
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
-        double cap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
-        runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
-#if 1 // error check, 1-22-2017; updated 12-6-2023
+        runtime_min = (1. - (leftoverCap_kJ / effectiveCap_kJ)) * minutesToRun;
         if (runtime_min < -TOL_MINVALUE)
+        {
             if (hpwh->hpwhVerbosity >= VRB_reluctant)
+            {
                 hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
-#endif
+            }
+        }
+        break;
     }
-    break;
 
     case CONFIG_EXTERNAL:
         // Else the heat source is external. SANCO2 system is only current example
@@ -556,11 +567,51 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         }
         break;
     }
+    // Accumulate the energies
+    double heatingEnergy_kJ = BTUperH_TO_KW(cap_BTUperHr) * runtime_min * sec_per_min;
+    double inputEnergy_kJ = BTUperH_TO_KW(input_BTUperHr) * runtime_min * sec_per_min;
+    double outputEnergy_kJ = (1. - heatRetentionCoef) * heatingEnergy_kJ;
+    // double retainedEnergy_kJ = heatRetentionCoef * heatingEnergy_kJ;
+    double removedEnergy_kJ = outputEnergy_kJ /*+ retainedEnergy_kJ*/ - inputEnergy_kJ;
 
-    // Write the input & output energy
-    energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
-    energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
+    energyInput_kJ += inputEnergy_kJ;
+    energyOutput_kJ += outputEnergy_kJ;
+    // energyRetained_kJ += retainedEnergy_kJ;
+    energyRemovedFromEnvironment_kJ += removedEnergy_kJ;
 }
+
+/*
+void HPWH::HeatSource::addRetainedHeat()
+{
+    if (energyRetained_kJ > 0.)
+    {
+        double heatAdded_kJ = 0.;
+
+        // takes care of the swooping for wrapped configurations
+        std::vector<double> heatDistribution;
+        calcHeatDist(heatDistribution);
+
+        double cap_kJ = energyRetained_kJ;
+        double effectiveCap_kJ = (1. - heatRetentionCoef) * cap_kJ;
+
+        // set the leftover capacity to 0
+        double leftoverCap_kJ = 0.;
+        for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
+        {
+            double nodeCap_kJ = heatDistribution[i] * effectiveCap_kJ;
+            if (nodeCap_kJ != 0.)
+            {
+                // add leftoverCap to the next run, and keep passing it on
+                double nodeHeatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
+                leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ, i, maxSetpointT_C);
+                heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
+            }
+        }
+        energyOutput_kJ += heatAdded_kJ;
+        energyRetained_kJ -= heatAdded_kJ;
+    }
+}
+*/
 
 // private HPWH::HeatSource functions
 void HPWH::HeatSource::sortPerformanceMap()
@@ -574,15 +625,15 @@ void HPWH::HeatSource::sortPerformanceMap()
 double HPWH::HeatSource::getTankTemp() const
 {
 
-    std::vector<double> resampledTankTemps(getCondensitySize());
-    resample(resampledTankTemps, hpwh->tankTemps_C);
+    std::vector<double> resampledTankTs_C(getCondensitySize());
+    resample(resampledTankTs_C, hpwh->tankTs_C);
 
     double tankTemp_C = 0.;
 
     std::size_t j = 0;
-    for (auto& resampledNodeTemp : resampledTankTemps)
+    for (auto& resampledNodeT_C : resampledTankTs_C)
     {
-        tankTemp_C += condensity[j] * resampledNodeTemp;
+        tankTemp_C += condensity[j] * resampledNodeT_C;
         // Note that condensity is normalized.
         ++j;
     }
@@ -604,14 +655,14 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
+    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideOffsetT_C);
     externalT_F = C_TO_F(externalT_C);
 
     // Get bounding performance map points for interpolation/extrapolation
     bool extrapolate = false;
     size_t i_prev = 0;
     size_t i_next = 1;
-    double Tout_F = C_TO_F(setpointTemp_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
+    double Tout_F = C_TO_F(setpointTemp_C + secondaryHeatExchanger.hotSideOffsetT_C);
 
     if (useBtwxtGrid)
     {
@@ -790,7 +841,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
     double externalT_F, condenserTemp_F;
     bool resDefrostHeatingOn = false;
     // Convert Celsius to Fahrenheit for the curve fits
-    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
+    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideOffsetT_C);
     externalT_F = C_TO_F(externalT_C);
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
@@ -930,7 +981,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpoint_C);
+            heatDistribution, shrinkageT_C, lowestNode, hpwh->tankTs_C, hpwh->setpointT_C);
     }
 }
 
@@ -961,19 +1012,19 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     cap_BTUperHr = 0.;
     cop = 0.;
 
-    double setpointT_C = std::min(maxSetpoint_C, hpwh->setpoint_C);
+    double effectiveSetpointT_C = std::min(maxSetpointT_C, hpwh->setpointT_C);
     double remainingTime_min = stepTime_min;
     do
     {
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tankTs_C[externalOutletNodeIndex];
 
         // how much heat is available in remaining time
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
 
         double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
 
-        double targetT_C = setpointT_C;
+        double targetT_C = effectiveSetpointT_C;
 
         // temperature increase
         double deltaT_C = targetT_C - externalOutletT_C;
@@ -1023,21 +1074,21 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            hpwh->condenserInlet_C += externalOutletT_C * heatingTime_min;
-            hpwh->condenserOutlet_C += targetT_C * heatingTime_min;
+            hpwh->condenserInletT_C += externalOutletT_C * heatingTime_min;
+            hpwh->condenserOutletT_C += targetT_C * heatingTime_min;
         }
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight;
-             static_cast<int>(nodeIndex) <= externalInletHeight;
+        for (std::size_t nodeIndex = externalOutletNodeIndex;
+             static_cast<int>(nodeIndex) <= externalInletNodeIndex;
              ++nodeIndex)
         {
-            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
+            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletNodeIndex)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tankTs_C[nodeIndex + 1];
+            hpwh->tankTs_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTs_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -1066,8 +1117,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         input_BTUperHr /= runTime_min;
         cap_BTUperHr /= runTime_min;
         cop /= runTime_min;
-        hpwh->condenserInlet_C /= runTime_min;
-        hpwh->condenserOutlet_C /= runTime_min;
+        hpwh->condenserInletT_C /= runTime_min;
+        hpwh->condenserOutletT_C /= runTime_min;
     }
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)
@@ -1113,7 +1164,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tankTs_C[externalOutletNodeIndex];
 
         // find heating capacity
         getCapacityMP(
@@ -1149,21 +1200,21 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            hpwh->condenserInlet_C += externalOutletT_C * heatingTime_min;
-            hpwh->condenserOutlet_C += targetT_C * heatingTime_min;
+            hpwh->condenserInletT_C += externalOutletT_C * heatingTime_min;
+            hpwh->condenserOutletT_C += targetT_C * heatingTime_min;
         }
 
         // mix with node above from outlet to inlet
         // mix inlet water at target temperature with inlet node
-        for (std::size_t nodeIndex = externalOutletHeight;
-             static_cast<int>(nodeIndex) <= externalInletHeight;
+        for (std::size_t nodeIndex = externalOutletNodeIndex;
+             static_cast<int>(nodeIndex) <= externalInletNodeIndex;
              ++nodeIndex)
         {
-            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
+            double& mixT_C = (static_cast<int>(nodeIndex) == externalInletNodeIndex)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tankTs_C[nodeIndex + 1];
+            hpwh->tankTs_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTs_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -1189,8 +1240,8 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         input_BTUperHr /= elapsedTime_min;
         cap_BTUperHr /= elapsedTime_min;
         cop /= elapsedTime_min;
-        hpwh->condenserInlet_C /= elapsedTime_min;
-        hpwh->condenserOutlet_C /= elapsedTime_min;
+        hpwh->condenserInletT_C /= elapsedTime_min;
+        hpwh->condenserOutletT_C /= elapsedTime_min;
     }
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)

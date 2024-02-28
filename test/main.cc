@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
     tempDepressThresh = 4;
-    hpwh.setMaxTempDepression(tempDepressThresh);
+    hpwh.setMaxDepressionT(tempDepressThresh);
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
@@ -285,14 +285,14 @@ int main(int argc, char* argv[])
     {
         if (!allSchedules[5].empty())
         {
-            hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
+            hpwh.setSetpointT(allSchedules[5][0]); // expect this to fail sometimes
         }
         else
         {
-            hpwh.setSetpoint(newSetpoint);
+            hpwh.setSetpointT(newSetpoint);
         }
         if (hasInitialTankTemp)
-            hpwh.setTankToTemperature(initialTankT_C);
+            hpwh.setTankT_C(initialTankT_C);
         else
             hpwh.resetTankToSetpoint();
     }
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL);
+        hpwh.setTankSize(newTankSize, HPWH::V_UNITS::GAL);
     }
     if (tot_limit > 0)
     {
@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
         // Change setpoint if there is a setpoint schedule.
         if (!allSchedules[5].empty() && !hpwh.isSetpointFixed())
         {
-            hpwh.setSetpoint(allSchedules[5][i]); // expect this to fail sometimes
+            hpwh.setSetpointT(allSchedules[5][i]); // expect this to fail sometimes
         }
 
         // Change SoC schedule
@@ -406,10 +406,10 @@ int main(int argc, char* argv[])
         if (hpwh.getModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
-            if (hpwh.getSetpoint() <= 125.)
+            if (hpwh.getSetpointT() <= 125.)
             {
                 allSchedules[1][i] *= (125. - allSchedules[0][i]) /
-                                      (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) -
+                                      (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, HPWH::T_UNITS::F) -
                                        allSchedules[0][i]);
             }
         }
@@ -445,8 +445,8 @@ int main(int argc, char* argv[])
         // Check flow for external MP
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::V_UNITS::GAL);
+            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::R_UNITS::GALperMIN) *
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
@@ -462,18 +462,19 @@ int main(int argc, char* argv[])
             // Copy current status into the output file
             if (HPWH_doTempDepress)
             {
-                airTemp2 = hpwh.getLocationTemp_C();
+                airTemp2 = hpwh.getLocationT_C();
             }
             strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-                          std::to_string(hpwh.getSetpoint()) + ", " +
+                          std::to_string(hpwh.getSetpointT()) + ", " +
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
             if (hpwh.isCompressorExternalMultipass() == 1)
             {
-                strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
-                               std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+                strPreamble += std::to_string(hpwh.getCondenserInletT_C()) + ", " +
+                               std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
+                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::V_UNITS::GAL)) +
+                               ", ";
             }
             if (useSoC)
             {
@@ -491,8 +492,9 @@ int main(int argc, char* argv[])
         {
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
-                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
+                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::E_UNITS::KWH) * 1000.;
+                cumHeatOut[iHS] +=
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::E_UNITS::KWH) * 1000.;
             }
         }
     }
