@@ -2581,6 +2581,7 @@ int HPWH::getCompressorCoilConfig() const
     }
     return heatSources[compressorIndex].configuration;
 }
+
 bool HPWH::isCompressorMultipass() const
 {
     if (!hasACompressor())
