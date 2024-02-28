@@ -4564,7 +4564,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_SUBMERGED;
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::wholeTank(111, T_UNITS::F, true));
+        compressor.addTurnOnLogic(HPWH::wholeTank(F_TO_C(111), true));
         compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
 
         // set everything in its places

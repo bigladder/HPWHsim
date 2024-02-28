@@ -280,6 +280,16 @@ class HPWH
     using ConversionMap =
         std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
 
+    template <typename T>
+    struct Unit
+    {
+        static ConversionMap<T> conversionMap;
+        static double convert(const double x, const T fromUnits, const T toUnits)
+        {
+            return conversionMap[{fromUnits, toUnits}](x);
+        }
+    };
+
     /* time units and conversion */
     enum class TIME_UNITS
     {
@@ -288,59 +298,35 @@ class HPWH
         S    // seconds
     };
 
-    static ConversionMap<TIME_UNITS> convertTime;
-    inline static double
-    convert(const double time, const HPWH::TIME_UNITS fromUnits, const HPWH::TIME_UNITS toUnits)
-    {
-        return convertTime[{fromUnits, toUnits}](time);
-    }
-
     /* temperature units and conversion */
     enum class T_UNITS
     {
         C, // celsius
         F  // fahrenheit
     };
-    static ConversionMap<T_UNITS> convertT;
-    inline static double
-    convert(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
+
+    /* temperature-difference units and conversion */
+    enum class DT_UNITS
     {
-        return convertT[{fromUnits, toUnits}](T);
-    }
-    static ConversionMap<T_UNITS> convertDeltaT;
-    inline static double
-    convertDelta(const double T, const HPWH::T_UNITS fromUnits, const HPWH::T_UNITS toUnits)
-    {
-        return convertT[{fromUnits, toUnits}](T);
-    }
+        C, // celsius
+        F  // fahrenheit
+    };
 
     /* energy units and conversion */
-    enum class E_UNITS : std::size_t
+    enum class E_UNITS
     {
         KJ,  // kilojoules
         KWH, // kilowatt hours
         BTU  // british thermal units
     };
-    static ConversionMap<E_UNITS> convertE;
-    inline static double
-    convert(const double E, const HPWH::E_UNITS fromUnits, const HPWH::E_UNITS toUnits)
-    {
-        return convertE[{fromUnits, toUnits}](E);
-    }
 
     /* power units and conversion */
-    enum class P_UNITS : std::size_t
+    enum class P_UNITS
     {
         KW,      // kilowatts
         BTUperH, // BTU per hour
         W,       // watts
     };
-    static ConversionMap<P_UNITS> convertP;
-    inline static double
-    convert(const double p, const HPWH::P_UNITS fromUnits, const HPWH::P_UNITS toUnits)
-    {
-        return convertP[{fromUnits, toUnits}](p);
-    }
 
     /* length units and conversion */
     enum class L_UNITS
@@ -348,12 +334,6 @@ class HPWH
         M, // meters
         FT // feet
     };
-    static ConversionMap<L_UNITS> convertL;
-    inline static double
-    convert(const double length, const HPWH::L_UNITS fromUnits, const HPWH::L_UNITS toUnits)
-    {
-        return convertL[{fromUnits, toUnits}](length);
-    }
 
     /* area units and conversion */
     enum class A_UNITS
@@ -361,12 +341,6 @@ class HPWH
         M2, // square meters
         FT2 // square feet
     };
-    static ConversionMap<A_UNITS> convertA;
-    inline static double
-    convert(const double length, const HPWH::A_UNITS fromUnits, const HPWH::A_UNITS toUnits)
-    {
-        return convertA[{fromUnits, toUnits}](length);
-    }
 
     /* volume units and conversion */
     enum class V_UNITS
@@ -375,12 +349,6 @@ class HPWH
         GAL, // gallons
         FT3  // cubic feet
     };
-    static ConversionMap<V_UNITS> convertV;
-    inline static double
-    convert(const double v, const HPWH::V_UNITS fromUnits, const HPWH::V_UNITS toUnits)
-    {
-        return convertV[{fromUnits, toUnits}](v);
-    }
 
     /* flow-rate units and conversion */
     enum class R_UNITS
@@ -388,12 +356,6 @@ class HPWH
         LperS,    // liters per second
         GALperMIN // gallons per minute
     };
-    static ConversionMap<R_UNITS> convertR;
-    inline static double
-    convert(const double r, const HPWH::R_UNITS fromUnits, const HPWH::R_UNITS toUnits)
-    {
-        return convertR[{fromUnits, toUnits}](r);
-    }
 
     /* UA units and conversion */
     enum class UA_UNITS
@@ -402,11 +364,10 @@ class HPWH
         BTUperHF // british thermal units per hour degree fahrenheit
     };
 
-    static ConversionMap<UA_UNITS> convertUA;
-    inline static double
-    convert(const double UA, const HPWH::UA_UNITS fromUnits, const HPWH::UA_UNITS toUnits)
+    template <typename T>
+    inline static double convert(const double val, const T fromUnits, const T toUnits)
     {
-        return convertUA[{fromUnits, toUnits}](UA);
+        return Unit<T>::convert(val, fromUnits, toUnits);
     }
 
     /// specifies the type of heat source
@@ -562,12 +523,11 @@ class HPWH
                                                           bool constMains,
                                                           double mains_C);
 
-    std::shared_ptr<TempBasedHeatingLogic>
-    wholeTank(double decisionPoint, const T_UNITS units = T_UNITS::C, const bool absolute = false);
+    std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint,
+                                                     const bool absolute = false);
     std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> secondThird(double decisionPoint,
-                                                       const T_UNITS units = T_UNITS::C,
                                                        const bool absolute = false);
     std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint);

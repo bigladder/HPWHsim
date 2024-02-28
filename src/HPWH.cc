@@ -67,19 +67,25 @@ const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 const int HPWH::HPWH_ABORT = -274000;
 
-HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertT = {
+template <typename T>
+HPWH::ConversionMap<T> HPWH::Unit<T>::conversionMap;
+
+template <>
+HPWH::ConversionMap<HPWH::T_UNITS> HPWH::Unit<HPWH::T_UNITS>::conversionMap = {
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &C_TO_F},
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &F_TO_C}};
 
-HPWH::ConversionMap<HPWH::T_UNITS> HPWH::convertDeltaT = {
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), ident},
-    {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), dC_TO_dF},
-    {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), dF_TO_dC}};
+template <>
+HPWH::ConversionMap<HPWH::DT_UNITS> HPWH::Unit<HPWH::DT_UNITS>::conversionMap = {
+    {std::make_pair(HPWH::DT_UNITS::F, HPWH::DT_UNITS::F), ident},
+    {std::make_pair(HPWH::DT_UNITS::C, HPWH::DT_UNITS::C), ident},
+    {std::make_pair(HPWH::DT_UNITS::C, HPWH::DT_UNITS::F), dC_TO_dF},
+    {std::make_pair(HPWH::DT_UNITS::F, HPWH::DT_UNITS::C), dF_TO_dC}};
 
-HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
+template <>
+HPWH::ConversionMap<HPWH::E_UNITS> HPWH::Unit<HPWH::E_UNITS>::conversionMap = {
     {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KJ), ident},
     {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KWH), ident},
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::BTU), ident},
@@ -90,7 +96,8 @@ HPWH::ConversionMap<HPWH::E_UNITS> HPWH::convertE = {
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KJ), BTU_TO_KJ},
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), BTU_TO_KWH}};
 
-HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
+template <>
+HPWH::ConversionMap<HPWH::P_UNITS> HPWH::Unit<HPWH::P_UNITS>::conversionMap = {
     {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::KW), ident},
     {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::BTUperH), ident},
     {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::BTUperH), KW_TO_BTUperH},
@@ -98,19 +105,22 @@ HPWH::ConversionMap<HPWH::P_UNITS> HPWH::convertP = {
     {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::W), BTUperH_TO_W},
     {std::make_pair(HPWH::P_UNITS::W, HPWH::P_UNITS::BTUperH), W_TO_BTUperH}};
 
-HPWH::ConversionMap<HPWH::L_UNITS> HPWH::convertL = {
+template <>
+HPWH::ConversionMap<HPWH::L_UNITS> HPWH::Unit<HPWH::L_UNITS>::conversionMap = {
     {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::M), &ident},
     {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::FT), &ident},
     {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::FT), &M_TO_FT},
     {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::M), &FT_TO_M}};
 
-HPWH::ConversionMap<HPWH::A_UNITS> HPWH::convertA = {
+template <>
+HPWH::ConversionMap<HPWH::A_UNITS> HPWH::Unit<HPWH::A_UNITS>::conversionMap = {
     {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::M2), &ident},
     {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::FT2), &ident},
     {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::FT2), &M2_TO_FT2},
     {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::M2), &FT2_TO_M2}};
 
-HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
+template <>
+HPWH::ConversionMap<HPWH::V_UNITS> HPWH::Unit<HPWH::V_UNITS>::conversionMap = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), ident},
     {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), ident},
@@ -121,13 +131,15 @@ HPWH::ConversionMap<HPWH::V_UNITS> HPWH::convertV = {
     {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::L), FT3_TO_L},
     {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL), FT3_TO_GAL}};
 
-HPWH::ConversionMap<HPWH::R_UNITS> HPWH::convertR = {
+template <>
+HPWH::ConversionMap<HPWH::R_UNITS> HPWH::Unit<HPWH::R_UNITS>::conversionMap = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
     {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::GALperMIN), &ident},
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::GALperMIN), &LPS_TO_GPM},
     {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::LperS), &GPM_TO_LPS}};
 
-HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
+template <>
+HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::Unit<HPWH::TIME_UNITS>::conversionMap = {
     {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::H), &ident},
     {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::MIN), &ident},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::S), &ident},
@@ -138,7 +150,8 @@ HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::convertTime = {
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::H), &S_TO_H},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
 
-HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::convertUA = {
+template <>
+HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::Unit<HPWH::UA_UNITS>::conversionMap = {
     {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::KJperHC), &ident},
     {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::BTUperHF), &ident},
     {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::BTUperHF), &KJperHC_TO_BTUperHF},
@@ -1848,14 +1861,12 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
     return nodeWeights;
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic>
-HPWH::wholeTank(double decisionPoint, const T_UNITS units /*C */, const bool absolute /* = false */)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,
+                                                             const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(0., 1.);
-    double decisionPoint_C = absolute ? convert(decisionPoint, units, T_UNITS::C)
-                                      : convertDelta(decisionPoint, units, T_UNITS::C);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "whole tank", nodeWeights, decisionPoint_C, this, absolute);
+        "whole tank", nodeWeights, decisionPoint, this, absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint)
@@ -1873,14 +1884,11 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double deci
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,
-                                                               const T_UNITS units /*C*/,
                                                                const bool absolute /* = false */)
 {
     auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
-    double decisionPoint_C = absolute ? convert(decisionPoint, units, T_UNITS::C)
-                                      : convertDelta(decisionPoint, units, T_UNITS::C);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second third", nodeWeights, decisionPoint_C, this, absolute);
+        "second third", nodeWeights, decisionPoint, this, absolute);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint)
@@ -4895,48 +4903,47 @@ int HPWH::initFromFile(string configFile)
                     }
                     if (tempString == "wholeTank")
                     {
-                        heatSources[heatsource].addTurnOnLogic(
-                            HPWH::wholeTank(tempDouble, T_UNITS::C, absolute));
+                        heatSources[heatsource].addTurnOnLogic(wholeTank(tempDouble, absolute));
                     }
                     else if (tempString == "topThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(topThird(tempDouble));
                     }
                     else if (tempString == "bottomThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(bottomThird(tempDouble));
                     }
                     else if (tempString == "standby")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(standby(tempDouble));
                     }
                     else if (tempString == "bottomSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(bottomSixth(tempDouble));
                     }
                     else if (tempString == "secondSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(secondSixth(tempDouble));
                     }
                     else if (tempString == "thirdSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(thirdSixth(tempDouble));
                     }
                     else if (tempString == "fourthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(fourthSixth(tempDouble));
                     }
                     else if (tempString == "fifthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(fifthSixth(tempDouble));
                     }
                     else if (tempString == "topSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(topSixth(tempDouble));
                     }
                     else if (tempString == "bottomHalf")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(bottomHalf(tempDouble));
                     }
                     else
                     {
