@@ -2589,7 +2589,7 @@ bool HPWH::isCompressorMultipass() const
         {
             msg("Current model does not have a compressor.  \n");
         }
-        return HPWH_ABORT;
+        return false;
     }
     return heatSources[compressorIndex].isMultipass;
 }
@@ -2602,7 +2602,7 @@ bool HPWH::isCompressorExternalMultipass() const
         {
             msg("Current model does not have a compressor.  \n");
         }
-        return HPWH_ABORT;
+        return false;
     }
     return heatSources[compressorIndex].isExternalMultipass();
 }
@@ -2647,7 +2647,7 @@ double HPWH::getExternalMPFlowRate(const R_UNITS units /*GALperMIN*/) const
         {
             msg("Does not have an external multipass heat source \n");
         }
-        return HPWH_ABORT;
+        return (double)HPWH_ABORT;
     }
 
     return convert(heatSources[compressorIndex].mpFlowRate_LPS, R_UNITS::LperS, units);

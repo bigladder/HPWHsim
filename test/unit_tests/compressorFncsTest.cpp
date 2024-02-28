@@ -15,9 +15,9 @@ struct CompressorFncsTest : public testing::Test
         std::string sModelName;
         bool hasCompressor;
         int coilConfig; // 1: Wrapped, 2: External
-        int isMultipass;
-        int isExternalMultipass;
-        double maxSetpointT_C;
+        bool isCompressorMultipass;
+        bool isCompressorExternalMultipass;
+        double maxCompressorSetpointT_C;
         double minT_F;
     };
 
@@ -29,8 +29,8 @@ struct CompressorFncsTest : public testing::Test
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
         {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
         {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
-        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
-        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
+        {"restankRealistic", false, intAbort, false, false, dblAbort, dblAbort},
+        {"StorageTank", false, intAbort, false, false, dblAbort, dblAbort},
         {"ColmacCxA_20_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"NyleC90A_MP", true, 2, true, true, F_TO_C(160.), 40.},
@@ -52,10 +52,11 @@ TEST_F(CompressorFncsTest, compressorSpecs)
 
         EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.sModelName;
         EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
+        EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isCompressorMultipass)
             << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMaxCompressorSetpointT_C(), modelSpec.maxSetpointT_C)
+        EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isCompressorExternalMultipass)
+            << modelSpec.sModelName;
+        EXPECT_EQ(hpwh.getMaxCompressorSetpointT_C(), modelSpec.maxCompressorSetpointT_C)
             << modelSpec.sModelName;
         EXPECT_EQ(hpwh.getMinOperatingT(HPWH::T_UNITS::F), modelSpec.minT_F)
             << modelSpec.sModelName;

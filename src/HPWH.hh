@@ -1770,14 +1770,14 @@ inline double KJ_TO_KWH(const double kJ) { return kJ / sec_per_hr; }
 inline double KWH_TO_KJ(const double kWh) { return kWh * sec_per_hr; }
 
 inline double KJ_TO_BTU(const double kJ) { return Btu_per_kJ * kJ; }
-inline double BTU_TO_KJ(const double Btu) { return Btu / Btu_per_kJ; }
+inline double BTU_TO_KJ(const double Btu) { return kJ_per_Btu * Btu; }
 
 inline double KWH_TO_BTU(const double kWh) { return KJ_TO_BTU(KWH_TO_KJ(kWh)); }
 inline double BTU_TO_KWH(const double Btu) { return KJ_TO_KWH(BTU_TO_KJ(Btu)); }
 
 // power conversion
 inline double KW_TO_BTUperH(const double kW) { return Btu_per_kJ * sec_per_hr * kW; }
-inline double BTUperH_TO_KW(const double Btu_per_h) { return Btu_per_h / Btu_per_kJ / sec_per_hr; }
+inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_per_h / sec_per_hr; }
 
 inline double KW_TO_W(const double kW) { return 1000. * kW; }
 inline double W_TO_KW(const double W) { return W / 1000.; }
