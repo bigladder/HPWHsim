@@ -68,24 +68,24 @@ const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 const int HPWH::HPWH_ABORT = -274000;
 
 template <typename T>
-HPWH::ConversionMap<T> HPWH::Unit<T>::conversionMap;
+HPWH::ConversionMap<T> HPWH::Units<T>::conversionMap;
 
 template <>
-HPWH::ConversionMap<HPWH::T_UNITS> HPWH::Unit<HPWH::T_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::T_UNITS> HPWH::Units<HPWH::T_UNITS>::conversionMap = {
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::F), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::C), &ident},
     {std::make_pair(HPWH::T_UNITS::C, HPWH::T_UNITS::F), &C_TO_F},
     {std::make_pair(HPWH::T_UNITS::F, HPWH::T_UNITS::C), &F_TO_C}};
 
 template <>
-HPWH::ConversionMap<HPWH::DT_UNITS> HPWH::Unit<HPWH::DT_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::DT_UNITS> HPWH::Units<HPWH::DT_UNITS>::conversionMap = {
     {std::make_pair(HPWH::DT_UNITS::F, HPWH::DT_UNITS::F), ident},
     {std::make_pair(HPWH::DT_UNITS::C, HPWH::DT_UNITS::C), ident},
     {std::make_pair(HPWH::DT_UNITS::C, HPWH::DT_UNITS::F), dC_TO_dF},
     {std::make_pair(HPWH::DT_UNITS::F, HPWH::DT_UNITS::C), dF_TO_dC}};
 
 template <>
-HPWH::ConversionMap<HPWH::E_UNITS> HPWH::Unit<HPWH::E_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::E_UNITS> HPWH::Units<HPWH::E_UNITS>::conversionMap = {
     {std::make_pair(HPWH::E_UNITS::KJ, HPWH::E_UNITS::KJ), ident},
     {std::make_pair(HPWH::E_UNITS::KWH, HPWH::E_UNITS::KWH), ident},
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::BTU), ident},
@@ -97,7 +97,7 @@ HPWH::ConversionMap<HPWH::E_UNITS> HPWH::Unit<HPWH::E_UNITS>::conversionMap = {
     {std::make_pair(HPWH::E_UNITS::BTU, HPWH::E_UNITS::KWH), BTU_TO_KWH}};
 
 template <>
-HPWH::ConversionMap<HPWH::P_UNITS> HPWH::Unit<HPWH::P_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::P_UNITS> HPWH::Units<HPWH::P_UNITS>::conversionMap = {
     {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::KW), ident},
     {std::make_pair(HPWH::P_UNITS::BTUperH, HPWH::P_UNITS::BTUperH), ident},
     {std::make_pair(HPWH::P_UNITS::KW, HPWH::P_UNITS::BTUperH), KW_TO_BTUperH},
@@ -106,21 +106,21 @@ HPWH::ConversionMap<HPWH::P_UNITS> HPWH::Unit<HPWH::P_UNITS>::conversionMap = {
     {std::make_pair(HPWH::P_UNITS::W, HPWH::P_UNITS::BTUperH), W_TO_BTUperH}};
 
 template <>
-HPWH::ConversionMap<HPWH::L_UNITS> HPWH::Unit<HPWH::L_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::L_UNITS> HPWH::Units<HPWH::L_UNITS>::conversionMap = {
     {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::M), &ident},
     {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::FT), &ident},
     {std::make_pair(HPWH::L_UNITS::M, HPWH::L_UNITS::FT), &M_TO_FT},
     {std::make_pair(HPWH::L_UNITS::FT, HPWH::L_UNITS::M), &FT_TO_M}};
 
 template <>
-HPWH::ConversionMap<HPWH::A_UNITS> HPWH::Unit<HPWH::A_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::A_UNITS> HPWH::Units<HPWH::A_UNITS>::conversionMap = {
     {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::M2), &ident},
     {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::FT2), &ident},
     {std::make_pair(HPWH::A_UNITS::M2, HPWH::A_UNITS::FT2), &M2_TO_FT2},
     {std::make_pair(HPWH::A_UNITS::FT2, HPWH::A_UNITS::M2), &FT2_TO_M2}};
 
 template <>
-HPWH::ConversionMap<HPWH::V_UNITS> HPWH::Unit<HPWH::V_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::V_UNITS> HPWH::Units<HPWH::V_UNITS>::conversionMap = {
     {std::make_pair(HPWH::V_UNITS::L, HPWH::V_UNITS::L), ident},
     {std::make_pair(HPWH::V_UNITS::GAL, HPWH::V_UNITS::GAL), ident},
     {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::FT3), ident},
@@ -132,14 +132,14 @@ HPWH::ConversionMap<HPWH::V_UNITS> HPWH::Unit<HPWH::V_UNITS>::conversionMap = {
     {std::make_pair(HPWH::V_UNITS::FT3, HPWH::V_UNITS::GAL), FT3_TO_GAL}};
 
 template <>
-HPWH::ConversionMap<HPWH::R_UNITS> HPWH::Unit<HPWH::R_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::R_UNITS> HPWH::Units<HPWH::R_UNITS>::conversionMap = {
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::LperS), &ident},
     {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::GALperMIN), &ident},
     {std::make_pair(HPWH::R_UNITS::LperS, HPWH::R_UNITS::GALperMIN), &LPS_TO_GPM},
     {std::make_pair(HPWH::R_UNITS::GALperMIN, HPWH::R_UNITS::LperS), &GPM_TO_LPS}};
 
 template <>
-HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::Unit<HPWH::TIME_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::Units<HPWH::TIME_UNITS>::conversionMap = {
     {std::make_pair(HPWH::TIME_UNITS::H, HPWH::TIME_UNITS::H), &ident},
     {std::make_pair(HPWH::TIME_UNITS::MIN, HPWH::TIME_UNITS::MIN), &ident},
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::S), &ident},
@@ -151,7 +151,7 @@ HPWH::ConversionMap<HPWH::TIME_UNITS> HPWH::Unit<HPWH::TIME_UNITS>::conversionMa
     {std::make_pair(HPWH::TIME_UNITS::S, HPWH::TIME_UNITS::MIN), &S_TO_MIN}};
 
 template <>
-HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::Unit<HPWH::UA_UNITS>::conversionMap = {
+HPWH::ConversionMap<HPWH::UA_UNITS> HPWH::Units<HPWH::UA_UNITS>::conversionMap = {
     {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::KJperHC), &ident},
     {std::make_pair(HPWH::UA_UNITS::BTUperHF, HPWH::UA_UNITS::BTUperHF), &ident},
     {std::make_pair(HPWH::UA_UNITS::KJperHC, HPWH::UA_UNITS::BTUperHF), &KJperHC_TO_BTUperHF},
@@ -1340,15 +1340,15 @@ int HPWH::setDoTempDepression(bool doTempDepress)
     return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double HPWH_size, V_UNITS units /*L*/, bool forceChange /*=false*/)
+// Uses the UA before the function is called and adjusts the A part of the UA to match
+// the input volume given getTankSurfaceArea().
+int HPWH::setTankWithSameU(double tankSize, V_UNITS units /*L*/, bool forceChange /*=false*/)
 {
-    // Uses the UA before the function is called and adjusts the A part of the UA to match
-    // the input volume given getTankSurfaceArea().
-    double HPWH_size_L = convert(HPWH_size, units, V_UNITS::L);
-    double oldA_ft2 = getTankSurfaceArea(A_UNITS::FT2);
+    double tankSize_L = convert(tankSize, units, V_UNITS::L);
+    double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(A_UNITS::M2);
 
-    setTankSize(HPWH_size_L, V_UNITS::L, forceChange);
-    setUA(tankUA_kJperHrC * getTankSurfaceArea(A_UNITS::FT2) / oldA_ft2, UA_UNITS::KJperHC);
+    setTankSize(tankSize_L, V_UNITS::L, forceChange);
+    setUA(oldTankU_kJperHCm2 * getTankSurfaceArea(A_UNITS::M2), UA_UNITS::KJperHC);
     return 0;
 }
 

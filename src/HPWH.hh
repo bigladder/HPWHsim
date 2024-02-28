@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib> //for exit
 #include <vector>
+#include <unordered_map>
 
 namespace Btwxt
 {
@@ -265,6 +266,7 @@ class HPWH
         VRB_emetic = 30     /**< print all the things  */
     };
 
+    /// unit-conversion utilities
     struct PairHash
     {
         template <class T>
@@ -281,7 +283,7 @@ class HPWH
         std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
 
     template <typename T>
-    struct Unit
+    struct Units
     {
         static ConversionMap<T> conversionMap;
         static double convert(const double x, const T fromUnits, const T toUnits)
@@ -367,7 +369,7 @@ class HPWH
     template <typename T>
     inline static double convert(const double val, const T fromUnits, const T toUnits)
     {
-        return Unit<T>::convert(val, fromUnits, toUnits);
+        return Units<T>::convert(val, fromUnits, toUnits);
     }
 
     /// specifies the type of heat source
@@ -722,8 +724,7 @@ class HPWH
     double getHeatContent_kJ() const;
 
     ///////////////////////////////////////////////
-    /* The following functions return energies in user-specified units
-     * HPWH_ABORT is returned for incorrect units */
+    /* The following functions return energies in user-specified units */
 
     double getInputEnergy(const E_UNITS units = E_UNITS::KWH) const;
 
@@ -738,7 +739,7 @@ class HPWH
     double getStandbyLosses(const E_UNITS units = E_UNITS::KWH) const;
 
     ///////////////////////////////////////////////
-    /* The following functions return, assign, or display temperatures (degC) */
+    /* The following functions return, assign, or display temperatures (in degC) */
 
     double getSetpointT_C() const { return setpointT_C; }
 
@@ -798,6 +799,12 @@ class HPWH
 
     double getMaxCompressorSetpointT(const T_UNITS units = T_UNITS::C) const;
 
+    /// resets the tank temperature to the setpoint temperature
+    int resetTankToSetpoint();
+
+    /// indicates whether the setpoint temperature can be changed
+    bool isSetpointFixed() const;
+
     int setMaxDepressionT(double maxDepression, const T_UNITS units = T_UNITS::C);
 
     int setTankTs(std::vector<double> tankTs_in, const T_UNITS units = T_UNITS::C);
@@ -811,16 +818,11 @@ class HPWH
                          std::string& why,
                          T_UNITS units = T_UNITS::C) const;
 
-    /// resets the tank temperature to the setpoint temperature
-    int resetTankToSetpoint();
+    ///////////////////////////////////////////////
 
     /// change the temperature-depression option
     int setDoTempDepression(bool doTempDepress);
 
-    /// indicates whether the setpoint temperature can be changed
-    bool isSetpointFixed() const;
-
-    ///////////////////////////////////////////////
     /** Returns State of Charge where
         tMains = current mains (cold) water temp,
         tMinUseful = minimum useful temp,
@@ -837,10 +839,9 @@ class HPWH
     int setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
 
-    int
-    setTankSize_adjustUA(double HPWH_size, V_UNITS units = V_UNITS::L, bool forceChange = false);
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
-       but a new A. A is found via getTankSurfaceArea()*/
+      but a new A. A is found via getTankSurfaceArea()*/
+    int setTankWithSameU(double tankSize, V_UNITS units = V_UNITS::L, bool forceChange = false);
 
     double getTankSurfaceArea(const A_UNITS units = A_UNITS::FT2) const;
 
