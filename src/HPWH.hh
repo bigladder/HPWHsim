@@ -1656,34 +1656,34 @@ class HPWH::HeatSource
 
     /// some methods to help with the add heat interface - MJL
     void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double setpointTemp_C,
+                     double condenserT_C,
+                     double setpointT_C,
                      double& input_BTUperHr,
                      double& cap_BTUperHr,
                      double& cop);
 
     /// An overloaded function that uses uses the setpoint temperature
     void getCapacity(double externalT_C,
-                     double condenserTemp_C,
+                     double condenserT_C,
                      double& input_BTUperHr,
                      double& cap_BTUperHr,
                      double& cop)
     {
         getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpointT(), input_BTUperHr, cap_BTUperHr, cop);
+            externalT_C, condenserT_C, hpwh->getSetpointT(), input_BTUperHr, cap_BTUperHr, cop);
     };
 
     /// An equivalent getCapacity function just for multipass external (or split) HPWHs
     void getCapacityMP(double externalT_C,
-                       double condenserTemp_C,
+                       double condenserT_C,
                        double& input_BTUperHr,
                        double& cap_BTUperHr,
                        double& cop);
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 
-    /// returns the tank temperature weighted by the condensity for this heat source
-    double getTankTemp() const;
+    /// returns the tank temperature (C) weighted by the condensity for this heat source
+    double getTankT_C() const;
 
     /// sorts the Performance Map by increasing external temperatures
     void sortPerformanceMap();

@@ -499,12 +499,12 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // calculate capacity btu/hr, input btu/hr, and cop
         if (isACompressor())
         {
-            hpwh->condenserInletT_C = getTankTemp();
-            getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
+            hpwh->condenserInletT_C = getTankT_C();
+            getCapacity(externalT_C, getTankT_C(), input_BTUperHr, cap_BTUperHr, cop);
         }
         else
         {
-            getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
+            getCapacity(externalT_C, getTankT_C(), input_BTUperHr, cap_BTUperHr, cop);
         }
         // some outputs for debugging
         if (hpwh->hpwhVerbosity >= VRB_typical)
@@ -536,7 +536,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (isACompressor())
         { // outlet temperature is the condenser temperature after heat has been added
-            hpwh->condenserOutletT_C = getTankTemp();
+            hpwh->condenserOutletT_C = getTankT_C();
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
@@ -576,42 +576,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
     energyInput_kJ += inputEnergy_kJ;
     energyOutput_kJ += outputEnergy_kJ;
-    // energyRetained_kJ += retainedEnergy_kJ;
     energyRemovedFromEnvironment_kJ += removedEnergy_kJ;
 }
-
-/*
-void HPWH::HeatSource::addRetainedHeat()
-{
-    if (energyRetained_kJ > 0.)
-    {
-        double heatAdded_kJ = 0.;
-
-        // takes care of the swooping for wrapped configurations
-        std::vector<double> heatDistribution;
-        calcHeatDist(heatDistribution);
-
-        double cap_kJ = energyRetained_kJ;
-        double effectiveCap_kJ = (1. - heatRetentionCoef) * cap_kJ;
-
-        // set the leftover capacity to 0
-        double leftoverCap_kJ = 0.;
-        for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
-        {
-            double nodeCap_kJ = heatDistribution[i] * effectiveCap_kJ;
-            if (nodeCap_kJ != 0.)
-            {
-                // add leftoverCap to the next run, and keep passing it on
-                double nodeHeatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
-                leftoverCap_kJ = hpwh->addHeatAboveNode(nodeHeatToAdd_kJ, i, maxSetpointT_C);
-                heatAdded_kJ += nodeHeatToAdd_kJ - leftoverCap_kJ;
-            }
-        }
-        energyOutput_kJ += heatAdded_kJ;
-        energyRetained_kJ -= heatAdded_kJ;
-    }
-}
-*/
 
 // private HPWH::HeatSource functions
 void HPWH::HeatSource::sortPerformanceMap()
@@ -622,51 +588,51 @@ void HPWH::HeatSource::sortPerformanceMap()
               { return a.T_F < b.T_F; });
 }
 
-double HPWH::HeatSource::getTankTemp() const
+double HPWH::HeatSource::getTankT_C() const
 {
 
     std::vector<double> resampledTankTs_C(getCondensitySize());
     resample(resampledTankTs_C, hpwh->tankTs_C);
 
-    double tankTemp_C = 0.;
+    double tankT_C = 0.;
 
     std::size_t j = 0;
     for (auto& resampledNodeT_C : resampledTankTs_C)
     {
-        tankTemp_C += condensity[j] * resampledNodeT_C;
+        tankT_C += condensity[j] * resampledNodeT_C;
         // Note that condensity is normalized.
         ++j;
     }
     if (hpwh->hpwhVerbosity >= VRB_typical)
     {
-        hpwh->msg("tank temp %.2lf \n", tankTemp_C);
+        hpwh->msg("tank temp %.2lf \n", tankT_C);
     }
-    return tankTemp_C;
+    return tankT_C;
 }
 
 void HPWH::HeatSource::getCapacity(double externalT_C,
-                                   double condenserTemp_C,
-                                   double setpointTemp_C,
+                                   double condenserT_C,
+                                   double setpointT_C,
                                    double& input_BTUperHr,
                                    double& cap_BTUperHr,
                                    double& cop)
 {
-    double externalT_F, condenserTemp_F;
+    double externalT_F, condenserT_F;
 
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideOffsetT_C);
+    condenserT_F = C_TO_F(condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C);
     externalT_F = C_TO_F(externalT_C);
 
     // Get bounding performance map points for interpolation/extrapolation
     bool extrapolate = false;
     size_t i_prev = 0;
     size_t i_next = 1;
-    double Tout_F = C_TO_F(setpointTemp_C + secondaryHeatExchanger.hotSideOffsetT_C);
+    double Tout_F = C_TO_F(setpointT_C + secondaryHeatExchanger.hotSideOffsetT_C);
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_F, Tout_F, condenserTemp_F};
+        std::vector<double> target {externalT_F, Tout_F, condenserT_F};
         btwxtInterp(input_BTUperHr, cop, target);
     }
     else
@@ -713,22 +679,22 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
             // Calculate COP and Input Power at each of the two reference temepratures
             COP_T1 = perfMap[i_prev].COP_coeffs[0];
-            COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
-            COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+            COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserT_F;
+            COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserT_F * condenserT_F;
 
             COP_T2 = perfMap[i_next].COP_coeffs[0];
-            COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserTemp_F;
-            COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
+            COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserT_F;
+            COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserT_F * condenserT_F;
 
             inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
-            inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserTemp_F;
+            inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserT_F;
             inputPower_T1_Watts +=
-                perfMap[i_prev].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+                perfMap[i_prev].inputPower_coeffs[2] * condenserT_F * condenserT_F;
 
             inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
-            inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserTemp_F;
+            inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserT_F;
             inputPower_T2_Watts +=
-                perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
+                perfMap[i_next].inputPower_coeffs[2] * condenserT_F * condenserT_F;
 
             if (hpwh->hpwhVerbosity >= VRB_emetic)
             {
@@ -779,10 +745,10 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             }
 
             regressedMethod(
-                input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserTemp_F);
+                input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserT_F);
             input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
-            regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserTemp_F);
+            regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserT_F);
         }
     }
 
@@ -796,10 +762,10 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
-        hpwh->msg("externalT_F: %.2lf, Tout_F: %.2lf, condenserTemp_F: %.2lf\n",
+        hpwh->msg("externalT_F: %.2lf, Tout_F: %.2lf, condenserT_F: %.2lf\n",
                   externalT_F,
                   Tout_F,
-                  condenserTemp_F);
+                  condenserT_F);
         hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
                   input_BTUperHr,
                   cop,
@@ -833,15 +799,15 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 }
 
 void HPWH::HeatSource::getCapacityMP(double externalT_C,
-                                     double condenserTemp_C,
+                                     double condenserT_C,
                                      double& input_BTUperHr,
                                      double& cap_BTUperHr,
                                      double& cop)
 {
-    double externalT_F, condenserTemp_F;
+    double externalT_F, condenserT_F;
     bool resDefrostHeatingOn = false;
     // Convert Celsius to Fahrenheit for the curve fits
-    condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideOffsetT_C);
+    condenserT_F = C_TO_F(condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C);
     externalT_F = C_TO_F(externalT_C);
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
@@ -856,7 +822,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_F, condenserTemp_F};
+        std::vector<double> target {externalT_F, condenserT_F};
         btwxtInterp(input_BTUperHr, cop, target);
     }
     else
@@ -871,9 +837,8 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(
-            input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserTemp_F);
-        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserTemp_F);
+        regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserT_F);
+        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserT_F);
     }
     input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
@@ -892,7 +857,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
     }
     if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
-        hpwh->msg("externalT_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, condenserTemp_F);
+        hpwh->msg("externalT_F: %.2lf, condenserT_F: %.2lf\n", externalT_F, condenserT_F);
         hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
                   input_BTUperHr,
                   cop,
