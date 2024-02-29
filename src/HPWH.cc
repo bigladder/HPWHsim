@@ -1351,7 +1351,7 @@ int HPWH::setDoTempDepression(bool doTempDepress)
 // the input volume given getTankSurfaceArea().
 int HPWH::setTankWithSameU(double tankSize, Units::Volume units /*L*/, bool forceChange /*=false*/)
 {
-    double tankSize_L = convert(tankSize, units, Units::Volume::L);
+    double tankSize_L = Units::convert(tankSize, units, Units::Volume::L);
     double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(Units::Area::m2);
 
     setTankSize(tankSize_L, Units::Volume::L, forceChange);
@@ -1369,7 +1369,8 @@ int HPWH::setTankWithSameU(double tankSize, Units::Volume units /*L*/, bool forc
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
     double radius = getTankRadius(vol, volUnits, Units::Length::ft);
-    return convert(2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.), Units::Area::ft2, surfAUnits);
+    return Units::convert(
+        2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.), Units::Area::ft2, surfAUnits);
 }
 
 double HPWH::getTankSurfaceArea(const Units::Area units /*FT2*/) const
@@ -1386,13 +1387,13 @@ double HPWH::getTankSurfaceArea(const Units::Area units /*FT2*/) const
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
     // is the same is the actual tank.
 
-    double vol_ft3 = convert(vol, volUnits, Units::Volume::ft3);
+    double vol_ft3 = Units::convert(vol, volUnits, Units::Volume::ft3);
 
     double radius_ft = -1.;
     if (vol_ft3 >= 0.)
     {
-        radius_ft =
-            convert(pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.), Units::Length::ft, radiusUnits);
+        radius_ft = Units::convert(
+            pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.), Units::Length::ft, radiusUnits);
     }
     return radius_ft;
 }
@@ -1435,7 +1436,7 @@ int HPWH::setTankSize(const double volume, Units::Volume units /*L*/, bool force
         simHasFailed = true;
         return HPWH_ABORT;
     }
-    tankVolume_L = convert(volume, units, Units::Volume::L);
+    tankVolume_L = Units::convert(volume, units, Units::Volume::L);
     calcSizeConstants();
     return 0;
 }
@@ -1454,25 +1455,25 @@ int HPWH::setDoConduction(bool doCondu)
 
 int HPWH::setUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    tankUA_kJperHrC = convert(UA, units, Units::UA::kJ_per_hC);
+    tankUA_kJperHrC = Units::convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getUA(double& UA, Units::UA units /*KJperHC*/) const
 {
-    UA = convert(tankUA_kJperHrC, Units::UA::kJ_per_hC, units);
+    UA = Units::convert(tankUA_kJperHrC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
 int HPWH::setFittingsUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    fittingsUA_kJperHrC = convert(UA, units, Units::UA::kJ_per_hC);
+    fittingsUA_kJperHrC = Units::convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
 {
-    UA = convert(fittingsUA_kJperHrC, Units::UA::kJ_per_hC, units);
+    UA = Units::convert(fittingsUA_kJperHrC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
@@ -1629,7 +1630,7 @@ int HPWH::getInletHeight(int whichInlet) const
 
 int HPWH::setMaxDepressionT(double maxDepressionT, Units::Temp units /*C*/)
 {
-    maxDepressionT_C = convert(maxDepressionT, units, Units::Temp::C);
+    maxDepressionT_C = Units::convert(maxDepressionT, units, Units::Temp::C);
     return 0;
 }
 
@@ -1670,7 +1671,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         return HPWH_ABORT;
     }
 
-    double highTemp_C = convert(highTemp, unit, Units::Temp::C);
+    double highTemp_C = Units::convert(highTemp, unit, Units::Temp::C);
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
@@ -1778,8 +1779,8 @@ int HPWH::switchToSoCControls(double targetSoC,
         return HPWH_ABORT;
     }
 
-    double tempMinUseful_C = convert(tempMinUseful, tempUnit, Units::Temp::C);
-    double mainsT_C = convert(mainsT, tempUnit, Units::Temp::C);
+    double tempMinUseful_C = Units::convert(tempMinUseful, tempUnit, Units::Temp::C);
+    double mainsT_C = Units::convert(mainsT, tempUnit, Units::Temp::C);
 
     if (mainsT_C >= tempMinUseful_C)
     {
@@ -2100,9 +2101,9 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         return double(HPWH_ABORT);
     }
 
-    airTemp_C = convert(airTemp, tempUnit, Units::Temp::C);
-    inletTemp_C = convert(inletTemp, tempUnit, Units::Temp::C);
-    outTemp_C = convert(outTemp, tempUnit, Units::Temp::C);
+    airTemp_C = Units::convert(airTemp, tempUnit, Units::Temp::C);
+    inletTemp_C = Units::convert(inletTemp, tempUnit, Units::Temp::C);
+    outTemp_C = Units::convert(outTemp, tempUnit, Units::Temp::C);
 
     if (airTemp_C < heatSources[compressorIndex].minT_C ||
         airTemp_C > heatSources[compressorIndex].maxT_C)
@@ -2139,7 +2140,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
             airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
-    return convert(capTemp_BTUperHr, Units::Power::Btu_per_h, pwrUnit);
+    return Units::convert(capTemp_BTUperHr, Units::Power::Btu_per_h, pwrUnit);
 }
 
 bool HPWH::isHeatSourceIndexValid(const int n) const
@@ -2210,54 +2211,55 @@ double HPWH::getHeatContent_kJ() const
 
 double HPWH::getInputEnergy(const Units::Energy units /*KWH*/) const
 {
-    return convert(getInputEnergy_kJ(), Units::Energy::kJ, units);
+    return Units::convert(getInputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getOutputEnergy(const Units::Energy units /*KWH*/) const
 {
-    return convert(getOutputEnergy_kJ(), Units::Energy::kJ, units);
+    return Units::convert(getOutputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getTankHeatContent(const Units::Energy units /*KWH*/) const
 {
-    return convert(getTankHeatContent_kJ(), Units::Energy::kJ, units);
+    return Units::convert(getTankHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getHeatContent(const Units::Energy units /*KWH*/) const
 {
-    return convert(getHeatContent_kJ(), Units::Energy::kJ, units);
+    return Units::convert(getHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getStandbyLosses(Units::Energy units /*KWH*/) const
 {
-    return convert(getStandbyLosses_kJ(), Units::Energy::kJ, units);
+    return Units::convert(getStandbyLosses_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyInput_kJ, Units::Energy::kJ, units)
+               ? Units::convert(heatSources[N].energyInput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyOutput_kJ, Units::Energy::kJ, units)
+               ? Units::convert(heatSources[N].energyOutput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyRetained_kJ, Units::Energy::kJ, units)
+               ? Units::convert(heatSources[N].energyRetained_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyRemovedFromEnvironment_kJ, Units::Energy::kJ, units)
+               ? Units::convert(
+                     heatSources[N].energyRemovedFromEnvironment_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
@@ -2278,7 +2280,7 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 
 double HPWH::getTankSize(Units::Volume units /*L*/) const
 {
-    return convert(tankVolume_L, Units::Volume::L, units);
+    return Units::convert(tankVolume_L, Units::Volume::L, units);
 }
 
 int HPWH::setSetpointT_C(const double setpointT_C_in)
@@ -2427,22 +2429,22 @@ void HPWH::printTankTs_C()
 
 double HPWH::getOutletT(const Units::Temp units /*C*/) const
 {
-    return convert(getOutletT_C(), Units::Temp::C, units);
+    return Units::convert(getOutletT_C(), Units::Temp::C, units);
 }
 
 double HPWH::getCondenserInletT(const Units::Temp units /*C*/) const
 {
-    return convert(getCondenserInletT_C(), Units::Temp::C, units);
+    return Units::convert(getCondenserInletT_C(), Units::Temp::C, units);
 }
 
 double HPWH::getCondenserOutletT(const Units::Temp units /*C*/) const
 {
-    return convert(getCondenserOutletT_C(), Units::Temp::C, units);
+    return Units::convert(getCondenserOutletT_C(), Units::Temp::C, units);
 }
 
 double HPWH::getSetpointT(const Units::Temp units /*C*/) const
 {
-    return convert(getSetpointT_C(), Units::Temp::C, units);
+    return Units::convert(getSetpointT_C(), Units::Temp::C, units);
 }
 
 double HPWH::getMaxCompressorSetpointT(const Units::Temp units /*C*/) const
@@ -2455,7 +2457,7 @@ double HPWH::getMaxCompressorSetpointT(const Units::Temp units /*C*/) const
         }
         return double(HPWH_ABORT);
     }
-    return convert(heatSources[compressorIndex].maxSetpointT_C, Units::Temp::C, units);
+    return Units::convert(heatSources[compressorIndex].maxSetpointT_C, Units::Temp::C, units);
 }
 
 double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) const
@@ -2470,7 +2472,7 @@ double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) cons
         }
         return double(HPWH_ABORT);
     }
-    return convert(getTankNodeT_C(nodeNum), Units::Temp::C, units);
+    return Units::convert(getTankNodeT_C(nodeNum), Units::Temp::C, units);
 }
 
 double HPWH::getNthThermocoupleT(const int iTCouple,
@@ -2490,13 +2492,14 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
 
-    return convert(simTcoupleTemp_C, Units::Temp::C, units);
+    return Units::convert(simTcoupleTemp_C, Units::Temp::C, units);
 }
 
 double HPWH::getMinOperatingT(const Units::Temp units /*C*/) const
 {
-    return hasCompressor() ? convert(heatSources[compressorIndex].minT_C, Units::Temp::C, units)
-                           : double(HPWH_ABORT);
+    return hasCompressor()
+               ? Units::convert(heatSources[compressorIndex].minT_C, Units::Temp::C, units)
+               : double(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2517,7 +2520,7 @@ int HPWH::setTankTs(std::vector<double> setTankTs, const Units::Temp units /*C*/
         return HPWH_ABORT;
     }
 
-    // convert setTankTemps to degC, if necessary
+    // Units::convert setTankTemps to degC, if necessary
     if (units == Units::Temp::F)
         for (auto& T : setTankTs)
             T = F_TO_C(T);
@@ -2531,7 +2534,7 @@ int HPWH::setTankTs(std::vector<double> setTankTs, const Units::Temp units /*C*/
 
 int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
 {
-    return setSetpointT_C(convert(setpointT, units, Units::Temp::C));
+    return setSetpointT_C(Units::convert(setpointT, units, Units::Temp::C));
 }
 
 bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
@@ -2579,10 +2582,10 @@ bool HPWH::canSetSetpointT(const double newSetpointT,
                            std::string& why,
                            Units::Temp units /*C*/) const
 {
-    double newSetpointT_C = convert(newSetpointT, units, Units::Temp::C);
+    double newSetpointT_C = Units::convert(newSetpointT, units, Units::Temp::C);
     double maxSetpointT_C = -273.15;
     bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
-    maxSetpointT = convert(maxSetpointT_C, Units::Temp::C, units);
+    maxSetpointT = Units::convert(maxSetpointT_C, Units::Temp::C, units);
     return result;
 }
 
@@ -2658,7 +2661,7 @@ bool HPWH::hasExternalHeatSource() const
 
 double HPWH::getExternalVolumeHeated(Units::Volume units /*L*/) const
 {
-    return convert(externalVolumeHeated_L, Units::Volume::L, units);
+    return Units::convert(externalVolumeHeated_L, Units::Volume::L, units);
 }
 
 double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*FlowRate::gal_per_min*/) const
@@ -2672,7 +2675,8 @@ double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*FlowRate::gal_p
         return (double)HPWH_ABORT;
     }
 
-    return convert(heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
+    return Units::convert(
+        heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
 }
 
 double HPWH::getCompressorMinRuntime(const Units::Time units /*MIN*/) const
@@ -2680,7 +2684,7 @@ double HPWH::getCompressorMinRuntime(const Units::Time units /*MIN*/) const
     if (hasACompressor())
     {
         const double time_min = 10.;
-        return convert(time_min, Units::Time::min, units);
+        return Units::convert(time_min, Units::Time::min, units);
     }
     else
     {
@@ -2883,7 +2887,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, Units::Power pw
     }
 
     // Unit conversion
-    double watts = 1000. * convert(power, pwrUnit, Units::Power::kW);
+    double watts = 1000. * Units::convert(power, pwrUnit, Units::Power::kW);
 
     // Whew so many checks...
     if (which == -1)
@@ -2966,7 +2970,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
     }
 
     // Unit conversion to kW
-    return convert(returnPower / 1000., Units::Power::kW, pwrUnit);
+    return Units::convert(returnPower / 1000., Units::Power::kW, pwrUnit);
 }
 
 int HPWH::getResistancePosition(int elementIndex) const

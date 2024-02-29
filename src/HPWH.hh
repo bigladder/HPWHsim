@@ -368,12 +368,6 @@ class HPWH
         };
     };
 
-    template <typename T>
-    inline static double convert(const double val, const T fromUnits, const T toUnits)
-    {
-        return Units::convert<T>(val, fromUnits, toUnits);
-    }
-
     /// specifies the type of heat source
     enum HEATSOURCE_TYPE
     {
