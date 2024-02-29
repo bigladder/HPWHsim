@@ -58,7 +58,7 @@ TEST_F(CompressorFncsTest, compressorSpecs)
             << modelSpec.sModelName;
         EXPECT_EQ(hpwh.getMaxCompressorSetpointT_C(), modelSpec.maxCompressorSetpointT_C)
             << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMinOperatingT(HPWH::T_UNITS::F), modelSpec.minT_F)
+        EXPECT_EQ(hpwh.getMinOperatingT(HPWH::Units::Temp::F), modelSpec.minT_F)
             << modelSpec.sModelName;
     }
 }

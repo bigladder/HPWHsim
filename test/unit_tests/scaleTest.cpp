@@ -335,8 +335,8 @@ TEST(ScaleTest, getCompressorSP_capacity)
     capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                               C_TO_F(waterTempC),
                                               C_TO_F(setpointC),
-                                              HPWH::P_UNITS::BTUperH,
-                                              HPWH::T_UNITS::F) /
+                                              HPWH::Units::Power::BTUperH,
+                                              HPWH::Units::Temp::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
@@ -368,8 +368,8 @@ TEST(ScaleTest, getCompressorMP_capacity)
     double capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                                      C_TO_F(waterTempC),
                                                      C_TO_F(setpointC),
-                                                     HPWH::P_UNITS::BTUperH,
-                                                     HPWH::T_UNITS::F) /
+                                                     HPWH::Units::Power::BTUperH,
+                                                     HPWH::Units::Temp::F) /
                           60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
@@ -455,13 +455,13 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
                                      C_TO_F(airTempC),
                                      C_TO_F(waterTempC),
                                      C_TO_F(setpointC),
-                                     HPWH::P_UNITS::BTUperH,
-                                     HPWH::T_UNITS::F);
+                                     HPWH::Units::Power::BTUperH,
+                                     HPWH::Units::Temp::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC),
                                                              C_TO_F(waterTempC),
                                                              C_TO_F(setpointC),
-                                                             HPWH::P_UNITS::BTUperH,
-                                                             HPWH::T_UNITS::F);
+                                                             HPWH::Units::Power::BTUperH,
+                                                             HPWH::Units::Temp::F);
     EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
@@ -482,10 +482,10 @@ TEST(ScaleTest, chipsCaseWithIP_units)
 
     // Scale output to 20000 btu/hr but let's use do the calc in other units
     hpwh.setCompressorOutputCapacity(
-        wh_heatingCap, airT_F, waterT_F, setpointT_F, HPWH::P_UNITS::BTUperH, HPWH::T_UNITS::F);
+        wh_heatingCap, airT_F, waterT_F, setpointT_F, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
 
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::P_UNITS::BTUperH, HPWH::T_UNITS::F);
+        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
 
     EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
@@ -516,28 +516,28 @@ TEST(ScaleTest, resistanceScales)
 
     double elementPower = 30.; // KW
 
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW), 2. * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW), 2. * elementPower);
 
     // check units convert
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::BTUperH),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::BTUperH),
                     2. * KW_TO_BTUperH(elementPower));
 
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW),
                     factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW), 2. * factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW), 2. * factor * elementPower);
 }
 
 /*

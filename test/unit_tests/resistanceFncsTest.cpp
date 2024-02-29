@@ -46,13 +46,13 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 
     double returnVal;
 
-    returnVal = hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW); // lower
+    returnVal = hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW); // lower
     EXPECT_NEAR_REL(returnVal, lowerElementPower);
 
-    returnVal = hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW); // both,
+    returnVal = hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW); // both,
     EXPECT_NEAR_REL(returnVal, lowerElementPower);
 
-    returnVal = hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW); // higher doesn't exist
+    returnVal = hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW); // higher doesn't exist
     EXPECT_EQ(returnVal, HPWH::HPWH_ABORT);
 }
 
@@ -151,27 +151,27 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
     double factor = 3.;
 
     // set both, but really only one
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::Units::Power::KW),
               0); // Check sets
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets just bottom with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets bottom with bottom
-    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT); // only have one element
 
     // set lowest
     factor = 4.;
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::Units::Power::KW),
               0); // Set just bottom
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets just bottom with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets bottom with bottom
-    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT); // only have one element
 
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 1, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT); // set top returns error
 }
 
@@ -191,26 +191,26 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
     double factor = 3.;
 
     // set both, but only bottom really.
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, -1, HPWH::Units::Power::KW),
               0); // Check sets
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets just bottom which is now top with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check the lower and only element
-    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT); //  error on non existant element
 
     // set top
     factor = 4.;
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 0, HPWH::Units::Power::KW),
               0); // only one element to set
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::P_UNITS::KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::Units::Power::KW),
                     factor * elementPower_kW); // Check gets just bottom which is now top with both
-    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.getResistanceCapacity(1, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT); // error on non existant bottom
 
     // set bottom returns error
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::P_UNITS::KW),
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, HPWH::Units::Power::KW),
               HPWH::HPWH_ABORT);
 }
 
