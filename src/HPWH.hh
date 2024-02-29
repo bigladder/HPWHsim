@@ -837,9 +837,9 @@ class HPWH
 
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
       but a new A. A is found via getTankSurfaceArea()*/
-    int setTankWithSameU(double tankSize,
-                         Units::Volume units = Units::Volume::L,
-                         bool forceChange = false);
+    int setTankSizeWithSameU(double tankSize,
+                             Units::Volume units = Units::Volume::L,
+                             bool forceChange = false);
 
     double getTankSurfaceArea(const Units::Area units = Units::Area::ft2) const;
 

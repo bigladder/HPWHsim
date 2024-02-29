@@ -1349,7 +1349,9 @@ int HPWH::setDoTempDepression(bool doTempDepress)
 
 // Uses the UA before the function is called and adjusts the A part of the UA to match
 // the input volume given getTankSurfaceArea().
-int HPWH::setTankWithSameU(double tankSize, Units::Volume units /*L*/, bool forceChange /*=false*/)
+int HPWH::setTankSizeWithSameU(double tankSize,
+                               Units::Volume units /*L*/,
+                               bool forceChange /*=false*/)
 {
     double tankSize_L = Units::convert(tankSize, units, Units::Volume::L);
     double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(Units::Area::m2);
