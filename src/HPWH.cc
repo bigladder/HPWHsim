@@ -2084,14 +2084,14 @@ int HPWH::getNumResistanceElements() const
     return count;
 }
 
-double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
-                                   double inletTemp /*=14.444*/,
-                                   double outTemp /*=57.222*/,
-                                   Units::Power pwrUnit /*KW*/,
+double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
+                                   double inletTemp /*14.444*/,
+                                   double outTemp /*57.222*/,
+                                   Units::Power pwrUnit /*kW*/,
                                    Units::Temp tempUnit /*C*/)
 {
-    // calculate capacity btu/hr, input btu/hr, and cop
-    double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
+    // calculate capacity, input power, and cop
+    double tempCap_kW, tempInput_kW, temp_cop; // temporary variables
     double airTemp_C, inletTemp_C, outTemp_C;
 
     if (!hasACompressor())
@@ -2134,15 +2134,15 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     {
         double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
         heatSources[compressorIndex].getCapacityMP(
-            airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            airTemp_C, averageTemp_C, tempInput_kW, tempCap_kW, temp_cop);
     }
     else
     {
         heatSources[compressorIndex].getCapacity(
-            airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            airTemp_C, inletTemp_C, outTemp_C, tempInput_kW, tempCap_kW, temp_cop);
     }
 
-    return Units::convert(capTemp_BTUperHr, Units::Power::Btu_per_h, pwrUnit);
+    return Units::convert(tempCap_kW, Units::Power::kW, pwrUnit);
 }
 
 bool HPWH::isHeatSourceIndexValid(const int n) const
@@ -2839,7 +2839,7 @@ int HPWH::setCompressorOutputCapacity(double newCapacity,
                                       double airTemp /*=19.722*/,
                                       double inletTemp /*=14.444*/,
                                       double outTemp /*=57.222*/,
-                                      Units::Power pwrUnit /*KW*/,
+                                      Units::Power pwrUnit /*kW*/,
                                       Units::Temp tempUnit /*C*/)
 {
     double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);

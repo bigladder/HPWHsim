@@ -484,7 +484,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
 
 void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 {
-    double input_BTUperHr = 0., cap_BTUperHr = 0., cop = 0.;
+    double input_kW = 0., cap_kW = 0., cop = 0.;
 
     switch (configuration)
     {
@@ -500,26 +500,24 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         if (isACompressor())
         {
             hpwh->condenserInletT_C = getTankT_C();
-            getCapacity(externalT_C, getTankT_C(), input_BTUperHr, cap_BTUperHr, cop);
+            getCapacity(externalT_C, getTankT_C(), input_kW, cap_kW, cop);
         }
         else
         {
-            getCapacity(externalT_C, getTankT_C(), input_BTUperHr, cap_BTUperHr, cop);
+            getCapacity(externalT_C, getTankT_C(), input_kW, cap_kW, cop);
         }
         // some outputs for debugging
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
-            hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",
-                      BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_hr,
-                      cap_BTUperHr);
+            hpwh->msg("capacity_kWh %.2lf \t\t cap_kW %.2lf \n",
+                      cap_kW * (minutesToRun) / min_per_hr,
+                      cap_kW);
         }
 
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
         // maybe start from the top and go down?  test this with graphs
-        double effectiveCap_kJ =
-            /*(1. - heatRetentionCoef) * */ BTUperH_TO_KW(cap_BTUperHr) * minutesToRun *
-            sec_per_min;
+        double effectiveCap_kJ = cap_kW * minutesToRun * sec_per_min;
 
         // set the leftover capacity to 0
         double leftoverCap_kJ = 0.;
@@ -557,22 +555,19 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         //  n, and cap/input_BTUperHr, cop are outputs
         if (isMultipass)
         {
-            runtime_min =
-                addHeatExternalMP(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
+            runtime_min = addHeatExternalMP(externalT_C, minutesToRun, cap_kW, input_kW, cop);
         }
         else
         {
-            runtime_min =
-                addHeatExternal(externalT_C, minutesToRun, cap_BTUperHr, input_BTUperHr, cop);
+            runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_kW, input_kW, cop);
         }
         break;
     }
     // Accumulate the energies
-    double heatingEnergy_kJ = BTUperH_TO_KW(cap_BTUperHr) * runtime_min * sec_per_min;
-    double inputEnergy_kJ = BTUperH_TO_KW(input_BTUperHr) * runtime_min * sec_per_min;
-    double outputEnergy_kJ = (1. - heatRetentionCoef) * heatingEnergy_kJ;
-    // double retainedEnergy_kJ = heatRetentionCoef * heatingEnergy_kJ;
-    double removedEnergy_kJ = outputEnergy_kJ /*+ retainedEnergy_kJ*/ - inputEnergy_kJ;
+    double heatingEnergy_kJ = cap_kW * runtime_min * sec_per_min;
+    double inputEnergy_kJ = input_kW * runtime_min * sec_per_min;
+    double outputEnergy_kJ = heatingEnergy_kJ;
+    double removedEnergy_kJ = outputEnergy_kJ - inputEnergy_kJ;
 
     energyInput_kJ += inputEnergy_kJ;
     energyOutput_kJ += outputEnergy_kJ;
@@ -613,8 +608,8 @@ double HPWH::HeatSource::getTankT_C() const
 void HPWH::HeatSource::getCapacity(double externalT_C,
                                    double condenserT_C,
                                    double setpointT_C,
-                                   double& input_BTUperHr,
-                                   double& cap_BTUperHr,
+                                   double& input_kW,
+                                   double& cap_kW,
                                    double& cop)
 {
     double externalT_F, condenserT_F;
@@ -633,13 +628,15 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     if (useBtwxtGrid)
     {
         std::vector<double> target {externalT_F, Tout_F, condenserT_F};
-        btwxtInterp(input_BTUperHr, cop, target);
+        double input_BTUperH = 0;
+        btwxtInterp(input_BTUperH, cop, target);
+        input_kW = BTUperH_TO_KW(input_BTUperH);
     }
     else
     {
         if (perfMap.empty())
         { // Avoid using empty perfMap
-            input_BTUperHr = 0.;
+            input_kW = 0.;
             cop = 0.;
         }
         else if (perfMap.size() > 1)
@@ -723,15 +720,17 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             }
 
             // Interpolate to get COP and input power at the current ambient temperature
-            linearInterp(
-                cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
-            linearInterp(input_BTUperHr,
+            double input_W = 0;
+            linearInterp(input_W,
                          externalT_F,
                          perfMap[i_prev].T_F,
                          perfMap[i_next].T_F,
                          inputPower_T1_Watts,
                          inputPower_T2_Watts);
-            input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0); // 1000 converts w to kw);
+            input_kW = W_TO_KW(input_W);
+
+            linearInterp(
+                cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
         }
         else
         { // perfMap.size() == 1 or we've got an issue.
@@ -745,8 +744,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             }
 
             regressedMethod(
-                input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserT_F);
-            input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
+                input_kW, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserT_F);
 
             regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserT_F);
         }
@@ -758,7 +756,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         defrostDerate(cop, externalT_F);
     }
 
-    cap_BTUperHr = cop * input_BTUperHr;
+    cap_kW = cop * input_kW;
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
@@ -766,10 +764,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                   externalT_F,
                   Tout_F,
                   condenserT_F);
-        hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
-                  input_BTUperHr,
-                  cop,
-                  cap_BTUperHr);
+        hpwh->msg("input_kW: %.2lf , cop: %.2lf, cap_kW: %.2lf \n", input_kW, cop, cap_kW);
     }
     // here is where the scaling for flow restriction happens
     // the input power doesn't change, we just scale the cop by a small percentage
@@ -783,10 +778,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
     if (hpwh->hpwhVerbosity >= VRB_typical)
     {
-        hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n",
-                  cop,
-                  input_BTUperHr,
-                  cap_BTUperHr);
+        hpwh->msg("cop: %.2lf \tinput_kW: %.2lf \tcap_kW: %.2lf \n", cop, input_kW, cap_kW);
         if (cop < 0.)
         {
             hpwh->msg(" Warning: COP is Negative! \n");
@@ -798,11 +790,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
 }
 
-void HPWH::HeatSource::getCapacityMP(double externalT_C,
-                                     double condenserT_C,
-                                     double& input_BTUperHr,
-                                     double& cap_BTUperHr,
-                                     double& cop)
+void HPWH::HeatSource::getCapacityMP(
+    double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop)
 {
     double externalT_F, condenserT_F;
     bool resDefrostHeatingOn = false;
@@ -823,7 +812,7 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
     if (useBtwxtGrid)
     {
         std::vector<double> target {externalT_F, condenserT_F};
-        btwxtInterp(input_BTUperHr, cop, target);
+        btwxtInterp(input_kW, cop, target);
     }
     else
     {
@@ -837,10 +826,9 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(input_BTUperHr, perfMap[0].inputPower_coeffs, externalT_F, condenserT_F);
+        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs, externalT_F, condenserT_F);
         regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserT_F);
     }
-    input_BTUperHr = KWH_TO_BTU(input_BTUperHr);
 
     if (doDefrost)
     {
@@ -848,20 +836,17 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
         defrostDerate(cop, externalT_F);
     }
 
-    cap_BTUperHr = cop * input_BTUperHr;
+    cap_kW = cop * input_kW;
 
     // For accounting add the resistance defrost to the input energy
     if (resDefrostHeatingOn)
     {
-        input_BTUperHr += KW_TO_BTUperH(resDefrost.inputPwr_kW);
+        input_kW += resDefrost.inputPwr_kW;
     }
     if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
         hpwh->msg("externalT_F: %.2lf, condenserT_F: %.2lf\n", externalT_F, condenserT_F);
-        hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
-                  input_BTUperHr,
-                  cop,
-                  cap_BTUperHr);
+        hpwh->msg("input_kW: %.2lf , cop: %.2lf, cap_kW: %.2lf \n", input_kW, cop, cap_kW);
     }
 }
 
@@ -967,27 +952,24 @@ bool HPWH::HeatSource::isExternalMultipass() const
 /// @param[out]	cop		            average cop
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
-double HPWH::HeatSource::addHeatExternal(double externalT_C,
-                                         double stepTime_min,
-                                         double& cap_BTUperHr,
-                                         double& input_BTUperHr,
-                                         double& cop)
+double HPWH::HeatSource::addHeatExternal(
+    double externalT_C, double stepTime_min, double& cap_kW, double& input_kW, double& cop)
 {
-    input_BTUperHr = 0.;
-    cap_BTUperHr = 0.;
+    input_kW = 0.;
+    cap_kW = 0.;
     cop = 0.;
 
     double effectiveSetpointT_C = std::min(maxSetpointT_C, hpwh->setpointT_C);
     double remainingTime_min = stepTime_min;
     do
     {
-        double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
+        double tempInput_kW = 0., tempCap_kW = 0., temp_cop = 0.;
         double& externalOutletT_C = hpwh->tankTs_C[externalOutletNodeIndex];
 
         // how much heat is available in remaining time
-        getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
+        getCapacity(externalT_C, externalOutletT_C, tempInput_kW, tempCap_kW, temp_cop);
 
-        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double heatingPower_kW = tempCap_kW;
 
         double targetT_C = effectiveSetpointT_C;
 
@@ -1061,10 +1043,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        input_BTUperHr +=
-            (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
-            heatingTime_min;
-        cap_BTUperHr += tempCap_BTUperHr * heatingTime_min;
+        input_kW +=
+            (tempInput_kW + W_TO_KW(secondaryHeatExchanger.extraPumpPower_W)) * heatingTime_min;
+        cap_kW += tempCap_kW * heatingTime_min;
         cop += temp_cop * heatingTime_min;
 
         hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
@@ -1079,8 +1060,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     double runTime_min = stepTime_min - remainingTime_min;
     if (runTime_min > 0.)
     {
-        input_BTUperHr /= runTime_min;
-        cap_BTUperHr /= runTime_min;
+        input_kW /= runTime_min;
+        cap_kW /= runTime_min;
         cop /= runTime_min;
         hpwh->condenserInletT_C /= runTime_min;
         hpwh->condenserOutletT_C /= runTime_min;
@@ -1104,14 +1085,10 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
 /// @param[out]	cop		            average cop
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
-double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
-                                           double stepTime_min,
-                                           double& cap_BTUperHr,
-                                           double& input_BTUperHr,
-                                           double& cop)
+double HPWH::HeatSource::addHeatExternalMP(
+    double externalT_C, double stepTime_min, double& cap_kW, double& input_kW, double& cop)
 {
-    input_BTUperHr = 0.;
-    cap_BTUperHr = 0.;
+    input_kW = cap_kW = 0.;
     cop = 0.;
 
     double remainingTime_min = stepTime_min;
@@ -1128,14 +1105,13 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         // apply nodeFrac as the degree of mixing (formerly 1.0)
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
-        double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
+        double tempInput_kW = 0., tempCap_kW = 0., temp_cop = 0.;
         double& externalOutletT_C = hpwh->tankTs_C[externalOutletNodeIndex];
 
         // find heating capacity
-        getCapacityMP(
-            externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
+        getCapacityMP(externalT_C, externalOutletT_C, tempInput_kW, tempCap_kW, temp_cop);
 
-        double heatingPower_kW = BTUperH_TO_KW(tempCap_BTUperHr);
+        double heatingPower_kW = tempCap_kW;
 
         // temperature increase at this power and flow rate
         double deltaT_C =
@@ -1187,10 +1163,9 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        input_BTUperHr +=
-            (tempInput_BTUperHr + W_TO_BTUperH(secondaryHeatExchanger.extraPumpPower_W)) *
-            heatingTime_min;
-        cap_BTUperHr += tempCap_BTUperHr * heatingTime_min;
+        input_kW +=
+            (tempInput_kW + W_TO_KW(secondaryHeatExchanger.extraPumpPower_W)) * heatingTime_min;
+        cap_kW += tempCap_kW * heatingTime_min;
         cop += temp_cop * heatingTime_min;
 
         hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
@@ -1202,8 +1177,8 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     double elapsedTime_min = stepTime_min - remainingTime_min;
     if (elapsedTime_min > 0.)
     {
-        input_BTUperHr /= elapsedTime_min;
-        cap_BTUperHr /= elapsedTime_min;
+        input_kW /= elapsedTime_min;
+        cap_kW /= elapsedTime_min;
         cop /= elapsedTime_min;
         hpwh->condenserInletT_C /= elapsedTime_min;
         hpwh->condenserOutletT_C /= elapsedTime_min;
