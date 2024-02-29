@@ -87,77 +87,81 @@ HPWH::Units::ConversionMap<HPWH::Units::TempDiff>
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Energy> HPWH::Units::conversionMap<HPWH::Units::Energy> = {
-    {std::make_pair(HPWH::Units::Energy::KJ, HPWH::Units::Energy::KJ), ident},
-    {std::make_pair(HPWH::Units::Energy::KWH, HPWH::Units::Energy::KWH), ident},
-    {std::make_pair(HPWH::Units::Energy::BTU, HPWH::Units::Energy::BTU), ident},
-    {std::make_pair(HPWH::Units::Energy::KJ, HPWH::Units::Energy::KWH), KJ_TO_KWH},
-    {std::make_pair(HPWH::Units::Energy::KJ, HPWH::Units::Energy::BTU), KJ_TO_BTU},
-    {std::make_pair(HPWH::Units::Energy::KWH, HPWH::Units::Energy::KJ), KWH_TO_KJ},
-    {std::make_pair(HPWH::Units::Energy::KWH, HPWH::Units::Energy::BTU), KWH_TO_BTU},
-    {std::make_pair(HPWH::Units::Energy::BTU, HPWH::Units::Energy::KJ), BTU_TO_KJ},
-    {std::make_pair(HPWH::Units::Energy::BTU, HPWH::Units::Energy::KWH), BTU_TO_KWH}};
+    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::kJ), ident},
+    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::kWh), ident},
+    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::Btu), ident},
+    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::kWh), KJ_TO_KWH},
+    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::Btu), KJ_TO_BTU},
+    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::kJ), KWH_TO_KJ},
+    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::Btu), KWH_TO_BTU},
+    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::kJ), BTU_TO_KJ},
+    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::kWh), BTU_TO_KWH}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Power> HPWH::Units::conversionMap<HPWH::Units::Power> = {
-    {std::make_pair(HPWH::Units::Power::KW, HPWH::Units::Power::KW), ident},
-    {std::make_pair(HPWH::Units::Power::BTUperH, HPWH::Units::Power::BTUperH), ident},
-    {std::make_pair(HPWH::Units::Power::KW, HPWH::Units::Power::BTUperH), KW_TO_BTUperH},
-    {std::make_pair(HPWH::Units::Power::BTUperH, HPWH::Units::Power::KW), BTUperH_TO_KW},
-    {std::make_pair(HPWH::Units::Power::BTUperH, HPWH::Units::Power::W), BTUperH_TO_W},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::BTUperH), W_TO_BTUperH}};
+    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kW), ident},
+    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::Btu_per_h), ident},
+    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::Btu_per_h), KW_TO_BTUperH},
+    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kW), BTUperH_TO_KW},
+    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::W), BTUperH_TO_W},
+    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h), W_TO_BTUperH}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Length> HPWH::Units::conversionMap<HPWH::Units::Length> = {
-    {std::make_pair(HPWH::Units::Length::M, HPWH::Units::Length::M), &ident},
-    {std::make_pair(HPWH::Units::Length::FT, HPWH::Units::Length::FT), &ident},
-    {std::make_pair(HPWH::Units::Length::M, HPWH::Units::Length::FT), &M_TO_FT},
-    {std::make_pair(HPWH::Units::Length::FT, HPWH::Units::Length::M), &FT_TO_M}};
+    {std::make_pair(HPWH::Units::Length::m, HPWH::Units::Length::m), &ident},
+    {std::make_pair(HPWH::Units::Length::ft, HPWH::Units::Length::ft), &ident},
+    {std::make_pair(HPWH::Units::Length::m, HPWH::Units::Length::ft), &M_TO_FT},
+    {std::make_pair(HPWH::Units::Length::ft, HPWH::Units::Length::m), &FT_TO_M}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Area> HPWH::Units::conversionMap<HPWH::Units::Area> = {
-    {std::make_pair(HPWH::Units::Area::M2, HPWH::Units::Area::M2), &ident},
-    {std::make_pair(HPWH::Units::Area::FT2, HPWH::Units::Area::FT2), &ident},
-    {std::make_pair(HPWH::Units::Area::M2, HPWH::Units::Area::FT2), &M2_TO_FT2},
-    {std::make_pair(HPWH::Units::Area::FT2, HPWH::Units::Area::M2), &FT2_TO_M2}};
+    {std::make_pair(HPWH::Units::Area::m2, HPWH::Units::Area::m2), &ident},
+    {std::make_pair(HPWH::Units::Area::ft2, HPWH::Units::Area::ft2), &ident},
+    {std::make_pair(HPWH::Units::Area::m2, HPWH::Units::Area::ft2), &M2_TO_FT2},
+    {std::make_pair(HPWH::Units::Area::ft2, HPWH::Units::Area::m2), &FT2_TO_M2}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Volume> HPWH::Units::conversionMap<HPWH::Units::Volume> = {
     {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::L), ident},
-    {std::make_pair(HPWH::Units::Volume::GAL, HPWH::Units::Volume::GAL), ident},
-    {std::make_pair(HPWH::Units::Volume::FT3, HPWH::Units::Volume::FT3), ident},
-    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::GAL), L_TO_GAL},
-    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::FT3), L_TO_FT3},
-    {std::make_pair(HPWH::Units::Volume::GAL, HPWH::Units::Volume::L), GAL_TO_L},
-    {std::make_pair(HPWH::Units::Volume::GAL, HPWH::Units::Volume::FT3), GAL_TO_FT3},
-    {std::make_pair(HPWH::Units::Volume::FT3, HPWH::Units::Volume::L), FT3_TO_L},
-    {std::make_pair(HPWH::Units::Volume::FT3, HPWH::Units::Volume::GAL), FT3_TO_GAL}};
+    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::gal), ident},
+    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::ft3), ident},
+    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::gal), L_TO_GAL},
+    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::ft3), L_TO_FT3},
+    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::L), GAL_TO_L},
+    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::ft3), GAL_TO_FT3},
+    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::L), FT3_TO_L},
+    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::gal), FT3_TO_GAL}};
 
 template <>
-HPWH::Units::ConversionMap<HPWH::Units::FlowRate> HPWH::Units::conversionMap<
-    HPWH::Units::FlowRate> = {
-    {std::make_pair(HPWH::Units::FlowRate::LperS, HPWH::Units::FlowRate::LperS), &ident},
-    {std::make_pair(HPWH::Units::FlowRate::GALperMIN, HPWH::Units::FlowRate::GALperMIN), &ident},
-    {std::make_pair(HPWH::Units::FlowRate::LperS, HPWH::Units::FlowRate::GALperMIN), &LPS_TO_GPM},
-    {std::make_pair(HPWH::Units::FlowRate::GALperMIN, HPWH::Units::FlowRate::LperS), &GPM_TO_LPS}};
+HPWH::Units::ConversionMap<HPWH::Units::FlowRate>
+    HPWH::Units::conversionMap<HPWH::Units::FlowRate> = {
+        {std::make_pair(HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::L_per_s), &ident},
+        {std::make_pair(HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::gal_per_min),
+         &ident},
+        {std::make_pair(HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::gal_per_min),
+         &LPS_TO_GPM},
+        {std::make_pair(HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::L_per_s),
+         &GPM_TO_LPS}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Time> HPWH::Units::conversionMap<HPWH::Units::Time> = {
-    {std::make_pair(HPWH::Units::Time::H, HPWH::Units::Time::H), &ident},
-    {std::make_pair(HPWH::Units::Time::MIN, HPWH::Units::Time::MIN), &ident},
-    {std::make_pair(HPWH::Units::Time::S, HPWH::Units::Time::S), &ident},
-    {std::make_pair(HPWH::Units::Time::H, HPWH::Units::Time::MIN), H_TO_MIN},
-    {std::make_pair(HPWH::Units::Time::H, HPWH::Units::Time::S), &H_TO_S},
-    {std::make_pair(HPWH::Units::Time::MIN, HPWH::Units::Time::H), MIN_TO_H},
-    {std::make_pair(HPWH::Units::Time::MIN, HPWH::Units::Time::S), &MIN_TO_S},
-    {std::make_pair(HPWH::Units::Time::S, HPWH::Units::Time::H), &S_TO_H},
-    {std::make_pair(HPWH::Units::Time::S, HPWH::Units::Time::MIN), &S_TO_MIN}};
+    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::h), &ident},
+    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::min), &ident},
+    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::s), &ident},
+    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::min), H_TO_MIN},
+    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::s), &H_TO_S},
+    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::h), MIN_TO_H},
+    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::s), &MIN_TO_S},
+    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::h), &S_TO_H},
+    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::min), &S_TO_MIN}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::UA> HPWH::Units::conversionMap<HPWH::Units::UA> = {
-    {std::make_pair(HPWH::Units::UA::KJperHC, HPWH::Units::UA::KJperHC), &ident},
-    {std::make_pair(HPWH::Units::UA::BTUperHF, HPWH::Units::UA::BTUperHF), &ident},
-    {std::make_pair(HPWH::Units::UA::KJperHC, HPWH::Units::UA::BTUperHF), &KJperHC_TO_BTUperHF},
-    {std::make_pair(HPWH::Units::UA::BTUperHF, HPWH::Units::UA::KJperHC), &BTUperHF_TO_KJperHC}};
+    {std::make_pair(HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::kJ_per_hC), &ident},
+    {std::make_pair(HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::Btu_per_hF), &ident},
+    {std::make_pair(HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::Btu_per_hF), &KJperHC_TO_BTUperHF},
+    {std::make_pair(HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::kJ_per_hC),
+     &BTUperHF_TO_KJperHC}};
 
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
@@ -1348,10 +1352,10 @@ int HPWH::setDoTempDepression(bool doTempDepress)
 int HPWH::setTankWithSameU(double tankSize, Units::Volume units /*L*/, bool forceChange /*=false*/)
 {
     double tankSize_L = convert(tankSize, units, Units::Volume::L);
-    double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(Units::Area::M2);
+    double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(Units::Area::m2);
 
     setTankSize(tankSize_L, Units::Volume::L, forceChange);
-    setUA(oldTankU_kJperHCm2 * getTankSurfaceArea(Units::Area::M2), Units::UA::KJperHC);
+    setUA(oldTankU_kJperHCm2 * getTankSurfaceArea(Units::Area::m2), Units::UA::kJ_per_hC);
     return 0;
 }
 
@@ -1364,8 +1368,8 @@ int HPWH::setTankWithSameU(double tankSize, Units::Volume units /*L*/, bool forc
     // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
-    double radius = getTankRadius(vol, volUnits, Units::Length::FT);
-    return convert(2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.), Units::Area::FT2, surfAUnits);
+    double radius = getTankRadius(vol, volUnits, Units::Length::ft);
+    return convert(2. * Pi * pow(radius, 2) * (ASPECTRATIO + 1.), Units::Area::ft2, surfAUnits);
 }
 
 double HPWH::getTankSurfaceArea(const Units::Area units /*FT2*/) const
@@ -1382,13 +1386,13 @@ double HPWH::getTankSurfaceArea(const Units::Area units /*FT2*/) const
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements
     // is the same is the actual tank.
 
-    double vol_ft3 = convert(vol, volUnits, Units::Volume::FT3);
+    double vol_ft3 = convert(vol, volUnits, Units::Volume::ft3);
 
     double radius_ft = -1.;
     if (vol_ft3 >= 0.)
     {
         radius_ft =
-            convert(pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.), Units::Length::FT, radiusUnits);
+            convert(pow(vol_ft3 / Pi / ASPECTRATIO, 1. / 3.), Units::Length::ft, radiusUnits);
     }
     return radius_ft;
 }
@@ -1450,25 +1454,25 @@ int HPWH::setDoConduction(bool doCondu)
 
 int HPWH::setUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    tankUA_kJperHrC = convert(UA, units, Units::UA::KJperHC);
+    tankUA_kJperHrC = convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getUA(double& UA, Units::UA units /*KJperHC*/) const
 {
-    UA = convert(tankUA_kJperHrC, Units::UA::KJperHC, units);
+    UA = convert(tankUA_kJperHrC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
 int HPWH::setFittingsUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    fittingsUA_kJperHrC = convert(UA, units, Units::UA::KJperHC);
+    fittingsUA_kJperHrC = convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
 {
-    UA = convert(fittingsUA_kJperHrC, Units::UA::KJperHC, units);
+    UA = convert(fittingsUA_kJperHrC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
@@ -2135,7 +2139,7 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
             airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
-    return convert(capTemp_BTUperHr, Units::Power::BTUperH, pwrUnit);
+    return convert(capTemp_BTUperHr, Units::Power::Btu_per_h, pwrUnit);
 }
 
 bool HPWH::isHeatSourceIndexValid(const int n) const
@@ -2206,54 +2210,54 @@ double HPWH::getHeatContent_kJ() const
 
 double HPWH::getInputEnergy(const Units::Energy units /*KWH*/) const
 {
-    return convert(getInputEnergy_kJ(), Units::Energy::KJ, units);
+    return convert(getInputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getOutputEnergy(const Units::Energy units /*KWH*/) const
 {
-    return convert(getOutputEnergy_kJ(), Units::Energy::KJ, units);
+    return convert(getOutputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getTankHeatContent(const Units::Energy units /*KWH*/) const
 {
-    return convert(getTankHeatContent_kJ(), Units::Energy::KJ, units);
+    return convert(getTankHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getHeatContent(const Units::Energy units /*KWH*/) const
 {
-    return convert(getHeatContent_kJ(), Units::Energy::KJ, units);
+    return convert(getHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getStandbyLosses(Units::Energy units /*KWH*/) const
 {
-    return convert(getStandbyLosses_kJ(), Units::Energy::KJ, units);
+    return convert(getStandbyLosses_kJ(), Units::Energy::kJ, units);
 }
 
 double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyInput_kJ, Units::Energy::KJ, units)
+               ? convert(heatSources[N].energyInput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyOutput_kJ, Units::Energy::KJ, units)
+               ? convert(heatSources[N].energyOutput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRetained(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyRetained_kJ, Units::Energy::KJ, units)
+               ? convert(heatSources[N].energyRetained_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*KWH*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? convert(heatSources[N].energyRemovedFromEnvironment_kJ, Units::Energy::KJ, units)
+               ? convert(heatSources[N].energyRemovedFromEnvironment_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
@@ -2657,7 +2661,7 @@ double HPWH::getExternalVolumeHeated(Units::Volume units /*L*/) const
     return convert(externalVolumeHeated_L, Units::Volume::L, units);
 }
 
-double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*GALperMIN*/) const
+double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*FlowRate::gal_per_min*/) const
 {
     if (!isCompressorExternalMultipass())
     {
@@ -2668,7 +2672,7 @@ double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*GALperMIN*/) co
         return (double)HPWH_ABORT;
     }
 
-    return convert(heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::LperS, units);
+    return convert(heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
 }
 
 double HPWH::getCompressorMinRuntime(const Units::Time units /*MIN*/) const
@@ -2676,7 +2680,7 @@ double HPWH::getCompressorMinRuntime(const Units::Time units /*MIN*/) const
     if (hasACompressor())
     {
         const double time_min = 10.;
-        return convert(time_min, Units::Time::MIN, units);
+        return convert(time_min, Units::Time::min, units);
     }
     else
     {
@@ -2879,7 +2883,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, Units::Power pw
     }
 
     // Unit conversion
-    double watts = 1000. * convert(power, pwrUnit, Units::Power::KW);
+    double watts = 1000. * convert(power, pwrUnit, Units::Power::kW);
 
     // Whew so many checks...
     if (which == -1)
@@ -2962,7 +2966,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
     }
 
     // Unit conversion to kW
-    return convert(returnPower / 1000., Units::Power::KW, pwrUnit);
+    return convert(returnPower / 1000., Units::Power::kW, pwrUnit);
 }
 
 int HPWH::getResistancePosition(int elementIndex) const
@@ -3518,7 +3522,7 @@ void HPWH::calcSizeConstants()
     // bottom node being the fraction of UA that corresponds to the top and bottom of the
     // tank. The assumption is that the aspect ratio is the same for all tanks and is the
     // same for the outside measurements of the unit and the inner water tank.
-    const double tankRad_m = getTankRadius(Units::Length::M);
+    const double tankRad_m = getTankRadius(Units::Length::m);
     const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
     nodeVolume_L = tankVolume_L / getNumNodes();

@@ -266,9 +266,9 @@ class HPWH
         VRB_emetic = 30     /**< print all the things  */
     };
 
+    /// unit-conversion utilities
     struct Units
     {
-        /// unit-conversion utilities
         struct PairHash
         {
             template <class T>
@@ -296,9 +296,9 @@ class HPWH
         /* time units and conversion */
         enum class Time
         {
-            H,   // hours
-            MIN, // minutes
-            S    // seconds
+            h,   // hours
+            min, // minutes
+            s    // seconds
         };
 
         /* temperature units and conversion */
@@ -318,53 +318,53 @@ class HPWH
         /* energy units and conversion */
         enum class Energy
         {
-            KJ,  // kilojoules
-            KWH, // kilowatt hours
-            BTU  // british thermal units
+            kJ,  // kilojoules
+            kWh, // kilowatt hours
+            Btu  // british thermal units
         };
 
         /* power units and conversion */
         enum class Power
         {
-            KW,      // kilowatts
-            BTUperH, // BTU per hour
-            W,       // watts
+            kW,        // kilowatts
+            Btu_per_h, // BTU per hour
+            W,         // watts
         };
 
         /* length units and conversion */
         enum class Length
         {
-            M, // meters
-            FT // feet
+            m, // meters
+            ft // feet
         };
 
         /* area units and conversion */
         enum class Area
         {
-            M2, // square meters
-            FT2 // square feet
+            m2, // square meters
+            ft2 // square feet
         };
 
         /* volume units and conversion */
         enum class Volume
         {
             L,   // liters
-            GAL, // gallons
-            FT3  // cubic feet
+            gal, // gallons
+            ft3  // cubic feet
         };
 
         /* flow-rate units and conversion */
         enum class FlowRate
         {
-            LperS,    // liters per second
-            GALperMIN // gallons per minute
+            L_per_s,    // liters per second
+            gal_per_min // gallons per minute
         };
 
         /* UA units and conversion */
         enum class UA
         {
-            KJperHC, // kilojoules per hour degree celsius
-            BTUperHF // british thermal units per hour degree fahrenheit
+            kJ_per_hC, // kilojoules per hour degree celsius
+            Btu_per_hF // british thermal units per hour degree fahrenheit
         };
     };
 
@@ -728,17 +728,17 @@ class HPWH
     ///////////////////////////////////////////////
     /* The following functions return energies in user-specified units */
 
-    double getInputEnergy(const Units::Energy units = Units::Energy::KWH) const;
+    double getInputEnergy(const Units::Energy units = Units::Energy::kWh) const;
 
-    double getOutputEnergy(const Units::Energy units = Units::Energy::KWH) const;
+    double getOutputEnergy(const Units::Energy units = Units::Energy::kWh) const;
 
-    double getTankHeatContent(const Units::Energy units = Units::Energy::KWH) const;
+    double getTankHeatContent(const Units::Energy units = Units::Energy::kWh) const;
 
-    double getHeatContent(const Units::Energy units = Units::Energy::KWH) const;
+    double getHeatContent(const Units::Energy units = Units::Energy::kWh) const;
 
-    double getEnergyRemovedFromEnvironment(const Units::Energy units = Units::Energy::KWH) const;
+    double getEnergyRemovedFromEnvironment(const Units::Energy units = Units::Energy::kWh) const;
 
-    double getStandbyLosses(const Units::Energy units = Units::Energy::KWH) const;
+    double getStandbyLosses(const Units::Energy units = Units::Energy::kWh) const;
 
     ///////////////////////////////////////////////
     /* The following functions return, assign, or display temperatures (in degC) */
@@ -847,19 +847,19 @@ class HPWH
                          Units::Volume units = Units::Volume::L,
                          bool forceChange = false);
 
-    double getTankSurfaceArea(const Units::Area units = Units::Area::FT2) const;
+    double getTankSurfaceArea(const Units::Area units = Units::Area::ft2) const;
 
     static double getTankSurfaceArea(double vol,
                                      Units::Volume volUnits = Units::Volume::L,
-                                     Units::Area surfAUnits = Units::Area::FT2);
+                                     Units::Area surfAUnits = Units::Area::ft2);
 
     /**< Returns the tank surface area based off of real storage tanks*/
-    double getTankRadius(const Units::Length units = Units::Length::FT) const;
+    double getTankRadius(const Units::Length units = Units::Length::ft) const;
 
     /// returns the tank surface radius based off of real storage tanks
     static double getTankRadius(double vol,
                                 const Units::Volume volUnits = Units::Volume::L,
-                                const Units::Length radiusUnits = Units::Length::FT);
+                                const Units::Length radiusUnits = Units::Length::ft);
 
     /// report whether the tank size can be changed
     bool isTankSizeFixed() const;
@@ -878,18 +878,18 @@ class HPWH
     int setDoConduction(bool doCondu);
     /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
-    int setUA(const double UA, const Units::UA units = Units::UA::KJperHC);
+    int setUA(const double UA, const Units::UA units = Units::UA::kJ_per_hC);
     /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC
      */
 
-    int getUA(double& UA, const Units::UA units = Units::UA::KJperHC) const;
+    int getUA(double& UA, const Units::UA units = Units::UA::kJ_per_hC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
-    int getFittingsUA(double& UA, const Units::UA units = Units::UA::KJperHC) const;
+    int getFittingsUA(double& UA, const Units::UA units = Units::UA::kJ_per_hC) const;
     /**< Returns the UAof just the fittings, with or without units specified - default is metric,
      * kJperHrC  */
 
-    int setFittingsUA(const double UA, const Units::UA units = Units::UA::KJperHC);
+    int setFittingsUA(const double UA, const Units::UA units = Units::UA::kJ_per_hC);
     /**< This is a setter for the UA of just the fittings, with or without units specified - default
      * is metric, kJperHrC */
 
@@ -948,7 +948,7 @@ class HPWH
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
                                  double outTemp = 57.222,
-                                 Units::Power pwrUnit = Units::Power::KW,
+                                 Units::Power pwrUnit = Units::Power::kW,
                                  Units::Temp tempUnit = Units::Temp::C);
     /**< Returns the heating output capacity of the compressor for the current HPWH model.
     Note only supports HPWHs with one compressor, if multiple will return the last index
@@ -959,7 +959,7 @@ class HPWH
                                     double airTemp = 19.722,
                                     double inletTemp = 14.444,
                                     double outTemp = 57.222,
-                                    Units::Power pwrUnit = Units::Power::KW,
+                                    Units::Power pwrUnit = Units::Power::kW,
                                     Units::Temp tempUnit = Units::Temp::C);
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
@@ -973,7 +973,7 @@ class HPWH
     /**< Scales the heatpump water heater input capacity and COP*/
 
     int
-    setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::Power::KW);
+    setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::Power::kW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
     changes is given by "which"
     - If which (-1) sets all the resisistance elements in the tank.
@@ -986,7 +986,7 @@ class HPWH
     defined as the by the ordered height of the resistance elements it cannot refer to a compressor.
     */
 
-    double getResistanceCapacity(int which = -1, Units::Power pwrUNIT = Units::Power::KW);
+    double getResistanceCapacity(int which = -1, Units::Power pwrUNIT = Units::Power::kW);
     /**< Returns the resistance elements capacity. Which heat source is chosen is changes is given
     by "which"
     - If which (-1) gets all the resisistance elements in the tank.
@@ -1005,18 +1005,18 @@ class HPWH
     bool isHeatSourceIndexValid(const int n) const;
 
     /// returns the energy input to the Nth heat source, with the specified units
-    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::KWH) const;
+    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kWh) const;
 
     /// returns energy transferred from the Nth heat source to the water, with the specified units
-    double getNthHeatSourceEnergyOutput(int N, Units::Energy units = Units::Energy::KWH) const;
+    double getNthHeatSourceEnergyOutput(int N, Units::Energy units = Units::Energy::kWh) const;
 
     /// returns energy removed from the environment into the heat source, with the specified units
     double
     getNthHeatSourceEnergyRemovedFromEnvironment(int N,
-                                                 Units::Energy units = Units::Energy::KWH) const;
+                                                 Units::Energy units = Units::Energy::kWh) const;
 
     /// returns energy retained by the heat source, with the specified units
-    double getNthHeatSourceEnergyRetained(int N, Units::Energy units = Units::Energy::KWH) const;
+    double getNthHeatSourceEnergyRetained(int N, Units::Energy units = Units::Energy::kWh) const;
 
     /// return the run time for the Nth heat source (min)
     /// note: they may sum to more than 1 time step for concurrently running heat sources
@@ -1053,9 +1053,9 @@ class HPWH
     bool hasExternalHeatSource() const;
 
     /// return the constant flow rate for an external multipass heat source
-    double getExternalMPFlowRate(const Units::FlowRate units = Units::FlowRate::GALperMIN) const;
+    double getExternalMPFlowRate(const Units::FlowRate units = Units::FlowRate::gal_per_min) const;
 
-    double getCompressorMinRuntime(const Units::Time units = Units::Time::MIN) const;
+    double getCompressorMinRuntime(const Units::Time units = Units::Time::min) const;
 
     int getSizingFractions(double& aquafract, double& percentUseable) const;
     /**< returns the fraction of total tank volume from the bottom up where the aquastat is

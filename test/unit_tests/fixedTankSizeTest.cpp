@@ -36,31 +36,31 @@ TEST_F(FixedSizeTest, tankSizeFixed)
         EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
         // get the initial tank size
-        double intitialTankSize_gal = hpwh.getTankSize(HPWH::Units::Volume::GAL);
+        double intitialTankSize_gal = hpwh.getTankSize(HPWH::Units::Volume::gal);
 
         // get the target tank size
         double targetTankSize_gal = intitialTankSize_gal + 100.;
 
         // change the tank size
-        hpwh.setTankSize(targetTankSize_gal, HPWH::Units::Volume::GAL);
+        hpwh.setTankSize(targetTankSize_gal, HPWH::Units::Volume::gal);
 
         // change tank size (unforced)
         if (hpwh.isTankSizeFixed())
         { // tank size should not have changed
-            EXPECT_NEAR(intitialTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::GAL), tol)
+            EXPECT_NEAR(intitialTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::gal), tol)
                 << "The tank size has changed when it should not.";
         }
         else
         { // tank size should have changed to target value
-            EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::GAL), tol)
+            EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::gal), tol)
                 << "The tank size did not change to the target value.";
         }
 
         // change tank size (forced)
-        hpwh.setTankSize(targetTankSize_gal, HPWH::Units::Volume::GAL, true);
+        hpwh.setTankSize(targetTankSize_gal, HPWH::Units::Volume::gal, true);
 
         // tank size should have changed to target value
-        EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::GAL), tol)
+        EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::Units::Volume::gal), tol)
             << "The tank size has not changed when forced.";
     }
 }

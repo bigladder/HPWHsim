@@ -20,7 +20,7 @@ struct PerformanceMapTest : public testing::Test
     double getCapacityMP_F_KW(HPWH& hpwh, performancePointMP& point)
     {
         return hpwh.getCompressorCapacity(
-            point.tairF, point.tinF, point.tinF, HPWH::Units::Power::KW, HPWH::Units::Temp::F);
+            point.tairF, point.tinF, point.tinF, HPWH::Units::Power::kW, HPWH::Units::Temp::F);
     }
 
     struct performancePointSP
@@ -33,8 +33,11 @@ struct PerformanceMapTest : public testing::Test
 
     double getCapacitySP_F_BTUHR(HPWH& hpwh, performancePointSP& point)
     {
-        return hpwh.getCompressorCapacity(
-            point.tairF, point.tinF, point.toutF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        return hpwh.getCompressorCapacity(point.tairF,
+                                          point.tinF,
+                                          point.toutF,
+                                          HPWH::Units::Power::Btu_per_h,
+                                          HPWH::Units::Temp::F);
     }
 
     double getCapacitySP_F_BTUHR(HPWH& hpwh,
@@ -45,7 +48,7 @@ struct PerformanceMapTest : public testing::Test
         return hpwh.getCompressorCapacity(point.tairF,
                                           point.tinF - tInOffSet_dF,
                                           point.toutF - tOutOffSet_dF,
-                                          HPWH::Units::Power::BTUperH,
+                                          HPWH::Units::Power::Btu_per_h,
                                           HPWH::Units::Temp::F);
     }
 };
@@ -69,7 +72,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     double capacityData_kW = 52.779317;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -83,7 +86,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     capacityData_kW = 44.962957379;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -97,7 +100,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     capacityData_kW = 37.5978306881;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -124,7 +127,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     double capacityData_kW = 105.12836804;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -138,7 +141,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     capacityData_kW = 89.186101453;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -152,7 +155,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     capacityData_kW = 74.2437689948;
 
     capacity_BTUperHr = hpwh.getCompressorCapacity(
-        airTempF, waterTempF, setpointF, HPWH::Units::Power::BTUperH, HPWH::Units::Temp::F);
+        airTempF, waterTempF, setpointF, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
     capacity_kW =
         hpwh.getCompressorCapacity(F_TO_C(airTempF), F_TO_C(waterTempF), F_TO_C(setpointF));
 
@@ -686,7 +689,7 @@ TEST_F(PerformanceMapTest, Sanden120)
     outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
                                             checkPoint.tinF,
                                             checkPoint.toutF,
-                                            HPWH::Units::Power::BTUperH,
+                                            HPWH::Units::Power::Btu_per_h,
                                             HPWH::Units::Temp::F);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
@@ -695,7 +698,7 @@ TEST_F(PerformanceMapTest, Sanden120)
     outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
                                             checkPoint.tinF,
                                             checkPoint.toutF,
-                                            HPWH::Units::Power::BTUperH,
+                                            HPWH::Units::Power::Btu_per_h,
                                             HPWH::Units::Temp::F);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
 
@@ -704,7 +707,7 @@ TEST_F(PerformanceMapTest, Sanden120)
     outputBTUH = hpwh.getCompressorCapacity(checkPoint.tairF,
                                             checkPoint.tinF,
                                             checkPoint.toutF,
-                                            HPWH::Units::Power::BTUperH,
+                                            HPWH::Units::Power::Btu_per_h,
                                             HPWH::Units::Temp::F);
     EXPECT_EQ(outputBTUH, HPWH::HPWH_ABORT);
 }

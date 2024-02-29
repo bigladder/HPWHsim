@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize(newTankSize, HPWH::Units::Volume::GAL);
+        hpwh.setTankSize(newTankSize, HPWH::Units::Volume::gal);
     }
     if (tot_limit > 0)
     {
@@ -446,9 +446,10 @@ int main(int argc, char* argv[])
         // Check flow for external MP
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::Units::Volume::GAL);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::Units::FlowRate::GALperMIN) *
-                                      hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::Units::Volume::gal);
+            double mpFlowVolume_Gal =
+                hpwh.getExternalMPFlowRate(HPWH::Units::FlowRate::gal_per_min) *
+                hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
@@ -475,7 +476,7 @@ int main(int argc, char* argv[])
                 strPreamble +=
                     std::to_string(hpwh.getCondenserInletT_C()) + ", " +
                     std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
-                    std::to_string(hpwh.getExternalVolumeHeated(HPWH::Units::Volume::GAL)) + ", ";
+                    std::to_string(hpwh.getExternalVolumeHeated(HPWH::Units::Volume::gal)) + ", ";
             }
             if (useSoC)
             {
@@ -494,9 +495,9 @@ int main(int argc, char* argv[])
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
                 cumHeatIn[iHS] +=
-                    hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::Units::Energy::KWH) * 1000.;
+                    hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::Units::Energy::kWh) * 1000.;
                 cumHeatOut[iHS] +=
-                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::Units::Energy::KWH) * 1000.;
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::Units::Energy::kWh) * 1000.;
             }
         }
     }
