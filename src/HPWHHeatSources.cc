@@ -454,7 +454,7 @@ bool HPWH::HeatSource::maxedOut() const
     return maxed;
 }
 
-double HPWH::HeatSource::fractToMeetComparisonExternal() const
+double HPWH::HeatSource::getFractToMeetComparisonExternal() const
 {
     double fracTemp;
     double frac = 1.;
@@ -466,7 +466,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
             hpwh->msg("\tshouldShutOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
 
-        fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
+        fracTemp = shutOffLogicSet[i]->getgetFractToMeetComparisonExternal();
 
         frac = fracTemp < frac ? fracTemp : frac;
     }
@@ -961,7 +961,7 @@ double HPWH::HeatSource::addHeatExternal(
         }
 
         // limit node fraction to heat by comparison criterion
-        double fractToShutOff = fractToMeetComparisonExternal();
+        double fractToShutOff = getFractToMeetComparisonExternal();
         if (fractToShutOff < nodeFrac)
         {
             nodeFrac = fractToShutOff;

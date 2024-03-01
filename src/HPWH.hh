@@ -433,7 +433,7 @@ class HPWH
         virtual double nodeWeightAvgFract() = 0;
 
         /// gets the fraction of a node that has to be heated up to met the turnoff condition
-        virtual double getFractToMeetComparisonExternal() = 0;
+        virtual double getgetFractToMeetComparisonExternal() = 0;
 
         virtual int setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
@@ -466,7 +466,7 @@ class HPWH
         double getComparisonValue();
         double getTankValue();
         double nodeWeightAvgFract();
-        double getFractToMeetComparisonExternal();
+        double getgetFractToMeetComparisonExternal();
         double getMainsT_C();
         double getTempMinUseful_C();
         int setDecisionPoint(double value);
@@ -496,7 +496,7 @@ class HPWH
         double getComparisonValue();
         double getTankValue();
         double nodeWeightAvgFract();
-        double getFractToMeetComparisonExternal();
+        double getgetFractToMeetComparisonExternal();
 
         int setDecisionPoint(double value);
         int setDecisionPoint(double value, bool absolute);
@@ -836,8 +836,7 @@ class HPWH
     /// change the AirFlowFreedom value
     int setAirFlowFreedom(double fanFraction);
 
-    /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
-      but a new A. A is found via getTankSurfaceArea()*/
+    /// set the tank size, adjusting the UA to maintain the same U
     int setTankSizeWithSameU(double tankSize,
                              Units::Volume units = Units::Volume::L,
                              bool forceChange = false);
@@ -848,7 +847,7 @@ class HPWH
                                      Units::Volume volUnits = Units::Volume::L,
                                      Units::Area surfAUnits = Units::Area::ft2);
 
-    /**< Returns the tank surface area based off of real storage tanks*/
+    /// return the tank surface area based on real storage tanks
     double getTankRadius(const Units::Length units = Units::Length::ft) const;
 
     /// returns the tank surface radius based off of real storage tanks
@@ -870,12 +869,11 @@ class HPWH
     /// set whether to run the inversion mixing method, default is true
     int setDoInversionMixing(bool doInvMix);
 
+    /// set whether to perform inter-nodal conduction
     int setDoConduction(bool doCondu);
-    /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
+    /// set the UA with specified units
     int setUA(const double UA, const Units::UA units = Units::UA::kJ_per_hC);
-    /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC
-     */
 
     /// returns the UA with specified units
     int getUA(double& UA, const Units::UA units = Units::UA::kJ_per_hC) const;
@@ -910,16 +908,16 @@ class HPWH
     /// get the node index for a specified fractional height
     int getFractionalHeightNodeIndex(double fractionalHeight, int& nodeIndex);
 
+    /// set the timer limit (min) for the DR_TOT call (0 min, 1440 min)
     int setTimerLimitTOT(double limit_min);
-    /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440
-     * minutes. */
+
+    /// return the timer limit (min) for the DR_TOT call
     double getTimerLimitTOT_minute() const;
-    /**< Returns the timer limit in minutes for the DR_TOT call. */
 
-    int getInletHeight(int whichInlet) const;
-    /**< returns the water inlet height node number */
+    /// return the node index of the specified water inlet
+    int getInletNodeIndex(int whichInlet) const;
 
-    /**< resizes the tankTemp_C and nextTankTemp_C node vectors  */
+    /// resizes the tankTs_C and nextTankTs_C node vectors
     void setNumNodes(const std::size_t num_nodes);
 
     /// returns the number of nodes
@@ -1012,11 +1010,11 @@ class HPWH
     /// returns HPWH_ABORT for N out of bounds  */
     double getNthHeatSourceRunTime(int N) const;
 
+    /// return 1 if the Nth heat source is currently engaged, 0 if it is not, or
+    /// HPWH_ABORT for N out of bounds
     int isNthHeatSourceRunning(int N) const;
-    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
-        returns HPWH_ABORT for N out of bounds  */
 
-    /// returns the enum value for what type of heat source the Nth heat source is/
+    /// return the enum value for what type of heat source the Nth heat source is/
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
 
     /// return the volume of water heated in an external in the specified units
@@ -1135,7 +1133,7 @@ class HPWH
     void modifyHeatDistribution(std::vector<double>& heatDistribution);
     void addExtraHeat(std::vector<double>& extraHeatDist_W);
 
-    ///  "extra" heat added during a simulation step
+    ///  "extra" heat (kJ) added during a simulation step
     double extraEnergyInput_kJ;
 
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
@@ -1381,16 +1379,12 @@ class HPWH::HeatSource
     /// returns the heat-source index of the backup (-1 if none)
     int findParentHeatSourceIndex() const;
 
-    double fractToMeetComparisonExternal() const;
-    /**< calculates the distance the current state is from the shutOff logic for external
-     * configurations*/
+    /// get the fractional measure from the current to the shut-off state
+    /// (external configurations)
+    double getFractToMeetComparisonExternal() const;
 
+    /// add heat
     void addHeat(double externalT_C, double minutesToRun);
-    /**< adds heat to the hpwh - this is the function that interprets the
-        various configurations (internal/external, resistance/heat pump) to add heat */
-
-    /// Add a portion of the retained heat to the tank
-    void addRetainedHeat();
 
     /// Assign new condensity values from supplied vector. Note the input vector is currently
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.
@@ -1398,13 +1392,14 @@ class HPWH::HeatSource
 
     int getCondensitySize() const;
 
-    void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
-    /**< Does a linear interpolation in btwxt to the target point*/
+    /// perform btwxt linear interpolation to the target point
+    void btwxtInterp(double& inputPower, double& cop, std::vector<double>& target);
 
+    /// configure a map for defrost derating
     void setupDefrostMap(double derate35 = 0.8865);
-    /**< configure the heat source with a default for the defrost derating */
+
+    /// perform cop derating based on the air temperature
     void defrostDerate(double& to_derate, double airT_C);
-    /**< Derates the COP of a system based on the air temperature */
 
   private:
     // start with a few type definitions
@@ -1433,13 +1428,13 @@ class HPWH::HeatSource
     /// tracks the time that heat source was running
     double runtime_min;
 
-    /// energy supplied to the heat source
+    /// energy supplied to the heat source in the previous time step
     double energyInput_kJ;
 
-    /// energy put transferred to the tank by the heat source
+    /// energy (kJ) transferred to the tank in the previous time step
     double energyOutput_kJ;
 
-    /// energy removed from the environment
+    /// energy removed from the environment in the previous time step
     double energyRemovedFromEnvironment_kJ;
 
     // property variables

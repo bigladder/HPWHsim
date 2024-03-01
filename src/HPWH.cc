@@ -1632,7 +1632,7 @@ int HPWH::setTimerLimitTOT(double limit_min)
 
 double HPWH::getTimerLimitTOT_minute() const { return timerLimitTOT; }
 
-int HPWH::getInletHeight(int whichInlet) const
+int HPWH::getInletNodeIndex(int whichInlet) const
 {
     if (whichInlet == 1)
     {
@@ -1646,7 +1646,7 @@ int HPWH::getInletHeight(int whichInlet) const
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Invalid inlet chosen in getInletHeight \n");
+            msg("Invalid inlet chosen in getInletNodeIndex \n");
         }
         return HPWH_ABORT;
     }
