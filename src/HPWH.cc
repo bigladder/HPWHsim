@@ -2223,46 +2223,51 @@ double HPWH::getTankHeatContent_kJ() const
 
 double HPWH::getHeatContent_kJ() const { return getTankHeatContent_kJ(); }
 
-double HPWH::getInputEnergy(const Units::Energy units /*KWH*/) const
+double HPWH::getInputEnergy(const Units::Energy units /*kWh*/) const
 {
     return Units::convert(getInputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
-double HPWH::getOutputEnergy(const Units::Energy units /*KWH*/) const
+double HPWH::getOutputEnergy(const Units::Energy units /*kWh*/) const
 {
     return Units::convert(getOutputEnergy_kJ(), Units::Energy::kJ, units);
 }
 
-double HPWH::getTankHeatContent(const Units::Energy units /*KWH*/) const
+double HPWH::getTankHeatContent(const Units::Energy units /*kWh*/) const
 {
     return Units::convert(getTankHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
-double HPWH::getHeatContent(const Units::Energy units /*KWH*/) const
+double HPWH::getHeatContent(const Units::Energy units /*kWh*/) const
 {
     return Units::convert(getHeatContent_kJ(), Units::Energy::kJ, units);
 }
 
-double HPWH::getStandbyLosses(Units::Energy units /*KWH*/) const
+double HPWH::getStandbyLosses(Units::Energy units /*kWh*/) const
 {
     return Units::convert(getStandbyLosses_kJ(), Units::Energy::kJ, units);
 }
 
-double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*KWH*/) const
+double HPWH::getEnergyRemovedFromEnvironment(const Units::Energy units /*kWh*/) const
+{
+    return Units::convert(getEnergyRemovedFromEnvironment_kJ(), Units::Energy::kJ, units);
+}
+
+double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*kWh*/) const
 {
     return (isHeatSourceIndexValid(N))
                ? Units::convert(heatSources[N].energyInput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
-double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*KWH*/) const
+double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*kWh*/) const
 {
     return (isHeatSourceIndexValid(N))
                ? Units::convert(heatSources[N].energyOutput_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
-double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*KWH*/) const
+double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*kWh*/) const
 {
     return (isHeatSourceIndexValid(N))
                ? Units::convert(
