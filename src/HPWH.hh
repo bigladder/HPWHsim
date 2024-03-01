@@ -716,7 +716,7 @@ class HPWH
     /// heat content of the tank (relative to 0 degC)
     double getTankHeatContent_kJ() const;
 
-    /// total heat content of the tank (relative to 0 degC) and energy retained by heat sources
+    /// total heat content of the tank (relative to 0 degC), other terms can be incorporated
     double getHeatContent_kJ() const;
 
     ///////////////////////////////////////////////
@@ -1009,9 +1009,6 @@ class HPWH
     getNthHeatSourceEnergyRemovedFromEnvironment(int N,
                                                  Units::Energy units = Units::Energy::kWh) const;
 
-    /// returns energy retained by the heat source, with the specified units
-    double getNthHeatSourceEnergyRetained(int N, Units::Energy units = Units::Energy::kWh) const;
-
     /// return the run time for the Nth heat source (min)
     /// note: they may sum to more than 1 time step for concurrently running heat sources
     /// returns HPWH_ABORT for N out of bounds  */
@@ -1049,7 +1046,7 @@ class HPWH
     /// return the constant flow rate for an external multipass heat source
     double getExternalMPFlowRate(const Units::FlowRate units = Units::FlowRate::gal_per_min) const;
 
-    double getCompressorMinRuntime(const Units::Time units = Units::Time::min) const;
+    double getCompressorMinimumRuntime(const Units::Time units = Units::Time::min) const;
 
     int getSizingFractions(double& aquafract, double& percentUseable) const;
     /**< returns the fraction of total tank volume from the bottom up where the aquastat is
@@ -1417,16 +1414,6 @@ class HPWH::HeatSource
 
     int getCondensitySize() const;
 
-    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-    /**< Does a simple linear interpolation between two points to the xnew point */
-
-    void regressedMethod(
-        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
     void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
@@ -1470,12 +1457,6 @@ class HPWH::HeatSource
 
     /// energy removed from the environment
     double energyRemovedFromEnvironment_kJ;
-
-    /// the energy retained by the heat source
-    double energyRetained_kJ;
-
-    /// coefficient [0,1) specifying fraction of heat-source capacity retained each pass
-    double heatRetentionCoef;
 
     // property variables
 
@@ -1813,5 +1794,15 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
+
+/// linear interpolation between two points to the xnew point
+void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
+
+/// applies ten-term regression
+void regressedMethod(
+    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
+
+/// applies five-term regression for MP split systems
+void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
 
 #endif

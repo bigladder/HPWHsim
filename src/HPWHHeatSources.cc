@@ -22,8 +22,6 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , energyInput_kJ(0.)
     , energyOutput_kJ(0.)
     , energyRemovedFromEnvironment_kJ(0.)
-    , energyRetained_kJ(0.)
-    , heatRetentionCoef(0.)
     , isVIP(false)
     , backupHeatSource(NULL)
     , companionHeatSource(NULL)
@@ -66,7 +64,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     energyInput_kJ = hSource.energyInput_kJ;
     energyOutput_kJ = hSource.energyOutput_kJ;
     energyRemovedFromEnvironment_kJ = hSource.energyRemovedFromEnvironment_kJ;
-    // energyRetained_kJ = hSource.energyRetained_kJ;
 
     isVIP = hSource.isVIP;
 
@@ -127,7 +124,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     extrapolationMethod = hSource.extrapolationMethod;
     secondaryHeatExchanger = hSource.secondaryHeatExchanger;
 
-    heatRetentionCoef = hSource.heatRetentionCoef;
     return *this;
 }
 
@@ -793,11 +789,9 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 void HPWH::HeatSource::getCapacityMP(
     double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop)
 {
-    double externalT_F, condenserT_F;
     bool resDefrostHeatingOn = false;
-    // Convert Celsius to Fahrenheit for the curve fits
-    condenserT_F = C_TO_F(condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C);
-    externalT_F = C_TO_F(externalT_C);
+    double condenserT_F = C_TO_F(condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C);
+    double externalT_F = C_TO_F(externalT_C);
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
     if (resDefrost.inputPwr_kW > 0)
@@ -885,37 +879,10 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_F)
     to_derate *= derate_factor;
 }
 
-void HPWH::HeatSource::linearInterp(
-    double& ynew, double xnew, double x0, double x1, double y0, double y1)
+void HPWH::HeatSource::btwxtInterp(double& inputPower, double& cop, std::vector<double>& target)
 {
-    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
-}
-
-void HPWH::HeatSource::regressedMethod(
-    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
-{
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
-           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
-           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
-           coefficents[10] * x1 * x2 * x3;
-}
-
-void HPWH::HeatSource::regressedMethodMP(double& ynew,
-                                         std::vector<double>& coefficents,
-                                         double x1,
-                                         double x2)
-{
-    // Const Tair Tin Tair2 Tin2 TairTin
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
-           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
-}
-
-void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
-{
-
     std::vector<double> result = perfRGI->get_values_at_target(target);
-
-    input_BTUperHr = result[0];
+    inputPower = result[0];
     cop = result[1];
 }
 

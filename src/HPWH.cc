@@ -429,6 +429,26 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
     }
 }
 
+void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1)
+{
+    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+}
+
+void regressedMethod(
+    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
+{
+    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
+           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
+           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
+           coefficents[10] * x1 * x2 * x3;
+}
+
+void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2)
+{
+    // Const Tair Tin Tair2 Tin2 TairTin
+    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
+           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
+}
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -2201,15 +2221,7 @@ double HPWH::getTankHeatContent_kJ() const
     return nodeCp_kJperC * totalT_C;
 }
 
-double HPWH::getHeatContent_kJ() const
-{
-    double energy_kJ = 0.;
-    for (auto& heatSource : heatSources)
-    {
-        energy_kJ += heatSource.energyRetained_kJ;
-    }
-    return energy_kJ + getTankHeatContent_kJ();
-}
+double HPWH::getHeatContent_kJ() const { return getTankHeatContent_kJ(); }
 
 double HPWH::getInputEnergy(const Units::Energy units /*KWH*/) const
 {
@@ -2247,13 +2259,6 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*KWH*/) co
 {
     return (isHeatSourceIndexValid(N))
                ? Units::convert(heatSources[N].energyOutput_kJ, Units::Energy::kJ, units)
-               : double(HPWH_ABORT);
-}
-
-double HPWH::getNthHeatSourceEnergyRetained(int N, Units::Energy units /*KWH*/) const
-{
-    return (isHeatSourceIndexValid(N))
-               ? Units::convert(heatSources[N].energyRetained_kJ, Units::Energy::kJ, units)
                : double(HPWH_ABORT);
 }
 
@@ -2597,12 +2602,8 @@ int HPWH::resetTankToSetpoint() { return setTankT_C(setpointT_C); }
 
 int HPWH::getCompressorCoilConfig() const
 {
-    if (!hasACompressor())
+    if (!hasCompressor())
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Current model does not have a compressor.  \n");
-        }
         return HPWH_ABORT;
     }
     return heatSources[compressorIndex].configuration;
@@ -2610,12 +2611,8 @@ int HPWH::getCompressorCoilConfig() const
 
 bool HPWH::isCompressorMultipass() const
 {
-    if (!hasACompressor())
+    if (!hasCompressor())
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Current model does not have a compressor.  \n");
-        }
         return false;
     }
     return heatSources[compressorIndex].isMultipass;
@@ -2623,12 +2620,8 @@ bool HPWH::isCompressorMultipass() const
 
 bool HPWH::isCompressorExternalMultipass() const
 {
-    if (!hasACompressor())
+    if (!hasCompressor())
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Current model does not have a compressor.  \n");
-        }
         return false;
     }
     return heatSources[compressorIndex].isExternalMultipass();
@@ -2666,7 +2659,8 @@ double HPWH::getExternalVolumeHeated(Units::Volume units /*L*/) const
     return Units::convert(externalVolumeHeated_L, Units::Volume::L, units);
 }
 
-double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*FlowRate::gal_per_min*/) const
+double
+HPWH::getExternalMPFlowRate(const Units::FlowRate units /*Units::FlowRate::gal_per_min*/) const
 {
     if (!isCompressorExternalMultipass())
     {
@@ -2681,19 +2675,15 @@ double HPWH::getExternalMPFlowRate(const Units::FlowRate units /*FlowRate::gal_p
         heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
 }
 
-double HPWH::getCompressorMinRuntime(const Units::Time units /*MIN*/) const
+double HPWH::getCompressorMinimumRuntime(const Units::Time units /*Units::Time::min*/) const
 {
-    if (hasACompressor())
+    if (hasCompressor())
     {
-        const double time_min = 10.;
-        return Units::convert(time_min, Units::Time::min, units);
+        const double minimumRunTime_min = 10.;
+        return Units::convert(minimumRunTime_min, Units::Time::min, units);
     }
     else
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("This HPWH has no compressor.  \n");
-        }
         return (double)HPWH_ABORT;
     }
 }
@@ -2703,12 +2693,8 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     double aFract = 1.;
     double useFract = 1.;
 
-    if (!hasACompressor())
+    if (!hasCompressor())
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Current model does not have a compressor. \n");
-        }
         return HPWH_ABORT;
     }
     else if (usesSoCLogic)
@@ -2796,12 +2782,8 @@ int HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=
         }
         return HPWH_ABORT;
     }
-    if (!hasACompressor())
+    if (!hasCompressor())
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Current model does not have a compressor.  \n");
-        }
         return HPWH_ABORT;
     }
     if (scaleCapacity <= 0 || scaleCOP <= 0)
