@@ -37,8 +37,8 @@ void getCompressorPerformance(
     );
 
     // Check the heat in and out of the compressor
-    point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex());
-    point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex());
+    point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorHeatSourceIndex());
+    point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorHeatSourceIndex());
     point.cop = point.output / point.input;
 }
 

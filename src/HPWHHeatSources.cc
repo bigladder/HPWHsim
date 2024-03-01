@@ -134,7 +134,7 @@ void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 
 int HPWH::HeatSource::getCondensitySize() const { return static_cast<int>(condensity.size()); }
 
-int HPWH::HeatSource::findParent() const
+int HPWH::HeatSource::findParentHeatSourceIndex() const
 {
     for (int i = 0; i < hpwh->getNumHeatSources(); ++i)
     {
@@ -312,7 +312,7 @@ void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal)
 {
     isOn = true;
     hpwh->isHeating = true;
-    if (companionHeatSource != NULL && companionHeatSource->shutsOff() != true &&
+    if (companionHeatSource != NULL && companionHeatSource->shouldShutOff() != true &&
         companionHeatSource->isEngaged() == false &&
         hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource, DR_signal) == false)
     {
@@ -383,12 +383,12 @@ bool HPWH::HeatSource::shouldHeat() const
     } // end loop over set of logic conditions
 
     // if everything else wants it to come on, but if it would shut off anyways don't turn it on
-    if (shouldEngage == true && shutsOff() == true)
+    if (shouldEngage == true && shouldShutOff() == true)
     {
         shouldEngage = false;
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
-            hpwh->msg("but is denied by shutsOff");
+            hpwh->msg("but is denied by shouldShutOff");
         }
     }
 
@@ -399,7 +399,7 @@ bool HPWH::HeatSource::shouldHeat() const
     return shouldEngage;
 }
 
-bool HPWH::HeatSource::shutsOff() const
+bool HPWH::HeatSource::shouldShutOff() const
 {
     bool shutOff = false;
 
@@ -408,7 +408,7 @@ bool HPWH::HeatSource::shutsOff() const
         shutOff = true;
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTs_C[0]);
+            hpwh->msg("shouldShutOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTs_C[0]);
         }
         return shutOff;
     }
@@ -417,7 +417,7 @@ bool HPWH::HeatSource::shutsOff() const
     {
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
+            hpwh->msg("\tshouldShutOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
 
         double average = shutOffLogicSet[i]->getTankValue();
@@ -435,10 +435,6 @@ bool HPWH::HeatSource::shutsOff() const
         }
     }
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("returns: %d \n", shutOff);
-    }
     return shutOff;
 }
 
@@ -450,7 +446,7 @@ bool HPWH::HeatSource::maxedOut() const
     // shut off
     if (hpwh->setpointT_C > maxSetpointT_C)
     {
-        if (hpwh->tankTs_C[0] >= maxSetpointT_C || shutsOff())
+        if (hpwh->tankTs_C[0] >= maxSetpointT_C || shouldShutOff())
         {
             maxed = true;
         }
@@ -458,7 +454,7 @@ bool HPWH::HeatSource::maxedOut() const
     return maxed;
 }
 
-double HPWH::HeatSource::fractToMeetComparisonExternal() const
+double HPWH::HeatSource::getFractToMeetComparisonExternal() const
 {
     double fracTemp;
     double frac = 1.;
@@ -467,10 +463,10 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
     {
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
+            hpwh->msg("\tshouldShutOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
 
-        fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
+        fracTemp = shutOffLogicSet[i]->getgetFractToMeetComparisonExternal();
 
         frac = fracTemp < frac ? fracTemp : frac;
     }
@@ -965,7 +961,7 @@ double HPWH::HeatSource::addHeatExternal(
         }
 
         // limit node fraction to heat by comparison criterion
-        double fractToShutOff = fractToMeetComparisonExternal();
+        double fractToShutOff = getFractToMeetComparisonExternal();
         if (fractToShutOff < nodeFrac)
         {
             nodeFrac = fractToShutOff;
@@ -1017,8 +1013,8 @@ double HPWH::HeatSource::addHeatExternal(
         hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
 
         // if there's still time remaining and you haven't heated to the cutoff
-        // specified in shutsOff logic, keep heating
-    } while ((remainingTime_min > 0.) && (!shutsOff()));
+        // specified in shouldShutOff logic, keep heating
+    } while ((remainingTime_min > 0.) && (!shouldShutOff()));
 
     // divide outputs by sum of weight - the total time ran
     // not remainingTime_min == minutesToRun is possible
@@ -1137,7 +1133,7 @@ double HPWH::HeatSource::addHeatExternalMP(
         hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
 
         // continue until time expired or cutoff condition met
-    } while ((remainingTime_min > 0.) && (!shutsOff()));
+    } while ((remainingTime_min > 0.) && (!shouldShutOff()));
 
     // time elapsed in this function
     double elapsedTime_min = stepTime_min - remainingTime_min;

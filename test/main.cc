@@ -449,7 +449,7 @@ int main(int argc, char* argv[])
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::Units::Volume::gal);
             double mpFlowVolume_Gal =
                 hpwh.getExternalMPFlowRate(HPWH::Units::FlowRate::gal_per_min) *
-                hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
+                hpwh.getNthHeatSourceRunTime(hpwh.getCompressorHeatSourceIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
