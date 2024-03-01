@@ -480,8 +480,8 @@ void HPWH::setAllDefaults()
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
-    inletIndex = 0;
-    inlet2Index = 0;
+    inletNodeIndex = 0;
+    inlet2NodeIndex = 0;
     fittingsUA_kJperhC = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
@@ -527,8 +527,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     tankTs_C = hpwh.tankTs_C;
     nextTankTs_C = hpwh.nextTankTs_C;
 
-    inletIndex = hpwh.inletIndex;
-    inlet2Index = hpwh.inlet2Index;
+    inletNodeIndex = hpwh.inletNodeIndex;
+    inlet2NodeIndex = hpwh.inlet2NodeIndex;
 
     outletT_C = hpwh.outletT_C;
     condenserInletT_C = hpwh.condenserInletT_C;
@@ -663,11 +663,11 @@ int HPWH::runOneStep(double drawVolume_L,
             // turn on the compressor and last resistance element.
             if (hasACompressor())
             {
-                heatSources[compressorIndex].engageHeatSource(DRstatus);
+                heatSources[compressorHeatSourceIndex].engageHeatSource(DRstatus);
             }
-            if (lowestElementIndex >= 0)
+            if (lowestResistanceHeatSourceIndex >= 0)
             {
-                heatSources[lowestElementIndex].engageHeatSource(DRstatus);
+                heatSources[lowestResistanceHeatSourceIndex].engageHeatSource(DRstatus);
             }
 
             if (hpwhVerbosity >= VRB_emetic)
@@ -693,12 +693,12 @@ int HPWH::runOneStep(double drawVolume_L,
             {
                 // check if anything that is on needs to turn off (generally for lowT cutoffs)
                 // things that just turn on later this step are checked for this in shouldHeat
-                if (heatSources[i].isEngaged() && heatSources[i].shutsOff())
+                if (heatSources[i].isEngaged() && heatSources[i].shouldShutOff())
                 {
                     heatSources[i].disengageHeatSource();
                     // check if the backup heat source would have to shut off too
                     if (heatSources[i].backupHeatSource != NULL &&
-                        heatSources[i].backupHeatSource->shutsOff() != true)
+                        heatSources[i].backupHeatSource->shouldShutOff() != true)
                     {
                         // and if not, go ahead and turn it on
                         heatSources[i].backupHeatSource->engageHeatSource(DRstatus);
@@ -719,7 +719,7 @@ int HPWH::runOneStep(double drawVolume_L,
                         {
                             if (hasACompressor())
                             {
-                                heatSources[compressorIndex].engageHeatSource(DRstatus);
+                                heatSources[compressorHeatSourceIndex].engageHeatSource(DRstatus);
                                 break;
                             }
                         }
@@ -806,7 +806,8 @@ int HPWH::runOneStep(double drawVolume_L,
                     }
                     // Don't turn the backup electric resistance heat source on if the VIP
                     // resistance element is on .
-                    else if (VIPIndex >= 0 && heatSources[VIPIndex].isOn &&
+                    else if (VIP_ResistanceHeatSourceIndex >= 0 &&
+                             heatSources[VIP_ResistanceHeatSourceIndex].isOn &&
                              heatSources[i].backupHeatSource->isAResistance())
                     {
                         if (hpwhVerbosity >= VRB_typical)
@@ -848,7 +849,7 @@ int HPWH::runOneStep(double drawVolume_L,
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
                     if (heatSources[i].followedByHeatSource != NULL &&
-                        heatSources[i].followedByHeatSource->shutsOff() == false)
+                        heatSources[i].followedByHeatSource->shouldShutOff() == false)
                     {
                         // turn it on
                         heatSources[i].followedByHeatSource->engageHeatSource(DRstatus);
@@ -1284,33 +1285,33 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     return 0;
 }
 
-double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
+double HPWH::calcSoCFraction(double mainsT_C, double minUsefulT_C, double nominalMaxT_C) const
 {
-    // Note that volume is ignored in here since with even nodes it cancels out of the SoC
+    // Note that volume is ignored here since with even nodes it cancels out of the SoC
     // fractional equation
-    if (tMains_C >= tMinUseful_C)
+    if (mainsT_C >= minUsefulT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("tMains_C is greater than or equal tMinUseful_C. \n");
+            msg("mainsT_C, is greater than or equal to minUsefulT_C. \n");
         }
         return HPWH_ABORT;
     }
-    if (tMinUseful_C > tMax_C)
+    if (minUsefulT_C > nominalMaxT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("tMinUseful_C is greater tMax_C. \n");
+            msg("minUsefulT_C is greater nominalMaxT_C. \n");
         }
         return HPWH_ABORT;
     }
 
     double chargeEquivalent = 0.;
-    for (auto& T : tankTs_C)
+    for (auto& tankT_C : tankTs_C)
     {
-        chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, T);
+        chargeEquivalent += getChargePerNode(mainsT_C, minUsefulT_C, tankT_C);
     }
-    double maxSoC = getNumNodes() * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
+    double maxSoC = getNumNodes() * getChargePerNode(mainsT_C, minUsefulT_C, nominalMaxT_C);
     return chargeEquivalent / maxSoC;
 }
 
@@ -1322,7 +1323,7 @@ void HPWH::calcAndSetSoCFraction()
 
     std::shared_ptr<SoCBasedHeatingLogic> logicSoC =
         std::dynamic_pointer_cast<SoCBasedHeatingLogic>(
-            heatSources[compressorIndex].turnOnLogicSet[0]);
+            heatSources[compressorHeatSourceIndex].turnOnLogicSet[0]);
     newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
 
     currentSoCFraction = newSoCFraction;
@@ -1501,18 +1502,19 @@ int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
 
 int HPWH::setInletByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inletIndex);
+    return getFractionalHeightNodeIndex(fractionalHeight, inletNodeIndex);
 }
 
 int HPWH::setInlet2ByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Index);
+    return getFractionalHeightNodeIndex(fractionalHeight, inlet2NodeIndex);
 }
 
 int HPWH::setExternalInletHeightByFraction(double fractionalHeight)
 {
     return setExternalPortHeightByFraction(fractionalHeight, 1);
 }
+
 int HPWH::setExternalOutletHeightByFraction(double fractionalHeight)
 {
     return setExternalPortHeightByFraction(fractionalHeight, 2);
@@ -1536,13 +1538,13 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
         {
             if (whichExternalPort == 1)
             {
-                returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalInletNodeIndex);
+                returnVal = getFractionalHeightNodeIndex(fractionalHeight,
+                                                         heatSources[i].externalInletNodeIndex);
             }
             else
             {
-                returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalOutletNodeIndex);
+                returnVal = getFractionalHeightNodeIndex(fractionalHeight,
+                                                         heatSources[i].externalOutletNodeIndex);
             }
 
             if (returnVal == HPWH_ABORT)
@@ -1554,7 +1556,7 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
     return returnVal;
 }
 
-int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
+int HPWH::getFractionalHeightNodeIndex(double fractionalHeight, int& nodeIndex)
 {
     if (fractionalHeight > 1. || fractionalHeight < 0.)
     {
@@ -1566,12 +1568,12 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
     }
 
     int node = (int)std::floor(getNumNodes() * fractionalHeight);
-    inletNum = (node == getNumNodes()) ? getIndexTopNode() : node;
+    nodeIndex = (node == getNumNodes()) ? getTopNodeIndex() : node;
 
     return 0;
 }
 
-int HPWH::getExternalInletHeight() const
+int HPWH::getExternalInletNodeIndex() const
 {
     if (!hasExternalHeatSource())
     {
@@ -1591,7 +1593,7 @@ int HPWH::getExternalInletHeight() const
     }
     return HPWH_ABORT;
 }
-int HPWH::getExternalOutletHeight() const
+int HPWH::getExternalOutletNodeIndex() const
 {
     if (!hasExternalHeatSource())
     {
@@ -1630,21 +1632,21 @@ int HPWH::setTimerLimitTOT(double limit_min)
 
 double HPWH::getTimerLimitTOT_minute() const { return timerLimitTOT; }
 
-int HPWH::getInletHeight(int whichInlet) const
+int HPWH::getInletNodeIndex(int whichInlet) const
 {
     if (whichInlet == 1)
     {
-        return inletIndex;
+        return inletNodeIndex;
     }
     else if (whichInlet == 2)
     {
-        return inlet2Index;
+        return inlet2NodeIndex;
     }
     else
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Invalid inlet chosen in getInletHeight \n");
+            msg("Invalid inlet chosen in getInletNodeIndex \n");
         }
         return HPWH_ABORT;
     }
@@ -1679,10 +1681,10 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
     return retVal;
 }
 
-int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
+int HPWH::setEnteringWaterHighTempShutOff(double highT,
                                           bool tempIsAbsolute,
                                           int heatSourceIndex,
-                                          Units::Temp unit /*_C*/)
+                                          Units::Temp unit /*C*/)
 {
     if (!hasEnteringWaterHighTempShutOff(heatSourceIndex))
     {
@@ -1693,20 +1695,20 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         return HPWH_ABORT;
     }
 
-    double highTemp_C = Units::convert(highTemp, unit, Units::Temp::C);
+    double highT_C = Units::convert(highT, unit, Units::Temp::C);
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
     {
-        // check differnce with setpoint
-        if (setpointT_C - highTemp_C < MINSINGLEPASSLIFT)
+        // check difference with setpoint
+        if (setpointT_C - highT_C < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
     }
     else
     {
-        if (highTemp_C < MINSINGLEPASSLIFT)
+        if (highT_C < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
@@ -1728,7 +1730,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
             std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)
-                ->setDecisionPoint(highTemp_C, tempIsAbsolute);
+                ->setDecisionPoint(highT_C, tempIsAbsolute);
             break;
         }
     }
@@ -1786,7 +1788,7 @@ bool HPWH::canUseSoCControls()
 
 int HPWH::switchToSoCControls(double targetSoC,
                               double hysteresisFraction /*= 0.05*/,
-                              double tempMinUseful /*= 43.333*/,
+                              double minUsefulT /*= 43.333*/,
                               bool constantMainsT /*= false*/,
                               double mainsT /*= 18.333*/,
                               Units::Temp tempUnit /*C*/)
@@ -1801,10 +1803,11 @@ int HPWH::switchToSoCControls(double targetSoC,
         return HPWH_ABORT;
     }
 
-    double tempMinUseful_C = Units::convert(tempMinUseful, tempUnit, Units::Temp::C);
+    double tempMinUsefulT_C = Units::convert(minUsefulT, tempUnit, Units::Temp::C);
     double mainsT_C = Units::convert(mainsT, tempUnit, Units::Temp::C);
+    double constantMainsT_C = Units::convert(constantMainsT, tempUnit, Units::Temp::C);
 
-    if (mainsT_C >= tempMinUseful_C)
+    if (mainsT_C >= tempMinUsefulT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -1829,46 +1832,45 @@ int HPWH::switchToSoCControls(double targetSoC,
         heatSources[i].shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off",
                                                             targetSoC,
                                                             hysteresisFraction,
-                                                            tempMinUseful_C,
-                                                            constantMainsT,
+                                                            tempMinUsefulT_C,
+                                                            constantMainsT_C,
                                                             mainsT_C));
         heatSources[i].turnOnLogicSet.push_back(turnOnSoC("SoC Turn On",
                                                           targetSoC,
                                                           hysteresisFraction,
-                                                          tempMinUseful_C,
-                                                          constantMainsT,
+                                                          tempMinUsefulT_C,
+                                                          constantMainsT_C,
                                                           mainsT_C));
     }
 
     usesSoCLogic = true;
-
     return 0;
 }
 
 std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc,
                                                             double targetSoC,
                                                             double hystFract,
-                                                            double tempMinUseful_C,
-                                                            bool constantMainsT,
+                                                            double minUsefulT_C,
+                                                            bool constantMainsT_C,
                                                             double mainsT_C)
 {
     return std::make_shared<SoCBasedHeatingLogic>(
-        desc, targetSoC, this, -hystFract, tempMinUseful_C, constantMainsT, mainsT_C);
+        desc, targetSoC, this, -hystFract, minUsefulT_C, constantMainsT_C, mainsT_C);
 }
 
 std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc,
                                                              double targetSoC,
                                                              double hystFract,
-                                                             double tempMinUseful_C,
-                                                             bool constantMainsT,
+                                                             double minUsefulT_C,
+                                                             bool constantMainsT_C,
                                                              double mainsT_C)
 {
     return std::make_shared<SoCBasedHeatingLogic>(desc,
                                                   targetSoC,
                                                   this,
                                                   hystFract,
-                                                  tempMinUseful_C,
-                                                  constantMainsT,
+                                                  minUsefulT_C,
+                                                  constantMainsT_C,
                                                   mainsT_C,
                                                   std::greater<double>());
 }
@@ -2088,11 +2090,11 @@ void HPWH::setNumNodes(const std::size_t num_nodes)
 
 int HPWH::getNumNodes() const { return static_cast<int>(tankTs_C.size()); }
 
-int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
+int HPWH::getTopNodeIndex() const { return getNumNodes() - 1; }
 
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
 
-int HPWH::getCompressorIndex() const { return compressorIndex; }
+int HPWH::getCompressorHeatSourceIndex() const { return compressorHeatSourceIndex; }
 
 int HPWH::getNumResistanceElements() const
 {
@@ -2127,8 +2129,8 @@ double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
     inletTemp_C = Units::convert(inletTemp, tempUnit, Units::Temp::C);
     outTemp_C = Units::convert(outTemp, tempUnit, Units::Temp::C);
 
-    if (airTemp_C < heatSources[compressorIndex].minT_C ||
-        airTemp_C > heatSources[compressorIndex].maxT_C)
+    if (airTemp_C < heatSources[compressorHeatSourceIndex].minT_C ||
+        airTemp_C > heatSources[compressorHeatSourceIndex].maxT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2138,8 +2140,8 @@ double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
     }
 
     double maxAllowedSetpoint_C =
-        heatSources[compressorIndex].maxSetpointT_C -
-        heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
+        heatSources[compressorHeatSourceIndex].maxSetpointT_C -
+        heatSources[compressorHeatSourceIndex].secondaryHeatExchanger.hotSideOffsetT_C;
     if (outTemp_C > maxAllowedSetpoint_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
@@ -2150,15 +2152,15 @@ double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
         return double(HPWH_ABORT);
     }
 
-    if (heatSources[compressorIndex].isExternalMultipass())
+    if (heatSources[compressorHeatSourceIndex].isExternalMultipass())
     {
         double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-        heatSources[compressorIndex].getCapacityMP(
+        heatSources[compressorHeatSourceIndex].getCapacityMP(
             airTemp_C, averageTemp_C, tempInput_kW, tempCap_kW, temp_cop);
     }
     else
     {
-        heatSources[compressorIndex].getCapacity(
+        heatSources[compressorHeatSourceIndex].getCapacity(
             airTemp_C, inletTemp_C, outTemp_C, tempInput_kW, tempCap_kW, temp_cop);
     }
 
@@ -2299,7 +2301,7 @@ int HPWH::setSetpointT_C(const double setpointT_C_in)
 {
     double maxSetpointT_C = -273.15;
     std::string why;
-    if (!canSetSetpointT_C(setpointT_C_in, maxSetpointT_C, why))
+    if (!canApplySetpointT_C(setpointT_C_in, maxSetpointT_C, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2386,7 +2388,7 @@ double HPWH::getMinOperatingT_C() const
 {
     if (hasCompressor())
     {
-        return heatSources[compressorIndex].minT_C;
+        return heatSources[compressorHeatSourceIndex].minT_C;
     }
     return double(HPWH_ABORT);
 }
@@ -2402,7 +2404,7 @@ double HPWH::getMaxCompressorSetpointT_C() const
         return HPWH_ABORT;
     }
 
-    return heatSources[compressorIndex].maxSetpointT_C;
+    return heatSources[compressorHeatSourceIndex].maxSetpointT_C;
 }
 
 double HPWH::getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const
@@ -2469,7 +2471,8 @@ double HPWH::getMaxCompressorSetpointT(const Units::Temp units /*C*/) const
         }
         return double(HPWH_ABORT);
     }
-    return Units::convert(heatSources[compressorIndex].maxSetpointT_C, Units::Temp::C, units);
+    return Units::convert(
+        heatSources[compressorHeatSourceIndex].maxSetpointT_C, Units::Temp::C, units);
 }
 
 double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) const
@@ -2509,9 +2512,10 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
 
 double HPWH::getMinOperatingT(const Units::Temp units /*C*/) const
 {
-    return hasCompressor()
-               ? Units::convert(heatSources[compressorIndex].minT_C, Units::Temp::C, units)
-               : double(HPWH_ABORT);
+    return hasCompressor() ? Units::convert(heatSources[compressorHeatSourceIndex].minT_C,
+                                            Units::Temp::C,
+                                            units)
+                           : double(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2549,7 +2553,9 @@ int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
     return setSetpointT_C(Units::convert(setpointT, units, Units::Temp::C));
 }
 
-bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
+bool HPWH::canApplySetpointT_C(double newSetpointT_C,
+                               double& maxSetpointT_C,
+                               std::string& why) const
 {
     maxSetpointT_C = -273.15;
     if (isSetpointFixed())
@@ -2568,13 +2574,15 @@ bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std:
 
     if (hasACompressor())
     { // check the new setpoint against the compressor's max setpoint
-        maxSetpointT_C = heatSources[compressorIndex].maxSetpointT_C -
-                         heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT_C;
+        maxSetpointT_C =
+            heatSources[compressorHeatSourceIndex].maxSetpointT_C -
+            heatSources[compressorHeatSourceIndex].secondaryHeatExchanger.hotSideOffsetT_C;
     }
 
-    if (lowestElementIndex >= 0)
+    if (lowestResistanceHeatSourceIndex >= 0)
     { // check the new setpoint against the resistor's max setpoint
-        maxSetpointT_C = std::max(heatSources[lowestElementIndex].maxSetpointT_C, maxSetpointT_C);
+        maxSetpointT_C =
+            std::max(heatSources[lowestResistanceHeatSourceIndex].maxSetpointT_C, maxSetpointT_C);
     }
 
     if (newSetpointT_C > maxSetpointT_C)
@@ -2589,14 +2597,14 @@ bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std:
     return true;
 }
 
-bool HPWH::canSetSetpointT(const double newSetpointT,
-                           double& maxSetpointT,
-                           std::string& why,
-                           Units::Temp units /*C*/) const
+bool HPWH::canApplySetpointT(const double newSetpointT,
+                             double& maxSetpointT,
+                             std::string& why,
+                             Units::Temp units /*C*/) const
 {
     double newSetpointT_C = Units::convert(newSetpointT, units, Units::Temp::C);
     double maxSetpointT_C = -273.15;
-    bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
+    bool result = canApplySetpointT_C(newSetpointT_C, maxSetpointT_C, why);
     maxSetpointT = Units::convert(maxSetpointT_C, Units::Temp::C, units);
     return result;
 }
@@ -2611,7 +2619,7 @@ int HPWH::getCompressorCoilConfig() const
     {
         return HPWH_ABORT;
     }
-    return heatSources[compressorIndex].configuration;
+    return heatSources[compressorHeatSourceIndex].configuration;
 }
 
 bool HPWH::isCompressorMultipass() const
@@ -2620,7 +2628,7 @@ bool HPWH::isCompressorMultipass() const
     {
         return false;
     }
-    return heatSources[compressorIndex].isMultipass;
+    return heatSources[compressorHeatSourceIndex].isMultipass;
 }
 
 bool HPWH::isCompressorExternalMultipass() const
@@ -2629,12 +2637,12 @@ bool HPWH::isCompressorExternalMultipass() const
     {
         return false;
     }
-    return heatSources[compressorIndex].isExternalMultipass();
+    return heatSources[compressorHeatSourceIndex].isExternalMultipass();
 }
 
 bool HPWH::hasCompressor() const
 {
-    if (compressorIndex < 0)
+    if (compressorHeatSourceIndex < 0)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2645,7 +2653,7 @@ bool HPWH::hasCompressor() const
     return true;
 }
 
-bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
+bool HPWH::hasACompressor() const { return compressorHeatSourceIndex >= 0; }
 
 bool HPWH::hasExternalHeatSource() const
 {
@@ -2677,7 +2685,7 @@ HPWH::getExternalMPFlowRate(const Units::FlowRate units /*Units::FlowRate::gal_p
     }
 
     return Units::convert(
-        heatSources[compressorIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
+        heatSources[compressorHeatSourceIndex].mpFlowRate_LPS, Units::FlowRate::L_per_s, units);
 }
 
 double HPWH::getCompressorMinimumRuntime(const Units::Time units /*Units::Time::min*/) const
@@ -2714,7 +2722,8 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     }
 
     // Every compressor must have at least one on logic
-    for (std::shared_ptr<HeatingLogic> onLogic : heatSources[compressorIndex].turnOnLogicSet)
+    for (std::shared_ptr<HeatingLogic> onLogic :
+         heatSources[compressorHeatSourceIndex].turnOnLogicSet)
     {
         double tempA;
 
@@ -2728,16 +2737,17 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     aquaFract = aFract;
 
     // Compressors don't need to have an off logic
-    if (heatSources[compressorIndex].shutOffLogicSet.size() != 0)
+    if (heatSources[compressorHeatSourceIndex].shutOffLogicSet.size() != 0)
     {
-        for (std::shared_ptr<HeatingLogic> offLogic : heatSources[compressorIndex].shutOffLogicSet)
+        for (std::shared_ptr<HeatingLogic> offLogic :
+             heatSources[compressorHeatSourceIndex].shutOffLogicSet)
         {
 
             double tempUse;
 
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("\tshutsOff logic: %s ", offLogic->description.c_str());
+                msg("\tshouldShutOff logic: %s ", offLogic->description.c_str());
             }
             if (offLogic->description == "large draw" || offLogic->description == "larger draw")
             {
@@ -2800,7 +2810,7 @@ int HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=
         return HPWH_ABORT;
     }
 
-    for (auto& perfP : heatSources[compressorIndex].perfMap)
+    for (auto& perfP : heatSources[compressorHeatSourceIndex].perfMap)
     {
         if (scaleCapacity != 1.)
         {
@@ -3023,21 +3033,21 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double lowInletT_C;
         double lowInletFraction; // fraction of draw from low inlet
 
-        if (inletIndex > inlet2Index)
+        if (inletNodeIndex > inlet2NodeIndex)
         {
-            highInletNodeIndex = inletIndex;
+            highInletNodeIndex = inletNodeIndex;
             highInletFraction = 1. - inletVol2_L / drawVolume_L;
             highInletT_C = inletT_C;
-            lowInletNodeIndex = inlet2Index;
+            lowInletNodeIndex = inlet2NodeIndex;
             lowInletT_C = inletT2_C;
             lowInletFraction = inletVol2_L / drawVolume_L;
         }
         else
         {
-            highInletNodeIndex = inlet2Index;
+            highInletNodeIndex = inlet2NodeIndex;
             highInletFraction = inletVol2_L / drawVolume_L;
             highInletT_C = inletT2_C;
-            lowInletNodeIndex = inletIndex;
+            lowInletNodeIndex = inletNodeIndex;
             lowInletT_C = inletT_C;
             lowInletFraction = 1. - inletVol2_L / drawVolume_L;
         }
@@ -3586,27 +3596,27 @@ void HPWH::calcDerivedHeatingValues()
     }
 
     // define condenser index and lowest resistance element index
-    compressorIndex = -1;     // Default = No compressor
-    lowestElementIndex = -1;  // Default = No resistance elements
-    highestElementIndex = -1; // Default = No resistance elements
-    VIPIndex = -1;            // Default = No VIP element
+    compressorHeatSourceIndex = -1;        // Default = No compressor
+    lowestResistanceHeatSourceIndex = -1;  // Default = No resistance elements
+    highestResistanceHeatSourceIndex = -1; // Default = No resistance elements
+    VIP_ResistanceHeatSourceIndex = -1;    // Default = No VIP element
     double lowestPos = 1.;
     double highestPos = 0.; // -1 to make sure a an element on the bottom can still be identified.
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         if (heatSources[i].isACompressor())
         {
-            compressorIndex = i; // NOTE: Maybe won't work with multiple compressors (last
-                                 // compressor will be used)
+            compressorHeatSourceIndex = i; // NOTE: Maybe won't work with multiple compressors (last
+                                           // compressor will be used)
         }
         else if (heatSources[i].isAResistance())
         {
             // Gets VIP element index
             if (heatSources[i].isVIP)
             {
-                if (VIPIndex == -1)
+                if (VIP_ResistanceHeatSourceIndex == -1)
                 {
-                    VIPIndex = i;
+                    VIP_ResistanceHeatSourceIndex = i;
                 }
                 else
                 {
@@ -3622,12 +3632,12 @@ void HPWH::calcDerivedHeatingValues()
                 double pos = static_cast<double>(j) / condensitySize;
                 if ((heatSources[i].condensity[j] > 0.) && (pos < lowestPos))
                 {
-                    lowestElementIndex = i;
+                    lowestResistanceHeatSourceIndex = i;
                     lowestPos = pos;
                 }
                 if ((heatSources[i].condensity[j] > 0.) && (pos >= highestPos))
                 {
-                    highestElementIndex = i;
+                    highestResistanceHeatSourceIndex = i;
                     highestPos = pos;
                 }
             }
@@ -3635,13 +3645,17 @@ void HPWH::calcDerivedHeatingValues()
     }
     if (hpwhVerbosity >= VRB_emetic)
     {
-        msg(outputString, " compressorIndex : %d \n", compressorIndex);
-        msg(outputString, " lowestElementIndex : %d \n", lowestElementIndex);
-        msg(outputString, " highestElementIndex : %d \n", highestElementIndex);
+        msg(outputString, " compressorHeatSourceIndex : %d \n", compressorHeatSourceIndex);
+        msg(outputString,
+            " lowestResistanceHeatSourceIndex : %d \n",
+            lowestResistanceHeatSourceIndex);
+        msg(outputString,
+            " highestResistanceHeatSourceIndex : %d \n",
+            highestResistanceHeatSourceIndex);
     }
     if (hpwhVerbosity >= VRB_emetic)
     {
-        msg(outputString, " VIPIndex : %d \n", VIPIndex);
+        msg(outputString, " VIP_ResistanceHeatSourceIndex : %d \n", VIP_ResistanceHeatSourceIndex);
     }
 
     // heat source ability to depress temp
@@ -3698,7 +3712,7 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 
 bool compressorIsRunning(HPWH& hpwh)
 {
-    return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
+    return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorHeatSourceIndex());
 }
 
 //-----------------------------------------------------------------------------
@@ -4133,7 +4147,7 @@ int HPWH::checkInputs()
             returnVal = HPWH_ABORT;
         }
         // check to make sure there is at least one onlogic or parent with onlogic
-        int parent = heatSources[i].findParent();
+        int parent = heatSources[i].findParentHeatSourceIndex();
         if (heatSources[i].turnOnLogicSet.size() == 0 &&
             (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
         {
@@ -4349,7 +4363,7 @@ int HPWH::checkInputs()
     double maxTemp;
     string why;
     double tempSetpoint = setpointT_C;
-    if (!canSetSetpointT(tempSetpoint, maxTemp, why))
+    if (!canApplySetpointT(tempSetpoint, maxTemp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {

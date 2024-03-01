@@ -2356,7 +2356,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.minT_C = F_TO_C(-25.);
         compressor.externalOutletNodeIndex = 0;
-        compressor.externalInletNodeIndex = getIndexTopNode();
+        compressor.externalInletNodeIndex = getTopNodeIndex();
 
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
@@ -4331,7 +4331,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.hysteresisOffsetT_C = 0;
 
         compressor.externalOutletNodeIndex = 0;
-        compressor.externalInletNodeIndex = getIndexTopNode();
+        compressor.externalInletNodeIndex = getTopNodeIndex();
 
         // Defrost Derate
         compressor.setupDefrostMap();
