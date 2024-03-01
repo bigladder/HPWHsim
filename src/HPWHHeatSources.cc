@@ -506,14 +506,14 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
             hpwh->msg("capacity_kWh %.2lf \t\t cap_kW %.2lf \n",
-                      cap_kW * (minutesToRun) / min_per_hr,
+                      cap_kW * (minutesToRun) / min_per_h,
                       cap_kW);
         }
 
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
         // maybe start from the top and go down?  test this with graphs
-        double effectiveCap_kJ = cap_kW * minutesToRun * sec_per_min;
+        double effectiveCap_kJ = cap_kW * minutesToRun * s_per_min;
 
         // set the leftover capacity to 0
         double leftoverCap_kJ = 0.;
@@ -560,8 +560,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         break;
     }
     // Accumulate the energies
-    double heatingEnergy_kJ = cap_kW * runtime_min * sec_per_min;
-    double inputEnergy_kJ = input_kW * runtime_min * sec_per_min;
+    double heatingEnergy_kJ = cap_kW * runtime_min * s_per_min;
+    double inputEnergy_kJ = input_kW * runtime_min * s_per_min;
     double outputEnergy_kJ = heatingEnergy_kJ;
     double removedEnergy_kJ = outputEnergy_kJ - inputEnergy_kJ;
 
@@ -581,7 +581,6 @@ void HPWH::HeatSource::sortPerformanceMap()
 
 double HPWH::HeatSource::getTankT_C() const
 {
-
     std::vector<double> resampledTankTs_C(getCondensitySize());
     resample(resampledTankTs_C, hpwh->tankTs_C);
 
@@ -949,7 +948,7 @@ double HPWH::HeatSource::addHeatExternal(
         }
 
         // maximum heat that can be added in remaining time
-        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
+        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * s_per_min);
 
         // heat for outlet node to reach target temperature
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
@@ -1062,7 +1061,7 @@ double HPWH::HeatSource::addHeatExternalMP(
     do
     {
         // find node fraction to heat in remaining time
-        double nodeFrac = mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->nodeVolume_L;
+        double nodeFrac = mpFlowRate_LPS * (remainingTime_min * s_per_min) / hpwh->nodeVolume_L;
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
             nodeFrac = 1.;
@@ -1088,7 +1087,7 @@ double HPWH::HeatSource::addHeatExternalMP(
         double targetT_C = externalOutletT_C + deltaT_C;
 
         // maximum heat that can be added in remaining time
-        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
+        double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * s_per_min);
 
         // heat needed to raise temperature of one node by deltaT_C
         double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;

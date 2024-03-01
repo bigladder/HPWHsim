@@ -452,8 +452,8 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
-    secondsPerStep = sec_per_min * minutesPerStep;
-    hoursPerStep = minutesPerStep / min_per_hr;
+    secondsPerStep = s_per_min * minutesPerStep;
+    hoursPerStep = minutesPerStep / min_per_h;
 }
 
 // public HPWH functions
@@ -3453,7 +3453,7 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
         if (heatDistribution_W[i] != 0)
         {
             double powerAdd_kW = heatDistribution_W[i] / 1000.;
-            double qAdd_kJ = KWH_TO_KJ(powerAdd_kW * minutesPerStep / min_per_hr);
+            double qAdd_kJ = KWH_TO_KJ(powerAdd_kW * minutesPerStep / min_per_h);
             addExtraHeatAboveNode(qAdd_kJ, i);
             tot_qAdded_kJ += qAdd_kJ;
         }
