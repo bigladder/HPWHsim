@@ -2299,7 +2299,7 @@ int HPWH::setSetpointT_C(const double setpointT_C_in)
 {
     double maxSetpointT_C = -273.15;
     std::string why;
-    if (!canSetSetpointT_C(setpointT_C_in, maxSetpointT_C, why))
+    if (!canApplySetpointT_C(setpointT_C_in, maxSetpointT_C, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2549,7 +2549,9 @@ int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
     return setSetpointT_C(Units::convert(setpointT, units, Units::Temp::C));
 }
 
-bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
+bool HPWH::canApplySetpointT_C(double newSetpointT_C,
+                               double& maxSetpointT_C,
+                               std::string& why) const
 {
     maxSetpointT_C = -273.15;
     if (isSetpointFixed())
@@ -2589,14 +2591,14 @@ bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std:
     return true;
 }
 
-bool HPWH::canSetSetpointT(const double newSetpointT,
-                           double& maxSetpointT,
-                           std::string& why,
-                           Units::Temp units /*C*/) const
+bool HPWH::canApplySetpointT(const double newSetpointT,
+                             double& maxSetpointT,
+                             std::string& why,
+                             Units::Temp units /*C*/) const
 {
     double newSetpointT_C = Units::convert(newSetpointT, units, Units::Temp::C);
     double maxSetpointT_C = -273.15;
-    bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
+    bool result = canApplySetpointT_C(newSetpointT_C, maxSetpointT_C, why);
     maxSetpointT = Units::convert(maxSetpointT_C, Units::Temp::C, units);
     return result;
 }
@@ -4349,7 +4351,7 @@ int HPWH::checkInputs()
     double maxTemp;
     string why;
     double tempSetpoint = setpointT_C;
-    if (!canSetSetpointT(tempSetpoint, maxTemp, why))
+    if (!canApplySetpointT(tempSetpoint, maxTemp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {

@@ -763,7 +763,7 @@ class HPWH
 
     void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
-    bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
+    bool canApplySetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
 
     int setSetpointT_C(const double setpointT_C_in);
 
@@ -808,10 +808,10 @@ class HPWH
     /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
     /// can be set higher than the compressor max outlet temperature if there is a  backup
     /// resistance element, but the compressor will not operate above this temperature.
-    bool canSetSetpointT(const double newSetpointT,
-                         double& maxSetpointT,
-                         std::string& why,
-                         Units::Temp units = Units::Temp::C) const;
+    bool canApplySetpointT(const double newSetpointT,
+                           double& maxSetpointT,
+                           std::string& why,
+                           Units::Temp units = Units::Temp::C) const;
 
     ///////////////////////////////////////////////
 
