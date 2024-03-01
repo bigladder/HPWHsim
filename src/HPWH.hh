@@ -293,7 +293,7 @@ class HPWH
             return conversionMap<T>[{fromUnits, toUnits}](x);
         }
 
-        /* time units and conversion */
+        /* time units */
         enum class Time
         {
             h,   // hours
@@ -301,21 +301,21 @@ class HPWH
             s    // seconds
         };
 
-        /* temperature units and conversion */
+        /* temperature units */
         enum class Temp
         {
             C, // celsius
             F  // fahrenheit
         };
 
-        /* temperature-difference units and conversion */
+        /* temperature-difference units */
         enum class TempDiff
         {
             C, // celsius
             F  // fahrenheit
         };
 
-        /* energy units and conversion */
+        /* energy units */
         enum class Energy
         {
             kJ,  // kilojoules
@@ -323,7 +323,7 @@ class HPWH
             Btu  // british thermal units
         };
 
-        /* power units and conversion */
+        /* power units */
         enum class Power
         {
             kW,        // kilowatts
@@ -331,21 +331,21 @@ class HPWH
             W,         // watts
         };
 
-        /* length units and conversion */
+        /* length units */
         enum class Length
         {
             m, // meters
             ft // feet
         };
 
-        /* area units and conversion */
+        /* area units */
         enum class Area
         {
             m2, // square meters
             ft2 // square feet
         };
 
-        /* volume units and conversion */
+        /* volume units */
         enum class Volume
         {
             L,   // liters
@@ -353,14 +353,14 @@ class HPWH
             ft3  // cubic feet
         };
 
-        /* flow-rate units and conversion */
+        /* flow-rate units */
         enum class FlowRate
         {
             L_per_s,    // liters per second
             gal_per_min // gallons per minute
         };
 
-        /* UA units and conversion */
+        /* UA units */
         enum class UA
         {
             kJ_per_hC, // kilojoules per hour degree celsius
@@ -1227,10 +1227,10 @@ class HPWH
     double tankVolume_L;
 
     /// the UA of the tank, in metric units
-    double tankUA_kJperHrC;
+    double tankUA_kJperhC;
 
     /// the UA of the fittings for the tank, in metric units
-    double fittingsUA_kJperHrC;
+    double fittingsUA_kJperhC;
 
     /// the volume (L) of a single node
     double nodeVolume_L;

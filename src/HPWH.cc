@@ -482,7 +482,7 @@ void HPWH::setAllDefaults()
     doConduction = true;
     inletIndex = 0;
     inlet2Index = 0;
-    fittingsUA_kJperHrC = 0.;
+    fittingsUA_kJperhC = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
     timerTOT = 0.;
@@ -519,8 +519,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     }
 
     tankVolume_L = hpwh.tankVolume_L;
-    tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
-    fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
+    tankUA_kJperhC = hpwh.tankUA_kJperhC;
+    fittingsUA_kJperhC = hpwh.fittingsUA_kJperhC;
 
     setpointT_C = hpwh.setpointT_C;
 
@@ -1374,7 +1374,7 @@ int HPWH::setTankSizeWithSameU(double tankSize,
                                bool forceChange /*=false*/)
 {
     double tankSize_L = Units::convert(tankSize, units, Units::Volume::L);
-    double oldTankU_kJperHCm2 = tankUA_kJperHrC / getTankSurfaceArea(Units::Area::m2);
+    double oldTankU_kJperHCm2 = tankUA_kJperhC / getTankSurfaceArea(Units::Area::m2);
 
     setTankSize(tankSize_L, Units::Volume::L, forceChange);
     setUA(oldTankU_kJperHCm2 * getTankSurfaceArea(Units::Area::m2), Units::UA::kJ_per_hC);
@@ -1477,25 +1477,25 @@ int HPWH::setDoConduction(bool doCondu)
 
 int HPWH::setUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    tankUA_kJperHrC = Units::convert(UA, units, Units::UA::kJ_per_hC);
+    tankUA_kJperhC = Units::convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getUA(double& UA, Units::UA units /*KJperHC*/) const
 {
-    UA = Units::convert(tankUA_kJperHrC, Units::UA::kJ_per_hC, units);
+    UA = Units::convert(tankUA_kJperhC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
 int HPWH::setFittingsUA(const double UA, const Units::UA units /*KJperHC*/)
 {
-    fittingsUA_kJperHrC = Units::convert(UA, units, Units::UA::kJ_per_hC);
+    fittingsUA_kJperhC = Units::convert(UA, units, Units::UA::kJ_per_hC);
     return 0;
 }
 
 int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
 {
-    UA = Units::convert(fittingsUA_kJperHrC, Units::UA::kJ_per_hC, units);
+    UA = Units::convert(fittingsUA_kJperhC, Units::UA::kJ_per_hC, units);
     return 0;
 }
 
@@ -3134,7 +3134,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
 
     // Standby losses from the top and bottom of the tank
     {
-        auto standbyLossRate_kJperHrC = tankUA_kJperHrC * fracAreaTop;
+        auto standbyLossRate_kJperHrC = tankUA_kJperhC * fracAreaTop;
 
         standbyLossesBottom_kJ =
             standbyLossRate_kJperHrC * hoursPerStep * (tankTs_C[0] - tankAmbientT_C);
@@ -3148,7 +3148,7 @@ void HPWH::updateTankTemps(double drawVolume_L,
     // Standby losses from the sides of the tank
     {
         auto standbyLossRate_kJperHrC =
-            (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
+            (tankUA_kJperhC * fracAreaSide + fittingsUA_kJperhC) / getNumNodes();
         for (int i = 0; i < getNumNodes(); i++)
         {
             double standbyLossesNodeSides_kJ =
@@ -4229,8 +4229,7 @@ int HPWH::checkInputs()
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
                     msg("External heat sources need an external outlet height within the "
-                        "bounds "
-                        "from from 0 to numNodes-1. \n");
+                        "bounds from from 0 to numNodes-1. \n");
                 }
                 returnVal = HPWH_ABORT;
             }
@@ -4240,8 +4239,7 @@ int HPWH::checkInputs()
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
                     msg("External heat sources need an external inlet height within the "
-                        "bounds "
-                        "from from 0 to numNodes-1. \n");
+                        "bounds from from 0 to numNodes-1. \n");
                 }
                 returnVal = HPWH_ABORT;
             }
@@ -4320,8 +4318,7 @@ int HPWH::checkInputs()
                 if (hpwhVerbosity >= VRB_reluctant)
                 {
                     msg("External multipass heat sources must have a perfMap of only one "
-                        "point "
-                        "with regression equations. \n");
+                        "point with regression equations. \n");
                 }
                 returnVal = HPWH_ABORT;
             }
@@ -4338,9 +4335,7 @@ int HPWH::checkInputs()
             if (hpwhVerbosity >= VRB_reluctant)
             {
                 msg("The relationship between the on logic and off logic is not supported. "
-                    "The "
-                    "off "
-                    "logic is beneath the on logic.");
+                    "The off logic is beneath the on logic.");
             }
             returnVal = HPWH_ABORT;
         }
@@ -4359,13 +4354,13 @@ int HPWH::checkInputs()
     }
 
     // Check if the UA is out of bounds
-    if (tankUA_kJperHrC < 0.0)
+    if (tankUA_kJperhC < 0.0)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
-                "tankUA_kJperHrC is: %f  \n",
-                tankUA_kJperHrC);
+            msg("The tankUA_kJperhC is less than 0 for a HPWH, it must be greater than 0, "
+                "tankUA_kJperhC is: %f  \n",
+                tankUA_kJperhC);
         }
         returnVal = HPWH_ABORT;
     }
@@ -4460,7 +4455,7 @@ int HPWH::initFromFile(string configFile)
                 }
                 return HPWH_ABORT;
             }
-            tankUA_kJperHrC = tempDouble;
+            tankUA_kJperhC = tempDouble;
         }
         else if (token == "depressTemp")
         {
