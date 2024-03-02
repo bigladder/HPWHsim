@@ -759,8 +759,7 @@ class HPWH
 
     void printTankTs_C();
 
-    /// assign uniform tank temperature
-    int setTankT_C(double tankT_C);
+    int setTankT_C(double tankT_C); /// assign uniform tank temperature
 
     void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
@@ -771,7 +770,7 @@ class HPWH
     /// change the setpoint T, if possible
     int setSetpointT(const double setpointT, const Units::Temp units = Units::Temp::C);
 
-    /// assign tank node temperatures by mapping the provided non-empty vector of temperatures
+    /// assign tank node temperatures by mapping the provided vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
 
     ///////////////////////////////////////////////
@@ -1601,44 +1600,31 @@ class HPWH::HeatSource
 
     ///  Add heat from a source outside of the tank. Assume the condensity is where
     /// the water is drawn from and hot water is put at the top of the tank.
-    double addHeatExternal(double externalT_C,
-                           double minutesToRun,
-                           double& cap_BTUperHr,
-                           double& input_BTUperHr,
-                           double& cop);
+    double addHeatExternal(
+        double externalT_C, double minutesToRun, double& cap_kW, double& input_kW, double& cop);
 
     /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(double externalT_C,
-                             double minutesToRun,
-                             double& cap_BTUperHr,
-                             double& input_BTUperHr,
-                             double& cop);
+    double addHeatExternalMP(
+        double externalT_C, double minutesToRun, double& cap_kW, double& input_kW, double& cop);
 
     /// some methods to help with the add heat interface - MJL
     void getCapacity(double externalT_C,
                      double condenserT_C,
                      double setpointT_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
+                     double& input_kW,
+                     double& cap_kW,
                      double& cop);
 
     /// An overloaded function that uses uses the setpoint temperature
-    void getCapacity(double externalT_C,
-                     double condenserT_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
+    void getCapacity(
+        double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop)
     {
-        getCapacity(
-            externalT_C, condenserT_C, hpwh->getSetpointT(), input_BTUperHr, cap_BTUperHr, cop);
+        getCapacity(externalT_C, condenserT_C, hpwh->getSetpointT(), input_kW, cap_kW, cop);
     };
 
     /// An equivalent getCapacity function just for multipass external (or split) HPWHs
-    void getCapacityMP(double externalT_C,
-                       double condenserT_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
+    void getCapacityMP(
+        double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop);
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 
