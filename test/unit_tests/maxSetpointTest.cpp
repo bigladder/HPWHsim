@@ -67,9 +67,10 @@ TEST(MaxSetpointTest, NyleC90A_SP)
 
     EXPECT_FALSE(hpwh.canApplySetpointT_C(101., num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.canApplySetpointT_C(99., num, why));  // Can't go to near boiling
-    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num);                // Assert we're getting the right number
+    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num);                  // Assert we're getting the right number
     EXPECT_TRUE(hpwh.canApplySetpointT_C(60., num, why));   // Can go to normal
-    EXPECT_TRUE(hpwh.canApplySetpointT_C(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
+    EXPECT_TRUE(
+        hpwh.canApplySetpointT_C(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
@@ -91,9 +92,10 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
 
     EXPECT_FALSE(hpwh.canApplySetpointT_C(101., num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.canApplySetpointT_C(99., num, why));  // Can't go to near boiling
-    EXPECT_TRUE(HPWH::MAXOUTLET_R410A == num);            // Assert we're getting the right number
+    EXPECT_TRUE(HPWH::MAXOUTLET_R410A == num);              // Assert we're getting the right number
     EXPECT_TRUE(hpwh.canApplySetpointT_C(50., num, why));   // Can go to normal
-    EXPECT_TRUE(hpwh.canApplySetpointT_C(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
+    EXPECT_TRUE(
+        hpwh.canApplySetpointT_C(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
@@ -148,7 +150,7 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     EXPECT_TRUE(hpwh.canApplySetpointT_C(99., num, why));   // Can go to near boiling
     EXPECT_TRUE(hpwh.canApplySetpointT_C(100., num, why));  // Can go to boiling
     EXPECT_TRUE(hpwh.canApplySetpointT_C(10., num, why));   // Can go low, albiet dumb
-    EXPECT_EQ(expectedRE_maxT_C, num);                    // Max is boiling
+    EXPECT_EQ(expectedRE_maxT_C, num);                      // Max is boiling
 
     // Check this carries over into setting the setpoint
     EXPECT_EQ(hpwh.setSetpointT_C(101.), HPWH::HPWH_ABORT); // Can't go above boiling
