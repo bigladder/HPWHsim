@@ -63,7 +63,7 @@ int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
 
 double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
 
-double HPWH::SoCBasedHeatingLogic::getgetFractToMeetComparisonExternal()
+double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
     double deltaSoCFraction = (getComparisonValue() + HPWH::TOL_MINVALUE) - getTankValue();
 
@@ -218,7 +218,7 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
     return logicNode / static_cast<double>(LOGIC_SIZE);
 }
 
-double HPWH::TempBasedHeatingLogic::getgetFractToMeetComparisonExternal()
+double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
     int calcNode = 0;
     int firstNode = -1;
