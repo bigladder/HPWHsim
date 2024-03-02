@@ -480,8 +480,8 @@ void HPWH::setAllDefaults()
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
-    inletIndex = 0;
-    inlet2Index = 0;
+    inletNodeIndex = 0;
+    inlet2NodeIndex = 0;
     fittingsUA_kJperhC = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
@@ -527,8 +527,8 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     tankTs_C = hpwh.tankTs_C;
     nextTankTs_C = hpwh.nextTankTs_C;
 
-    inletIndex = hpwh.inletIndex;
-    inlet2Index = hpwh.inlet2Index;
+    inletNodeIndex = hpwh.inletNodeIndex;
+    inlet2NodeIndex = hpwh.inlet2NodeIndex;
 
     outletT_C = hpwh.outletT_C;
     condenserInletT_C = hpwh.condenserInletT_C;
@@ -693,12 +693,12 @@ int HPWH::runOneStep(double drawVolume_L,
             {
                 // check if anything that is on needs to turn off (generally for lowT cutoffs)
                 // things that just turn on later this step are checked for this in shouldHeat
-                if (heatSources[i].isEngaged() && heatSources[i].shutsOff())
+                if (heatSources[i].isEngaged() && heatSources[i].shouldShutOff())
                 {
                     heatSources[i].disengageHeatSource();
                     // check if the backup heat source would have to shut off too
                     if (heatSources[i].backupHeatSource != NULL &&
-                        heatSources[i].backupHeatSource->shutsOff() != true)
+                        heatSources[i].backupHeatSource->shouldShutOff() != true)
                     {
                         // and if not, go ahead and turn it on
                         heatSources[i].backupHeatSource->engageHeatSource(DRstatus);
@@ -848,7 +848,7 @@ int HPWH::runOneStep(double drawVolume_L,
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
                     if (heatSources[i].followedByHeatSource != NULL &&
-                        heatSources[i].followedByHeatSource->shutsOff() == false)
+                        heatSources[i].followedByHeatSource->shouldShutOff() == false)
                     {
                         // turn it on
                         heatSources[i].followedByHeatSource->engageHeatSource(DRstatus);
@@ -1501,12 +1501,12 @@ int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
 
 int HPWH::setInletByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inletIndex);
+    return getFractionalHeightNodeIndex(fractionalHeight, inletNodeIndex);
 }
 
 int HPWH::setInlet2ByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Index);
+    return getFractionalHeightNodeIndex(fractionalHeight, inlet2NodeIndex);
 }
 
 int HPWH::setExternalInletHeightByFraction(double fractionalHeight)
@@ -1536,13 +1536,13 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
         {
             if (whichExternalPort == 1)
             {
-                returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalInletNodeIndex);
+                returnVal = getFractionalHeightNodeIndex(fractionalHeight,
+                                                         heatSources[i].externalInletNodeIndex);
             }
             else
             {
-                returnVal = setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalOutletNodeIndex);
+                returnVal = getFractionalHeightNodeIndex(fractionalHeight,
+                                                         heatSources[i].externalOutletNodeIndex);
             }
 
             if (returnVal == HPWH_ABORT)
@@ -1554,7 +1554,7 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
     return returnVal;
 }
 
-int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
+int HPWH::getFractionalHeightNodeIndex(double fractionalHeight, int& nodeIndex)
 {
     if (fractionalHeight > 1. || fractionalHeight < 0.)
     {
@@ -1566,12 +1566,12 @@ int HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
     }
 
     int node = (int)std::floor(getNumNodes() * fractionalHeight);
-    inletNum = (node == getNumNodes()) ? getIndexTopNode() : node;
+    nodeIndex = (node == getNumNodes()) ? getTopNodeIndex() : node;
 
     return 0;
 }
 
-int HPWH::getExternalInletHeight() const
+int HPWH::getExternalInletNodeIndex() const
 {
     if (!hasExternalHeatSource())
     {
@@ -1591,7 +1591,7 @@ int HPWH::getExternalInletHeight() const
     }
     return HPWH_ABORT;
 }
-int HPWH::getExternalOutletHeight() const
+int HPWH::getExternalOutletNodeIndex() const
 {
     if (!hasExternalHeatSource())
     {
@@ -1630,21 +1630,21 @@ int HPWH::setTimerLimitTOT(double limit_min)
 
 double HPWH::getTimerLimitTOT_minute() const { return timerLimitTOT; }
 
-int HPWH::getInletHeight(int whichInlet) const
+int HPWH::getInletNodeIndex(int whichInlet) const
 {
     if (whichInlet == 1)
     {
-        return inletIndex;
+        return inletNodeIndex;
     }
     else if (whichInlet == 2)
     {
-        return inlet2Index;
+        return inlet2NodeIndex;
     }
     else
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("Invalid inlet chosen in getInletHeight \n");
+            msg("Invalid inlet chosen in getInletNodeIndex \n");
         }
         return HPWH_ABORT;
     }
@@ -1679,10 +1679,10 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
     return retVal;
 }
 
-int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
+int HPWH::setEnteringWaterHighTempShutOff(double highT,
                                           bool tempIsAbsolute,
                                           int heatSourceIndex,
-                                          Units::Temp unit /*_C*/)
+                                          Units::Temp unit /*C*/)
 {
     if (!hasEnteringWaterHighTempShutOff(heatSourceIndex))
     {
@@ -1693,20 +1693,20 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         return HPWH_ABORT;
     }
 
-    double highTemp_C = Units::convert(highTemp, unit, Units::Temp::C);
+    double highT_C = Units::convert(highT, unit, Units::Temp::C);
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
     {
-        // check differnce with setpoint
-        if (setpointT_C - highTemp_C < MINSINGLEPASSLIFT)
+        // check difference with setpoint
+        if (setpointT_C - highT_C < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
     }
     else
     {
-        if (highTemp_C < MINSINGLEPASSLIFT)
+        if (highT_C < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
@@ -1728,7 +1728,7 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
             std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)
-                ->setDecisionPoint(highTemp_C, tempIsAbsolute);
+                ->setDecisionPoint(highT_C, tempIsAbsolute);
             break;
         }
     }
@@ -2088,7 +2088,7 @@ void HPWH::setNumNodes(const std::size_t num_nodes)
 
 int HPWH::getNumNodes() const { return static_cast<int>(tankTs_C.size()); }
 
-int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
+int HPWH::getTopNodeIndex() const { return getNumNodes() - 1; }
 
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
 
@@ -2299,7 +2299,7 @@ int HPWH::setSetpointT_C(const double setpointT_C_in)
 {
     double maxSetpointT_C = -273.15;
     std::string why;
-    if (!canSetSetpointT_C(setpointT_C_in, maxSetpointT_C, why))
+    if (!canApplySetpointT_C(setpointT_C_in, maxSetpointT_C, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -2549,7 +2549,9 @@ int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
     return setSetpointT_C(Units::convert(setpointT, units, Units::Temp::C));
 }
 
-bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const
+bool HPWH::canApplySetpointT_C(double newSetpointT_C,
+                               double& maxSetpointT_C,
+                               std::string& why) const
 {
     maxSetpointT_C = -273.15;
     if (isSetpointFixed())
@@ -2589,14 +2591,14 @@ bool HPWH::canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std:
     return true;
 }
 
-bool HPWH::canSetSetpointT(const double newSetpointT,
-                           double& maxSetpointT,
-                           std::string& why,
-                           Units::Temp units /*C*/) const
+bool HPWH::canApplySetpointT(const double newSetpointT,
+                             double& maxSetpointT,
+                             std::string& why,
+                             Units::Temp units /*C*/) const
 {
     double newSetpointT_C = Units::convert(newSetpointT, units, Units::Temp::C);
     double maxSetpointT_C = -273.15;
-    bool result = canSetSetpointT_C(newSetpointT_C, maxSetpointT_C, why);
+    bool result = canApplySetpointT_C(newSetpointT_C, maxSetpointT_C, why);
     maxSetpointT = Units::convert(maxSetpointT_C, Units::Temp::C, units);
     return result;
 }
@@ -3023,21 +3025,21 @@ void HPWH::updateTankTemps(double drawVolume_L,
         double lowInletT_C;
         double lowInletFraction; // fraction of draw from low inlet
 
-        if (inletIndex > inlet2Index)
+        if (inletNodeIndex > inlet2NodeIndex)
         {
-            highInletNodeIndex = inletIndex;
+            highInletNodeIndex = inletNodeIndex;
             highInletFraction = 1. - inletVol2_L / drawVolume_L;
             highInletT_C = inletT_C;
-            lowInletNodeIndex = inlet2Index;
+            lowInletNodeIndex = inlet2NodeIndex;
             lowInletT_C = inletT2_C;
             lowInletFraction = inletVol2_L / drawVolume_L;
         }
         else
         {
-            highInletNodeIndex = inlet2Index;
+            highInletNodeIndex = inlet2NodeIndex;
             highInletFraction = inletVol2_L / drawVolume_L;
             highInletT_C = inletT2_C;
-            lowInletNodeIndex = inletIndex;
+            lowInletNodeIndex = inletNodeIndex;
             lowInletT_C = inletT_C;
             lowInletFraction = 1. - inletVol2_L / drawVolume_L;
         }
@@ -4349,7 +4351,7 @@ int HPWH::checkInputs()
     double maxTemp;
     string why;
     double tempSetpoint = setpointT_C;
-    if (!canSetSetpointT(tempSetpoint, maxTemp, why))
+    if (!canApplySetpointT(tempSetpoint, maxTemp, why))
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {

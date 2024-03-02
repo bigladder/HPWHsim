@@ -190,7 +190,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
         {
             double temp;
             std::string tempStr;
-            if (!hpwh.canSetSetpointT_C(setpointT_C, temp, tempStr))
+            if (!hpwh.canApplySetpointT_C(setpointT_C, temp, tempStr))
             {
                 continue; // Numbers don't align for this type
             }
@@ -208,7 +208,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             {
                 double temp;
                 std::string tempStr;
-                if (!hpwh.canSetSetpointT_C(setpointT_C, temp, tempStr))
+                if (!hpwh.canApplySetpointT_C(setpointT_C, temp, tempStr))
                 {
                     continue; // Numbers don't align for this type
                 }

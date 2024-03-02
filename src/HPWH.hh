@@ -758,19 +758,18 @@ class HPWH
 
     void printTankTs_C();
 
-    /// assign uniform tank temperature
-    int setTankT_C(double tankT_C);
+    int setTankT_C(double tankT_C); /// assign uniform tank temperature
 
     void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
-    bool canSetSetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
+    bool canApplySetpointT_C(double newSetpointT_C, double& maxSetpointT_C, std::string& why) const;
 
     int setSetpointT_C(const double setpointT_C_in);
 
     /// change the setpoint T, if possible
     int setSetpointT(const double setpointT, const Units::Temp units = Units::Temp::C);
 
-    /// assign tank node temperatures by mapping the provided non-empty vector of temperatures
+    /// assign tank node temperatures by mapping the provided vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
 
     ///////////////////////////////////////////////
@@ -806,12 +805,12 @@ class HPWH
 
     /// returns whether specified new setpoint is physically possible for the compressor. If
     /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
-    /// can be set higher than the compressor max outlet temperature if there is a  backup
+    /// can be set higher than the compressor max outlet temperature if there is a backup
     /// resistance element, but the compressor will not operate above this temperature.
-    bool canSetSetpointT(const double newSetpointT,
-                         double& maxSetpointT,
-                         std::string& why,
-                         Units::Temp units = Units::Temp::C) const;
+    bool canApplySetpointT(const double newSetpointT,
+                           double& maxSetpointT,
+                           std::string& why,
+                           Units::Temp units = Units::Temp::C) const;
 
     ///////////////////////////////////////////////
 
@@ -828,14 +827,14 @@ class HPWH
     {
         return calcSoCFraction(tMains_C, tMinUseful_C, getSetpointT());
     };
-    /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
+
+    /// return State of Charge calculated from the SoC heating logics if used.
     double getSoCFraction() const;
 
+    /// change the AirFlowFreedom value
     int setAirFlowFreedom(double fanFraction);
-    /**< This is a simple setter for the AirFlowFreedom */
 
-    /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
-      but a new A. A is found via getTankSurfaceArea()*/
+    /// set the tank size, adjusting the UA to maintain the same U
     int setTankSizeWithSameU(double tankSize,
                              Units::Volume units = Units::Volume::L,
                              bool forceChange = false);
@@ -846,7 +845,7 @@ class HPWH
                                      Units::Volume volUnits = Units::Volume::L,
                                      Units::Area surfAUnits = Units::Area::ft2);
 
-    /**< Returns the tank surface area based off of real storage tanks*/
+    /// return the tank surface area based on real storage tanks
     double getTankRadius(const Units::Length units = Units::Length::ft) const;
 
     /// returns the tank surface radius based off of real storage tanks
@@ -868,48 +867,44 @@ class HPWH
     /// set whether to run the inversion mixing method, default is true
     int setDoInversionMixing(bool doInvMix);
 
+    /// set whether to perform inter-nodal conduction
     int setDoConduction(bool doCondu);
-    /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
+    /// set the UA with specified units
     int setUA(const double UA, const Units::UA units = Units::UA::kJ_per_hC);
-    /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC
-     */
 
+    /// returns the UA with specified units
     int getUA(double& UA, const Units::UA units = Units::UA::kJ_per_hC) const;
-    /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
+    /// returns the fittings UA with specified units
     int getFittingsUA(double& UA, const Units::UA units = Units::UA::kJ_per_hC) const;
-    /**< Returns the UAof just the fittings, with or without units specified - default is metric,
-     * kJperHrC  */
 
+    /// set the fittings UA with specified units
     int setFittingsUA(const double UA, const Units::UA units = Units::UA::kJ_per_hC);
-    /**< This is a setter for the UA of just the fittings, with or without units specified - default
-     * is metric, kJperHrC */
 
+    /// set the water inlet height as a fraction from the bottom up
     int setInletByFraction(double fractionalHeight);
-    /**< This is a setter for the water inlet height which sets it as a fraction of the number of
-     * nodes from the bottom up*/
+
+    /// set the second water inlet height as a fraction from the bottom up
     int setInlet2ByFraction(double fractionalHeight);
-    /**< This is a setter for the water inlet height which sets it as a fraction of the number of
-     * nodes from the bottom up*/
 
+    /// set the external water inlet height as a fraction from the bottom up (split systems)
     int setExternalInletHeightByFraction(double fractionalHeight);
-    /**< This is a setter for the height at which the split system HPWH adds heated water to the
-    storage tank, this sets it as a fraction of the number of nodes from the bottom up*/
+
+    /// set the external water outlet height as a fraction from the bottom up (split systems)
     int setExternalOutletHeightByFraction(double fractionalHeight);
-    /**< This is a setter for the height at which the split system HPWH takes cold water out of the
-    storage tank, this sets it as a fraction of the number of nodes from the bottom up*/
 
+    /// set an external heater port height as a fraction from the bottom up (split systems)
     int setExternalPortHeightByFraction(double fractionalHeight, int whichPort);
-    /**< sets the external heater port heights inlet height node number */
 
-    int getExternalInletHeight() const;
-    /**< Returns the node where the split system HPWH adds heated water to the storage tank*/
-    int getExternalOutletHeight() const;
-    /**< Returns the node where the split system HPWH takes cold water out of the storage tank*/
+    /// return the index of the node for the external water inlet (split systems)
+    int getExternalInletNodeIndex() const;
 
-    int setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
-    /**< This is a setter for the water inlet height, by fraction. */
+    /// returns the index of the node for the external water outlet (split systems)
+    int getExternalOutletNodeIndex() const;
+
+    /// get the node index for a specified fractional height
+    int getFractionalHeightNodeIndex(double fractionalHeight, int& nodeIndex);
 
     int setTimerLimitTOT(double limit_min);
     /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440
@@ -917,17 +912,17 @@ class HPWH
     double getTimerLimitTOT_minute() const;
     /**< Returns the timer limit in minutes for the DR_TOT call. */
 
-    int getInletHeight(int whichInlet) const;
-    /**< returns the water inlet height node number */
+    /// return the node index of the specified water inlet
+    int getInletNodeIndex(int whichInlet) const;
 
-    /**< resizes the tankTemp_C and nextTankTemp_C node vectors  */
+    /// resizes the tankTs_C and nextTankTs_C node vectors
     void setNumNodes(const std::size_t num_nodes);
 
     /// returns the number of nodes
     int getNumNodes() const;
 
     /// returns the index of the top node
-    int getIndexTopNode() const;
+    int getTopNodeIndex() const;
 
     /// returns the number of heat sources
     int getNumHeatSources() const;
@@ -1013,9 +1008,9 @@ class HPWH
     /// returns HPWH_ABORT for N out of bounds  */
     double getNthHeatSourceRunTime(int N) const;
 
+    /// return 1 if the Nth heat source is currently engaged, 0 if it is not, or
+    /// HPWH_ABORT for N out of bounds
     int isNthHeatSourceRunning(int N) const;
-    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
-        returns HPWH_ABORT for N out of bounds  */
 
     /// returns the enum value for what type of heat source the Nth heat source is/
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
@@ -1133,7 +1128,7 @@ class HPWH
     void modifyHeatDistribution(std::vector<double>& heatDistribution);
     void addExtraHeat(std::vector<double>& extraHeatDist_W);
 
-    ///  "extra" heat added during a simulation step
+    ///  "extra" heat (kJ) added during a simulation step
     double extraEnergyInput_kJ;
 
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
@@ -1214,13 +1209,11 @@ class HPWH
     /// (-1 if no VIP resistance elements)
     int VIPIndex;
 
-    /// index of the tank node where the inlet water enters
-    /// must be between 0 and numNodes-1
-    int inletIndex;
+    /// tank node index of the inlet [0, numNodes-1]
+    int inletNodeIndex;
 
-    /// index of the tank node where the water from a 2nd inlet enters
-    /// must be between 0 and numNodes-1
-    int inlet2Index;
+    /// tank node index of the second inlet [0, numNodes-1]
+    int inlet2NodeIndex;
 
     /// the volume (L) of the tank
     double tankVolume_L;
@@ -1333,14 +1326,14 @@ class HPWH
     /// Generates a vector of logical nodes
     std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
 
-    /// False: water is drawn from the tank itself; True: tank provides heat exchange only
+    /// true if tank provides heat exchange only
     bool hasHeatExchanger;
 
-    /// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by
-    /// heat-exchange models only).
+    /// coefficient (0-1) of effectiveness for heat exchange between tank and water line
+    /// (heat-exchange models only).
     double heatExchangerEffectiveness;
 
-    /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
+    /// cefficient (0-1) of effectiveness for heat exchange between a single tank node and water
     /// line (derived from heatExchangerEffectiveness).
     double nodeHeatExchangerEffectiveness;
 
@@ -1360,37 +1353,26 @@ class HPWH::HeatSource
     /// configure the heat source to be a resisive element, positioned at the
     /// specified node, with the specified power in watts
 
-    bool isEngaged() const;
-    /**< return whether or not the heat source is engaged */
-    void engageHeatSource(DRMODES DRstatus = DR_ALLOW);
-    /**< turn heat source on, i.e. set isEngaged to TRUE */
-    void disengageHeatSource();
-    /**< turn heat source off, i.e. set isEngaged to FALSE */
+    bool isEngaged() const;                             /// true if on
+    void engageHeatSource(DRMODES DRstatus = DR_ALLOW); /// turn on
+    void disengageHeatSource();                         /// turn off
 
-    bool isLockedOut() const;
-    /**< return whether or not the heat source is locked out */
-    void lockOutHeatSource();
-    /**< lockout heat source, i.e. set isLockedOut to TRUE */
-    void unlockHeatSource();
-    /**< unlock heat source, i.e. set isLockedOut to FALSE */
+    bool isLockedOut() const; /// true if locked out
+    void lockOutHeatSource(); /// lock out
+    void unlockHeatSource();  /// unlock
 
-    bool shouldLockOut(double heatSourceAmbientT_C) const;
-    /**< queries the heat source as to whether it should lock out */
-    bool shouldUnlock(double heatSourceAmbientT_C) const;
-    /**< queries the heat source as to whether it should unlock */
+    bool shouldLockOut(double heatSourceAmbientT_C) const; /// true if should lock out
+    bool shouldUnlock(double heatSourceAmbientT_C) const;  /// true if should unlock
 
+    /// lock or unlock, as needed; return resulting state (true: locked, false: unlocked)
     bool toLockOrUnlock(double heatSourceAmbientT_C);
-    /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the
-     * heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
 
-    bool shouldHeat() const;
-    /**< queries the heat source as to whether or not it should turn on */
-    bool shutsOff() const;
-    /**< queries the heat source whether should shut off */
+    bool shouldHeat() const; /// return whether to turn on
 
+    bool shouldShutOff() const; /// return whether to turn off
+
+    /// return whether either maximum or setpoint temperature is exceeded
     bool maxedOut() const;
-    /**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at
-     * setpoint. */
 
     int findParent() const;
     /**< returns the index of the heat source where this heat source is a backup.
@@ -1400,12 +1382,8 @@ class HPWH::HeatSource
     /**< calculates the distance the current state is from the shutOff logic for external
      * configurations*/
 
+    /// add heat
     void addHeat(double externalT_C, double minutesToRun);
-    /**< adds heat to the hpwh - this is the function that interprets the
-        various configurations (internal/external, resistance/heat pump) to add heat */
-
-    /// Add a portion of the retained heat to the tank
-    void addRetainedHeat();
 
     /// Assign new condensity values from supplied vector. Note the input vector is currently
     /// resampled to preserve a condensity vector of size CONDENSITY_SIZE.
@@ -1413,13 +1391,14 @@ class HPWH::HeatSource
 
     int getCondensitySize() const;
 
-    void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
-    /**< Does a linear interpolation in btwxt to the target point*/
+    /// perform btwxt linear interpolation to the target point
+    void btwxtInterp(double& inputPower, double& cop, std::vector<double>& target);
 
+    /// configure a map for defrost derating
     void setupDefrostMap(double derate35 = 0.8865);
-    /**< configure the heat source with a default for the defrost derating */
+
+    /// perform cop derating based on the air temperature
     void defrostDerate(double& to_derate, double airT_C);
-    /**< Derates the COP of a system based on the air temperature */
 
   private:
     // start with a few type definitions
@@ -1440,7 +1419,7 @@ class HPWH::HeatSource
 
     bool isOn; /// whether heat source is running
 
-    bool lockedOut; /// whether the heat source locked out
+    bool lockedOut; /// whether the heat source is locked out
 
     /// iff true will derate the COP of a compressor to simulate a defrost cycle
     bool doDefrost;
@@ -1448,13 +1427,13 @@ class HPWH::HeatSource
     /// tracks the time that heat source was running
     double runtime_min;
 
-    /// energy supplied to the heat source
+    /// energy supplied to the heat source in the previous time step
     double energyInput_kJ;
 
-    /// energy put transferred to the tank by the heat source
+    /// energy (kJ) transferred to the tank in the previous time step
     double energyOutput_kJ;
 
-    /// energy removed from the environment
+    /// energy removed from the environment in the previous time step
     double energyRemovedFromEnvironment_kJ;
 
     // property variables
@@ -1466,7 +1445,7 @@ class HPWH::HeatSource
     HeatSource* backupHeatSource;
 
     /// pointer to the heat source that runs concurrently with this one
-    /// it still will only turn on if shutsOff is false.
+    /// it still will only turn on if shouldShutOff is false.
     HeatSource* companionHeatSource;
 
     /// pointer to the heat source which will attempt to run after this one
