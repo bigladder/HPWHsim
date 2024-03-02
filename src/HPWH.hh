@@ -433,7 +433,7 @@ class HPWH
         virtual double nodeWeightAvgFract() = 0;
 
         /// gets the fraction of a node that has to be heated up to met the turnoff condition
-        virtual double getgetFractToMeetComparisonExternal() = 0;
+        virtual double getFractToMeetComparisonExternal() = 0;
 
         virtual int setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
@@ -466,7 +466,7 @@ class HPWH
         double getComparisonValue();
         double getTankValue();
         double nodeWeightAvgFract();
-        double getgetFractToMeetComparisonExternal();
+        double getFractToMeetComparisonExternal();
         double getMainsT_C();
         double getTempMinUseful_C();
         int setDecisionPoint(double value);
@@ -496,7 +496,7 @@ class HPWH
         double getComparisonValue();
         double getTankValue();
         double nodeWeightAvgFract();
-        double getgetFractToMeetComparisonExternal();
+        double getFractToMeetComparisonExternal();
 
         int setDecisionPoint(double value);
         int setDecisionPoint(double value, bool absolute);
@@ -511,16 +511,15 @@ class HPWH
     std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc,
                                                            double targetSoC,
                                                            double hystFract,
-                                                           double minUsefulT_C,
-                                                           bool constantMainsT_C,
-                                                           double mainsT_C);
-
+                                                           double tempMinUseful_C,
+                                                           bool constMains,
+                                                           double mains_C);
     std::shared_ptr<HPWH::SoCBasedHeatingLogic> turnOnSoC(std::string desc,
                                                           double targetSoC,
                                                           double hystFract,
-                                                          double minUsefulT_C,
-                                                          bool constantMainsT_C,
-                                                          double mainsT_C);
+                                                          double tempMinUseful_C,
+                                                          bool constMains,
+                                                          double mains_C);
 
     std::shared_ptr<TempBasedHeatingLogic> wholeTank(double decisionPoint,
                                                      const bool absolute = false);
@@ -759,8 +758,7 @@ class HPWH
 
     void printTankTs_C();
 
-    /// assign uniform tank temperature
-    int setTankT_C(double tankT_C);
+    int setTankT_C(double tankT_C); /// assign uniform tank temperature
 
     void setInletT_C(double inletT_C_in) { inletT_C = inletT_C_in; }
 
@@ -771,7 +769,7 @@ class HPWH
     /// change the setpoint T, if possible
     int setSetpointT(const double setpointT, const Units::Temp units = Units::Temp::C);
 
-    /// assign tank node temperatures by mapping the provided non-empty vector of temperatures
+    /// assign tank node temperatures by mapping the provided vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
 
     ///////////////////////////////////////////////
@@ -820,14 +818,14 @@ class HPWH
     int setDoTempDepression(bool doTempDepress);
 
     /** Returns State of Charge where
-        mainsT_C = current mains (cold) water temp,
-        minUsefulT_C = minimum useful temp,
-        nominalMaxT_C = nominal maximum temp.*/
+        tMains = current mains (cold) water temp,
+        tMinUseful = minimum useful temp,
+        tMax = nominal maximum temp.*/
 
-    double calcSoCFraction(double mainsT_C, double minUsefulT_C, double nominalMaxT_C) const;
-    double calcSoCFraction(double mainsT_C, double minUsefulT_C) const
+    double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
+    double calcSoCFraction(double tMains_C, double tMinUseful_C) const
     {
-        return calcSoCFraction(mainsT_C, minUsefulT_C, getSetpointT_C());
+        return calcSoCFraction(tMains_C, tMinUseful_C, getSetpointT());
     };
 
     /// return State of Charge calculated from the SoC heating logics if used.
@@ -913,6 +911,7 @@ class HPWH
 
     /// return the timer limit (min) for the DR_TOT call
     double getTimerLimitTOT_minute() const;
+    /**< Returns the timer limit in minutes for the DR_TOT call. */
 
     /// return the node index of the specified water inlet
     int getInletNodeIndex(int whichInlet) const;
@@ -933,7 +932,7 @@ class HPWH
     int getNumResistanceElements() const;
 
     /// returns the index of the last compressor in the heat source array.
-    int getCompressorHeatSourceIndex() const;
+    int getCompressorIndex() const;
 
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
@@ -1014,7 +1013,7 @@ class HPWH
     /// HPWH_ABORT for N out of bounds
     int isNthHeatSourceRunning(int N) const;
 
-    /// return the enum value for what type of heat source the Nth heat source is/
+    /// returns the enum value for what type of heat source the Nth heat source is/
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
 
     /// return the volume of water heated in an external in the specified units
@@ -1034,10 +1033,7 @@ class HPWH
     bool hasACompressor() const;
 
     /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
-    int isCompressorRunning() const
-    {
-        return isNthHeatSourceRunning(getCompressorHeatSourceIndex());
-    }
+    int isCompressorRunning() const { return isNthHeatSourceRunning(getCompressorIndex()); }
 
     /// report whether the HPWH has any external heat sources, (compressor or resistance element)
     bool hasExternalHeatSource() const;
@@ -1066,7 +1062,7 @@ class HPWH
 
     /// check for and set specific high temperature shut off logics.
     /// HPWHs can only have one of these, which is at least typical
-    int setEnteringWaterHighTempShutOff(double highT,
+    int setEnteringWaterHighTempShutOff(double highTemp,
                                         bool tempIsAbsolute,
                                         int heatSourceIndex,
                                         Units::Temp units = Units::Temp::C);
@@ -1077,7 +1073,7 @@ class HPWH
 
     int switchToSoCControls(double targetSoC,
                             double hysteresisFraction = 0.05,
-                            double minUsefulT = 43.333,
+                            double tempMinUseful = 43.333,
                             bool constantMainsT = false,
                             double mainsT = 18.333,
                             Units::Temp tempUnit = Units::Temp::C);
@@ -1199,17 +1195,20 @@ class HPWH
     /// contains the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
-    /// heat-source index of the compressor (-1 if none)
-    int compressorHeatSourceIndex;
+    /// index of the compressor heat source (set to -1 if no compressor)
+    int compressorIndex;
 
-    /// heat-source index of the lowest resistance element (-1 if none)
-    int lowestResistanceHeatSourceIndex;
+    /// The index of the lowest resistance element heat source
+    /// (-1 if no resistance elements)
+    int lowestElementIndex;
 
-    /// heat-source index of the highest resistance element (-1 if none)
-    int highestResistanceHeatSourceIndex;
+    /// index of the highest resistance element heat source. if only one element it equals
+    /// lowestElementIndex (-1 if no resistance elements)
+    int highestElementIndex;
 
-    /// heat-source index of the VIP resistance element (-1 if none)
-    int VIP_ResistanceHeatSourceIndex;
+    /// index of the VIP resistance element heat source
+    /// (-1 if no VIP resistance elements)
+    int VIPIndex;
 
     /// tank node index of the inlet [0, numNodes-1]
     int inletNodeIndex;
@@ -1376,12 +1375,13 @@ class HPWH::HeatSource
     /// return whether either maximum or setpoint temperature is exceeded
     bool maxedOut() const;
 
-    /// returns the heat-source index of the backup (-1 if none)
-    int findParentHeatSourceIndex() const;
+    int findParent() const;
+    /**< returns the index of the heat source where this heat source is a backup.
+        returns -1 if none found. */
 
-    /// get the fractional measure from the current to the shut-off state
-    /// (external configurations)
-    double getFractToMeetComparisonExternal() const;
+    double fractToMeetComparisonExternal() const;
+    /**< calculates the distance the current state is from the shutOff logic for external
+     * configurations*/
 
     /// add heat
     void addHeat(double externalT_C, double minutesToRun);
@@ -1601,44 +1601,31 @@ class HPWH::HeatSource
 
     ///  Add heat from a source outside of the tank. Assume the condensity is where
     /// the water is drawn from and hot water is put at the top of the tank.
-    double addHeatExternal(double externalT_C,
-                           double minutesToRun,
-                           double& cap_BTUperHr,
-                           double& input_BTUperHr,
-                           double& cop);
+    double addHeatExternal(
+        double externalT_C, double minutesToRun, double& cap_kW, double& input_kW, double& cop);
 
     /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(double externalT_C,
-                             double minutesToRun,
-                             double& cap_BTUperHr,
-                             double& input_BTUperHr,
-                             double& cop);
+    double addHeatExternalMP(
+        double externalT_C, double minutesToRun, double& cap_kW, double& input_kW, double& cop);
 
     /// some methods to help with the add heat interface - MJL
     void getCapacity(double externalT_C,
                      double condenserT_C,
                      double setpointT_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
+                     double& input_kW,
+                     double& cap_kW,
                      double& cop);
 
     /// An overloaded function that uses uses the setpoint temperature
-    void getCapacity(double externalT_C,
-                     double condenserT_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
+    void getCapacity(
+        double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop)
     {
-        getCapacity(
-            externalT_C, condenserT_C, hpwh->getSetpointT(), input_BTUperHr, cap_BTUperHr, cop);
+        getCapacity(externalT_C, condenserT_C, hpwh->getSetpointT(), input_kW, cap_kW, cop);
     };
 
     /// An equivalent getCapacity function just for multipass external (or split) HPWHs
-    void getCapacityMP(double externalT_C,
-                       double condenserT_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
+    void getCapacityMP(
+        double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop);
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 

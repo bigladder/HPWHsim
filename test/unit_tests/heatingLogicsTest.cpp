@@ -52,8 +52,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
         { // testHasEnteringWaterShutOff
-            int index =
-                hpwh.getCompressorHeatSourceIndex() == -1 ? 0 : hpwh.getCompressorHeatSourceIndex();
+            int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
             EXPECT_TRUE(hpwh.hasEnteringWaterHighTempShutOff(index));
         }
 
@@ -64,23 +63,19 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
         { // testSetEnteringWaterShuffOffDeadbandToSmall
             double value = HPWH::MINSINGLEPASSLIFT - 1.;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          value, false, hpwh.getCompressorHeatSourceIndex()),
+            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()),
                       HPWH::HPWH_ABORT);
 
             value = HPWH::MINSINGLEPASSLIFT;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          value, false, hpwh.getCompressorHeatSourceIndex()),
+            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()),
                       0);
 
             value = hpwh.getSetpointT_C() - (HPWH::MINSINGLEPASSLIFT - 1);
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          value, true, hpwh.getCompressorHeatSourceIndex()),
+            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()),
                       HPWH::HPWH_ABORT);
 
             value = hpwh.getSetpointT_C() - HPWH::MINSINGLEPASSLIFT;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          value, true, hpwh.getCompressorHeatSourceIndex()),
+            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()),
                       0);
         }
 
@@ -100,7 +95,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // change entering water temp to below temp
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C - delta, doAbsolute, hpwh.getCompressorHeatSourceIndex()),
+                          highT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
                       0);
 
             // run a step and check we're not heating.
@@ -109,7 +104,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // and reverse it
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C + delta, doAbsolute, hpwh.getCompressorHeatSourceIndex()),
+                          highT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
                       0);
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
@@ -132,7 +127,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // change entering water temp to below temp
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          relativeHighT_C + delta, doAbsolute, hpwh.getCompressorHeatSourceIndex()),
+                          relativeHighT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
                       0);
 
             // run a step and check we're not heating.
@@ -141,7 +136,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // and reverse it
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          relativeHighT_C - delta, doAbsolute, hpwh.getCompressorHeatSourceIndex()),
+                          relativeHighT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
                       0);
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
@@ -161,14 +156,12 @@ TEST_F(HeatingLogicsTest, noShutOffMP_external)
         EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
         { // testDoesNotHaveEnteringWaterShutOff
-            int index =
-                hpwh.getCompressorHeatSourceIndex() == -1 ? 0 : hpwh.getCompressorHeatSourceIndex();
+            int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
             EXPECT_FALSE(hpwh.hasEnteringWaterHighTempShutOff(index));
         }
 
         { // testCanNotSetEnteringWaterShutOff
-            int index =
-                hpwh.getCompressorHeatSourceIndex() == -1 ? 0 : hpwh.getCompressorHeatSourceIndex();
+            int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(10., false, index), HPWH::HPWH_ABORT);
         }
     }
@@ -210,7 +203,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             const double setpointT_C = F_TO_C(149.);
 
             const bool originalHasHighTempShutOff =
-                hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorHeatSourceIndex());
+                hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex());
             if (!hpwh.isSetpointFixed())
             {
                 double temp;
@@ -230,16 +223,15 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             EXPECT_TRUE(hpwh.isSoCControlled());
 
             // check entering water high temp shut off controll unchanged
-            EXPECT_EQ(hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorHeatSourceIndex()),
+            EXPECT_EQ(hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()),
                       originalHasHighTempShutOff);
 
             // Test we can change the SoC and run a step and check we're heating
-            if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorHeatSourceIndex()))
+            if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()))
             {
                 EXPECT_EQ(
-                    hpwh.setEnteringWaterHighTempShutOff(setpointT_C - HPWH::MINSINGLEPASSLIFT,
-                                                         true,
-                                                         hpwh.getCompressorHeatSourceIndex()),
+                    hpwh.setEnteringWaterHighTempShutOff(
+                        setpointT_C - HPWH::MINSINGLEPASSLIFT, true, hpwh.getCompressorIndex()),
                     0); // Force to ignore this part.
             }
             EXPECT_EQ(hpwh.setTankT_C(F_TO_C(100.)), 0); // .51
@@ -312,8 +304,7 @@ TEST_F(HeatingLogicsTest, noHighShutOffIntegrated)
         HPWH hpwh;
         EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
-        int index =
-            hpwh.getCompressorHeatSourceIndex() == -1 ? 0 : hpwh.getCompressorHeatSourceIndex();
+        int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
         { // testDoesNotHaveEnteringWaterShutOff
             EXPECT_FALSE(hpwh.hasEnteringWaterHighTempShutOff(index));
         }

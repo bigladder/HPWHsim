@@ -134,7 +134,7 @@ void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 
 int HPWH::HeatSource::getCondensitySize() const { return static_cast<int>(condensity.size()); }
 
-int HPWH::HeatSource::findParentHeatSourceIndex() const
+int HPWH::HeatSource::findParent() const
 {
     for (int i = 0; i < hpwh->getNumHeatSources(); ++i)
     {
@@ -417,7 +417,7 @@ bool HPWH::HeatSource::shouldShutOff() const
     {
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("\tshouldShutOff logic: %s ", shutOffLogicSet[i]->description.c_str());
+            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
 
         double average = shutOffLogicSet[i]->getTankValue();
@@ -435,6 +435,10 @@ bool HPWH::HeatSource::shouldShutOff() const
         }
     }
 
+    if (hpwh->hpwhVerbosity >= VRB_emetic)
+    {
+        hpwh->msg("returns: %d \n", shutOff);
+    }
     return shutOff;
 }
 
@@ -454,7 +458,7 @@ bool HPWH::HeatSource::maxedOut() const
     return maxed;
 }
 
-double HPWH::HeatSource::getFractToMeetComparisonExternal() const
+double HPWH::HeatSource::fractToMeetComparisonExternal() const
 {
     double fracTemp;
     double frac = 1.;
@@ -463,10 +467,10 @@ double HPWH::HeatSource::getFractToMeetComparisonExternal() const
     {
         if (hpwh->hpwhVerbosity >= VRB_emetic)
         {
-            hpwh->msg("\tshouldShutOff logic: %s ", shutOffLogicSet[i]->description.c_str());
+            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
 
-        fracTemp = shutOffLogicSet[i]->getgetFractToMeetComparisonExternal();
+        fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
 
         frac = fracTemp < frac ? fracTemp : frac;
     }
@@ -961,7 +965,7 @@ double HPWH::HeatSource::addHeatExternal(
         }
 
         // limit node fraction to heat by comparison criterion
-        double fractToShutOff = getFractToMeetComparisonExternal();
+        double fractToShutOff = fractToMeetComparisonExternal();
         if (fractToShutOff < nodeFrac)
         {
             nodeFrac = fractToShutOff;
