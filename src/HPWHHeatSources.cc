@@ -156,7 +156,6 @@ void HPWH::HeatSource::unlockHeatSource() { lockedOut = false; }
 
 bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 {
-
     // if it's already locked out, keep it locked out
     if (isLockedOut() == true)
     {
@@ -232,7 +231,6 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 
 bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 {
-
     // if it's already unlocked, keep it unlocked
     if (isLockedOut() == false)
     {

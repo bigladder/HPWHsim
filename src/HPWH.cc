@@ -1328,13 +1328,13 @@ void HPWH::calcAndSetSoCFraction()
     currentSoCFraction = newSoCFraction;
 }
 
-double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const
+double HPWH::getChargePerNode(double coldT, double mixT, double hotT) const
 {
-    if (tHot < tMix)
+    if (hotT < mixT)
     {
         return 0.;
     }
-    return (tHot - tCold) / (tMix - tCold);
+    return (hotT - coldT) / (mixT - coldT);
 }
 
 int HPWH::setAirFlowFreedom(double fanFraction)
@@ -2374,8 +2374,7 @@ double HPWH::getTankNodeT_C(const int nodeNum) const
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("You have attempted to access the temperature of a tank node that does not "
-                "exist.  "
-                "\n");
+                "exist.\n");
         }
         return double(HPWH_ABORT);
     }
@@ -2412,8 +2411,7 @@ double HPWH::getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("You have attempted to access a simulated thermocouple that does not "
-                "exist.  "
-                "\n");
+                "exist.\n");
         }
         return double(HPWH_ABORT);
     }
@@ -2479,8 +2477,7 @@ double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) cons
         if (hpwhVerbosity >= VRB_reluctant)
         {
             msg("You have attempted to access the temperature of a tank node that does not "
-                "exist.  "
-                "\n");
+                "exist.\n");
         }
         return double(HPWH_ABORT);
     }
@@ -3274,7 +3271,6 @@ void HPWH::mixTankInversions()
 //-----------------------------------------------------------------------------
 double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 {
-
     // Do not exceed maxT_C or setpoint
     double maxHeatToT_C = std::min(maxT_C, setpointT_C);
 
@@ -3353,12 +3349,6 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 //-----------------------------------------------------------------------------
 void HPWH::addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum)
 {
-
-    if (hpwhVerbosity >= VRB_emetic)
-    {
-        msg("node %2d   cap_kwh %.4lf \n", nodeNum, KJ_TO_KWH(qAdd_kJ));
-    }
-
     // find number of nodes at or above nodeNum with the same temperature
     int numNodesToHeat = 1;
     for (int i = nodeNum; i < getNumNodes() - 1; i++)

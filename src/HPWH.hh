@@ -793,17 +793,11 @@ class HPWH
 
     double getMaxCompressorSetpointT(const Units::Temp units = Units::Temp::C) const;
 
-    /// resets the tank temperature to the setpoint temperature
-    int resetTankToSetpoint();
-
-    /// indicates whether the setpoint temperature can be changed
-    bool isSetpointFixed() const;
-
     int setMaxDepressionT(double maxDepression, const Units::Temp units = Units::Temp::C);
 
     int setTankTs(std::vector<double> tankTs_in, const Units::Temp units = Units::Temp::C);
 
-    /// returns whether specified new setpoint is physically possible for the compressor. If
+    /// return whether specified new setpoint is physically possible for the compressor. If
     /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
     /// can be set higher than the compressor max outlet temperature if there is a backup
     /// resistance element, but the compressor will not operate above this temperature.
@@ -813,9 +807,11 @@ class HPWH
                            Units::Temp units = Units::Temp::C) const;
 
     ///////////////////////////////////////////////
+    int resetTankToSetpoint(); /// reset tank to setpoint temperature
 
-    /// change the temperature-depression option
-    int setDoTempDepression(bool doTempDepress);
+    bool isSetpointFixed() const; /// can the setpoint temperature be changed
+
+    int setDoTempDepression(bool doTempDepress); /// set the temperature-depression option
 
     /** Returns State of Charge where
         mainsT_C = current mains (cold) water temp,
@@ -911,7 +907,6 @@ class HPWH
 
     /// return the timer limit (min) for the DR_TOT call
     double getTimerLimitTOT_minute() const;
-    /**< Returns the timer limit in minutes for the DR_TOT call. */
 
     /// return the node index of the specified water inlet
     int getInletNodeIndex(int whichInlet) const;
@@ -958,8 +953,8 @@ class HPWH
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
+    /// scale the input capacity and COP
     int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
-    /**< Scales the heatpump water heater input capacity and COP*/
 
     int
     setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::Power::kW);
@@ -1080,12 +1075,12 @@ class HPWH
 
     bool isSoCControlled() const;
 
-    /// Checks whether energy is balanced during a simulation step.
+    /// checks whether energy is balanced follwoing a simulation step
     bool isEnergyBalanced(const double drawVol_L,
                           const double prevHeatContent_kJ,
                           const double fracEnergyTolerance = 0.001);
 
-    /// Overloaded version of above that allows specification of inlet temperature.
+    /// overloaded version of above that allows specification of inlet temperature
     bool isEnergyBalanced(const double drawVol_L,
                           double inletT_C_in,
                           const double prevHeatContent_kJ,
@@ -1095,11 +1090,11 @@ class HPWH
         return isEnergyBalanced(drawVol_L, prevHeatContent_kJ, fracEnergyTolerance);
     }
 
-    /// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent
+    /// ad heat from a normal heat source; return excess heat, if needed, to prevent
     /// exceeding maximum or setpoint
     double addHeatAboveNode(double qAdd_kJ, const int nodeNum, const double maxT_C);
 
-    /// Addition of extra heat handled separately from normal heat sources
+    /// add "extra" heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
   private:
@@ -1132,8 +1127,8 @@ class HPWH
     ///  "extra" heat (kJ) added during a simulation step
     double extraEnergyInput_kJ;
 
+    /// calculate the tank temperature using logic-node weighting
     double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
-    /**< functions to calculate what the temperature in a portion of the tank is  */
 
     /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
     /// by a factor mixFactor towards their average temperature
@@ -1154,7 +1149,7 @@ class HPWH
     /// run checks on the HPWH input parameters
     int checkInputs();
 
-    double getChargePerNode(double tCold, double tMix, double tHot) const;
+    double getChargePerNode(double coldT, double mixT, double hotT) const;
 
     void calcAndSetSoCFraction();
 
@@ -1320,9 +1315,9 @@ class HPWH
         int position;
     };
 
+    /// map of resistance element index to position in the tank,
+    /// sorted by height from lowest to highest
     std::vector<resPoint> resistanceHeightMap;
-    /**< A map from index of an resistance element in heatSources to position in the tank, its
-    is sorted by height from lowest to highest*/
 
     /// Generates a vector of logical nodes
     std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
@@ -1379,9 +1374,8 @@ class HPWH::HeatSource
     /**< returns the index of the heat source where this heat source is a backup.
         returns -1 if none found. */
 
+    /// return a measure of the current state from the shutoff condition (external configurations)
     double fractToMeetComparisonExternal() const;
-    /**< calculates the distance the current state is from the shutOff logic for external
-     * configurations*/
 
     /// add heat
     void addHeat(double externalT_C, double minutesToRun);
