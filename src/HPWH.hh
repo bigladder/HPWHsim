@@ -818,14 +818,14 @@ class HPWH
     int setDoTempDepression(bool doTempDepress);
 
     /** Returns State of Charge where
-        tMains = current mains (cold) water temp,
-        tMinUseful = minimum useful temp,
-        tMax = nominal maximum temp.*/
+        mainsT_C = current mains (cold) water temp,
+        minUsefulT_C = minimum useful temp,
+        maxT_C = nominal maximum temp.*/
 
-    double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
-    double calcSoCFraction(double tMains_C, double tMinUseful_C) const
+    double calcSoCFraction(double mainsT_C, double minUsefulT_C, double maxT_C) const;
+    double calcSoCFraction(double mainsT_C, double minUsefulT_C) const
     {
-        return calcSoCFraction(tMains_C, tMinUseful_C, getSetpointT());
+        return calcSoCFraction(mainsT_C, minUsefulT_C, getSetpointT());
     };
 
     /// return State of Charge calculated from the SoC heating logics if used.

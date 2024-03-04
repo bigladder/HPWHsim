@@ -1284,23 +1284,23 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     return 0;
 }
 
-double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
+double HPWH::calcSoCFraction(double mainsT_C, double minUsefulT_C, double maxT_C) const
 {
     // Note that volume is ignored in here since with even nodes it cancels out of the SoC
     // fractional equation
-    if (tMains_C >= tMinUseful_C)
+    if (mainsT_C >= minUsefulT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("tMains_C is greater than or equal tMinUseful_C. \n");
+            msg("mainsT_C is greater than or equal minUsefulT_C. \n");
         }
         return HPWH_ABORT;
     }
-    if (tMinUseful_C > tMax_C)
+    if (minUsefulT_C > maxT_C)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
-            msg("tMinUseful_C is greater tMax_C. \n");
+            msg("minUsefulT_C is greater maxT_C. \n");
         }
         return HPWH_ABORT;
     }
@@ -1308,9 +1308,9 @@ double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C
     double chargeEquivalent = 0.;
     for (auto& T : tankTs_C)
     {
-        chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, T);
+        chargeEquivalent += getChargePerNode(mainsT_C, minUsefulT_C, T);
     }
-    double maxSoC = getNumNodes() * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
+    double maxSoC = getNumNodes() * getChargePerNode(mainsT_C, minUsefulT_C, maxT_C);
     return chargeEquivalent / maxSoC;
 }
 
