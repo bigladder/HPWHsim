@@ -1119,12 +1119,7 @@ class HPWH
                   const std::vector<double>& inputPower_coeffs_in = {},
                   std::vector<double> COP_coeffs_in = {},
                   const Units::Temp unitsTemp_in = Units::Temp::C,
-                  const Units::Power unitsPower_in = Units::Power::kW)
-        {
-            T_C = Units::convert(T_in, unitsTemp_in, Units::Temp::C);
-            inputPower_coeffs_kW =
-                Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
-        }
+                  const Units::Power unitsPower_in = Units::Power::kW);
     };
 
     /// A map with input/COP quadratic curve coefficients at a given external temperature
@@ -1527,14 +1522,14 @@ class HPWH::HeatSource
     /// some compressors have a resistance element for defrost
     struct resistanceElementDefrost
     {
-        double inputPwr_kW {0.0};
-        double constTempLift_dF {0.0};
-        double onBelowT_F {-999};
+        double inputPwr_kW {0.};
+        double constLiftT_C {0.};
+        double onBelowT_C {-999};
     } resDefrost;
 
     struct defrostPoint
     {
-        double T_F;
+        double T_C;
         double derate_fraction;
     };
 

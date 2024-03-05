@@ -450,6 +450,44 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
            coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
 
+HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
+                           const std::vector<double>& inputPower_coeffs_in /*{}*/,
+                           std::vector<double> COP_coeffs_in /*{}*/,
+                           const Units::Temp tempUnits_in /*C*/,
+                           const Units::Power unitsPower_in /*kW*/)
+{
+    T_C = Units::convert(T_in, tempUnits_in, Units::Temp::C);
+    Units::TempDiff tempDiffUnits_in =
+        (tempUnits_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
+
+    if (inputPower_coeffs_in.size() == 11) // use regressMethod
+    {
+        for (std::size_t j : {1, 4, 10})
+        {
+            for (std::size_t i = j; i < 11; ++i)
+            {
+                inputPower_coeffs_kW[i] =
+                    Units::convert(inputPower_coeffs_kW[i], tempDiffUnits_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::convert(COP_coeffs[i], tempDiffUnits_in, Units::TempDiff::C);
+            }
+        }
+    }
+
+    inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
+    if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
+    {
+        for (std::size_t j : {1, 3})
+        {
+            for (std::size_t i = j; i < 6; ++i)
+            {
+                inputPower_coeffs_kW[i] =
+                    Units::convert(inputPower_coeffs_kW[i], tempDiffUnits_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::convert(COP_coeffs[i], tempDiffUnits_in, Units::TempDiff::C);
+            }
+        }
+    }
+}
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;

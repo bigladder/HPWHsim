@@ -4458,9 +4458,9 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
             "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
+        compressor.setupDefrostMap();
 
         // Defrost Derate
-        compressor.setupDefrostMap();
 
         // logic conditions
         compressor.minT_C = F_TO_C(40.);
@@ -4476,8 +4476,8 @@ int HPWH::initPreset(MODELS presetNum)
                       Units::Temp::F,
                       Units::Power::W));
 
-        resistiveElementBottom.setupAsResistiveElement(0, 30000, Units::Power::W);
-        resistiveElementTop.setupAsResistiveElement(9, 30000, Units::Power::W);
+        resistiveElementBottom.setupAsResistiveElement(0, 30, Units::Power::kW);
+        resistiveElementTop.setupAsResistiveElement(9, 30, Units::Power::kW);
 
         // top resistor values
         // standard logic conditions
