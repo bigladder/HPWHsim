@@ -1520,11 +1520,22 @@ class HPWH::HeatSource
     std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
 
     /// some compressors have a resistance element for defrost
-    struct resistanceElementDefrost
+    struct ResistanceDefrost
     {
         double inputPwr_kW {0.};
         double constLiftT_C {0.};
         double onBelowT_C {-999};
+
+        ResistanceDefrost(const double inputPwr_in = 0.,
+                          const double constLiftT_in = 0.,
+                          const double onBelowT_in = 0.,
+                          const Units::Temp unitsTemp_in = Units::Temp::C,
+                          const Units::Power unitsPower_in = Units::Power::kW)
+        {
+            inputPwr_kW = Units::convert(inputPwr_in, unitsPower_in, Units::Power::kW);
+            constLiftT_C = Units::convert(constLiftT_in, unitsTemp_in, Units::Temp::C);
+            onBelowT_C = Units::convert(onBelowT_in, unitsTemp_in, Units::Temp::C);
+        }
     } resDefrost;
 
     struct defrostPoint

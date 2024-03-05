@@ -43,6 +43,7 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , lowestNode(0)
     , mpFlowRate_LPS(0.)
     , isMultipass(true)
+    , resDefrost()
 {
 }
 
