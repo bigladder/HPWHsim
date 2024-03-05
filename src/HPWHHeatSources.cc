@@ -629,11 +629,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         }
         else if (perfMap.size() > 1)
         {
-            double COP_T1,           // cop at ambient temperature T1
-                COP_T2;              // cop at ambient temperature T2
-            double inputPower_T1_kW, // input power at ambient temperature T1
-                inputPower_T2_kW;    // input power at ambient temperature T2
-
             size_t i_prev = 0;
             size_t i_next = 1;
             for (size_t i = 0; i < perfMap.size(); ++i)
@@ -666,21 +661,17 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             }
 
             // Calculate COP and Input Power at each of the two reference temepratures
-            COP_T1 = perfMap[i_prev].COP_coeffs[0];
-            COP_T1 += perfMap[i_prev].COP_coeffs[1] * coldT_C;
-            COP_T1 += perfMap[i_prev].COP_coeffs[2] * coldT_C * coldT_C;
+            double COP_T1 = // cop at ambient temperature T1
+                expandSeries(perfMap[i_prev].COP_coeffs, coldT_C);
 
-            COP_T2 = perfMap[i_next].COP_coeffs[0];
-            COP_T2 += perfMap[i_next].COP_coeffs[1] * coldT_C;
-            COP_T2 += perfMap[i_next].COP_coeffs[2] * coldT_C * coldT_C;
+            double COP_T2 = // cop at ambient temperature T2
+                expandSeries(perfMap[i_next].COP_coeffs, coldT_C);
 
-            inputPower_T1_kW = perfMap[i_prev].inputPower_coeffs_kW[0];
-            inputPower_T1_kW += perfMap[i_prev].inputPower_coeffs_kW[1] * coldT_C;
-            inputPower_T1_kW += perfMap[i_prev].inputPower_coeffs_kW[2] * coldT_C * coldT_C;
+            double inputPower_T1_kW = // input power at ambient temperature T1
+                expandSeries(perfMap[i_prev].inputPower_coeffs_kW, coldT_C);
 
-            inputPower_T2_kW = perfMap[i_next].inputPower_coeffs_kW[0];
-            inputPower_T2_kW += perfMap[i_next].inputPower_coeffs_kW[1] * coldT_C;
-            inputPower_T2_kW += perfMap[i_next].inputPower_coeffs_kW[2] * coldT_C * coldT_C;
+            double inputPower_T2_kW = // input power at ambient temperature T2
+                expandSeries(perfMap[i_next].inputPower_coeffs_kW, coldT_C);
 
             // Interpolate to get COP and input power at the current ambient temperature
             linearInterp(input_kW,

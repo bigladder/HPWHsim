@@ -434,6 +434,16 @@ void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, do
     ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
+double expandSeries(const std::vector<double> coeffs, const double x)
+{
+    double y = 0.;
+    for (auto coeff : coeffs)
+    {
+        y = coeff + y * x;
+    }
+    return y;
+}
+
 void regressedMethod(
     double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
 {

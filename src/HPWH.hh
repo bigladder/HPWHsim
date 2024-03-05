@@ -1795,6 +1795,8 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 /// linear interpolation between two points to the xnew point
 void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
 
+double expandSeries(const std::vector<double> coeffs, const double x);
+
 /// applies ten-term regression
 void regressedMethod(
     double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
