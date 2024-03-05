@@ -69,7 +69,7 @@ int HPWH::initResistanceTank(double tankVol_L,
     tankMixesOnDraw = true;
 
     HeatSource resistiveElementBottom(this);
-    resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
+    resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W, Units::Power::W);
 
     // standard logic conditions
     resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
@@ -80,7 +80,7 @@ int HPWH::initResistanceTank(double tankVol_L,
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
         HeatSource resistiveElementTop(this);
-        resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
+        resistiveElementTop.setupAsResistiveElement(8, upperPower_W, Units::Power::W);
 
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
@@ -208,7 +208,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
         HeatSource resistiveElementTop(this);
-        resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
+        resistiveElementTop.setupAsResistiveElement(8, upperPower_W, Units::Power::W);
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
 
@@ -220,7 +220,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     if (lowerPower_W > 0.)
     {
         HeatSource resistiveElementBottom(this);
-        resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
+        resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W, Units::Power::W);
 
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
         resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
@@ -317,17 +317,17 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     compressor.perfMap.reserve(2);
 
-    compressor.perfMap.push_back({
-        50,                          // Temperature (T_F)
-        {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-    });
+    compressor.perfMap.push_back({50,                           // Temperature (F)
+                                  {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                  {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                  Units::Temp::F,
+                                  Units::Power::W});
 
-    compressor.perfMap.push_back({
-        70,                         // Temperature (T_F)
-        {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-        {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-    });
+    compressor.perfMap.push_back({70,                          // Temperature (F)
+                                  {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                  {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                  Units::Temp::F,
+                                  Units::Power::W});
 
     compressor.minT_C = F_TO_C(45.);
     compressor.maxT_C = F_TO_C(120.);
@@ -336,11 +336,11 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
     // top resistor values
-    resistiveElementTop.setupAsResistiveElement(6, 4500);
+    resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
     resistiveElementTop.isVIP = true;
 
     // bottom resistor values
-    resistiveElementBottom.setupAsResistiveElement(0, 4000);
+    resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
     resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -394,13 +394,13 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor.perfMap[1].COP_coeffs[1] *= genericFudge;
     compressor.perfMap[1].COP_coeffs[2] *= genericFudge;
 
-    compressor.perfMap[0].inputPower_coeffs[0] /= genericFudge;
-    compressor.perfMap[0].inputPower_coeffs[1] /= genericFudge;
-    compressor.perfMap[0].inputPower_coeffs[2] /= genericFudge;
+    compressor.perfMap[0].inputPower_coeffs_kW[0] /= genericFudge;
+    compressor.perfMap[0].inputPower_coeffs_kW[1] /= genericFudge;
+    compressor.perfMap[0].inputPower_coeffs_kW[2] /= genericFudge;
 
-    compressor.perfMap[1].inputPower_coeffs[0] /= genericFudge;
-    compressor.perfMap[1].inputPower_coeffs[1] /= genericFudge;
-    compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
+    compressor.perfMap[1].inputPower_coeffs_kW[0] /= genericFudge;
+    compressor.perfMap[1].inputPower_coeffs_kW[1] /= genericFudge;
+    compressor.perfMap[1].inputPower_coeffs_kW[2] /= genericFudge;
 
     // set everything in its place
     heatSources.resize(3);
@@ -478,8 +478,8 @@ int HPWH::initPreset(MODELS presetNum)
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
 
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
 
         // standard logic conditions
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
@@ -514,8 +514,8 @@ int HPWH::initPreset(MODELS presetNum)
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
 
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementTop.setupAsResistiveElement(9, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(9, 4500, Units::Power::W);
 
         // standard logic conditions
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
@@ -549,8 +549,8 @@ int HPWH::initPreset(MODELS presetNum)
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
 
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementTop.setupAsResistiveElement(9, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(9, 4500, Units::Power::W);
 
         // standard logic conditions
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
@@ -601,8 +601,8 @@ int HPWH::initPreset(MODELS presetNum)
         HeatSource resistiveElementTop(this);
         HeatSource compressor(this);
 
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementTop.setupAsResistiveElement(9, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(9, 4500, Units::Power::W);
 
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
@@ -623,21 +623,17 @@ int HPWH::initPreset(MODELS presetNum)
         // GE tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47, // Temperature (T_F)
-            {0.290 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                           // Temperature (F)
+                                      {0.290, 0.00159, 0.00000107}, // Input Power Coefficients (kW)
+                                      {4.49, -0.0187, -0.0000133},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
-        compressor.perfMap.push_back({
-            67, // Temperature (T_F)
-            {0.375 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                           // Temperature (F)
+                                      {0.375, 0.00121, 0.00000216}, // Input Power Coefficients (kW)
+                                      {5.60, -0.0252, 0.00000254},  // COP Coefficients (COP_coeffs)
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
         compressor.minT_C = 0;
         compressor.maxT_C = F_TO_C(120.);
@@ -688,21 +684,17 @@ int HPWH::initPreset(MODELS presetNum)
         // GE tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47, // Temperature (T_F)
-            {0.290 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {4.49, -0.0187, -0.0000133} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                           // Temperature (F)
+                                      {0.290, 0.00159, 0.00000107}, // Input Power Coefficients (kW)
+                                      {4.49, -0.0187, -0.0000133},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67, // Temperature (T_F)
-            {0.375 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                           // Temperature (F)
+                                      {0.375, 0.00121, 0.00000216}, // Input Power Coefficients (kW)
+                                      {5.60, -0.0252, 0.00000254},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
         compressor.maxT_C = F_TO_C(120.);
         compressor.hysteresisOffsetT_C = 0; // no hysteresis
@@ -747,21 +739,18 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47, // Temperature (T_F)
-            {0.467 * 1000,
-             0.00281 * 1000,
-             0.0000072 * 1000},       // Input Power Coefficients (inputPower_coeffs)
-            {4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                          // Temperature (F)
+                                      {0.467, 0.00281, 0.0000072}, // Input Power Coefficients (kW)
+                                      {4.86, -0.0222, -0.00001},   // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
-        compressor.perfMap.push_back({
-            67, // Temperature (T_F)
-            {0.541 * 1000,
-             0.00147 * 1000,
-             0.0000176 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back(
+            {67,                                               // Temperature (F)
+             {0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (kW)
+             {6.58, -0.0392, 0.0000407},                       // COP Coefficients
+             Units::Temp::F,
+             Units::Power::kW});
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -770,11 +759,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4250);
+        resistiveElementTop.setupAsResistiveElement(8, 4250, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 2000);
+        resistiveElementBottom.setupAsResistiveElement(0, 2000, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
@@ -827,21 +816,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47, // Temperature (T_F)
-            {0.467 * 1000,
-             0.00281 * 1000,
-             0.0000072 * 1000},       // Input Power Coefficients (inputPower_coeffs)
-            {4.86, -0.0222, -0.00001} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                          // Temperature (F)
+                                      {0.467, 0.00281, 0.0000072}, // Input Power Coefficients (kW)
+                                      {4.86, -0.0222, -0.00001},   // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
-        compressor.perfMap.push_back({
-            67, // Temperature (T_F)
-            {0.541 * 1000,
-             0.00147 * 1000,
-             0.0000176 * 1000},        // Input Power Coefficients (inputPower_coeffs)
-            {6.58, -0.0392, 0.0000407} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                          // Temperature (F)
+                                      {0.541, 0.00147, 0.0000176}, // Input Power Coefficients (kW)
+                                      {6.58, -0.0392, 0.0000407},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -850,11 +835,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4250);
+        resistiveElementTop.setupAsResistiveElement(8, 4250, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 2000);
+        resistiveElementBottom.setupAsResistiveElement(0, 2000, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
@@ -906,21 +891,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47, // Temperature (T_F)
-            {0.3 * 1000,
-             0.00159 * 1000,
-             0.00000107 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-            {4.7, -0.0210, 0.0}  // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                         // Temperature (F)
+                                      {0.3, 0.00159, 0.00000107}, // Input Power Coefficients (kW)
+                                      {4.7, -0.0210, 0.0},        // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
-        compressor.perfMap.push_back({
-            67, // Temperature (T_F)
-            {0.378 * 1000,
-             0.00121 * 1000,
-             0.00000216 * 1000}, // Input Power Coefficients (inputPower_coeffs)
-            {4.8, -0.0167, 0.0}  // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                           // Temperature (F)
+                                      {0.378, 0.00121, 0.00000216}, // Input Power Coefficients (kW)
+                                      {4.8, -0.0167, 0.0},          // COP Coefficients (COP_coeffs)
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -929,11 +910,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4200);
+        resistiveElementTop.setupAsResistiveElement(8, 4200, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4200);
+        resistiveElementBottom.setupAsResistiveElement(0, 4200, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
@@ -1016,33 +997,34 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.minT_C = F_TO_C(-4.0);
             compressor.maxSetpointT_C = MAXOUTLET_R410A;
 
-            compressor.perfMap.push_back({
-                100, // Temperature (T_F)
+            compressor.perfMap.push_back({100, // Temperature (F)
 
-                {4.9621645063,
-                 -0.0096084144,
-                 -0.0095647009,
-                 -0.0115911960,
-                 -0.0000788517,
-                 0.0000886176,
-                 0.0001114142,
-                 0.0001832377,
-                 -0.0000451308,
-                 0.0000411975,
-                 0.0000003535}, // Input Power Coefficients (inputPower_coeffs)
+                                          {4.9621645063,
+                                           -0.0096084144,
+                                           -0.0095647009,
+                                           -0.0115911960,
+                                           -0.0000788517,
+                                           0.0000886176,
+                                           0.0001114142,
+                                           0.0001832377,
+                                           -0.0000451308,
+                                           0.0000411975,
+                                           0.0000003535}, // Input Power Coefficients (W)
 
-                {3.8189922420,
-                 0.0569412237,
-                 -0.0320101962,
-                 -0.0012859036,
-                 0.0000576439,
-                 0.0001101241,
-                 -0.0000352368,
-                 -0.0002630301,
-                 -0.0000509365,
-                 0.0000369655,
-                 -0.0000000606} // COP Coefficients (COP_coeffs)
-            });
+                                          {3.8189922420,
+                                           0.0569412237,
+                                           -0.0320101962,
+                                           -0.0012859036,
+                                           0.0000576439,
+                                           0.0001101241,
+                                           -0.0000352368,
+                                           -0.0002630301,
+                                           -0.0000509365,
+                                           0.0000369655,
+                                           -0.0000000606}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else
         {
@@ -1054,161 +1036,166 @@ int HPWH::initPreset(MODELS presetNum)
             {
                 setTankSizeWithSameU(500., Units::Volume::gal);
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {5.9786974243,
-                     0.0194445115,
-                     -0.0077802278,
-                     0.0053809029,
-                     -0.0000334832,
-                     0.0001864310,
-                     0.0001190540,
-                     0.0000040405,
-                     -0.0002538279,
-                     -0.0000477652,
-                     0.0000014101}, // Input Power Coefficients (inputPower_coeffs)
+                                              {5.9786974243,
+                                               0.0194445115,
+                                               -0.0077802278,
+                                               0.0053809029,
+                                               -0.0000334832,
+                                               0.0001864310,
+                                               0.0001190540,
+                                               0.0000040405,
+                                               -0.0002538279,
+                                               -0.0000477652,
+                                               0.0000014101}, // Input Power Coefficients (W)
 
-                    {3.6128563086,
-                     0.0527064498,
-                     -0.0278198945,
-                     -0.0070529748,
-                     0.0000934705,
-                     0.0000781711,
-                     -0.0000359215,
-                     -0.0002223206,
-                     0.0000359239,
-                     0.0000727189,
-                     -0.0000005037} // COP Coefficients (COP_coeffs)
-                });
+                                              {3.6128563086,
+                                               0.0527064498,
+                                               -0.0278198945,
+                                               -0.0070529748,
+                                               0.0000934705,
+                                               0.0000781711,
+                                               -0.0000359215,
+                                               -0.0002223206,
+                                               0.0000359239,
+                                               0.0000727189,
+                                               -0.0000005037}, // COP Coefficients
+
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
+
             else if (presetNum == MODELS_ColmacCxA_15_SP)
             {
                 setTankSizeWithSameU(600., Units::Volume::gal);
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {15.5869846555,
-                     -0.0044503761,
-                     -0.0577941202,
-                     -0.0286911185,
-                     -0.0000803325,
-                     0.0003399817,
-                     0.0002009576,
-                     0.0002494761,
-                     -0.0000595773,
-                     0.0001401800,
-                     0.0000004312}, // Input Power Coefficients (inputPower_coeffs)
+                                              {15.5869846555,
+                                               -0.0044503761,
+                                               -0.0577941202,
+                                               -0.0286911185,
+                                               -0.0000803325,
+                                               0.0003399817,
+                                               0.0002009576,
+                                               0.0002494761,
+                                               -0.0000595773,
+                                               0.0001401800,
+                                               0.0000004312}, // Input Power Coefficients (W)
 
-                    {1.6643120405,
-                     0.0515623393,
-                     -0.0110239930,
-                     0.0041514430,
-                     0.0000481544,
-                     0.0000493424,
-                     -0.0000262721,
-                     -0.0002356218,
-                     -0.0000989625,
-                     -0.0000070572,
-                     0.0000004108} // COP Coefficients (COP_coeffs)
-                });
+                                              {1.6643120405,
+                                               0.0515623393,
+                                               -0.0110239930,
+                                               0.0041514430,
+                                               0.0000481544,
+                                               0.0000493424,
+                                               -0.0000262721,
+                                               -0.0002356218,
+                                               -0.0000989625,
+                                               -0.0000070572,
+                                               0.0000004108}, // COP Coefficients
+
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_20_SP)
             {
                 setTankSizeWithSameU(800., Units::Volume::gal);
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {23.0746692231,
-                     0.0248584608,
-                     -0.1417927282,
-                     -0.0253733303,
-                     -0.0004882754,
-                     0.0006508079,
-                     0.0002139934,
-                     0.0005552752,
-                     -0.0002026772,
-                     0.0000607338,
-                     0.0000021571}, // Input Power Coefficients (inputPower_coeffs)
+                                              {23.0746692231,
+                                               0.0248584608,
+                                               -0.1417927282,
+                                               -0.0253733303,
+                                               -0.0004882754,
+                                               0.0006508079,
+                                               0.0002139934,
+                                               0.0005552752,
+                                               -0.0002026772,
+                                               0.0000607338,
+                                               0.0000021571}, // Input Power Coefficients (W)
 
-                    {1.7692660120,
-                     0.0525134783,
-                     -0.0081102040,
-                     -0.0008715405,
-                     0.0001274956,
-                     0.0000369489,
-                     -0.0000293775,
-                     -0.0002778086,
-                     -0.0000095067,
-                     0.0000381186,
-                     -0.0000003135} // COP Coefficients (COP_coeffs)
-                });
+                                              {1.7692660120,
+                                               0.0525134783,
+                                               -0.0081102040,
+                                               -0.0008715405,
+                                               0.0001274956,
+                                               0.0000369489,
+                                               -0.0000293775,
+                                               -0.0002778086,
+                                               -0.0000095067,
+                                               0.0000381186,
+                                               -0.0000003135}, // COP Coefficients
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_25_SP)
             {
                 setTankSizeWithSameU(1000., Units::Volume::gal);
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {20.4185336541,
-                     -0.0236920615,
-                     -0.0736219119,
-                     -0.0260385082,
-                     -0.0005048074,
-                     0.0004940510,
-                     0.0002632660,
-                     0.0009820050,
-                     -0.0000223587,
-                     0.0000885101,
-                     0.0000005649}, // Input Power Coefficients (inputPower_coeffs)
+                                              {20.4185336541,
+                                               -0.0236920615,
+                                               -0.0736219119,
+                                               -0.0260385082,
+                                               -0.0005048074,
+                                               0.0004940510,
+                                               0.0002632660,
+                                               0.0009820050,
+                                               -0.0000223587,
+                                               0.0000885101,
+                                               0.0000005649}, // Input Power Coefficients (W)
 
-                    {0.8942843854,
-                     0.0677641611,
-                     -0.0001582927,
-                     0.0048083998,
-                     0.0001196407,
-                     0.0000334921,
-                     -0.0000378740,
-                     -0.0004146401,
-                     -0.0001213363,
-                     -0.0000031856,
-                     0.0000006306} // COP Coefficients (COP_coeffs)
-                });
+                                              {0.8942843854,
+                                               0.0677641611,
+                                               -0.0001582927,
+                                               0.0048083998,
+                                               0.0001196407,
+                                               0.0000334921,
+                                               -0.0000378740,
+                                               -0.0004146401,
+                                               -0.0001213363,
+                                               -0.0000031856,
+                                               0.0000006306}, // COP Coefficients
+
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_30_SP)
             {
                 setTankSizeWithSameU(1200., Units::Volume::gal);
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {11.3687485772,
-                     -0.0207292362,
-                     0.0496254077,
-                     -0.0038394967,
-                     -0.0005991041,
-                     0.0001304318,
-                     0.0003099774,
-                     0.0012092717,
-                     -0.0001455509,
-                     -0.0000893889,
-                     0.0000018221}, // Input Power Coefficients (inputPower_coeffs)
+                                              {11.3687485772,
+                                               -0.0207292362,
+                                               0.0496254077,
+                                               -0.0038394967,
+                                               -0.0005991041,
+                                               0.0001304318,
+                                               0.0003099774,
+                                               0.0012092717,
+                                               -0.0001455509,
+                                               -0.0000893889,
+                                               0.0000018221}, // Input Power Coefficients (W)
 
-                    {4.4170108542,
-                     0.0596384263,
-                     -0.0416104579,
-                     -0.0017199887,
-                     0.0000774664,
-                     0.0001521934,
-                     -0.0000251665,
-                     -0.0003289731,
-                     -0.0000801823,
-                     0.0000325972,
-                     0.0000002705} // COP Coefficients (COP_coeffs)
-                });
+                                              {4.4170108542,
+                                               0.0596384263,
+                                               -0.0416104579,
+                                               -0.0017199887,
+                                               0.0000774664,
+                                               0.0001521934,
+                                               -0.0000251665,
+                                               -0.0003289731,
+                                               -0.0000801823,
+                                               0.0000325972,
+                                               0.0000002705}, // COP Coefficients
+
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
         } // End if MODELS_ColmacCxV_5_SP
 
@@ -1268,23 +1255,24 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.minT_C = F_TO_C(-4.0);
             compressor.maxT_C = F_TO_C(105.);
             compressor.maxSetpointT_C = MAXOUTLET_R410A;
-            compressor.perfMap.push_back({
-                100, // Temperature (T_F)
+            compressor.perfMap.push_back({100, // Temperature (F)
 
-                {5.8438525529,
-                 0.0003288231,
-                 -0.0494255840,
-                 -0.0000386642,
-                 0.0004385362,
-                 0.0000647268}, // Input Power Coefficients (inputPower_coeffs)
+                                          {5.8438525529,
+                                           0.0003288231,
+                                           -0.0494255840,
+                                           -0.0000386642,
+                                           0.0004385362,
+                                           0.0000647268}, // Input Power Coefficients (W)
 
-                {0.6679056901,
-                 0.0499777846,
-                 0.0251828292,
-                 0.0000699764,
-                 -0.0001552229,
-                 -0.0002911167} // COP Coefficients (COP_coeffs)
-            });
+                                          {0.6679056901,
+                                           0.0499777846,
+                                           0.0251828292,
+                                           0.0000699764,
+                                           -0.0001552229,
+                                           -0.0002911167}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else
         {
@@ -1297,46 +1285,47 @@ int HPWH::initPreset(MODELS presetNum)
             {
                 setTankSizeWithSameU(500., Units::Volume::gal);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {8.6918824405,
-                     0.0136666667,
-                     -0.0548348214,
-                     -0.0000208333,
-                     0.0005301339,
-                     -0.0000250000}, // Input Power Coefficients (inputPower_coeffs)
+                                              {8.6918824405,
+                                               0.0136666667,
+                                               -0.0548348214,
+                                               -0.0000208333,
+                                               0.0005301339,
+                                               -0.0000250000}, // Input Power Coefficients (W)
 
-                    {0.6944181117,
-                     0.0445926666,
-                     0.0213188804,
-                     0.0001172913,
-                     -0.0001387694,
-                     -0.0002365885} // COP Coefficients (COP_coeffs)
-                });
+                                              {0.6944181117,
+                                               0.0445926666,
+                                               0.0213188804,
+                                               0.0001172913,
+                                               -0.0001387694,
+                                               -0.0002365885}, // COP Coefficients
+
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {
                 setTankSizeWithSameU(600., Units::Volume::gal);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {12.4908723958,
-                     0.0073988095,
-                     -0.0411417411,
-                     0.0000000000,
-                     0.0005789621,
-                     0.0000696429}, // Input Power Coefficients (inputPower_coeffs)
+                                              {12.4908723958,
+                                               0.0073988095,
+                                               -0.0411417411,
+                                               0.0000000000,
+                                               0.0005789621,
+                                               0.0000696429}, // Input Power Coefficients (W)
 
-                    {1.2846349520,
-                     0.0334658309,
-                     0.0019121906,
-                     0.0002840970,
-                     0.0000497136,
-                     -0.0004401737} // COP Coefficients (COP_coeffs)
+                                              {1.2846349520,
+                                               0.0334658309,
+                                               0.0019121906,
+                                               0.0002840970,
+                                               0.0000497136,
+                                               -0.0004401737}, // COP Coefficients
 
-                });
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
@@ -1344,67 +1333,67 @@ int HPWH::initPreset(MODELS presetNum)
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {14.4893345424,
-                     0.0355357143,
-                     -0.0476593192,
-                     -0.0002916667,
-                     0.0006120954,
-                     0.0003607143}, // Input Power Coefficients (inputPower_coeffs)
+                                              {14.4893345424,
+                                               0.0355357143,
+                                               -0.0476593192,
+                                               -0.0002916667,
+                                               0.0006120954,
+                                               0.0003607143}, // Input Power Coefficients (W)
 
-                    {1.2421582831,
-                     0.0450256569,
-                     0.0051234755,
-                     0.0001271296,
-                     -0.0000299981,
-                     -0.0002910606} // COP Coefficients (COP_coeffs)
-                });
+                                              {1.2421582831,
+                                               0.0450256569,
+                                               0.0051234755,
+                                               0.0001271296,
+                                               -0.0000299981,
+                                               -0.0002910606}, // COP Coefficients
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
                 setTankSizeWithSameU(1000., Units::Volume::gal);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {14.5805808222,
-                     0.0081934524,
-                     -0.0216169085,
-                     -0.0001979167,
-                     0.0007376535,
-                     0.0004955357}, // Input Power Coefficients (inputPower_coeffs)
+                                              {14.5805808222,
+                                               0.0081934524,
+                                               -0.0216169085,
+                                               -0.0001979167,
+                                               0.0007376535,
+                                               0.0004955357}, // Input Power Coefficients (W)
 
-                    {2.0013175767,
-                     0.0576617432,
-                     -0.0130480870,
-                     0.0000856818,
-                     0.0000610760,
-                     -0.0003684106} // COP Coefficients (COP_coeffs)
-                });
+                                              {2.0013175767,
+                                               0.0576617432,
+                                               -0.0130480870,
+                                               0.0000856818,
+                                               0.0000610760,
+                                               -0.0003684106}, // COP Coefficients
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
                 setTankSizeWithSameU(1200., Units::Volume::gal);
                 compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
-                compressor.perfMap.push_back({
-                    100, // Temperature (T_F)
+                compressor.perfMap.push_back({100, // Temperature (F)
 
-                    {14.5824911644,
-                     0.0072083333,
-                     -0.0278055246,
-                     -0.0002916667,
-                     0.0008841378,
-                     0.0008125000}, // Input Power Coefficients (inputPower_coeffs)
+                                              {14.5824911644,
+                                               0.0072083333,
+                                               -0.0278055246,
+                                               -0.0002916667,
+                                               0.0008841378,
+                                               0.0008125000}, // Input Power Coefficients (W)
 
-                    {2.6996807527,
-                     0.0617507969,
-                     -0.0220966420,
-                     0.0000336149,
-                     0.0000890989,
-                     -0.0003682431} // COP Coefficients (COP_coeffs)
-                });
+                                              {2.6996807527,
+                                               0.0617507969,
+                                               -0.0220966420,
+                                               0.0000336149,
+                                               0.0000890989,
+                                               -0.0003682431}, // COP Coefficients
+                                              Units::Temp::F,
+                                              Units::Power::W});
             }
         }
 
@@ -1474,189 +1463,195 @@ int HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_NyleC25A_SP)
         {
             setTankSizeWithSameU(200., Units::Volume::gal);
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {4.060120364,
-                 -0.020584279,
-                 -0.024201054,
-                 -0.007023945,
-                 0.000017461,
-                 0.000110366,
-                 0.000060338,
-                 0.000120015,
-                 0.000111068,
-                 0.000138907,
-                 -0.000001569}, // Input Power Coefficients (inputPower_coeffs)
+                                          {4.060120364,
+                                           -0.020584279,
+                                           -0.024201054,
+                                           -0.007023945,
+                                           0.000017461,
+                                           0.000110366,
+                                           0.000060338,
+                                           0.000120015,
+                                           0.000111068,
+                                           0.000138907,
+                                           -0.000001569}, // Input Power Coefficients (W)
 
-                {0.462979529,
-                 0.065656840,
-                 0.001077377,
-                 0.003428059,
-                 0.000243692,
-                 0.000021522,
-                 0.000005143,
-                 -0.000384778,
-                 -0.000404744,
-                 -0.000036277,
-                 0.000001900} // COP Coefficients (COP_coeffs)
-            });
+                                          {0.462979529,
+                                           0.065656840,
+                                           0.001077377,
+                                           0.003428059,
+                                           0.000243692,
+                                           0.000021522,
+                                           0.000005143,
+                                           -0.000384778,
+                                           -0.000404744,
+                                           -0.000036277,
+                                           0.000001900}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
         {
             setTankSizeWithSameU(300., Units::Volume::gal);
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {-0.1180905709,
-                 0.0045354306,
-                 0.0314990479,
-                 -0.0406839757,
-                 0.0002355294,
-                 0.0000818684,
-                 0.0001943834,
-                 -0.0002160871,
-                 0.0003053633,
-                 0.0003612413,
-                 -0.0000035912}, // Input Power Coefficients (inputPower_coeffs)
+                                          {-0.1180905709,
+                                           0.0045354306,
+                                           0.0314990479,
+                                           -0.0406839757,
+                                           0.0002355294,
+                                           0.0000818684,
+                                           0.0001943834,
+                                           -0.0002160871,
+                                           0.0003053633,
+                                           0.0003612413,
+                                           -0.0000035912}, // Input Power Coefficients (W)
 
-                {6.8205043418,
-                 0.0860385185,
-                 -0.0748330699,
-                 -0.0172447955,
-                 0.0000510842,
-                 0.0002187441,
-                 -0.0000321036,
-                 -0.0003311463,
-                 -0.0002154270,
-                 0.0001307922,
-                 0.0000005568} // COP Coefficients (COP_coeffs)
-            });
+                                          {6.8205043418,
+                                           0.0860385185,
+                                           -0.0748330699,
+                                           -0.0172447955,
+                                           0.0000510842,
+                                           0.0002187441,
+                                           -0.0000321036,
+                                           -0.0003311463,
+                                           -0.0002154270,
+                                           0.0001307922,
+                                           0.0000005568}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
         {
             setTankSizeWithSameU(400., Units::Volume::gal);
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {13.27612215047,
-                 -0.01014009337,
-                 -0.13401028549,
-                 -0.02325705976,
-                 -0.00032515646,
-                 0.00040270625,
-                 0.00001988733,
-                 0.00069451670,
-                 0.00069067890,
-                 0.00071091372,
-                 -0.00000854352}, // Input Power Coefficients (inputPower_coeffs)
+                                          {13.27612215047,
+                                           -0.01014009337,
+                                           -0.13401028549,
+                                           -0.02325705976,
+                                           -0.00032515646,
+                                           0.00040270625,
+                                           0.00001988733,
+                                           0.00069451670,
+                                           0.00069067890,
+                                           0.00071091372,
+                                           -0.00000854352}, // Input Power Coefficients (W
 
-                {1.49112327987,
-                 0.06616282153,
-                 0.00715307252,
-                 -0.01269458185,
-                 0.00031448571,
-                 0.00001765313,
-                 0.00006002498,
-                 -0.00045661397,
-                 -0.00034003896,
-                 -0.00004327766,
-                 0.00000176015} // COP Coefficients (COP_coeffs)
-            });
+                                          {1.49112327987,
+                                           0.06616282153,
+                                           0.00715307252,
+                                           -0.01269458185,
+                                           0.00031448571,
+                                           0.00001765313,
+                                           0.00006002498,
+                                           -0.00045661397,
+                                           -0.00034003896,
+                                           -0.00004327766,
+                                           0.00000176015}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
         {
             setTankSizeWithSameU(500., Units::Volume::gal);
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {-3.558277209,
-                 -0.038590968,
-                 0.136307181,
-                 -0.016945699,
-                 0.000983753,
-                 -5.18201E-05,
-                 0.000476904,
-                 -0.000514211,
-                 -0.000359172,
-                 0.000266509,
-                 -1.58646E-07}, // Input Power Coefficients (inputPower_coeffs)
+                                          {-3.558277209,
+                                           -0.038590968,
+                                           0.136307181,
+                                           -0.016945699,
+                                           0.000983753,
+                                           -5.18201E-05,
+                                           0.000476904,
+                                           -0.000514211,
+                                           -0.000359172,
+                                           0.000266509,
+                                           -1.58646E-07}, // Input Power Coefficients (W)
 
-                {4.889555031,
-                 0.117102769,
-                 -0.060005795,
-                 -0.011871234,
-                 -1.79926E-05,
-                 0.000207293,
-                 -1.4452E-05,
-                 -0.000492486,
-                 -0.000376814,
-                 7.85911E-05,
-                 1.47884E-06} // COP Coefficients (COP_coeffs)
-            });
+                                          {4.889555031,
+                                           0.117102769,
+                                           -0.060005795,
+                                           -0.011871234,
+                                           -1.79926E-05,
+                                           0.000207293,
+                                           -1.4452E-05,
+                                           -0.000492486,
+                                           -0.000376814,
+                                           7.85911E-05,
+                                           1.47884E-06}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
         {
             setTankSizeWithSameU(800., Units::Volume::gal);
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {18.58007733,
-                 -0.215324777,
-                 -0.089782421,
-                 0.01503161,
-                 0.000332503,
-                 0.000274216,
-                 2.70498E-05,
-                 0.001387914,
-                 0.000449199,
-                 0.000829578,
-                 -5.28641E-06}, // Input Power Coefficients (inputPower_coeffs)
+                                          {18.58007733,
+                                           -0.215324777,
+                                           -0.089782421,
+                                           0.01503161,
+                                           0.000332503,
+                                           0.000274216,
+                                           2.70498E-05,
+                                           0.001387914,
+                                           0.000449199,
+                                           0.000829578,
+                                           -5.28641E-06}, // Input Power Coefficients (W)
 
-                {-0.629432348,
-                 0.181466663,
-                 0.00044047,
-                 0.012104957,
-                 -6.61515E-05,
-                 9.29975E-05,
-                 9.78042E-05,
-                 -0.000872708,
-                 -0.001013945,
-                 -0.00021852,
-                 5.55444E-06} // COP Coefficients (COP_coeffs)
-            });
+                                          {-0.629432348,
+                                           0.181466663,
+                                           0.00044047,
+                                           0.012104957,
+                                           -6.61515E-05,
+                                           9.29975E-05,
+                                           9.78042E-05,
+                                           -0.000872708,
+                                           -0.001013945,
+                                           -0.00021852,
+                                           5.55444E-06}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
         {
             setTankSizeWithSameU(800., Units::Volume::gal);
 
-            compressor.perfMap.push_back({
-                90, // Temperature (T_F)
+            compressor.perfMap.push_back({90, // Temperature (F)
 
-                {-13.89057656,
-                 0.025902417,
-                 0.304250541,
-                 0.061695153,
-                 -0.001474249,
-                 -0.001126845,
-                 -0.000220192,
-                 0.001241026,
-                 0.000571009,
-                 -0.000479282,
-                 9.04063E-06}, // Input Power Coefficients (inputPower_coeffs)
+                                          {-13.89057656,
+                                           0.025902417,
+                                           0.304250541,
+                                           0.061695153,
+                                           -0.001474249,
+                                           -0.001126845,
+                                           -0.000220192,
+                                           0.001241026,
+                                           0.000571009,
+                                           -0.000479282,
+                                           9.04063E-06}, // Input Power Coefficients (W)
 
-                {7.443904067,
-                 0.185978755,
-                 -0.098481635,
-                 -0.002500073,
-                 0.000127658,
-                 0.000444321,
-                 0.000139547,
-                 -0.001000195,
-                 -0.001140199,
-                 -8.77557E-05,
-                 4.87405E-06} // COP Coefficients (COP_coeffs)
-            });
+                                          {7.443904067,
+                                           0.185978755,
+                                           -0.098481635,
+                                           -0.002500073,
+                                           0.000127658,
+                                           0.000444321,
+                                           0.000139547,
+                                           -0.001000195,
+                                           -0.001140199,
+                                           -8.77557E-05,
+                                           4.87405E-06}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
 
         // set everything in its places
@@ -1901,46 +1896,48 @@ int HPWH::initPreset(MODELS presetNum)
         {
             setTankSizeWithSameU(250., Units::Volume::gal);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(17.4);
-            compressor.perfMap.push_back({
-                110, // Temperature (T_F)
+            compressor.perfMap.push_back({110, // Temperature (F)
 
-                {1.8558438453,
-                 0.0120796155,
-                 -0.0135443327,
-                 0.0000059621,
-                 0.0003010506,
-                 -0.0000463525}, // Input Power Coefficients (inputPower_coeffs)
+                                          {1.8558438453,
+                                           0.0120796155,
+                                           -0.0135443327,
+                                           0.0000059621,
+                                           0.0003010506,
+                                           -0.0000463525}, // Input Power Coefficients (W)
 
-                {3.6840046360,
-                 0.0995685071,
-                 -0.0398107723,
-                 -0.0001903160,
-                 0.0000980361,
-                 -0.0003469814} // COP Coefficients (COP_coeffs)
-            });
+                                          {3.6840046360,
+                                           0.0995685071,
+                                           -0.0398107723,
+                                           -0.0001903160,
+                                           0.0000980361,
+                                           -0.0003469814}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
         else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
                  presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
         {
             setTankSizeWithSameU(500., Units::Volume::gal);
             compressor.mpFlowRate_LPS = GPM_TO_LPS(34.87);
-            compressor.perfMap.push_back({
-                110, // Temperature (T_F)
+            compressor.perfMap.push_back({110, // Temperature (F)
 
-                {5.1838201136,
-                 0.0247312962,
-                 -0.0120766440,
-                 0.0000493862,
-                 0.0005422089,
-                 -0.0001385078}, // Input Power Coefficients (inputPower_coeffs)
+                                          {5.1838201136,
+                                           0.0247312962,
+                                           -0.0120766440,
+                                           0.0000493862,
+                                           0.0005422089,
+                                           -0.0001385078}, // Input Power Coefficients (W)
 
-                {5.0207181209,
-                 0.0442525790,
-                 -0.0418284882,
-                 0.0000793531,
-                 0.0001132421,
-                 -0.0002491563} // COP Coefficients (COP_coeffs)
-            });
+                                          {5.0207181209,
+                                           0.0442525790,
+                                           -0.0418284882,
+                                           0.0000793531,
+                                           0.0001132421,
+                                           -0.0002491563}, // COP Coefficients
+
+                                          Units::Temp::F,
+                                          Units::Power::W});
         }
 
         // set everything in its places
@@ -2265,35 +2262,35 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(5);
 
-        compressor.perfMap.push_back({
-            17,                // Temperature (T_F)
-            {1650, 5.5, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({17,                 // Temperature (F)
+                                      {1650, 5.5, 0.0},   // Input Power Coefficients (W)
+                                      {3.2, -0.015, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            35,                // Temperature (T_F)
-            {1100, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({35,                 // Temperature (F)
+                                      {1100, 4.0, 0.0},   // Input Power Coefficients (W)
+                                      {3.7, -0.015, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {880, 3.1, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                  // Temperature (F)
+                                      {880, 3.1, 0.0},     // Input Power Coefficients (W)
+                                      {5.25, -0.025, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,               // Temperature (T_F)
-            {740, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                // Temperature (F)
+                                      {740, 4.0, 0.0},   // Input Power Coefficients (W)
+                                      {6.2, -0.03, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                // Temperature (T_F)
-            {790, 2, 0.0},     // Input Power Coefficients (inputPower_coeffs)
-            {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                 // Temperature (F)
+                                      {790, 2, 0.0},      // Input Power Coefficients (W)
+                                      {7.15, -0.04, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -2362,35 +2359,35 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(5);
 
-        compressor.perfMap.push_back({
-            17,                // Temperature (T_F)
-            {1650, 5.5, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.2, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({17,                 // Temperature (F)
+                                      {1650, 5.5, 0.0},   // Input Power Coefficients (W)
+                                      {3.2, -0.015, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            35,                // Temperature (T_F)
-            {1100, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {3.7, -0.015, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({35,                 // Temperature (F)
+                                      {1100, 4.0, 0.0},   // Input Power Coefficients (W)
+                                      {3.7, -0.015, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {880, 3.1, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {5.25, -0.025, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                  // Temperature (F)
+                                      {880, 3.1, 0.0},     // Input Power Coefficients (W)
+                                      {5.25, -0.025, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,               // Temperature (T_F)
-            {740, 4.0, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {6.2, -0.03, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                // Temperature (F)
+                                      {740, 4.0, 0.0},   // Input Power Coefficients (W)
+                                      {6.2, -0.03, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                // Temperature (T_F)
-            {790, 2, 0.0},     // Input Power Coefficients (inputPower_coeffs)
-            {7.15, -0.04, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                 // Temperature (F)
+                                      {790, 2, 0.0},      // Input Power Coefficients (W)
+                                      {7.15, -0.04, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
@@ -2456,23 +2453,23 @@ int HPWH::initPreset(MODELS presetNum)
         // performance map
         compressor.perfMap.reserve(3);
 
-        compressor.perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                  // Temperature (F)
+                                      {170, 2.02, 0.0},    // Input Power Coefficients (W)
+                                      {5.93, -0.027, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                  // Temperature (F)
+                                      {144.5, 2.42, 0.0},  // Input Power Coefficients (W)
+                                      {7.67, -0.037, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                  // Temperature (F)
+                                      {94.1, 3.15, 0.0},   // Input Power Coefficients (W)
+                                      {11.1, -0.056, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -2483,22 +2480,22 @@ int HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2250)
         {
-            resistiveElementTop.setupAsResistiveElement(8, 2250);
+            resistiveElementTop.setupAsResistiveElement(8, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementTop.setupAsResistiveElement(8, 4500);
+            resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2250)
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 2250);
+            resistiveElementBottom.setupAsResistiveElement(0, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 4500);
+            resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -2567,23 +2564,23 @@ int HPWH::initPreset(MODELS presetNum)
         // performance map
         compressor.perfMap.reserve(3);
 
-        compressor.perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                  // Temperature (F)
+                                      {170, 2.02, 0.0},    // Input Power Coefficients (W)
+                                      {5.93, -0.027, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                  // Temperature (F)
+                                      {144.5, 2.42, 0.0},  // Input Power Coefficients (W)
+                                      {7.67, -0.037, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                  // Temperature (F)
+                                      {94.1, 3.15, 0.0},   // Input Power Coefficients (W)
+                                      {11.1, -0.056, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -2594,22 +2591,22 @@ int HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2265)
         {
-            resistiveElementTop.setupAsResistiveElement(8, 2250);
+            resistiveElementTop.setupAsResistiveElement(8, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementTop.setupAsResistiveElement(8, 4500);
+            resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2265)
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 2250);
+            resistiveElementBottom.setupAsResistiveElement(0, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 4500);
+            resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -2672,23 +2669,23 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(3);
 
-        compressor.perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {170, 2.02, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.93, -0.027, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                  // Temperature (F)
+                                      {170, 2.02, 0.0},    // Input Power Coefficients (W)
+                                      {5.93, -0.027, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                 // Temperature (T_F)
-            {144.5, 2.42, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.67, -0.037, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                  // Temperature (F)
+                                      {144.5, 2.42, 0.0},  // Input Power Coefficients (W)
+                                      {7.67, -0.037, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                 // Temperature (T_F)
-            {94.1, 3.15, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {11.1, -0.056, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                  // Temperature (F)
+                                      {94.1, 3.15, 0.0},   // Input Power Coefficients (W)
+                                      {11.1, -0.056, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.0);
@@ -2697,22 +2694,22 @@ int HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2280)
         {
-            resistiveElementTop.setupAsResistiveElement(8, 2250);
+            resistiveElementTop.setupAsResistiveElement(8, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementTop.setupAsResistiveElement(8, 4500);
+            resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         }
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2280)
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 2250);
+            resistiveElementBottom.setupAsResistiveElement(0, 2250, Units::Power::W);
         }
         else
         {
-            resistiveElementBottom.setupAsResistiveElement(0, 4500);
+            resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -2774,17 +2771,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47,                        // Temperature (T_F)
-            {142.6, 2.152, 0.0},       // Input Power Coefficients (inputPower_coeffs)
-            {6.989258, -0.038320, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                         // Temperature (F)
+                                      {142.6, 2.152, 0.0},        // Input Power Coefficients (W)
+                                      {6.989258, -0.038320, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                   // Temperature (T_F)
-            {120.14, 2.513, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {8.188, -0.0432, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                    // Temperature (F)
+                                      {120.14, 2.513, 0.0},  // Input Power Coefficients (W)
+                                      {8.188, -0.0432, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -2792,11 +2789,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
@@ -2849,23 +2846,26 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.perfMap.reserve(3);
 
         // Tuned on the multiple K167 tests
-        compressor.perfMap.push_back({
-            50.,                              // Temperature (T_F)
-            {2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (inputPower_coeffs)
-            {5.91, -0.026299, 0.0}            // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back(
+            {50.,                              // Temperature (F)
+             {2010.49966, -4.20966, 0.085395}, // Input Power Coefficients (W)
+             {5.91, -0.026299, 0.0},           // COP Coefficients
+             Units::Temp::F,
+             Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67.5,                             // Temperature (T_F)
-            {2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (inputPower_coeffs)
-            {7.26272, -0.034135, 0.0}         // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back(
+            {67.5,                             // Temperature (F)
+             {2171.012, -6.936571, 0.1094962}, // Input Power Coefficients (W)
+             {7.26272, -0.034135, 0.0},        // COP Coefficients
+             Units::Temp::F,
+             Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95.,                              // Temperature (T_F)
-            {2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (inputPower_coeffs)
-            {8.821262, -0.042059, 0.0}        // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back(
+            {95.,                              // Temperature (F)
+             {2276.0625, -7.106608, 0.119911}, // Input Power Coefficients (W)
+             {8.821262, -0.042059, 0.0},       // COP Coefficients
+             Units::Temp::F,
+             Units::Power::W});
 
         compressor.minT_C =
             F_TO_C(47.0); // Product documentation says 45F doesn't look like it in CMP-T test//
@@ -2875,13 +2875,13 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        double wattRE = 6000; // 5650.;
-        resistiveElementTop.setupAsResistiveElement(7, wattRE);
+        double powerRE_W = 6000; // 5650.;
+        resistiveElementTop.setupAsResistiveElement(7, powerRE_W, Units::Power::W);
         resistiveElementTop.isVIP = true; // VIP is the only source that turns on independently when
                                           // something else is already heating.
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, wattRE);
+        resistiveElementBottom.setupAsResistiveElement(0, powerRE_W, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
         resistiveElementBottom.setCondensity(
             {0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
@@ -2952,23 +2952,23 @@ int HPWH::initPreset(MODELS presetNum)
         // performance map
         compressor.perfMap.reserve(3);
 
-        compressor.perfMap.push_back({
-            50,                  // Temperature (T_F)
-            {66.82, 2.49, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {8.64, -0.0436, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                   // Temperature (F)
+                                      {66.82, 2.49, 0.0},   // Input Power Coefficients (W)
+                                      {8.64, -0.0436, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67.5,                 // Temperature (T_F)
-            {85.1, 2.38, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {10.82, -0.0551, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67.5,                  // Temperature (F)
+                                      {85.1, 2.38, 0.0},     // Input Power Coefficients (W)
+                                      {10.82, -0.0551, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                   // Temperature (T_F)
-            {89, 2.62, 0.0},      // Input Power Coefficients (inputPower_coeffs)
-            {12.52, -0.0534, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                    // Temperature (F)
+                                      {89, 2.62, 0.0},       // Input Power Coefficients (W)
+                                      {12.52, -0.0534, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.);
         compressor.maxT_C = F_TO_C(120.);
@@ -2976,10 +2976,10 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
@@ -3031,17 +3031,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3050,11 +3050,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3105,24 +3105,24 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3176,17 +3176,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3195,11 +3195,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3253,17 +3253,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients (COP_coeffs)
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3272,11 +3272,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3330,17 +3330,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3349,11 +3349,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3409,17 +3409,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                           // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},  // Input Power Coefficients (W)
+                                      {5.4977772, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                         // Temperature (T_F)
-            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                          // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},   // Input Power Coefficients (W)
+                                      {7.207307, -0.0335265, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3428,11 +3428,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -3501,17 +3501,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                     // Temperature (T_F)
-            {250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
-            {6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                      // Temperature (F)
+                                      {250, -1.0883, 0.0176},  // Input Power Coefficients (W)
+                                      {6.7, -0.0087, -0.0002}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {7.0, -0.0168, -0.0001}    // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                        // Temperature (F)
+                                      {275.0, -0.6631, 0.01571}, // Input Power Coefficients (W)
+                                      {7.0, -0.0168, -0.0001},   // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
@@ -3520,11 +3520,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
@@ -3595,17 +3595,17 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
         compressor.perfMap.reserve(2);
-        compressor.perfMap.push_back({
-            50,                       // Temperature (T_F)
-            {220.0, 0.8743, 0.00454}, // Input Power Coefficients (inputPower_coeffs)
-            {7.96064, -0.0448, 0.0}   // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                       // Temperature (F)
+                                      {220.0, 0.8743, 0.00454}, // Input Power Coefficients (W)
+                                      {7.96064, -0.0448, 0.0},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {8.45936, -0.04539, 0.0}   // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                        // Temperature (F)
+                                      {275.0, -0.6631, 0.01571}, // Input Power Coefficients (W)
+                                      {8.45936, -0.04539, 0.0},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(37.0);
@@ -3615,11 +3615,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
 
         // logic conditions
@@ -3689,17 +3689,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                     // Temperature (T_F)
-            {250, -1.0883, 0.0176}, // Input Power Coefficients (inputPower_coeffs)
-            {6.7, -0.0087, -0.0002} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                      // Temperature (F)
+                                      {250, -1.0883, 0.0176},  // Input Power Coefficients (W)
+                                      {6.7, -0.0087, -0.0002}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                        // Temperature (T_F)
-            {275.0, -0.6631, 0.01571}, // Input Power Coefficients (inputPower_coeffs)
-            {7.0, -0.0168, -0.0001}    // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                        // Temperature (F)
+                                      {275.0, -0.6631, 0.01571}, // Input Power Coefficients (W)
+                                      {7.0, -0.0168, -0.0001},   // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.0);
@@ -3744,17 +3744,17 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.setCondensity({0.5, 0.5, 0.});
 
         compressor.perfMap.reserve(2);
-        compressor.perfMap.push_back({
-            50,                      // Temperature (T_F)
-            {528.91, 4.8988, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {4.3943, -0.012443, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                       // Temperature (F)
+                                      {528.91, 4.8988, 0.0},    // Input Power Coefficients (W)
+                                      {4.3943, -0.012443, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                      // Temperature (T_F)
-            {494.03, 7.7266, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.48189, -0.01604, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                       // Temperature (F)
+                                      {494.03, 7.7266, 0.0},    // Input Power Coefficients (W)
+                                      {5.48189, -0.01604, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(37.0);
@@ -3798,17 +3798,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            47,                        // Temperature (T_F)
-            {280, 4.97342, 0.0},       // Input Power Coefficients (inputPower_coeffs)
-            {5.634009, -0.029485, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({47,                         // Temperature (F)
+                                      {280, 4.97342, 0.0},        // Input Power Coefficients (W)
+                                      {5.634009, -0.029485, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                  // Temperature (T_F)
-            {280, 5.35992, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {6.3, -0.03, 0.0}    // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                  // Temperature (F)
+                                      {280, 5.35992, 0.0}, // Input Power Coefficients (W)
+                                      {6.3, -0.03, 0.0},   // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.hysteresisOffsetT_C = dF_TO_dC(1);
         compressor.minT_C = F_TO_C(40.0);
@@ -3818,11 +3818,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4200);
+        resistiveElementTop.setupAsResistiveElement(8, 4200, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 2250);
+        resistiveElementBottom.setupAsResistiveElement(0, 2250, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
@@ -3868,24 +3868,24 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isVIP = false;
         compressor.typeOfHeatSource = TYPE_compressor;
 
-        resistiveElement.setupAsResistiveElement(0, 1500);
+        resistiveElement.setupAsResistiveElement(0, 1500, Units::Power::W);
         resistiveElement.hysteresisOffsetT_C = dF_TO_dC(0);
 
         compressor.setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                        // Temperature (T_F)
-            {295.55337, 2.28518, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.744118, -0.025946, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                         // Temperature (F)
+                                      {295.55337, 2.28518, 0.0},  // Input Power Coefficients (W)
+                                      {5.744118, -0.025946, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                        // Temperature (T_F)
-            {282.2126, 2.82001, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {8.012112, -0.039394, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                         // Temperature (F)
+                                      {282.2126, 2.82001, 0.0},   // Input Power Coefficients (W)
+                                      {8.012112, -0.039394, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(32.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3929,17 +3929,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                         // Temperature (T_F)
-            {472.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {2.942642, -0.0125954, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                          // Temperature (F)
+                                      {472.58616, 2.09340, 0.0},   // Input Power Coefficients (W)
+                                      {2.942642, -0.0125954, 0.0}, // COP Coefficients (COP_coeffs)
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                         // Temperature (T_F)
-            {439.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {3.95076, -0.01638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                          // Temperature (F)
+                                      {439.5615, 2.62997, 0.0},    // Input Power Coefficients (W)
+                                      {3.95076, -0.01638033, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -3948,11 +3948,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
@@ -4001,17 +4001,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                         // Temperature (T_F)
-            {272.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {4.042642, -0.0205954, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                          // Temperature (F)
+                                      {272.58616, 2.09340, 0.0},   // Input Power Coefficients (W)
+                                      {4.042642, -0.0205954, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                         // Temperature (T_F)
-            {239.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {5.25076, -0.02638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                          // Temperature (F)
+                                      {239.5615, 2.62997, 0.0},    // Input Power Coefficients (W)
+                                      {5.25076, -0.02638033, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(40.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -4020,11 +4020,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
         // logic conditions
@@ -4078,17 +4078,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                         // Temperature (T_F)
-            {172.58616, 2.09340, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {5.242642, -0.0285954, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                          // Temperature (F)
+                                      {172.58616, 2.09340, 0.0},   // Input Power Coefficients (W)
+                                      {5.242642, -0.0285954, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                         // Temperature (T_F)
-            {139.5615, 2.62997, 0.0},   // Input Power Coefficients (inputPower_coeffs)
-            {6.75076, -0.03638033, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                          // Temperature (F)
+                                      {139.5615, 2.62997, 0.0},    // Input Power Coefficients (W)
+                                      {6.75076, -0.03638033, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(35.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -4096,11 +4096,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -4151,17 +4151,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {4.29, -0.0243008, 0.0}      // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                          // Temperature (F)
+                                      {187.064124, 1.939747, 0.0}, // Imput Power (W)
+                                      {4.29, -0.0243008, 0.0},     // COP Coeffs
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                        // Temperature (T_F)
-            {148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.61, -0.0335265, 0.0}    // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                        // Temperature (F)
+                                      {148.0418, 2.553291, 0.0}, // Imput Power (W)
+                                      {5.61, -0.0335265, 0.0},   // COP Coeffs
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(37.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -4170,11 +4170,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -4251,19 +4251,17 @@ int HPWH::initPreset(MODELS presetNum)
         // voltex60 tier 1 values
         compressor.perfMap.reserve(2);
 
-        compressor.perfMap.push_back({
-            50,                          // Temperature (T_F)
-            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            //{5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-            {5.22288834, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({50,                            // Temperature (F)
+                                      {187.064124, 1.939747, 0.0},   // Input Power Coefficients (W)
+                                      {5.22288834, -0.0243008, 0.0}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            70,                        // Temperature (T_F)
-            {148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            //{7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-            {6.84694165, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({70,                            // Temperature (F)
+                                      {148.0418, 2.553291, 0.0},     // Input Power Coefficients (W)
+                                      {6.84694165, -0.0335265, 0.0}, // COP Coeffs
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(42.0);
         compressor.maxT_C = F_TO_C(120.);
@@ -4272,11 +4270,11 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop.setupAsResistiveElement(6, 4500);
+        resistiveElementTop.setupAsResistiveElement(6, 4500, Units::Power::W);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom.setupAsResistiveElement(0, 4000);
+        resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
 
@@ -4338,17 +4336,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // Perfmap for input power and COP made from data for poor preforming modeled to be scalled
         // for this model
-        std::vector<double> inputPower_coeffs = {13.6,
-                                                 0.00995,
-                                                 -0.0342,
-                                                 -0.014,
-                                                 -0.000110,
-                                                 0.00026,
-                                                 0.000232,
-                                                 0.000195,
-                                                 -0.00034,
-                                                 5.30E-06,
-                                                 2.3600E-06};
+        std::vector<double> inputPower_coeffs_W = {13.6,
+                                                   0.00995,
+                                                   -0.0342,
+                                                   -0.014,
+                                                   -0.000110,
+                                                   0.00026,
+                                                   0.000232,
+                                                   0.000195,
+                                                   -0.00034,
+                                                   5.30E-06,
+                                                   2.3600E-06};
         std::vector<double> COP_coeffs = {1.945,
                                           0.0412,
                                           -0.0112,
@@ -4373,13 +4371,13 @@ int HPWH::initPreset(MODELS presetNum)
         }
 
         // Scale the compressor capacity
-        scaleVector(inputPower_coeffs, scaleFactor);
+        scaleVector(inputPower_coeffs_W, scaleFactor);
 
-        compressor.perfMap.push_back({
-            105,               // Temperature (T_F)
-            inputPower_coeffs, // Input Power Coefficients (inputPower_coeffs
-            COP_coeffs         // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.emplace_back(105,                 // Temperature (F)
+                                        inputPower_coeffs_W, // Input Power Coefficients (W)
+                                        COP_coeffs,          // COP Coefficients
+                                        Units::Temp::F,
+                                        Units::Power::W);
 
         // logic conditions
         compressor.minT_C = F_TO_C(40.);
@@ -4399,8 +4397,8 @@ int HPWH::initPreset(MODELS presetNum)
 
         // Scale the resistance-element power
         double elementPower_W = scaleFactor * 30000.;
-        resistiveElementBottom.setupAsResistiveElement(0, elementPower_W);
-        resistiveElementTop.setupAsResistiveElement(9, elementPower_W);
+        resistiveElementBottom.setupAsResistiveElement(0, elementPower_W, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(9, elementPower_W), Units::Power::W;
 
         // top resistor values
         // standard logic conditions
@@ -4471,18 +4469,15 @@ int HPWH::initPreset(MODELS presetNum)
 
         setTankSizeWithSameU(600., Units::Volume::gal);
         compressor.mpFlowRate_LPS = GPM_TO_LPS(25.);
-        compressor.perfMap.push_back({
-            100, // Temperature (T_F)
+        compressor.perfMap.emplace_back(
+            PerfPoint(100,                                                // Temperature (F)
+                      {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coeffs (W)
+                      {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440}, // COP Coefficients
+                      Units::Temp::F,
+                      Units::Power::W));
 
-            {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coefficients
-                                                                // (inputPower_coeffs)
-
-            {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440} // COP Coefficients (COP_coeffs)
-
-        });
-
-        resistiveElementBottom.setupAsResistiveElement(0, 30000);
-        resistiveElementTop.setupAsResistiveElement(9, 30000);
+        resistiveElementBottom.setupAsResistiveElement(0, 30000, Units::Power::W);
+        resistiveElementTop.setupAsResistiveElement(9, 30000, Units::Power::W);
 
         // top resistor values
         // standard logic conditions
@@ -4535,29 +4530,29 @@ int HPWH::initPreset(MODELS presetNum)
         // AOSmithPHPT60 values
         compressor.perfMap.reserve(4);
 
-        compressor.perfMap.push_back({
-            5,                     // Temperature (T_F)
-            {-1356, 39.80, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {2.003, -0.003637, 0.} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({5,                      // Temperature (F)
+                                      {-1356, 39.80, 0.},     // Input Power Coefficients (W)
+                                      {2.003, -0.003637, 0.}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            34,                    // Temperature (T_F)
-            {-1485, 43.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {2.805, -0.005092, 0.} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({34,                     // Temperature (F)
+                                      {-1485, 43.60, 0.},     // Input Power Coefficients (iW)
+                                      {2.805, -0.005092, 0.}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            67,                    // Temperature (T_F)
-            {-1632, 47.93, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {4.076, -0.007400, 0.} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({67,                     // Temperature (F)
+                                      {-1632, 47.93, 0.},     // Input Power Coefficients (W)
+                                      {4.076, -0.007400, 0.}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
-        compressor.perfMap.push_back({
-            95,                    // Temperature (T_F)
-            {-1757, 51.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
-            {6.843, -0.012424, 0.} // COP Coefficients (COP_coeffs)
-        });
+        compressor.perfMap.push_back({95,                     // Temperature (F)
+                                      {-1757, 51.60, 0.},     // Input Power Coefficients (W)
+                                      {6.843, -0.012424, 0.}, // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         compressor.minT_C = F_TO_C(-25);
         compressor.maxT_C = F_TO_C(125.);

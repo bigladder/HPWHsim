@@ -293,6 +293,18 @@ class HPWH
             return conversionMap<T>[{fromUnits, toUnits}](x);
         }
 
+        template <typename T>
+        static std::vector<double>
+        convert(const std::vector<double> xV, const T fromUnits, const T toUnits)
+        {
+            std::vector<double> xV_out;
+            for (auto& x : xV)
+            {
+                xV_out.push_back(conversionMap<T>[{fromUnits, toUnits}](x));
+            }
+            return xV_out;
+        }
+
         /* time units */
         enum class Time
         {
@@ -1097,6 +1109,27 @@ class HPWH
     /// add "extra" heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    struct PerfPoint
+    {
+        double T_C;
+        std::vector<double> inputPower_coeffs_kW; // c0 + c1*T + c2*T*T
+        std::vector<double> COP_coeffs;           // c0 + c1*T + c2*T*T
+
+        PerfPoint(const double T_in = 0.,
+                  const std::vector<double>& inputPower_coeffs_in = {},
+                  std::vector<double> COP_coeffs_in = {},
+                  const Units::Temp unitsTemp_in = Units::Temp::C,
+                  const Units::Power unitsPower_in = Units::Power::kW)
+        {
+            T_C = Units::convert(T_in, unitsTemp_in, Units::Temp::C);
+            inputPower_coeffs_kW =
+                Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
+        }
+    };
+
+    /// A map with input/COP quadratic curve coefficients at a given external temperature
+    typedef std::vector<PerfPoint> PerfMap;
+
   private:
     class HeatSource;
 
@@ -1263,7 +1296,8 @@ class HPWH
     /// 0 if no flow or no compressor
     double condenserOutletT_C;
 
-    /// the volume of water heated by an external source, 0 if no flow or no external heat source
+    /// the volume of water heated by an external source, 0 if no flow or no external heat
+    /// source
     double externalVolumeHeated_L;
 
     /// the amount of heat lost to standby
@@ -1345,9 +1379,12 @@ class HPWH::HeatSource
     HeatSource(const HeatSource& hSource);            /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
     /// configure the heat source to be a resisive element, positioned at the
     /// specified node, with the specified power in watts
+    void setupAsResistiveElement(const int node,
+                                 const double power,
+                                 const Units::Power units = Units::Power::kW,
+                                 const int condensitySize = CONDENSITY_SIZE);
 
     bool isEngaged() const;                             /// true if on
     void engageHeatSource(DRMODES DRstatus = DR_ALLOW); /// turn on
@@ -1374,7 +1411,8 @@ class HPWH::HeatSource
     /**< returns the index of the heat source where this heat source is a backup.
         returns -1 if none found. */
 
-    /// return a measure of the current state from the shutoff condition (external configurations)
+    /// return a measure of the current state from the shutoff condition (external
+    /// configurations)
     double fractToMeetComparisonExternal() const;
 
     /// add heat
@@ -1459,15 +1497,7 @@ class HPWH::HeatSource
     /// see the hpwh_init functions for calculation of shrinkage.
     double shrinkageT_C;
 
-    struct perfPoint
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
-    };
-
-    /// A map with input/COP quadratic curve coefficients at a given external temperature
-    std::vector<perfPoint> perfMap;
+    PerfMap perfMap;
 
     /// The axis values defining the regular grid for the performance data.
     /// SP would have 3 axis, MP would have 2 axis
@@ -1508,7 +1538,8 @@ class HPWH::HeatSource
         double derate_fraction;
     };
 
-    /// A list of points for the defrost derate factor ordered by increasing external temperature
+    /// A list of points for the defrost derate factor ordered by increasing external
+    /// temperature
     std::vector<defrostPoint> defrostMap;
 
     ///  maximum output temperature at the minimum operating temperature (minT_C) of HPWH
@@ -1520,8 +1551,8 @@ class HPWH::HeatSource
     } maxOut_at_LowT;
 
     /// approximate a secondary
-    /// heat exchanger by adding extra input energy for the pump and an increase in the water to the
-    /// incoming waater temperature to the heatpump
+    /// heat exchanger by adding extra input energy for the pump and an increase in the water to
+    /// the incoming waater temperature to the heatpump
     struct SecondaryHeatExchanger
     {
         double coldSideOffsetT_C;
@@ -1538,7 +1569,7 @@ class HPWH::HeatSource
     void clearAllLogic();
 
     /// change the resistance wattage
-    void changeResistanceWatts(double watts);
+    void changeResistancePower(const double power, const Units::Power units = Units::Power::kW);
 
     /// returns if the heat source uses a compressor or not
     bool isACompressor() const;

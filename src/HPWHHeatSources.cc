@@ -573,8 +573,8 @@ void HPWH::HeatSource::sortPerformanceMap()
 {
     std::sort(perfMap.begin(),
               perfMap.end(),
-              [](const HPWH::HeatSource::perfPoint& a, const HPWH::HeatSource::perfPoint& b) -> bool
-              { return a.T_F < b.T_F; });
+              [](const HPWH::PerfPoint& a, const HPWH::PerfPoint& b) -> bool
+              { return a.T_C < b.T_C; });
 }
 
 double HPWH::HeatSource::getTankT_C() const
@@ -640,7 +640,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
             for (size_t i = 0; i < perfMap.size(); ++i)
             {
-                if (externalT_F < perfMap[i].T_F)
+                if (externalT_F < perfMap[i].T_C)
                 {
                     if (i == 0)
                     {
@@ -676,28 +676,28 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             COP_T2 += perfMap[i_next].COP_coeffs[1] * condenserT_F;
             COP_T2 += perfMap[i_next].COP_coeffs[2] * condenserT_F * condenserT_F;
 
-            inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs[0];
-            inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs[1] * condenserT_F;
+            inputPower_T1_Watts = perfMap[i_prev].inputPower_coeffs_kW[0];
+            inputPower_T1_Watts += perfMap[i_prev].inputPower_coeffs_kW[1] * condenserT_F;
             inputPower_T1_Watts +=
-                perfMap[i_prev].inputPower_coeffs[2] * condenserT_F * condenserT_F;
+                perfMap[i_prev].inputPower_coeffs_kW[2] * condenserT_F * condenserT_F;
 
-            inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs[0];
-            inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs[1] * condenserT_F;
+            inputPower_T2_Watts = perfMap[i_next].inputPower_coeffs_kW[0];
+            inputPower_T2_Watts += perfMap[i_next].inputPower_coeffs_kW[1] * condenserT_F;
             inputPower_T2_Watts +=
-                perfMap[i_next].inputPower_coeffs[2] * condenserT_F * condenserT_F;
+                perfMap[i_next].inputPower_coeffs_kW[2] * condenserT_F * condenserT_F;
 
             if (hpwh->hpwhVerbosity >= VRB_emetic)
             {
                 hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  "
                           "%.2lf  %.2lf \n",
-                          perfMap[0].inputPower_coeffs[0],
-                          perfMap[0].inputPower_coeffs[1],
-                          perfMap[0].inputPower_coeffs[2]);
+                          perfMap[0].inputPower_coeffs_kW[0],
+                          perfMap[0].inputPower_coeffs_kW[1],
+                          perfMap[0].inputPower_coeffs_kW[2]);
                 hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  "
                           "%.2lf  %.2lf \n",
-                          perfMap[1].inputPower_coeffs[0],
-                          perfMap[1].inputPower_coeffs[1],
-                          perfMap[1].inputPower_coeffs[2]);
+                          perfMap[1].inputPower_coeffs_kW[0],
+                          perfMap[1].inputPower_coeffs_kW[1],
+                          perfMap[1].inputPower_coeffs_kW[2]);
                 hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n",
                           inputPower_T1_Watts,
                           inputPower_T2_Watts);
@@ -707,8 +707,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                     hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: "
                               "%.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n",
                               externalT_F,
-                              perfMap[i_prev].T_F,
-                              perfMap[i_next].T_F);
+                              perfMap[i_prev].T_C,
+                              perfMap[i_next].T_C);
                 }
             }
 
@@ -716,28 +716,28 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             double input_W = 0;
             linearInterp(input_W,
                          externalT_F,
-                         perfMap[i_prev].T_F,
-                         perfMap[i_next].T_F,
+                         perfMap[i_prev].T_C,
+                         perfMap[i_next].T_C,
                          inputPower_T1_Watts,
                          inputPower_T2_Watts);
             input_kW = W_TO_KW(input_W);
 
             linearInterp(
-                cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
+                cop, externalT_F, perfMap[i_prev].T_C, perfMap[i_next].T_C, COP_T1, COP_T2);
         }
         else
         { // perfMap.size() == 1 or we've got an issue.
-            if (externalT_F > perfMap[0].T_F)
+            if (externalT_F > perfMap[0].T_C)
             {
                 extrapolate = true;
                 if (extrapolationMethod == EXTRAP_NEAREST)
                 {
-                    externalT_F = perfMap[0].T_F;
+                    externalT_F = perfMap[0].T_C;
                 }
             }
 
             regressedMethod(
-                input_kW, perfMap[0].inputPower_coeffs, externalT_F, Tout_F, condenserT_F);
+                input_kW, perfMap[0].inputPower_coeffs_kW, externalT_F, Tout_F, condenserT_F);
 
             regressedMethod(cop, perfMap[0].COP_coeffs, externalT_F, Tout_F, condenserT_F);
         }
@@ -808,16 +808,16 @@ void HPWH::HeatSource::getCapacityMP(
     else
     {
         // Get bounding performance map points for interpolation/extrapolation
-        if (externalT_F > perfMap[0].T_F)
+        if (externalT_F > perfMap[0].T_C)
         {
             if (extrapolationMethod == EXTRAP_NEAREST)
             {
-                externalT_F = perfMap[0].T_F;
+                externalT_F = perfMap[0].T_C;
             }
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs, externalT_F, condenserT_F);
+        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs_kW, externalT_F, condenserT_F);
         regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_F, condenserT_F);
     }
 
@@ -1157,11 +1157,11 @@ double HPWH::HeatSource::addHeatExternalMP(
     return elapsedTime_min;
 }
 
-void HPWH::HeatSource::setupAsResistiveElement(int node,
-                                               double Watts,
-                                               int condensitySize /* = CONDENSITY_SIZE*/)
+void HPWH::HeatSource::setupAsResistiveElement(const int node,
+                                               const double power,
+                                               const Units::Power units, /*kW*/
+                                               const int condensitySize /*CONDENSITY_SIZE*/)
 {
-
     isOn = false;
     isVIP = false;
     condensity = std::vector<double>(condensitySize, 0.);
@@ -1169,17 +1169,17 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
 
     perfMap.reserve(2);
 
-    perfMap.push_back({
-        50,                // Temperature (T_F)
-        {Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
-    });
+    perfMap.push_back({50,                // Temperature (F)
+                       {power, 0.0, 0.0}, // Input Power Coefficients
+                       {1.0, 0.0, 0.0},   // COP Coefficients
+                       Units::Temp::F,
+                       units});
 
-    perfMap.push_back({
-        67,                // Temperature (T_F)
-        {Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
-    });
+    perfMap.push_back({67,                // Temperature (F)
+                       {power, 0.0, 0.0}, // Input Power Coefficients
+                       {1.0, 0.0, 0.0},   // COP Coefficients
+                       Units::Temp::F,
+                       units});
 
     configuration = CONFIG_SUBMERGED; // immersed in tank
 
@@ -1206,10 +1206,10 @@ void HPWH::HeatSource::clearAllLogic()
     this->clearAllShutOffLogic();
 }
 
-void HPWH::HeatSource::changeResistanceWatts(double watts)
+void HPWH::HeatSource::changeResistancePower(const double power, const Units::Power units /*kW*/)
 {
     for (auto& perfP : perfMap)
     {
-        perfP.inputPower_coeffs[0] = watts;
+        perfP.inputPower_coeffs_kW[0] = Units::convert(power, units, Units::Power::kW);
     }
 }

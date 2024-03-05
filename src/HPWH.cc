@@ -449,6 +449,7 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
     ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
            coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
+
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -582,7 +583,8 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         if (hpwhVerbosity >= VRB_typical)
         {
-            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme "
+            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT "
+                "scheme "
                 " \n");
         }
     }
@@ -672,7 +674,8 @@ int HPWH::runOneStep(double drawVolume_L,
 
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = "
+                msg("TURNED ON DR_TOO engaged compressor and lowest resistance element, "
+                    "DRstatus = "
                     "%i \n",
                     DRstatus);
             }
@@ -683,7 +686,8 @@ int HPWH::runOneStep(double drawVolume_L,
         {
             if (hpwhVerbosity >= VRB_emetic)
             {
-                msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and %lu "
+                msg("Heat source choice:\theatsource %d can choose from %lu turn on logics and "
+                    "%lu "
                     "shut off logics\n",
                     i,
                     heatSources[i].turnOnLogicSet.size(),
@@ -739,7 +743,8 @@ int HPWH::runOneStep(double drawVolume_L,
                 if (heatSources[i].shouldHeat())
                 {
                     heatSources[i].engageHeatSource(DRstatus);
-                    // engaging a heat source sets isHeating to true, so this will only trigger once
+                    // engaging a heat source sets isHeating to true, so this will only trigger
+                    // once
                 }
             }
 
@@ -795,8 +800,8 @@ int HPWH::runOneStep(double drawVolume_L,
                 if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource != NULL)
                 {
 
-                    // Check that the backup isn't locked out too or already engaged then it will
-                    // heat on its own.
+                    // Check that the backup isn't locked out too or already engaged then it
+                    // will heat on its own.
                     if (heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
                         shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
                                         DRstatus) || //){
@@ -811,7 +816,8 @@ int HPWH::runOneStep(double drawVolume_L,
                     {
                         if (hpwhVerbosity >= VRB_typical)
                         {
-                            msg("Locked out back up heat source AND the engaged heat source %i, "
+                            msg("Locked out back up heat source AND the engaged heat source "
+                                "%i, "
                                 "DRstatus = %i\n",
                                 i,
                                 DRstatus);
@@ -830,8 +836,8 @@ int HPWH::runOneStep(double drawVolume_L,
 
                 addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
 
-                // if it finished early. i.e. shuts off early like if the heatsource met setpoint or
-                // maxed out
+                // if it finished early. i.e. shuts off early like if the heatsource met
+                // setpoint or maxed out
                 if (heatSourcePtr->runtime_min < minutesToRun)
                 {
                     // debugging message handling
@@ -853,15 +859,16 @@ int HPWH::runOneStep(double drawVolume_L,
                         // turn it on
                         heatSources[i].followedByHeatSource->engageHeatSource(DRstatus);
                     }
-                    // or if there heat source can't produce hotter water (i.e. it's maxed out) and
-                    // the tank still isn't at setpoint. the compressor should get locked out when
-                    // the maxedOut is true but have to run the resistance first during this
-                    // timestep to make sure tank is above the max temperature for the compressor.
+                    // or if there heat source can't produce hotter water (i.e. it's maxed out)
+                    // and the tank still isn't at setpoint. the compressor should get locked
+                    // out when the maxedOut is true but have to run the resistance first during
+                    // this timestep to make sure tank is above the max temperature for the
+                    // compressor.
                     else if (heatSources[i].maxedOut() && heatSources[i].backupHeatSource != NULL)
                     {
 
-                        // Check that the backup isn't locked out or already engaged then it will
-                        // heat or already heated on it's own.
+                        // Check that the backup isn't locked out or already engaged then it
+                        // will heat or already heated on it's own.
                         if (!heatSources[i].backupHeatSource->toLockOrUnlock(
                                 heatSourceAmbientT_C) && // If not locked out
                             !shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
@@ -1004,7 +1011,8 @@ int HPWH::runNSteps(int N,
         {
             if (hpwhVerbosity >= VRB_reluctant)
             {
-                msg("RunNSteps has encountered an error on step %d of N and has ceased running.  "
+                msg("RunNSteps has encountered an error on step %d of N and has ceased "
+                    "running.  "
                     "\n",
                     i + 1);
             }
@@ -2803,18 +2811,11 @@ int HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=
     {
         if (scaleCapacity != 1.)
         {
-            std::transform(
-                perfP.inputPower_coeffs.begin(),
-                perfP.inputPower_coeffs.end(),
-                perfP.inputPower_coeffs.begin(),
-                std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCapacity));
+            scaleVector(perfP.inputPower_coeffs_kW, scaleCapacity);
         }
         if (scaleCOP != 1.)
         {
-            std::transform(perfP.COP_coeffs.begin(),
-                           perfP.COP_coeffs.end(),
-                           perfP.COP_coeffs.begin(),
-                           std::bind(std::multiplies<double>(), std::placeholders::_1, scaleCOP));
+            scaleVector(perfP.COP_coeffs, scaleCOP);
         }
     }
 
@@ -2875,7 +2876,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, Units::Power pw
     }
 
     // Unit conversion
-    double watts = 1000. * Units::convert(power, pwrUnit, Units::Power::kW);
+    double power_kW = Units::convert(power, pwrUnit, Units::Power::kW);
 
     // Whew so many checks...
     if (which == -1)
@@ -2885,13 +2886,13 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, Units::Power pw
         {
             if (heatSources[i].isAResistance())
             {
-                heatSources[i].changeResistanceWatts(watts);
+                heatSources[i].changeResistancePower(power_kW, Units::Power::kW);
             }
         }
     }
     else
     {
-        heatSources[resistanceHeightMap[which].index].changeResistanceWatts(watts);
+        heatSources[resistanceHeightMap[which].index].changeResistancePower(power_kW);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2899,7 +2900,7 @@ int HPWH::setResistanceCapacity(double power, int which /*=-1*/, Units::Power pw
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                heatSources[resistanceHeightMap[i].index].changeResistanceWatts(watts);
+                heatSources[resistanceHeightMap[i].index].changeResistancePower(power_kW);
             }
         }
     }
@@ -2935,7 +2936,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
         {
             if (heatSources[i].isAResistance())
             {
-                returnPower += heatSources[i].perfMap[0].inputPower_coeffs[0];
+                returnPower += heatSources[i].perfMap[0].inputPower_coeffs_kW[0];
             }
         }
     }
@@ -2943,7 +2944,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            heatSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs[0];
+            heatSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs_kW[0];
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2952,7 +2953,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 returnPower +=
-                    heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
+                    heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs_kW[0];
             }
         }
     }
@@ -5164,7 +5165,7 @@ int HPWH::initFromFile(string configFile)
                     }
                     return HPWH_ABORT;
                 }
-                heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
+                heatSources[heatsource].perfMap[nTemps - 1].T_C = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -5225,7 +5226,7 @@ int HPWH::initFromFile(string configFile)
 
                 if (var == "inPow")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(
+                    heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs_kW.push_back(
                         tempDouble);
                 }
                 else if (var == "cop")
