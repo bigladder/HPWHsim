@@ -1290,7 +1290,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0494255840,
                                            -0.0000386642,
                                            0.0004385362,
-                                           0.0000647268}, // Input Power Coefficients (W)
+                                           0.0000647268}, // Input Power Coefficients (kW)
 
                                           {0.6679056901,
                                            0.0499777846,
@@ -1300,7 +1300,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0002911167}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else
         {
@@ -1320,7 +1320,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0548348214,
                                                -0.0000208333,
                                                0.0005301339,
-                                               -0.0000250000}, // Input Power Coefficients (W)
+                                               -0.0000250000}, // Input Power Coefficients (kW)
 
                                               {0.6944181117,
                                                0.0445926666,
@@ -1330,7 +1330,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0002365885}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {

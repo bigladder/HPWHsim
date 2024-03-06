@@ -15,7 +15,7 @@ struct PerformanceMapTest : public testing::Test
 
     double getCapacityMP(HPWH& hpwh,
                          performancePointMP& point,
-                         HPWH::Units::Power unitsPower = HPWH::Units::Power::Btu_per_h,
+                         HPWH::Units::Power unitsPower = HPWH::Units::Power::kW,
                          HPWH::Units::Temp unitsTemp = HPWH::Units::Temp::F)
     {
         return hpwh.getCompressorCapacity(point.airT, point.inT, point.inT, unitsPower, unitsTemp);
