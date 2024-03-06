@@ -101,9 +101,12 @@ template <>
 HPWH::Units::ConversionMap<HPWH::Units::Power> HPWH::Units::conversionMap<HPWH::Units::Power> = {
     {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kW), ident},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::Btu_per_h), ident},
+    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::W), ident},
     {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::Btu_per_h), KW_TO_BTUperH},
+    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::W), KW_TO_W},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kW), BTUperH_TO_KW},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::W), BTUperH_TO_W},
+    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::kW), W_TO_KW},
     {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h), W_TO_BTUperH}};
 
 template <>
@@ -486,12 +489,15 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
     Units::TempDiff unitsTempDiff_in =
         (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
 
+    inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
+
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
     {
         inputPower_coeffs_kW = changeSeriesUnits<Units::TempDiff>(
             inputPower_coeffs_kW, unitsTempDiff_in, Units::TempDiff::C);
         COP_coeffs =
             changeSeriesUnits<Units::TempDiff>(COP_coeffs, unitsTempDiff_in, Units::TempDiff::C);
+        return;
     }
 
     if (inputPower_coeffs_in.size() == 11) // use regressMethod
@@ -505,9 +511,9 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                 COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
+        return;
     }
 
-    inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
     if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
     {
         for (std::size_t j : {1, 3})
@@ -519,6 +525,7 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                 COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
+        return;
     }
 }
 

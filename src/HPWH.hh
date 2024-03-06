@@ -300,7 +300,8 @@ class HPWH
             std::vector<double> xV_out;
             for (auto& x : xV)
             {
-                xV_out.push_back(conversionMap<T>[{fromUnits, toUnits}](x));
+                double y = conversionMap<T>[{fromUnits, toUnits}](x);
+                xV_out.push_back(y);
             }
             return xV_out;
         }
