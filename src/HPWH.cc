@@ -434,14 +434,30 @@ void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, do
     ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-double expandSeries(const std::vector<double> coeffs, const double x)
+double expandSeries(const std::vector<double>& coeffs, const double x)
 {
+
     double y = 0.;
     for (auto coeff : coeffs)
     {
         y = coeff + y * x;
     }
     return y;
+}
+
+template <typename T>
+std::vector<double>
+changeSeriesUnits(const std::vector<double>& coeffs, const T fromUnits, const T toUnits)
+{
+    std::vector<double> newCoeffs = coeffs;
+    for (std::size_t j = 0; j < coeffs.size(); ++j)
+    {
+        for (std::size_t i = j + 1; i < coeffs.size(); ++i)
+        {
+            newCoeffs[i] = HPWH::Units::convert(coeffs[i], fromUnits, toUnits);
+        }
+    }
+    return newCoeffs;
 }
 
 void regressedMethod(
@@ -463,12 +479,20 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
 HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const std::vector<double>& inputPower_coeffs_in /*{}*/,
                            std::vector<double> COP_coeffs_in /*{}*/,
-                           const Units::Temp tempUnits_in /*C*/,
+                           const Units::Temp unitsTemp_in /*C*/,
                            const Units::Power unitsPower_in /*kW*/)
 {
-    T_C = Units::convert(T_in, tempUnits_in, Units::Temp::C);
-    Units::TempDiff tempDiffUnits_in =
-        (tempUnits_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
+    T_C = Units::convert(T_in, unitsTemp_in, Units::Temp::C);
+    Units::TempDiff unitsTempDiff_in =
+        (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
+
+    if (inputPower_coeffs_in.size() == 3) // use expandSeries
+    {
+        inputPower_coeffs_kW = changeSeriesUnits<Units::TempDiff>(
+            inputPower_coeffs_kW, unitsTempDiff_in, Units::TempDiff::C);
+        COP_coeffs =
+            changeSeriesUnits<Units::TempDiff>(COP_coeffs, unitsTempDiff_in, Units::TempDiff::C);
+    }
 
     if (inputPower_coeffs_in.size() == 11) // use regressMethod
     {
@@ -477,8 +501,8 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
             for (std::size_t i = j; i < 11; ++i)
             {
                 inputPower_coeffs_kW[i] =
-                    Units::convert(inputPower_coeffs_kW[i], tempDiffUnits_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::convert(COP_coeffs[i], tempDiffUnits_in, Units::TempDiff::C);
+                    Units::convert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
     }
@@ -491,8 +515,8 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
             for (std::size_t i = j; i < 6; ++i)
             {
                 inputPower_coeffs_kW[i] =
-                    Units::convert(inputPower_coeffs_kW[i], tempDiffUnits_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::convert(COP_coeffs[i], tempDiffUnits_in, Units::TempDiff::C);
+                    Units::convert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
     }
