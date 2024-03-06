@@ -363,6 +363,7 @@ class HPWH
             kW,        // kilowatts
             Btu_per_h, // BTU per hour
             W,         // watts
+            kJ_per_h,  // kilojoules per hour
         };
 
         /* length units */
@@ -596,10 +597,12 @@ class HPWH
     int getModel() const { return model; }
 
     int initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
-    int initResistanceTank(double tankVol_L,
-                           double energyFactor,
-                           double upperPower_W,
-                           double lowerPower_W);
+    int initResistanceTank(const double tankVol,
+                           const double energyFactor,
+                           const double upperPower,
+                           const double lowerPower,
+                           const Units::Volume unitsVolume = Units::Volume::L,
+                           const Units::Power unitsPower = Units::Power::kW);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -611,10 +614,14 @@ class HPWH
      * to standard setting, with upper as VIP activating when the top third is too cold.
      */
 
-    int initResistanceTankGeneric(double tankVol_L,
-                                  double rValue_M2KperW,
-                                  double upperPower_W,
-                                  double lowerPower_W);
+    int initResistanceTankGeneric(double tankVol,
+                                  double rValue,
+                                  double upperPower,
+                                  double lowerPower,
+                                  const Units::Volume unitsVolume = Units::Volume::L,
+                                  const Units::Area unitsArea = Units::Area::m2,
+                                  const Units::Temp unitsTemp = Units::Temp::C,
+                                  const Units::Power unitsPower = Units::Power::kW);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -623,7 +630,11 @@ class HPWH
      * controls for the HPWHinit_resTank()
      */
 
-    int initGeneric(double tankVol_L, double energyFactor, double resUse_C);
+    int initGeneric(double tankVol,
+                    double energyFactor,
+                    double resUseT,
+                    const Units::Volume unitsVolume = Units::Volume::L,
+                    const Units::Temp unitsTemp = Units::Temp::C);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
@@ -1745,8 +1756,23 @@ inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_pe
 inline double KW_TO_W(const double kW) { return 1000. * kW; }
 inline double W_TO_KW(const double W) { return W / 1000.; }
 
+inline double KW_TO_KJperH(const double kW) { return kW * s_per_h; }
+inline double KJperH_TO_KW(const double kJ_per_h) { return kJ_per_h / s_per_h; }
+
 inline double BTUperH_TO_W(const double Btu_per_h) { return KW_TO_W(BTUperH_TO_KW(Btu_per_h)); }
 inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
+
+inline double BTUperH_TO_KJperH(const double Btu_per_h)
+{
+    return KW_TO_KJperH(BTUperH_TO_KW(Btu_per_h));
+}
+inline double KJperH_TO_BTUperH(const double kJ_per_h)
+{
+    return KW_TO_BTUperH(KJperH_TO_KW(kJ_per_h));
+}
+
+inline double W_TO_KJperH(const double W) { return KW_TO_KJperH(W_TO_KW(W)); }
+inline double KJperH_TO_W(const double kJ_per_h) { return KW_TO_W(KJperH_TO_KW(kJ_per_h)); }
 
 // length conversion
 inline double M_TO_FT(const double m) { return ft_per_m * m; }

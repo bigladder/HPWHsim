@@ -102,12 +102,21 @@ HPWH::Units::ConversionMap<HPWH::Units::Power> HPWH::Units::conversionMap<HPWH::
     {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kW), ident},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::Btu_per_h), ident},
     {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::W), ident},
+    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kJ_per_h), ident},
     {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::Btu_per_h), KW_TO_BTUperH},
     {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::W), KW_TO_W},
+    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kJ_per_h), KW_TO_KJperH},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kW), BTUperH_TO_KW},
     {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::W), BTUperH_TO_W},
+    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kJ_per_h),
+     BTUperH_TO_KJperH},
     {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::kW), W_TO_KW},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h), W_TO_BTUperH}};
+    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h), W_TO_BTUperH},
+    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::kJ_per_h), W_TO_KJperH},
+    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kW), KJperH_TO_KW},
+    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::Btu_per_h),
+     KJperH_TO_BTUperH},
+    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::W), KJperH_TO_W}};
 
 template <>
 HPWH::Units::ConversionMap<HPWH::Units::Length> HPWH::Units::conversionMap<HPWH::Units::Length> = {
@@ -3008,7 +3017,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
         return HPWH_ABORT;
     }
 
-    double returnPower = 0;
+    double returnPower_kW = 0;
     if (which == -1)
     {
         // Just get all the elements
@@ -3016,14 +3025,14 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
         {
             if (heatSources[i].isAResistance())
             {
-                returnPower += heatSources[i].perfMap[0].inputPower_coeffs_kW[0];
+                returnPower_kW += heatSources[i].perfMap[0].inputPower_coeffs_kW[0];
             }
         }
     }
     else
     {
         // get the power from "which" element by height
-        returnPower +=
+        returnPower_kW +=
             heatSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs_kW[0];
 
         // Then check for repeats in the position
@@ -3032,14 +3041,14 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, Units::Power pwrUnit /*KW*
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                returnPower +=
+                returnPower_kW +=
                     heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs_kW[0];
             }
         }
     }
 
     // Unit conversion to kW
-    return Units::convert(returnPower / 1000., Units::Power::kW, pwrUnit);
+    return Units::convert(returnPower_kW, Units::Power::kW, pwrUnit);
 }
 
 int HPWH::getResistancePosition(int elementIndex) const

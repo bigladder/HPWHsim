@@ -10,14 +10,19 @@ File Containing all of the presets available in HPWHsim
 int HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
-    return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
+    return initResistanceTank(47.5, 0.95, 4500, 4500, Units::Volume::gal, Units::Power::W);
 }
 
-int HPWH::initResistanceTank(double tankVol_L,
-                             double energyFactor,
-                             double upperPower_W,
-                             double lowerPower_W)
+int HPWH::initResistanceTank(const double tankVol,
+                             const double energyFactor,
+                             const double upperPower,
+                             const double lowerPower,
+                             const Units::Volume unitsVolume /*L*/,
+                             const Units::Power unitsPower /*kW*/)
 {
+    double tankVol_L = Units::convert(tankVol, unitsVolume, Units::Volume::L);
+    double upperPower_W = Units::convert(upperPower, unitsPower, Units::Power::W);
+    double lowerPower_W = Units::convert(lowerPower, unitsPower, Units::Power::W);
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -149,11 +154,27 @@ int HPWH::initResistanceTank(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::initResistanceTankGeneric(double tankVol_L,
-                                    double rValue_m2KperW,
-                                    double upperPower_W,
-                                    double lowerPower_W)
+int HPWH::initResistanceTankGeneric(double tankVol,
+                                    double rValue,
+                                    double upperPower,
+                                    double lowerPower,
+                                    const Units::Volume unitsVolume /*L*/,
+                                    const Units::Area unitsArea /*m2*/,
+                                    const Units::Temp unitsTemp /*C*/,
+                                    const Units::Power unitsPower /*kW*/)
 {
+
+    Units::TempDiff unitsTempDiff =
+        (unitsTemp == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
+
+    double tankVol_L = Units::convert(tankVol, unitsVolume, Units::Volume::L);
+    double upperPower_W = Units::convert(upperPower, unitsPower, Units::Power::W);
+    double lowerPower_W = Units::convert(lowerPower, unitsPower, Units::Power::W);
+    double rValue_m2CperW = Units::invert(
+        Units::convert(
+            Units::convert(rValue, unitsArea, Units::Area::m2), unitsTempDiff, Units::TempDiff ::C),
+        unitsPower,
+        Units::Power::W);
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -177,7 +198,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         }
         return HPWH_ABORT;
     }
-    if (rValue_m2KperW <= 0.)
+    if (rValue_m2CperW <= 0.)
     {
         if (hpwhVerbosity >= VRB_reluctant)
         {
@@ -235,10 +256,10 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     }
 
     // Calc UA
-    double SA_M2 =
+    double SA_m2 =
         getTankSurfaceArea(tankVol_L, HPWH::HPWH::Units::Volume::L, HPWH::Units::Area::m2);
-    double tankUA_WperK = SA_M2 / rValue_m2KperW;
-    tankUA_kJperhC = tankUA_WperK * s_per_h / 1000.; // 1000 J/kJ
+    double tankUA_WperC = SA_m2 / rValue_m2CperW;
+    tankUA_kJperhC = Units::convert(tankUA_WperC, Units::Power::W, Units::Power::kJ_per_h);
 
     if (tankUA_kJperhC < 0.)
     {
@@ -280,8 +301,15 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     return 0; // successful init returns 0
 }
 
-int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
+int HPWH::initGeneric(double tankVol,
+                      double energyFactor,
+                      double resUseT,
+                      const Units::Volume unitsVolume /*L*/,
+                      const Units::Temp unitsTemp /*C*/)
 {
+
+    double tankVol_L = Units::convert(tankVol, unitsVolume, Units::Volume::L);
+    double resUseT_C = Units::convert(resUseT, unitsTemp, Units::Temp::C);
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -347,7 +375,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     // logic conditions
     // this is set customly, from input
     // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
-    resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUse_C));
+    resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUseT_C));
 
     resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
@@ -373,7 +401,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
-    double tankVol_gal = tankVol_L / GAL_TO_L(1.);
+    double tankVol_gal = Units::convert(tankVol_L, Units::Volume::L, Units::Volume::gal);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
     tankUA_kJperhC = 0.0076183819 * v1 * v1;
 
@@ -4426,7 +4454,7 @@ int HPWH::initPreset(MODELS presetNum)
         // Scale the resistance-element power
         double elementPower_W = scaleFactor * 30000.;
         resistiveElementBottom.setupAsResistiveElement(0, elementPower_W, Units::Power::W);
-        resistiveElementTop.setupAsResistiveElement(9, elementPower_W), Units::Power::W;
+        resistiveElementTop.setupAsResistiveElement(9, elementPower_W, Units::Power::W);
 
         // top resistor values
         // standard logic conditions
