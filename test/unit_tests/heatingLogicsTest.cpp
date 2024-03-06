@@ -91,7 +91,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // run a step and check we're heating
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 1);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 1) << sModelName;
 
             // change entering water temp to below temp
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
@@ -100,14 +100,15 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // run a step and check we're not heating.
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 0);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 0) << sModelName;
 
             // and reverse it
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
                           highT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+                      0)
+                << sModelName;
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 1);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 1) << sModelName;
         }
 
         { // testSetEnteringWaterHighTempShutOffRelative
@@ -123,23 +124,25 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // run a step and check we're heating
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 1);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 1) << sModelName;
 
             // change entering water temp to below temp
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
                           relativeHighT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+                      0)
+                << sModelName;
 
             // run a step and check we're not heating.
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 0);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 0) << sModelName;
 
             // and reverse it
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
                           relativeHighT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+                      0)
+                << sModelName;
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
-            EXPECT_EQ(hpwh.isCompressorRunning(), 1);
+            EXPECT_EQ(hpwh.isCompressorRunning(), 1) << sModelName;
         }
     }
 }

@@ -450,9 +450,9 @@ double expandSeries(const std::vector<double>& coeffs, const double x)
 {
 
     double y = 0.;
-    for (auto coeff : coeffs)
+    for (auto pCoeff = coeffs.rbegin(); pCoeff != coeffs.rend(); ++pCoeff)
     {
-        y = coeff + y * x;
+        y = (*pCoeff) + y * x;
     }
     return y;
 }
