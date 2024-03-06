@@ -294,13 +294,34 @@ class HPWH
         }
 
         template <typename T>
+        static double invert(const double x, const T fromUnits, const T toUnits)
+        {
+            return conversionMap<T>[{toUnits, fromUnits}](x);
+        }
+
+        template <typename T>
         static std::vector<double>
         convert(const std::vector<double> xV, const T fromUnits, const T toUnits)
         {
+            auto conversionFnc = conversionMap<T>[{fromUnits, toUnits}];
             std::vector<double> xV_out;
             for (auto& x : xV)
             {
-                double y = conversionMap<T>[{fromUnits, toUnits}](x);
+                double y = conversionFnc(x);
+                xV_out.push_back(y);
+            }
+            return xV_out;
+        }
+
+        template <typename T>
+        static std::vector<double>
+        invert(const std::vector<double> xV, const T fromUnits, const T toUnits)
+        {
+            auto conversionFnc = conversionMap<T>[{toUnits, fromUnits}];
+            std::vector<double> xV_out;
+            for (auto& x : xV)
+            {
+                double y = conversionFnc(x);
                 xV_out.push_back(y);
             }
             return xV_out;

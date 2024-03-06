@@ -4401,11 +4401,11 @@ int HPWH::initPreset(MODELS presetNum)
         // Scale the compressor capacity
         scaleVector(inputPower_coeffs_W, scaleFactor);
 
-        compressor.perfMap.emplace_back(105,                 // Temperature (F)
-                                        inputPower_coeffs_W, // Input Power Coefficients (W)
-                                        COP_coeffs,          // COP Coefficients
-                                        Units::Temp::F,
-                                        Units::Power::W);
+        compressor.perfMap.push_back({105,                 // Temperature (F)
+                                      inputPower_coeffs_W, // Input Power Coefficients (W)
+                                      COP_coeffs,          // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::W});
 
         // logic conditions
         compressor.minT_C = F_TO_C(40.);

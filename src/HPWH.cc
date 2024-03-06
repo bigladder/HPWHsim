@@ -490,6 +490,7 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
         (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
 
     inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
+    COP_coeffs = COP_coeffs_in;
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
     {
@@ -507,8 +508,8 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
             for (std::size_t i = j; i < 11; ++i)
             {
                 inputPower_coeffs_kW[i] =
-                    Units::convert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
+                    Units::invert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::invert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
         return;
@@ -521,8 +522,8 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
             for (std::size_t i = j; i < 6; ++i)
             {
                 inputPower_coeffs_kW[i] =
-                    Units::convert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::convert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
+                    Units::invert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
+                COP_coeffs[i] = Units::invert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
             }
         }
         return;
