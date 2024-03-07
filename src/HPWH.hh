@@ -1158,6 +1158,10 @@ class HPWH
     /// A map with input/COP quadratic curve coefficients at a given external temperature
     typedef std::vector<PerfPoint> PerfMap;
 
+    static const std::vector<int> powers3;
+    static const std::vector<std::pair<int, int>> powers6;
+    static const std::vector<std::tuple<int, int, int>> powers11;
+
   private:
     class HeatSource;
 

@@ -472,6 +472,24 @@ changeSeriesUnits(const std::vector<double>& coeffs, const T fromUnits, const T 
     return newCoeffs;
 }
 
+double factorial(const int n)
+{
+    double f = 1.;
+    for (int i = 1; i <= n; ++i)
+        f *= i;
+    return f;
+}
+
+double choose(const int n, const int i)
+{
+    double f = 0.;
+    if (i <= n)
+    {
+        f = factorial(n) / factorial(i) / factorial(n - i);
+    }
+    return f;
+}
+
 void regressedMethod(
     double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
 {
@@ -488,6 +506,142 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
            coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
 
+const std::vector<int> HPWH::powers3 = {0, 1, 2};
+
+const std::vector<std::pair<int, int>> HPWH::powers6 = {
+    {0, 0}, {1, 0}, {0, 1}, {2, 0}, {0, 2}, {1, 1}};
+
+const std::vector<std::tuple<int, int, int>> HPWH::powers11 = {{0, 0, 0},
+                                                               {1, 0, 0},
+                                                               {0, 1, 0},
+                                                               {0, 0, 1},
+                                                               {2, 0, 0},
+                                                               {0, 2, 0},
+                                                               {0, 0, 2},
+                                                               {1, 1, 0},
+                                                               {1, 0, 1},
+                                                               {0, 1, 1},
+                                                               {1, 1, 1}};
+
+std::vector<double> changeSeriesUnitsTemp3(const std::vector<double>& coeffs,
+                                           const HPWH::Units::Temp fromUnits,
+                                           const HPWH::Units::Temp toUnits)
+{
+    std::vector<double> newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    double alpha = offsetF, beta = F_per_C;
+    if (fromUnits == HPWH::Units::Temp::C)
+    {
+        alpha = -offsetF / F_per_C;
+        beta = 1. / F_per_C;
+    }
+
+    auto& powers = HPWH::powers3;
+    for (int i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i = powers[i];
+        for (int j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j = powers[j];
+            double fac = choose(power_j, power_i) * std::pow(alpha, power_j - power_i) *
+                         std::pow(beta, power_i);
+
+            newCoeffs[i] += fac * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp6(const std::vector<double>& coeffs,
+                                           const HPWH::Units::Temp fromUnits,
+                                           const HPWH::Units::Temp toUnits)
+{
+    std::vector<double> newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    double alpha = offsetF, beta = F_per_C;
+    if (fromUnits == HPWH::Units::Temp::C)
+    {
+        alpha = -offsetF / F_per_C;
+        beta = 1. / F_per_C;
+    }
+
+    auto& powers = HPWH::powers6;
+    for (int i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        for (int j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            newCoeffs[i] += fac0 * fac1 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp11(const std::vector<double>& coeffs,
+                                            const HPWH::Units::Temp fromUnits,
+                                            const HPWH::Units::Temp toUnits)
+{
+    std::vector<double> newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    double alpha = offsetF, beta = F_per_C;
+    if (fromUnits == HPWH::Units::Temp::C)
+    {
+        alpha = -offsetF / F_per_C;
+        beta = 1. / F_per_C;
+    }
+
+    auto& powers = HPWH::powers11;
+    for (int i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        int power_i2 = std::get<2>(powers[i]);
+        for (int j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+            int power_j2 = std::get<2>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            double fac2 = choose(power_j2, power_i2) * std::pow(alpha, power_j2 - power_i2) *
+                          std::pow(beta, power_i2);
+
+            newCoeffs[i] += fac0 * fac1 * fac2 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
 HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const std::vector<double>& inputPower_coeffs_in /*{}*/,
                            std::vector<double> COP_coeffs_in /*{}*/,
@@ -495,46 +649,31 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const Units::Power unitsPower_in /*kW*/)
 {
     T_C = Units::convert(T_in, unitsTemp_in, Units::Temp::C);
-    Units::TempDiff unitsTempDiff_in =
-        (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
 
     inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
     COP_coeffs = COP_coeffs_in;
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
     {
-        inputPower_coeffs_kW = changeSeriesUnits<Units::TempDiff>(
-            inputPower_coeffs_kW, unitsTempDiff_in, Units::TempDiff::C);
-        COP_coeffs =
-            changeSeriesUnits<Units::TempDiff>(COP_coeffs, unitsTempDiff_in, Units::TempDiff::C);
+        inputPower_coeffs_kW =
+            changeSeriesUnitsTemp3(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
+        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp_in, Units::Temp::C);
         return;
     }
 
     if (inputPower_coeffs_in.size() == 11) // use regressMethod
     {
-        for (std::size_t j : {1, 4, 10})
-        {
-            for (std::size_t i = j; i < 11; ++i)
-            {
-                inputPower_coeffs_kW[i] =
-                    Units::invert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::invert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
-            }
-        }
+        inputPower_coeffs_kW =
+            changeSeriesUnitsTemp11(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
+        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp_in, Units::Temp::C);
         return;
     }
 
     if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
     {
-        for (std::size_t j : {1, 3})
-        {
-            for (std::size_t i = j; i < 6; ++i)
-            {
-                inputPower_coeffs_kW[i] =
-                    Units::invert(inputPower_coeffs_kW[i], unitsTempDiff_in, Units::TempDiff::C);
-                COP_coeffs[i] = Units::invert(COP_coeffs[i], unitsTempDiff_in, Units::TempDiff::C);
-            }
-        }
+        inputPower_coeffs_kW =
+            changeSeriesUnitsTemp6(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
+        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, Units::Temp::C);
         return;
     }
 }
