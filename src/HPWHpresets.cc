@@ -1052,7 +1052,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0000000606}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else
         {
@@ -1091,7 +1091,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0000005037}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
 
             else if (presetNum == MODELS_ColmacCxA_15_SP)
@@ -1125,7 +1125,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000004108}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_20_SP)
             {
@@ -1157,7 +1157,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000381186,
                                                -0.0000003135}, // COP Coefficients
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_25_SP)
             {
@@ -1190,7 +1190,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000006306}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_30_SP)
             {
@@ -1223,7 +1223,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000002705}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
         } // End if MODELS_ColmacCxV_5_SP
 
@@ -1353,7 +1353,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0004401737}, // COP Coefficients
 
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
@@ -1377,7 +1377,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0000299981,
                                                -0.0002910606}, // COP Coefficients
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
@@ -1399,7 +1399,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000610760,
                                                -0.0003684106}, // COP Coefficients
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
@@ -1421,7 +1421,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000890989,
                                                -0.0003682431}, // COP Coefficients
                                               Units::Temp::F,
-                                              Units::Power::W});
+                                              Units::Power::kW});
             }
         }
 
@@ -1767,7 +1767,7 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.perfGridValues.push_back(Units::convert(
                 {3.64, 4.11, 4.86, 5.97, 8.68, 9.95, 3.72, 4.27, 4.99, 6.03, 8.55, 10.02,
                  3.98, 4.53, 5.24, 6.24, 8.54, 9.55, 4.45, 4.68, 5.37, 6.34, 8.59, 9.55},
-                Units::Power::W,
+                Units::Power::kW,
                 Units::Power::kW));
 
             // Grid values in long format, table 2, COP
@@ -1793,7 +1793,7 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.perfGridValues.push_back(Units::convert(
                 {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
                  5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35},
-                Units::Power::W,
+                Units::Power::kW,
                 Units::Power::kW));
 
             // Grid values in long format, table 2, COP
@@ -1819,7 +1819,7 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.perfGridValues.push_back(Units::convert(
                 {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
                  7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4},
-                Units::Power::W,
+                Units::Power::kW,
                 Units::Power::kW));
 
             // Grid values in long format, table 2, COP
@@ -1845,7 +1845,7 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.perfGridValues.push_back(Units::convert(
                 {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
                  7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62},
-                Units::Power::W,
+                Units::Power::kW,
                 Units::Power::kW));
 
             // Grid values in long format, table 2, COP
@@ -1872,7 +1872,7 @@ int HPWH::initPreset(MODELS presetNum)
                 Units::convert({10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76,
                                 15.97, 17.79, 20.56, 22.50, 10.36, 14.66, 18.07, 21.23,
                                 25.81, 29.01, 8.67,  15.05, 18.76, 21.87, 26.63, 30.02},
-                               Units::Power::W,
+                               Units::Power::kW,
                                Units::Power::kW));
 
             // Grid values in long format, table 2, COP
@@ -1960,7 +1960,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0003469814}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
                  presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
@@ -1984,7 +1984,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0002491563}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
 
         // set everything in its places

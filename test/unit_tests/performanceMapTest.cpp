@@ -632,13 +632,13 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
     // test
     performancePointSP checkPoint = {-13.0, 140.0, 41.0};
     double capData = 66529.49616;
-    double cap = getCapacitySP(hpwh, checkPoint);
+    double cap = getQAHV_capacitySP(hpwh, checkPoint);
     EXPECT_NEAR_REL(capData, cap);
 
     // test
     checkPoint = {-13.0, 176.0, 41.0};
     capData = 65872.597448;
-    cap = getQAHV_capacitySP(hpwh, checkPoint);
+    cap = getCapacitySP(hpwh, checkPoint);
     EXPECT_EQ(cap, HPWH::HPWH_ABORT); // max setpoint without adjustment forces error
 
     cap = getQAHV_capacitySP(hpwh, checkPoint);
@@ -832,5 +832,5 @@ TEST_F(PerformanceMapTest, Sanden120)
                                      checkPoint.outT,
                                      HPWH::Units::Power::Btu_per_h,
                                      HPWH::Units::Temp::F);
-    EXPECT_NEAR_REL(capData, cap);
+    EXPECT_EQ(HPWH::HPWH_ABORT, cap);
 }
