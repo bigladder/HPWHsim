@@ -796,9 +796,9 @@ void HPWH::HeatSource::setupDefrostMap(double derate35 /*=0.8865*/)
     defrostMap.push_back({F_TO_C(47.), 1.});
 }
 
-void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_F)
+void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_C)
 {
-    if (airT_F <= defrostMap[0].T_C || airT_F >= defrostMap[defrostMap.size() - 1].T_C)
+    if (airT_C <= defrostMap[0].T_C || airT_C >= defrostMap[defrostMap.size() - 1].T_C)
     {
         return; // Air temperature outside bounds of the defrost map. There is no extrapolation
                 // here.
@@ -807,14 +807,14 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_F)
     size_t i_prev = 0;
     for (size_t i = 1; i < defrostMap.size(); ++i)
     {
-        if (airT_F <= defrostMap[i].T_C)
+        if (airT_C <= defrostMap[i].T_C)
         {
             i_prev = i - 1;
             break;
         }
     }
     linearInterp(derate_factor,
-                 airT_F,
+                 airT_C,
                  defrostMap[i_prev].T_C,
                  defrostMap[i_prev + 1].T_C,
                  defrostMap[i_prev].derate_fraction,
