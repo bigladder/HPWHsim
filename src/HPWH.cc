@@ -4630,7 +4630,11 @@ int HPWH::initFromFile(string configFile)
     bool hasInitialTankTemp = false;
     double initalTankT_C = F_TO_C(120.);
 
-    typedef std::vector<PerfPointStore> PerfMapStore;
+    struct PerfMapStore : std::vector<PerfPointStore>
+    {
+        Units::Temp unitsTemp = Units::Temp::C;
+        Units::Power unitsPower = Units::Power::kW;
+    };
     std::vector<PerfMapStore> perfMapStoreSet;
 
     string tempString, units;
@@ -5346,13 +5350,51 @@ int HPWH::initFromFile(string configFile)
                 // heatSources[heatsource].perfMap.resize(nTemps);
                 perfMapStoreSet[heatsource].resize(nTemps);
             }
+            else if (token == "tempUnits")
+            {
+                line_ss >> units;
+                Units::Temp unitsTemp = Units::Temp::C;
+                if (units == "C")
+                    ;
+                else if (units == "F")
+                    unitsTemp = Units::Temp::F;
+                else
+                {
+                    if (hpwhVerbosity >= VRB_reluctant)
+                    {
+                        msg("Incorrect units specification for %s.  \n", token.c_str());
+                    }
+                    return HPWH_ABORT;
+                }
+                perfMapStoreSet[heatsource].unitsTemp = unitsTemp;
+            }
+            else if (token == "powerUnits")
+            {
+                line_ss >> units;
+                Units::Power unitsPower = Units::Power::kW;
+                if (units == "kW")
+                    ;
+                else if (units == "W")
+                    unitsPower = Units::Power::W;
+                else if (units == "Btu/h")
+                    unitsPower = Units::Power::Btu_per_h;
+                else
+                {
+                    if (hpwhVerbosity >= VRB_reluctant)
+                    {
+                        msg("Incorrect units specification for %s.  \n", token.c_str());
+                    }
+                    return HPWH_ABORT;
+                }
+                perfMapStoreSet[heatsource].unitsPower = unitsPower;
+            }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
                 // std::size_t maxTemps = heatSources[heatsource].perfMap.size();
-                std::size_t maxTemps = perfMapStoreSet.size();
+                std::size_t maxTemps = perfMapStoreSet[heatsource].size();
 
                 if (maxTemps < nTemps)
                 {
@@ -5383,12 +5425,11 @@ int HPWH::initFromFile(string configFile)
                     }
                 }
                 line_ss >> tempDouble >> units;
-                //        if (units == "F")  tempDouble = F_TO_C(tempDouble);
                 if (units == "F")
-                    ;
+                    tempDouble = F_TO_C(tempDouble);
                 //        else if (units == "C") ; //do nothing, lol
                 else if (units == "C")
-                    tempDouble = C_TO_F(tempDouble);
+                    ; // tempDouble = C_TO_F(tempDouble);
                 else
                 {
                     if (hpwhVerbosity >= VRB_reluctant)
@@ -5400,7 +5441,7 @@ int HPWH::initFromFile(string configFile)
                     return HPWH_ABORT;
                 }
                 // heatSources[heatsource].perfMap[nTemps - 1].T_C = tempDouble;
-                perfMapStoreSet[heatsource][nTemps - 1].T = tempDouble;
+                perfMapStoreSet[heatsource][nTemps - 1].T_C = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -5535,10 +5576,11 @@ int HPWH::initFromFile(string configFile)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
+        auto unitsTemp = perfMapStoreSet[i].unitsTemp;
+        auto unitsPower = perfMapStoreSet[i].unitsPower;
         for (auto& perfPointStore : perfMapStoreSet[i])
         {
-            heatSources[i].perfMap.push_back(
-                PerfPoint(perfPointStore, Units::Temp::F, Units::Power::kW));
+            heatSources[i].perfMap.push_back(PerfPoint(perfPointStore, unitsTemp, unitsPower));
         }
 
         if (heatSources[i].isOn)

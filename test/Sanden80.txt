@@ -17,6 +17,8 @@ heatsource 0 type compressor
 heatsource 0 heatCycle singlepass
 heatsource 0 condensity 1 0 0 0 0 0 0 0 0 0 0 0
 heatsource 0 nTemps 5
+heatsource 0 tempUnits F
+heatsource 0 powerUnits W
 heatsource 0 T1 17 F
 heatsource 0 T2 35 F
 heatsource 0 T3 50 F

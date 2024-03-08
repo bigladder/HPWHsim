@@ -773,12 +773,11 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::kW});
 
-        compressor.perfMap.push_back(
-            {67,                                               // Temperature (F)
-             {0.541 * 1000, 0.00147 * 1000, 0.0000176 * 1000}, // Input Power Coefficients (kW)
-             {6.58, -0.0392, 0.0000407},                       // COP Coefficients
-             Units::Temp::F,
-             Units::Power::kW});
+        compressor.perfMap.push_back({67,                          // Temperature (F)
+                                      {0.541, 0.00147, 0.0000176}, // Input Power Coefficients (kW)
+                                      {6.58, -0.0392, 0.0000407},  // COP Coefficients
+                                      Units::Temp::F,
+                                      Units::Power::kW});
 
         compressor.minT_C = F_TO_C(45.0);
         compressor.maxT_C = F_TO_C(120.);

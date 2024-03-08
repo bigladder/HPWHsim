@@ -19,6 +19,8 @@ heatsource 0 condensity 1
 
 #we have input power and COP equations at for ambient temperatures
 heatsource 0 nTemps 4
+heatsource 0 tempUnits F
+heatsource 0 powerUnits W
 heatsource 0 T1 5 F
 heatsource 0 T2 34 F
 heatsource 0 T3 67 F

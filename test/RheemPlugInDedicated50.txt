@@ -12,6 +12,8 @@ heatsource 0 isOn false
 heatsource 0 type compressor
 heatsource 0 condensity 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0 0 0 0
 heatsource 0 nTemps 2
+heatsource 0 tempUnits F
+heatsource 0 powerUnits W
 heatsource 0 T1 50 F
 heatsource 0 T2 95 F
 

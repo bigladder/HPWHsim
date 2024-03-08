@@ -15,6 +15,8 @@ heatsource 2 isOn false
 heatsource 2 type compressor
 heatsource 2 condensity  .2 .2 .2 .2 .2 0 0 0 0 0 0 0
 heatsource 2 nTemps 2
+heatsource 2 tempUnits F
+heatsource 2 powerUnits W
 heatsource 2 T1 50 F
 heatsource 2 T2 67 F
 heatsource 2 inPowT1const 220.0
@@ -39,6 +41,8 @@ heatsource 0 isOn false
 heatsource 0 type resistor
 heatsource 0 condensity 0 0 0 0 0 0 0 0 1 0 0 0
 heatsource 0 nTemps 2
+heatsource 0 tempUnits F
+heatsource 0 powerUnits W
 heatsource 0 T1 50 F
 heatsource 0 T2 67 F
 heatsource 0 inPowT1const 4500
@@ -62,6 +66,8 @@ heatsource 1 isOn false
 heatsource 1 type resistor
 heatsource 1 condensity 1 0 0 0 0 0 0 0 0 0 0 0
 heatsource 1 nTemps 2
+heatsource 1 tempUnits F
+heatsource 1 powerUnits W
 heatsource 1 T1 47 F
 heatsource 1 T2 67 F
 heatsource 1 inPowT1const 4500
