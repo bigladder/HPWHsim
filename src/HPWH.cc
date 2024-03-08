@@ -4630,6 +4630,9 @@ int HPWH::initFromFile(string configFile)
     bool hasInitialTankTemp = false;
     double initalTankT_C = F_TO_C(120.);
 
+    typedef std::vector<PerfPointStore> PerfMapStore;
+    std::vector<PerfMapStore> perfMapStoreSet;
+
     string tempString, units;
     double tempDouble;
 
@@ -4844,6 +4847,7 @@ int HPWH::initFromFile(string configFile)
         {
             line_ss >> numHeatSources;
             heatSources.reserve(numHeatSources);
+            perfMapStoreSet.resize(numHeatSources);
             for (std::size_t i = 0; i < numHeatSources; i++)
             {
                 heatSources.emplace_back(this);
@@ -5339,14 +5343,16 @@ int HPWH::initFromFile(string configFile)
             else if (token == "nTemps")
             {
                 line_ss >> nTemps;
-                heatSources[heatsource].perfMap.resize(nTemps);
+                // heatSources[heatsource].perfMap.resize(nTemps);
+                perfMapStoreSet[heatsource].resize(nTemps);
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                // std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = perfMapStoreSet.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -5393,7 +5399,8 @@ int HPWH::initFromFile(string configFile)
                     }
                     return HPWH_ABORT;
                 }
-                heatSources[heatsource].perfMap[nTemps - 1].T_C = tempDouble;
+                // heatSources[heatsource].perfMap[nTemps - 1].T_C = tempDouble;
+                perfMapStoreSet[heatsource][nTemps - 1].T = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -5420,7 +5427,8 @@ int HPWH::initFromFile(string configFile)
                 }
                 */
 
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                // std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = perfMapStoreSet[heatsource].size();
 
                 if (maxTemps < nTemps)
                 {
@@ -5454,12 +5462,11 @@ int HPWH::initFromFile(string configFile)
 
                 if (var == "inPow")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs_kW.push_back(
-                        tempDouble);
+                    perfMapStoreSet[heatsource][nTemps - 1].inputPower_coeffs.push_back(tempDouble);
                 }
                 else if (var == "cop")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
+                    perfMapStoreSet[heatsource][nTemps - 1].COP_coeffs.push_back(tempDouble);
                 }
             }
             else if (token == "hysteresis")
@@ -5528,6 +5535,12 @@ int HPWH::initFromFile(string configFile)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
+        for (auto& perfPointStore : perfMapStoreSet[i])
+        {
+            heatSources[i].perfMap.push_back(
+                PerfPoint(perfPointStore, Units::Temp::F, Units::Power::kW));
+        }
+
         if (heatSources[i].isOn)
         {
             isHeating = true;

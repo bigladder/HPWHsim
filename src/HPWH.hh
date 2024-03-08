@@ -1142,6 +1142,13 @@ class HPWH
     /// add "extra" heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    struct PerfPointStore
+    {
+        double T;
+        std::vector<double> inputPower_coeffs;
+        std::vector<double> COP_coeffs;
+    };
+
     struct PerfPoint
     {
         double T_C;
@@ -1153,6 +1160,17 @@ class HPWH
                   std::vector<double> COP_coeffs_in = {},
                   const Units::Temp unitsTemp_in = Units::Temp::C,
                   const Units::Power unitsPower_in = Units::Power::kW);
+
+        PerfPoint(const PerfPointStore& perfPointStore,
+                  const Units::Temp unitsTemp_in = Units::Temp::C,
+                  const Units::Power unitsPower_in = Units::Power::kW)
+            : PerfPoint(perfPointStore.T,
+                        perfPointStore.inputPower_coeffs,
+                        perfPointStore.COP_coeffs,
+                        unitsTemp_in,
+                        unitsPower_in)
+        {
+        }
     };
 
     /// A map with input/COP quadratic curve coefficients at a given external temperature
