@@ -1517,7 +1517,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.000001900}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
         {
@@ -1549,7 +1549,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.0000005568}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
         {
@@ -1581,7 +1581,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.00000176015}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
         {
@@ -1613,7 +1613,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            1.47884E-06}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
         {
@@ -1645,7 +1645,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            5.55444E-06}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
         else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
         {
@@ -1678,7 +1678,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            4.87405E-06}, // COP Coefficients
 
                                           Units::Temp::F,
-                                          Units::Power::W});
+                                          Units::Power::kW});
         }
 
         // set everything in its places
@@ -1762,7 +1762,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power (kW)
             compressor.perfGridValues.push_back(Units::convert(
                 {3.64, 4.11, 4.86, 5.97, 8.68, 9.95, 3.72, 4.27, 4.99, 6.03, 8.55, 10.02,
                  3.98, 4.53, 5.24, 6.24, 8.54, 9.55, 4.45, 4.68, 5.37, 6.34, 8.59, 9.55},
@@ -1788,7 +1788,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power (kW)
             compressor.perfGridValues.push_back(Units::convert(
                 {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
                  5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35},
@@ -1814,7 +1814,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power (kW)
             compressor.perfGridValues.push_back(Units::convert(
                 {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
                  7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4},
@@ -1840,7 +1840,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power (kW)
             compressor.perfGridValues.push_back(Units::convert(
                 {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
                  7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62},
@@ -4391,17 +4391,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // Perfmap for input power and COP made from data for poor preforming modeled to be
         // scalled for this model
-        std::vector<double> inputPower_coeffs_W = {13.6,
-                                                   0.00995,
-                                                   -0.0342,
-                                                   -0.014,
-                                                   -0.000110,
-                                                   0.00026,
-                                                   0.000232,
-                                                   0.000195,
-                                                   -0.00034,
-                                                   5.30E-06,
-                                                   2.3600E-06};
+        std::vector<double> inputPower_coeffs_kW = {13.6,
+                                                    0.00995,
+                                                    -0.0342,
+                                                    -0.014,
+                                                    -0.000110,
+                                                    0.00026,
+                                                    0.000232,
+                                                    0.000195,
+                                                    -0.00034,
+                                                    5.30E-06,
+                                                    2.3600E-06};
         std::vector<double> COP_coeffs = {1.945,
                                           0.0412,
                                           -0.0112,
@@ -4426,13 +4426,13 @@ int HPWH::initPreset(MODELS presetNum)
         }
 
         // Scale the compressor capacity
-        scaleVector(inputPower_coeffs_W, scaleFactor);
+        scaleVector(inputPower_coeffs_kW, scaleFactor);
 
-        compressor.perfMap.push_back({105,                 // Temperature (F)
-                                      inputPower_coeffs_W, // Input Power Coefficients (W)
-                                      COP_coeffs,          // COP Coefficients
+        compressor.perfMap.push_back({105,                  // Temperature (F)
+                                      inputPower_coeffs_kW, // Input Power Coefficients (W)
+                                      COP_coeffs,           // COP Coefficients
                                       Units::Temp::F,
-                                      Units::Power::W});
+                                      Units::Power::kW});
 
         // logic conditions
         compressor.minT_C = F_TO_C(40.);
@@ -4526,10 +4526,10 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.mpFlowRate_LPS = GPM_TO_LPS(25.);
         compressor.perfMap.push_back(
             PerfPoint(100,                                                // Temperature (F)
-                      {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coeffs (W)
+                      {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coeffs (kW)
                       {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440}, // COP Coefficients
                       Units::Temp::F,
-                      Units::Power::W));
+                      Units::Power::kW));
 
         resistiveElementBottom.setupAsResistiveElement(0, 30, Units::Power::kW);
         resistiveElementTop.setupAsResistiveElement(9, 30, Units::Power::kW);

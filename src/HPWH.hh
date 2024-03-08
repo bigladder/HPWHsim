@@ -1587,8 +1587,10 @@ class HPWH::HeatSource
                           const Units::Temp unitsTemp_in = Units::Temp::C,
                           const Units::Power unitsPower_in = Units::Power::kW)
         {
+            Units::TempDiff unitsTempDiff_in =
+                (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
             inputPwr_kW = Units::convert(inputPwr_in, unitsPower_in, Units::Power::kW);
-            constLiftT_C = Units::convert(constLiftT_in, unitsTemp_in, Units::Temp::C);
+            constLiftT_C = Units::convert(constLiftT_in, unitsTempDiff_in, Units::TempDiff::C);
             onBelowT_C = Units::convert(onBelowT_in, unitsTemp_in, Units::Temp::C);
         }
     } resDefrost;
