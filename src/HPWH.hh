@@ -25,6 +25,112 @@ class RegularGridInterpolator;
 
 #include "HPWHversion.hh"
 
+const double Pi = 4. * atan(1.);
+
+// reference conversion factors
+constexpr double s_per_min = 60.;            // s / min
+constexpr double min_per_h = 60.;            // min / h
+constexpr double in3_per_gal = 231.;         // in^3 / gal (U.S., exact)
+constexpr double m_per_in = 0.0254;          // m / in (exact)
+constexpr double F_per_C = 1.8;              // degF / degC
+constexpr double offsetF = 32.;              // degF offset
+constexpr double kJ_per_Btu = 1.05505585262; // kJ / Btu (IT), https://www.unitconverters.net/
+
+// useful conversion factors
+constexpr double s_per_h = s_per_min * min_per_h;                                  // s / h
+constexpr double Btu_per_kJ = 1. / kJ_per_Btu;                                     // Btu / kJ
+constexpr double ft_per_m = 1. / m_per_in / 12.;                                   // ft / m
+constexpr double gal_per_L = 1.e-3 / in3_per_gal / m_per_in / m_per_in / m_per_in; // gal / L
+constexpr double ft3_per_L = ft_per_m * ft_per_m * ft_per_m / 1000.;               // ft^3 / L
+
+// identity
+inline double ident(const double x) { return x; }
+
+// time conversion
+inline double S_TO_MIN(const double s) { return s / s_per_min; }
+inline double MIN_TO_S(const double min) { return s_per_min * min; }
+
+inline double S_TO_H(const double s) { return s / s_per_h; }
+inline double H_TO_S(const double h) { return s_per_h * h; }
+
+inline double MIN_TO_H(const double min) { return S_TO_H(MIN_TO_S(min)); }
+inline double H_TO_MIN(const double h) { return S_TO_MIN(H_TO_S(h)); }
+
+// temperature conversion
+inline double dC_TO_dF(const double dC) { return F_per_C * dC; }
+inline double dF_TO_dC(const double dF) { return dF / F_per_C; }
+
+inline double C_TO_F(const double C) { return (F_per_C * C) + offsetF; }
+inline double F_TO_C(const double F) { return (F - offsetF) / F_per_C; }
+
+// energy conversion
+inline double KJ_TO_KWH(const double kJ) { return kJ / s_per_h; }
+inline double KWH_TO_KJ(const double kWh) { return kWh * s_per_h; }
+
+inline double KJ_TO_BTU(const double kJ) { return Btu_per_kJ * kJ; }
+inline double BTU_TO_KJ(const double Btu) { return kJ_per_Btu * Btu; }
+
+inline double KWH_TO_BTU(const double kWh) { return KJ_TO_BTU(KWH_TO_KJ(kWh)); }
+inline double BTU_TO_KWH(const double Btu) { return KJ_TO_KWH(BTU_TO_KJ(Btu)); }
+
+// power conversion
+inline double KW_TO_BTUperH(const double kW) { return Btu_per_kJ * s_per_h * kW; }
+inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_per_h / s_per_h; }
+
+inline double KW_TO_W(const double kW) { return 1000. * kW; }
+inline double W_TO_KW(const double W) { return W / 1000.; }
+
+inline double KW_TO_KJperH(const double kW) { return kW * s_per_h; }
+inline double KJperH_TO_KW(const double kJ_per_h) { return kJ_per_h / s_per_h; }
+
+inline double BTUperH_TO_W(const double Btu_per_h) { return KW_TO_W(BTUperH_TO_KW(Btu_per_h)); }
+inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
+
+inline double BTUperH_TO_KJperH(const double Btu_per_h)
+{
+    return KW_TO_KJperH(BTUperH_TO_KW(Btu_per_h));
+}
+inline double KJperH_TO_BTUperH(const double kJ_per_h)
+{
+    return KW_TO_BTUperH(KJperH_TO_KW(kJ_per_h));
+}
+
+inline double W_TO_KJperH(const double W) { return KW_TO_KJperH(W_TO_KW(W)); }
+inline double KJperH_TO_W(const double kJ_per_h) { return KW_TO_W(KJperH_TO_KW(kJ_per_h)); }
+
+// length conversion
+inline double M_TO_FT(const double m) { return ft_per_m * m; }
+inline double FT_TO_M(const double ft) { return ft / ft_per_m; }
+
+// area conversion
+inline double M2_TO_FT2(const double m2) { return (ft_per_m * ft_per_m * m2); }
+inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); }
+
+// volume conversion
+inline double L_TO_GAL(const double L) { return gal_per_L * L; }
+inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
+
+inline double L_TO_FT3(const double L) { return ft3_per_L * L; }
+inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
+
+inline double GAL_TO_FT3(const double gal) { return L_TO_FT3(GAL_TO_L(gal)); }
+inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
+
+// flow-rate conversion
+inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / s_per_min); }
+inline double LPS_TO_GPM(const double lps) { return (gal_per_L * lps * s_per_min); }
+
+// UA conversion
+inline double KJperHC_TO_BTUperHF(const double UA_kJperhC)
+{
+    return Btu_per_kJ * UA_kJperhC / F_per_C;
+}
+
+inline double BTUperHF_TO_KJperHC(const double UA_BTUperhF)
+{
+    return F_per_C * UA_BTUperhF / Btu_per_kJ;
+}
+
 class HPWH
 {
   public:
@@ -301,7 +407,7 @@ class HPWH
 
         template <typename T>
         static std::vector<double>
-        convert(const std::vector<double> xV, const T fromUnits, const T toUnits)
+        convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
             auto conversionFnc = conversionMap<T>[{fromUnits, toUnits}];
             std::vector<double> xV_out;
@@ -315,7 +421,7 @@ class HPWH
 
         template <typename T>
         static std::vector<double>
-        invert(const std::vector<double> xV, const T fromUnits, const T toUnits)
+        invert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
             auto conversionFnc = conversionMap<T>[{toUnits, fromUnits}];
             std::vector<double> xV_out;
@@ -335,12 +441,31 @@ class HPWH
             s    // seconds
         };
 
+        template <>
+        static inline ConversionMap<Time> conversionMap<Time> = {
+            {std::make_pair(Time::h, Time::h), &ident},
+            {std::make_pair(Time::min, Time::min), &ident},
+            {std::make_pair(Time::s, Time::s), &ident},
+            {std::make_pair(Time::h, Time::min), H_TO_MIN},
+            {std::make_pair(Time::h, Time::s), &H_TO_S},
+            {std::make_pair(Time::min, Time::h), MIN_TO_H},
+            {std::make_pair(Time::min, Time::s), &MIN_TO_S},
+            {std::make_pair(Time::s, Time::h), &S_TO_H},
+            {std::make_pair(Time::s, Time::min), &S_TO_MIN}};
+
         /* temperature units */
         enum class Temp
         {
             C, // celsius
             F  // fahrenheit
         };
+
+        template <>
+        static inline ConversionMap<Temp> conversionMap<Temp> = {
+            {std::make_pair(Temp::F, Temp::F), &ident},
+            {std::make_pair(Temp::C, Temp::C), &ident},
+            {std::make_pair(Temp::C, Temp::F), &C_TO_F},
+            {std::make_pair(Temp::F, Temp::C), &F_TO_C}};
 
         /* temperature-difference units */
         enum class TempDiff
@@ -349,6 +474,13 @@ class HPWH
             F  // fahrenheit
         };
 
+        template <>
+        static inline ConversionMap<TempDiff> conversionMap<TempDiff> = {
+            {std::make_pair(TempDiff::F, TempDiff::F), ident},
+            {std::make_pair(TempDiff::C, TempDiff::C), ident},
+            {std::make_pair(TempDiff::C, TempDiff::F), dC_TO_dF},
+            {std::make_pair(TempDiff::F, TempDiff::C), dF_TO_dC}};
+
         /* energy units */
         enum class Energy
         {
@@ -356,6 +488,18 @@ class HPWH
             kWh, // kilowatt hours
             Btu  // british thermal units
         };
+
+        template <>
+        static inline ConversionMap<Energy> conversionMap<Energy> = {
+            {std::make_pair(Energy::kJ, Energy::kJ), ident},
+            {std::make_pair(Energy::kWh, Energy::kWh), ident},
+            {std::make_pair(Energy::Btu, Energy::Btu), ident},
+            {std::make_pair(Energy::kJ, Energy::kWh), KJ_TO_KWH},
+            {std::make_pair(Energy::kJ, Energy::Btu), KJ_TO_BTU},
+            {std::make_pair(Energy::kWh, Energy::kJ), KWH_TO_KJ},
+            {std::make_pair(Energy::kWh, Energy::Btu), KWH_TO_BTU},
+            {std::make_pair(Energy::Btu, Energy::kJ), BTU_TO_KJ},
+            {std::make_pair(Energy::Btu, Energy::kWh), BTU_TO_KWH}};
 
         /* power units */
         enum class Power
@@ -366,6 +510,25 @@ class HPWH
             kJ_per_h,  // kilojoules per hour
         };
 
+        template <>
+        static inline ConversionMap<Power> conversionMap<Power> = {
+            {std::make_pair(Power::kW, Power::kW), ident},
+            {std::make_pair(Power::Btu_per_h, Power::Btu_per_h), ident},
+            {std::make_pair(Power::W, Power::W), ident},
+            {std::make_pair(Power::kJ_per_h, Power::kJ_per_h), ident},
+            {std::make_pair(Power::kW, Power::Btu_per_h), KW_TO_BTUperH},
+            {std::make_pair(Power::kW, Power::W), KW_TO_W},
+            {std::make_pair(Power::kW, Power::kJ_per_h), KW_TO_KJperH},
+            {std::make_pair(Power::Btu_per_h, Power::kW), BTUperH_TO_KW},
+            {std::make_pair(Power::Btu_per_h, Power::W), BTUperH_TO_W},
+            {std::make_pair(Power::Btu_per_h, Power::kJ_per_h), BTUperH_TO_KJperH},
+            {std::make_pair(Power::W, Power::kW), W_TO_KW},
+            {std::make_pair(Power::W, Power::Btu_per_h), W_TO_BTUperH},
+            {std::make_pair(Power::W, Power::kJ_per_h), W_TO_KJperH},
+            {std::make_pair(Power::kJ_per_h, Power::kW), KJperH_TO_KW},
+            {std::make_pair(Power::kJ_per_h, Power::Btu_per_h), KJperH_TO_BTUperH},
+            {std::make_pair(Power::kJ_per_h, Power::W), KJperH_TO_W}};
+
         /* length units */
         enum class Length
         {
@@ -373,12 +536,26 @@ class HPWH
             ft // feet
         };
 
+        template <>
+        static inline ConversionMap<Length> conversionMap<Length> = {
+            {std::make_pair(Length::m, Length::m), &ident},
+            {std::make_pair(Length::ft, Length::ft), &ident},
+            {std::make_pair(Length::m, Length::ft), &M_TO_FT},
+            {std::make_pair(Length::ft, Length::m), &FT_TO_M}};
+
         /* area units */
         enum class Area
         {
             m2, // square meters
             ft2 // square feet
         };
+
+        template <>
+        static inline ConversionMap<Area> conversionMap<Area> = {
+            {std::make_pair(Area::m2, Area::m2), &ident},
+            {std::make_pair(Area::ft2, Area::ft2), &ident},
+            {std::make_pair(Area::m2, Area::ft2), &M2_TO_FT2},
+            {std::make_pair(Area::ft2, Area::m2), &FT2_TO_M2}};
 
         /* volume units */
         enum class Volume
@@ -388,6 +565,18 @@ class HPWH
             ft3  // cubic feet
         };
 
+        template <>
+        static inline ConversionMap<Volume> conversionMap<Volume> = {
+            {std::make_pair(Volume::L, Volume::L), ident},
+            {std::make_pair(Volume::gal, Volume::gal), ident},
+            {std::make_pair(Volume::ft3, Volume::ft3), ident},
+            {std::make_pair(Volume::L, Volume::gal), L_TO_GAL},
+            {std::make_pair(Volume::L, Volume::ft3), L_TO_FT3},
+            {std::make_pair(Volume::gal, Volume::L), GAL_TO_L},
+            {std::make_pair(Volume::gal, Volume::ft3), GAL_TO_FT3},
+            {std::make_pair(Volume::ft3, Volume::L), FT3_TO_L},
+            {std::make_pair(Volume::ft3, Volume::gal), FT3_TO_GAL}};
+
         /* flow-rate units */
         enum class FlowRate
         {
@@ -395,12 +584,26 @@ class HPWH
             gal_per_min // gallons per minute
         };
 
+        template <>
+        static inline ConversionMap<FlowRate> conversionMap<FlowRate> = {
+            {std::make_pair(FlowRate::L_per_s, FlowRate::L_per_s), &ident},
+            {std::make_pair(FlowRate::gal_per_min, FlowRate::gal_per_min), &ident},
+            {std::make_pair(FlowRate::L_per_s, FlowRate::gal_per_min), &LPS_TO_GPM},
+            {std::make_pair(FlowRate::gal_per_min, FlowRate::L_per_s), &GPM_TO_LPS}};
+
         /* UA units */
         enum class UA
         {
             kJ_per_hC, // kilojoules per hour degree celsius
-            Btu_per_hF // british thermal units per hour degree fahrenheit
+            Btu_per_hF // british thermal units per hour degree Fahrenheit
         };
+
+        template <>
+        static inline ConversionMap<UA> conversionMap<UA> = {
+            {std::make_pair(UA::kJ_per_hC, UA::kJ_per_hC), &ident},
+            {std::make_pair(UA::Btu_per_hF, UA::Btu_per_hF), &ident},
+            {std::make_pair(UA::kJ_per_hC, UA::Btu_per_hF), &KJperHC_TO_BTUperHF},
+            {std::make_pair(UA::Btu_per_hF, UA::kJ_per_hC), &BTUperHF_TO_KJperHC}};
     };
 
     /// specifies the type of heat source
@@ -1163,14 +1366,7 @@ class HPWH
 
         PerfPoint(const PerfPointStore& perfPointStore,
                   const Units::Temp unitsTemp = Units::Temp::C,
-                  const Units::Power unitsPower = Units::Power::kW)
-            : PerfPoint(Units::convert(perfPointStore.T_C, Units::Temp::C, unitsTemp),
-                        perfPointStore.inputPower_coeffs,
-                        perfPointStore.COP_coeffs,
-                        unitsTemp,
-                        unitsPower)
-        {
-        }
+                  const Units::Power unitsPower = Units::Power::kW);
     };
 
     /// A map with input/COP quadratic curve coefficients at a given external temperature
@@ -1585,14 +1781,7 @@ class HPWH::HeatSource
                           const double constLiftT_in = 0.,
                           const double onBelowT_in = 0.,
                           const Units::Temp unitsTemp_in = Units::Temp::C,
-                          const Units::Power unitsPower_in = Units::Power::kW)
-        {
-            Units::TempDiff unitsTempDiff_in =
-                (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
-            inputPwr_kW = Units::convert(inputPwr_in, unitsPower_in, Units::Power::kW);
-            constLiftT_C = Units::convert(constLiftT_in, unitsTempDiff_in, Units::TempDiff::C);
-            onBelowT_C = Units::convert(onBelowT_in, unitsTemp_in, Units::Temp::C);
-        }
+                          const Units::Power unitsPower_in = Units::Power::kW);
     } resDefrost;
 
     struct defrostPoint
@@ -1724,112 +1913,6 @@ class HPWH::HeatSource
     void sortPerformanceMap();
 
 }; // end of HeatSource class
-
-const double Pi = 4. * atan(1.);
-
-// reference conversion factors
-constexpr double s_per_min = 60.;            // s / min
-constexpr double min_per_h = 60.;            // min / h
-constexpr double in3_per_gal = 231.;         // in^3 / gal (U.S., exact)
-constexpr double m_per_in = 0.0254;          // m / in (exact)
-constexpr double F_per_C = 1.8;              // degF / degC
-constexpr double offsetF = 32.;              // degF offset
-constexpr double kJ_per_Btu = 1.05505585262; // kJ / Btu (IT), https://www.unitconverters.net/
-
-// useful conversion factors
-constexpr double s_per_h = s_per_min * min_per_h;                                  // s / h
-constexpr double Btu_per_kJ = 1. / kJ_per_Btu;                                     // Btu / kJ
-constexpr double ft_per_m = 1. / m_per_in / 12.;                                   // ft / m
-constexpr double gal_per_L = 1.e-3 / in3_per_gal / m_per_in / m_per_in / m_per_in; // gal / L
-constexpr double ft3_per_L = ft_per_m * ft_per_m * ft_per_m / 1000.;               // ft^3 / L
-
-// identity
-inline double ident(const double x) { return x; }
-
-// time conversion
-inline double S_TO_MIN(const double s) { return s / s_per_min; }
-inline double MIN_TO_S(const double min) { return s_per_min * min; }
-
-inline double S_TO_H(const double s) { return s / s_per_h; }
-inline double H_TO_S(const double h) { return s_per_h * h; }
-
-inline double MIN_TO_H(const double min) { return S_TO_H(MIN_TO_S(min)); }
-inline double H_TO_MIN(const double h) { return S_TO_MIN(H_TO_S(h)); }
-
-// temperature conversion
-inline double dC_TO_dF(const double dC) { return F_per_C * dC; }
-inline double dF_TO_dC(const double dF) { return dF / F_per_C; }
-
-inline double C_TO_F(const double C) { return (F_per_C * C) + offsetF; }
-inline double F_TO_C(const double F) { return (F - offsetF) / F_per_C; }
-
-// energy conversion
-inline double KJ_TO_KWH(const double kJ) { return kJ / s_per_h; }
-inline double KWH_TO_KJ(const double kWh) { return kWh * s_per_h; }
-
-inline double KJ_TO_BTU(const double kJ) { return Btu_per_kJ * kJ; }
-inline double BTU_TO_KJ(const double Btu) { return kJ_per_Btu * Btu; }
-
-inline double KWH_TO_BTU(const double kWh) { return KJ_TO_BTU(KWH_TO_KJ(kWh)); }
-inline double BTU_TO_KWH(const double Btu) { return KJ_TO_KWH(BTU_TO_KJ(Btu)); }
-
-// power conversion
-inline double KW_TO_BTUperH(const double kW) { return Btu_per_kJ * s_per_h * kW; }
-inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_per_h / s_per_h; }
-
-inline double KW_TO_W(const double kW) { return 1000. * kW; }
-inline double W_TO_KW(const double W) { return W / 1000.; }
-
-inline double KW_TO_KJperH(const double kW) { return kW * s_per_h; }
-inline double KJperH_TO_KW(const double kJ_per_h) { return kJ_per_h / s_per_h; }
-
-inline double BTUperH_TO_W(const double Btu_per_h) { return KW_TO_W(BTUperH_TO_KW(Btu_per_h)); }
-inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
-
-inline double BTUperH_TO_KJperH(const double Btu_per_h)
-{
-    return KW_TO_KJperH(BTUperH_TO_KW(Btu_per_h));
-}
-inline double KJperH_TO_BTUperH(const double kJ_per_h)
-{
-    return KW_TO_BTUperH(KJperH_TO_KW(kJ_per_h));
-}
-
-inline double W_TO_KJperH(const double W) { return KW_TO_KJperH(W_TO_KW(W)); }
-inline double KJperH_TO_W(const double kJ_per_h) { return KW_TO_W(KJperH_TO_KW(kJ_per_h)); }
-
-// length conversion
-inline double M_TO_FT(const double m) { return ft_per_m * m; }
-inline double FT_TO_M(const double ft) { return ft / ft_per_m; }
-
-// area conversion
-inline double M2_TO_FT2(const double m2) { return (ft_per_m * ft_per_m * m2); }
-inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); }
-
-// volume conversion
-inline double L_TO_GAL(const double L) { return gal_per_L * L; }
-inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
-
-inline double L_TO_FT3(const double L) { return ft3_per_L * L; }
-inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
-
-inline double GAL_TO_FT3(const double gal) { return L_TO_FT3(GAL_TO_L(gal)); }
-inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
-
-// flow-rate conversion
-inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / s_per_min); }
-inline double LPS_TO_GPM(const double lps) { return (gal_per_L * lps * s_per_min); }
-
-// UA conversion
-inline double KJperHC_TO_BTUperHF(const double UA_kJperhC)
-{
-    return Btu_per_kJ * UA_kJperhC / F_per_C;
-}
-
-inline double BTUperHF_TO_KJperHC(const double UA_BTUperhF)
-{
-    return F_per_C * UA_BTUperhF / Btu_per_kJ;
-}
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {

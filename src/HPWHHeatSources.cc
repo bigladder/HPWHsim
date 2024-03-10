@@ -30,6 +30,7 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , useBtwxtGrid(false)
     , extrapolationMethod(EXTRAP_LINEAR)
     , standbyLogic(NULL)
+    , resDefrost()
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
     , minT_C(-273.15)
@@ -43,7 +44,6 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , lowestNode(0)
     , mpFlowRate_LPS(0.)
     , isMultipass(true)
-    , resDefrost()
 {
 }
 
@@ -613,7 +613,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     double coldT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
 
     // Get bounding performance map points for interpolation/extrapolation
-    bool extrapolate = false;
+    // bool extrapolate = false;
 
     if (useBtwxtGrid)
     {
@@ -637,7 +637,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 {
                     if (i == 0)
                     {
-                        extrapolate = true;
+                        // extrapolate = true;
                         i_prev = 0;
                         i_next = 1;
                     }
@@ -652,7 +652,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 {
                     if (i == perfMap.size() - 1)
                     {
-                        extrapolate = true;
+                        // extrapolate = true;
                         i_prev = i - 1;
                         i_next = i;
                         break;
@@ -688,7 +688,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         { // perfMap.size() == 1 or we've got an issue.
             if (externalT_C > perfMap[0].T_C)
             {
-                extrapolate = true;
+                // extrapolate = true;
                 if (extrapolationMethod == EXTRAP_NEAREST)
                 {
                     externalT_C = perfMap[0].T_C;

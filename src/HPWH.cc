@@ -70,111 +70,6 @@ const int HPWH::HPWH_ABORT = -274000;
 template <typename T>
 HPWH::Units::ConversionMap<T> HPWH::Units::conversionMap;
 
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Temp> HPWH::Units::conversionMap<HPWH::Units::Temp> = {
-    {std::make_pair(HPWH::Units::Temp::F, HPWH::Units::Temp::F), &ident},
-    {std::make_pair(HPWH::Units::Temp::C, HPWH::Units::Temp::C), &ident},
-    {std::make_pair(HPWH::Units::Temp::C, HPWH::Units::Temp::F), &C_TO_F},
-    {std::make_pair(HPWH::Units::Temp::F, HPWH::Units::Temp::C), &F_TO_C}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::TempDiff>
-    HPWH::Units::conversionMap<HPWH::Units::TempDiff> = {
-        {std::make_pair(HPWH::Units::TempDiff::F, HPWH::Units::TempDiff::F), ident},
-        {std::make_pair(HPWH::Units::TempDiff::C, HPWH::Units::TempDiff::C), ident},
-        {std::make_pair(HPWH::Units::TempDiff::C, HPWH::Units::TempDiff::F), dC_TO_dF},
-        {std::make_pair(HPWH::Units::TempDiff::F, HPWH::Units::TempDiff::C), dF_TO_dC}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Energy> HPWH::Units::conversionMap<HPWH::Units::Energy> = {
-    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::kJ), ident},
-    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::kWh), ident},
-    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::Btu), ident},
-    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::kWh), KJ_TO_KWH},
-    {std::make_pair(HPWH::Units::Energy::kJ, HPWH::Units::Energy::Btu), KJ_TO_BTU},
-    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::kJ), KWH_TO_KJ},
-    {std::make_pair(HPWH::Units::Energy::kWh, HPWH::Units::Energy::Btu), KWH_TO_BTU},
-    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::kJ), BTU_TO_KJ},
-    {std::make_pair(HPWH::Units::Energy::Btu, HPWH::Units::Energy::kWh), BTU_TO_KWH}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Power> HPWH::Units::conversionMap<HPWH::Units::Power> = {
-    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kW), ident},
-    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::Btu_per_h), ident},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::W), ident},
-    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kJ_per_h), ident},
-    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::Btu_per_h), KW_TO_BTUperH},
-    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::W), KW_TO_W},
-    {std::make_pair(HPWH::Units::Power::kW, HPWH::Units::Power::kJ_per_h), KW_TO_KJperH},
-    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kW), BTUperH_TO_KW},
-    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::W), BTUperH_TO_W},
-    {std::make_pair(HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kJ_per_h),
-     BTUperH_TO_KJperH},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::kW), W_TO_KW},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h), W_TO_BTUperH},
-    {std::make_pair(HPWH::Units::Power::W, HPWH::Units::Power::kJ_per_h), W_TO_KJperH},
-    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kW), KJperH_TO_KW},
-    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::Btu_per_h),
-     KJperH_TO_BTUperH},
-    {std::make_pair(HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::W), KJperH_TO_W}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Length> HPWH::Units::conversionMap<HPWH::Units::Length> = {
-    {std::make_pair(HPWH::Units::Length::m, HPWH::Units::Length::m), &ident},
-    {std::make_pair(HPWH::Units::Length::ft, HPWH::Units::Length::ft), &ident},
-    {std::make_pair(HPWH::Units::Length::m, HPWH::Units::Length::ft), &M_TO_FT},
-    {std::make_pair(HPWH::Units::Length::ft, HPWH::Units::Length::m), &FT_TO_M}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Area> HPWH::Units::conversionMap<HPWH::Units::Area> = {
-    {std::make_pair(HPWH::Units::Area::m2, HPWH::Units::Area::m2), &ident},
-    {std::make_pair(HPWH::Units::Area::ft2, HPWH::Units::Area::ft2), &ident},
-    {std::make_pair(HPWH::Units::Area::m2, HPWH::Units::Area::ft2), &M2_TO_FT2},
-    {std::make_pair(HPWH::Units::Area::ft2, HPWH::Units::Area::m2), &FT2_TO_M2}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Volume> HPWH::Units::conversionMap<HPWH::Units::Volume> = {
-    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::L), ident},
-    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::gal), ident},
-    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::ft3), ident},
-    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::gal), L_TO_GAL},
-    {std::make_pair(HPWH::Units::Volume::L, HPWH::Units::Volume::ft3), L_TO_FT3},
-    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::L), GAL_TO_L},
-    {std::make_pair(HPWH::Units::Volume::gal, HPWH::Units::Volume::ft3), GAL_TO_FT3},
-    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::L), FT3_TO_L},
-    {std::make_pair(HPWH::Units::Volume::ft3, HPWH::Units::Volume::gal), FT3_TO_GAL}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::FlowRate>
-    HPWH::Units::conversionMap<HPWH::Units::FlowRate> = {
-        {std::make_pair(HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::L_per_s), &ident},
-        {std::make_pair(HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::gal_per_min),
-         &ident},
-        {std::make_pair(HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::gal_per_min),
-         &LPS_TO_GPM},
-        {std::make_pair(HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::L_per_s),
-         &GPM_TO_LPS}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::Time> HPWH::Units::conversionMap<HPWH::Units::Time> = {
-    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::h), &ident},
-    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::min), &ident},
-    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::s), &ident},
-    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::min), H_TO_MIN},
-    {std::make_pair(HPWH::Units::Time::h, HPWH::Units::Time::s), &H_TO_S},
-    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::h), MIN_TO_H},
-    {std::make_pair(HPWH::Units::Time::min, HPWH::Units::Time::s), &MIN_TO_S},
-    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::h), &S_TO_H},
-    {std::make_pair(HPWH::Units::Time::s, HPWH::Units::Time::min), &S_TO_MIN}};
-
-template <>
-HPWH::Units::ConversionMap<HPWH::Units::UA> HPWH::Units::conversionMap<HPWH::Units::UA> = {
-    {std::make_pair(HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::kJ_per_hC), &ident},
-    {std::make_pair(HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::Btu_per_hF), &ident},
-    {std::make_pair(HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::Btu_per_hF), &KJperHC_TO_BTUperHF},
-    {std::make_pair(HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::kJ_per_hC),
-     &BTUperHF_TO_KJperHC}};
-
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
@@ -541,11 +436,11 @@ std::vector<double> changeSeriesUnitsTemp3(const std::vector<double>& coeffs,
     }
 
     auto& powers = HPWH::powers3;
-    for (int i = 0; i < coeffs.size(); ++i)
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
     {
         newCoeffs[i] = 0.;
         int power_i = powers[i];
-        for (int j = 0; j < coeffs.size(); ++j)
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
         {
             int power_j = powers[j];
             double fac = choose(power_j, power_i) * std::pow(alpha, power_j - power_i) *
@@ -575,12 +470,12 @@ std::vector<double> changeSeriesUnitsTemp6(const std::vector<double>& coeffs,
     }
 
     auto& powers = HPWH::powers6;
-    for (int i = 0; i < coeffs.size(); ++i)
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
     {
         newCoeffs[i] = 0.;
         int power_i0 = std::get<0>(powers[i]);
         int power_i1 = std::get<1>(powers[i]);
-        for (int j = 0; j < coeffs.size(); ++j)
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
         {
             int power_j0 = std::get<0>(powers[j]);
             int power_j1 = std::get<1>(powers[j]);
@@ -615,13 +510,13 @@ std::vector<double> changeSeriesUnitsTemp11(const std::vector<double>& coeffs,
     }
 
     auto& powers = HPWH::powers11;
-    for (int i = 0; i < coeffs.size(); ++i)
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
     {
         newCoeffs[i] = 0.;
         int power_i0 = std::get<0>(powers[i]);
         int power_i1 = std::get<1>(powers[i]);
         int power_i2 = std::get<2>(powers[i]);
-        for (int j = 0; j < coeffs.size(); ++j)
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
         {
             int power_j0 = std::get<0>(powers[j]);
             int power_j1 = std::get<1>(powers[j]);
@@ -676,6 +571,30 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
         COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, Units::Temp::C);
         return;
     }
+}
+
+HPWH::PerfPoint::PerfPoint(const PerfPointStore& perfPointStore,
+                           const Units::Temp unitsTemp /*C*/,
+                           const Units::Power unitsPower /*kW*/)
+    : PerfPoint(Units::convert(perfPointStore.T_C, Units::Temp::C, unitsTemp),
+                perfPointStore.inputPower_coeffs,
+                perfPointStore.COP_coeffs,
+                unitsTemp,
+                unitsPower)
+{
+}
+
+HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in /*0.*/,
+                                                       const double constLiftT_in /*0.*/,
+                                                       const double onBelowT_in /*0.*/,
+                                                       const Units::Temp unitsTemp_in /*C*/,
+                                                       const Units::Power unitsPower_in /*kW*/)
+{
+    Units::TempDiff unitsTempDiff_in =
+        (unitsTemp_in == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
+    inputPwr_kW = Units::convert(inputPwr_in, unitsPower_in, Units::Power::kW);
+    constLiftT_C = Units::convert(constLiftT_in, unitsTempDiff_in, Units::TempDiff::C);
+    onBelowT_C = Units::convert(onBelowT_in, unitsTemp_in, Units::Temp::C);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
