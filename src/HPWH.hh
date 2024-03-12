@@ -373,7 +373,8 @@ class HPWH
     };
 
     /// unit-conversion utilities
-    struct Units
+    template <typename T>
+    struct Converter
     {
         struct PairHash
         {
@@ -386,30 +387,25 @@ class HPWH
             }
         };
 
-        template <typename T>
         using ConversionMap =
             std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
 
-        template <typename T>
-        static ConversionMap<T> conversionMap;
+        static ConversionMap conversionMap;
 
-        template <typename T>
         static double convert(const double x, const T fromUnits, const T toUnits)
         {
-            return conversionMap<T>[{fromUnits, toUnits}](x);
+            return conversionMap[{fromUnits, toUnits}](x);
         }
 
-        template <typename T>
         static double invert(const double x, const T fromUnits, const T toUnits)
         {
-            return conversionMap<T>[{toUnits, fromUnits}](x);
+            return conversionMap[{toUnits, fromUnits}](x);
         }
 
-        template <typename T>
         static std::vector<double>
         convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
-            auto conversionFnc = conversionMap<T>[{fromUnits, toUnits}];
+            auto conversionFnc = conversionMap[{fromUnits, toUnits}];
             std::vector<double> xV_out;
             for (auto& x : xV)
             {
@@ -419,11 +415,10 @@ class HPWH
             return xV_out;
         }
 
-        template <typename T>
         static std::vector<double>
         invert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
-            auto conversionFnc = conversionMap<T>[{toUnits, fromUnits}];
+            auto conversionFnc = conversionMap[{toUnits, fromUnits}];
             std::vector<double> xV_out;
             for (auto& x : xV)
             {
@@ -432,7 +427,10 @@ class HPWH
             }
             return xV_out;
         }
+    };
 
+    struct Units
+    {
         /* time units */
         enum class Time
         {
@@ -441,31 +439,12 @@ class HPWH
             s    // seconds
         };
 
-        template <>
-        static inline ConversionMap<Time> conversionMap<Time> = {
-            {std::make_pair(Time::h, Time::h), &ident},
-            {std::make_pair(Time::min, Time::min), &ident},
-            {std::make_pair(Time::s, Time::s), &ident},
-            {std::make_pair(Time::h, Time::min), H_TO_MIN},
-            {std::make_pair(Time::h, Time::s), &H_TO_S},
-            {std::make_pair(Time::min, Time::h), MIN_TO_H},
-            {std::make_pair(Time::min, Time::s), &MIN_TO_S},
-            {std::make_pair(Time::s, Time::h), &S_TO_H},
-            {std::make_pair(Time::s, Time::min), &S_TO_MIN}};
-
         /* temperature units */
         enum class Temp
         {
             C, // celsius
             F  // fahrenheit
         };
-
-        template <>
-        static inline ConversionMap<Temp> conversionMap<Temp> = {
-            {std::make_pair(Temp::F, Temp::F), &ident},
-            {std::make_pair(Temp::C, Temp::C), &ident},
-            {std::make_pair(Temp::C, Temp::F), &C_TO_F},
-            {std::make_pair(Temp::F, Temp::C), &F_TO_C}};
 
         /* temperature-difference units */
         enum class TempDiff
@@ -474,13 +453,6 @@ class HPWH
             F  // fahrenheit
         };
 
-        template <>
-        static inline ConversionMap<TempDiff> conversionMap<TempDiff> = {
-            {std::make_pair(TempDiff::F, TempDiff::F), ident},
-            {std::make_pair(TempDiff::C, TempDiff::C), ident},
-            {std::make_pair(TempDiff::C, TempDiff::F), dC_TO_dF},
-            {std::make_pair(TempDiff::F, TempDiff::C), dF_TO_dC}};
-
         /* energy units */
         enum class Energy
         {
@@ -488,18 +460,6 @@ class HPWH
             kWh, // kilowatt hours
             Btu  // british thermal units
         };
-
-        template <>
-        static inline ConversionMap<Energy> conversionMap<Energy> = {
-            {std::make_pair(Energy::kJ, Energy::kJ), ident},
-            {std::make_pair(Energy::kWh, Energy::kWh), ident},
-            {std::make_pair(Energy::Btu, Energy::Btu), ident},
-            {std::make_pair(Energy::kJ, Energy::kWh), KJ_TO_KWH},
-            {std::make_pair(Energy::kJ, Energy::Btu), KJ_TO_BTU},
-            {std::make_pair(Energy::kWh, Energy::kJ), KWH_TO_KJ},
-            {std::make_pair(Energy::kWh, Energy::Btu), KWH_TO_BTU},
-            {std::make_pair(Energy::Btu, Energy::kJ), BTU_TO_KJ},
-            {std::make_pair(Energy::Btu, Energy::kWh), BTU_TO_KWH}};
 
         /* power units */
         enum class Power
@@ -510,25 +470,6 @@ class HPWH
             kJ_per_h,  // kilojoules per hour
         };
 
-        template <>
-        static inline ConversionMap<Power> conversionMap<Power> = {
-            {std::make_pair(Power::kW, Power::kW), ident},
-            {std::make_pair(Power::Btu_per_h, Power::Btu_per_h), ident},
-            {std::make_pair(Power::W, Power::W), ident},
-            {std::make_pair(Power::kJ_per_h, Power::kJ_per_h), ident},
-            {std::make_pair(Power::kW, Power::Btu_per_h), KW_TO_BTUperH},
-            {std::make_pair(Power::kW, Power::W), KW_TO_W},
-            {std::make_pair(Power::kW, Power::kJ_per_h), KW_TO_KJperH},
-            {std::make_pair(Power::Btu_per_h, Power::kW), BTUperH_TO_KW},
-            {std::make_pair(Power::Btu_per_h, Power::W), BTUperH_TO_W},
-            {std::make_pair(Power::Btu_per_h, Power::kJ_per_h), BTUperH_TO_KJperH},
-            {std::make_pair(Power::W, Power::kW), W_TO_KW},
-            {std::make_pair(Power::W, Power::Btu_per_h), W_TO_BTUperH},
-            {std::make_pair(Power::W, Power::kJ_per_h), W_TO_KJperH},
-            {std::make_pair(Power::kJ_per_h, Power::kW), KJperH_TO_KW},
-            {std::make_pair(Power::kJ_per_h, Power::Btu_per_h), KJperH_TO_BTUperH},
-            {std::make_pair(Power::kJ_per_h, Power::W), KJperH_TO_W}};
-
         /* length units */
         enum class Length
         {
@@ -536,26 +477,12 @@ class HPWH
             ft // feet
         };
 
-        template <>
-        static inline ConversionMap<Length> conversionMap<Length> = {
-            {std::make_pair(Length::m, Length::m), &ident},
-            {std::make_pair(Length::ft, Length::ft), &ident},
-            {std::make_pair(Length::m, Length::ft), &M_TO_FT},
-            {std::make_pair(Length::ft, Length::m), &FT_TO_M}};
-
         /* area units */
         enum class Area
         {
             m2, // square meters
             ft2 // square feet
         };
-
-        template <>
-        static inline ConversionMap<Area> conversionMap<Area> = {
-            {std::make_pair(Area::m2, Area::m2), &ident},
-            {std::make_pair(Area::ft2, Area::ft2), &ident},
-            {std::make_pair(Area::m2, Area::ft2), &M2_TO_FT2},
-            {std::make_pair(Area::ft2, Area::m2), &FT2_TO_M2}};
 
         /* volume units */
         enum class Volume
@@ -565,31 +492,12 @@ class HPWH
             ft3  // cubic feet
         };
 
-        template <>
-        static inline ConversionMap<Volume> conversionMap<Volume> = {
-            {std::make_pair(Volume::L, Volume::L), ident},
-            {std::make_pair(Volume::gal, Volume::gal), ident},
-            {std::make_pair(Volume::ft3, Volume::ft3), ident},
-            {std::make_pair(Volume::L, Volume::gal), L_TO_GAL},
-            {std::make_pair(Volume::L, Volume::ft3), L_TO_FT3},
-            {std::make_pair(Volume::gal, Volume::L), GAL_TO_L},
-            {std::make_pair(Volume::gal, Volume::ft3), GAL_TO_FT3},
-            {std::make_pair(Volume::ft3, Volume::L), FT3_TO_L},
-            {std::make_pair(Volume::ft3, Volume::gal), FT3_TO_GAL}};
-
         /* flow-rate units */
         enum class FlowRate
         {
             L_per_s,    // liters per second
             gal_per_min // gallons per minute
         };
-
-        template <>
-        static inline ConversionMap<FlowRate> conversionMap<FlowRate> = {
-            {std::make_pair(FlowRate::L_per_s, FlowRate::L_per_s), &ident},
-            {std::make_pair(FlowRate::gal_per_min, FlowRate::gal_per_min), &ident},
-            {std::make_pair(FlowRate::L_per_s, FlowRate::gal_per_min), &LPS_TO_GPM},
-            {std::make_pair(FlowRate::gal_per_min, FlowRate::L_per_s), &GPM_TO_LPS}};
 
         /* UA units */
         enum class UA
@@ -598,12 +506,31 @@ class HPWH
             Btu_per_hF // british thermal units per hour degree Fahrenheit
         };
 
-        template <>
-        static inline ConversionMap<UA> conversionMap<UA> = {
-            {std::make_pair(UA::kJ_per_hC, UA::kJ_per_hC), &ident},
-            {std::make_pair(UA::Btu_per_hF, UA::Btu_per_hF), &ident},
-            {std::make_pair(UA::kJ_per_hC, UA::Btu_per_hF), &KJperHC_TO_BTUperHF},
-            {std::make_pair(UA::Btu_per_hF, UA::kJ_per_hC), &BTUperHF_TO_KJperHC}};
+        template <class T>
+        static double convert(const double x, const T fromUnits, const T toUnits)
+        {
+            return Converter<T>::convert(x, fromUnits, toUnits);
+        };
+
+        template <class T>
+        static double invert(const double x, const T fromUnits, const T toUnits)
+        {
+            return Converter<T>::invert(x, fromUnits, toUnits);
+        };
+
+        template <class T>
+        static std::vector<double>
+        convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+        {
+            return Converter<T>::convert(xV, fromUnits, toUnits);
+        }
+
+        template <class T>
+        static std::vector<double>
+        invert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+        {
+            return Converter<T>::invert(xV, fromUnits, toUnits);
+        }
     };
 
     /// specifies the type of heat source
@@ -829,8 +756,8 @@ class HPWH
      * heater, with a specific R-Value defined at initalization.
      *
      * Several assumptions regarding the tank configuration are assumed: the lower element
-     * is at the bottom, the upper element is at the top third. The controls are the same standard
-     * controls for the HPWHinit_resTank()
+     * is at the bottom, the upper element is at the top third. The controls are the same
+     * standard controls for the HPWHinit_resTank()
      */
 
     int initGeneric(double tankVol,
@@ -861,13 +788,13 @@ class HPWH
 
 #ifndef HPWH_ABRIDGED
     int initFromFile(std::string configFile);
-    /**< Loads a HPWH model from a file
-     * The file name is the input - there should be at most one set of parameters per file
-     * This is useful for testing new variations, and for the sort of variability
-     * that we typically do when creating SEEM runs
-     * Appropriate use of this function can be found in the documentation
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
-     */
+/**< Loads a HPWH model from a file
+ * The file name is the input - there should be at most one set of parameters per file
+ * This is useful for testing new variations, and for the sort of variability
+ * that we typically do when creating SEEM runs
+ * Appropriate use of this function can be found in the documentation
+ * The return value is 0 for successful initialization, HPWH_ABORT otherwise
+ */
 #endif
 
     int runOneStep(double drawVolume_L,
@@ -1046,9 +973,9 @@ class HPWH
     int setTankTs(std::vector<double> tankTs_in, const Units::Temp units = Units::Temp::C);
 
     /// return whether specified new setpoint is physically possible for the compressor. If
-    /// there is no compressor then checks that the new setpoint is less than boiling. The setpoint
-    /// can be set higher than the compressor max outlet temperature if there is a backup
-    /// resistance element, but the compressor will not operate above this temperature.
+    /// there is no compressor then checks that the new setpoint is less than boiling. The
+    /// setpoint can be set higher than the compressor max outlet temperature if there is a
+    /// backup resistance element, but the compressor will not operate above this temperature.
     bool canApplySetpointT(const double newSetpointT,
                            double& maxSetpointT,
                            std::string& why,
@@ -1211,24 +1138,26 @@ class HPWH
     - If which (-1) sets all the resisistance elements in the tank.
     - If which (0, 1, 2...) sets the resistance element in a low to high order.
       So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element,
-    regardless of their order in heatSources. If the elements exist on at the same node then all of
-    the elements are set.
+    regardless of their order in heatSources. If the elements exist on at the same node then all
+    of the elements are set.
 
-    The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is
-    defined as the by the ordered height of the resistance elements it cannot refer to a compressor.
+    The only valid values for which are between -1 and getNumResistanceElements()-1. Since which
+    is defined as the by the ordered height of the resistance elements it cannot refer to a
+    compressor.
     */
 
     double getResistanceCapacity(int which = -1, Units::Power pwrUNIT = Units::Power::kW);
-    /**< Returns the resistance elements capacity. Which heat source is chosen is changes is given
-    by "which"
+    /**< Returns the resistance elements capacity. Which heat source is chosen is changes is
+    given by "which"
     - If which (-1) gets all the resisistance elements in the tank.
     - If which (0, 1, 2...) sets the resistance element in a low to high order.
       So if there are 3 elements 0 is the bottom, 1 is the middle, and 2 is the top element,
-    regardless of their order in heatSources. If the elements exist on at the same node then all of
-    the elements are set.
+    regardless of their order in heatSources. If the elements exist on at the same node then all
+    of the elements are set.
 
-    The only valid values for which are between -1 and getNumResistanceElements()-1. Since which is
-    defined as the by the ordered height of the resistance elements it cannot refer to a compressor.
+    The only valid values for which are between -1 and getNumResistanceElements()-1. Since which
+    is defined as the by the ordered height of the resistance elements it cannot refer to a
+    compressor.
     */
 
     int getResistancePosition(int elementIndex) const;
@@ -1239,10 +1168,12 @@ class HPWH
     /// returns the energy input to the Nth heat source, with the specified units
     double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kWh) const;
 
-    /// returns energy transferred from the Nth heat source to the water, with the specified units
+    /// returns energy transferred from the Nth heat source to the water, with the specified
+    /// units
     double getNthHeatSourceEnergyOutput(int N, Units::Energy units = Units::Energy::kWh) const;
 
-    /// returns energy removed from the environment into the heat source, with the specified units
+    /// returns energy removed from the environment into the heat source, with the specified
+    /// units
     double
     getNthHeatSourceEnergyRemovedFromEnvironment(int N,
                                                  Units::Energy units = Units::Energy::kWh) const;
@@ -1278,7 +1209,8 @@ class HPWH
     /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
     int isCompressorRunning() const { return isNthHeatSourceRunning(getCompressorIndex()); }
 
-    /// report whether the HPWH has any external heat sources, (compressor or resistance element)
+    /// report whether the HPWH has any external heat sources, (compressor or resistance
+    /// element)
     bool hasExternalHeatSource() const;
 
     /// return the constant flow rate for an external multipass heat source
@@ -1612,7 +1544,6 @@ class HPWH
     /// cefficient (0-1) of effectiveness for heat exchange between a single tank node and water
     /// line (derived from heatExchangerEffectiveness).
     double nodeHeatExchangerEffectiveness;
-
 }; // end of HPWH class
 
 class HPWH::HeatSource

@@ -1949,7 +1949,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0135443327,
                                            0.0000059621,
                                            0.0003010506,
-                                           -0.0000463525}, // Input Power Coefficients (W)
+                                           -0.0000463525}, // Input Power Coefficients (kW)
 
                                           {3.6840046360,
                                            0.0995685071,
@@ -1973,7 +1973,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0120766440,
                                            0.0000493862,
                                            0.0005422089,
-                                           -0.0001385078}, // Input Power Coefficients (W)
+                                           -0.0001385078}, // Input Power Coefficients (kW)
 
                                           {5.0207181209,
                                            0.0442525790,
