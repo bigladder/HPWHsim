@@ -378,7 +378,6 @@ class HPWH
     {
         struct PairHash
         {
-            template <class T>
             std::size_t operator()(const std::pair<T, T>& p) const
             {
                 auto h1 = static_cast<std::size_t>(p.first);
