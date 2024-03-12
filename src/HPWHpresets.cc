@@ -1866,7 +1866,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power (kW)
             compressor.perfGridValues.push_back(
                 Units::convert({10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76,
                                 15.97, 17.79, 20.56, 22.50, 10.36, 14.66, 18.07, 21.23,

@@ -399,7 +399,6 @@ class HPWH
     /// unit specification
     struct Units
     {
-
         template <class T>
         static double revert(const double x, const T fromUnits, const T toUnits)
         {
@@ -423,13 +422,7 @@ class HPWH
         static std::vector<double>
         revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
-            std::vector<double> xV_out;
-            for (auto& x : xV)
-            {
-                double y = convert(x, toUnits, fromUnits);
-                xV_out.push_back(y);
-            }
-            return xV_out;
+            return convert(x, toUnits, fromUnits);
         }
 
         /* time units */
@@ -510,72 +503,71 @@ class HPWH
         static double convert(const double x, const Time fromUnits, const Time toUnits)
         {
             static Converter<Time>::ConversionMap conversionMap = {
-                {std::make_pair(Time::h, Time::h), &ident},
-                {std::make_pair(Time::min, Time::min), &ident},
-                {std::make_pair(Time::s, Time::s), &ident},
-                {std::make_pair(Time::h, Time::min), H_TO_MIN},
-                {std::make_pair(Time::h, Time::s), &H_TO_S},
-                {std::make_pair(Time::min, Time::h), MIN_TO_H},
-                {std::make_pair(Time::min, Time::s), &MIN_TO_S},
-                {std::make_pair(Time::s, Time::h), &S_TO_H},
-                {std::make_pair(Time::s, Time::min), &S_TO_MIN}};
+                {{Time::h, Time::h}, &ident},
+                {{Time::min, Time::min}, &ident},
+                {{Time::s, Time::s}, &ident},
+                {{Time::h, Time::min}, H_TO_MIN},
+                {{Time::h, Time::s}, &H_TO_S},
+                {{Time::min, Time::h}, MIN_TO_H},
+                {{Time::min, Time::s}, &MIN_TO_S},
+                {{Time::s, Time::h}, &S_TO_H},
+                {{Time::s, Time::min}, &S_TO_MIN}};
             return Converter<Time>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const Temp fromUnits, const Temp toUnits)
         {
-            static Converter<Temp>::ConversionMap conversionMap = {
-                {std::make_pair(Temp::F, Temp::F), &ident},
-                {std::make_pair(Temp::C, Temp::C), &ident},
-                {std::make_pair(Temp::C, Temp::F), &C_TO_F},
-                {std::make_pair(Temp::F, Temp::C), &F_TO_C}};
+            static Converter<Temp>::ConversionMap conversionMap = {{{Temp::F, Temp::F}, &ident},
+                                                                   {{Temp::C, Temp::C}, &ident},
+                                                                   {{Temp::C, Temp::F}, &C_TO_F},
+                                                                   {{Temp::F, Temp::C}, &F_TO_C}};
             return Converter<Temp>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const TempDiff fromUnits, const TempDiff toUnits)
         {
             static Converter<TempDiff>::ConversionMap conversionMap = {
-                {std::make_pair(TempDiff::F, TempDiff::F), &ident},
-                {std::make_pair(TempDiff::C, TempDiff::C), &ident},
-                {std::make_pair(TempDiff::C, TempDiff::F), &C_TO_F},
-                {std::make_pair(TempDiff::F, TempDiff::C), &F_TO_C}};
+                {{TempDiff::F, TempDiff::F}, &ident},
+                {{TempDiff::C, TempDiff::C}, &ident},
+                {{TempDiff::C, TempDiff::F}, &C_TO_F},
+                {{TempDiff::F, TempDiff::C}, &F_TO_C}};
             return Converter<TempDiff>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const Energy fromUnits, const Energy toUnits)
         {
             static Converter<Energy>::ConversionMap conversionMap = {
-                {std::make_pair(Energy::kJ, Energy::kJ), ident},
-                {std::make_pair(Energy::kWh, Energy::kWh), ident},
-                {std::make_pair(Energy::Btu, Energy::Btu), ident},
-                {std::make_pair(Energy::kJ, Energy::kWh), KJ_TO_KWH},
-                {std::make_pair(Energy::kJ, Energy::Btu), KJ_TO_BTU},
-                {std::make_pair(Energy::kWh, Energy::kJ), KWH_TO_KJ},
-                {std::make_pair(Energy::kWh, Energy::Btu), KWH_TO_BTU},
-                {std::make_pair(Energy::Btu, Energy::kJ), BTU_TO_KJ},
-                {std::make_pair(Energy::Btu, Energy::kWh), BTU_TO_KWH}};
+                {{Energy::kJ, Energy::kJ}, ident},
+                {{Energy::kWh, Energy::kWh}, ident},
+                {{Energy::Btu, Energy::Btu}, ident},
+                {{Energy::kJ, Energy::kWh}, KJ_TO_KWH},
+                {{Energy::kJ, Energy::Btu}, KJ_TO_BTU},
+                {{Energy::kWh, Energy::kJ}, KWH_TO_KJ},
+                {{Energy::kWh, Energy::Btu}, KWH_TO_BTU},
+                {{Energy::Btu, Energy::kJ}, BTU_TO_KJ},
+                {{Energy::Btu, Energy::kWh}, BTU_TO_KWH}};
             return Converter<Energy>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const Power fromUnits, const Power toUnits)
         {
             static Converter<Power>::ConversionMap conversionMap = {
-                {std::make_pair(Power::kW, Power::kW), ident},
-                {std::make_pair(Power::Btu_per_h, Power::Btu_per_h), ident},
-                {std::make_pair(Power::W, Power::W), ident},
-                {std::make_pair(Power::kJ_per_h, Power::kJ_per_h), ident},
-                {std::make_pair(Power::kW, Power::Btu_per_h), KW_TO_BTUperH},
-                {std::make_pair(Power::kW, Power::W), KW_TO_W},
-                {std::make_pair(Power::kW, Power::kJ_per_h), KW_TO_KJperH},
-                {std::make_pair(Power::Btu_per_h, Power::kW), BTUperH_TO_KW},
-                {std::make_pair(Power::Btu_per_h, Power::W), BTUperH_TO_W},
-                {std::make_pair(Power::Btu_per_h, Power::kJ_per_h), BTUperH_TO_KJperH},
-                {std::make_pair(Power::W, Power::kW), W_TO_KW},
-                {std::make_pair(Power::W, Power::Btu_per_h), W_TO_BTUperH},
-                {std::make_pair(Power::W, Power::kJ_per_h), W_TO_KJperH},
-                {std::make_pair(Power::kJ_per_h, Power::kW), KJperH_TO_KW},
-                {std::make_pair(Power::kJ_per_h, Power::Btu_per_h), KJperH_TO_BTUperH},
-                {std::make_pair(Power::kJ_per_h, Power::W), KJperH_TO_W}};
+                {{Power::kW, Power::kW}, ident},
+                {{Power::Btu_per_h, Power::Btu_per_h}, ident},
+                {{Power::W, Power::W}, ident},
+                {{Power::kJ_per_h, Power::kJ_per_h}, ident},
+                {{Power::kW, Power::Btu_per_h}, KW_TO_BTUperH},
+                {{Power::kW, Power::W}, KW_TO_W},
+                {{Power::kW, Power::kJ_per_h}, KW_TO_KJperH},
+                {{Power::Btu_per_h, Power::kW}, BTUperH_TO_KW},
+                {{Power::Btu_per_h, Power::W}, BTUperH_TO_W},
+                {{Power::Btu_per_h, Power::kJ_per_h}, BTUperH_TO_KJperH},
+                {{Power::W, Power::kW}, W_TO_KW},
+                {{Power::W, Power::Btu_per_h}, W_TO_BTUperH},
+                {{Power::W, Power::kJ_per_h}, W_TO_KJperH},
+                {{Power::kJ_per_h, Power::kW}, KJperH_TO_KW},
+                {{Power::kJ_per_h, Power::Btu_per_h}, KJperH_TO_BTUperH},
+                {{Power::kJ_per_h, Power::W}, KJperH_TO_W}};
 
             return Converter<Power>::convert(conversionMap, x, fromUnits, toUnits);
         }
@@ -583,55 +575,55 @@ class HPWH
         static double convert(const double x, const Length fromUnits, const Length toUnits)
         {
             static Converter<Length>::ConversionMap conversionMap = {
-                {std::make_pair(Length::m, Length::m), &ident},
-                {std::make_pair(Length::ft, Length::ft), &ident},
-                {std::make_pair(Length::m, Length::ft), &M_TO_FT},
-                {std::make_pair(Length::ft, Length::m), &FT_TO_M}};
+                {{Length::m, Length::m}, &ident},
+                {{Length::ft, Length::ft}, &ident},
+                {{Length::m, Length::ft}, &M_TO_FT},
+                {{Length::ft, Length::m}, &FT_TO_M}};
             return Converter<Length>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const Area fromUnits, const Area toUnits)
         {
             static Converter<Area>::ConversionMap conversionMap = {
-                {std::make_pair(Area::m2, Area::m2), &ident},
-                {std::make_pair(Area::ft2, Area::ft2), &ident},
-                {std::make_pair(Area::m2, Area::ft2), &M2_TO_FT2},
-                {std::make_pair(Area::ft2, Area::m2), &FT2_TO_M2}};
+                {{Area::m2, Area::m2}, &ident},
+                {{Area::ft2, Area::ft2}, &ident},
+                {{Area::m2, Area::ft2}, &M2_TO_FT2},
+                {{Area::ft2, Area::m2}, &FT2_TO_M2}};
             return Converter<Area>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const Volume fromUnits, const Volume toUnits)
         {
             static Converter<Volume>::ConversionMap conversionMap = {
-                {std::make_pair(Volume::L, Volume::L), ident},
-                {std::make_pair(Volume::gal, Volume::gal), ident},
-                {std::make_pair(Volume::ft3, Volume::ft3), ident},
-                {std::make_pair(Volume::L, Volume::gal), L_TO_GAL},
-                {std::make_pair(Volume::L, Volume::ft3), L_TO_FT3},
-                {std::make_pair(Volume::gal, Volume::L), GAL_TO_L},
-                {std::make_pair(Volume::gal, Volume::ft3), GAL_TO_FT3},
-                {std::make_pair(Volume::ft3, Volume::L), FT3_TO_L},
-                {std::make_pair(Volume::ft3, Volume::gal), FT3_TO_GAL}};
+                {{Volume::L, Volume::L}, ident},
+                {{Volume::gal, Volume::gal}, ident},
+                {{Volume::ft3, Volume::ft3}, ident},
+                {{Volume::L, Volume::gal}, L_TO_GAL},
+                {{Volume::L, Volume::ft3}, L_TO_FT3},
+                {{Volume::gal, Volume::L}, GAL_TO_L},
+                {{Volume::gal, Volume::ft3}, GAL_TO_FT3},
+                {{Volume::ft3, Volume::L}, FT3_TO_L},
+                {{Volume::ft3, Volume::gal}, FT3_TO_GAL}};
             return Converter<Volume>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const UA fromUnits, const UA toUnits)
         {
             static Converter<UA>::ConversionMap conversionMap = {
-                {std::make_pair(UA::kJ_per_hC, UA::kJ_per_hC), &ident},
-                {std::make_pair(UA::Btu_per_hF, UA::Btu_per_hF), &ident},
-                {std::make_pair(UA::kJ_per_hC, UA::Btu_per_hF), &KJperHC_TO_BTUperHF},
-                {std::make_pair(UA::Btu_per_hF, UA::kJ_per_hC), &BTUperHF_TO_KJperHC}};
+                {{UA::kJ_per_hC, UA::kJ_per_hC}, &ident},
+                {{UA::Btu_per_hF, UA::Btu_per_hF}, &ident},
+                {{UA::kJ_per_hC, UA::Btu_per_hF}, &KJperHC_TO_BTUperHF},
+                {{UA::Btu_per_hF, UA::kJ_per_hC}, &BTUperHF_TO_KJperHC}};
             return Converter<UA>::convert(conversionMap, x, fromUnits, toUnits);
         }
 
         static double convert(const double x, const FlowRate fromUnits, const FlowRate toUnits)
         {
             static Converter<FlowRate>::ConversionMap conversionMap = {
-                {std::make_pair(FlowRate::L_per_s, FlowRate::L_per_s), &ident},
-                {std::make_pair(FlowRate::gal_per_min, FlowRate::gal_per_min), &ident},
-                {std::make_pair(FlowRate::L_per_s, FlowRate::gal_per_min), &LPS_TO_GPM},
-                {std::make_pair(FlowRate::gal_per_min, FlowRate::L_per_s), &GPM_TO_LPS}};
+                {{FlowRate::L_per_s, FlowRate::L_per_s}, &ident},
+                {{FlowRate::gal_per_min, FlowRate::gal_per_min}, &ident},
+                {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
+                {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
             return Converter<FlowRate>::convert(conversionMap, x, fromUnits, toUnits);
         }
     };
