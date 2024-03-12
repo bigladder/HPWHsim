@@ -67,9 +67,6 @@ const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 const int HPWH::HPWH_ABORT = -274000;
 
-// template <typename T>
-// HPWH::Units::ConversionMap<T> HPWH::Units::conversionMap;
-
 template <>
 /*static*/ HPWH::Converter<HPWH::Units::Time>::ConversionMap
     HPWH::Converter<HPWH::Units::Time>::conversionMap = {

@@ -429,6 +429,7 @@ class HPWH
         }
     };
 
+    /// unit specification
     struct Units
     {
         /* time units */
