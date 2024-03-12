@@ -373,7 +373,7 @@ class HPWH
     };
 
     /// unit-conversion utilities
-    template <class T>
+    template <typename T>
     struct Converter
     {
         struct PairHash
@@ -389,42 +389,48 @@ class HPWH
         using ConversionMap =
             std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
 
-        static double
-        convert(ConversionMap& conversionMap, const double x, const T fromUnits, const T toUnits)
+        static ConversionMap conversionMap;
+
+        static double convert(const double x, const T fromUnits, const T toUnits)
         {
             return conversionMap[{fromUnits, toUnits}](x);
+        }
+
+        static double revert(const double x, const T fromUnits, const T toUnits)
+        {
+            return conversionMap[{toUnits, fromUnits}](x);
+        }
+
+        static std::vector<double>
+        convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+        {
+            auto conversionFnc = conversionMap[{fromUnits, toUnits}];
+            std::vector<double> xV_out;
+            for (auto& x : xV)
+            {
+                double y = conversionFnc(x);
+                xV_out.push_back(y);
+            }
+            return xV_out;
+        }
+
+        static std::vector<double>
+        revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+        {
+            auto conversionFnc = conversionMap[{toUnits, fromUnits}];
+            std::vector<double> xV_out;
+            for (auto& x : xV)
+            {
+                double y = conversionFnc(x);
+                xV_out.push_back(y);
+            }
+            return xV_out;
         }
     };
 
     /// unit specification
     struct Units
     {
-        template <class T>
-        static double revert(const double x, const T fromUnits, const T toUnits)
-        {
-            return convert(x, toUnits, fromUnits);
-        }
-
-        template <class T>
-        static std::vector<double>
-        convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-        {
-            std::vector<double> xV_out;
-            for (auto& x : xV)
-            {
-                double y = convert(x, fromUnits, toUnits);
-                xV_out.push_back(y);
-            }
-            return xV_out;
-        }
-
-        template <class T>
-        static std::vector<double>
-        revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-        {
-            return convert(x, toUnits, fromUnits);
-        }
-
         /* time units */
         enum class Time
         {
@@ -500,131 +506,30 @@ class HPWH
             Btu_per_hF // british thermal units per hour degree Fahrenheit
         };
 
-        static double convert(const double x, const Time fromUnits, const Time toUnits)
+        template <class T>
+        static double convert(const double x, const T fromUnits, const T toUnits)
         {
-            static Converter<Time>::ConversionMap conversionMap = {
-                {{Time::h, Time::h}, &ident},
-                {{Time::min, Time::min}, &ident},
-                {{Time::s, Time::s}, &ident},
-                {{Time::h, Time::min}, H_TO_MIN},
-                {{Time::h, Time::s}, &H_TO_S},
-                {{Time::min, Time::h}, MIN_TO_H},
-                {{Time::min, Time::s}, &MIN_TO_S},
-                {{Time::s, Time::h}, &S_TO_H},
-                {{Time::s, Time::min}, &S_TO_MIN}};
-            return Converter<Time>::convert(conversionMap, x, fromUnits, toUnits);
+            return Converter<T>::convert(x, fromUnits, toUnits);
         }
 
-        static double convert(const double x, const Temp fromUnits, const Temp toUnits)
+        template <class T>
+        static double revert(const double x, const T fromUnits, const T toUnits)
         {
-            static Converter<Temp>::ConversionMap conversionMap = {{{Temp::F, Temp::F}, &ident},
-                                                                   {{Temp::C, Temp::C}, &ident},
-                                                                   {{Temp::C, Temp::F}, &C_TO_F},
-                                                                   {{Temp::F, Temp::C}, &F_TO_C}};
-            return Converter<Temp>::convert(conversionMap, x, fromUnits, toUnits);
+            return Converter<T>::revert(x, fromUnits, toUnits);
         }
 
-        static double convert(const double x, const TempDiff fromUnits, const TempDiff toUnits)
+        template <class T>
+        static std::vector<double>
+        convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
-            static Converter<TempDiff>::ConversionMap conversionMap = {
-                {{TempDiff::F, TempDiff::F}, &ident},
-                {{TempDiff::C, TempDiff::C}, &ident},
-                {{TempDiff::C, TempDiff::F}, &C_TO_F},
-                {{TempDiff::F, TempDiff::C}, &F_TO_C}};
-            return Converter<TempDiff>::convert(conversionMap, x, fromUnits, toUnits);
+            return Converter<T>::convert(xV, fromUnits, toUnits);
         }
 
-        static double convert(const double x, const Energy fromUnits, const Energy toUnits)
+        template <class T>
+        static std::vector<double>
+        revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
         {
-            static Converter<Energy>::ConversionMap conversionMap = {
-                {{Energy::kJ, Energy::kJ}, ident},
-                {{Energy::kWh, Energy::kWh}, ident},
-                {{Energy::Btu, Energy::Btu}, ident},
-                {{Energy::kJ, Energy::kWh}, KJ_TO_KWH},
-                {{Energy::kJ, Energy::Btu}, KJ_TO_BTU},
-                {{Energy::kWh, Energy::kJ}, KWH_TO_KJ},
-                {{Energy::kWh, Energy::Btu}, KWH_TO_BTU},
-                {{Energy::Btu, Energy::kJ}, BTU_TO_KJ},
-                {{Energy::Btu, Energy::kWh}, BTU_TO_KWH}};
-            return Converter<Energy>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const Power fromUnits, const Power toUnits)
-        {
-            static Converter<Power>::ConversionMap conversionMap = {
-                {{Power::kW, Power::kW}, ident},
-                {{Power::Btu_per_h, Power::Btu_per_h}, ident},
-                {{Power::W, Power::W}, ident},
-                {{Power::kJ_per_h, Power::kJ_per_h}, ident},
-                {{Power::kW, Power::Btu_per_h}, KW_TO_BTUperH},
-                {{Power::kW, Power::W}, KW_TO_W},
-                {{Power::kW, Power::kJ_per_h}, KW_TO_KJperH},
-                {{Power::Btu_per_h, Power::kW}, BTUperH_TO_KW},
-                {{Power::Btu_per_h, Power::W}, BTUperH_TO_W},
-                {{Power::Btu_per_h, Power::kJ_per_h}, BTUperH_TO_KJperH},
-                {{Power::W, Power::kW}, W_TO_KW},
-                {{Power::W, Power::Btu_per_h}, W_TO_BTUperH},
-                {{Power::W, Power::kJ_per_h}, W_TO_KJperH},
-                {{Power::kJ_per_h, Power::kW}, KJperH_TO_KW},
-                {{Power::kJ_per_h, Power::Btu_per_h}, KJperH_TO_BTUperH},
-                {{Power::kJ_per_h, Power::W}, KJperH_TO_W}};
-
-            return Converter<Power>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const Length fromUnits, const Length toUnits)
-        {
-            static Converter<Length>::ConversionMap conversionMap = {
-                {{Length::m, Length::m}, &ident},
-                {{Length::ft, Length::ft}, &ident},
-                {{Length::m, Length::ft}, &M_TO_FT},
-                {{Length::ft, Length::m}, &FT_TO_M}};
-            return Converter<Length>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const Area fromUnits, const Area toUnits)
-        {
-            static Converter<Area>::ConversionMap conversionMap = {
-                {{Area::m2, Area::m2}, &ident},
-                {{Area::ft2, Area::ft2}, &ident},
-                {{Area::m2, Area::ft2}, &M2_TO_FT2},
-                {{Area::ft2, Area::m2}, &FT2_TO_M2}};
-            return Converter<Area>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const Volume fromUnits, const Volume toUnits)
-        {
-            static Converter<Volume>::ConversionMap conversionMap = {
-                {{Volume::L, Volume::L}, ident},
-                {{Volume::gal, Volume::gal}, ident},
-                {{Volume::ft3, Volume::ft3}, ident},
-                {{Volume::L, Volume::gal}, L_TO_GAL},
-                {{Volume::L, Volume::ft3}, L_TO_FT3},
-                {{Volume::gal, Volume::L}, GAL_TO_L},
-                {{Volume::gal, Volume::ft3}, GAL_TO_FT3},
-                {{Volume::ft3, Volume::L}, FT3_TO_L},
-                {{Volume::ft3, Volume::gal}, FT3_TO_GAL}};
-            return Converter<Volume>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const UA fromUnits, const UA toUnits)
-        {
-            static Converter<UA>::ConversionMap conversionMap = {
-                {{UA::kJ_per_hC, UA::kJ_per_hC}, &ident},
-                {{UA::Btu_per_hF, UA::Btu_per_hF}, &ident},
-                {{UA::kJ_per_hC, UA::Btu_per_hF}, &KJperHC_TO_BTUperHF},
-                {{UA::Btu_per_hF, UA::kJ_per_hC}, &BTUperHF_TO_KJperHC}};
-            return Converter<UA>::convert(conversionMap, x, fromUnits, toUnits);
-        }
-
-        static double convert(const double x, const FlowRate fromUnits, const FlowRate toUnits)
-        {
-            static Converter<FlowRate>::ConversionMap conversionMap = {
-                {{FlowRate::L_per_s, FlowRate::L_per_s}, &ident},
-                {{FlowRate::gal_per_min, FlowRate::gal_per_min}, &ident},
-                {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
-                {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
-            return Converter<FlowRate>::convert(conversionMap, x, fromUnits, toUnits);
+            return Converter<T>::revert(xV, fromUnits, toUnits);
         }
     };
 

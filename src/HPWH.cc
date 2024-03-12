@@ -67,6 +67,113 @@ const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 const int HPWH::HPWH_ABORT = -274000;
 
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Time>::ConversionMap
+    HPWH::Converter<HPWH::Units::Time>::conversionMap = {
+        {{HPWH::Units::Time::h, HPWH::Units::Time::h}, &ident},
+        {{HPWH::Units::Time::min, HPWH::Units::Time::min}, &ident},
+        {{HPWH::Units::Time::s, HPWH::Units::Time::s}, &ident},
+        {{HPWH::Units::Time::h, HPWH::Units::Time::min}, H_TO_MIN},
+        {{HPWH::Units::Time::h, HPWH::Units::Time::s}, &H_TO_S},
+        {{HPWH::Units::Time::min, HPWH::Units::Time::h}, MIN_TO_H},
+        {{HPWH::Units::Time::min, HPWH::Units::Time::s}, &MIN_TO_S},
+        {{HPWH::Units::Time::s, HPWH::Units::Time::h}, &S_TO_H},
+        {{HPWH::Units::Time::s, HPWH::Units::Time::min}, &S_TO_MIN}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Temp>::ConversionMap
+    HPWH::Converter<HPWH::Units::Temp>::conversionMap = {
+        {{HPWH::Units::Temp::F, HPWH::Units::Temp::F}, &ident},
+        {{HPWH::Units::Temp::C, HPWH::Units::Temp::C}, &ident},
+        {{HPWH::Units::Temp::C, HPWH::Units::Temp::F}, &C_TO_F},
+        {{HPWH::Units::Temp::F, HPWH::Units::Temp::C}, &F_TO_C}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::TempDiff>::ConversionMap
+    HPWH::Converter<HPWH::Units::TempDiff>::conversionMap = {
+        {{HPWH::Units::TempDiff::F, HPWH::Units::TempDiff::F}, ident},
+        {{HPWH::Units::TempDiff::C, HPWH::Units::TempDiff::C}, ident},
+        {{HPWH::Units::TempDiff::C, HPWH::Units::TempDiff::F}, dC_TO_dF},
+        {{HPWH::Units::TempDiff::F, HPWH::Units::TempDiff::C}, dF_TO_dC}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Energy>::ConversionMap
+    HPWH::Converter<HPWH::Units::Energy>::conversionMap = {
+        {{HPWH::Units::Energy::kJ, HPWH::Units::Energy::kJ}, ident},
+        {{HPWH::Units::Energy::kWh, HPWH::Units::Energy::kWh}, ident},
+        {{HPWH::Units::Energy::Btu, HPWH::Units::Energy::Btu}, ident},
+        {{HPWH::Units::Energy::kJ, HPWH::Units::Energy::kWh}, KJ_TO_KWH},
+        {{HPWH::Units::Energy::kJ, HPWH::Units::Energy::Btu}, KJ_TO_BTU},
+        {{HPWH::Units::Energy::kWh, HPWH::Units::Energy::kJ}, KWH_TO_KJ},
+        {{HPWH::Units::Energy::kWh, HPWH::Units::Energy::Btu}, KWH_TO_BTU},
+        {{HPWH::Units::Energy::Btu, HPWH::Units::Energy::kJ}, BTU_TO_KJ},
+        {{HPWH::Units::Energy::Btu, HPWH::Units::Energy::kWh}, BTU_TO_KWH}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Power>::ConversionMap
+    HPWH::Converter<HPWH::Units::Power>::conversionMap = {
+        {{HPWH::Units::Power::kW, HPWH::Units::Power::kW}, ident},
+        {{HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::Btu_per_h}, ident},
+        {{HPWH::Units::Power::W, HPWH::Units::Power::W}, ident},
+        {{HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kJ_per_h}, ident},
+        {{HPWH::Units::Power::kW, HPWH::Units::Power::Btu_per_h}, KW_TO_BTUperH},
+        {{HPWH::Units::Power::kW, HPWH::Units::Power::W}, KW_TO_W},
+        {{HPWH::Units::Power::kW, HPWH::Units::Power::kJ_per_h}, KW_TO_KJperH},
+        {{HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kW}, BTUperH_TO_KW},
+        {{HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::W}, BTUperH_TO_W},
+        {{HPWH::Units::Power::Btu_per_h, HPWH::Units::Power::kJ_per_h}, BTUperH_TO_KJperH},
+        {{HPWH::Units::Power::W, HPWH::Units::Power::kW}, W_TO_KW},
+        {{HPWH::Units::Power::W, HPWH::Units::Power::Btu_per_h}, W_TO_BTUperH},
+        {{HPWH::Units::Power::W, HPWH::Units::Power::kJ_per_h}, W_TO_KJperH},
+        {{HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::kW}, KJperH_TO_KW},
+        {{HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::Btu_per_h}, KJperH_TO_BTUperH},
+        {{HPWH::Units::Power::kJ_per_h, HPWH::Units::Power::W}, KJperH_TO_W}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Length>::ConversionMap
+    HPWH::Converter<HPWH::Units::Length>::conversionMap = {
+        {{HPWH::Units::Length::m, HPWH::Units::Length::m}, &ident},
+        {{HPWH::Units::Length::ft, HPWH::Units::Length::ft}, &ident},
+        {{HPWH::Units::Length::m, HPWH::Units::Length::ft}, &M_TO_FT},
+        {{HPWH::Units::Length::ft, HPWH::Units::Length::m}, &FT_TO_M}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Area>::ConversionMap
+    HPWH::Converter<HPWH::Units::Area>::conversionMap = {
+        {{HPWH::Units::Area::m2, HPWH::Units::Area::m2}, &ident},
+        {{HPWH::Units::Area::ft2, HPWH::Units::Area::ft2}, &ident},
+        {{HPWH::Units::Area::m2, HPWH::Units::Area::ft2}, &M2_TO_FT2},
+        {{HPWH::Units::Area::ft2, HPWH::Units::Area::m2}, &FT2_TO_M2}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::Volume>::ConversionMap
+    HPWH::Converter<HPWH::Units::Volume>::conversionMap = {
+        {{HPWH::Units::Volume::L, HPWH::Units::Volume::L}, ident},
+        {{HPWH::Units::Volume::gal, HPWH::Units::Volume::gal}, ident},
+        {{HPWH::Units::Volume::ft3, HPWH::Units::Volume::ft3}, ident},
+        {{HPWH::Units::Volume::L, HPWH::Units::Volume::gal}, L_TO_GAL},
+        {{HPWH::Units::Volume::L, HPWH::Units::Volume::ft3}, L_TO_FT3},
+        {{HPWH::Units::Volume::gal, HPWH::Units::Volume::L}, GAL_TO_L},
+        {{HPWH::Units::Volume::gal, HPWH::Units::Volume::ft3}, GAL_TO_FT3},
+        {{HPWH::Units::Volume::ft3, HPWH::Units::Volume::L}, FT3_TO_L},
+        {{HPWH::Units::Volume::ft3, HPWH::Units::Volume::gal}, FT3_TO_GAL}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::UA>::ConversionMap
+    HPWH::Converter<HPWH::Units::UA>::conversionMap = {
+        {{HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::kJ_per_hC}, &ident},
+        {{HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::Btu_per_hF}, &ident},
+        {{HPWH::Units::UA::kJ_per_hC, HPWH::Units::UA::Btu_per_hF}, &KJperHC_TO_BTUperHF},
+        {{HPWH::Units::UA::Btu_per_hF, HPWH::Units::UA::kJ_per_hC}, &BTUperHF_TO_KJperHC}};
+
+template <>
+/*static*/ HPWH::Converter<HPWH::Units::FlowRate>::ConversionMap
+    HPWH::Converter<HPWH::Units::FlowRate>::conversionMap = {
+        {{HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::L_per_s}, &ident},
+        {{HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::gal_per_min}, &ident},
+        {{HPWH::Units::FlowRate::L_per_s, HPWH::Units::FlowRate::gal_per_min}, &LPS_TO_GPM},
+        {{HPWH::Units::FlowRate::gal_per_min, HPWH::Units::FlowRate::L_per_s}, &GPM_TO_LPS}};
+
 //-----------------------------------------------------------------------------
 ///	@brief	Samples a std::vector to extract a single value spanning the fractional
 ///			coordinate range from frac_begin to frac_end.
