@@ -170,7 +170,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     double tankVol_L = Units::convert(tankVol, unitsVolume, Units::Volume::L);
     double upperPower_W = Units::convert(upperPower, unitsPower, Units::Power::W);
     double lowerPower_W = Units::convert(lowerPower, unitsPower, Units::Power::W);
-    double rValue_m2CperW = Units::invert(
+    double rValue_m2CperW = Units::revert(
         Units::convert(
             Units::convert(rValue, unitsArea, Units::Area::m2), unitsTempDiff, Units::TempDiff ::C),
         unitsPower,
