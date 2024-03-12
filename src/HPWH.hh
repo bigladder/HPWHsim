@@ -428,7 +428,7 @@ class HPWH
         }
     };
 
-    /// unit specification
+    /// units specifications
     struct Units
     {
         /* time units */
