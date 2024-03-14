@@ -222,7 +222,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             EXPECT_FALSE(hpwh.isSoCControlled());
 
             // change to SOC control;
-            hpwh.switchToSoCControls(.76, .05, 99, true, 49, HPWH::Units::Temp::F);
+            hpwh.switchToSoCControls(.76, .05, 99, true, 49, Units::Temp::F);
             EXPECT_TRUE(hpwh.isSoCControlled());
 
             // check entering water high temp shut off controll unchanged
@@ -268,8 +268,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
                 double tankAt76SoC_T_F = tempsForSetSoC[i][2];
 
                 // change to SOC control;
-                hpwh.switchToSoCControls(
-                    .85, .05, minUseT_F, true, coldWaterT_F, HPWH::Units::Temp::F);
+                hpwh.switchToSoCControls(.85, .05, minUseT_F, true, coldWaterT_F, Units::Temp::F);
                 EXPECT_TRUE(hpwh.isSoCControlled());
 
                 // Test if we're on and in band stay on

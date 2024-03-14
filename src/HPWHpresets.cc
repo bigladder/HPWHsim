@@ -256,8 +256,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     }
 
     // Calc UA
-    double SA_m2 =
-        getTankSurfaceArea(tankVol_L, HPWH::HPWH::Units::Volume::L, HPWH::Units::Area::m2);
+    double SA_m2 = getTankSurfaceArea(tankVol_L, Units::Volume::L, Units::Area::m2);
     double tankUA_WperC = SA_m2 / rValue_m2CperW;
     tankUA_kJperhC = Units::convert(tankUA_WperC, Units::Power::W, Units::Power::kJ_per_h);
 
@@ -1866,7 +1865,7 @@ int HPWH::initPreset(MODELS presetNum)
                                          Units::Temp::F,
                                          Units::Power::kW};
             }
-            // Grid values in long format, table 1, input power (kW)
+            // Grid values in long format, table 1, input power (W)
             compressor.perfGridValues.push_back(
                 Units::convert({10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76,
                                 15.97, 17.79, 20.56, 22.50, 10.36, 14.66, 18.07, 21.23,
@@ -1949,7 +1948,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0135443327,
                                            0.0000059621,
                                            0.0003010506,
-                                           -0.0000463525}, // Input Power Coefficients (kW)
+                                           -0.0000463525}, // Input Power Coefficients (W)
 
                                           {3.6840046360,
                                            0.0995685071,
@@ -1973,7 +1972,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0120766440,
                                            0.0000493862,
                                            0.0005422089,
-                                           -0.0001385078}, // Input Power Coefficients (kW)
+                                           -0.0001385078}, // Input Power Coefficients (W)
 
                                           {5.0207181209,
                                            0.0442525790,

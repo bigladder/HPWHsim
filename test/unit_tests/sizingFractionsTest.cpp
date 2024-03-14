@@ -162,9 +162,9 @@ TEST(SizingFractionsTest, getCompressorMinRuntime)
     double runTime_min = hpwh.getCompressorMinimumRuntime();
     EXPECT_EQ(runTime_min, expectedRunTime_min);
 
-    double runTime_sec = hpwh.getCompressorMinimumRuntime(HPWH::Units::Time::s);
+    double runTime_sec = hpwh.getCompressorMinimumRuntime(Units::Time::s);
     EXPECT_EQ(runTime_sec, expectedRunTime_sec);
 
-    double runTime_hr = hpwh.getCompressorMinimumRuntime(HPWH::Units::Time::h);
+    double runTime_hr = hpwh.getCompressorMinimumRuntime(Units::Time::h);
     EXPECT_EQ(runTime_hr, expectedRunTime_hr);
 }

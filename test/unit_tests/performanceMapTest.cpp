@@ -15,8 +15,8 @@ struct PerformanceMapTest : public testing::Test
 
     double getCapacityMP(HPWH& hpwh,
                          performancePointMP& point,
-                         HPWH::Units::Power unitsPower = HPWH::Units::Power::kW,
-                         HPWH::Units::Temp unitsTemp = HPWH::Units::Temp::F)
+                         Units::Power unitsPower = Units::Power::kW,
+                         Units::Temp unitsTemp = Units::Temp::F)
     {
         return hpwh.getCompressorCapacity(point.airT, point.inT, point.inT, unitsPower, unitsTemp);
     }
@@ -30,19 +30,19 @@ struct PerformanceMapTest : public testing::Test
 
     double getCapacitySP(HPWH& hpwh,
                          performancePointSP& point,
-                         HPWH::Units::Power unitsPower = HPWH::Units::Power::Btu_per_h,
-                         HPWH::Units::Temp unitsTemp = HPWH::Units::Temp::F)
+                         Units::Power unitsPower = Units::Power::Btu_per_h,
+                         Units::Temp unitsTemp = Units::Temp::F)
     {
         return hpwh.getCompressorCapacity(point.airT, point.inT, point.outT, unitsPower, unitsTemp);
     }
 
     double getQAHV_capacitySP(HPWH& hpwh,
                               performancePointSP& point,
-                              HPWH::Units::Power unitsPower = HPWH::Units::Power::Btu_per_h,
-                              HPWH::Units::Temp unitsTemp = HPWH::Units::Temp::F)
+                              Units::Power unitsPower = Units::Power::Btu_per_h,
+                              Units::Temp unitsTemp = Units::Temp::F)
     {
-        double inOffsetT = HPWH::Units::convert(10., HPWH::Units::Temp::F, unitsTemp);
-        double outOffsetT = HPWH::Units::convert(15., HPWH::Units::Temp::F, unitsTemp);
+        double inOffsetT = Units::convert(10., Units::Temp::F, unitsTemp);
+        double outOffsetT = Units::convert(15., Units::Temp::F, unitsTemp);
         return hpwh.getCompressorCapacity(
             point.airT, point.inT - inOffsetT, point.outT - outOffsetT, unitsPower, unitsTemp);
     }
@@ -66,10 +66,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     double setpointT_F = 150., setpointT_C = F_TO_C(setpointT_F);
     double capacityData_kW = 52.779317, capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -85,10 +85,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     setpointT_C = F_TO_C(setpointT_F);
     capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -104,10 +104,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     setpointT_C = F_TO_C(setpointT_F);
     capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -129,10 +129,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     double setpointT_F = 150., setpointT_C = F_TO_C(setpointT_F);
     double capacityData_kW = 105.12836804, capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    double capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    double capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     double capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -148,10 +148,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     setpointT_C = F_TO_C(setpointT_F);
     capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -167,10 +167,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     setpointT_C = F_TO_C(setpointT_F);
     capacityData_BTUperH = KW_TO_BTUperH(capacityData_kW);
 
-    capacity_kW = hpwh.getCompressorCapacity(
-        airT_C, waterT_C, setpointT_C, HPWH::Units::Power::kW, HPWH::Units::Temp::C);
+    capacity_kW =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C);
     capacity_BTUperH = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::Units::Power::Btu_per_h, HPWH::Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(capacityData_kW, capacity_kW);
     EXPECT_NEAR_REL(capacityData_BTUperH, capacity_BTUperH);
@@ -807,30 +807,21 @@ TEST_F(PerformanceMapTest, Sanden120)
     // nominal
     performancePointSP checkPoint = {60, 149.0, 41.0};
     double capData = 15059.59167;
-    double cap = hpwh.getCompressorCapacity(checkPoint.airT,
-                                            checkPoint.inT,
-                                            checkPoint.outT,
-                                            HPWH::Units::Power::Btu_per_h,
-                                            HPWH::Units::Temp::F);
+    double cap = hpwh.getCompressorCapacity(
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
     EXPECT_NEAR_REL(capData, cap);
 
     // Cold outlet temperature
     checkPoint = {60, 125.0, 41.0};
     capData = 15059.59167;
-    cap = hpwh.getCompressorCapacity(checkPoint.airT,
-                                     checkPoint.inT,
-                                     checkPoint.outT,
-                                     HPWH::Units::Power::Btu_per_h,
-                                     HPWH::Units::Temp::F);
+    cap = hpwh.getCompressorCapacity(
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
     EXPECT_NEAR_REL(capData, cap);
 
     // tests fails when output high
     checkPoint = {60, 200, 41.0};
     capData = 15059.59167;
-    cap = hpwh.getCompressorCapacity(checkPoint.airT,
-                                     checkPoint.inT,
-                                     checkPoint.outT,
-                                     HPWH::Units::Power::Btu_per_h,
-                                     HPWH::Units::Temp::F);
+    cap = hpwh.getCompressorCapacity(
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
     EXPECT_EQ(HPWH::HPWH_ABORT, cap);
 }

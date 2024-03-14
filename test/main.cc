@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize(newTankSize, HPWH::Units::Volume::gal);
+        hpwh.setTankSize(newTankSize, Units::Volume::gal);
     }
     if (tot_limit > 0)
     {
@@ -408,10 +408,9 @@ int main(int argc, char* argv[])
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpointT() <= 125.)
             {
-                allSchedules[1][i] *=
-                    (125. - allSchedules[0][i]) /
-                    (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, HPWH::Units::Temp::F) -
-                     allSchedules[0][i]);
+                allSchedules[1][i] *= (125. - allSchedules[0][i]) /
+                                      (hpwh.getTankNodeT(hpwh.getNumNodes() - 1, Units::Temp::F) -
+                                       allSchedules[0][i]);
             }
         }
 
@@ -446,10 +445,9 @@ int main(int argc, char* argv[])
         // Check flow for external MP
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::Units::Volume::gal);
-            double mpFlowVolume_Gal =
-                hpwh.getExternalMPFlowRate(HPWH::Units::FlowRate::gal_per_min) *
-                hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(Units::Volume::gal);
+            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(Units::FlowRate::gal_per_min) *
+                                      hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
@@ -473,10 +471,10 @@ int main(int argc, char* argv[])
             // Add some more outputs for mp tests
             if (hpwh.isCompressorExternalMultipass() == 1)
             {
-                strPreamble +=
-                    std::to_string(hpwh.getCondenserInletT_C()) + ", " +
-                    std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
-                    std::to_string(hpwh.getExternalVolumeHeated(HPWH::Units::Volume::gal)) + ", ";
+                strPreamble += std::to_string(hpwh.getCondenserInletT_C()) + ", " +
+                               std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
+                               std::to_string(hpwh.getExternalVolumeHeated(Units::Volume::gal)) +
+                               ", ";
             }
             if (useSoC)
             {
@@ -494,10 +492,9 @@ int main(int argc, char* argv[])
         {
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                cumHeatIn[iHS] +=
-                    hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::Units::Energy::kWh) * 1000.;
+                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh) * 1000.;
                 cumHeatOut[iHS] +=
-                    hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::Units::Energy::kWh) * 1000.;
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, Units::Energy::kWh) * 1000.;
             }
         }
     }
