@@ -356,6 +356,6 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
 
-}; // namespace Units
+} // namespace Units
 
 #endif
