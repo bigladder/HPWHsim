@@ -2592,22 +2592,22 @@ void HPWH::printTankTs_C()
 
 double HPWH::getOutletT(const Units::Temp units /*C*/) const
 {
-    return Units::convert(getOutletT_C(), Units::Temp::C, units);
+    return Units::Temp_C(getOutletT_C())(units);
 }
 
 double HPWH::getCondenserInletT(const Units::Temp units /*C*/) const
 {
-    return Units::convert(getCondenserInletT_C(), Units::Temp::C, units);
+    return Units::Temp_C(getCondenserInletT_C())(units);
 }
 
 double HPWH::getCondenserOutletT(const Units::Temp units /*C*/) const
 {
-    return Units::convert(getCondenserOutletT_C(), Units::Temp::C, units);
+    return Units::Temp_C(getCondenserOutletT_C())(units);
 }
 
 double HPWH::getSetpointT(const Units::Temp units /*C*/) const
 {
-    return Units::convert(getSetpointT_C(), Units::Temp::C, units);
+    return Units::Temp_C(getSetpointT_C())(units);
 }
 
 double HPWH::getMaxCompressorSetpointT(const Units::Temp units /*C*/) const
@@ -2620,7 +2620,7 @@ double HPWH::getMaxCompressorSetpointT(const Units::Temp units /*C*/) const
         }
         return double(HPWH_ABORT);
     }
-    return Units::convert(heatSources[compressorIndex].maxSetpointT_C, Units::Temp::C, units);
+    return Units::Temp_C(heatSources[compressorIndex].maxSetpointT_C)(units);
 }
 
 double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) const
@@ -2634,7 +2634,7 @@ double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) cons
         }
         return double(HPWH_ABORT);
     }
-    return Units::convert(getTankNodeT_C(nodeNum), Units::Temp::C, units);
+    return Units::Temp_C(getTankNodeT_C(nodeNum))(units);
 }
 
 double HPWH::getNthThermocoupleT(const int iTCouple,
@@ -2654,14 +2654,13 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp_C = getResampledValue(tankTs_C, beginFraction, endFraction);
 
-    return Units::convert(simTcoupleTemp_C, Units::Temp::C, units);
+    return Units::Temp_C(simTcoupleTemp_C)(units);
 }
 
 double HPWH::getMinOperatingT(const Units::Temp units /*C*/) const
 {
-    return hasCompressor()
-               ? Units::convert(heatSources[compressorIndex].minT_C, Units::Temp::C, units)
-               : double(HPWH_ABORT);
+    return hasCompressor() ? Units::Temp_C(heatSources[compressorIndex].minT_C)(units)
+                           : double(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------

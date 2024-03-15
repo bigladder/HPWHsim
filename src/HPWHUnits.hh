@@ -1,6 +1,8 @@
 #ifndef HPWH_UNITS_
 #define HPWH_UNITS_
 
+#include <utility>
+
 // reference conversion factors
 constexpr double s_per_min = 60.;            // s / min
 constexpr double min_per_h = 60.;            // min / h
@@ -355,6 +357,75 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::gal_per_min, FlowRate::gal_per_min}, &ident},
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
+
+/// fixed-unit quantities
+template <class T>
+struct UnitsVal
+{
+
+  private:
+  public:
+    double x;
+
+    UnitsVal(const double x_in) : x(x_in) {}
+
+    UnitsVal(const double x_in, const T fromUnits, const T toUnits)
+        : x(Converter<T>::convert(x_in, fromUnits, toUnits))
+    {
+    }
+
+    UnitsVal operator=(const UnitsVal unitVal_in)
+    {
+        x = unitVal_in.x;
+        return *this;
+    }
+
+    UnitsVal operator=(const double x_in)
+    {
+        x = x_in;
+        return *this;
+    }
+
+    UnitsVal operator()(const T fromUnits, const T toUnits) { return to(fromUnits, toUnits); }
+
+    const double to(const T fromUnits, const T toUnits)
+    {
+        return Converter<T>::convert(x, fromUnits, toUnits);
+    }
+
+    operator double() { return x; }
+};
+
+template <class T, T refUnits>
+struct FixedUnitsVal : public UnitsVal<T>
+{
+
+    FixedUnitsVal(const double x_in = 0.) : UnitsVal<T>(x_in) {}
+
+    FixedUnitsVal(const double x_in, const T fromUnits)
+        : UnitsVal<T>(Converter<T>::convert(x_in, fromUnits, refUnits))
+    {
+    }
+
+    template <T fromUnits>
+    FixedUnitsVal(const FixedUnitsVal<T, fromUnits> fixedUnitsVal)
+        : UnitsVal<T>(fixedUnitsVal.x, fromUnits, refUnits)
+    {
+    }
+
+    UnitsVal<T> operator()(const T toUnits) { return UnitsVal<T>(this->x, refUnits, toUnits); }
+};
+
+typedef FixedUnitsVal<Time, Time::min> Time_min;
+typedef FixedUnitsVal<Temp, Temp::C> Temp_C;
+typedef FixedUnitsVal<TempDiff, TempDiff::C> TempDiff_C;
+typedef FixedUnitsVal<Energy, Energy::kJ> Energy_kJ;
+typedef FixedUnitsVal<Power, Power::kW> Power_kW;
+typedef FixedUnitsVal<Length, Length::m> Length_m;
+typedef FixedUnitsVal<Area, Area::m2> Area_m2;
+typedef FixedUnitsVal<Volume, Volume::L> Volume_L;
+typedef FixedUnitsVal<FlowRate, FlowRate::L_per_s> FlowRate_L_per_s;
+typedef FixedUnitsVal<UA, UA::kJ_per_hC> UA_kJ_per_hC;
 
 } // namespace Units
 
