@@ -12,6 +12,7 @@ constexpr double m_per_in = 0.0254;          // m / in (exact)
 constexpr double F_per_C = 1.8;              // degF / degC
 constexpr double offsetF = 32.;              // degF offset
 constexpr double kJ_per_Btu = 1.05505585262; // kJ / Btu (IT), https://www.unitconverters.net/
+constexpr double L_per_m3 = 1000.;           // L / m^3
 
 // useful conversion factors
 constexpr double s_per_h = s_per_min * min_per_h;                                  // s / h
@@ -85,13 +86,20 @@ inline double FT2_TO_M2(const double ft2) { return (ft2 / ft_per_m / ft_per_m); 
 
 // volume conversion
 inline double L_TO_GAL(const double L) { return gal_per_L * L; }
-inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
-
+inline double L_TO_M3(const double L) { return L / L_per_m3; }
 inline double L_TO_FT3(const double L) { return ft3_per_L * L; }
-inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
 
+inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
+inline double GAL_TO_M3(const double gal) { return L_TO_M3(GAL_TO_L(gal)); }
 inline double GAL_TO_FT3(const double gal) { return L_TO_FT3(GAL_TO_L(gal)); }
+
+inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
+inline double FT3_TO_M3(const double ft3) { return L_TO_M3(FT3_TO_L(ft3)); }
 inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
+
+inline double M3_TO_L(const double m3) { return L_per_m3 * m3; }
+inline double M3_TO_GAL(const double m3) { return L_TO_GAL(M3_TO_L(m3)); }
+inline double M3_TO_FT3(const double m3) { return L_TO_FT3(M3_TO_L(m3)); }
 
 // flow-rate conversion
 inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / s_per_min); }
@@ -169,6 +177,7 @@ enum class Volume
 {
     L,   // liters
     gal, // gallons
+    m3,  // cubic meters
     ft3  // cubic feet
 };
 
@@ -337,13 +346,20 @@ template <>
 inline Converter<Volume>::ConversionMap Converter<Volume>::conversionMap = {
     {{Volume::L, Volume::L}, ident},
     {{Volume::gal, Volume::gal}, ident},
+    {{Volume::m3, Volume::m3}, ident},
     {{Volume::ft3, Volume::ft3}, ident},
     {{Volume::L, Volume::gal}, L_TO_GAL},
+    {{Volume::L, Volume::m3}, L_TO_M3},
     {{Volume::L, Volume::ft3}, L_TO_FT3},
     {{Volume::gal, Volume::L}, GAL_TO_L},
+    {{Volume::gal, Volume::m3}, GAL_TO_M3},
     {{Volume::gal, Volume::ft3}, GAL_TO_FT3},
     {{Volume::ft3, Volume::L}, FT3_TO_L},
-    {{Volume::ft3, Volume::gal}, FT3_TO_GAL}};
+    {{Volume::ft3, Volume::gal}, FT3_TO_GAL},
+    {{Volume::ft3, Volume::m3}, FT3_TO_M3},
+    {{Volume::m3, Volume::L}, M3_TO_L},
+    {{Volume::m3, Volume::gal}, M3_TO_GAL},
+    {{Volume::m3, Volume::ft3}, M3_TO_FT3}};
 
 template <>
 inline Converter<UA>::ConversionMap Converter<UA>::conversionMap = {
@@ -394,6 +410,8 @@ struct UnitsVal
     }
 
     operator double() const { return x; }
+
+    double as_double() const { return x; }
 };
 
 /// fixed-unit quantities
