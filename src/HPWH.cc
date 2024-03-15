@@ -2659,8 +2659,9 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
 
 double HPWH::getMinOperatingT(const Units::Temp units /*C*/) const
 {
-    return hasCompressor() ? Units::Temp_C(heatSources[compressorIndex].minT_C)(units)
-                           : double(HPWH_ABORT);
+    return hasCompressor()
+               ? static_cast<double>(Units::Temp_C(heatSources[compressorIndex].minT_C)(units))
+               : static_cast<double>(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------

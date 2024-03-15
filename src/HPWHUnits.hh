@@ -359,11 +359,10 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
 
-/// fixed-unit quantities
+/// units quantities
 template <class T>
 struct UnitsVal
 {
-
   protected:
     double x;
 
@@ -397,26 +396,26 @@ struct UnitsVal
     operator double() const { return x; }
 };
 
-template <class T, T refUnits>
+/// fixed-unit quantities
+template <class T, T fixedUnits>
 struct FixedUnitsVal : public UnitsVal<T>
 {
-
     FixedUnitsVal(const double x_in = 0.) : UnitsVal<T>(x_in) {}
 
     FixedUnitsVal(const double x_in, const T fromUnits)
-        : UnitsVal<T>(Converter<T>::convert(x_in, fromUnits, refUnits))
+        : UnitsVal<T>(Converter<T>::convert(x_in, fromUnits, fixedUnits))
     {
     }
 
     template <T fromUnits>
     FixedUnitsVal(const FixedUnitsVal<T, fromUnits> fixedUnitsVal)
-        : UnitsVal<T>(fixedUnitsVal, fromUnits, refUnits)
+        : UnitsVal<T>(fixedUnitsVal, fromUnits, fixedUnits)
     {
     }
 
     UnitsVal<T> operator()(const T toUnits) const
     {
-        return UnitsVal<T>(this->x, refUnits, toUnits);
+        return UnitsVal<T>(this->x, fixedUnits, toUnits);
     }
 };
 typedef FixedUnitsVal<Time, Time::s> Time_s;
