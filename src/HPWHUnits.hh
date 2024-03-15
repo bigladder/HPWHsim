@@ -1,7 +1,8 @@
 #ifndef HPWH_UNITS_
 #define HPWH_UNITS_
 
-#include <utility>
+#include <unordered_map>
+#include <vector>
 
 // reference conversion factors
 constexpr double s_per_min = 60.;            // s / min
@@ -363,10 +364,10 @@ template <class T>
 struct UnitsVal
 {
 
-  private:
-  public:
+  protected:
     double x;
 
+  public:
     UnitsVal(const double x_in) : x(x_in) {}
 
     UnitsVal(const double x_in, const T fromUnits, const T toUnits)
@@ -386,14 +387,14 @@ struct UnitsVal
         return *this;
     }
 
-    UnitsVal operator()(const T fromUnits, const T toUnits) { return to(fromUnits, toUnits); }
+    UnitsVal operator()(const T fromUnits, const T toUnits) const { return to(fromUnits, toUnits); }
 
-    const double to(const T fromUnits, const T toUnits)
+    double to(const T fromUnits, const T toUnits) const
     {
         return Converter<T>::convert(x, fromUnits, toUnits);
     }
 
-    operator double() { return x; }
+    operator double() const { return x; }
 };
 
 template <class T, T refUnits>
@@ -409,13 +410,16 @@ struct FixedUnitsVal : public UnitsVal<T>
 
     template <T fromUnits>
     FixedUnitsVal(const FixedUnitsVal<T, fromUnits> fixedUnitsVal)
-        : UnitsVal<T>(fixedUnitsVal.x, fromUnits, refUnits)
+        : UnitsVal<T>(fixedUnitsVal, fromUnits, refUnits)
     {
     }
 
-    UnitsVal<T> operator()(const T toUnits) { return UnitsVal<T>(this->x, refUnits, toUnits); }
+    UnitsVal<T> operator()(const T toUnits) const
+    {
+        return UnitsVal<T>(this->x, refUnits, toUnits);
+    }
 };
-
+typedef FixedUnitsVal<Time, Time::s> Time_s;
 typedef FixedUnitsVal<Time, Time::min> Time_min;
 typedef FixedUnitsVal<Temp, Temp::C> Temp_C;
 typedef FixedUnitsVal<TempDiff, TempDiff::C> TempDiff_C;
