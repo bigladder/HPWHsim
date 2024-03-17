@@ -543,7 +543,7 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
 {
     T_C = Units::Temp_C(T_in, unitsTemp_in);
 
-    inputPower_coeffs_kW = Units::convert(inputPower_coeffs_in, unitsPower_in, Units::Power::kW);
+    inputPower_coeffs_kW = Units::PowerVect_kW(inputPower_coeffs_in, unitsPower_in);
     COP_coeffs = COP_coeffs_in;
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
@@ -2407,22 +2407,20 @@ double HPWH::getEnergyRemovedFromEnvironment(const Units::Energy units /*kWh*/) 
 
 double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*kWh*/) const
 {
-    return (isHeatSourceIndexValid(N))
-               ? Units::Energy_kJ(heatSources[N].energyInput_kJ)(units).as_double()
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyInput_kJ)(units)
+                                       : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*kWh*/) const
 {
-    return (isHeatSourceIndexValid(N))
-               ? Units::Energy_kJ(heatSources[N].energyOutput_kJ)(units).as_double()
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyOutput_kJ)(units)
+                                       : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*kWh*/) const
 {
     return (isHeatSourceIndexValid(N))
-               ? Units::Energy_kJ(heatSources[N].energyRemovedFromEnvironment_kJ)(units).as_double()
+               ? Units::Energy_kJ(heatSources[N].energyRemovedFromEnvironment_kJ)(units)
                : double(HPWH_ABORT);
 }
 
@@ -2657,13 +2655,13 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
 
 double HPWH::getMinOperatingT(const Units::Temp units /*C*/) const
 {
-    return hasCompressor() ? Units::Temp_C(heatSources[compressorIndex].minT_C)(units).as_double()
+    return hasCompressor() ? Units::Temp_C(heatSources[compressorIndex].minT_C)(units)
                            : static_cast<double>(HPWH_ABORT);
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Assigns new temps provided from a std::vector to tankTs_C.
-/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+/// @param[in]	setTankTs	   new tank temps (arbitrary non-zero size)
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
 /// @return	Success: 0; Failure: HPWH_ABORT
 //-----------------------------------------------------------------------------
@@ -2679,7 +2677,7 @@ int HPWH::setTankTs(std::vector<double> setTankTs, const Units::Temp units /*C*/
         return HPWH_ABORT;
     }
 
-    // Units::convert setTankTemps to degC, if necessary
+    // convert setTankTemps to degC, if necessary
     if (units == Units::Temp::F)
         for (auto& T : setTankTs)
             T = F_TO_C(T);

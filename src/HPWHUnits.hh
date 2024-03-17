@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <iterator>
 
 // reference conversion factors
 constexpr double s_per_min = 60.;            // s / min
@@ -375,25 +376,26 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
 
-/// units quantities
-template <class T>
+///units values
+template <class T, T units>
 struct UnitsVal
 {
   protected:
-    double x;
 
   public:
-    UnitsVal(const double x_in) : x(x_in) {}
+    double x;
 
-    UnitsVal(const double x_in, const T fromUnits, const T toUnits)
-        : x(Converter<T>::convert(x_in, fromUnits, toUnits))
+    UnitsVal(const double x_in = 0.): x(x_in) {}
+
+    UnitsVal(const double x_in, const T fromUnits)
+        : x(Converter<T>::convert(x_in, fromUnits, units))
     {
     }
 
-    UnitsVal operator=(const UnitsVal unitVal_in)
+    template <T fromUnits>
+    UnitsVal(const UnitsVal<T, fromUnits> unitsVal)
+        : x(Converter<T>::convert(unitsVal, fromUnits, units))
     {
-        x = unitVal_in.x;
-        return *this;
     }
 
     UnitsVal operator=(const double x_in)
@@ -402,52 +404,201 @@ struct UnitsVal
         return *this;
     }
 
-    UnitsVal operator()(const T fromUnits, const T toUnits) const { return to(fromUnits, toUnits); }
-
-    double to(const T fromUnits, const T toUnits) const
+    double to(const T toUnits) const
     {
-        return Converter<T>::convert(x, fromUnits, toUnits);
+        return Converter<T>::convert(x, units, toUnits);
+    }
+
+    template <T toUnits>
+    UnitsVal<T, toUnits> to() const
+    {
+        return Converter<T>::convert(x, units, toUnits);
+    }
+
+    double operator()(const T toUnits) const
+    {
+        return to(toUnits);
     }
 
     operator double() const { return x; }
 
     double as_double() const { return x; }
+
+    static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>> &xV, const T toUnits)
+    {
+        std::vector<UnitsVal<T, toUnits>> xV_out;
+        for (auto x: xV)
+            xV_out.push_back({x, units, toUnits});
+        return xV_out;
+    }
 };
 
-/// fixed-unit quantities
-template <class T, T fixedUnits>
-struct FixedUnitsVal : public UnitsVal<T>
+/// units vectors
+template <class T, T units>
+struct UnitsVect
 {
-    FixedUnitsVal(const double x_in = 0.) : UnitsVal<T>(x_in) {}
+  public:
+    std::vector<UnitsVal<T, units>> fV;
 
-    FixedUnitsVal(const double x_in, const T fromUnits)
-        : UnitsVal<T>(Converter<T>::convert(x_in, fromUnits, fixedUnits))
+    UnitsVect(const std::vector<double> &xV_from = {}, const T fromUnits = units)
     {
+        fV.clear();
+        for (auto x: xV_from)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
 
     template <T fromUnits>
-    FixedUnitsVal(const FixedUnitsVal<T, fromUnits> fixedUnitsVal)
-        : UnitsVal<T>(fixedUnitsVal, fromUnits, fixedUnits)
+    UnitsVect(const std::vector<UnitsVal<T, fromUnits>> &xV_from)
     {
+        fV.clear();
+        for (auto x: xV_from)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
 
-    UnitsVal<T> operator()(const T toUnits) const
+    template <T fromUnits>
+    UnitsVect(const UnitsVect<T, fromUnits> &fV_from)
     {
-        return UnitsVal<T>(this->x, fixedUnits, toUnits);
+        fV.clear();
+        for (auto x: fV_from.fV)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
+
+    operator std::vector<double>() const
+    {
+        std::vector<double> xV_to;
+        for (auto f: fV)
+            xV_to.push_back(f);
+        return xV_to;
+    }
+
+    UnitsVect operator = (const std::vector<double> &xV)
+    {
+        fV.clear();
+        for (auto x: xV)
+            fV.push_back(x);
+        return *this;
+    }
+
+    std::vector<double> operator()(const T toUnits) const
+    {
+        std::vector<double> xV_to;
+        for (auto f: fV)
+            xV_to.push_back(f(toUnits));
+        return xV_to;
+    }
+
+    template <T toUnits>
+    UnitsVect<T, toUnits> to()
+    {
+        std::vector<double> xV_to;
+        for (auto f: fV)
+            xV_to.push_back(f);
+        return UnitsVect<T, toUnits>(xV_to, units);
+    }
+
+    template <T toUnits>
+    UnitsVect<T, toUnits> operator()() const
+    {
+        return to<toUnits>();
+    }
+
+    UnitsVal<T, units>& operator[] (const std::size_t i)
+    {
+        return fV[i];
+    }
+
+    UnitsVal<T, units>* begin(){return &fV[0];}
+
+    UnitsVal<T, units>* end(){return &fV[0] + fV.size();}
 };
-typedef FixedUnitsVal<Time, Time::s> Time_s;
-typedef FixedUnitsVal<Time, Time::min> Time_min;
-typedef FixedUnitsVal<Temp, Temp::C> Temp_C;
-typedef FixedUnitsVal<TempDiff, TempDiff::C> TempDiff_C;
-typedef FixedUnitsVal<Energy, Energy::kJ> Energy_kJ;
-typedef FixedUnitsVal<Power, Power::kW> Power_kW;
-typedef FixedUnitsVal<Length, Length::m> Length_m;
-typedef FixedUnitsVal<Area, Area::m2> Area_m2;
-typedef FixedUnitsVal<Volume, Volume::L> Volume_L;
-typedef FixedUnitsVal<FlowRate, FlowRate::L_per_s> FlowRate_L_per_s;
-typedef FixedUnitsVal<UA, UA::kJ_per_hC> UA_kJ_per_hC;
 
+/// units-values partial specializations
+template <Time units>
+using TimeVal = UnitsVal<Time, units>;
+
+template <Temp units>
+using TempVal = UnitsVal<Temp, units>;
+
+template <TempDiff units>
+using TempDiffVal = UnitsVal<TempDiff, units>;
+
+template <Energy units>
+using EnergyVal = UnitsVal<Energy, units>;
+
+template <Power units>
+using PowerVal = UnitsVal<Power, units>;
+
+template <Length units>
+using LengthVal = UnitsVal<Length, units>;
+
+template <Area units>
+using AreaVal = UnitsVal<Area, units>;
+
+template <Volume units>
+using VolumeVal = UnitsVal<Volume, units>;
+
+template <FlowRate units>
+using FlowRateVal = UnitsVal<FlowRate, units>;
+
+template <UA units>
+using UAVal = UnitsVal<UA, units>;
+
+/// units-vectors partial specializations
+template <Time units>
+using TimeVect = UnitsVect<Time, units>;
+
+template <Temp units>
+using TempVect = UnitsVect<Temp, units>;
+
+template <TempDiff units>
+using TempDiffVect = UnitsVect<TempDiff, units>;
+
+template <Energy units>
+using EnergyVect = UnitsVect<Energy, units>;
+
+template <Power units>
+using PowerVect = UnitsVect<Power, units>;
+
+template <Length units>
+using LengthVect = UnitsVect<Length, units>;
+
+template <Area units>
+using AreaVect = UnitsVect<Area, units>;
+
+template <Volume units>
+using VolumeVect = UnitsVect<Volume, units>;
+
+template <FlowRate units>
+using FlowRateVect = UnitsVect<FlowRate, units>;
+
+template <UA units>
+using UAVect = UnitsVect<UA, units>;
+
+/// units-values full specializations
+typedef TimeVal<Time::s> Time_s;
+typedef TimeVal<Time::min> Time_min;
+typedef TempVal<Temp::C> Temp_C;
+typedef TempDiffVal<TempDiff::C> TempDiff_C;
+typedef EnergyVal<Energy::kJ> Energy_kJ;
+typedef PowerVal<Power::kW> Power_kW;
+typedef LengthVal<Length::m> Length_m;
+typedef AreaVal<Area::m2> Area_m2;
+typedef VolumeVal<Volume::L> Volume_L;
+typedef FlowRateVal<FlowRate::L_per_s> FlowRate_L_per_s;
+typedef UAVal<Units::UA::kJ_per_hC> UA_kJ_per_hC;
+
+/// units-vectors full specializations
+typedef TimeVect<Time::s> TimeVect_s;
+typedef TimeVect<Time::min> TimeVect_min;
+typedef TempVect<Temp::C> TempVect_C;
+typedef TempDiffVect<TempDiff::C> TempDiffVect_C;
+typedef EnergyVect<Energy::kJ> EnergyVect_kJ;
+typedef PowerVect<Power::kW> PowerVect_kW;
+typedef LengthVect<Length::m> LengthVect_m;
+typedef AreaVect<Area::m2> AreaVect_m2;
+typedef VolumeVect<Volume::L> VolumeVect_L;
+typedef FlowRateVect<FlowRate::L_per_s> FlowRateVect_L_per_s;
+typedef UAVect<UA::kJ_per_hC> UAVect_kJ_per_hC;
 } // namespace Units
 
 #endif
