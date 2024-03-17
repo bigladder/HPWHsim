@@ -376,16 +376,15 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
 
-///units values
+/// units values
 template <class T, T units>
 struct UnitsVal
 {
   protected:
-
   public:
     double x;
 
-    UnitsVal(const double x_in = 0.): x(x_in) {}
+    UnitsVal(const double x_in = 0.) : x(x_in) {}
 
     UnitsVal(const double x_in, const T fromUnits)
         : x(Converter<T>::convert(x_in, fromUnits, units))
@@ -404,10 +403,7 @@ struct UnitsVal
         return *this;
     }
 
-    double to(const T toUnits) const
-    {
-        return Converter<T>::convert(x, units, toUnits);
-    }
+    double to(const T toUnits) const { return Converter<T>::convert(x, units, toUnits); }
 
     template <T toUnits>
     UnitsVal<T, toUnits> to() const
@@ -415,19 +411,16 @@ struct UnitsVal
         return Converter<T>::convert(x, units, toUnits);
     }
 
-    double operator()(const T toUnits) const
-    {
-        return to(toUnits);
-    }
+    double operator()(const T toUnits) const { return to(toUnits); }
 
     operator double() const { return x; }
 
     double as_double() const { return x; }
 
-    static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>> &xV, const T toUnits)
+    static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
     {
         std::vector<UnitsVal<T, toUnits>> xV_out;
-        for (auto x: xV)
+        for (auto x : xV)
             xV_out.push_back({x, units, toUnits});
         return xV_out;
     }
@@ -440,41 +433,41 @@ struct UnitsVect
   public:
     std::vector<UnitsVal<T, units>> fV;
 
-    UnitsVect(const std::vector<double> &xV_from = {}, const T fromUnits = units)
+    UnitsVect(const std::vector<double>& xV_from = {}, const T fromUnits = units)
     {
         fV.clear();
-        for (auto x: xV_from)
+        for (auto x : xV_from)
             fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
 
     template <T fromUnits>
-    UnitsVect(const std::vector<UnitsVal<T, fromUnits>> &xV_from)
+    UnitsVect(const std::vector<UnitsVal<T, fromUnits>>& xV_from)
     {
         fV.clear();
-        for (auto x: xV_from)
+        for (auto x : xV_from)
             fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
 
     template <T fromUnits>
-    UnitsVect(const UnitsVect<T, fromUnits> &fV_from)
+    UnitsVect(const UnitsVect<T, fromUnits>& fV_from)
     {
         fV.clear();
-        for (auto x: fV_from.fV)
+        for (auto x : fV_from.fV)
             fV.push_back(Converter<T>::convert(x, fromUnits, units));
     }
 
     operator std::vector<double>() const
     {
         std::vector<double> xV_to;
-        for (auto f: fV)
+        for (auto f : fV)
             xV_to.push_back(f);
         return xV_to;
     }
 
-    UnitsVect operator = (const std::vector<double> &xV)
+    UnitsVect operator=(const std::vector<double>& xV)
     {
         fV.clear();
-        for (auto x: xV)
+        for (auto x : xV)
             fV.push_back(x);
         return *this;
     }
@@ -482,7 +475,7 @@ struct UnitsVect
     std::vector<double> operator()(const T toUnits) const
     {
         std::vector<double> xV_to;
-        for (auto f: fV)
+        for (auto f : fV)
             xV_to.push_back(f(toUnits));
         return xV_to;
     }
@@ -491,7 +484,7 @@ struct UnitsVect
     UnitsVect<T, toUnits> to()
     {
         std::vector<double> xV_to;
-        for (auto f: fV)
+        for (auto f : fV)
             xV_to.push_back(f);
         return UnitsVect<T, toUnits>(xV_to, units);
     }
@@ -502,14 +495,11 @@ struct UnitsVect
         return to<toUnits>();
     }
 
-    UnitsVal<T, units>& operator[] (const std::size_t i)
-    {
-        return fV[i];
-    }
+    UnitsVal<T, units>& operator[](const std::size_t i) { return fV[i]; }
 
-    UnitsVal<T, units>* begin(){return &fV[0];}
+    UnitsVal<T, units>* begin() { return &fV[0]; }
 
-    UnitsVal<T, units>* end(){return &fV[0] + fV.size();}
+    UnitsVal<T, units>* end() { return &fV[0] + fV.size(); }
 };
 
 /// units-values partial specializations
