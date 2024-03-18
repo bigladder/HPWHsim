@@ -1156,6 +1156,6 @@ void HPWH::HeatSource::changeResistancePower(const double power, const Units::Po
 {
     for (auto& perfP : perfMap)
     {
-        perfP.inputPower_coeffs_kW[0] = Units::convert(power, units, Units::Power::kW);
+        perfP.inputPower_coeffs_kW[0] = Units::Power_kW(power, units);
     }
 }

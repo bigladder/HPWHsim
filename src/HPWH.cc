@@ -1627,25 +1627,25 @@ int HPWH::setDoConduction(bool doCondu)
     return 0;
 }
 
-int HPWH::setUA(const double UA, const Units::UA units /*KJperHC*/)
+int HPWH::setUA(const double UA, const Units::UA units /*kJ_per_hC*/)
 {
     tankUA_kJperhC = Units::UA_kJ_per_hC(UA, units);
     return 0;
 }
 
-int HPWH::getUA(double& UA, Units::UA units /*KJperHC*/) const
+int HPWH::getUA(double& UA, Units::UA units /*kJ_per_hC*/) const
 {
     UA = Units::UA_kJ_per_hC(tankUA_kJperhC)(units);
     return 0;
 }
 
-int HPWH::setFittingsUA(const double UA, const Units::UA units /*KJperHC*/)
+int HPWH::setFittingsUA(const double UA, const Units::UA units /*kJ_per_hC*/)
 {
     fittingsUA_kJperhC = Units::UA_kJ_per_hC(UA, units);
     return 0;
 }
 
-int HPWH::getFittingsUA(double& UA, const Units::UA units /*KJperHC*/) const
+int HPWH::getFittingsUA(double& UA, const Units::UA units /*kJ_per_hC*/) const
 {
     UA = Units::UA_kJ_per_hC(fittingsUA_kJperhC)(units);
     return 0;

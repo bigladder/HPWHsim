@@ -219,8 +219,6 @@ struct Converter
     static double convert(const double x, const T fromUnits, const T toUnits)
     {
         return conversionMap.at(std::make_pair(fromUnits, toUnits))(x);
-        // .find(std::make_pair(fromUnits, toUnits))(x);
-        //[std::make_pair(fromUnits, toUnits)](x); //
     }
 
     static double revert(const double x, const T fromUnits, const T toUnits)
@@ -405,13 +403,10 @@ struct UnitsVal
 
     double to(const T toUnits) const { return Converter<T>::convert(x, units, toUnits); }
 
-    template <T toUnits>
-    UnitsVal<T, toUnits> to() const
-    {
-        return Converter<T>::convert(x, units, toUnits);
-    }
-
     double operator()(const T toUnits) const { return to(toUnits); }
+
+    /// inverse unit conversion
+    double inv(const T toUnits) const { return Converter<T>::revert(x, units, toUnits); }
 
     operator double() const { return x; }
 
@@ -472,27 +467,23 @@ struct UnitsVect
         return *this;
     }
 
-    std::vector<double> operator()(const T toUnits) const
+    std::vector<double> to(const T toUnits) const
     {
         std::vector<double> xV_to;
         for (auto f : fV)
-            xV_to.push_back(f(toUnits));
+            xV_to.push_back(f.to(toUnits));
         return xV_to;
     }
 
-    template <T toUnits>
-    UnitsVect<T, toUnits> to()
+    std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
+
+    /// inverse unit conversion
+    std::vector<double> inv(const T toUnits) const
     {
         std::vector<double> xV_to;
         for (auto f : fV)
-            xV_to.push_back(f);
-        return UnitsVect<T, toUnits>(xV_to, units);
-    }
-
-    template <T toUnits>
-    UnitsVect<T, toUnits> operator()() const
-    {
-        return to<toUnits>();
+            xV_to.push_back(f.inv(toUnits));
+        return xV_to;
     }
 
     UnitsVal<T, units>& operator[](const std::size_t i) { return fV[i]; }

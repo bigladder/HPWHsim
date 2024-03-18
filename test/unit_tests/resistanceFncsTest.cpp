@@ -325,16 +325,16 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 struct InsulationPoint
 {
     double volume_L;
-    double r_ft2hFperBTU; // ft^2.degF/(BTU/h)
+    double r_ft2hF_per_Btu; // ft^2.degF/(BTU/h)
     double expectedUA_kJperhC;
 };
 
-#define FT2HFperBTU_TO_M2CperW(r_ft2hFperBTU)                                                      \
-    W_TO_KW(KWH_TO_BTU(dF_TO_dC(FT2_TO_M2(r_ft2hFperBTU))))
+#define FT2HFperBTU_TO_M2CperW(r_ft2hF_per_Btu)                                                    \
+    W_TO_KW(KWH_TO_BTU(dF_TO_dC(FT2_TO_M2(r_ft2hF_per_Btu))))
 
 #define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower_W)                                   \
     EXPECT_EQ(hpwh.initResistanceTankGeneric(point.volume_L,                                       \
-                                             FT2HFperBTU_TO_M2CperW(point.r_ft2hFperBTU),          \
+                                             FT2HFperBTU_TO_M2CperW(point.r_ft2hF_per_Btu),        \
                                              elementPower_W,                                       \
                                              elementPower_W,                                       \
                                              Units::Volume::L,                                     \
