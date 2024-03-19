@@ -348,3 +348,8 @@ add_subdirectory(unit_tests)
 add_executable(measureMetrics measureMetrics.cc)
 target_link_libraries(measureMetrics PRIVATE ${libs})
 target_compile_features(measureMetrics PRIVATE cxx_std_17)
+
+# Build makeGeneric
+add_executable(makeGeneric makeGeneric.cc)
+target_link_libraries(makeGeneric PRIVATE ${libs})
+target_compile_features(makeGeneric PRIVATE cxx_std_17)
