@@ -246,12 +246,6 @@ struct UnitsVal
     {
     }
 
-    UnitsVal operator=(const double x_in)
-    {
-        x = x_in;
-        return *this;
-    }
-
     double to(const T toUnits) const { return Converter<T, mode>::convert(x, units, toUnits); }
     double to(const T toUnits, int power) const
     {
@@ -264,6 +258,18 @@ struct UnitsVal
     operator double() const { return x; }
 
     double as_double() const { return x; }
+
+    template <T toUnits>
+    bool operator==(const UnitsVal<T, toUnits> unitsVal) const
+    {
+        return (unitsVal(units) == x);
+    }
+
+    template <T toUnits>
+    bool operator!=(const UnitsVal<T, toUnits> unitsVal) const
+    {
+        return !(operator==(unitsVal));
+    }
 
     static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
     {
@@ -315,14 +321,6 @@ struct UnitsVect
         return xV_to;
     }
 
-    UnitsVect operator=(const std::vector<double>& xV)
-    {
-        fV.clear();
-        for (auto x : xV)
-            fV.push_back(x);
-        return *this;
-    }
-
     std::vector<double> to(const T toUnits) const
     {
         return Converter<T>::convert(fV, units, toUnits);
@@ -334,6 +332,18 @@ struct UnitsVect
     }
 
     std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
+
+    template <T toUnits>
+    bool operator==(const UnitsVect<T, toUnits> unitsVect) const
+    {
+        return (unitsVect(units) == fV);
+    }
+
+    template <T toUnits>
+    bool operator!=(const UnitsVect<T, toUnits> unitsVect) const
+    {
+        return !(operator==(unitsVect));
+    }
 
     UnitsVal<T, units>& operator[](const std::size_t i) { return fV[i]; }
 
