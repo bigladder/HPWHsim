@@ -121,10 +121,15 @@ inline double BTUperHF_TO_KJperHC(const double UA_BTUperhF)
 namespace Units
 {
 /// unit-conversion utilities
-template <typename T>
+enum class Mode
+{
+    Abs,
+    Diff
+};
+
+template <typename T, Mode mode = Mode::Abs>
 struct Converter
 {
-
     struct PairHash
     {
         std::size_t operator()(const std::pair<T, T>& p) const
@@ -180,65 +185,64 @@ struct Converter
             xV_out.push_back(y);
         }
         return xV_out;
-        c
     }
 };
 
-template <class T>
+template <class T, Mode mode = Mode::Abs>
 static double convert(const double x, const T fromUnits, const T toUnits)
 {
-    return Converter<T>::convert(x, fromUnits, toUnits);
+    return Converter<T, mode>::convert(x, fromUnits, toUnits);
 }
 
-template <class T>
+template <class T, Mode mode = Mode::Abs>
 static double convert(const double x, const T fromUnits, const T toUnits, int power)
 {
-    return Converter<T>::convert(x, fromUnits, toUnits, power);
+    return Converter<T, mode>::convert(x, fromUnits, toUnits, power);
 }
 
-template <class T>
+template <class T, Mode mode = Mode::Abs>
 static std::vector<double>
 convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
 {
-    return Converter<T>::convert(xV, fromUnits, toUnits);
+    return Converter<T, mode>::convert(xV, fromUnits, toUnits);
 }
 
-template <class T>
+template <class T, Mode mode = Mode::Abs>
 static std::vector<double>
 convert(const std::vector<double>& xV, const T fromUnits, const T toUnits, int power)
 {
-    return Converter<T>::convert(xV, fromUnits, toUnits, power);
+    return Converter<T, mode>::convert(xV, fromUnits, toUnits, power);
 }
 
 /// units values
-template <class T, T units>
+template <class T, T units, Mode mode = Mode::Abs>
 struct UnitsVal
 {
   protected:
-  public:
     double x;
 
+  public:
     UnitsVal(const double x_in = 0.) : x(x_in) {}
 
     UnitsVal(const double x_in, const T fromUnits)
-        : x(Converter<T>::convert(x_in, fromUnits, units))
+        : x(Converter<T, mode>::convert(x_in, fromUnits, units))
     {
     }
 
     UnitsVal(const double x_in, const T fromUnits, int power)
-        : x(Converter<T>::convert(x_in, fromUnits, units, power))
+        : x(Converter<T, mode>::convert(x_in, fromUnits, units, power))
     {
     }
 
     template <T fromUnits>
-    UnitsVal(const UnitsVal<T, fromUnits> unitsVal)
-        : x(Converter<T>::convert(unitsVal, fromUnits, units))
+    UnitsVal(const UnitsVal<T, fromUnits, mode> unitsVal)
+        : x(Converter<T, mode>::convert(unitsVal, fromUnits, units))
     {
     }
 
     template <T fromUnits>
-    UnitsVal(const UnitsVal<T, fromUnits> unitsVal, int power)
-        : x(Converter<T>::convert(unitsVal, fromUnits, units, power))
+    UnitsVal(const UnitsVal<T, fromUnits, mode> unitsVal, int power)
+        : x(Converter<T, mode>::convert(unitsVal, fromUnits, units, power))
     {
     }
 
@@ -248,10 +252,10 @@ struct UnitsVal
         return *this;
     }
 
-    double to(const T toUnits) const { return Converter<T>::convert(x, units, toUnits); }
+    double to(const T toUnits) const { return Converter<T, mode>::convert(x, units, toUnits); }
     double to(const T toUnits, int power) const
     {
-        return Converter<T>::convert(x, units, toUnits, power);
+        return Converter<T, mode>::convert(x, units, toUnits, power);
     }
 
     double operator()(const T toUnits) const { return to(toUnits); }
@@ -263,18 +267,18 @@ struct UnitsVal
 
     static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
     {
-        return Converter<T>::convert(xV, units, toUnits);
+        return Converter<T, mode>::convert(xV, units, toUnits);
     }
 
     static std::vector<UnitsVal>
     convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits, int power)
     {
-        return Converter<T>::convert(xV, units, toUnits, power);
+        return Converter<T, mode>::convert(xV, units, toUnits, power);
     }
 };
 
 /// units vectors
-template <class T, T units>
+template <class T, T units, Mode mode = Mode::Abs>
 struct UnitsVect
 {
   public:
@@ -284,15 +288,15 @@ struct UnitsVect
     {
         fV.clear();
         for (auto x : xV_from)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+            fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
     }
 
-    template <T fromUnits>
-    UnitsVect(const std::vector<UnitsVal<T, fromUnits>>& xV_from)
+    template <T fromUnits, Mode fromMmode = Mode::Abs>
+    UnitsVect(const std::vector<UnitsVal<T, fromUnits, fromMmode>>& xV_from)
     {
         fV.clear();
         for (auto x : xV_from)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+            fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
     }
 
     template <T fromUnits>
@@ -300,7 +304,7 @@ struct UnitsVect
     {
         fV.clear();
         for (auto x : fV_from.fV)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+            fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
     }
 
     operator std::vector<double>() const
@@ -323,7 +327,7 @@ struct UnitsVect
 
     std::vector<double> to(const T toUnits, int power) const
     {
-        return Converter<T>::convert(xV, units, toUnits, power);
+        return Converter<T, mode>::convert(xV, units, toUnits, power);
     }
 
     std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
@@ -345,13 +349,6 @@ enum class Time
 
 /* temperature units */
 enum class Temp
-{
-    C, // celsius
-    F  // fahrenheit
-};
-
-/* temperature-difference units */
-enum class TempDiff
 {
     C, // celsius
     F  // fahrenheit
@@ -424,18 +421,18 @@ inline Converter<Time>::ConversionMap Converter<Time>::conversionMap = {
     {{Time::s, Time::min}, &S_TO_MIN}};
 
 template <>
-inline Converter<Temp>::ConversionMap Converter<Temp>::conversionMap = {
+inline Converter<Temp /*,Mode::Abs*/>::ConversionMap Converter<Temp, Mode::Abs>::conversionMap = {
     {{Temp::F, Temp::F}, &ident},
     {{Temp::C, Temp::C}, &ident},
     {{Temp::C, Temp::F}, &C_TO_F},
     {{Temp::F, Temp::C}, &F_TO_C}};
 
 template <>
-inline Converter<TempDiff>::ConversionMap Converter<TempDiff>::conversionMap = {
-    {{TempDiff::F, TempDiff::F}, ident},
-    {{TempDiff::C, TempDiff::C}, ident},
-    {{TempDiff::C, TempDiff::F}, dC_TO_dF},
-    {{TempDiff::F, TempDiff::C}, dF_TO_dC}};
+inline Converter<Temp, Mode::Diff>::ConversionMap Converter<Temp, Mode::Diff>::conversionMap = {
+    {{Temp::F, Temp::F}, ident},
+    {{Temp::C, Temp::C}, ident},
+    {{Temp::C, Temp::F}, dC_TO_dF},
+    {{Temp::F, Temp::C}, dF_TO_dC}};
 
 template <>
 inline Converter<Energy>::ConversionMap Converter<Energy>::conversionMap = {
@@ -522,8 +519,8 @@ using TimeVal = UnitsVal<Time, units>;
 template <Temp units>
 using TempVal = UnitsVal<Temp, units>;
 
-template <TempDiff units>
-using TempDiffVal = UnitsVal<TempDiff, units>;
+template <Temp units>
+using TempDiffVal = UnitsVal<Temp, units, Mode::Diff>;
 
 template <Energy units>
 using EnergyVal = UnitsVal<Energy, units>;
@@ -553,8 +550,8 @@ using TimeVect = UnitsVect<Time, units>;
 template <Temp units>
 using TempVect = UnitsVect<Temp, units>;
 
-template <TempDiff units>
-using TempDiffVect = UnitsVect<TempDiff, units>;
+template <Temp units>
+using TempDiffVect = UnitsVect<Temp, units, Mode::Diff>;
 
 template <Energy units>
 using EnergyVect = UnitsVect<Energy, units>;
@@ -581,7 +578,7 @@ using UAVect = UnitsVect<UA, units>;
 typedef TimeVal<Time::s> Time_s;
 typedef TimeVal<Time::min> Time_min;
 typedef TempVal<Temp::C> Temp_C;
-typedef TempDiffVal<TempDiff::C> TempDiff_C;
+typedef TempDiffVal<Temp::C> TempDiff_C;
 typedef EnergyVal<Energy::kJ> Energy_kJ;
 typedef PowerVal<Power::kW> Power_kW;
 typedef LengthVal<Length::m> Length_m;
@@ -594,7 +591,7 @@ typedef UAVal<Units::UA::kJ_per_hC> UA_kJ_per_hC;
 typedef TimeVect<Time::s> TimeVect_s;
 typedef TimeVect<Time::min> TimeVect_min;
 typedef TempVect<Temp::C> TempVect_C;
-typedef TempDiffVect<TempDiff::C> TempDiffVect_C;
+typedef TempDiffVect<Temp::C> TempDiffVect_C;
 typedef EnergyVect<Energy::kJ> EnergyVect_kJ;
 typedef PowerVect<Power::kW> PowerVect_kW;
 typedef LengthVect<Length::m> LengthVect_m;

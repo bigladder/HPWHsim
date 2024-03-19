@@ -163,15 +163,11 @@ int HPWH::initResistanceTankGeneric(double tankVol,
                                     const Units::Temp unitsTemp /*C*/,
                                     const Units::Power unitsPower /*kW*/)
 {
-
-    Units::TempDiff unitsTempDiff =
-        (unitsTemp == Units::Temp::C) ? Units::TempDiff::C : Units::TempDiff::F;
-
     double tankVol_L = Units::Volume_L(tankVol, unitsVolume);
     double upperPower_W = Units::Power_kW(upperPower, unitsPower)(Units::Power::W);
     double lowerPower_W = Units::Power_kW(lowerPower, unitsPower)(Units::Power::W);
     double rValue_m2CperW =
-        Units::convert(Units::TempDiff_C(Units::Area_m2(rValue, unitsArea), unitsTempDiff),
+        Units::convert(Units::TempDiff_C(Units::Area_m2(rValue, unitsArea), unitsTemp),
                        unitsPower,
                        Units::Power::W,
                        -1);
