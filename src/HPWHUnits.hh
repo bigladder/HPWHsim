@@ -120,6 +120,221 @@ inline double BTUperHF_TO_KJperHC(const double UA_BTUperhF)
 /// units specifications
 namespace Units
 {
+/// unit-conversion utilities
+template <typename T>
+struct Converter
+{
+
+    struct PairHash
+    {
+        std::size_t operator()(const std::pair<T, T>& p) const
+        {
+            auto h1 = static_cast<std::size_t>(p.first);
+            auto h2 = static_cast<std::size_t>(p.second);
+            return h1 ^ h2;
+        }
+    };
+
+    using ConversionMap =
+        std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
+
+    static ConversionMap conversionMap;
+
+    static double convert(const double x, const T fromUnits, const T toUnits)
+    {
+        return conversionMap.at(std::make_pair(fromUnits, toUnits))(x);
+    }
+
+    static double convert(const double x, const T fromUnits, const T toUnits, int power)
+    {
+        if (power > 0)
+        {
+            return convert(convert(x, fromUnits, toUnits), fromUnits, toUnits, power - 1);
+        }
+        if (power < 0)
+        {
+            return convert(convert(x, toUnits, fromUnits), toUnits, fromUnits, power + 1);
+        }
+        return x;
+    }
+
+    static std::vector<double>
+    convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+    {
+        std::vector<double> xV_out;
+        for (auto& x : xV)
+        {
+            double y = convert(x, fromUnits, toUnits);
+            xV_out.push_back(y);
+        }
+        return xV_out;
+    }
+
+    static std::vector<double>
+    convert(const std::vector<double>& xV, const T fromUnits, const T toUnits, int power)
+    {
+        std::vector<double> xV_out;
+        for (auto& x : xV)
+        {
+            double y = convert(x, fromUnits, toUnits, power);
+            xV_out.push_back(y);
+        }
+        return xV_out;
+        c
+    }
+};
+
+template <class T>
+static double convert(const double x, const T fromUnits, const T toUnits)
+{
+    return Converter<T>::convert(x, fromUnits, toUnits);
+}
+
+template <class T>
+static double convert(const double x, const T fromUnits, const T toUnits, int power)
+{
+    return Converter<T>::convert(x, fromUnits, toUnits, power);
+}
+
+template <class T>
+static std::vector<double>
+convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
+{
+    return Converter<T>::convert(xV, fromUnits, toUnits);
+}
+
+template <class T>
+static std::vector<double>
+convert(const std::vector<double>& xV, const T fromUnits, const T toUnits, int power)
+{
+    return Converter<T>::convert(xV, fromUnits, toUnits, power);
+}
+
+/// units values
+template <class T, T units>
+struct UnitsVal
+{
+  protected:
+  public:
+    double x;
+
+    UnitsVal(const double x_in = 0.) : x(x_in) {}
+
+    UnitsVal(const double x_in, const T fromUnits)
+        : x(Converter<T>::convert(x_in, fromUnits, units))
+    {
+    }
+
+    UnitsVal(const double x_in, const T fromUnits, int power)
+        : x(Converter<T>::convert(x_in, fromUnits, units, power))
+    {
+    }
+
+    template <T fromUnits>
+    UnitsVal(const UnitsVal<T, fromUnits> unitsVal)
+        : x(Converter<T>::convert(unitsVal, fromUnits, units))
+    {
+    }
+
+    template <T fromUnits>
+    UnitsVal(const UnitsVal<T, fromUnits> unitsVal, int power)
+        : x(Converter<T>::convert(unitsVal, fromUnits, units, power))
+    {
+    }
+
+    UnitsVal operator=(const double x_in)
+    {
+        x = x_in;
+        return *this;
+    }
+
+    double to(const T toUnits) const { return Converter<T>::convert(x, units, toUnits); }
+    double to(const T toUnits, int power) const
+    {
+        return Converter<T>::convert(x, units, toUnits, power);
+    }
+
+    double operator()(const T toUnits) const { return to(toUnits); }
+    double operator()(const T toUnits, int power) const { return to(toUnits, power); }
+
+    operator double() const { return x; }
+
+    double as_double() const { return x; }
+
+    static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
+    {
+        return Converter<T>::convert(xV, units, toUnits);
+    }
+
+    static std::vector<UnitsVal>
+    convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits, int power)
+    {
+        return Converter<T>::convert(xV, units, toUnits, power);
+    }
+};
+
+/// units vectors
+template <class T, T units>
+struct UnitsVect
+{
+  public:
+    std::vector<UnitsVal<T, units>> fV;
+
+    UnitsVect(const std::vector<double>& xV_from = {}, const T fromUnits = units)
+    {
+        fV.clear();
+        for (auto x : xV_from)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+    }
+
+    template <T fromUnits>
+    UnitsVect(const std::vector<UnitsVal<T, fromUnits>>& xV_from)
+    {
+        fV.clear();
+        for (auto x : xV_from)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+    }
+
+    template <T fromUnits>
+    UnitsVect(const UnitsVect<T, fromUnits>& fV_from)
+    {
+        fV.clear();
+        for (auto x : fV_from.fV)
+            fV.push_back(Converter<T>::convert(x, fromUnits, units));
+    }
+
+    operator std::vector<double>() const
+    {
+        std::vector<double> xV_to;
+        for (auto f : fV)
+            xV_to.push_back(f);
+        return xV_to;
+    }
+
+    UnitsVect operator=(const std::vector<double>& xV)
+    {
+        fV.clear();
+        for (auto x : xV)
+            fV.push_back(x);
+        return *this;
+    }
+
+    std::vector<double> to(const T toUnits) const {return Converter<T>::convert(xV, units, toUnits)}
+
+    std::vector<double> to(const T toUnits, int power) const
+    {
+        return Converter<T>::convert(xV, units, toUnits, power);
+    }
+
+    std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
+
+    UnitsVal<T, units>& operator[](const std::size_t i) { return fV[i]; }
+
+    UnitsVal<T, units>* begin() { return &fV[0]; }
+
+    UnitsVal<T, units>* end() { return &fV[0] + fV.size(); }
+};
+
 /* time units */
 enum class Time
 {
@@ -195,80 +410,6 @@ enum class UA
     kJ_per_hC, // kilojoules per hour degree celsius
     Btu_per_hF // british thermal units per hour degree Fahrenheit
 };
-
-/// unit-conversion utilities
-template <typename T>
-struct Converter
-{
-
-    struct PairHash
-    {
-        std::size_t operator()(const std::pair<T, T>& p) const
-        {
-            auto h1 = static_cast<std::size_t>(p.first);
-            auto h2 = static_cast<std::size_t>(p.second);
-            return h1 ^ h2;
-        }
-    };
-
-    using ConversionMap =
-        std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
-
-    static ConversionMap conversionMap;
-
-    static double convert(const double x, const T fromUnits, const T toUnits)
-    {
-        return conversionMap.at(std::make_pair(fromUnits, toUnits))(x);
-    }
-
-    static double revert(const double x, const T fromUnits, const T toUnits)
-    {
-        return convert(x, toUnits, fromUnits);
-    }
-
-    static std::vector<double>
-    convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-    {
-        std::vector<double> xV_out;
-        for (auto& x : xV)
-        {
-            double y = convert(x, fromUnits, toUnits);
-            xV_out.push_back(y);
-        }
-        return xV_out;
-    }
-
-    static std::vector<double>
-    revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-    {
-        return convert(xV, toUnits, fromUnits);
-    }
-};
-
-template <class T>
-static double convert(const double x, const T fromUnits, const T toUnits)
-{
-    return Converter<T>::convert(x, fromUnits, toUnits);
-}
-
-template <class T>
-static double revert(const double x, const T fromUnits, const T toUnits)
-{
-    return Converter<T>::revert(x, fromUnits, toUnits);
-}
-
-template <class T>
-static std::vector<double>
-convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-{
-    return Converter<T>::convert(xV, fromUnits, toUnits);
-}
-
-template <class T>
-static std::vector<double> revert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
-{
-    return Converter<T>::revert(xV, fromUnits, toUnits);
-}
 
 template <>
 inline Converter<Time>::ConversionMap Converter<Time>::conversionMap = {
@@ -373,125 +514,6 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
     {{FlowRate::gal_per_min, FlowRate::gal_per_min}, &ident},
     {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
     {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
-
-/// units values
-template <class T, T units>
-struct UnitsVal
-{
-  protected:
-  public:
-    double x;
-
-    UnitsVal(const double x_in = 0.) : x(x_in) {}
-
-    UnitsVal(const double x_in, const T fromUnits)
-        : x(Converter<T>::convert(x_in, fromUnits, units))
-    {
-    }
-
-    template <T fromUnits>
-    UnitsVal(const UnitsVal<T, fromUnits> unitsVal)
-        : x(Converter<T>::convert(unitsVal, fromUnits, units))
-    {
-    }
-
-    UnitsVal operator=(const double x_in)
-    {
-        x = x_in;
-        return *this;
-    }
-
-    double to(const T toUnits) const { return Converter<T>::convert(x, units, toUnits); }
-
-    double operator()(const T toUnits) const { return to(toUnits); }
-
-    /// inverse unit conversion
-    double inv(const T toUnits) const { return Converter<T>::revert(x, units, toUnits); }
-
-    operator double() const { return x; }
-
-    double as_double() const { return x; }
-
-    static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
-    {
-        std::vector<UnitsVal<T, toUnits>> xV_out;
-        for (auto x : xV)
-            xV_out.push_back({x, units, toUnits});
-        return xV_out;
-    }
-};
-
-/// units vectors
-template <class T, T units>
-struct UnitsVect
-{
-  public:
-    std::vector<UnitsVal<T, units>> fV;
-
-    UnitsVect(const std::vector<double>& xV_from = {}, const T fromUnits = units)
-    {
-        fV.clear();
-        for (auto x : xV_from)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
-    }
-
-    template <T fromUnits>
-    UnitsVect(const std::vector<UnitsVal<T, fromUnits>>& xV_from)
-    {
-        fV.clear();
-        for (auto x : xV_from)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
-    }
-
-    template <T fromUnits>
-    UnitsVect(const UnitsVect<T, fromUnits>& fV_from)
-    {
-        fV.clear();
-        for (auto x : fV_from.fV)
-            fV.push_back(Converter<T>::convert(x, fromUnits, units));
-    }
-
-    operator std::vector<double>() const
-    {
-        std::vector<double> xV_to;
-        for (auto f : fV)
-            xV_to.push_back(f);
-        return xV_to;
-    }
-
-    UnitsVect operator=(const std::vector<double>& xV)
-    {
-        fV.clear();
-        for (auto x : xV)
-            fV.push_back(x);
-        return *this;
-    }
-
-    std::vector<double> to(const T toUnits) const
-    {
-        std::vector<double> xV_to;
-        for (auto f : fV)
-            xV_to.push_back(f.to(toUnits));
-        return xV_to;
-    }
-
-    std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
-
-    /// inverse unit conversion
-    std::vector<double> inv(const T toUnits) const
-    {
-        std::vector<double> xV_to;
-        for (auto f : fV)
-            xV_to.push_back(f.inv(toUnits));
-        return xV_to;
-    }
-
-    UnitsVal<T, units>& operator[](const std::size_t i) { return fV[i]; }
-
-    UnitsVal<T, units>* begin() { return &fV[0]; }
-
-    UnitsVal<T, units>* end() { return &fV[0] + fV.size(); }
-};
 
 /// units-values partial specializations
 template <Time units>
