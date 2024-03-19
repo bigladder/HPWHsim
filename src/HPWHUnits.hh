@@ -303,8 +303,8 @@ struct UnitsVect
     UnitsVect(const UnitsVect<T, fromUnits>& fV_from)
     {
         fV.clear();
-        for (auto x : fV_from.fV)
-            fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
+        for (auto f : fV_from.fV)
+            fV.push_back(Converter<T, mode>::convert(f, fromUnits, units));
     }
 
     operator std::vector<double>() const
