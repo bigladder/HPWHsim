@@ -323,11 +323,14 @@ struct UnitsVect
         return *this;
     }
 
-    std::vector<double> to(const T toUnits) const {return Converter<T>::convert(xV, units, toUnits)}
+    std::vector<double> to(const T toUnits) const
+    {
+        return Converter<T>::convert(fV, units, toUnits);
+    }
 
     std::vector<double> to(const T toUnits, int power) const
     {
-        return Converter<T, mode>::convert(xV, units, toUnits, power);
+        return Converter<T, mode>::convert(fV, units, toUnits, power);
     }
 
     std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
