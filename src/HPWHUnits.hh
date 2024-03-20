@@ -314,15 +314,22 @@ struct UnitsVect
   public:
     std::vector<UnitsVal<T, units>> fV;
 
-    UnitsVect(const std::vector<double>& xV_from = {}, const T fromUnits = units)
+    UnitsVect(const std::vector<double>& xV_in = {})
     {
         fV.clear();
-        for (auto x : xV_from)
+        for (auto x : xV_in)
+            fV.push_back(x);
+    }
+
+    UnitsVect(const std::vector<double>& xV_in, const T fromUnits)
+    {
+        fV.clear();
+        for (auto x : xV_in)
             fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
     }
 
-    template <T fromUnits, Mode fromMmode = Mode::Abs>
-    UnitsVect(const std::vector<UnitsVal<T, fromUnits, fromMmode>>& xV_from)
+    template <T fromUnits, Mode fromMode = Mode::Abs>
+    UnitsVect(const std::vector<UnitsVal<T, fromUnits, fromMode>>& xV_from)
     {
         fV.clear();
         for (auto x : xV_from)
@@ -360,7 +367,7 @@ struct UnitsVect
     template <T toUnits>
     bool operator==(const UnitsVect<T, toUnits> unitsVect) const
     {
-        return (unitsVect(units) == fV);
+        return (unitsVect(units) == fV(units));
     }
 
     template <T toUnits>
