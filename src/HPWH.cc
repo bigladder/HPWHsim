@@ -65,14 +65,14 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
-std::unordered_map<HPWH::FirstHourRatingDesig, std::size_t> HPWH::firstDrawClusterSizes = {
-    {HPWH::FirstHourRatingDesig::VerySmall, 5},
-    {HPWH::FirstHourRatingDesig::Low, 3},
-    {HPWH::FirstHourRatingDesig::Medium, 3},
-    {HPWH::FirstHourRatingDesig::High, 4}};
+std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
+    {HPWH::FirstHourRating::Desig::VerySmall, 5},
+    {HPWH::FirstHourRating::Desig::Low, 3},
+    {HPWH::FirstHourRating::Desig::Medium, 3},
+    {HPWH::FirstHourRating::Desig::High, 4}};
 
-std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatterns = {
-    {HPWH::FirstHourRatingDesig::VerySmall,
+std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPatterns = {
+    {HPWH::FirstHourRating::Desig::VerySmall,
      {{HM_TO_MIN(0, 00), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
       {HM_TO_MIN(1, 05), 1.9, 3.8},
@@ -83,7 +83,7 @@ std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatt
       {HM_TO_MIN(9, 00), 5.7, 3.8},
       {HM_TO_MIN(9, 15), 3.8, 3.8}}},
 
-    {HPWH::FirstHourRatingDesig::Low,
+    {HPWH::FirstHourRating::Desig::Low,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 00), 3.8, 3.8},
@@ -96,7 +96,7 @@ std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatt
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 11.4, 6.4}}},
 
-    {HPWH::FirstHourRatingDesig::Medium,
+    {HPWH::FirstHourRating::Desig::Medium,
      {{HM_TO_MIN(0, 00), 56.8, 6.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(1, 40), 34.1, 6.4},
@@ -110,7 +110,7 @@ std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatt
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 26.5, 6.4}}},
 
-    {HPWH::FirstHourRatingDesig::High,
+    {HPWH::FirstHourRating::Desig::High,
      {{HM_TO_MIN(0, 00), 102, 11.4},
       {HM_TO_MIN(0, 30), 7.6, 3.8},
       {HM_TO_MIN(0, 40), 3.8, 3.8},
@@ -6093,19 +6093,19 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     //
     if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::VerySmall;
+        firstHourRating.desig = FirstHourRating::Desig::VerySmall;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::Low;
+        firstHourRating.desig = FirstHourRating::Desig::Low;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::Medium;
+        firstHourRating.desig = FirstHourRating::Desig::Medium;
     }
     else
     {
-        firstHourRating.desig = FirstHourRatingDesig::High;
+        firstHourRating.desig = FirstHourRating::Desig::High;
     }
 
     return true;

@@ -988,7 +988,21 @@ class HPWH
 
     struct FirstHourRating
     {
-        FirstHourRatingDesig desig;
+        enum class Desig
+        {
+            VerySmall,
+            Low,
+            Medium,
+            High
+        };
+
+        static inline std::unordered_map<Desig, std::string> sDesigMap = {
+            {Desig::VerySmall, "Very Small"},
+            {Desig::Low, "Low"},
+            {Desig::Medium, "Medium"},
+            {Desig::High, "High"}};
+
+        Desig desig;
         double drawVolume_L;
     };
 
@@ -1080,10 +1094,10 @@ class HPWH
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes;
+    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
 
     /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
+    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
     /// fields for test output to csv
     struct OutputData
