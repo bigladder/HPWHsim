@@ -32,6 +32,11 @@ TEST(UnitsConversionTest, convsersions)
         T_F = 212.;
         T_C = T_F;
         EXPECT_EQ(T_C, 100.);
+
+        T_C = 72.;
+        Units::Temp_C Tp_C =
+            T_C + Units::UnitsVal<Units::Temp, Units::Temp::F, Units::Mode::Diff>(18.);
+        EXPECT_EQ(Tp_C, T_C + dF_TO_dC(18.));
     }
     /*
     std::cout << f_min << std::endl;

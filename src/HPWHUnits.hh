@@ -268,7 +268,31 @@ struct UnitsVal
     template <T toUnits>
     bool operator!=(const UnitsVal<T, toUnits> unitsVal) const
     {
-        return !(operator==(unitsVal));
+        return !(operator== unitsVal);
+    }
+
+    template <T toUnits>
+    UnitsVal operator+(const UnitsVal<T, toUnits> unitsVal) const
+    {
+        return UnitsVal(x + unitsVal(units));
+    }
+
+    template <T toUnits, Mode toMode>
+    UnitsVal operator+(const UnitsVal<T, toUnits, toMode> unitsVal) const
+    {
+        return UnitsVal(x + unitsVal(units));
+    }
+
+    template <T toUnits>
+    UnitsVal& operator+=(const UnitsVal<T, toUnits> unitsVal)
+    {
+        return *this = x + unitsVal(units);
+    }
+
+    template <T toUnits, Mode toMode>
+    UnitsVal& operator+=(const UnitsVal<T, toUnits, toMode> unitsVal)
+    {
+        return *this = x + unitsVal(units);
     }
 
     static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
