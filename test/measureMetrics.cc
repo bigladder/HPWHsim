@@ -109,30 +109,9 @@ int main(int argc, char* argv[])
     HPWH::FirstHourRating firstHourRating;
     if (hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
-        std::string sFirstHourRatingDesig = "";
-        switch (firstHourRating.desig)
-        {
-        case HPWH::FirstHourRatingDesig::VerySmall:
-        {
-            sFirstHourRatingDesig = "Very Small";
-            break;
-        }
-        case HPWH::FirstHourRatingDesig::Low:
-        {
-            sFirstHourRatingDesig = "Low";
-            break;
-        }
-        case HPWH::FirstHourRatingDesig::Medium:
-        {
-            sFirstHourRatingDesig = "Medium";
-            break;
-        }
-        case HPWH::FirstHourRatingDesig::High:
-        {
-            sFirstHourRatingDesig = "High";
-            break;
-        }
-        }
+        const std::string sFirstHourRatingDesig =
+            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+
         std::cout << "\tFirst-Hour Rating:\n";
         std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
         std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
