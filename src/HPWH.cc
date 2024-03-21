@@ -2717,6 +2717,20 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
     return heatSources[N].typeOfHeatSource;
 }
 
+bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
+{
+    if (N >= getNumHeatSources() || N < 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access the type of a heat source that does not exist.  \n");
+        }
+        return false;
+    }
+    heatSource = &heatSources[N];
+    return true;
+}
+
 double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
 {
     if (units == UNITS_L)
