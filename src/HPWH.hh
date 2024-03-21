@@ -834,6 +834,11 @@ class HPWH
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
+    class HeatSource;
+
+    /// get a pointer to the Nth heat source
+    bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);
+
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
@@ -1119,8 +1124,6 @@ class HPWH
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
   private:
-    class HeatSource;
-
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
@@ -1428,6 +1431,16 @@ class HPWH::HeatSource
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    struct perfPoint
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
+        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
+    };
+
+    std::vector<perfPoint> perfMap;
+    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
+
   private:
     // start with a few type definitions
     enum COIL_CONFIG
@@ -1484,16 +1497,6 @@ class HPWH::HeatSource
         using the condensity and fixed parameters Talpha_C and Tbeta_C.
         Talpha_C and Tbeta_C are not intended to be settable
         see the hpwh_init functions for calculation of shrinkage */
-
-    struct perfPoint
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
-    };
-
-    std::vector<perfPoint> perfMap;
-    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
     std::vector<std::vector<double>> perfGrid;
     /**< The axis values defining the regular grid for the performance data.
