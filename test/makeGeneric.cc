@@ -4,6 +4,10 @@
 
 #include "HPWH.hh"
 
+HPWH::FirstHourRating firstHourRating;
+HPWH::StandardTestSummary standardTestSummary;
+HPWH::StandardTestOptions standardTestOptions;
+
 double getError(const double targetUEF, const double UEF)
 {
     const double tolUEF = 1.e-4;
@@ -69,8 +73,9 @@ struct CopCoefInfo : public ParamInfo
 struct Param
 {
     double* val;
+    double dVal;
 
-    Param() : val(nullptr) {}
+    Param() : val(nullptr), dVal(1.e3) {}
 
     virtual bool assignVal(HPWH& hpwh) = 0;
 };
@@ -78,22 +83,44 @@ struct Param
 struct CopCoef : public Param,
                  CopCoefInfo
 {
-    CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) {}
+    CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
 
     bool assignVal(HPWH& hpwh) override { return assign(hpwh, val); }
 };
 
-int main(int argc, char* argv[])
+struct Merit
 {
-    enum class Target
+    double val;
+    double targetVal;
+    double tolVal;
+
+    Merit() : val(0.), targetVal(0.), tolVal(1.e-6) {}
+
+    virtual double eval(HPWH& hpwh) = 0;
+    virtual double evalDiff(HPWH& hpwh) = 0;
+};
+
+struct UEF_Merit : public Merit
+{
+    UEF_Merit(double targetVal_in) : Merit() { targetVal = targetVal_in; }
+
+    double eval(HPWH& hpwh) override
     {
-        UEF
+        if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+        {
+            std::cout << "Unable to complete 24-hr test.\n";
+            exit(1);
+        }
+        return val = standardTestSummary.UEF;
     };
 
-    HPWH::StandardTestSummary standardTestSummary;
+    double evalDiff(HPWH& hpwh) override { return (eval(hpwh) - targetVal) / tolVal; };
+};
+
+int main(int argc, char* argv[])
+{
     bool validNumArgs = false;
 
-    HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = false;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
@@ -135,7 +162,6 @@ int main(int argc, char* argv[])
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << sOutputDirectory << "\n";
 
-    HPWH::FirstHourRating firstHourRating;
     if (!hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
         std::cout << "Unable to complete first-hour rating test.\n";
@@ -148,7 +174,26 @@ int main(int argc, char* argv[])
     std::cout << "\tFirst-Hour Rating:\n";
     std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
 
-    std::vector<Param*> params;
+    // set up merit parameters
+    std::vector<Merit*> pMerits;
+    UEF_Merit uefMerit(targetUEF);
+    pMerits.push_back(&uefMerit);
+
+    for (auto& pMerit : pMerits)
+    {
+        double val = pMerit->eval(hpwh);
+        std::cout << "initial value: " << val << std::endl;
+    }
+
+    double chi2 = 0;
+    for (auto& pMerit : pMerits)
+    {
+        chi2 += pMerit->evalDiff(hpwh);
+    }
+    std::cout << "initial FOM: " << chi2 << std::endl;
+
+    // set up parameters
+    std::vector<Param*> pParams;
 
     CopCoefInfo copT2constInfo = {2, 1, 0}; // heatSourceIndex, tempIndex, power
     CopCoefInfo copT2linInfo = {2, 1, 1};   // heatSourceIndex, tempIndex, power
@@ -156,34 +201,34 @@ int main(int argc, char* argv[])
     CopCoef copT2const(copT2constInfo);
     CopCoef copT2lin(copT2linInfo);
 
-    params.push_back(&copT2const);
-    params.push_back(&copT2lin);
+    pParams.push_back(&copT2const);
+    pParams.push_back(&copT2lin);
+
+    std::vector<double> dParams;
 
     //
     bool res = true;
-    for (auto& param : params)
+    for (auto& pParam : pParams)
     {
-        res &= param->assignVal(hpwh);
+        res &= pParam->assignVal(hpwh);
+        dParams.push_back(pParam->dVal);
     }
 
+    /*
     const int maxIters = 1000;
-    for (auto iter = 0; iter < maxIters; ++iter)
-    {
-        if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
-        {
-            std::cout << "Unable to complete 24-hr test.\n";
-            exit(1);
-        }
+       for (auto iter = 0; iter < maxIters; ++iter)
+       {
+           if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+                  {
+                      std::cout << "Unable to complete 24-hr test.\n";
+                      exit(1);
+                  }
 
-        if (!standardTestSummary.qualifies)
-        {
-            std::cout << "\t\tDoes not qualify as consumer water heater.\n";
-            exit(1);
-        }
+                  double UEF = standardTestSummary.UEF;
+                  double err = getError(targetUEF, UEF);
+                  std::cout << "\t UEF: " << UEF << ", error: " << err << "\n";
 
-        double UEF = standardTestSummary.UEF;
-        double err = getError(targetUEF, UEF);
-        std::cout << "\t UEF: " << UEF << ", error: " << err << "\n";
-    }
+       }
+           */
     return 0;
 }
