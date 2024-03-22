@@ -2,6 +2,7 @@
  * Utility to make HPWH generic models
  */
 
+#include <cmath>
 #include "HPWH.hh"
 
 HPWH::FirstHourRating firstHourRating;
@@ -25,6 +26,7 @@ struct ParamInfo
     virtual Type paramType() = 0;
 
     virtual bool assign(HPWH& hpwh, double*& val) = 0;
+    virtual void showInfo(std::ostream& os) = 0;
 };
 
 struct CopCoefInfo : public ParamInfo
@@ -68,6 +70,13 @@ struct CopCoefInfo : public ParamInfo
         val = &copCoeffs[power];
         return true;
     };
+
+    void showInfo(std::ostream& os) override
+    {
+        os << " heat-source index: " << heatSourceIndex;
+        os << ", temperature index: " << tempIndex;
+        os << ", power: " << power;
+    }
 };
 
 struct Param
@@ -78,6 +87,7 @@ struct Param
     Param() : val(nullptr), dVal(1.e3) {}
 
     virtual bool assignVal(HPWH& hpwh) = 0;
+    virtual void show(std::ostream& os) = 0;
 };
 
 struct CopCoef : public Param,
@@ -86,6 +96,12 @@ struct CopCoef : public Param,
     CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
 
     bool assignVal(HPWH& hpwh) override { return assign(hpwh, val); }
+
+    void show(std::ostream& os) override
+    {
+        showInfo(os);
+        os << ": " << *val << "\n";
+    }
 };
 
 struct Merit
@@ -115,6 +131,37 @@ struct UEF_Merit : public Merit
     };
 
     double evalDiff(HPWH& hpwh) override { return (eval(hpwh) - targetVal) / tolVal; };
+};
+
+static bool getLeftDampledInv(const double nu,
+                              const std::vector<double>& matV, // 1 x 2
+                              std::vector<double>& invMatV     // 2 x 1
+)
+{
+    constexpr double thresh = 1.e-12;
+
+    if (matV.size() != 2)
+    {
+        return false;
+    }
+
+    double a = matV[0];
+    double b = matV[1];
+
+    double A = (1. + nu) * a * a;
+    double B = (1. + nu) * b * b;
+    double C = a * b;
+    double det = A * B - C * C;
+
+    if (abs(det) < thresh)
+    {
+        return false;
+    }
+
+    invMatV.resize(2);
+    invMatV[0] = (a * B - b * C) / det;
+    invMatV[1] = (-a * C + b * A) / det;
+    return true;
 };
 
 int main(int argc, char* argv[])
@@ -174,23 +221,17 @@ int main(int argc, char* argv[])
     std::cout << "\tFirst-Hour Rating:\n";
     std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
 
-    // set up merit parameters
-    std::vector<Merit*> pMerits;
+    // set up merit parameter
+    Merit* pMerit;
     UEF_Merit uefMerit(targetUEF);
-    pMerits.push_back(&uefMerit);
+    pMerit = &uefMerit;
 
-    for (auto& pMerit : pMerits)
-    {
-        double val = pMerit->eval(hpwh);
-        std::cout << "initial value: " << val << std::endl;
-    }
+    double val = pMerit->eval(hpwh);
+    std::cout << "initial value: " << val << std::endl;
 
-    double chi2 = 0;
-    for (auto& pMerit : pMerits)
-    {
-        chi2 += pMerit->evalDiff(hpwh);
-    }
-    std::cout << "initial FOM: " << chi2 << std::endl;
+    double dMerit0 = pMerit->evalDiff(hpwh);
+    double FOM0 = dMerit0 * dMerit0;
+    std::cout << "initial FOM: " << FOM0 << std::endl;
 
     // set up parameters
     std::vector<Param*> pParams;
@@ -214,21 +255,126 @@ int main(int argc, char* argv[])
         dParams.push_back(pParam->dVal);
     }
 
-    /*
-    const int maxIters = 1000;
-       for (auto iter = 0; iter < maxIters; ++iter)
-       {
-           if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
-                  {
-                      std::cout << "Unable to complete 24-hr test.\n";
-                      exit(1);
-                  }
+    for (auto& pParam : pParams)
+    {
+        pParam->show(std::cout);
+    }
 
-                  double UEF = standardTestSummary.UEF;
-                  double err = getError(targetUEF, UEF);
-                  std::cout << "\t UEF: " << UEF << ", error: " << err << "\n";
+    std::size_t nParams = pParams.size();
+    std::size_t nMerits = 1;
 
-       }
-           */
+    double nu = 0.1;
+    const int maxIters = 20;
+    for (auto iter = 0; iter < maxIters; ++iter)
+    {
+        std::cout << iter << ": ";
+        std::cout << "UEF: " << pMerit->eval(hpwh) << "; ";
+
+        bool first = true;
+        for (std::size_t j = 0; j < nParams; ++j)
+        {
+            if (!first)
+                std::cout << ", ";
+            std::cout << *(pParams[j]->val);
+            first = false;
+        }
+
+        double dMerit0 = pMerit->evalDiff(hpwh);
+        FOM0 = dMerit0 * dMerit0;
+        std::cout << ", FOM: " << FOM0 << "\n";
+
+        double FOM1 = 0., FOM2 = 0.;
+
+        std::vector<double> paramV(nParams);
+        for (std::size_t i = 0; i < nParams; ++i)
+        {
+            paramV[i] = *(pParams[i]->val);
+        }
+
+        std::vector<double> jacobiV(nParams); // 1 x 2
+        for (std::size_t j = 0; j < nParams; ++j)
+        {
+            *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
+            for (std::size_t i = 0; i < 1; ++i)
+            {
+                double dMerit = pMerit->evalDiff(hpwh);
+                jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
+            }
+            *(pParams[j]->val) = paramV[j];
+        }
+
+        std::vector<double> invJacobiV1;
+        bool got1 = getLeftDampledInv(nu, jacobiV, invJacobiV1);
+
+        std::vector<double> invJacobiV2;
+        bool got2 = getLeftDampledInv(nu / 2., jacobiV, invJacobiV2);
+
+        std::vector<double> inc1ParamV(2);
+        std::vector<double> paramV1 = paramV;
+        if (got1)
+        {
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                inc1ParamV[j] = -invJacobiV1[j] * dMerit0;
+                paramV1[j] += inc1ParamV[j];
+                *(pParams[j]->val) = paramV1[j];
+            }
+            double dMerit = pMerit->evalDiff(hpwh);
+            FOM1 = dMerit * dMerit;
+        }
+
+        std::vector<double> inc2ParamV(2);
+        std::vector<double> paramV2 = paramV;
+        if (got2)
+        {
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                inc2ParamV[j] = -invJacobiV2[j] * dMerit0;
+                paramV2[j] += inc2ParamV[j];
+                *(pParams[j]->val) = paramV2[j];
+            }
+            double dMerit = pMerit->evalDiff(hpwh);
+            FOM2 = dMerit * dMerit;
+        }
+
+        for (std::size_t i = 0; i < nParams; ++i)
+        {
+            *(pParams[i]->val) = paramV[i];
+        }
+
+        if (got1 && got2)
+        {
+            if ((FOM1 < FOM0) || (FOM2 < FOM0))
+            {
+                if (FOM1 < FOM2)
+                {
+                    for (std::size_t i = 0; i < nParams; ++i)
+                    {
+                        *(pParams[i]->val) = paramV1[i];
+                        (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
+                        FOM0 = FOM1;
+                    }
+                }
+                else
+                {
+                    for (std::size_t i = 0; i < nParams; ++i)
+                    {
+                        *(pParams[i]->val) = paramV2[i];
+                        (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
+                        FOM0 = FOM2;
+                    }
+                }
+            }
+            else
+            {
+
+                nu *= 10.;
+                if (nu > 1.e6)
+                {
+                    std::cout << "Can't improve fit.\n";
+                }
+            }
+        }
+    }
     return 0;
 }
