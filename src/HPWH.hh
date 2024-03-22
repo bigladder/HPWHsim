@@ -1061,6 +1061,8 @@ class HPWH
     struct StandardTestOptions
     {
         bool saveOutput = false;
+        std::string sOutputDirectory = "";
+        std::string sOutputFilename = "";
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
@@ -1122,6 +1124,10 @@ class HPWH
     int writeRowAsCSV(std::ofstream& outFILE,
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
+
+    bool measureMetrics(FirstHourRating& firstHourRating,
+                        StandardTestOptions& standardTestOptions,
+                        StandardTestSummary& standardTestSummary);
 
     bool makeGeneric(const double targetUEF);
 

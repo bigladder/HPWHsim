@@ -6650,6 +6650,103 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     return true;
 }
 
+bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
+                          StandardTestOptions& standardTestOptions,
+                          StandardTestSummary& standardTestSummary)
+{
+    if (standardTestOptions.saveOutput)
+    {
+
+        std::string sFullOutputFilename =
+            standardTestOptions.sOutputDirectory + "/" + standardTestOptions.sOutputFilename;
+        standardTestOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
+        if (!standardTestOptions.outputFile.is_open())
+        {
+            std::cout << "Could not open output file " << sFullOutputFilename << "\n";
+            return false;
+        }
+        std::cout << "Output file: " << sFullOutputFilename << "\n";
+
+        std::string strPreamble;
+        std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
+
+        int csvOptions = HPWH::CSVOPT_NONE;
+        WriteCSVHeading(standardTestOptions.outputFile,
+                        sHeader.c_str(),
+                        standardTestOptions.nTestTCouples,
+                        csvOptions);
+    }
+
+    if (findFirstHourRating(firstHourRating, standardTestOptions))
+    {
+        const std::string sFirstHourRatingDesig =
+            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+
+        std::cout << "\tFirst-Hour Rating:\n";
+        std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+        std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
+
+        if (run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+        {
+
+            std::cout << "\t24-Hour Test Results:\n";
+            if (!standardTestSummary.qualifies)
+            {
+                std::cout << "\t\tDoes not qualify as consumer water heater.\n";
+            }
+
+            std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
+                      << "\n";
+
+            std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+
+            std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+
+            std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+                      << "\n";
+
+            std::cout << "\t\tAverage Outlet Temperature (degC): "
+                      << standardTestSummary.avgOutletT_C << "\n";
+
+            std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L
+                      << "\n";
+
+            std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+
+            std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ)
+                      << "\n";
+
+            std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ)
+                      << "\n";
+
+            std::cout << "\tAnnual Values:\n";
+            std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+
+            std::cout << "\t\tAnnual Energy Consumption (kWh): "
+                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+        }
+        else
+        {
+            std::cout << "Unable to complete 24-hr test.\n";
+        }
+    }
+    else
+    {
+        std::cout << "Unable to complete first-hour rating test.\n";
+    }
+
+    if (standardTestOptions.saveOutput)
+    {
+        standardTestOptions.outputFile.close();
+    }
+    return true;
+}
+
 bool HPWH::makeGeneric(const double targetUEF)
 {
     static HPWH::FirstHourRating firstHourRating;

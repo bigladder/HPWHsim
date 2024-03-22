@@ -7,6 +7,17 @@
 
 int main(int argc, char* argv[])
 {
+    HPWH::FirstHourRating firstHourRating;
+    HPWH::StandardTestSummary standardTestSummary;
+
+    HPWH::StandardTestOptions standardTestOptions;
+    standardTestOptions.saveOutput = false;
+    standardTestOptions.sOutputFilename = "";
+    standardTestOptions.sOutputDirectory = "";
+    standardTestOptions.changeSetpoint = true;
+    standardTestOptions.nTestTCouples = 6;
+    standardTestOptions.setpointT_C = 51.7;
+
     bool validNumArgs = false;
 
     // process command line arguments
@@ -17,7 +28,7 @@ int main(int argc, char* argv[])
     {
         sModelName = argv[1];
         targetUEF = std::stod(argv[2]);
-        sOutputDirectory = argv[3];
+        standardTestOptions.sOutputDirectory = argv[3];
         validNumArgs = true;
     }
 
@@ -45,9 +56,15 @@ int main(int argc, char* argv[])
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << sOutputDirectory << "\n";
 
-    if (!hpwh.makeGeneric(targetUEF))
+    if (hpwh.makeGeneric(targetUEF))
     {
         std::cout << "Could not generate generic model.\n";
         exit(1);
     }
+
+    const std::string sPresetOrFile = "File";
+
+    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+
+    return hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary) ? 0 : 1;
 }
