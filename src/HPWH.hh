@@ -1123,6 +1123,8 @@ class HPWH
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
+    bool makeGeneric(const double targetUEF);
+
   private:
     void setAllDefaults(); /**< sets all the defaults default */
 
