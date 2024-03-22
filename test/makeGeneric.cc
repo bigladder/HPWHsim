@@ -6,14 +6,7 @@
 #include "HPWH.hh"
 
 HPWH::FirstHourRating firstHourRating;
-HPWH::StandardTestSummary standardTestSummary;
 HPWH::StandardTestOptions standardTestOptions;
-
-double getError(const double targetUEF, const double UEF)
-{
-    const double tolUEF = 1.e-4;
-    return (targetUEF - UEF) / tolUEF;
-}
 
 struct ParamInfo
 {
@@ -31,13 +24,15 @@ struct ParamInfo
 
 struct CopCoefInfo : public ParamInfo
 {
-    int heatSourceIndex;
-    int tempIndex;
-    int power;
+    unsigned heatSourceIndex;
+    unsigned tempIndex;
+    unsigned power;
 
     Type paramType() override { return Type::copCoef; }
 
-    CopCoefInfo(const int heatSourceIndex_in, const int tempIndex_in, const int power_in)
+    CopCoefInfo(const unsigned heatSourceIndex_in,
+                const unsigned tempIndex_in,
+                const unsigned power_in)
         : ParamInfo(), heatSourceIndex(heatSourceIndex_in), tempIndex(tempIndex_in), power(power_in)
     {
     }
@@ -122,6 +117,7 @@ struct UEF_Merit : public Merit
 
     double eval(HPWH& hpwh) override
     {
+        static HPWH::StandardTestSummary standardTestSummary;
         if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         {
             std::cout << "Unable to complete 24-hr test.\n";
@@ -162,16 +158,11 @@ static bool getLeftDampledInv(const double nu,
     invMatV[0] = (a * B - b * C) / det;
     invMatV[1] = (-a * C + b * A) / det;
     return true;
-};
+}
 
 int main(int argc, char* argv[])
 {
     bool validNumArgs = false;
-
-    standardTestOptions.saveOutput = false;
-    standardTestOptions.changeSetpoint = true;
-    standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
 
     // process command line arguments
     std::string sModelName;
@@ -209,6 +200,10 @@ int main(int argc, char* argv[])
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << sOutputDirectory << "\n";
 
+    standardTestOptions.saveOutput = false;
+    standardTestOptions.changeSetpoint = true;
+    standardTestOptions.nTestTCouples = 6;
+    standardTestOptions.setpointT_C = 51.7;
     if (!hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
     {
         std::cout << "Unable to complete first-hour rating test.\n";
@@ -255,12 +250,7 @@ int main(int argc, char* argv[])
         dParams.push_back(pParam->dVal);
     }
 
-    for (auto& pParam : pParams)
-    {
-        pParam->show(std::cout);
-    }
-
-    std::size_t nParams = pParams.size();
+    auto nParams = pParams.size();
 
     double nu = 0.1;
     const int maxIters = 20;
