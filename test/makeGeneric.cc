@@ -5,42 +5,45 @@
 #include <cmath>
 #include "HPWH.hh"
 
-static bool getLeftDampedInv(const double nu,
-                             const std::vector<double>& matV, // 1 x 2
-                             std::vector<double>& invMatV     // 2 x 1
-)
-{
-    constexpr double thresh = 1.e-12;
-
-    if (matV.size() != 2)
-    {
-        return false;
-    }
-
-    double a = matV[0];
-    double b = matV[1];
-
-    double A = (1. + nu) * a * a;
-    double B = (1. + nu) * b * b;
-    double C = a * b;
-    double det = A * B - C * C;
-
-    if (abs(det) < thresh)
-    {
-        return false;
-    }
-
-    invMatV.resize(2);
-    invMatV[0] = (a * B - b * C) / det;
-    invMatV[1] = (-a * C + b * A) / det;
-    return true;
-}
-
 static bool makeGeneric(HPWH& hpwh, const double targetUEF)
 {
 
     static HPWH::FirstHourRating firstHourRating;
     static HPWH::StandardTestOptions standardTestOptions;
+
+    struct Inverter
+    {
+        static bool getLeftDampedInv(const double nu,
+                                     const std::vector<double>& matV, // 1 x 2
+                                     std::vector<double>& invMatV     // 2 x 1
+        )
+        {
+            constexpr double thresh = 1.e-12;
+
+            if (matV.size() != 2)
+            {
+                return false;
+            }
+
+            double a = matV[0];
+            double b = matV[1];
+
+            double A = (1. + nu) * a * a;
+            double B = (1. + nu) * b * b;
+            double C = a * b;
+            double det = A * B - C * C;
+
+            if (abs(det) < thresh)
+            {
+                return false;
+            }
+
+            invMatV.resize(2);
+            invMatV[0] = (a * B - b * C) / det;
+            invMatV[1] = (-a * C + b * A) / det;
+            return true;
+        }
+    };
 
     struct ParamInfo
     {
@@ -276,7 +279,7 @@ static bool makeGeneric(HPWH& hpwh, const double targetUEF)
 
         // try nu
         std::vector<double> invJacobiV1;
-        bool got1 = getLeftDampedInv(nu, jacobiV, invJacobiV1);
+        bool got1 = Inverter::getLeftDampedInv(nu, jacobiV, invJacobiV1);
 
         std::vector<double> inc1ParamV(2);
         std::vector<double> paramV1 = paramV;
@@ -304,7 +307,7 @@ static bool makeGeneric(HPWH& hpwh, const double targetUEF)
 
         // try nu / 2
         std::vector<double> invJacobiV2;
-        bool got2 = getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
+        bool got2 = Inverter::getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
 
         std::vector<double> inc2ParamV(2);
         std::vector<double> paramV2 = paramV;
