@@ -261,7 +261,6 @@ int main(int argc, char* argv[])
     }
 
     std::size_t nParams = pParams.size();
-    std::size_t nMerits = 1;
 
     double nu = 0.1;
     const int maxIters = 20;
@@ -279,7 +278,7 @@ int main(int argc, char* argv[])
             first = false;
         }
 
-        double dMerit0 = pMerit->evalDiff(hpwh);
+        dMerit0 = pMerit->evalDiff(hpwh);
         FOM0 = dMerit0 * dMerit0;
         std::cout << ", FOM: " << FOM0 << "\n";
 
@@ -295,7 +294,7 @@ int main(int argc, char* argv[])
         for (std::size_t j = 0; j < nParams; ++j)
         {
             *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
-            for (std::size_t i = 0; i < 1; ++i)
+            // for (std::size_t i = 0; i < 1; ++i)
             {
                 double dMerit = pMerit->evalDiff(hpwh);
                 jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
