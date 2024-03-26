@@ -31,7 +31,7 @@ TEST(UnitsConversionTest, conversions)
         Units::TimeVect_min tV_min({10., 20., 30., 60., 120., 360., 12.});
         Units::TimeVect_s tV_s = tV_min;
         // EXPECT_EQ(tV_s, tV_min);
-        EXPECT_EQ(tV_s[3], 1.);
+        EXPECT_EQ(tV_s[3], 3600.);
     }
 
     /* temperature conversions */

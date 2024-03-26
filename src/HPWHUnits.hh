@@ -268,7 +268,7 @@ struct UnitsVal
     template <T toUnits>
     bool operator!=(const UnitsVal<T, toUnits> unitsVal) const
     {
-        return !(operator== unitsVal);
+        return !(operator==(unitsVal));
     }
 
     template <T toUnits>
@@ -352,14 +352,16 @@ struct UnitsVect
         return xV_to;
     }
 
+    std::vector<double> as_double() const { return operator std::vector<double>(); }
+
     std::vector<double> to(const T toUnits) const
     {
-        return Converter<T>::convert(fV, units, toUnits);
+        return Converter<T, mode>::convert(operator std::vector<double>(), units, toUnits);
     }
 
     std::vector<double> to(const T toUnits, int power) const
     {
-        return Converter<T, mode>::convert(fV, units, toUnits, power);
+        return Converter<T, mode>::convert(operator std::vector<double>(), units, toUnits, power);
     }
 
     std::vector<double> operator()(const T toUnits) const { return to(toUnits); }
