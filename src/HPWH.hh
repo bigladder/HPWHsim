@@ -249,6 +249,8 @@ class HPWH
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
         MODELS_AquaThermAire = 400, // heat exchanger model
+
+        MODELS_Generic65 = 410
     };
 
     /// specifies the modes for writing output
@@ -983,14 +985,6 @@ class HPWH
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
     /// first-hour rating designations to determine draw pattern for 24-hr test
-    enum class FirstHourRatingDesig
-    {
-        VerySmall,
-        Low,
-        Medium,
-        High
-    };
-
     struct FirstHourRating
     {
         enum class Desig
@@ -1067,6 +1061,8 @@ class HPWH
         std::ofstream outputFile;
         int nTestTCouples = 6;
         double setpointT_C = 51.7;
+        bool applyUserFirstHourRating = false;
+        FirstHourRating::Desig firstHourRatingDesig = FirstHourRating::Desig::VerySmall;
     };
 
     /// perform a draw/heat cycle to prepare for test

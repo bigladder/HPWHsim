@@ -4571,6 +4571,73 @@ int HPWH::initPreset(MODELS presetNum)
         heatSources.resize(1);
         heatSources[0] = compressor;
     }
+    else if (presetNum == MODELS_Generic65)
+    { // Generic65
+        setNumNodes(12);
+        setpoint_C = F_TO_C(125.);
+
+        tankVolume_L = GAL_TO_L(58.5);
+        tankUA_kJperHrC = 8.5;
+
+        doTempDepression = false;
+        tankMixesOnDraw = true;
+
+        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this);
+        HeatSource compressor(this);
+
+        // compressor values
+        compressor.isOn = false;
+        compressor.isVIP = false;
+        compressor.typeOfHeatSource = TYPE_compressor;
+
+        compressor.setCondensity({1., 0., 0.});
+
+        compressor.perfMap.reserve(2);
+
+        compressor.perfMap.push_back({
+            50,                         // Temperature (F)
+            {187.064124, 1.939747, 0.}, // Input Power Coefficients (kW)
+            {5.4977772, -0.0243008, 0.} // COP Coefficients
+        });
+
+        compressor.perfMap.push_back({
+            67,                        // Temperature (F)
+            {148.0418, 2.553291, 0.},  // Input Power Coefficients (kW)
+            {7.207307, -0.0335265, 0.} // COP Coefficients
+        });
+
+        compressor.minT = F_TO_C(45);
+        compressor.maxT = F_TO_C(120.);
+        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.)));
+        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.)));
+
+        // top resistor values
+        resistiveElementTop.setupAsResistiveElement(6, 4500.);
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.)));
+        resistiveElementTop.isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom.setupAsResistiveElement(0, 4500.);
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(F_TO_C(60.)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(85.)));
+        resistiveElementBottom.isVIP = false;
+
+        // set everything in its places
+        heatSources.resize(3);
+        heatSources[0] = resistiveElementTop;
+        heatSources[1] = resistiveElementBottom;
+        heatSources[2] = compressor;
+
+        heatSources[0].followedByHeatSource = &heatSources[1];
+        heatSources[1].followedByHeatSource = &heatSources[2];
+
+        heatSources[2].backupHeatSource = &heatSources[1];
+        heatSources[1].backupHeatSource = &heatSources[2];
+    }
     else
     {
         if (hpwhVerbosity >= VRB_reluctant)
