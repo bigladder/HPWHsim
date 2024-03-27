@@ -72,9 +72,9 @@ TEST(UnitsConversionTest, conversions)
     /* power conversion */
     {
         Units::Power_kW P_kW = 60.;
-        Units::PowerVal<Units::Power::Btu_per_h> P_BTUperH = P_kW;
-        EXPECT_EQ(P_BTUperH, KW_TO_BTUperH(P_kW));
-        EXPECT_NEAR_REL(P_kW, BTUperH_TO_KW(P_BTUperH));
+        Units::PowerVal<Units::Power::Btu_per_h> P_Btuperh = P_kW;
+        EXPECT_EQ(P_Btuperh, KW_TO_BTUperH(P_kW));
+        EXPECT_NEAR_REL(P_kW, BTUperH_TO_KW(P_Btuperh));
     }
 
     /* length conversion */

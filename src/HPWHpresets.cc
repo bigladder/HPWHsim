@@ -711,7 +711,7 @@ int HPWH::initPreset(MODELS presetNum)
                                       {0.290, 0.00159, 0.00000107}, // Input Power Coefficients (kW)
                                       {4.49, -0.0187, -0.0000133},  // COP Coefficients
                                       Units::Temp::F,
-                                      Units::Power::W});
+                                      Units::Power::kW});
 
         compressor.perfMap.push_back({67,                           // Temperature (F)
                                       {0.375, 0.00121, 0.00000216}, // Input Power Coefficients (kW)
@@ -921,7 +921,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.push_back({67,                           // Temperature (F)
                                       {0.378, 0.00121, 0.00000216}, // Input Power Coefficients (kW)
-                                      {4.8, -0.0167, 0.0},          // COP Coefficients (COP_coeffs)
+                                      {4.8, -0.0167, 0.0},          // COP Coefficients
                                       Units::Temp::F,
                                       Units::Power::kW});
 
@@ -1031,7 +1031,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.0001832377,
                                            -0.0000451308,
                                            0.0000411975,
-                                           0.0000003535}, // Input Power Coefficients (W)
+                                           0.0000003535}, // Input Power Coefficients (kW)
 
                                           {3.8189922420,
                                            0.0569412237,
@@ -1070,7 +1070,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0000040405,
                                                -0.0002538279,
                                                -0.0000477652,
-                                               0.0000014101}, // Input Power Coefficients (W)
+                                               0.0000014101}, // Input Power Coefficients (kW)
 
                                               {3.6128563086,
                                                0.0527064498,
@@ -1104,7 +1104,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0002494761,
                                                -0.0000595773,
                                                0.0001401800,
-                                               0.0000004312}, // Input Power Coefficients (W)
+                                               0.0000004312}, // Input Power Coefficients (kW)
 
                                               {1.6643120405,
                                                0.0515623393,
@@ -1137,7 +1137,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0005552752,
                                                -0.0002026772,
                                                0.0000607338,
-                                               0.0000021571}, // Input Power Coefficients (W)
+                                               0.0000021571}, // Input Power Coefficients (kW)
 
                                               {1.7692660120,
                                                0.0525134783,
@@ -1169,7 +1169,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0009820050,
                                                -0.0000223587,
                                                0.0000885101,
-                                               0.0000005649}, // Input Power Coefficients (W)
+                                               0.0000005649}, // Input Power Coefficients (kW)
 
                                               {0.8942843854,
                                                0.0677641611,
@@ -1202,7 +1202,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                0.0012092717,
                                                -0.0001455509,
                                                -0.0000893889,
-                                               0.0000018221}, // Input Power Coefficients (W)
+                                               0.0000018221}, // Input Power Coefficients (kW)
 
                                               {4.4170108542,
                                                0.0596384263,
@@ -1337,7 +1337,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0411417411,
                                                0.0000000000,
                                                0.0005789621,
-                                               0.0000696429}, // Input Power Coefficients (W)
+                                               0.0000696429}, // Input Power Coefficients (kW)
 
                                               {1.2846349520,
                                                0.0334658309,
@@ -1362,7 +1362,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0476593192,
                                                -0.0002916667,
                                                0.0006120954,
-                                               0.0003607143}, // Input Power Coefficients (W)
+                                               0.0003607143}, // Input Power Coefficients (kW)
 
                                               {1.2421582831,
                                                0.0450256569,
@@ -1384,7 +1384,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0216169085,
                                                -0.0001979167,
                                                0.0007376535,
-                                               0.0004955357}, // Input Power Coefficients (W)
+                                               0.0004955357}, // Input Power Coefficients (kW)
 
                                               {2.0013175767,
                                                0.0576617432,
@@ -1406,7 +1406,7 @@ int HPWH::initPreset(MODELS presetNum)
                                                -0.0278055246,
                                                -0.0002916667,
                                                0.0008841378,
-                                               0.0008125000}, // Input Power Coefficients (W)
+                                               0.0008125000}, // Input Power Coefficients (kW)
 
                                               {2.6996807527,
                                                0.0617507969,
@@ -1497,7 +1497,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.000120015,
                                            0.000111068,
                                            0.000138907,
-                                           -0.000001569}, // Input Power Coefficients (W)
+                                           -0.000001569}, // Input Power Coefficients (kW)
 
                                           {0.462979529,
                                            0.065656840,
@@ -1529,7 +1529,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0002160871,
                                            0.0003053633,
                                            0.0003612413,
-                                           -0.0000035912}, // Input Power Coefficients (W)
+                                           -0.0000035912}, // Input Power Coefficients (kW)
 
                                           {6.8205043418,
                                            0.0860385185,
@@ -1561,7 +1561,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.00069451670,
                                            0.00069067890,
                                            0.00071091372,
-                                           -0.00000854352}, // Input Power Coefficients (W
+                                           -0.00000854352}, // Input Power Coefficients (kW)
 
                                           {1.49112327987,
                                            0.06616282153,
@@ -1593,7 +1593,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.000514211,
                                            -0.000359172,
                                            0.000266509,
-                                           -1.58646E-07}, // Input Power Coefficients (W)
+                                           -1.58646E-07}, // Input Power Coefficients (kW)
 
                                           {4.889555031,
                                            0.117102769,
@@ -1625,7 +1625,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.001387914,
                                            0.000449199,
                                            0.000829578,
-                                           -5.28641E-06}, // Input Power Coefficients (W)
+                                           -5.28641E-06}, // Input Power Coefficients (kW)
 
                                           {-0.629432348,
                                            0.181466663,
@@ -1658,7 +1658,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            0.001241026,
                                            0.000571009,
                                            -0.000479282,
-                                           9.04063E-06}, // Input Power Coefficients (W)
+                                           9.04063E-06}, // Input Power Coefficients (kW)
 
                                           {7.443904067,
                                            0.185978755,
@@ -1958,7 +1958,7 @@ int HPWH::initPreset(MODELS presetNum)
                                            -0.0120766440,
                                            0.0000493862,
                                            0.0005422089,
-                                           -0.0001385078}, // Input Power Coefficients (W)
+                                           -0.0001385078}, // Input Power Coefficients (kW)
 
                                           {5.0207181209,
                                            0.0442525790,
@@ -3967,7 +3967,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.push_back({50,                          // Temperature (F)
                                       {472.58616, 2.09340, 0.0},   // Input Power Coefficients (W)
-                                      {2.942642, -0.0125954, 0.0}, // COP Coefficients (COP_coeffs)
+                                      {2.942642, -0.0125954, 0.0}, // COP Coefficients
                                       Units::Temp::F,
                                       Units::Power::W});
 

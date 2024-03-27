@@ -537,7 +537,7 @@ std::vector<double> changeSeriesUnitsTemp11(const std::vector<double>& coeffs,
 
 HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const std::vector<double>& inputPower_coeffs_in /*{}*/,
-                           std::vector<double> COP_coeffs_in /*{}*/,
+                           const std::vector<double>& COP_coeffs_in /*{}*/,
                            const Units::Temp unitsTemp_in /*C*/,
                            const Units::Power unitsPower_in /*kW*/)
 {

@@ -1028,7 +1028,7 @@ class HPWH
 
         PerfPoint(const double T_in = 0.,
                   const std::vector<double>& inputPower_coeffs_in = {},
-                  std::vector<double> COP_coeffs_in = {},
+                  const std::vector<double>& COP_coeffs_in = {},
                   const Units::Temp unitsTemp = Units::Temp::C,
                   const Units::Power unitsPower = Units::Power::kW);
 
