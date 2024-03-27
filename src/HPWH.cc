@@ -4632,6 +4632,10 @@ bool compressorIsRunning(HPWH& hpwh)
     {
         model = HPWH::MODELS_AquaThermAire;
     }
+    else if (modelName == "Generic65")
+    {
+        model = HPWH::MODELS_Generic65;
+    }
     else
     {
         model = HPWH::MODELS_basicIntegrated;
