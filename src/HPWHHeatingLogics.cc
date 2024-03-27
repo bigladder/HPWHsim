@@ -23,7 +23,7 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
     double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if (hpwh->inletT_C == HPWH_ABORT && !useCostantMains)
     {
         soCFraction = HPWH_ABORT;
     }
@@ -42,7 +42,7 @@ double HPWH::SoCBasedHeatingLogic::getMainsT_C()
     }
     else
     {
-        return hpwh->member_inletT_C;
+        return hpwh->inletT_C;
     }
 }
 
@@ -79,7 +79,7 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     int calcNode = 0;
     for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
     {
-        if (hpwh->tankTemps_C[i] < tempMinUseful_C)
+        if (hpwh->tankTs_C[i] < tempMinUseful_C)
         {
             calcNode = i + 1;
             break;
@@ -93,21 +93,21 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     // Find the fraction to heat the calc node to meet the target SoC fraction without heating the
     // node below up to tempMinUseful.
     double maxSoC = hpwh->getNumNodes() *
-                    hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpoint_C);
-    double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tankTemps_C[calcNode] - getMainsT_C()) /
+                    hpwh->getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpointT_C);
+    double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tankTs_C[calcNode] - getMainsT_C()) /
                                                         (tempMinUseful_C - getMainsT_C());
     targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
     // Catch case where node temperature == setpoint
     double fractCalcNode;
-    if (hpwh->tankTemps_C[calcNode] >= hpwh->setpoint_C)
+    if (hpwh->tankTs_C[calcNode] >= hpwh->setpointT_C)
     {
         fractCalcNode = 1;
     }
     else
     {
-        fractCalcNode = (targetTemp - hpwh->tankTemps_C[calcNode]) /
-                        (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]);
+        fractCalcNode = (targetTemp - hpwh->tankTs_C[calcNode]) /
+                        (hpwh->setpointT_C - hpwh->tankTs_C[calcNode]);
     }
 
     // If we're at the bottom node there's not another node to heat so case 2 doesn't apply.
@@ -117,15 +117,15 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     }
 
     // Fraction to heat next node, where the step change occurs
-    double fractNextNode = (tempMinUseful_C - hpwh->tankTemps_C[calcNode - 1]) /
-                           (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
+    double fractNextNode = (tempMinUseful_C - hpwh->tankTs_C[calcNode - 1]) /
+                           (hpwh->tankTs_C[calcNode] - hpwh->tankTs_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
     if (hpwh->hpwhVerbosity >= VRB_emetic)
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
-            (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
+            (1. + fractNextNode * (hpwh->setpointT_C - hpwh->tankTs_C[calcNode]) /
                       (tempMinUseful_C - getMainsT_C()));
         hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
                   "deltaSoCFraction: %.6f\n",
@@ -172,7 +172,7 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
     else
     {
-        return hpwh->getSetpoint() - value;
+        return hpwh->getSetpointT_C() - value;
     }
 }
 
@@ -225,8 +225,8 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, hpwh->tankTemps_C);
+    std::vector<double> resampledTankTs_C(LOGIC_SIZE);
+    resample(resampledTankTs_C, hpwh->tankTs_C);
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
     double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
@@ -235,7 +235,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
         if (nodeWeight.nodeNum == 0)
         { // bottom-most tank node only
             firstNode = calcNode = 0;
-            double nodeT_C = hpwh->tankTemps_C.front();
+            double nodeT_C = hpwh->tankTs_C.front();
             sum = nodeT_C * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
@@ -243,7 +243,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
         else if (nodeWeight.nodeNum == LOGIC_SIZE + 1)
         { // top-most tank node only
             firstNode = calcNode = hpwh->getNumNodes() - 1;
-            double nodeT_C = hpwh->tankTemps_C.back();
+            double nodeT_C = hpwh->tankTs_C.back();
             sum = nodeT_C * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
@@ -254,17 +254,17 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             calcNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum)) -
                        1; // last tank node in logical node
             auto logicNode = static_cast<std::size_t>(nodeWeight.nodeNum - 1);
-            double logicNodeT_C = resampledTankTemps[logicNode];
+            double logicNodeT_C = resampledTankTs_C[logicNode];
             sum += logicNodeT_C * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
     }
 
     double averageT_C = sum / totWeight;
-    double targetT_C = (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTemps_C[calcNode + 1]
-                                                            : hpwh->getSetpoint();
+    double targetT_C = (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs_C[calcNode + 1]
+                                                            : hpwh->getSetpointT_C();
 
-    double nodeDiffT_C = targetT_C - hpwh->tankTemps_C[firstNode];
+    double nodeDiffT_C = targetT_C - hpwh->tankTs_C[firstNode];
     double logicNodeDiffT_C = comparisonT_C - averageT_C;
 
     // if averageT_C > comparison then the shutoff condition is already true and you

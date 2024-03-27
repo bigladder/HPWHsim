@@ -13,25 +13,25 @@ struct Performance
 };
 
 void getCompressorPerformance(
-    HPWH& hpwh, Performance& point, double waterTempC, double airTempC, double setpointC)
+    HPWH& hpwh, Performance& point, double waterT_C, double airT_C, double setpointT_C)
 {
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
       // temperature of the lift
-        hpwh.setSetpoint((waterTempC + setpointC) / 2.);
+        hpwh.setSetpointT_C((waterT_C + setpointT_C) / 2.);
     }
     else
     {
-        hpwh.setSetpoint(waterTempC);
+        hpwh.setSetpointT_C(waterT_C);
     }
     hpwh.resetTankToSetpoint(); // Force tank cold
-    hpwh.setSetpoint(setpointC);
+    hpwh.setSetpointT_C(setpointT_C);
 
     // Run the step
-    hpwh.runOneStep(waterTempC, // Inlet water temperature (C )
-                    0.,         // Flow in gallons
-                    airTempC,   // Ambient Temp (C)
-                    airTempC,   // External Temp (C)
+    hpwh.runOneStep(waterT_C, // Inlet water temperature (C )
+                    0.,       // Flow in gallons
+                    airT_C,   // Ambient Temp (C)
+                    airT_C,   // External Temp (C)
                     // HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
                     (HPWH::DR_TOO | HPWH::DR_LOR) // DR Status (now an enum. Fixed for now as allow)
     );
@@ -47,12 +47,12 @@ bool scaleCapacityCOP(HPWH& hpwh,
                       double scaleCOP,
                       Performance& point0,
                       Performance& point1,
-                      double waterTempC = F_TO_C(63),
-                      double airTempC = F_TO_C(77),
-                      double setpointC = F_TO_C(135))
+                      double waterT_C = F_TO_C(63),
+                      double airT_C = F_TO_C(77),
+                      double setpointT_C = F_TO_C(135))
 {
     // Get peformance unscaled
-    getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC);
+    getCompressorPerformance(hpwh, point0, waterT_C, airT_C, setpointT_C);
 
     // Scale the compressor
     int val = hpwh.setScaleCapacityCOP(scaleInput, scaleCOP);
@@ -62,7 +62,7 @@ bool scaleCapacityCOP(HPWH& hpwh,
     }
 
     // Get the scaled performance
-    getCompressorPerformance(hpwh, point1, waterTempC, airTempC, setpointC);
+    getCompressorPerformance(hpwh, point1, waterT_C, airT_C, setpointT_C);
     return true;
 }
 
@@ -321,22 +321,22 @@ TEST(ScaleTest, getCompressorSP_capacity)
     Performance point0;
 
     double capacity_kWH, capacity_BTU;
-    double waterTempC = F_TO_C(63);
-    double airTempC = F_TO_C(77);
-    double setpointC = F_TO_C(135);
+    double waterT_C = F_TO_C(63);
+    double airT_C = F_TO_C(77);
+    double setpointT_C = F_TO_C(135);
 
-    getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC); // gives kWH
-    capacity_kWH = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) /
+    getCompressorPerformance(hpwh, point0, waterT_C, airT_C, setpointT_C); // gives kWH
+    capacity_kWH = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C) /
                    60; // div 60 to kWh because I know above only runs 1 minute
 
     EXPECT_NEAR(point0.output, capacity_kWH, tol);
 
     // Test with IP units
-    capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
-                                              C_TO_F(waterTempC),
-                                              C_TO_F(setpointC),
-                                              HPWH::UNITS_BTUperHr,
-                                              HPWH::UNITS_F) /
+    capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airT_C),
+                                              C_TO_F(waterT_C),
+                                              C_TO_F(setpointT_C),
+                                              Units::Power::Btu_per_h,
+                                              Units::Temp::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
@@ -355,21 +355,21 @@ TEST(ScaleTest, getCompressorMP_capacity)
 
     Performance point0;
 
-    const double waterTempC = F_TO_C(50); // 50 and 126 to make average 88
-    const double airTempC = F_TO_C(61.7);
-    const double setpointC = F_TO_C(126);
+    const double waterT_C = F_TO_C(50); // 50 and 126 to make average 88
+    const double airT_C = F_TO_C(61.7);
+    const double setpointT_C = F_TO_C(126);
 
-    double capacity_kWH = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC) /
+    double capacity_kWH = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C) /
                           60.; // div 60 to kWh because I know above only runs 1 minute
-    getCompressorPerformance(hpwh, point0, waterTempC, airTempC, setpointC); // gives kWH
+    getCompressorPerformance(hpwh, point0, waterT_C, airT_C, setpointT_C); // gives kWH
     EXPECT_NEAR(point0.output, capacity_kWH, tol);
 
     // Test with IP units
-    double capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airTempC),
-                                                     C_TO_F(waterTempC),
-                                                     C_TO_F(setpointC),
-                                                     HPWH::UNITS_BTUperHr,
-                                                     HPWH::UNITS_F) /
+    double capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airT_C),
+                                                     C_TO_F(waterT_C),
+                                                     C_TO_F(setpointT_C),
+                                                     Units::Power::Btu_per_h,
+                                                     Units::Temp::F) /
                           60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
@@ -387,32 +387,32 @@ TEST(ScaleTest, getCompressorMP_outputCapacity)
     EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
-    double waterTempC = F_TO_C(44);
-    double airTempC = F_TO_C(98);
-    double setpointC = F_TO_C(150);
+    double waterT_C = F_TO_C(44);
+    double airT_C = F_TO_C(98);
+    double setpointT_C = F_TO_C(150);
 
     // Scale output to 1 kW
     num = 1.;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Scale output to .01 kW
     num = .01;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Scale output to 1000 kW
     num = 1000.;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Check again with changed setpoint. For MP it should affect output capacity since it looks at
     // the mean temperature for the cycle.
-    setpointC = F_TO_C(100);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    setpointT_C = F_TO_C(100);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_FAR(num, newCapacity_kW, tol);
 }
 
@@ -427,41 +427,41 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
     EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
 
     double newCapacity_kW, num;
-    double waterTempC = F_TO_C(44);
-    double airTempC = F_TO_C(98);
-    double setpointC = F_TO_C(145);
+    double waterT_C = F_TO_C(44);
+    double airT_C = F_TO_C(98);
+    double setpointT_C = F_TO_C(145);
 
     // Scale output to 1 kW
     num = 1.;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Scale output to .01 kW
     num = .01;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Scale output to 1000 kW
     num = 1000.;
-    hpwh.setCompressorOutputCapacity(num, airTempC, waterTempC, setpointC);
-    newCapacity_kW = hpwh.getCompressorCapacity(airTempC, waterTempC, setpointC);
+    hpwh.setCompressorOutputCapacity(num, airT_C, waterT_C, setpointT_C);
+    newCapacity_kW = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C);
     EXPECT_NEAR(num, newCapacity_kW, tol);
 
     // Scale output to 1000 kW but let's do the calc in other units
     num = KW_TO_BTUperH(num);
     hpwh.setCompressorOutputCapacity(num,
-                                     C_TO_F(airTempC),
-                                     C_TO_F(waterTempC),
-                                     C_TO_F(setpointC),
-                                     HPWH::UNITS_BTUperHr,
-                                     HPWH::UNITS_F);
-    double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airTempC),
-                                                             C_TO_F(waterTempC),
-                                                             C_TO_F(setpointC),
-                                                             HPWH::UNITS_BTUperHr,
-                                                             HPWH::UNITS_F);
+                                     C_TO_F(airT_C),
+                                     C_TO_F(waterT_C),
+                                     C_TO_F(setpointT_C),
+                                     Units::Power::Btu_per_h,
+                                     Units::Temp::F);
+    double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airT_C),
+                                                             C_TO_F(waterT_C),
+                                                             C_TO_F(setpointT_C),
+                                                             Units::Power::Btu_per_h,
+                                                             Units::Temp::F);
     EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
@@ -482,10 +482,10 @@ TEST(ScaleTest, chipsCaseWithIP_units)
 
     // Scale output to 20000 btu/hr but let's use do the calc in other units
     hpwh.setCompressorOutputCapacity(
-        wh_heatingCap, airT_F, waterT_F, setpointT_F, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        wh_heatingCap, airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
+        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
@@ -516,28 +516,28 @@ TEST(ScaleTest, resistanceScales)
 
     double elementPower = 30.; // KW
 
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, Units::Power::kW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, Units::Power::kW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::kW), 2. * elementPower);
 
     // check units convert
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::Btu_per_h),
                     2. * KW_TO_BTUperH(elementPower));
 
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, Units::Power::kW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, Units::Power::kW), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::kW),
                     factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, Units::Power::kW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, Units::Power::kW), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::kW), 2. * factor * elementPower);
 }
 
 /*
