@@ -1061,8 +1061,6 @@ class HPWH
         std::ofstream outputFile;
         int nTestTCouples = 6;
         double setpointT_C = 51.7;
-        bool applyUserFirstHourRating = false;
-        FirstHourRating::Desig firstHourRatingDesig = FirstHourRating::Desig::VerySmall;
     };
 
     /// perform a draw/heat cycle to prepare for test
@@ -1124,6 +1122,13 @@ class HPWH
     bool measureMetrics(FirstHourRating& firstHourRating,
                         StandardTestOptions& standardTestOptions,
                         StandardTestSummary& standardTestSummary);
+
+
+    struct CustomTestOptions
+    {
+        bool overrideFirstHourRating = false;
+        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+    } customTestOptions;
 
     bool makeGeneric(const double targetUEF);
 

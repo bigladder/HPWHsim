@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
+    sPresetOrFile[0] =
+        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
 
     HPWH hpwh;
     bool validModel = false;
@@ -79,8 +81,6 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    sPresetOrFile[0] =
-        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 

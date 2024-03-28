@@ -6109,6 +6109,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     }
 
     //
+
     if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
         firstHourRating.desig = FirstHourRating::Desig::VerySmall;
@@ -6125,6 +6126,13 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     {
         firstHourRating.desig = FirstHourRating::Desig::High;
     }
+
+    const std::string sFirstHourRatingDesig =
+        HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+
+    std::cout << "\tFirst-Hour Rating:\n";
+    std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 
     return true;
 }
@@ -6681,74 +6689,74 @@ bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
                         csvOptions);
     }
 
-    if (findFirstHourRating(firstHourRating, standardTestOptions))
+    if (!findFirstHourRating(firstHourRating, standardTestOptions))
     {
+        std::cout << "Unable to complete first-hour rating test.\n";
+        if (!customTestOptions.overrideFirstHourRating)
+        {
+            return false;
+        }
+    }
+
+    if (customTestOptions.overrideFirstHourRating)
+    {
+        firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig <<"\n";
+    }
 
-        std::cout << "\tFirst-Hour Rating:\n";
-        std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
-        std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
+    if (run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    {
 
-        if (run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+        std::cout << "\t24-Hour Test Results:\n";
+        if (!standardTestSummary.qualifies)
         {
-
-            std::cout << "\t24-Hour Test Results:\n";
-            if (!standardTestSummary.qualifies)
-            {
-                std::cout << "\t\tDoes not qualify as consumer water heater.\n";
-            }
-
-            std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency
-                      << "\n";
-
-            std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
-                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
-
-            std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
-
-            std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
-                      << "\n";
-
-            std::cout << "\t\tAverage Outlet Temperature (degC): "
-                      << standardTestSummary.avgOutletT_C << "\n";
-
-            std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L
-                      << "\n";
-
-            std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
-
-            std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ)
-                      << "\n";
-
-            std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ)
-                      << "\n";
-
-            std::cout << "\tAnnual Values:\n";
-            std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
-
-            std::cout << "\t\tAnnual Energy Consumption (kWh): "
-                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+            std::cout << "\t\tDoes not qualify as consumer water heater.\n";
         }
-        else
-        {
-            std::cout << "Unable to complete 24-hr test.\n";
-        }
+
+        std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+
+        std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                  << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+
+        std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+
+        std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+                  << "\n";
+
+        std::cout << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
+                  << "\n";
+
+        std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+
+        std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\tAnnual Values:\n";
+        std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+
+        std::cout << "\t\tAnnual Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
     }
     else
     {
-        std::cout << "Unable to complete first-hour rating test.\n";
+        std::cout << "Unable to complete 24-hr test.\n";
+        return false;
     }
 
-    if (standardTestOptions.saveOutput)
-    {
-        standardTestOptions.outputFile.close();
-    }
-    return true;
+if (standardTestOptions.saveOutput)
+{
+    standardTestOptions.outputFile.close();
+}
+return true;
 }
 
 bool HPWH::makeGeneric(const double targetUEF)
@@ -6846,16 +6854,18 @@ bool HPWH::makeGeneric(const double targetUEF)
                 std::cout << "Invalid heat-source performance-map cop-coefficient power.\n";
                 return false;
             }
-            std::cout << "Valid parameter.\n";
+            std::cout << "Valid parameter:";
+            showInfo(std::cout);
+            std::cout <<"\n";
             val = &copCoeffs[power];
             return true;
         };
 
         void showInfo(std::ostream& os) override
         {
-            os << " heat-source index: " << heatSourceIndex;
-            os << ", temperature index: " << tempIndex;
-            os << ", power: " << power;
+            os << " heat-source index = " << heatSourceIndex;
+            os << ", temperature index = " << tempIndex;
+            os << ", power = " << power;
         }
     };
 
@@ -6927,17 +6937,23 @@ bool HPWH::makeGeneric(const double targetUEF)
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
+
     if (!findFirstHourRating(firstHourRating, standardTestOptions))
     {
         std::cout << "Unable to complete first-hour rating test.\n";
-        exit(1);
+        if (!customTestOptions.overrideFirstHourRating)
+        {
+            return false;
+        }
     }
 
-    const std::string sFirstHourRatingDesig =
-        HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-
-    std::cout << "\tFirst-Hour Rating:\n";
-    std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    if (customTestOptions.overrideFirstHourRating)
+    {
+        firstHourRating.desig = customTestOptions.desig;
+        const std::string sFirstHourRatingDesig =
+            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig <<"\n";
+    }
 
     // set up merit parameter
     Merit* pMerit;
@@ -6986,7 +7002,9 @@ bool HPWH::makeGeneric(const double targetUEF)
         for (std::size_t j = 0; j < nParams; ++j)
         {
             if (!first)
-                std::cout << ", ";
+                std::cout << ",";
+
+            std::cout << " " << j << ": ";
             std::cout << *(pParams[j]->val);
             first = false;
         }
@@ -7010,15 +7028,12 @@ bool HPWH::makeGeneric(const double targetUEF)
         for (std::size_t j = 0; j < nParams; ++j)
         {
             *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
-            // for (std::size_t i = 0; i < 1; ++i)
+            double dMerit;
+            if (!(pMerit->evalDiff(*this, dMerit)))
             {
-                double dMerit;
-                if (!(pMerit->evalDiff(*this, dMerit)))
-                {
-                    return false;
-                }
-                jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
+                return false;
             }
+            jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
             *(pParams[j]->val) = paramV[j];
         }
 
