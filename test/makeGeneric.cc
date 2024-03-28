@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     HPWH::StandardTestSummary standardTestSummary;
 
     HPWH::StandardTestOptions standardTestOptions;
-    standardTestOptions.saveOutput = false;
+    standardTestOptions.saveOutput = true;
     standardTestOptions.sOutputFilename = "";
     standardTestOptions.sOutputDirectory = "";
     standardTestOptions.changeSetpoint = true;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Model name: " << sModelName << "\n";
     std::cout << "Target UEF: " << targetUEF << "\n";
-    std::cout << "Output directory: " << sOutputDirectory << "\n";
+    std::cout << "Output directory: " << sOutputDirectory << "\n\n";
 
     if (hpwh.makeGeneric(targetUEF))
     {

@@ -4637,6 +4637,9 @@ int HPWH::initPreset(MODELS presetNum)
 
         heatSources[2].backupHeatSource = &heatSources[1];
         heatSources[1].backupHeatSource = &heatSources[2];
+
+        customTestOptions.overrideFirstHourRating = true;
+        customTestOptions.desig = FirstHourRating::Desig::High; // for B. Larson
     }
     else
     {
