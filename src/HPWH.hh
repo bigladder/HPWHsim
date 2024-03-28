@@ -1123,7 +1123,6 @@ class HPWH
                         StandardTestOptions& standardTestOptions,
                         StandardTestSummary& standardTestSummary);
 
-
     struct CustomTestOptions
     {
         bool overrideFirstHourRating = false;
