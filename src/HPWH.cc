@@ -4632,9 +4632,9 @@ bool compressorIsRunning(HPWH& hpwh)
     {
         model = HPWH::MODELS_AquaThermAire;
     }
-    else if (modelName == "Generic65")
+    else if (modelName == "GenericUEF217")
     {
-        model = HPWH::MODELS_Generic65;
+        model = HPWH::MODELS_GenericUEF217;
     }
     else
     {
@@ -6703,7 +6703,7 @@ bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig <<"\n";
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     if (run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
@@ -6752,11 +6752,11 @@ bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
         return false;
     }
 
-if (standardTestOptions.saveOutput)
-{
-    standardTestOptions.outputFile.close();
-}
-return true;
+    if (standardTestOptions.saveOutput)
+    {
+        standardTestOptions.outputFile.close();
+    }
+    return true;
 }
 
 bool HPWH::makeGeneric(const double targetUEF)
@@ -6856,7 +6856,7 @@ bool HPWH::makeGeneric(const double targetUEF)
             }
             std::cout << "Valid parameter:";
             showInfo(std::cout);
-            std::cout <<"\n";
+            std::cout << "\n";
             val = &copCoeffs[power];
             return true;
         };
@@ -6952,7 +6952,7 @@ bool HPWH::makeGeneric(const double targetUEF)
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig <<"\n";
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     // set up merit parameter

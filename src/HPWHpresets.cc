@@ -4571,8 +4571,8 @@ int HPWH::initPreset(MODELS presetNum)
         heatSources.resize(1);
         heatSources[0] = compressor;
     }
-    else if (presetNum == MODELS_Generic65)
-    { // Generic65
+    else if (presetNum == MODELS_GenericUEF217)
+    { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
@@ -4602,9 +4602,9 @@ int HPWH::initPreset(MODELS presetNum)
         });
 
         compressor.perfMap.push_back({
-            67,                        // Temperature (F)
-            {148.0418, 2.553291, 0.},  // Input Power Coefficients (kW)
-            {7.207307, -0.0335265, 0.} // COP Coefficients
+            67,                                     // Temperature (F)
+            {148.0418, 2.553291, 0.},               // Input Power Coefficients (kW)
+            {6.556322712161, -0.03974367485016, 0.} // COP Coefficients
         });
 
         compressor.minT = F_TO_C(45);
@@ -4638,8 +4638,8 @@ int HPWH::initPreset(MODELS presetNum)
         heatSources[2].backupHeatSource = &heatSources[1];
         heatSources[1].backupHeatSource = &heatSources[2];
 
-        customTestOptions.overrideFirstHourRating = true;
-        customTestOptions.desig = FirstHourRating::Desig::High; // for B. Larson
+        //      customTestOptions.overrideFirstHourRating = true;
+        //      customTestOptions.desig = FirstHourRating::Desig::High; // for B. Larson
     }
     else
     {

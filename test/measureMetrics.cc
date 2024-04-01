@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
     HPWH hpwh;
     bool validModel = false;
-    if (sPresetOrFile == "preset")
+    if (sPresetOrFile == "Preset")
     {
         if (hpwh.initPreset(sModelName) == 0)
         {
