@@ -4574,7 +4574,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
         setNumNodes(12);
-        setpoint_C = F_TO_C(125.);
+        setpoint_C = F_TO_C(127.);
 
         tankVolume_L = GAL_TO_L(58.5);
         tankUA_kJperHrC = 8.5;
