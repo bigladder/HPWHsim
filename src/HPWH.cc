@@ -4973,7 +4973,7 @@ int HPWH::initFromFile(string configFile)
         line_ss >> token;
         if (line_s.empty() || (token.length() == 0))
         {
-             continue;
+            continue;
         }
         if (token.at(0) == '#')
         {
