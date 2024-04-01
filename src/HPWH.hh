@@ -250,7 +250,7 @@ class HPWH
 
         MODELS_AquaThermAire = 400, // heat exchanger model
 
-        MODELS_Generic65 = 410
+        MODELS_GenericUEF217 = 410
     };
 
     /// specifies the modes for writing output
