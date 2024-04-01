@@ -4969,8 +4969,13 @@ int HPWH::initFromFile(string configFile)
         line_ss.str(line_s);
 
         // grab the first word, and start comparing
+        token = "";
         line_ss >> token;
-        if (token.at(0) == '#' || line_s.empty())
+        if (line_s.empty() || (token.length() == 0))
+        {
+             continue;
+        }
+        if (token.at(0) == '#')
         {
             // if you hit a comment, skip to next line
             continue;
