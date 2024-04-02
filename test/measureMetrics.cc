@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
             sCustomDrawProfile[0] =
                 static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
         }
-        for (const auto& [key, value]: HPWH::FirstHourRating::sDesigMap)
+        for (const auto& [key, value] : HPWH::FirstHourRating::sDesigMap)
         {
             if (value == sCustomDrawProfile)
             {
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
             std::cout << "Invalid input: Draw profile name not found.\n";
             exit(1);
         }
-     }
+    }
 
     std::cout << "Spec type: " << sPresetOrFile << "\n";
     std::cout << "Model name: " << sModelName << "\n";
