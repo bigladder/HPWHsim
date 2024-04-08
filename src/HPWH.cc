@@ -341,7 +341,8 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH() : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& logger_in)
+: logger(logger_in), hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
 }

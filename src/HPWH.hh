@@ -13,6 +13,8 @@
 #include <cstdlib> //for exit
 #include <vector>
 
+#include <courier/courier.h>
+
 namespace Btwxt
 {
 class RegularGridInterpolator;
@@ -23,6 +25,7 @@ class RegularGridInterpolator;
  * compiled library.  */
 
 #include "HPWHversion.hh"
+#include "courier/helpers.h"
 
 class HPWH
 {
@@ -62,7 +65,18 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH();                            /**< default constructor */
+    class Logger : public Courier::DefaultCourier {
+      protected:
+        void write_message(const std::string& message_type, const std::string& message) override
+        {
+            std::cout << fmt::format("  [{}] {}", message_type, message) << std::endl;
+        }
+    };
+
+    std::shared_ptr<Courier::Courier> logger;
+
+    HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
+             std::make_shared<Logger>());                            /**< default constructor */
     HPWH(const HPWH& hpwh);            /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh); /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors

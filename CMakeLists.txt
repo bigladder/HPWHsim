@@ -1,3 +1,4 @@
+cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0091 NEW)
 project(HPWHsim LANGUAGES CXX)
 cmake_minimum_required(VERSION 3.7)
