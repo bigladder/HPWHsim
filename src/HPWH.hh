@@ -65,11 +65,26 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    class Logger : public Courier::DefaultCourier {
-      protected:
-        void write_message(const std::string& message_type, const std::string& message) override
+    class Logger : public Courier::Courier {
+      private:
+        unsigned loggerBits = 0b0000;
+        const unsigned errorMask = 0b1000;
+        const unsigned warningMask = 0b0100;
+        const unsigned infoMask = 0b0010;
+        const unsigned debugMask = 0b0001;
+
+      public:
+        void receive_error(const std::string& message) override
         {
-            std::cout << fmt::format("  [{}] {}", message_type, message) << std::endl;
+            write_message("ERROR", message);
+            throw std::runtime_error(message);
+        }
+        void receive_warning(const std::string& message) override { write_message("WARNING", message); }
+        void receive_info(const std::string& message) override { write_message("INFO", message); }
+        void receive_debug(const std::string& message) override { write_message("DEBUG", message); }
+        virtual void write_message(const std::string& message_type, const std::string& message)
+        {
+            std::cout << fmt::format("[{}] {}", message_type, message) << std::endl;
         }
     };
 
