@@ -341,8 +341,8 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& logger_in)
-: logger(logger_in), hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
+HPWH::HPWH(const std::shared_ptr<Logger>& logger_in)
+:     logger(logger_in),hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
 }
@@ -401,12 +401,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     for (auto& heatSource : heatSources)
     {
         heatSource.hpwh = this;
-        // HeatSource assignment will fail (causing the simulation to fail) if a
-        // HeatSource has backups/companions.
-        // This could be dealt with in this function (tricky), but the HeatSource
-        // assignment can't know where its backup/companion pointer goes so it either
-        // fails or silently does something that's not at all useful.
-        // I prefer it to fail.  -NDK  1/2016
     }
 
     tankVolume_L = hpwh.tankVolume_L;
@@ -465,23 +459,19 @@ int HPWH::runOneStep(double drawVolume_L,
     // check for errors
     if (doTempDepression == true && minutesPerStep != 1)
     {
-        msg("minutesPerStep must equal one for temperature depression to work.  \n");
+        LOG_WARNING("minutesPerStep must equal one for temperature depression to work.\n");
         simHasFailed = true;
         return HPWH_ABORT;
     }
 
     if ((DRstatus & (DR_TOO | DR_TOT)))
     {
-        if (hpwhVerbosity >= VRB_typical)
-        {
-            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme "
-                " \n");
-        }
+        LOG_WARNING("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme.\n");
     }
 
+    LOG_INFO("Beginning runOneStep.\nTank Temps:\n");
     if (hpwhVerbosity >= VRB_typical)
     {
-        msg("Beginning runOneStep.  \nTank Temps: ");
         printTankTemps();
         msg("Step Inputs: InletT_C:  %.2lf, drawVolume_L:  %.2lf, tankAmbientT_C:  %.2lf, "
             "heatSourceAmbientT_C:  %.2lf, DRstatus:  %d, minutesPerStep:  %.2lf \n",
@@ -495,10 +485,7 @@ int HPWH::runOneStep(double drawVolume_L,
     // is the failure flag is set, don't run
     if (simHasFailed)
     {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("simHasFailed is set, aborting.  \n");
-        }
+        LOG_WARNING("simHasFailed is set, aborting.\n");
         return HPWH_ABORT;
     }
 
