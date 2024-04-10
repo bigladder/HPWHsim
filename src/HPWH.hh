@@ -74,6 +74,14 @@ class HPWH
         const unsigned debugMask = 0b0001;
 
       public:
+#if NDEBUG
+        Logger(const unsigned loggerBits_in = 0b0000) : Courier::Courier(), loggerBits(loggerBits_in) {}
+#else
+        Logger(const unsigned loggerBits_in = 0b1111) : Courier::Courier(), loggerBits(loggerBits_in) {}
+#endif
+        unsigned getMode() const { return loggerBits; }
+       void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
+
         void receive_error(const std::string& message) override
         {
             write_message("ERROR", message);
@@ -86,11 +94,25 @@ class HPWH
         {
             std::cout << fmt::format("[{}] {}", message_type, message) << std::endl;
         }
+
+        bool debug() const { return debugMask & loggerBits; }
+        bool error() const { return errorMask & loggerBits; }
+        bool warning() const { return warningMask & loggerBits; }
+        bool info() const { return infoMask & loggerBits; }
+
+        bool showDebug(const std::string& message) { receive_debug(message); return debug();}
+        bool showError(const std::string& message) { receive_error(message); return error();}
+        bool showWarning(const std::string& message) { receive_warning(message); return warning();}
+        bool showInfo(const std::string& message) { receive_info(message); return info();}
     };
 
-    std::shared_ptr<Courier::Courier> logger;
+    std::shared_ptr<Logger> logger;
+#define LOG_DEBUG(f) (logger->debug() ? logger->showDebug(f) : false)
+#define LOG_ERROR(f) (logger->error() ? logger->showError(f) : false)
+#define LOG_WARNING(f) (logger->warning() ? logger->showWarning(f) : false)
+#define LOG_INFO(f) (logger->info() ? logger->showInfo(f) : false)                                                                               \
 
-    HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
+    HPWH(const std::shared_ptr<Logger>& logger_in =
              std::make_shared<Logger>());                            /**< default constructor */
     HPWH(const HPWH& hpwh);            /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh); /**< assignment operator  */
