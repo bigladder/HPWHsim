@@ -100,10 +100,10 @@ class HPWH
         bool warning() const { return warningMask & loggerBits; }
         bool info() const { return infoMask & loggerBits; }
 
-        bool showDebug(const std::string& message) { receive_debug(message); return debug();}
-        bool showError(const std::string& message) { receive_error(message); return error();}
-        bool showWarning(const std::string& message) { receive_warning(message); return warning();}
-        bool showInfo(const std::string& message) { receive_info(message); return info();}
+        Logger showDebug(const std::string& message) { receive_debug(message); return *this;}
+        Logger showError(const std::string& message) { receive_error(message); return error();}
+        Logger showWarning(const std::string& message) { receive_warning(message); return warning();}
+        Logger showInfo(const std::string& message) { receive_info(message); return info();}
     };
 
     std::shared_ptr<Logger> logger;
