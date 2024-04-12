@@ -835,7 +835,7 @@ int HPWH::runOneStep(double drawVolume_L,
                     }
                 }
             } // heat source not engaged
-        }     // end while iHS heat source
+        } // end while iHS heat source
     }
     if (areAllHeatSourcesOff() == true)
     {
@@ -4628,6 +4628,22 @@ bool compressorIsRunning(HPWH& hpwh)
     {
         model = HPWH::MODELS_AWHSTier3Generic80;
     }
+    else if (modelName == "Tier4Generic40") // Tier-4 Generic 40 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic40;
+    }
+    else if (modelName == "Tier4Generic50") // Tier-4 Generic 50 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic50;
+    }
+    else if (modelName == "Tier4Generic65") // Tier-4 Generic 65 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic65;
+    }
+    else if (modelName == "Tier4Generic80") // Tier-4 Generic 80 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic80;
+    }
     else if (modelName == "AquaThermAire")
     {
         model = HPWH::MODELS_AquaThermAire;
@@ -6020,6 +6036,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     int elapsedTime_min = 0;
     while (!done)
     {
+
         // limit draw-volume increment to tank volume
         double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
         if (incrementalDrawVolume_L > tankVolume_L)
@@ -6110,7 +6127,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
         }
 
         drawVolume_L += incrementalDrawVolume_L;
-        ++elapsedTime_min;
+         ++elapsedTime_min;
     }
 
     //
