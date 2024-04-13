@@ -4628,19 +4628,19 @@ bool compressorIsRunning(HPWH& hpwh)
     {
         model = HPWH::MODELS_AWHSTier3Generic80;
     }
-    else if (modelName == "Tier4Generic40") // Tier-4 Generic 40 gal
+    else if (modelName == "AWHSTier4Generic40") // Tier-4 Generic 40 gal
     {
         model = HPWH::MODELS_AWHSTier4Generic40;
     }
-    else if (modelName == "Tier4Generic50") // Tier-4 Generic 50 gal
+    else if (modelName == "AWHSTier4Generic50") // Tier-4 Generic 50 gal
     {
         model = HPWH::MODELS_AWHSTier4Generic50;
     }
-    else if (modelName == "Tier4Generic65") // Tier-4 Generic 65 gal
+    else if (modelName == "AWHSTier4Generic65") // Tier-4 Generic 65 gal
     {
         model = HPWH::MODELS_AWHSTier4Generic65;
     }
-    else if (modelName == "Tier4Generic80") // Tier-4 Generic 80 gal
+    else if (modelName == "AWHSTier4Generic80") // Tier-4 Generic 80 gal
     {
         model = HPWH::MODELS_AWHSTier4Generic80;
     }
