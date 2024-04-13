@@ -6127,7 +6127,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
         }
 
         drawVolume_L += incrementalDrawVolume_L;
-         ++elapsedTime_min;
+        ++elapsedTime_min;
     }
 
     //
