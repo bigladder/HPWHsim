@@ -835,7 +835,7 @@ int HPWH::runOneStep(double drawVolume_L,
                     }
                 }
             } // heat source not engaged
-        } // end while iHS heat source
+        }     // end while iHS heat source
     }
     if (areAllHeatSourcesOff() == true)
     {
