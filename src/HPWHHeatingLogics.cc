@@ -121,20 +121,20 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
+    if (hpwh->logger->info())
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
             (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
                       (tempMinUseful_C - getMainsT_C()));
-        hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
-                  "deltaSoCFraction: %.6f\n",
-                  fractCalcNode,
-                  fractNextNode,
-                  smallestSoCChangeWhenHeatingNextNode,
-                  deltaSoCFraction);
+        LOG_INFO(hpwh,
+                 "fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
+                 "deltaSoCFraction: %.6f\n",
+                 fractCalcNode,
+                 fractNextNode,
+                 smallestSoCChangeWhenHeatingNextNode,
+                 deltaSoCFraction)
     }
-
     // if the fraction is enough to heat up the next node, do that minimum and handle the heating of
     // the next node next iteration.
     return std::min(fractCalcNode, fractNextNode);

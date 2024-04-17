@@ -72,9 +72,6 @@ int main(int argc, char* argv[])
     string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
     string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
     string strHeadSoC = "targetSoCFract,soCFract,";
-#if defined _DEBUG
-    hpwh.setVerbosity(HPWH::VRB_reluctant);
-#endif
 
     //.......................................
     // process command line arguments
