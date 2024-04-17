@@ -1,5 +1,5 @@
 /*
-File of the presets heating logics available HPWHsim
+File of the heating logics available in HPWHsim
 */
 
 #include "HPWH.hh"
@@ -121,7 +121,7 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (HPWH::Logger::info())
+    if (hpwh->sender.info())
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
