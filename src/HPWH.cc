@@ -521,7 +521,7 @@ int HPWH::runOneStep(double drawVolume_L,
         turnAllHeatSourcesOff(); // turns off isheating
         LOG_INFO(this,
                  fmt::format("DR_LOC | DR_LOC everything off, DRstatus = {}",
-                             static_cast<int>(DRstatus)));
+                             static_cast<int>(DRstatus)))
     }
     else
     { // do normal check
