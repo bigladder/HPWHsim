@@ -100,9 +100,9 @@ class HPWH
             : courier(courier_in)
         {
 #if NDEBUG
-                loggerBits = 0b1110;
+            loggerBits = 0b1110;
 #else
-                loggerBits = 0b1111;
+            loggerBits = 0b1111;
 #endif
         }
 
@@ -120,7 +120,6 @@ class HPWH
         bool error() const { return errorMask & loggerBits; }
         bool warning() const { return warningMask & loggerBits; }
         bool info() const { return infoMask & loggerBits; }
-
 
         void send_error(const std::string& message) const { courier->send_error(message); }
         void send_warning(const std::string& message) const { courier->send_warning(message); }
