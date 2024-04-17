@@ -75,7 +75,8 @@ class HPWH
         static constexpr unsigned warningMask = 0b0100;
         static constexpr unsigned infoMask = 0b0010;
         static constexpr unsigned debugMask = 0b0001;
-        Logger(const unsigned loggerBits_in = errorMask) : loggerBits(loggerBits_in) {}
+
+        Logger(const unsigned loggerBits_in) : loggerBits(loggerBits_in) {}
 
 #if NDEBUG
         Logger() : Logger(0b1110) {}
@@ -116,7 +117,7 @@ class HPWH
     std::shared_ptr<Logger> logger;
 
     HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
-             std::make_shared<Logger>(Logger::errorMask)); /**< default constructor */
+             std::make_shared<Logger>()); /**< default constructor */
     HPWH(const HPWH& hpwh);                                /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);                     /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
