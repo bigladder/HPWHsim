@@ -545,8 +545,6 @@ int HPWH::runOneStep(double drawVolume_L,
                 static_cast<int>(DRstatus))
         }
 
-        LOG_INFO(this, "Desc = {}", 1)
-
         // do HeatSource choice
         for (int i = 0; i < getNumHeatSources(); i++)
         {
