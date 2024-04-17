@@ -342,7 +342,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& logger_in /*= std::make_shared<Logger>()*/)
-:     hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
+    : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
 {
     logger = std::dynamic_pointer_cast<Logger>(logger_in);
     setAllDefaults();
@@ -467,7 +467,9 @@ int HPWH::runOneStep(double drawVolume_L,
 
     if ((DRstatus & (DR_TOO | DR_TOT)))
     {
-        LOG_WARNING(this, "DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme.");
+        LOG_WARNING(
+            this,
+            "DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme.");
     }
 
     // is the failure flag is set, don't run
@@ -517,8 +519,9 @@ int HPWH::runOneStep(double drawVolume_L,
     if ((DRstatus & DR_LOC) != 0 && (DRstatus & DR_LOR) != 0)
     {
         turnAllHeatSourcesOff(); // turns off isheating
-        LOG_INFO(this, fmt::format("DR_LOC | DR_LOC everything off, DRstatus = {}", static_cast<int>(DRstatus)));
-
+        LOG_INFO(this,
+                 fmt::format("DR_LOC | DR_LOC everything off, DRstatus = {}",
+                             static_cast<int>(DRstatus)));
     }
     else
     { // do normal check
@@ -534,8 +537,10 @@ int HPWH::runOneStep(double drawVolume_L,
             {
                 heatSources[lowestElementIndex].engageHeatSource(DRstatus);
             }
-            LOG_INFO(this, "TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = {}", static_cast<int>(DRstatus))
-
+            LOG_INFO(
+                this,
+                "TURNED ON DR_TOO engaged compressor and lowest resistance element, DRstatus = {}",
+                static_cast<int>(DRstatus))
         }
 
         LOG_INFO(this, "Desc = {}", 1)
@@ -543,10 +548,12 @@ int HPWH::runOneStep(double drawVolume_L,
         // do HeatSource choice
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            LOG_INFO(this, "Heat source choice: heatsource {} can choose from {} turn on logics and {} shut off logics",
-                   i,
-                    heatSources[i].turnOnLogicSet.size(),
-                    heatSources[i].shutOffLogicSet.size())
+            LOG_INFO(this,
+                     "Heat source choice: heatsource {} can choose from {} turn on logics and {} "
+                     "shut off logics",
+                     i,
+                     heatSources[i].turnOnLogicSet.size(),
+                     heatSources[i].shutOffLogicSet.size())
 
             if (isHeating)
             {
@@ -621,7 +628,9 @@ int HPWH::runOneStep(double drawVolume_L,
             if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource == NULL)
             {
                 heatSources[i].disengageHeatSource();
-                LOG_WARNING(this, "lock-out triggered, but no backupHeatSource defined. Simulation will continue will lock out the heat source.");
+                LOG_WARNING(this,
+                            "lock-out triggered, but no backupHeatSource defined. Simulation will "
+                            "continue will lock out the heat source.");
             }
 
             // going through in order, check if the heat source is on
@@ -646,8 +655,11 @@ int HPWH::runOneStep(double drawVolume_L,
                     else if (VIPIndex >= 0 && heatSources[VIPIndex].isOn &&
                              heatSources[i].backupHeatSource->isAResistance())
                     {
-                        LOG_INFO(this, fmt::format("Locked out back up heat source AND the engaged heat source {}, DRstatus = {}",
-                                i, static_cast<int>(DRstatus)))
+                        LOG_INFO(this,
+                                 fmt::format("Locked out back up heat source AND the engaged heat "
+                                             "source {}, DRstatus = {}",
+                                             i,
+                                             static_cast<int>(DRstatus)))
                         continue;
                     }
                     else
@@ -666,9 +678,10 @@ int HPWH::runOneStep(double drawVolume_L,
                 // maxed out
                 if (heatSourcePtr->runtime_min < minutesToRun)
                 {
-                    LOG_DEBUG(this, fmt::format("done heating! runtime_min minutesToRun %.2lf %.2lf\n",
-                            heatSourcePtr->runtime_min,
-                            minutesToRun))
+                    LOG_DEBUG(this,
+                              fmt::format("done heating! runtime_min minutesToRun %.2lf %.2lf\n",
+                                          heatSourcePtr->runtime_min,
+                                          minutesToRun))
 
                     // subtract time it ran and turn it off
                     minutesToRun -= heatSourcePtr->runtime_min;
@@ -711,7 +724,7 @@ int HPWH::runOneStep(double drawVolume_L,
                     }
                 }
             } // heat source not engaged
-        }     // end while iHS heat source
+        } // end while iHS heat source
     }
     if (areAllHeatSourcesOff())
     {
@@ -825,7 +838,10 @@ int HPWH::runNSteps(int N,
 
         if (simHasFailed)
         {
-            LOG_WARNING(this, "RunNSteps has encountered an error on step {} of N and has ceased running.", i + 1)
+            LOG_WARNING(
+                this,
+                "RunNSteps has encountered an error on step {} of N and has ceased running.",
+                i + 1)
             return HPWH_ABORT;
         }
 
@@ -973,13 +989,16 @@ int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
     }
     else
     {
-        LOG_WARNING(this, "Incorrect unit specification for setSetpoint.",0);
+        LOG_WARNING(this, "Incorrect unit specification for setSetpoint.", 0);
         return HPWH_ABORT;
     }
     if (!isNewSetpointPossible(newSetpoint_C, temp, why))
     {
-        LOG_WARNING(this, fmt::format("Unwilling to set this setpoint for the currently selected model, max setpoint is {} C. {}",
-                temp, why.c_str()));
+        LOG_WARNING(this,
+                    fmt::format("Unwilling to set this setpoint for the currently selected model, "
+                                "max setpoint is {} C. {}",
+                                temp,
+                                why.c_str()));
         return HPWH_ABORT;
     }
 
@@ -1314,7 +1333,7 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
     double value = getTankSurfaceArea(tankVolume_L, UNITS_L, units);
     if (value < 0.)
     {
-        LOG_WARNING(this, "Incorrect unit specification for getTankSurfaceArea.",0)
+        LOG_WARNING(this, "Incorrect unit specification for getTankSurfaceArea.", 0)
         value = HPWH_ABORT;
     }
     return value;
@@ -1676,7 +1695,8 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     }
     else
     {
-        LOG_WARNING(this, "Incorrect unit specification for set Entering Water High Temp Shut Off.");
+        LOG_WARNING(this,
+                    "Incorrect unit specification for set Entering Water High Temp Shut Off.");
         return HPWH_ABORT;
     }
 
@@ -1698,8 +1718,10 @@ int HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     }
     if (highTempIsNotValid)
     {
-        LOG_WARNING(this, fmt::format("High temperature shut off is too close to the setpoint, expected a minimum difference of {}",
-                MINSINGLEPASSLIFT));
+        LOG_WARNING(this,
+                    fmt::format("High temperature shut off is too close to the setpoint, expected "
+                                "a minimum difference of {}",
+                                MINSINGLEPASSLIFT));
         return HPWH_ABORT;
     }
 
@@ -1719,8 +1741,9 @@ int HPWH::setTargetSoCFraction(double target)
 {
     if (!isSoCControlled())
     {
-        LOG_WARNING(this, "Can not set target state of charge if HPWH is not using state of charge "
-                "controls.");
+        LOG_WARNING(this,
+                    "Can not set target state of charge if HPWH is not using state of charge "
+                    "controls.");
         return HPWH_ABORT;
     }
     if (target < 0)
@@ -1767,7 +1790,8 @@ int HPWH::switchToSoCControls(double targetSoC,
 {
     if (!canUseSoCControls())
     {
-        LOG_WARNING(this, "Cannot set up state of charge controls for integrated or wrapped HPWHs.");
+        LOG_WARNING(this,
+                    "Cannot set up state of charge controls for integrated or wrapped HPWHs.");
         return HPWH_ABORT;
     }
 
@@ -1784,14 +1808,16 @@ int HPWH::switchToSoCControls(double targetSoC,
     }
     else
     {
-        LOG_WARNING(this, "Incorrect unit specification for set Entering Water High Temp Shut Off.");
+        LOG_WARNING(this,
+                    "Incorrect unit specification for set Entering Water High Temp Shut Off.");
         return HPWH_ABORT;
     }
 
     if (mainsT_C >= tempMinUseful_C)
     {
-        LOG_WARNING(this, "The mains temperature can't be equal to or greater than the minimum useful "
-                "temperature.");
+        LOG_WARNING(this,
+                    "The mains temperature can't be equal to or greater than the minimum useful "
+                    "temperature.");
         return HPWH_ABORT;
     }
 
@@ -2078,7 +2104,9 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
 {
     if (tankTemps_C.empty())
     {
-        LOG_WARNING(this, "You have attempted to access the temperature of a tank node that does not exist.");
+        LOG_WARNING(
+            this,
+            "You have attempted to access the temperature of a tank node that does not exist.");
         return double(HPWH_ABORT);
     }
     else
@@ -2107,7 +2135,8 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
-        LOG_WARNING(this, "You have attempted to access a simulated thermocouple that does not exist.")
+        LOG_WARNING(this,
+                    "You have attempted to access a simulated thermocouple that does not exist.")
         return double(HPWH_ABORT);
     }
     double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
@@ -2190,7 +2219,8 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 
     if (outTemp_C > maxAllowedSetpoint_C)
     {
-        LOG_WARNING(this, "Inputted outlet temperature of the compressor is higher than can be produced.")
+        LOG_WARNING(this,
+                    "Inputted outlet temperature of the compressor is higher than can be produced.")
         return double(HPWH_ABORT);
     }
 
@@ -2225,7 +2255,9 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) cons
     // energy used by the heat source is positive - this should always be positive
     if (N >= getNumHeatSources() || N < 0)
     {
-        LOG_WARNING(this, "You have attempted to access the energy input of a heat source that does not exist.")
+        LOG_WARNING(
+            this,
+            "You have attempted to access the energy input of a heat source that does not exist.")
         return double(HPWH_ABORT);
     }
 
@@ -2253,7 +2285,9 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) con
     // returns energy from the heat source into the water - this should always be positive
     if (N >= getNumHeatSources() || N < 0)
     {
-        LOG_WARNING(this, "You have attempted to access the energy output of a heat source that does not exist.")
+        LOG_WARNING(
+            this,
+            "You have attempted to access the energy output of a heat source that does not exist.")
         return double(HPWH_ABORT);
     }
 
@@ -2280,7 +2314,8 @@ double HPWH::getNthHeatSourceRunTime(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)
     {
-        LOG_WARNING(this, "You have attempted to access the run time of a heat source that does not exist.")
+        LOG_WARNING(
+            this, "You have attempted to access the run time of a heat source that does not exist.")
         return double(HPWH_ABORT);
     }
     return heatSources[N].runtime_min;
@@ -2290,7 +2325,8 @@ int HPWH::isNthHeatSourceRunning(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)
     {
-        LOG_WARNING(this, "You have attempted to access the status of a heat source that does not exist.")
+        LOG_WARNING(this,
+                    "You have attempted to access the status of a heat source that does not exist.")
         return HPWH_ABORT;
     }
     if (heatSources[N].isEngaged())
@@ -2309,7 +2345,8 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)
     {
-        LOG_WARNING(this, "You have attempted to access the type of a heat source that does not exist.")
+        LOG_WARNING(this,
+                    "You have attempted to access the type of a heat source that does not exist.")
         return HEATSOURCE_TYPE(HPWH_ABORT);
     }
     return heatSources[N].typeOfHeatSource;
@@ -2572,7 +2609,9 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     }
     else if (usesSoCLogic)
     {
-        LOG_WARNING(this, "Current model uses SOC control logic and does not have a definition for sizing fractions.")
+        LOG_WARNING(this,
+                    "Current model uses SOC control logic and does not have a definition for "
+                    "sizing fractions.")
         return HPWH_ABORT;
     }
 
@@ -3564,7 +3603,8 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
     if (fracEnergyDiff > fracEnergyTolerance)
     {
-        LOG_INFO(this, fmt::format("Energy-balance error: {} kJ, {} %%", qBal_kJ, 100. * fracEnergyDiff))
+        LOG_INFO(this,
+                 fmt::format("Energy-balance error: {} kJ, {} %%", qBal_kJ, 100. * fracEnergyDiff))
         return false;
     }
     return true;
@@ -3955,8 +3995,12 @@ int HPWH::checkInputs()
         // check the heat source type to make sure it has been set
         if (heatSources[i].typeOfHeatSource == TYPE_none)
         {
-            LOG_WARNING(this, "Heat source {} does not have a specified type.  Initialization failed.", i)
-            LOG_WARNING(this, fmt::format("Heat source {} does not have a specified type.  Initialization failed.", i))
+            LOG_WARNING(
+                this, "Heat source {} does not have a specified type.  Initialization failed.", i)
+            LOG_WARNING(
+                this,
+                fmt::format(
+                    "Heat source {} does not have a specified type.  Initialization failed.", i))
             returnVal = HPWH_ABORT;
         }
         // check to make sure there is at least one onlogic or parent with onlogic
@@ -3964,7 +4008,8 @@ int HPWH::checkInputs()
         if (heatSources[i].turnOnLogicSet.size() == 0 &&
             (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
         {
-            LOG_WARNING(this, "You must specify at least one logic to turn on the element or the element \
+            LOG_WARNING(this,
+                        "You must specify at least one logic to turn on the element or the element \
                 must be set as a backup for another heat source with at least one logic.")
 
             returnVal = HPWH_ABORT;
@@ -3996,8 +4041,11 @@ int HPWH::checkInputs()
             condensitySum += heatSources[i].condensity[j];
         if (fabs(condensitySum - 1.0) > 1e-6)
         {
-            LOG_WARNING(this, "The condensity for heatsource {} does not sum to 1. "
-                        "It sums to {}.", i, condensitySum)
+            LOG_WARNING(this,
+                        "The condensity for heatsource {} does not sum to 1. "
+                        "It sums to {}.",
+                        i,
+                        condensitySum)
             returnVal = HPWH_ABORT;
         }
         // check that air flows are all set properly
@@ -4013,7 +4061,8 @@ int HPWH::checkInputs()
             {
                 if (heatSources[i].defrostMap.size() < 3)
                 {
-                    LOG_WARNING(this, "Defrost logic set to true but no valid defrost map of length 3 or "
+                    LOG_WARNING(this,
+                                "Defrost logic set to true but no valid defrost map of length 3 or "
                                 "greater set.")
                     returnVal = HPWH_ABORT;
                 }
@@ -4035,15 +4084,17 @@ int HPWH::checkInputs()
             if (0 > heatSources[i].externalOutletHeight ||
                 heatSources[i].externalOutletHeight > getNumNodes() - 1)
             {
-                LOG_WARNING(this, "External heat sources need an external outlet height within the bounds"
+                LOG_WARNING(this,
+                            "External heat sources need an external outlet height within the bounds"
                             "from from 0 to numNodes-1.")
                 returnVal = HPWH_ABORT;
             }
             if (0 > heatSources[i].externalInletHeight ||
                 heatSources[i].externalInletHeight > getNumNodes() - 1)
             {
-                LOG_WARNING(this, "External heat sources need an external inlet height within the bounds "
-                    "from from 0 to numNodes-1.")
+                LOG_WARNING(this,
+                            "External heat sources need an external inlet height within the bounds "
+                            "from from 0 to numNodes-1.")
                 returnVal = HPWH_ABORT;
             }
         }
@@ -4052,8 +4103,10 @@ int HPWH::checkInputs()
             if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
                 heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
             {
-                LOG_WARNING(this, "Heatsource %d is not an external heat source but has an external "
-                        "secondary heat exchanger.", i)
+                LOG_WARNING(this,
+                            "Heatsource %d is not an external heat source but has an external "
+                            "secondary heat exchanger.",
+                            i)
                 returnVal = HPWH_ABORT;
             }
         }
@@ -4066,7 +4119,8 @@ int HPWH::checkInputs()
             // If useBtwxtGrid is true that the perfMap is empty
             if (heatSources[i].perfMap.size() != 0)
             {
-                LOG_WARNING(this, "Using the grid lookups but a regression based performance map is given.")
+                LOG_WARNING(
+                    this, "Using the grid lookups but a regression based performance map is given.")
                 returnVal = HPWH_ABORT;
             }
 
@@ -4075,8 +4129,10 @@ int HPWH::checkInputs()
                     heatSources[i].perfGridValues[1].size() &&
                 heatSources[i].perfGridValues[0].size() != 0)
             {
-                LOG_WARNING(this, "When using grid lookups for performance the vectors in perfGridValues must "
-                        "be the same length.")
+                LOG_WARNING(
+                    this,
+                    "When using grid lookups for performance the vectors in perfGridValues must "
+                    "be the same length.")
                 returnVal = HPWH_ABORT;
             }
 
@@ -4089,8 +4145,10 @@ int HPWH::checkInputs()
             }
             if (expLength != heatSources[i].perfGridValues[0].size())
             {
-                LOG_WARNING(this, "When using grid lookups for perfmance the vectors in perfGridValues must "
-                        "be the same length.")
+                LOG_WARNING(
+                    this,
+                    "When using grid lookups for perfmance the vectors in perfGridValues must "
+                    "be the same length.")
                 returnVal = HPWH_ABORT;
             }
         }
@@ -4099,8 +4157,9 @@ int HPWH::checkInputs()
             // Check that perfmap only has 1 point if config_external and multipass
             if (heatSources[i].isExternalMultipass() && heatSources[i].perfMap.size() != 1)
             {
-                LOG_WARNING(this, "External multipass heat sources must have a perfMap of only one point "
-                        "with regression equations.")
+                LOG_WARNING(this,
+                            "External multipass heat sources must have a perfMap of only one point "
+                            "with regression equations.")
                 returnVal = HPWH_ABORT;
             }
         }
@@ -4113,8 +4172,10 @@ int HPWH::checkInputs()
         getSizingFractions(aquaF, useF);
         if (aquaF < (1. - useF))
         {
-            LOG_WARNING(this, "The relationship between the on logic and off logic is not supported. The off "
-                   "logic is beneath the on logic.")
+            LOG_WARNING(
+                this,
+                "The relationship between the on logic and off logic is not supported. The off "
+                "logic is beneath the on logic.")
             returnVal = HPWH_ABORT;
         }
     }
@@ -4131,8 +4192,10 @@ int HPWH::checkInputs()
     // Check if the UA is out of bounds
     if (tankUA_kJperHrC < 0.0)
     {
-        LOG_WARNING(this, "The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
-                    "tankUA_kJperHrC is: {}", tankUA_kJperHrC)
+        LOG_WARNING(this,
+                    "The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
+                    "tankUA_kJperHrC is: {}",
+                    tankUA_kJperHrC)
         returnVal = HPWH_ABORT;
     }
 
@@ -4255,7 +4318,8 @@ int HPWH::initFromFile(string configFile)
             line_ss >> tempDouble;
             if (tempDouble < 0 || tempDouble > 1)
             {
-                LOG_WARNING(this, "Out of bounds value for {}. Should be between 0 and 1.", token.c_str())
+                LOG_WARNING(
+                    this, "Out of bounds value for {}. Should be between 0 and 1.", token.c_str())
                 return HPWH_ABORT;
             }
             mixBelowFractionOnDraw = tempDouble;
@@ -4362,7 +4426,9 @@ int HPWH::initFromFile(string configFile)
         {
             if (numHeatSources == 0)
             {
-                LOG_WARNING(this, "You must specify the number of heatsources before setting their properties.")
+                LOG_WARNING(
+                    this,
+                    "You must specify the number of heatsources before setting their properties.")
                 return HPWH_ABORT;
             }
             line_ss >> heatsource >> token;
@@ -4375,9 +4441,10 @@ int HPWH::initFromFile(string configFile)
                     heatSources[heatsource].isVIP = false;
                 else
                 {
-                    LOG_WARNING(this, "Improper value for {} for heat source {}.",
-                           token.c_str(),
-                           heatsource)
+                    LOG_WARNING(this,
+                                "Improper value for {} for heat source {}.",
+                                token.c_str(),
+                                heatsource)
                     return HPWH_ABORT;
                 }
             }
@@ -4390,9 +4457,10 @@ int HPWH::initFromFile(string configFile)
                     heatSources[heatsource].isOn = false;
                 else
                 {
-                    LOG_WARNING(this, "Improper value for {} for heat source {}.",
-                            token.c_str(),
-                            heatsource)
+                    LOG_WARNING(this,
+                                "Improper value for {} for heat source {}.",
+                                token.c_str(),
+                                heatsource)
                     return HPWH_ABORT;
                 }
             }
@@ -4438,10 +4506,12 @@ int HPWH::initFromFile(string configFile)
                         int nodeNum = std::stoi(nextToken);
                         if (nodeNum > LOGIC_SIZE + 1 || nodeNum < 0)
                         {
-                            LOG_WARNING(this, "Node number for heatsource {} {} must be between 0 and {}.",
-                                   heatsource,
-                                    token.c_str(),
-                                    LOGIC_SIZE + 1)
+                            LOG_WARNING(
+                                this,
+                                "Node number for heatsource {} {} must be between 0 and {}.",
+                                heatsource,
+                                token.c_str(),
+                                LOGIC_SIZE + 1)
                             return HPWH_ABORT;
                         }
                         nodeNums.push_back(nodeNum);
@@ -4465,23 +4535,25 @@ int HPWH::initFromFile(string configFile)
                     }
                     if (nodeNums.size() != weights.size())
                     {
-                        LOG_WARNING(this, "Number of weights for heatsource {} {} ({}) does not match number "
-                                "of nodes for {} ({}).",
-                                heatsource,
-                                token.c_str(),
-                                weights.size(),
-                                token.c_str(),
-                                nodeNums.size())
+                        LOG_WARNING(
+                            this,
+                            "Number of weights for heatsource {} {} ({}) does not match number "
+                            "of nodes for {} ({}).",
+                            heatsource,
+                            token.c_str(),
+                            weights.size(),
+                            token.c_str(),
+                            nodeNums.size())
                         return HPWH_ABORT;
                     }
                     if (nextToken != "absolute" && nextToken != "relative")
                     {
-                        LOG_WARNING(this, 
-                            "Improper definition, \"{}\", for heat source {} {}. Should be "
-                                "\"relative\" or \"absoute\".",
-                                nextToken.c_str(),
-                                heatsource,
-                                token.c_str())
+                        LOG_WARNING(this,
+                                    "Improper definition, \"{}\", for heat source {} {}. Should be "
+                                    "\"relative\" or \"absoute\".",
+                                    nextToken.c_str(),
+                                    heatsource,
+                                    token.c_str())
                         return HPWH_ABORT;
                     }
                     bool absolute = (nextToken == "absolute");
@@ -4494,11 +4566,12 @@ int HPWH::initFromFile(string configFile)
                         compare = std::greater<double>();
                     else
                     {
-                         LOG_WARNING(this, "Improper comparison, \"%s\", for heat source %d %s. Should be "
-                            "\"<\" or \">\".\n",
-                            compareStr.c_str(),
-                            heatsource,
-                            token.c_str())
+                        LOG_WARNING(this,
+                                    "Improper comparison, \"%s\", for heat source %d %s. Should be "
+                                    "\"<\" or \">\".\n",
+                                    compareStr.c_str(),
+                                    heatsource,
+                                    token.c_str())
                         return HPWH_ABORT;
                     }
                     if (units == "F")
@@ -4516,9 +4589,10 @@ int HPWH::initFromFile(string configFile)
                         ; // do nothing, lol
                     else
                     {
-                        LOG_WARNING(this, "Incorrect units specification for {} from heatsource {}.",
-                                token.c_str(),
-                                heatsource)
+                        LOG_WARNING(this,
+                                    "Incorrect units specification for {} from heatsource {}.",
+                                    token.c_str(),
+                                    heatsource)
                         return HPWH_ABORT;
                     }
                     std::vector<NodeWeight> nodeWeights;
@@ -4560,11 +4634,13 @@ int HPWH::initFromFile(string configFile)
                             compare = std::greater<double>();
                         else
                         {
-                            LOG_WARNING(this, "Improper comparison, \"%s\", for heat source %d %s. Should be "
-                                    "\"<\" or \">\".",
-                                    compareStr.c_str(),
-                                    heatsource,
-                                    token.c_str())
+                            LOG_WARNING(
+                                this,
+                                "Improper comparison, \"%s\", for heat source %d %s. Should be "
+                                "\"<\" or \">\".",
+                                compareStr.c_str(),
+                                heatsource,
+                                token.c_str())
                             return HPWH_ABORT;
                         }
                         line_ss >> tempDouble;
@@ -4589,9 +4665,10 @@ int HPWH::initFromFile(string configFile)
                         ; // do nothing, lol
                     else
                     {
-                        LOG_WARNING(this, "Incorrect units specification for %s from heatsource %d.",
-                                token.c_str(),
-                                heatsource)
+                        LOG_WARNING(this,
+                                    "Incorrect units specification for %s from heatsource %d.",
+                                    token.c_str(),
+                                    heatsource)
                         return HPWH_ABORT;
                     }
                     if (tempString == "wholeTank")
@@ -4641,7 +4718,8 @@ int HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        LOG_WARNING(this, "Improper %s for heat source %d\n", token.c_str(), heatsource)
+                        LOG_WARNING(
+                            this, "Improper %s for heat source %d\n", token.c_str(), heatsource)
                         return HPWH_ABORT;
                     }
                 }
@@ -4654,9 +4732,10 @@ int HPWH::initFromFile(string configFile)
                         ; // do nothing, lol
                     else
                     {
-                        LOG_WARNING(this, "Incorrect units specification for %s from heatsource %d.",
-                                token.c_str(),
-                                heatsource)
+                        LOG_WARNING(this,
+                                    "Incorrect units specification for %s from heatsource %d.",
+                                    token.c_str(),
+                                    heatsource)
                         return HPWH_ABORT;
                     }
                     if (tempString == "topNodeMaxTemp")
@@ -4688,7 +4767,8 @@ int HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        LOG_WARNING(this, "Improper %s for heat source %d\n", token.c_str(), heatsource);
+                        LOG_WARNING(
+                            this, "Improper %s for heat source %d\n", token.c_str(), heatsource);
                         return HPWH_ABORT;
                     }
                 }
@@ -4800,19 +4880,22 @@ int HPWH::initFromFile(string configFile)
                 {
                     if (maxTemps == 0)
                     {
-                        LOG_WARNING(this, "%s specified for heatsource %d before definition of nTemps.",
-                                token.c_str(),
-                                heatsource)
+                        LOG_WARNING(this,
+                                    "%s specified for heatsource %d before definition of nTemps.",
+                                    token.c_str(),
+                                    heatsource)
                         return HPWH_ABORT;
                     }
                     else
                     {
-                        LOG_WARNING(this, "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
-                                "less than %d.  \n",
-                                token.c_str(),
-                                heatsource,
-                                    maxTemps,
-                                nTemps)
+                        LOG_WARNING(
+                            this,
+                            "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
+                            "less than %d.  \n",
+                            token.c_str(),
+                            heatsource,
+                            maxTemps,
+                            nTemps)
                         return HPWH_ABORT;
                     }
                 }
@@ -4825,9 +4908,10 @@ int HPWH::initFromFile(string configFile)
                     tempDouble = C_TO_F(tempDouble);
                 else
                 {
-                    LOG_WARNING(this, "Incorrect units specification for %s from heatsource %d.",
-                            token.c_str(),
-                            heatsource)
+                    LOG_WARNING(this,
+                                "Incorrect units specification for %s from heatsource %d.",
+                                token.c_str(),
+                                heatsource)
                     return HPWH_ABORT;
                 }
                 heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
@@ -4863,19 +4947,22 @@ int HPWH::initFromFile(string configFile)
                 {
                     if (maxTemps == 0)
                     {
-                        LOG_WARNING(this, "%s specified for heatsource %d before definition of nTemps.",
-                                token.c_str(),
-                                heatsource)
+                        LOG_WARNING(this,
+                                    "%s specified for heatsource %d before definition of nTemps.",
+                                    token.c_str(),
+                                    heatsource)
                         return HPWH_ABORT;
                     }
                     else
                     {
-                        LOG_WARNING(this, "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
-                                "less than %d.  \n",
-                                token.c_str(),
-                               heatsource,
-                               maxTemps,
-                                nTemps)
+                        LOG_WARNING(
+                            this,
+                            "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
+                            "less than %d.  \n",
+                            token.c_str(),
+                            heatsource,
+                            maxTemps,
+                            nTemps)
                         return HPWH_ABORT;
                     }
                 }
@@ -4900,9 +4987,10 @@ int HPWH::initFromFile(string configFile)
                     ; // do nothing, lol
                 else
                 {
-                    LOG_WARNING(this, "Incorrect units specification for %s from heatsource %d.",
-                           token.c_str(),
-                            heatsource)
+                    LOG_WARNING(this,
+                                "Incorrect units specification for %s from heatsource %d.",
+                                token.c_str(),
+                                heatsource)
                     return HPWH_ABORT;
                 }
                 heatSources[heatsource].hysteresis_dC = tempDouble;
@@ -4924,7 +5012,8 @@ int HPWH::initFromFile(string configFile)
             }
             else
             {
-                LOG_WARNING(this, "Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource)
+                LOG_WARNING(
+                    this, "Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource)
             }
 
         } // end heatsource options
