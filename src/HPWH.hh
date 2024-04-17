@@ -1626,10 +1626,10 @@ void calcThermalDist(std::vector<double>& thermalDist,
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 // clang-format off
-#define LOG_DEBUG(hpwh, f, ...)  {if (hpwh->logger->debug()) hpwh->logger->receive_debug(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
-#define LOG_ERROR(hpwh, f, ...)  {if (hpwh->logger->error()) hpwh->logger->receive_error(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
-#define LOG_WARNING(hpwh, f, ...)  {if (hpwh->logger->warning()) hpwh->logger->receive_warning(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
-#define LOG_INFO(hpwh, f, ...) {if (hpwh->logger->info()) hpwh->logger->receive_info(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
+#define LOG_DEBUG(hpwh, f, ...)  {if (hpwh->logger->debug()) hpwh->logger->receive_debug(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_ERROR(hpwh, f, ...)  {if (hpwh->logger->error()) hpwh->logger->receive_error(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_WARNING(hpwh, f, ...)  {if (hpwh->logger->warning()) hpwh->logger->receive_warning(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_INFO(hpwh, f, ...) {if (hpwh->logger->info()) hpwh->logger->receive_info(fmt::format(f, ##__VA_ARGS__));}
 // clang-format on
 
 #endif
