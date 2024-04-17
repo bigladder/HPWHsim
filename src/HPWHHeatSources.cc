@@ -61,7 +61,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
         hSource.followedByHeatSource != NULL)
     {
         hpwh->simHasFailed = true;
-        LOG_WARNING(hpwh,
+        LOG_ERROR(hpwh,
                     "HeatSources cannot be copied if they contain pointers to other HeatSources")
     }
     else

@@ -130,7 +130,11 @@ int main(int argc, char* argv[])
     {
         inputFile = "";
 
-        if (hpwh.initPreset(input2) != 0)
+        try
+        {
+            hpwh.initPreset(input2);
+        }
+        catch (...)
         {
             cout << "Error, preset model did not initialize.\n";
             exit(1);
@@ -146,7 +150,11 @@ int main(int argc, char* argv[])
     else if (input1 == "File")
     {
         inputFile = input2 + ".txt";
-        if (hpwh.initFromFile(inputFile) != 0)
+        try
+        {
+            hpwh.initFromFile(inputFile);
+        }
+        catch (...)
         {
             cout << "Error, file model did not initialize.\n";
             exit(1);
