@@ -61,11 +61,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
         hSource.followedByHeatSource != NULL)
     {
         hpwh->simHasFailed = true;
-        if (hpwh->hpwhVerbosity >= VRB_reluctant)
-        {
-            hpwh->msg(
-                "HeatSources cannot be copied if they contain pointers to other HeatSources\n");
-        }
+        LOG_WARNING(hpwh, "HeatSources cannot be copied if they contain pointers to other HeatSources")
     }
     else
     {
@@ -160,23 +156,17 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
         {
             lock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
-            {
-                hpwh->msg("\tlock-out: running below minT\tambient: %.2f\tminT: %.2f",
+            LOG_WARNING(hpwh, fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
                           heatSourceAmbientT_C,
-                          minT);
-            }
+                          minT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < minT)
         {
             lock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
-            {
-                hpwh->msg("\tlock-out: already below minT\tambient: %.2f\tminT: %.2f",
+            LOG_WARNING(hpwh, fmt::format("lock-out: already below minT\tambient: {}\tminT: {}",
                           heatSourceAmbientT_C,
-                          minT);
-            }
+                          minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
@@ -184,44 +174,25 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
         {
             lock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
-            {
-                hpwh->msg("\tlock-out: running above maxT\tambient: %.2f\tmaxT: %.2f",
+            LOG_WARNING(hpwh, fmt::format("lock-out: running above maxT\tambient: {}\tmaxT: {}",
                           heatSourceAmbientT_C,
-                          maxT);
-            }
+                          maxT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
         {
             lock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
-            {
-                hpwh->msg("\tlock-out: already above maxT\tambient: %.2f\tmaxT: %.2f",
+            LOG_WARNING(hpwh, fmt::format("lock-out: already above maxT\tambient: {}\tmaxT: {}",
                           heatSourceAmbientT_C,
-                          maxT);
-            }
+                          maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic)
-            {
-                hpwh->msg("\tlock-out: condenser water temperature above max: %.2f", maxSetpoint_C);
-            }
+            LOG_WARNING(hpwh, fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
         }
-        //	if (lock == true && backupHeatSource == NULL) {
-        //		if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic) {
-        //			hpwh->msg("\nWARNING: lock-out triggered, but no backupHeatSource defined.
-        // Simulation will continue without lock-out");
-        //		}
-        //		lock = false;
-        //	}
-        if (hpwh->hpwhVerbosity >= VRB_typical)
-        {
-            hpwh->msg("\n");
-        }
+
         return lock;
     }
 }
@@ -234,7 +205,7 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
     {
         return true;
     }
-    // if it the heat source is capped and can't produce hotter water
+    // if the heat source is capped and can't produce hotter water
     else if (maxedOut())
     {
         return false;
@@ -244,45 +215,39 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
         // when the "external" temperature is no longer too cold or too warm
         // when running, use hysteresis
         bool unlock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C > minT + hysteresis_dC &&
-            heatSourceAmbientT_C < maxT - hysteresis_dC)
+        if (isEngaged() && (heatSourceAmbientT_C > minT + hysteresis_dC) &&
+            (heatSourceAmbientT_C < maxT - hysteresis_dC))
         {
             unlock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C > minT + hysteresis_dC)
+            if (heatSourceAmbientT_C > minT + hysteresis_dC)
             {
-                hpwh->msg("\tunlock: running above minT\tambient: %.2f\tminT: %.2f",
+                LOG_WARNING(hpwh, fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT));
             }
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic &&
-                heatSourceAmbientT_C < maxT - hysteresis_dC)
+            if (heatSourceAmbientT_C < maxT - hysteresis_dC)
             {
-                hpwh->msg("\tunlock: running below maxT\tambient: %.2f\tmaxT: %.2f",
+                LOG_WARNING(hpwh, fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT));
             }
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > minT && heatSourceAmbientT_C < maxT)
+        else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
         {
             unlock = true;
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C > minT)
+            if (heatSourceAmbientT_C > minT)
             {
-                hpwh->msg("\tunlock: already above minT\tambient: %.2f\tminT: %.2f",
+                LOG_WARNING(hpwh, fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
                           heatSourceAmbientT_C,
-                          minT);
+                          minT));
             }
-            if (hpwh->hpwhVerbosity >= HPWH::VRB_emetic && heatSourceAmbientT_C < maxT)
+            if (heatSourceAmbientT_C < maxT)
             {
-                hpwh->msg("\tunlock: already below maxT\tambient: %.2f\tmaxT: %.2f",
+                LOG_WARNING(hpwh, fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
                           heatSourceAmbientT_C,
-                          maxT);
+                          maxT));
             }
-        }
-        if (hpwh->hpwhVerbosity >= VRB_typical)
-        {
-            hpwh->msg("\n");
         }
         return unlock;
     }
@@ -307,9 +272,9 @@ void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal)
 {
     isOn = true;
     hpwh->isHeating = true;
-    if (companionHeatSource != NULL && companionHeatSource->shutsOff() != true &&
-        companionHeatSource->isEngaged() == false &&
-        hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource, DR_signal) == false)
+    if ((companionHeatSource != NULL) && !(companionHeatSource->shutsOff()) &&
+        !(companionHeatSource->isEngaged()) &&
+        !(hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource, DR_signal)))
     {
         companionHeatSource->engageHeatSource(DR_signal);
     }
@@ -325,10 +290,7 @@ bool HPWH::HeatSource::shouldHeat() const
 
     for (int i = 0; i < (int)turnOnLogicSet.size(); i++)
     {
-        if (hpwh->hpwhVerbosity >= VRB_emetic)
-        {
-            hpwh->msg("\tshouldHeat logic: %s ", turnOnLogicSet[i]->description.c_str());
-        }
+        LOG_INFO(hpwh, fmt::format("shouldHeat logic: {} ", turnOnLogicSet[i]->description.c_str()));
 
         double average = turnOnLogicSet[i]->getTankValue();
         double comparison = turnOnLogicSet[i]->getComparisonValue();
@@ -355,42 +317,20 @@ bool HPWH::HeatSource::shouldHeat() const
         if (shouldEngage)
         {
             // debugging message handling
-            if (hpwh->hpwhVerbosity >= VRB_typical)
-            {
-                hpwh->msg("engages!\n");
-            }
-            if (hpwh->hpwhVerbosity >= VRB_emetic)
-            {
-                hpwh->msg("average: %.2lf \t setpoint: %.2lf \t decisionPoint: %.2lf \t "
-                          "comparison: %2.1f\n",
-                          average,
-                          hpwh->setpoint_C,
-                          turnOnLogicSet[i]->getDecisionPoint(),
-                          comparison);
-            }
+            LOG_INFO(hpwh, "engages!");
             break;
         }
 
-        if (hpwh->hpwhVerbosity >= VRB_emetic)
-        {
-            hpwh->msg("returns: %d \t", shouldEngage);
-        }
+        LOG_INFO(hpwh, fmt::format("returns: {}", shouldEngage));
     } // end loop over set of logic conditions
 
     // if everything else wants it to come on, but if it would shut off anyways don't turn it on
-    if (shouldEngage == true && shutsOff() == true)
+    if (shouldEngage && shutsOff())
     {
         shouldEngage = false;
-        if (hpwh->hpwhVerbosity >= VRB_typical)
-        {
-            hpwh->msg("but is denied by shutsOff");
-        }
+        LOG_INFO(hpwh, "but is denied by shutsOff");
     }
 
-    if (hpwh->hpwhVerbosity >= VRB_typical)
-    {
-        hpwh->msg("\n");
-    }
     return shouldEngage;
 }
 
@@ -401,19 +341,13 @@ bool HPWH::HeatSource::shutsOff() const
     if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C)
     {
         shutOff = true;
-        if (hpwh->hpwhVerbosity >= VRB_emetic)
-        {
-            hpwh->msg("shutsOff  bottom node hot: %.2d C  \n returns true", hpwh->tankTemps_C[0]);
-        }
+        LOG_INFO(hpwh, fmt::format("shutsOff  bottom node hot: {} C returns true", hpwh->tankTemps_C[0]));
         return shutOff;
     }
 
     for (int i = 0; i < (int)shutOffLogicSet.size(); i++)
     {
-        if (hpwh->hpwhVerbosity >= VRB_emetic)
-        {
-            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
-        }
+        LOG_INFO(hpwh, fmt::format("shutsOff logic: {}", shutOffLogicSet[i]->description.c_str()));
 
         double average = shutOffLogicSet[i]->getTankValue();
         double comparison = shutOffLogicSet[i]->getComparisonValue();
@@ -423,17 +357,11 @@ bool HPWH::HeatSource::shutsOff() const
             shutOff = true;
 
             // debugging message handling
-            if (hpwh->hpwhVerbosity >= VRB_typical)
-            {
-                hpwh->msg("shuts down %s\n", shutOffLogicSet[i]->description.c_str());
-            }
+            LOG_INFO(hpwh, fmt::format("shuts down {}", shutOffLogicSet[i]->description.c_str()));
         }
     }
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("returns: %d \n", shutOff);
-    }
+    LOG_INFO(hpwh, "returns: {}", shutOff);
     return shutOff;
 }
 
@@ -460,13 +388,9 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
 
     for (int i = 0; i < (int)shutOffLogicSet.size(); i++)
     {
-        if (hpwh->hpwhVerbosity >= VRB_emetic)
-        {
-            hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
-        }
+        LOG_INFO(hpwh, "shutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
 
         fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
-
         frac = fracTemp < frac ? fracTemp : frac;
     }
 
@@ -498,12 +422,9 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
             getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
         }
         // some outputs for debugging
-        if (hpwh->hpwhVerbosity >= VRB_typical)
-        {
-            hpwh->msg("capacity_kWh %.2lf \t\t cap_BTUperHr %.2lf \n",
+        LOG_INFO(hpwh, "capacity_kWh: {}, \t\t cap_BTUperHr: {}",
                       BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_hr,
-                      cap_BTUperHr);
-        }
+                      cap_BTUperHr)
 
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
@@ -532,11 +453,11 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // after you've done everything, any leftover capacity is time that didn't run
         double cap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
         runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
-#if 1 // error check, 1-22-2017; updated 12-6-2023
+
         if (runtime_min < -TOL_MINVALUE)
-            if (hpwh->hpwhVerbosity >= VRB_reluctant)
-                hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
-#endif
+        {
+            LOG_ERROR(hpwh, "Internal error: Negative runtime = {} min", runtime_min)
+        }
     }
     break;
 
@@ -586,10 +507,7 @@ double HPWH::HeatSource::getTankTemp() const
         // Note that condensity is normalized.
         ++j;
     }
-    if (hpwh->hpwhVerbosity >= VRB_typical)
-    {
-        hpwh->msg("tank temp %.2lf \n", tankTemp_C);
-    }
+    LOG_INFO(hpwh, fmt::format("tank temp {}", tankTemp_C));
     return tankTemp_C;
 }
 
@@ -608,7 +526,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     externalT_F = C_TO_F(externalT_C);
 
     // Get bounding performance map points for interpolation/extrapolation
-    bool extrapolate = false;
     size_t i_prev = 0;
     size_t i_next = 1;
     double Tout_F = C_TO_F(setpointTemp_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
@@ -637,7 +554,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 {
                     if (i == 0)
                     {
-                        extrapolate = true;
                         i_prev = 0;
                         i_next = 1;
                     }
@@ -652,7 +568,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 {
                     if (i == perfMap.size() - 1)
                     {
-                        extrapolate = true;
                         i_prev = i - 1;
                         i_next = i;
                         break;
@@ -679,32 +594,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             inputPower_T2_Watts +=
                 perfMap[i_next].inputPower_coeffs[2] * condenserTemp_F * condenserTemp_F;
 
-            if (hpwh->hpwhVerbosity >= VRB_emetic)
-            {
-                hpwh->msg("inputPower_T1_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  "
-                          "%.2lf  %.2lf \n",
-                          perfMap[0].inputPower_coeffs[0],
-                          perfMap[0].inputPower_coeffs[1],
-                          perfMap[0].inputPower_coeffs[2]);
-                hpwh->msg("inputPower_T2_constant_W   linear_WperF   quadratic_WperF2  \t%.2lf  "
-                          "%.2lf  %.2lf \n",
-                          perfMap[1].inputPower_coeffs[0],
-                          perfMap[1].inputPower_coeffs[1],
-                          perfMap[1].inputPower_coeffs[2]);
-                hpwh->msg("inputPower_T1_Watts:  %.2lf \tinputPower_T2_Watts:  %.2lf \n",
-                          inputPower_T1_Watts,
-                          inputPower_T2_Watts);
-
-                if (extrapolate)
-                {
-                    hpwh->msg("Warning performance extrapolation\n\tExternal Temperature: "
-                              "%.2lf\tNearest temperatures:  %.2lf, %.2lf \n\n",
-                              externalT_F,
-                              perfMap[i_prev].T_F,
-                              perfMap[i_next].T_F);
-                }
-            }
-
             // Interpolate to get COP and input power at the current ambient temperature
             linearInterp(
                 cop, externalT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
@@ -720,7 +609,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         { // perfMap.size() == 1 or we've got an issue.
             if (externalT_F > perfMap[0].T_F)
             {
-                extrapolate = true;
                 if (extrapolationMethod == EXTRAP_NEAREST)
                 {
                     externalT_F = perfMap[0].T_F;
@@ -743,17 +631,6 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     cap_BTUperHr = cop * input_BTUperHr;
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("externalT_F: %.2lf, Tout_F: %.2lf, condenserTemp_F: %.2lf\n",
-                  externalT_F,
-                  Tout_F,
-                  condenserTemp_F);
-        hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
-                  input_BTUperHr,
-                  cop,
-                  cap_BTUperHr);
-    }
     // here is where the scaling for flow restriction happens
     // the input power doesn't change, we just scale the cop by a small percentage
     // that is based on the flow rate.  The equation is a fit to three points,
@@ -764,21 +641,15 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         double airflow = 375 * airflowFreedom;
         cop *= 0.00056 * airflow + 0.79;
     }
-    if (hpwh->hpwhVerbosity >= VRB_typical)
+    if (cop < 0.)
     {
-        hpwh->msg("cop: %.2lf \tinput_BTUperHr: %.2lf \tcap_BTUperHr: %.2lf \n",
-                  cop,
-                  input_BTUperHr,
-                  cap_BTUperHr);
-        if (cop < 0.)
-        {
-            hpwh->msg(" Warning: COP is Negative! \n");
-        }
-        if (cop < 1.)
-        {
-            hpwh->msg(" Warning: COP is Less than 1! \n");
-        }
+        LOG_WARNING(hpwh, "Warning: COP is Negative!")
     }
+    if (cop < 1.)
+    {
+        LOG_WARNING(hpwh, "Warning: COP is Less than 1!")
+    }
+
 }
 
 void HPWH::HeatSource::getCapacityMP(double externalT_C,
@@ -838,14 +709,6 @@ void HPWH::HeatSource::getCapacityMP(double externalT_C,
     if (resDefrostHeatingOn)
     {
         input_BTUperHr += KW_TO_BTUperH(resDefrost.inputPwr_kW);
-    }
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("externalT_F: %.2lf, condenserTemp_F: %.2lf\n", externalT_F, condenserTemp_F);
-        hpwh->msg("input_BTUperHr: %.2lf , cop: %.2lf, cap_BTUperHr: %.2lf \n",
-                  input_BTUperHr,
-                  cop,
-                  cap_BTUperHr);
     }
 }
 
@@ -911,9 +774,15 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-
-    std::vector<double> result = perfRGI->get_values_at_target(target);
-
+    std::vector<double> result;
+    try
+    {
+        result = perfRGI->get_values_at_target(target);
+    }
+    catch(std::string message)
+    {
+        LOG_ERROR(hpwh,message);
+    }
     input_BTUperHr = result[0];
     cop = result[1];
 }
@@ -1070,10 +939,8 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         hpwh->condenserOutlet_C /= runTime_min;
     }
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("final remaining time: %.2lf \n", remainingTime_min);
-    }
+
+    LOG_INFO(hpwh, fmt::format("final remaining time: {}", remainingTime_min));
 
     // return the time left
     return runTime_min;
@@ -1193,12 +1060,9 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->condenserOutlet_C /= elapsedTime_min;
     }
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        hpwh->msg("final remaining time: %.2lf \n", remainingTime_min);
-    }
+    LOG_INFO(hpwh, fmt::format("final remaining time: {}", remainingTime_min));
 
-    // return the elasped time
+    // return the elapsed time
     return elapsedTime_min;
 }
 
@@ -1233,12 +1097,12 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic)
 {
-    this->turnOnLogicSet.push_back(logic);
+    turnOnLogicSet.push_back(logic);
 }
 
 void HPWH::HeatSource::addShutOffLogic(std::shared_ptr<HeatingLogic> logic)
 {
-    this->shutOffLogicSet.push_back(logic);
+    shutOffLogicSet.push_back(logic);
 }
 
 void HPWH::HeatSource::clearAllTurnOnLogic() { this->turnOnLogicSet.clear(); }
@@ -1247,8 +1111,8 @@ void HPWH::HeatSource::clearAllShutOffLogic() { this->shutOffLogicSet.clear(); }
 
 void HPWH::HeatSource::clearAllLogic()
 {
-    this->clearAllTurnOnLogic();
-    this->clearAllShutOffLogic();
+    clearAllTurnOnLogic();
+    clearAllShutOffLogic();
 }
 
 void HPWH::HeatSource::changeResistanceWatts(double watts)
