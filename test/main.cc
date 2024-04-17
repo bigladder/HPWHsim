@@ -438,7 +438,8 @@ int main(int argc, char* argv[])
             if (hpwh.getNthHeatSourceRunTime(iHS) > 1)
             {
                 cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
-                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
+                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
+                     << "\n";
                 exit(1);
             }
         }
