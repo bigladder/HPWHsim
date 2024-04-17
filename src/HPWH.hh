@@ -75,8 +75,7 @@ class HPWH
         static constexpr unsigned warningMask = 0b0100;
         static constexpr unsigned infoMask = 0b0010;
         static constexpr unsigned debugMask = 0b0001;
-        Logger(const unsigned loggerBits_in = errorMask) : loggerBits (loggerBits_in)
-        {}
+        Logger(const unsigned loggerBits_in = errorMask) : loggerBits(loggerBits_in) {}
 
 #if NDEBUG
         Logger() : Logger(0b1110) {}
@@ -118,8 +117,8 @@ class HPWH
 
     HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
              std::make_shared<Logger>(Logger::errorMask)); /**< default constructor */
-    HPWH(const HPWH& hpwh);               /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
+    HPWH(const HPWH& hpwh);                                /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);                     /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
@@ -1626,9 +1625,11 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const double setpointT_C);
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
+// clang-format off
 #define LOG_DEBUG(hpwh, f, ...)  {if (hpwh->logger->debug()) hpwh->logger->receive_debug(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
 #define LOG_ERROR(hpwh, f, ...)  {if (hpwh->logger->error()) hpwh->logger->receive_error(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
 #define LOG_WARNING(hpwh, f, ...)  {if (hpwh->logger->warning()) hpwh->logger->receive_warning(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
 #define LOG_INFO(hpwh, f, ...) {if (hpwh->logger->info()) hpwh->logger->receive_info(fmt::format(f __VA_OPT__(,) __VA_ARGS__));}
+// clang-format on
 
 #endif

@@ -145,17 +145,17 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
     if (lowerPower_W < 0)
     {
-        LOG_ERROR(this, "Lower resistance tank wattage below 0 W.");
+        LOG_WARNING(this, "Lower resistance tank wattage below 0 W.");
         return HPWH_ABORT;
     }
     if (upperPower_W < 0.)
     {
-        LOG_ERROR(this, "Upper resistance tank wattage below 0 W.");
+        LOG_WARNING(this, "Upper resistance tank wattage below 0 W.");
         return HPWH_ABORT;
     }
     if (rValue_m2KperW <= 0.)
     {
-        LOG_ERROR(this, "R-Value is equal to or below 0.");
+        LOG_WARNING(this, "R-Value is equal to or below 0.");
         return HPWH_ABORT;
     }
 
@@ -216,7 +216,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     {
         if (tankUA_kJperHrC < -0.1)
         {
-            LOG_ERROR(this, "Computed tankUA_kJperHrC is less than 0, and is reset to 0.")
+            LOG_WARNING(this, "Computed tankUA_kJperHrC is less than 0, and is reset to 0.")
         }
         tankUA_kJperHrC = 0.0;
     }

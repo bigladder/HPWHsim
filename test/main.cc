@@ -23,7 +23,6 @@ using std::cout;
 using std::endl;
 using std::ifstream;
 using std::string;
-// using std::ofstream;
 
 typedef std::vector<double> schedule;
 
@@ -35,8 +34,6 @@ int main(int argc, char* argv[])
 
     HPWH::DRMODES drStatus = HPWH::DR_ALLOW;
     HPWH::MODELS model;
-    // HPWH::CSVOPTIONS IP = HPWH::CSVOPT_IPUNITS; //  CSVOPT_NONE or  CSVOPT_IPUNITS
-    //  HPWH::UNITS units = HPWH::UNITS_F;
 
     const double EBALTHRESHOLD = 1.e-6;
 
@@ -412,15 +409,22 @@ int main(int argc, char* argv[])
         }
 
         // Run the step
-        hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
-                        GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-                        airTemp2,                     // Ambient Temp (C)
-                        allSchedules[3][i],           // External Temp (C)
-                        drStatus, // DDR Status (now an enum. Fixed for now as allow)
-                        1. * GAL_TO_L(allSchedules[1][i]),
-                        allSchedules[0][i],
-                        vectptr);
-
+        try
+        {
+            hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
+                            GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+                            airTemp2,                     // Ambient Temp (C)
+                            allSchedules[3][i],           // External Temp (C)
+                            drStatus, // DDR Status (now an enum. Fixed for now as allow)
+                            1. * GAL_TO_L(allSchedules[1][i]),
+                            allSchedules[0][i],
+                            vectptr);
+        }
+        catch (...)
+        {
+            cout << "Error in hpwh.runOneStep.\n";
+            exit(1);
+        }
         if (!hpwh.isEnergyBalanced(
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {
@@ -434,8 +438,7 @@ int main(int argc, char* argv[])
             if (hpwh.getNthHeatSourceRunTime(iHS) > 1)
             {
                 cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
-                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
-                     << "\n";
+                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes" << "\n";
                 exit(1);
             }
         }
