@@ -342,9 +342,11 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& logger_in /*= std::make_shared<Logger>()*/)
-    : hpwhVerbosity(VRB_silent), messageCallback(NULL), messageCallbackContextPtr(NULL)
+    : sender(logger_in)
+    , hpwhVerbosity(VRB_silent)
+    , messageCallback(NULL)
+    , messageCallbackContextPtr(NULL)
 {
-    logger = std::dynamic_pointer_cast<Logger>(logger_in);
     setAllDefaults();
 }
 
@@ -4008,8 +4010,8 @@ int HPWH::checkInputs()
         if (heatSources[i].turnOnLogicSet.size() == 0 &&
             (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
         {
-            LOG_WARNING(this,
-                        "You must specify at least one logic to turn on the element or the element \
+            LOG_WARNING(
+                this, "You must specify at least one logic to turn on the element or the element \
                 must be set as a backup for another heat source with at least one logic.")
 
             returnVal = HPWH_ABORT;

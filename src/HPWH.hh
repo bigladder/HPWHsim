@@ -68,7 +68,7 @@ class HPWH
     class Logger : public Courier::Courier
     {
       private:
-        unsigned loggerBits;
+        static inline unsigned loggerBits;
 
       public:
         static constexpr unsigned errorMask = 0b1000;
@@ -76,7 +76,12 @@ class HPWH
         static constexpr unsigned infoMask = 0b0010;
         static constexpr unsigned debugMask = 0b0001;
 
-        Logger(const unsigned loggerBits_in) : loggerBits(loggerBits_in) {}
+        static bool debug() { return debugMask & loggerBits; }
+        static bool error() { return errorMask & loggerBits; }
+        static bool warning() { return warningMask & loggerBits; }
+        static bool info() { return infoMask & loggerBits; }
+
+        Logger(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
 
 #if NDEBUG
         Logger() : Logger(0b1110) {}
@@ -86,6 +91,7 @@ class HPWH
         unsigned getMode() { return loggerBits; }
         void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
 
+      protected:
         void receive_error(const std::string& message) override
         {
             write_message("HPWH ERROR", message);
@@ -107,19 +113,30 @@ class HPWH
         {
             std::cout << fmt::format("[{}] {}", message_type, message) << std::endl;
         }
-
-        bool debug() { return debugMask & loggerBits; }
-        bool error() { return errorMask & loggerBits; }
-        bool warning() { return warningMask & loggerBits; }
-        bool info() { return infoMask & loggerBits; }
     };
 
-    std::shared_ptr<Logger> logger;
+    class Sender
+    {
+      public:
+        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
+            : courier(courier_in)
+        {
+        }
+
+        std::shared_ptr<Courier::Courier> courier;
+
+        void send_error(const std::string& message) const { courier->send_error(message); }
+        void send_warning(const std::string& message) const { courier->send_warning(message); }
+        void send_info(const std::string& message) const { courier->send_info(message); }
+        void send_debug(const std::string& message) const { courier->send_debug(message); }
+    };
+
+    Sender sender;
 
     HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
              std::make_shared<Logger>()); /**< default constructor */
-    HPWH(const HPWH& hpwh);                                /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);                     /**< assignment operator  */
+    HPWH(const HPWH& hpwh);               /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
@@ -1627,10 +1644,10 @@ void calcThermalDist(std::vector<double>& thermalDist,
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 // clang-format off
-#define LOG_DEBUG(hpwh, f, ...)  {if (hpwh->logger->debug()) hpwh->logger->receive_debug(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_ERROR(hpwh, f, ...)  {if (hpwh->logger->error()) hpwh->logger->receive_error(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_WARNING(hpwh, f, ...)  {if (hpwh->logger->warning()) hpwh->logger->receive_warning(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_INFO(hpwh, f, ...) {if (hpwh->logger->info()) hpwh->logger->receive_info(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_DEBUG(hpwh, f, ...)  {if (Logger::debug()) hpwh->sender.send_debug(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_ERROR(hpwh, f, ...)  {if (Logger::error()) hpwh->sender.send_error(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_WARNING(hpwh, f, ...)  {if (Logger::warning()) hpwh->sender.send_warning(fmt::format(f, ##__VA_ARGS__));}
+#define LOG_INFO(hpwh, f, ...) {if (Logger::info()) hpwh->sender.send_info(fmt::format(f, ##__VA_ARGS__));}
 // clang-format on
 
 #endif
