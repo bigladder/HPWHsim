@@ -93,20 +93,19 @@ class HPWH
     class Sender
     {
       private:
+        std::shared_ptr<Courier::Courier> courier;
         unsigned loggerBits;
 
       public:
-        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
-            : courier(courier_in)
-        {
 #if NDEBUG
-            loggerBits = 0b1110;
+        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
+            : courier(courier_in), loggerBits(0b1000)
 #else
-            loggerBits = 0b1111;
+        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
+            : courier(courier_in), loggerBits(0b1001)
 #endif
+        {
         }
-
-        std::shared_ptr<Courier::Courier> courier;
 
         static constexpr unsigned errorMask = 0b1000;
         static constexpr unsigned warningMask = 0b0100;

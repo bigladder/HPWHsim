@@ -62,19 +62,13 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 TEST(ResistanceFunctionsTest, commercialTankInitErrors)
 {
     HPWH hpwh;
-
-    // init model
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(-800., 10., 100., 100.),
-              HPWH::HPWH_ABORT); // negative volume
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., -100., 100.),
-              HPWH::HPWH_ABORT); // negative element
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., 100., -100.),
-              HPWH::HPWH_ABORT); // negative element
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., -10., 100., 100.),
-              HPWH::HPWH_ABORT); // negative r value
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 0., 100., 100.), HPWH::HPWH_ABORT); // 0 r value
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800., 10., 0., 0.),
-              HPWH::HPWH_ABORT); // Check needs one element
+   // init model
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(-800., 10., 100., 100.)); // negative volume
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., -100., 100.)); // negative element
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., 100., -100.)); // negative element
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., -10., 100., 100.)); // negative r value
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 0., 100., 100.)); // 0 r value
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., 0., 0.)); // Check needs one element
 }
 
 /*
