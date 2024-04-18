@@ -67,6 +67,7 @@ class HPWH
 
     class Logger : public Courier::Courier
     {
+      private:
         void receive_error(const std::string& message) override
         {
             write_message("HPWH ERROR", message);
@@ -95,6 +96,7 @@ class HPWH
       private:
         std::shared_ptr<Courier::Courier> courier;
         unsigned loggerBits;
+        bool usingLogger;
 
       public:
 #if NDEBUG
@@ -105,6 +107,8 @@ class HPWH
             : courier(courier_in), loggerBits(0b1001)
 #endif
         {
+            auto& c = *courier.get();
+            usingLogger = (typeid(c) == typeid(Logger));
         }
 
         static constexpr unsigned errorMask = 0b1000;
@@ -115,10 +119,10 @@ class HPWH
         unsigned getMode() const { return loggerBits; }
         void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
 
-        bool debug() const { return debugMask & loggerBits; }
-        bool error() const { return errorMask & loggerBits; }
-        bool warning() const { return warningMask & loggerBits; }
-        bool info() const { return infoMask & loggerBits; }
+        bool debug() const { return !usingLogger || (debugMask & loggerBits); }
+        bool error() const { return !usingLogger || (errorMask & loggerBits); }
+        bool warning() const { return !usingLogger || (warningMask & loggerBits); }
+        bool info() const { return !usingLogger || (infoMask & loggerBits); }
 
         void send_error(const std::string& message) const { courier->send_error(message); }
         void send_warning(const std::string& message) const { courier->send_warning(message); }
