@@ -178,6 +178,11 @@ class HPWH
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
+        MODELS_AWHSTier4Generic40 = 1175, /**< Generic AWHS Tier 4 40 gallons*/
+        MODELS_AWHSTier4Generic50 = 1176, /**< Generic AWHS Tier 4 50 gallons*/
+        MODELS_AWHSTier4Generic65 = 1177, /**< Generic AWHS Tier 4 65 gallons*/
+        MODELS_AWHSTier4Generic80 = 1178, /**< Generic AWHS Tier 4 80 gallons*/
+
         MODELS_StorageTank = 180, /**< Generic Tank without heaters */
 
         MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that
@@ -249,6 +254,8 @@ class HPWH
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
         MODELS_AquaThermAire = 400, // heat exchanger model
+
+        MODELS_GenericUEF217 = 410
     };
 
     /// specifies the modes for writing output
@@ -834,6 +841,11 @@ class HPWH
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
+    class HeatSource;
+
+    /// get a pointer to the Nth heat source
+    bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);
+
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
@@ -978,17 +990,23 @@ class HPWH
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
     /// first-hour rating designations to determine draw pattern for 24-hr test
-    enum class FirstHourRatingDesig
-    {
-        VerySmall,
-        Low,
-        Medium,
-        High
-    };
-
     struct FirstHourRating
     {
-        FirstHourRatingDesig desig;
+        enum class Desig
+        {
+            VerySmall,
+            Low,
+            Medium,
+            High
+        };
+
+        static inline std::unordered_map<Desig, std::string> sDesigMap = {
+            {Desig::VerySmall, "Very Small"},
+            {Desig::Low, "Low"},
+            {Desig::Medium, "Medium"},
+            {Desig::High, "High"}};
+
+        Desig desig;
         double drawVolume_L;
     };
 
@@ -1042,6 +1060,8 @@ class HPWH
     struct StandardTestOptions
     {
         bool saveOutput = false;
+        std::string sOutputDirectory = "";
+        std::string sOutputFilename = "";
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
@@ -1080,10 +1100,10 @@ class HPWH
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes;
+    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
 
     /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
+    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
     /// fields for test output to csv
     struct OutputData
@@ -1104,9 +1124,19 @@ class HPWH
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-  private:
-    class HeatSource;
+    bool measureMetrics(FirstHourRating& firstHourRating,
+                        StandardTestOptions& standardTestOptions,
+                        StandardTestSummary& standardTestSummary);
 
+    struct CustomTestOptions
+    {
+        bool overrideFirstHourRating = false;
+        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+    } customTestOptions;
+
+    bool makeGeneric(const double targetUEF);
+
+  private:
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
@@ -1414,6 +1444,16 @@ class HPWH::HeatSource
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    struct perfPoint
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
+        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
+    };
+
+    std::vector<perfPoint> perfMap;
+    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
+
   private:
     // start with a few type definitions
     enum COIL_CONFIG
@@ -1470,16 +1510,6 @@ class HPWH::HeatSource
         using the condensity and fixed parameters Talpha_C and Tbeta_C.
         Talpha_C and Tbeta_C are not intended to be settable
         see the hpwh_init functions for calculation of shrinkage */
-
-    struct perfPoint
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
-    };
-
-    std::vector<perfPoint> perfMap;
-    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
     std::vector<std::vector<double>> perfGrid;
     /**< The axis values defining the regular grid for the performance data.

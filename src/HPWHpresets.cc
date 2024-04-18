@@ -4571,6 +4571,172 @@ int HPWH::initPreset(MODELS presetNum)
         heatSources.resize(1);
         heatSources[0] = compressor;
     }
+    else if (presetNum == MODELS_GenericUEF217)
+    { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
+        setNumNodes(12);
+        setpoint_C = F_TO_C(127.);
+
+        tankVolume_L = GAL_TO_L(58.5);
+        tankUA_kJperHrC = 8.5;
+
+        doTempDepression = false;
+        tankMixesOnDraw = true;
+
+        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this);
+        HeatSource compressor(this);
+
+        // compressor values
+        compressor.isOn = false;
+        compressor.isVIP = false;
+        compressor.typeOfHeatSource = TYPE_compressor;
+
+        compressor.setCondensity({1., 0., 0.});
+
+        compressor.perfMap.reserve(2);
+
+        compressor.perfMap.push_back({
+            50,                         // Temperature (F)
+            {187.064124, 1.939747, 0.}, // Input Power Coefficients (kW)
+            {5.4977772, -0.0243008, 0.} // COP Coefficients
+        });
+
+        compressor.perfMap.push_back({
+            67,                                     // Temperature (F)
+            {148.0418, 2.553291, 0.},               // Input Power Coefficients (kW)
+            {6.556322712161, -0.03974367485016, 0.} // COP Coefficients
+        });
+
+        compressor.minT = F_TO_C(45);
+        compressor.maxT = F_TO_C(120.);
+        compressor.hysteresis_dC = dF_TO_dC(2);
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
+
+        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.)));
+        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.)));
+
+        // top resistor values
+        resistiveElementTop.setupAsResistiveElement(6, 4500.);
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.)));
+        resistiveElementTop.isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom.setupAsResistiveElement(0, 4500.);
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(F_TO_C(60.)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(85.)));
+        resistiveElementBottom.isVIP = false;
+
+        // set everything in its places
+        heatSources.resize(3);
+        heatSources[0] = resistiveElementTop;
+        heatSources[1] = resistiveElementBottom;
+        heatSources[2] = compressor;
+
+        heatSources[0].followedByHeatSource = &heatSources[1];
+        heatSources[1].followedByHeatSource = &heatSources[2];
+
+        heatSources[2].backupHeatSource = &heatSources[1];
+        heatSources[1].backupHeatSource = &heatSources[2];
+    }
+    else if ((MODELS_AWHSTier4Generic40 <= presetNum) && (presetNum <= MODELS_AWHSTier4Generic80))
+    {
+        setNumNodes(12);
+        setpoint_C = F_TO_C(127.0);
+
+        if (presetNum == MODELS_AWHSTier4Generic40)
+        {
+            tankVolume_L = GAL_TO_L(36.0);
+            tankUA_kJperHrC = 5.0;
+        }
+        else if (presetNum == MODELS_AWHSTier4Generic50)
+        {
+            tankVolume_L = GAL_TO_L(45.0);
+            tankUA_kJperHrC = 6.5;
+        }
+        else if (presetNum == MODELS_AWHSTier4Generic65)
+        {
+            tankVolume_L = GAL_TO_L(64.0);
+            tankUA_kJperHrC = 7.6;
+        }
+        else if (presetNum == MODELS_AWHSTier4Generic80)
+        {
+            tankVolume_L = GAL_TO_L(75.4);
+            tankUA_kJperHrC = 10.0;
+        }
+        else
+        {
+            if (hpwhVerbosity >= VRB_reluctant)
+            {
+                msg("Incorrect model specification.  \n");
+            }
+            return HPWH_ABORT;
+        }
+
+        doTempDepression = false;
+        tankMixesOnDraw = true;
+
+        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this);
+        HeatSource compressor(this);
+
+        // compressor values
+        compressor.isOn = false;
+        compressor.isVIP = false;
+        compressor.typeOfHeatSource = TYPE_compressor;
+        compressor.setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0., 0., 0., 0., 0., 0., 0.});
+
+        //
+        compressor.perfMap.reserve(2);
+
+        compressor.perfMap.push_back({
+            50,                    // Temperature (T_F)
+            {126.9, 2.215, 0.0},   // Input Power Coefficients (inputPower_coeffs)
+            {6.931, -0.03395, 0.0} // COP Coefficients (COP_coeffs)
+        });
+
+        compressor.perfMap.push_back({
+            67.5,                  // Temperature (T_F)
+            {116.6, 2.467, 0.0},   // Input Power Coefficients (inputPower_coeffs)
+            {8.833, -0.04431, 0.0} // COP Coefficients (COP_coeffs)
+        });
+
+        compressor.minT = F_TO_C(37.);
+        compressor.maxT = F_TO_C(120.);
+        compressor.hysteresis_dC = dF_TO_dC(1.);
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
+        compressor.maxSetpoint_C = MAXOUTLET_R134A;
+
+        // top resistor values
+        resistiveElementTop.setupAsResistiveElement(8, 4500);
+        resistiveElementBottom.hysteresis_dC = dF_TO_dC(0.);
+        resistiveElementTop.isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom.setupAsResistiveElement(0, 4500);
+        resistiveElementBottom.hysteresis_dC = dF_TO_dC(2.);
+
+        // logic conditions
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(12.0)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.0)));
+        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(9.0)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+
+        // set everything in its places
+        heatSources.resize(3);
+        heatSources[0] = resistiveElementTop;
+        heatSources[1] = resistiveElementBottom;
+        heatSources[2] = compressor;
+
+        //
+        heatSources[1].backupHeatSource = &heatSources[2];
+        heatSources[2].backupHeatSource = &heatSources[1];
+
+        heatSources[0].followedByHeatSource = &heatSources[2];
+        heatSources[1].followedByHeatSource = &heatSources[2];
+
+        heatSources[0].companionHeatSource = &heatSources[2];
+    }
     else
     {
         if (hpwhVerbosity >= VRB_reluctant)
