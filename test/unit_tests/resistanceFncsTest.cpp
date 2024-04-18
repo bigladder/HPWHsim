@@ -62,12 +62,12 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 TEST(ResistanceFunctionsTest, commercialTankInitErrors)
 {
     HPWH hpwh;
-   // init model
+    // init model
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(-800., 10., 100., 100.)); // negative volume
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., -100., 100.)); // negative element
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., 100., -100.)); // negative element
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., -10., 100., 100.)); // negative r value
-    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 0., 100., 100.)); // 0 r value
+    EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 0., 100., 100.));   // 0 r value
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(800., 10., 0., 0.)); // Check needs one element
 }
 
