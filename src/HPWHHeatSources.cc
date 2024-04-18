@@ -62,7 +62,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     {
         hpwh->simHasFailed = true;
         LOG_ERROR(hpwh,
-                    "HeatSources cannot be copied if they contain pointers to other HeatSources")
+                  "HeatSources cannot be copied if they contain pointers to other HeatSources")
     }
     else
     {
