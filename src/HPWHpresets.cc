@@ -20,7 +20,6 @@ int HPWH::initResistanceTank(double tankVol_L,
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure
 
     heatSources.clear();
@@ -115,7 +114,10 @@ int HPWH::initResistanceTank(double tankVol_L,
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
+    {
+        LOG_ERROR(this, "Invalid input.")
         return HPWH_ABORT;
+    }
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -127,7 +129,6 @@ int HPWH::initResistanceTank(double tankVol_L,
         heatSources[i].sortPerformanceMap();
     }
 
-    simHasFailed = false;
     return 0; // successful init returns 0
 }
 
@@ -138,7 +139,6 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure
     heatSources.clear();
 
@@ -227,7 +227,10 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     calcDerivedValues();
 
     if (checkInputs() == HPWH_ABORT)
+    {
+        LOG_ERROR(this, "Invalid input.")
         return HPWH_ABORT;
+    }
 
     isHeating = false;
     for (auto& source : heatSources)
@@ -239,7 +242,6 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         source.sortPerformanceMap();
     }
 
-    simHasFailed = false;
     return 0; // successful init returns 0
 }
 
@@ -247,8 +249,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // sets simHasFailed = true; this gets cleared on successful completion of init
-    // return 0 on success, HPWH_ABORT for failure
+                      // return 0 on success, HPWH_ABORT for failure
     heatSources.clear();
 
     // except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
@@ -385,6 +386,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     if (checkInputs() == HPWH_ABORT)
     {
+        LOG_ERROR(this, "Invalid input.")
         return HPWH_ABORT;
     }
 
@@ -398,15 +400,13 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
         heatSources[i].sortPerformanceMap();
     }
 
-    simHasFailed = false;
     return 0;
 }
 
 int HPWH::initPreset(MODELS presetNum)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // sets simHasFailed = true; this gets cleared on successful completion of init
-    // return 0 on success, HPWH_ABORT for failure
+                      // return 0 on success, HPWH_ABORT for failure
 
     heatSources.clear();
 
@@ -4538,6 +4538,7 @@ int HPWH::initPreset(MODELS presetNum)
 
     if (checkInputs() == HPWH_ABORT)
     {
+        LOG_ERROR(this, "Invalid input.")
         return HPWH_ABORT;
     }
 
@@ -4551,6 +4552,5 @@ int HPWH::initPreset(MODELS presetNum)
         heatSources[i].sortPerformanceMap();
     }
 
-    simHasFailed = false;
     return 0; // successful init returns 0
 } // end HPWHinit_presets

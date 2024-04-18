@@ -343,9 +343,6 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& logger_in /* std::make_shared<Logger>() */)
     : sender(logger_in)
-    , hpwhVerbosity(VRB_silent)
-    , messageCallback(NULL)
-    , messageCallbackContextPtr(NULL)
 {
     setAllDefaults();
 }
@@ -356,7 +353,6 @@ void HPWH::setAllDefaults()
     nextTankTemps_C.clear();
     heatSources.clear();
 
-    simHasFailed = true;
     isHeating = false;
     setpointFixed = false;
     tankSizeFixed = true;
@@ -376,7 +372,6 @@ void HPWH::setAllDefaults()
     timerTOT = 0.;
     usesSoCLogic = false;
     setMinutesPerStep(1.0);
-    hpwhVerbosity = VRB_minuteOut;
     hasHeatExchanger = false;
     heatExchangerEffectiveness = 0.9;
 }
@@ -389,14 +384,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     {
         return *this;
     }
-
-    simHasFailed = hpwh.simHasFailed;
-
-    hpwhVerbosity = hpwh.hpwhVerbosity;
-
-    // these should actually be the same pointers
-    messageCallback = hpwh.messageCallback;
-    messageCallbackContextPtr = hpwh.messageCallbackContextPtr;
 
     isHeating = hpwh.isHeating;
 
@@ -463,7 +450,6 @@ int HPWH::runOneStep(double drawVolume_L,
     if (doTempDepression && (minutesPerStep != 1))
     {
         LOG_ERROR(this, "minutesPerStep must equal one for temperature depression to work.")
-        simHasFailed = true;
         return HPWH_ABORT;
     }
 
@@ -472,13 +458,6 @@ int HPWH::runOneStep(double drawVolume_L,
         LOG_WARNING(
             this,
             "DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme.");
-    }
-
-    // is the failure flag is set, don't run
-    if (simHasFailed)
-    {
-        LOG_ERROR(this, "simHasFailed is set, aborting.");
-        return HPWH_ABORT;
     }
 
     // reset the output variables
@@ -799,12 +778,6 @@ int HPWH::runOneStep(double drawVolume_L,
         resetTopOffTimer();
     }
 
-    if (simHasFailed)
-    {
-        LOG_ERROR(this, "The simulation has encountered an error.");
-        return HPWH_ABORT;
-    }
-
     LOG_INFO(this, "Ending runOneStep.")
 
     return 0; // successful completion of the step returns 0
@@ -833,10 +806,15 @@ int HPWH::runNSteps(int N,
     // run the sim one step at a time, accumulating the outputs as you go
     for (int i = 0; i < N; i++)
     {
-        runOneStep(
-            inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i], DRstatus[i]);
-
-        if (simHasFailed)
+        try
+        {
+            runOneStep(inletT_C[i],
+                       drawVolume_L[i],
+                       tankAmbientT_C[i],
+                       heatSourceAmbientT_C[i],
+                       DRstatus[i]);
+        }
+        catch (...)
         {
             LOG_ERROR(this,
                       "RunNSteps has encountered an error on step {} of N and has ceased running.",
@@ -1253,7 +1231,6 @@ int HPWH::setAirFlowFreedom(double fanFraction)
     if (fanFraction < 0 || fanFraction > 1)
     {
         LOG_ERROR(this, "You have attempted to set the fan fraction outside of bounds.");
-        simHasFailed = true;
         return HPWH_ABORT;
     }
     else
@@ -1389,7 +1366,6 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChan
     if (HPWH_size <= 0)
     {
         LOG_ERROR(this, "You have attempted to set the tank volume outside of bounds.");
-        simHasFailed = true;
         return HPWH_ABORT;
     }
     else
@@ -2884,7 +2860,6 @@ void HPWH::updateTankTemps(double drawVolume_L,
         if (inletVol2_L > drawVolume_L)
         {
             LOG_ERROR(this, "Volume in inlet 2 is greater than the draw volume.");
-            simHasFailed = true;
             return;
         }
 
@@ -3051,7 +3026,6 @@ void HPWH::updateTankTemps(double drawVolume_L,
         if (tau > 1.)
         {
             LOG_ERROR(this, "The stability condition for conduction has failed!")
-            simHasFailed = true;
             return;
         }
 
@@ -3983,7 +3957,7 @@ int HPWH::checkInputs()
 
     if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
     {
-        LOG_ERROR(this, "You must have at least one HeatSource.")
+        LOG_WARNING(this, "You must have at least one HeatSource.")
         returnVal = HPWH_ABORT;
     }
 
@@ -3996,10 +3970,6 @@ int HPWH::checkInputs()
         {
             LOG_WARNING(
                 this, "Heat source {} does not have a specified type.  Initialization failed.", i)
-            LOG_WARNING(
-                this,
-                fmt::format(
-                    "Heat source {} does not have a specified type.  Initialization failed.", i))
             returnVal = HPWH_ABORT;
         }
         // check to make sure there is at least one onlogic or parent with onlogic
@@ -4008,9 +3978,8 @@ int HPWH::checkInputs()
             (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
         {
             LOG_WARNING(this,
-                        "You must specify at least one logic to turn on the element or the element \
-                must be set as a backup for another heat source with at least one logic.")
-
+                        "You must specify at least one logic to turn on the element or the element "
+                        "must be set as a backup for another heat source with at least one logic.")
             returnVal = HPWH_ABORT;
         }
 
@@ -4019,8 +3988,8 @@ int HPWH::checkInputs()
         {
             if (!logic->isValid())
             {
-                returnVal = HPWH_ABORT;
                 LOG_WARNING(this, "On logic at index %i is invalid", i)
+                returnVal = HPWH_ABORT;
             }
         }
         // Validate off logics
@@ -4028,8 +3997,8 @@ int HPWH::checkInputs()
         {
             if (!logic->isValid())
             {
-                returnVal = HPWH_ABORT;
                 LOG_WARNING(this, "Off logic at index %i is invalid", i)
+                returnVal = HPWH_ABORT;
             }
         }
 
@@ -4213,7 +4182,6 @@ int HPWH::checkInputs()
 int HPWH::initFromFile(string configFile)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // sets simHasFailed = true; this gets cleared on successful completion of init
     // return 0 on success, HPWH_ABORT for failure
 
     // open file, check and report errors
@@ -4388,28 +4356,6 @@ int HPWH::initFromFile(string configFile)
         }
         else if (token == "verbosity")
         {
-            line_ss >> token;
-            if (token == "silent")
-            {
-                hpwhVerbosity = VRB_silent;
-            }
-            else if (token == "reluctant")
-            {
-                hpwhVerbosity = VRB_reluctant;
-            }
-            else if (token == "typical")
-            {
-                hpwhVerbosity = VRB_typical;
-            }
-            else if (token == "emetic")
-            {
-                hpwhVerbosity = VRB_emetic;
-            }
-            else
-            {
-                LOG_ERROR(this, "Incorrect verbosity on input.")
-                return HPWH_ABORT;
-            }
         }
 
         else if (token == "numHeatSources")
@@ -5048,9 +4994,8 @@ int HPWH::initFromFile(string configFile)
 
     if (checkInputs() == HPWH_ABORT)
     {
-        return HPWH_ABORT;
+        LOG_ERROR(this, "Invalid input.")
     }
-    simHasFailed = false;
     return 0;
 }
 #endif

@@ -1070,9 +1070,6 @@ class HPWH
 
     void calcAndSetSoCFraction();
 
-    bool simHasFailed;
-    /**< did an internal error cause the simulation to fail?  */
-
     bool isHeating;
     /**< is the hpwh currently heating or not?  */
 
@@ -1084,14 +1081,6 @@ class HPWH
 
     bool canScale;
     /**< can the HPWH scale capactiy and COP or not  */
-
-    VERBOSITY hpwhVerbosity;
-    /**< an enum to let the sim know how much output to say  */
-
-    void (*messageCallback)(const std::string message, void* contextPtr);
-    /**< function pointer to indicate an external message processing function  */
-    void* messageCallbackContextPtr;
-    /**< caller context pointer for external message processing  */
 
     MODELS model;
     /**< The model id */
