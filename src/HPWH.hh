@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -12,6 +13,7 @@
 #include <cstdio>
 #include <cstdlib> //for exit
 #include <vector>
+#include <unordered_map>
 
 namespace Btwxt
 {
@@ -612,7 +614,6 @@ class HPWH
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
     int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
-    void getTankTemps(std::vector<double>& tankTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
     int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
@@ -747,16 +748,6 @@ class HPWH
     /**< returns the index of the top node  */
     int getIndexTopNode() const;
 
-    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
-
-    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
-    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
-
     int getNumHeatSources() const;
     /**< returns the number of heat sources  */
 
@@ -843,17 +834,6 @@ class HPWH
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
-    double getOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
-    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
-    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
-
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
       returns 0 when no external heat source is running  */
@@ -918,6 +898,40 @@ class HPWH
     /**< resets variables for timer associated with the DR_TOT call  */
 
     double getLocationTemp_C() const;
+
+    void getTankTemps(std::vector<double>& tankTemps);
+
+    double getOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the outlet temperature in the specified units
+      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser inlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser outlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
+    /**< returns the temperature of the water at the specified node - with specified units
+      or HPWH_ABORT for incorrect node number or unit failure  */
+
+    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
+        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
+        1 at the bottom using specified units
+        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+
+    /// returns the tank temperature averaged uniformly
+    double getAverageTankTemp_C() const;
+
+    /// returns the tank temperature averaged over a distribution
+    double getAverageTankTemp_C(const std::vector<double>& dist) const;
+
+    /// returns the tank temperature averaged using weighted logic nodes
+    double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
@@ -963,6 +977,133 @@ class HPWH
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
+    /// first-hour rating designations to determine draw pattern for 24-hr test
+    enum class FirstHourRatingDesig
+    {
+        VerySmall,
+        Low,
+        Medium,
+        High
+    };
+
+    struct FirstHourRating
+    {
+        FirstHourRatingDesig desig;
+        double drawVolume_L;
+    };
+
+    /// collection of information derived from standard test
+    struct StandardTestSummary
+    {
+        // first recovery values
+        double recoveryEfficiency = 0.; // eta_r
+        double recoveryDeliveredEnergy_kJ = 0.;
+        double recoveryStoredEnergy_kJ = 0.;
+        double recoveryUsedEnergy_kJ = 0.; // Q_r
+
+        //
+        double standbyPeriodTime_h = 0; // tau_stby,1
+
+        double standbyStartTankT_C = 0.; // T_su,0
+        double standbyEndTankT_C = 0.;   // T_su,f
+
+        double standbyStartEnergy_kJ = 0.; // Q_su,0
+        double standbyEndEnergy_kJ = 0.;   // Q_su,f
+        double standbyUsedEnergy_kJ = 0.;  // Q_stby
+
+        double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
+        double standbyLossCoefficient_kJperhC = 0.; // UA
+
+        double noDrawTotalTime_h = 0;        // tau_stby,2
+        double noDrawAverageAmbientT_C = 0.; // <T_a,stby,2>
+
+        // 24-hr values
+        double removedVolume_L = 0.;
+        double waterHeatingEnergy_kJ = 0.; // Q_HW
+        double avgOutletT_C = 0.;          // <Tdel,i>
+        double avgInletT_C = 0.;           // <Tin,i>
+
+        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
+        double usedElectricalEnergy_kJ = 0.;               // Q_e
+        double usedEnergy_kJ = 0.;                         // Q
+        double consumedHeatingEnergy_kJ = 0.;              // Q_d
+        double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
+        double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
+        double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
+        double UEF = 0.;
+
+        // (calculated) annual totals
+        double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
+        double annualConsumedEnergy_kJ = 0.;           // E_annual
+
+        bool qualifies = false;
+    };
+
+    struct StandardTestOptions
+    {
+        bool saveOutput = false;
+        bool changeSetpoint = false;
+        std::ofstream outputFile;
+        int nTestTCouples = 6;
+        double setpointT_C = 51.7;
+    };
+
+    /// perform a draw/heat cycle to prepare for test
+    bool prepForTest(StandardTestOptions& standardTestOptions);
+
+    /// determine first-hour rating
+    bool findFirstHourRating(FirstHourRating& firstHourRating,
+                             StandardTestOptions& standardTestOptions);
+
+    /// run 24-hr draw pattern and compute metrics
+    bool run24hrTest(const FirstHourRating firstHourRating,
+                     StandardTestSummary& standardTestSummary,
+                     StandardTestOptions& standardTestOptions);
+
+    /// specific information for a single draw
+    struct Draw
+    {
+        double startTime_min;
+        double volume_L;
+        double flowRate_Lper_min;
+
+        Draw(const double startTime_min_in,
+             const double volume_L_in,
+             const double flowRate_Lper_min_in)
+            : startTime_min(startTime_min_in)
+            , volume_L(volume_L_in)
+            , flowRate_Lper_min(flowRate_Lper_min_in)
+        {
+        }
+    };
+
+    /// sequence of draws in pattern
+    typedef std::vector<Draw> DrawPattern;
+
+    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes;
+
+    /// collection of standard draw patterns
+    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
+
+    /// fields for test output to csv
+    struct OutputData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
+    int writeRowAsCSV(std::ofstream& outFILE,
+                      OutputData& outputData,
+                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
+
   private:
     class HeatSource;
 
@@ -988,9 +1129,6 @@ class HPWH
 
     ///  "extra" heat added during a simulation step
     double extraEnergyInput_kWh;
-
-    double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
-    /**< functions to calculate what the temperature in a portion of the tank is  */
 
     /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
     /// by a factor mixFactor towards their average temperature
@@ -1552,6 +1690,11 @@ inline double FT2_TO_M2(double feet2) { return (feet2 / ft2_per_m2); }
 
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
+
+inline double HM_TO_MIN(const double hours, const double minutes)
+{
+    return min_per_hr * hours + minutes;
+}
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {

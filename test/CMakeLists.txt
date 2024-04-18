@@ -1,4 +1,3 @@
-
 # Build test tool
 add_executable(testTool main.cc)
 
@@ -7,8 +6,6 @@ set(libs ${PROJECT_NAME} ${PROJECT_NAME}_common_interface)
 target_link_libraries(testTool PRIVATE ${libs})
 
 target_compile_features(testTool PRIVATE cxx_std_17)
-
-add_subdirectory(unit_tests)
 
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
@@ -343,3 +340,11 @@ endforeach (test)
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
+
+# Add unit tests
+add_subdirectory(unit_tests)
+
+# Build measureMetrics
+add_executable(measureMetrics measureMetrics.cc)
+target_link_libraries(measureMetrics PRIVATE ${libs})
+target_compile_features(measureMetrics PRIVATE cxx_std_17)

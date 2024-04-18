@@ -65,6 +65,67 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+std::unordered_map<HPWH::FirstHourRatingDesig, std::size_t> HPWH::firstDrawClusterSizes = {
+    {HPWH::FirstHourRatingDesig::VerySmall, 5},
+    {HPWH::FirstHourRatingDesig::Low, 3},
+    {HPWH::FirstHourRatingDesig::Medium, 3},
+    {HPWH::FirstHourRatingDesig::High, 4}};
+
+std::unordered_map<HPWH::FirstHourRatingDesig, HPWH::DrawPattern> HPWH::drawPatterns = {
+    {HPWH::FirstHourRatingDesig::VerySmall,
+     {{HM_TO_MIN(0, 00), 7.6, 3.8},
+      {HM_TO_MIN(1, 00), 3.8, 3.8},
+      {HM_TO_MIN(1, 05), 1.9, 3.8},
+      {HM_TO_MIN(1, 10), 1.9, 3.8},
+      {HM_TO_MIN(1, 15), 1.9, 3.8},
+      {HM_TO_MIN(8, 00), 3.8, 3.8},
+      {HM_TO_MIN(8, 15), 7.6, 3.8},
+      {HM_TO_MIN(9, 00), 5.7, 3.8},
+      {HM_TO_MIN(9, 15), 3.8, 3.8}}},
+
+    {HPWH::FirstHourRatingDesig::Low,
+     {{HM_TO_MIN(0, 00), 56.8, 6.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(1, 00), 3.8, 3.8},
+      {HM_TO_MIN(10, 30), 22.7, 6.4},
+      {HM_TO_MIN(11, 30), 15.1, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 11.4, 6.4}}},
+
+    {HPWH::FirstHourRatingDesig::Medium,
+     {{HM_TO_MIN(0, 00), 56.8, 6.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(1, 40), 34.1, 6.4},
+      {HM_TO_MIN(10, 30), 34.1, 6.4},
+      {HM_TO_MIN(11, 30), 18.9, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 00), 3.8, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 26.5, 6.4}}},
+
+    {HPWH::FirstHourRatingDesig::High,
+     {{HM_TO_MIN(0, 00), 102, 11.4},
+      {HM_TO_MIN(0, 30), 7.6, 3.8},
+      {HM_TO_MIN(0, 40), 3.8, 3.8},
+      {HM_TO_MIN(1, 40), 34.1, 6.4},
+      {HM_TO_MIN(10, 30), 56.8, 11.4},
+      {HM_TO_MIN(11, 30), 18.9, 6.4},
+      {HM_TO_MIN(12, 00), 3.8, 3.8},
+      {HM_TO_MIN(12, 45), 3.8, 3.8},
+      {HM_TO_MIN(12, 50), 3.8, 3.8},
+      {HM_TO_MIN(16, 00), 7.6, 3.8},
+      {HM_TO_MIN(16, 15), 7.6, 3.8},
+      {HM_TO_MIN(16, 30), 7.6, 6.4},
+      {HM_TO_MIN(16, 45), 7.6, 6.4},
+      {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
+
 const int HPWH::HPWH_ABORT = -274000;
 
 //-----------------------------------------------------------------------------
@@ -1199,6 +1260,52 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     return 0;
 }
 
+int HPWH::writeRowAsCSV(std::ofstream& outFILE,
+                        OutputData& outputData,
+                        const CSVOPTIONS& options /* = CSVOPTIONS::CSVOPT_NONE */) const
+{
+    bool doIP = (options & CSVOPT_IPUNITS) != 0;
+
+    //
+    outFILE << fmt::format("{}", outputData.time_min);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
+    outFILE << fmt::format(",{:0.2f}",
+                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
+    outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
+
+    //
+    for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
+    {
+        outFILE << fmt::format(",{:0.2f},{:0.2f}",
+                               outputData.h_srcIn_kWh[iHS] * 1000.,
+                               outputData.h_srcOut_kWh[iHS] * 1000.);
+    }
+
+    //
+    for (auto thermocoupleT_C : outputData.thermocoupleT_C)
+    {
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
+    }
+
+    //
+    if (outputData.drawVolume_L > 0.)
+    {
+        outFILE << fmt::format(",{:0.2f}",
+                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
+    }
+    else
+    {
+        outFILE << ",";
+    }
+
+    outFILE << std::endl;
+    return 0;
+}
+
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
 
 int HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
@@ -1465,51 +1572,6 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
         return HPWH_ABORT;
     }
 }
-
-int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpoint_C); }
-
-int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
-
-//-----------------------------------------------------------------------------
-///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
-/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
-///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
-/// @return	Success: 0; Failure: HPWH_ABORT
-//-----------------------------------------------------------------------------
-int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
-{
-    if ((units != UNITS_C) && (units != UNITS_F))
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for setSetpoint.  \n");
-        }
-        return HPWH_ABORT;
-    }
-
-    std::size_t numSetNodes = setTankTemps.size();
-    if (numSetNodes == 0)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("No temperatures provided.\n");
-        }
-        return HPWH_ABORT;
-    }
-
-    // convert setTankTemps to �C, if necessary
-    if (units == UNITS_F)
-        for (auto& T : setTankTemps)
-            T = F_TO_C(T);
-
-    // set node temps
-    if (!resampleIntensive(tankTemps_C, setTankTemps))
-        return HPWH_ABORT;
-
-    return 0;
-}
-
-void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_C; }
 
 int HPWH::setAirFlowFreedom(double fanFraction)
 {
@@ -2430,74 +2492,6 @@ int HPWH::getNumNodes() const { return static_cast<int>(tankTemps_C.size()); }
 
 int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
 
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
-{
-    if (tankTemps_C.empty())
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access the temperature of a tank node that does not exist.  "
-                "\n");
-        }
-        return double(HPWH_ABORT);
-    }
-    else
-    {
-        double result = tankTemps_C[nodeNum];
-        // if (result == double(HPWH_ABORT)) { can't happen?
-        //	return result;
-        // }
-        if (units == UNITS_C)
-        {
-            return result;
-        }
-        else if (units == UNITS_F)
-        {
-            return C_TO_F(result);
-        }
-        else
-        {
-            if (hpwhVerbosity >= VRB_reluctant)
-            {
-                msg("Incorrect unit specification for getTankNodeTemp.  \n");
-            }
-            return double(HPWH_ABORT);
-        }
-    }
-}
-
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
-{
-    if (iTCouple > nTCouple || iTCouple < 1)
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
-    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-
-    double simTcoupleTemp_C = getResampledValue(tankTemps_C, beginFraction, endFraction);
-    if (units == UNITS_C)
-    {
-        return simTcoupleTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(simTcoupleTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getNthSimTcouple.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
 
 int HPWH::getCompressorIndex() const { return compressorIndex; }
@@ -2743,66 +2737,6 @@ double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
     }
 }
 
-double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return outletTemp_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(outletTemp_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getOutletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
-double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return condenserInlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserInlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
-double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    if (units == UNITS_C)
-    {
-        return condenserOutlet_C;
-    }
-    else if (units == UNITS_F)
-    {
-        return C_TO_F(condenserOutlet_C);
-    }
-    else
-    {
-        if (hpwhVerbosity >= VRB_reluctant)
-        {
-            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
-        }
-        return double(HPWH_ABORT);
-    }
-}
-
 double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
 {
     if (units == UNITS_L)
@@ -2873,20 +2807,266 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
     }
 }
 
-double HPWH::getTankHeatContent_kJ() const
-{
-    // returns tank heat content relative to 0 C using kJ
+///////////////////////////////////////////////////////////////////////////////////
 
-    // sum over nodes
-    double totalT_C = 0.;
-    for (int i = 0; i < getNumNodes(); i++)
+double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
     {
-        totalT_C += tankTemps_C[i];
+        return outletTemp_C;
     }
-    return nodeCp_kJperC * totalT_C;
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(outletTemp_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getOutletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return condenserInlet_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(condenserInlet_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
+{
+    if (units == UNITS_C)
+    {
+        return condenserOutlet_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(condenserOutlet_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getCondenserWaterInletTemp.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+}
+
+double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
+{
+    if (tankTemps_C.empty())
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access the temperature of a tank node that does not exist.  "
+                "\n");
+        }
+        return double(HPWH_ABORT);
+    }
+    else
+    {
+        double result = tankTemps_C[nodeNum];
+        // if (result == double(HPWH_ABORT)) { can't happen?
+        //	return result;
+        // }
+        if (units == UNITS_C)
+        {
+            return result;
+        }
+        else if (units == UNITS_F)
+        {
+            return C_TO_F(result);
+        }
+        else
+        {
+            if (hpwhVerbosity >= VRB_reluctant)
+            {
+                msg("Incorrect unit specification for getTankNodeTemp.  \n");
+            }
+            return double(HPWH_ABORT);
+        }
+    }
+}
+
+double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
+{
+    if (iTCouple > nTCouple || iTCouple < 1)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("You have attempted to access a simulated thermocouple that does not exist.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
+    double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
+    double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
+
+    double simTcoupleTemp_C = getResampledValue(tankTemps_C, beginFraction, endFraction);
+    if (units == UNITS_C)
+    {
+        return simTcoupleTemp_C;
+    }
+    else if (units == UNITS_F)
+    {
+        return C_TO_F(simTcoupleTemp_C);
+    }
+    else
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for getNthSimTcouple.  \n");
+        }
+        return double(HPWH_ABORT);
+    }
 }
 
 double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
+
+void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_C; }
+
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the tank temperature averaged uniformly
+/// @param[in]	nodeWeights	Discrete set of weighted nodes
+/// @return	Tank temperature (C)
+//-----------------------------------------------------------------------------
+double HPWH::getAverageTankTemp_C() const
+{
+    double totalT_C = 0.;
+    for (auto& T_C : tankTemps_C)
+    {
+        totalT_C += T_C;
+    }
+    return totalT_C / static_cast<double>(getNumNodes());
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the average tank temperature based on distribution.
+/// @note	Distribution must have positive size and be normalized.
+/// @param[in]	dist	Discrete set of distribution values
+//-----------------------------------------------------------------------------
+double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
+{
+    std::vector<double> resampledTankTemps_C(dist.size());
+    resample(resampledTankTemps_C, tankTemps_C);
+
+    double tankT_C = 0.;
+
+    std::size_t j = 0;
+    for (auto& nodeT_C : resampledTankTemps_C)
+    {
+        tankT_C += dist[j] * nodeT_C;
+        ++j;
+    }
+    return tankT_C;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Evaluates the average tank temperature based on weighted logic nodes.
+/// @note	Logic nodes must be normalizable and are referred to the fixed size LOGIC_NODE_SIZE.
+///         Node indices as associated with tank nodes as follows:
+///         node # 0: bottom tank node only;
+///         node # LOGIC_NODE_SIZE + 1: top node only;
+///         nodes # 1..LOGIC_NODE_SIZE: resampled tank nodes.
+/// @param[in]	nodeWeights	Discrete set of weighted nodes
+/// @return	Tank temperature (C)
+//-----------------------------------------------------------------------------
+double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+{
+    double sum = 0;
+    double totWeight = 0;
+
+    std::vector<double> resampledTankTemps(LOGIC_SIZE);
+    resample(resampledTankTemps, tankTemps_C);
+
+    for (auto& nodeWeight : nodeWeights)
+    {
+        if (nodeWeight.nodeNum == 0)
+        { // bottom node only
+            sum += tankTemps_C.front() * nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+        else if (nodeWeight.nodeNum > LOGIC_SIZE)
+        { // top node only
+            sum += tankTemps_C.back() * nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+        else
+        { // general case; sum over all weighted nodes
+            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
+                   nodeWeight.weight;
+            totWeight += nodeWeight.weight;
+        }
+    }
+    return sum / totWeight;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
+/// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
+///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
+/// @return	Success: 0; Failure: HPWH_ABORT
+//-----------------------------------------------------------------------------
+int HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
+{
+    if ((units != UNITS_C) && (units != UNITS_F))
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("Incorrect unit specification for setSetpoint.  \n");
+        }
+        return HPWH_ABORT;
+    }
+
+    std::size_t numSetNodes = setTankTemps.size();
+    if (numSetNodes == 0)
+    {
+        if (hpwhVerbosity >= VRB_reluctant)
+        {
+            msg("No temperatures provided.\n");
+        }
+        return HPWH_ABORT;
+    }
+
+    // convert setTankTemps to �C, if necessary
+    if (units == UNITS_F)
+        for (auto& T : setTankTemps)
+            T = F_TO_C(T);
+
+    // set node temps
+    if (!resampleIntensive(tankTemps_C, setTankTemps))
+        return HPWH_ABORT;
+
+    return 0;
+}
+
+int HPWH::resetTankToSetpoint() { return setTankToTemperature(setpoint_C); }
+
+int HPWH::setTankToTemperature(double temp_C) { return setTankLayerTemperatures({temp_C}); }
+
+///////////////////////////////////////////////////////////////////////////////////
+
+double HPWH::getTankHeatContent_kJ() const
+{
+    // returns tank heat content relative to 0 C using kJ
+    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getAverageTankTemp_C();
+}
 
 int HPWH::getModel() const { return model; }
 
@@ -3837,36 +4017,6 @@ bool HPWH::areAllHeatSourcesOff() const
         }
     }
     return allOff;
-}
-
-double HPWH::tankAvg_C(const std::vector<HPWH::NodeWeight> nodeWeights) const
-{
-    double sum = 0;
-    double totWeight = 0;
-
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, tankTemps_C);
-
-    for (auto& nodeWeight : nodeWeights)
-    {
-        if (nodeWeight.nodeNum == 0)
-        { // bottom node only
-            sum += tankTemps_C.front() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-        else if (nodeWeight.nodeNum > LOGIC_SIZE)
-        { // top node only
-            sum += tankTemps_C.back() * nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-        else
-        { // general case; sum over all weighted nodes
-            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
-                   nodeWeight.weight;
-            totWeight += nodeWeight.weight;
-        }
-    }
-    return sum / totWeight;
 }
 
 void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
@@ -5696,3 +5846,792 @@ int HPWH::initFromFile(string configFile)
     return 0;
 }
 #endif
+
+//-----------------------------------------------------------------------------
+///	@brief	Performs a draw/heat cycle to prep for test
+/// @return	true (success), false (failure).
+//-----------------------------------------------------------------------------
+bool HPWH::prepForTest(StandardTestOptions& testOptions)
+{
+    double flowRate_Lper_min = GAL_TO_L(3.);
+    if (tankVolume_L < GAL_TO_L(20.))
+        flowRate_Lper_min = GAL_TO_L(1.5);
+
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    constexpr double externalT_C = 19.7;
+
+    if (testOptions.changeSetpoint)
+    {
+        if (!isSetpointFixed())
+        {
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
+        }
+    }
+
+    DRMODES drMode = DR_ALLOW;
+    bool isDrawing = false;
+    bool done = false;
+    int step = 0;
+    int time_min = 0;
+    while (!done)
+    {
+        switch (step)
+        {
+        case 0: // start with heat off
+        {
+            if (!isHeating)
+            {
+                isDrawing = true;
+                ++step;
+            }
+            break;
+        }
+
+        case 1: // draw until heat turns on
+        {
+            if (isHeating)
+            {
+                isDrawing = false;
+                ++step;
+            }
+            break;
+        }
+
+        case 2: // wait for heat to turn on
+        {
+            if (!isHeating)
+            {
+                isDrawing = false;
+                done = true;
+            }
+            break;
+        }
+        }
+
+        // limit draw-volume increment to tank volume
+        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
+        if (incrementalDrawVolume_L > tankVolume_L)
+        {
+            incrementalDrawVolume_L = tankVolume_L;
+        }
+
+        if (runOneStep(inletT_C,                // inlet water temperature (C)
+                       incrementalDrawVolume_L, // draw volume (L)
+                       ambientT_C,              // ambient Temp (C)
+                       externalT_C,             // external Temp (C)
+                       drMode,                  // DDR Status
+                       0.,                      // inlet-2 volume (L)
+                       inletT_C,                // inlet-2 Temp (C)
+                       NULL)                    // no extra heat
+            == HPWH_ABORT)
+        {
+            return false;
+        }
+
+        ++time_min;
+    }
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Find first-hour rating designation for 24-hr test
+/// @param[out] firstHourRating	    contains first-hour rating designation
+///	@param[in]	setpointT_C		    setpoint temperature (optional)
+/// @return	true (success), false (failure).
+//-----------------------------------------------------------------------------
+bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOptions& testOptions)
+{
+    double flowRate_Lper_min = GAL_TO_L(3.);
+    if (tankVolume_L < GAL_TO_L(20.))
+        flowRate_Lper_min = GAL_TO_L(1.5);
+
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    constexpr double externalT_C = 19.7;
+
+    if (testOptions.changeSetpoint)
+    {
+        if (!isSetpointFixed())
+        {
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
+        }
+    }
+
+    double tankT_C = getAverageTankTemp_C();
+    double maxTankT_C = tankT_C;
+    double maxOutletT_C = 0.;
+
+    DRMODES drMode = DR_ALLOW;
+    double drawVolume_L = 0.;
+
+    firstHourRating.drawVolume_L = 0.;
+
+    double sumOutletVolumeT_LC = 0.;
+    double sumOutletVolume_L = 0.;
+
+    double avgOutletT_C = 0.;
+    double minOutletT_C = 0.;
+    double prevAvgOutletT_C = 0.;
+    double prevMinOutletT_C = 0.;
+
+    bool isDrawing = false;
+    bool done = false;
+    int step = 0;
+
+    if (!prepForTest(testOptions))
+    {
+        return false;
+    }
+
+    bool firstDraw = true;
+    isDrawing = true;
+    maxOutletT_C = 0.;
+    drMode = DR_LOC;
+    int elapsedTime_min = 0;
+    while (!done)
+    {
+        // limit draw-volume increment to tank volume
+        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
+        if (incrementalDrawVolume_L > tankVolume_L)
+        {
+            incrementalDrawVolume_L = tankVolume_L;
+        }
+
+        if (runOneStep(inletT_C,                // inlet water temperature (C)
+                       incrementalDrawVolume_L, // draw volume (L)
+                       ambientT_C,              // ambient Temp (C)
+                       externalT_C,             // external Temp (C)
+                       drMode,                  // DDR Status
+                       0.,                      // inlet-2 volume (L)
+                       inletT_C,                // inlet-2 Temp (C)
+                       NULL)                    // no extra heat
+            == HPWH_ABORT)
+        {
+            return false;
+        }
+        tankT_C = getAverageTankTemp_C();
+
+        switch (step)
+        {
+        case 0: // drawing
+        {
+            sumOutletVolume_L += incrementalDrawVolume_L;
+            sumOutletVolumeT_LC += incrementalDrawVolume_L * outletTemp_C;
+
+            maxOutletT_C = std::max(outletTemp_C, maxOutletT_C);
+            if (outletTemp_C <
+                maxOutletT_C - dF_TO_dC(15.)) // outletT has dropped by 15 degF below max T
+            {
+                avgOutletT_C = sumOutletVolumeT_LC / sumOutletVolume_L;
+                minOutletT_C = outletTemp_C;
+                if (elapsedTime_min >= 60)
+                {
+                    double fac = 1;
+                    if (!firstDraw)
+                    {
+                        fac = (avgOutletT_C - prevMinOutletT_C) /
+                              (prevAvgOutletT_C - prevMinOutletT_C);
+                    }
+                    firstHourRating.drawVolume_L += fac * drawVolume_L;
+                    done = true;
+                }
+                else
+                {
+                    firstHourRating.drawVolume_L += drawVolume_L;
+                    drawVolume_L = 0.;
+                    isDrawing = false;
+                    drMode = DR_ALLOW;
+                    maxTankT_C = tankT_C;        // initialize for next pass
+                    maxOutletT_C = outletTemp_C; // initialize for next pass
+                    prevAvgOutletT_C = avgOutletT_C;
+                    prevMinOutletT_C = minOutletT_C;
+                    ++step;
+                }
+            }
+            break;
+        }
+
+        case 1:
+        {
+            if (isHeating) // ensure heat is on before proceeding
+            {
+                ++step;
+            }
+            break;
+        }
+
+        case 2: // heating
+        {
+            if ((tankT_C > maxTankT_C) && isHeating &&
+                (elapsedTime_min <
+                 60)) // has not reached maxTankT, heat is on, and less than 1 hr has elpased
+            {
+                maxTankT_C = std::max(tankT_C, maxTankT_C);
+            }
+            else // start another draw
+            {
+                firstDraw = false;
+                isDrawing = true;
+                drawVolume_L = 0.;
+                drMode = DR_LOC;
+                step = 0; // repeat
+            }
+        }
+        }
+
+        drawVolume_L += incrementalDrawVolume_L;
+        ++elapsedTime_min;
+    }
+
+    //
+    if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
+    {
+        firstHourRating.desig = FirstHourRatingDesig::VerySmall;
+    }
+    else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
+    {
+        firstHourRating.desig = FirstHourRatingDesig::Low;
+    }
+    else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
+    {
+        firstHourRating.desig = FirstHourRatingDesig::Medium;
+    }
+    else
+    {
+        firstHourRating.desig = FirstHourRatingDesig::High;
+    }
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+///	@brief	Performs standard 24-hr test
+/// @note	see https://www.regulations.gov/document/EERE-2019-BT-TP-0032-0058
+/// @param[in] firstHourRating          specifies first-hour rating
+/// @param[out] testSummary	            contains test metrics on output
+///	@param[in]	setpointT_C		        setpoint temperature (optional)
+/// @return	true (success), false (failure).
+//-----------------------------------------------------------------------------
+bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
+                       StandardTestSummary& testSummary,
+                       StandardTestOptions& testOptions)
+{
+    // select the first draw cluster size and pattern
+    auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
+    DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
+
+    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
+    constexpr double externalT_C = 19.7;
+    DRMODES drMode = DR_ALLOW;
+
+    if (testOptions.changeSetpoint)
+    {
+        if (!isSetpointFixed())
+        {
+            if (setSetpoint(testOptions.setpointT_C, UNITS_C) == HPWH_ABORT)
+            {
+                return false;
+            }
+        }
+    }
+
+    if (!prepForTest(testOptions))
+    {
+        return false;
+    }
+
+    std::vector<OutputData> outputDataSet;
+
+    // idle for 1 hr
+    int preTime_min = 0;
+    bool heatersAreOn = false;
+    while ((preTime_min < 60) || heatersAreOn)
+    {
+        if (runOneStep(inletT_C,    // inlet water temperature (C)
+                       0,           // draw volume (L)
+                       ambientT_C,  // ambient Temp (C)
+                       externalT_C, // external Temp (C)
+                       drMode,      // DDR Status
+                       0.,          // inlet-2 volume (L)
+                       inletT_C,    // inlet-2 Temp (C)
+                       NULL)        // no extra heat
+            == HPWH_ABORT)
+        {
+            return false;
+        }
+
+        heatersAreOn = false;
+        for (auto& heatSource : heatSources)
+        {
+            heatersAreOn |= heatSource.isEngaged();
+        }
+
+        {
+            OutputData outputData;
+            outputData.time_min = preTime_min;
+            outputData.ambientT_C = ambientT_C;
+            outputData.setpointT_C = getSetpoint();
+            outputData.inletT_C = inletT_C;
+            outputData.drawVolume_L = 0.;
+            outputData.drMode = drMode;
+
+            for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
+            {
+                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcOut_kWh.push_back(
+                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+            }
+
+            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
+            {
+                outputData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+            }
+            outputData.outletT_C = 0.;
+
+            outputDataSet.push_back(outputData);
+        }
+
+        ++preTime_min;
+    }
+
+    // correct time to start test at 0 min
+    for (auto& outputData : outputDataSet)
+    {
+        outputData.time_min -= preTime_min;
+    }
+
+    double tankT_C = getAverageTankTemp_C();
+    double initialTankT_C = tankT_C;
+
+    // used to find average draw temperatures
+    double drawSumOutletVolumeT_LC = 0.;
+    double drawSumInletVolumeT_LC = 0.;
+
+    // used to find average 24-hr test temperatures
+    double sumOutletVolumeT_LC = 0.;
+    double sumInletVolumeT_LC = 0.;
+
+    // first-recovery info
+    testSummary.recoveryStoredEnergy_kJ = 0.;
+    testSummary.recoveryDeliveredEnergy_kJ = 0.;
+    testSummary.recoveryUsedEnergy_kJ = 0.;
+
+    double deliveredEnergy_kJ = 0.; // total energy delivered to water
+    testSummary.removedVolume_L = 0.;
+    testSummary.usedEnergy_kJ = 0.;           // Q
+    testSummary.usedFossilFuelEnergy_kJ = 0.; // total fossil-fuel energy consumed, Qf
+    testSummary.usedElectricalEnergy_kJ = 0.; // total electrical energy consumed, Qe
+
+    bool hasHeated = false;
+
+    int endTime_min = 24 * static_cast<int>(min_per_hr);
+    std::size_t iDraw = 0;
+    double remainingDrawVolume_L = 0.;
+    double drawVolume_L = 0.;
+    double prevDrawEndTime_min = 0.;
+
+    bool isFirstRecoveryPeriod = true;
+    bool isInFirstDrawCluster = true;
+    bool hasStandbyPeriodStarted = false;
+    bool hasStandbyPeriodEnded = false;
+    bool nextDraw = true;
+    bool isDrawing = false;
+    bool isDrawPatternComplete = false;
+
+    int recoveryEndTime_min = 0;
+
+    int standbyStartTime_min = 0;
+    int standbyEndTime_min = 0;
+    double standbyStartT_C = 0;
+    double standbyEndT_C = 0;
+    double standbyStartTankEnergy_kJ = 0.;
+    double standbyEndTankEnergy_kJ = 0.;
+    double standbySumTimeTankT_minC = 0.;
+    double standbySumTimeAmbientT_minC = 0.;
+
+    int noDrawTotalTime_min = 0;
+    double noDrawSumTimeAmbientT_minC = 0.;
+
+    bool inLastHour = false;
+    double stepDrawVolume_L = 0.;
+    for (int runTime_min = 0; runTime_min <= endTime_min; ++runTime_min)
+    {
+        if (inLastHour)
+        {
+            drMode = DR_LOC | DR_LOR;
+        }
+
+        if (nextDraw)
+        {
+            auto& draw = drawPattern[iDraw];
+            if (runTime_min >= draw.startTime_min)
+            {
+                // limit draw-volume step to tank volume
+                stepDrawVolume_L = draw.flowRate_Lper_min * (1.);
+                if (stepDrawVolume_L > tankVolume_L)
+                {
+                    stepDrawVolume_L = tankVolume_L;
+                }
+
+                remainingDrawVolume_L = drawVolume_L = draw.volume_L;
+
+                nextDraw = false;
+                isDrawing = true;
+
+                drawSumOutletVolumeT_LC = 0.;
+                drawSumInletVolumeT_LC = 0.;
+
+                if (hasStandbyPeriodStarted && (!hasStandbyPeriodEnded))
+                {
+                    hasStandbyPeriodEnded = true;
+                    standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
+                    standbyEndT_C = tankT_C;                             // Tsu,0
+                    standbyEndTime_min = runTime_min;
+                }
+            }
+        }
+
+        // iterate until 1) specified draw volume has been reached and 2) next draw has started
+        // do not exceed specified draw volume
+        if (isDrawing)
+        {
+            if (stepDrawVolume_L >= remainingDrawVolume_L)
+            {
+                stepDrawVolume_L = remainingDrawVolume_L;
+                remainingDrawVolume_L = 0.;
+                isDrawing = false;
+                prevDrawEndTime_min = runTime_min;
+            }
+            else
+            {
+                remainingDrawVolume_L -= stepDrawVolume_L;
+            }
+        }
+        else
+        {
+            remainingDrawVolume_L = stepDrawVolume_L = 0.;
+            noDrawSumTimeAmbientT_minC += (1.) * ambientT_C;
+            ++noDrawTotalTime_min;
+        }
+
+        // run a step
+        int runResult = runOneStep(inletT_C,         // inlet water temperature (C)
+                                   stepDrawVolume_L, // draw volume (L)
+                                   ambientT_C,       // ambient Temp (C)
+                                   externalT_C,      // external Temp (C)
+                                   drMode,           // DDR Status
+                                   0.,               // inlet-2 volume (L)
+                                   inletT_C,         // inlet-2 Temp (C)
+                                   NULL);            // no extra heat
+
+        if (runResult == HPWH_ABORT)
+        {
+            return false;
+        }
+
+        {
+            OutputData outputData;
+            outputData.time_min = runTime_min;
+            outputData.ambientT_C = ambientT_C;
+            outputData.setpointT_C = getSetpoint();
+            outputData.inletT_C = inletT_C;
+            outputData.drawVolume_L = stepDrawVolume_L;
+            outputData.drMode = drMode;
+
+            for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
+            {
+                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcOut_kWh.push_back(
+                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+            }
+
+            for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
+            {
+                outputData.thermocoupleT_C.push_back(
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+            }
+            outputData.outletT_C = outletTemp_C;
+
+            outputDataSet.push_back(outputData);
+        }
+
+        tankT_C = getAverageTankTemp_C();
+        hasHeated |= isHeating;
+
+        drawSumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
+        drawSumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
+
+        sumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
+        sumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
+
+        // collect energy added to water
+        double stepDrawMass_kg = DENSITYWATER_kgperL * stepDrawVolume_L;
+        double stepDrawHeatCapacity_kJperC = CPWATER_kJperkgC * stepDrawMass_kg;
+        deliveredEnergy_kJ += stepDrawHeatCapacity_kJperC * (outletTemp_C - inletT_C);
+
+        // collect used-energy info
+        double usedFossilFuelEnergy_kJ = 0.;
+        double usedElectricalEnergy_kJ = 0.;
+        for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
+        {
+            usedElectricalEnergy_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+        }
+
+        // collect 24-hr test info
+        testSummary.removedVolume_L += stepDrawVolume_L;
+        testSummary.usedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
+        testSummary.usedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
+        testSummary.usedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+
+        if (isFirstRecoveryPeriod)
+        {
+            testSummary.recoveryUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+        }
+
+        if (!isDrawing)
+        {
+            if (isFirstRecoveryPeriod)
+            {
+                if (hasHeated && (!isHeating))
+                {
+                    // collect recovery info
+                    isFirstRecoveryPeriod = false;
+
+                    double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
+                    double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
+                    testSummary.recoveryStoredEnergy_kJ =
+                        tankHeatCapacity_kJperC * (tankT_C - initialTankT_C);
+                }
+
+                if (!nextDraw)
+                {
+                    double meanDrawOutletT_C = drawSumOutletVolumeT_LC / drawVolume_L;
+                    double meanDrawInletT_C = drawSumInletVolumeT_LC / drawVolume_L;
+
+                    double drawMass_kg = DENSITYWATER_kgperL * drawVolume_L;
+                    double drawHeatCapacity_kJperC = CPWATER_kJperkgC * drawMass_kg;
+
+                    testSummary.recoveryDeliveredEnergy_kJ +=
+                        drawHeatCapacity_kJperC * (meanDrawOutletT_C - meanDrawInletT_C);
+                }
+            }
+
+            if (!hasStandbyPeriodEnded)
+            {
+                if (hasStandbyPeriodStarted)
+                {
+                    standbySumTimeTankT_minC += (1.) * tankT_C;
+                    standbySumTimeAmbientT_minC += (1.) * ambientT_C;
+
+                    if (runTime_min >= standbyStartTime_min + 8 * min_per_hr)
+                    {
+                        hasStandbyPeriodEnded = true;
+                        standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
+                        standbyEndT_C = tankT_C;                             // Tsu,0
+                        standbyEndTime_min = runTime_min;
+                    }
+                }
+                else
+                {
+                    if (isHeating)
+                    {
+                        recoveryEndTime_min = runTime_min;
+                    }
+                    else
+                    {
+                        if ((!isInFirstDrawCluster) || isDrawPatternComplete)
+                        {
+                            if ((runTime_min > prevDrawEndTime_min + 5) &&
+                                (runTime_min > recoveryEndTime_min + 5))
+                            {
+                                hasStandbyPeriodStarted = true;
+                                standbyStartTime_min = runTime_min;
+                                standbyStartTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
+                                standbyStartT_C = tankT_C;                             // Tsu,0
+
+                                if (isDrawPatternComplete &&
+                                    (runTime_min + 8 * min_per_hr > endTime_min))
+                                {
+                                    endTime_min = runTime_min + 8 * static_cast<int>(min_per_hr);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!nextDraw)
+            {
+                ++iDraw;
+                if (iDraw < drawPattern.size())
+                {
+                    nextDraw = true;
+                    isInFirstDrawCluster = (iDraw < firstDrawClusterSize);
+                }
+                else
+                {
+                    isDrawPatternComplete = true;
+                }
+            }
+        }
+    }
+
+    double finalTankT_C = tankT_C;
+
+    if (!hasStandbyPeriodEnded)
+    {
+        hasStandbyPeriodEnded = true;
+        standbyEndTime_min = endTime_min;
+        standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
+        standbyEndT_C = tankT_C;                             // Tsu,0
+    }
+
+    if (testOptions.saveOutput)
+    {
+        for (auto& outputData : outputDataSet)
+        {
+            writeRowAsCSV(testOptions.outputFile, outputData);
+        }
+    }
+
+    testSummary.avgOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
+    testSummary.avgInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
+
+    constexpr double standardSetpointT_C = 51.7;
+    constexpr double standardInletT_C = 14.4;
+    constexpr double standardAmbientT_C = 19.7;
+
+    double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
+    double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
+
+    double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
+    double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
+
+    // require heating during 24-hr test for unit to qualify as consumer water heater
+    if (hasHeated && !isDrawing)
+    {
+        testSummary.qualifies = true;
+    }
+
+    // find the "Recovery Efficiency" (6.3.3)
+    testSummary.recoveryEfficiency = 0.;
+    if (testSummary.recoveryUsedEnergy_kJ > 0.)
+    {
+        testSummary.recoveryEfficiency =
+            (testSummary.recoveryStoredEnergy_kJ + testSummary.recoveryDeliveredEnergy_kJ) /
+            testSummary.recoveryUsedEnergy_kJ;
+    }
+
+    // find the energy consumed during the standby-loss test, Qstdby
+    testSummary.standbyUsedEnergy_kJ = standbyEndTankEnergy_kJ - standbyStartTankEnergy_kJ;
+
+    int standbyPeriodTime_min = standbyEndTime_min - standbyStartTime_min - 1;
+    testSummary.standbyPeriodTime_h = standbyPeriodTime_min / min_per_hr; // tau_stby,1
+    if ((testSummary.standbyPeriodTime_h > 0) && (testSummary.recoveryEfficiency > 0.))
+    {
+        double standardTankEnergy_kJ = tankHeatCapacity_kJperC * (standbyEndT_C - standbyStartT_C) /
+                                       testSummary.recoveryEfficiency;
+        testSummary.standbyHourlyLossEnergy_kJperh =
+            (testSummary.standbyUsedEnergy_kJ - standardTankEnergy_kJ) /
+            testSummary.standbyPeriodTime_h;
+
+        double standbyAverageTankT_C = standbySumTimeTankT_minC / standbyPeriodTime_min;
+        double standbyAverageAmbientT_C = standbySumTimeAmbientT_minC / standbyPeriodTime_min;
+
+        double dT_C = standbyAverageTankT_C - standbyAverageAmbientT_C;
+        if (dT_C > 0.)
+        {
+            testSummary.standbyLossCoefficient_kJperhC =
+                testSummary.standbyHourlyLossEnergy_kJperh / dT_C; // UA
+        }
+    }
+
+    //
+    testSummary.noDrawTotalTime_h = noDrawTotalTime_min / min_per_hr; // tau_stby,2
+    if (noDrawTotalTime_min > 0)
+    {
+        testSummary.noDrawAverageAmbientT_C =
+            noDrawSumTimeAmbientT_minC / noDrawTotalTime_min; // <Ta,stby,2>
+    }
+
+    // find the standard delivered daily energy
+    double standardDeliveredEnergy_kJ =
+        removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+
+    // find the "Daily Water Heating Energy Consumption (Q_d)" (6.3.5)
+    testSummary.consumedHeatingEnergy_kJ = testSummary.usedEnergy_kJ;
+    if (testSummary.recoveryEfficiency > 0.)
+    {
+        testSummary.consumedHeatingEnergy_kJ -= tankHeatCapacity_kJperC *
+                                                (finalTankT_C - initialTankT_C) /
+                                                testSummary.recoveryEfficiency;
+    }
+
+    // find the "Adjusted Daily Water Heating Energy Consumption (Q_da)" (6.3.6)
+    testSummary.adjustedConsumedWaterHeatingEnergy_kJ =
+        testSummary.consumedHeatingEnergy_kJ -
+        (standardAmbientT_C - testSummary.noDrawAverageAmbientT_C) *
+            testSummary.standbyLossCoefficient_kJperhC * testSummary.noDrawTotalTime_h;
+
+    // find the "Energy Used to Heat Water (Q_HW)" (6.3.6)
+    testSummary.waterHeatingEnergy_kJ = 0.;
+    if (testSummary.recoveryEfficiency > 0.)
+    {
+        testSummary.waterHeatingEnergy_kJ = deliveredEnergy_kJ / testSummary.recoveryEfficiency;
+    }
+
+    // find the "Standard Energy Used to Heat Water (Q_HW,T)" (6.3.6)
+    testSummary.standardWaterHeatingEnergy_kJ = 0.;
+    if (testSummary.recoveryEfficiency > 0.)
+    {
+        double standardRemovedEnergy_kJ =
+            removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+        testSummary.standardWaterHeatingEnergy_kJ =
+            standardRemovedEnergy_kJ / testSummary.recoveryEfficiency;
+    }
+
+    // find the "Modified Daily Water Heating Energy Consumption (Q_dm = Q_da - Q_HWD) (p.
+    // 40487) note: same as Q_HW,T
+    double waterHeatingDifferenceEnergy_kJ =
+        testSummary.standardWaterHeatingEnergy_kJ - testSummary.waterHeatingEnergy_kJ; // Q_HWD
+    testSummary.modifiedConsumedWaterHeatingEnergy_kJ =
+        testSummary.adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ;
+
+    // find the "Uniform Energy Factor" (6.4.4)
+    testSummary.UEF = 0.;
+    if (testSummary.modifiedConsumedWaterHeatingEnergy_kJ > 0.)
+    {
+        testSummary.UEF =
+            standardDeliveredEnergy_kJ / testSummary.modifiedConsumedWaterHeatingEnergy_kJ;
+    }
+
+    // find the "Annual Energy Consumption" (6.4.5)
+    testSummary.annualConsumedEnergy_kJ = 0.;
+    if (testSummary.UEF > 0.)
+    {
+        constexpr double days_per_year = 365.;
+        const double nominalDifferenceT_C = F_TO_C(67.);
+        testSummary.annualConsumedEnergy_kJ =
+            days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.UEF;
+    }
+
+    // find the "Annual Electrical Energy Consumption" (6.4.6)
+    testSummary.annualConsumedElectricalEnergy_kJ = 0.;
+    if (testSummary.usedEnergy_kJ > 0.)
+    {
+        testSummary.annualConsumedElectricalEnergy_kJ =
+            (testSummary.usedElectricalEnergy_kJ / testSummary.usedEnergy_kJ) *
+            testSummary.annualConsumedEnergy_kJ;
+    }
+
+    return true;
+}
