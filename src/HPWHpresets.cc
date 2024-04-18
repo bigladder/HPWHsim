@@ -198,7 +198,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
         resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
 
-        // set everything in it's correct place
+        // set everything in its correct place
         heatSources.push_back(resistiveElementBottom);
     }
 

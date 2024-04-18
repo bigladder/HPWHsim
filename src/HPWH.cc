@@ -3983,7 +3983,7 @@ int HPWH::checkInputs()
 
     if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
     {
-        LOG_WARNING(this, "You must have at least one HeatSource.")
+        LOG_ERROR(this, "You must have at least one HeatSource.")
         returnVal = HPWH_ABORT;
     }
 
