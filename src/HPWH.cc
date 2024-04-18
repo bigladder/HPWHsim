@@ -4007,8 +4007,8 @@ int HPWH::checkInputs()
         if (heatSources[i].turnOnLogicSet.size() == 0 &&
             (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
         {
-            LOG_WARNING(
-                this, "You must specify at least one logic to turn on the element or the element \
+            LOG_WARNING(this,
+                        "You must specify at least one logic to turn on the element or the element \
                 must be set as a backup for another heat source with at least one logic.")
 
             returnVal = HPWH_ABORT;
