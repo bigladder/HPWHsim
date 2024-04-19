@@ -468,12 +468,9 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
         {
             hpwh->msg("\tshutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
         }
-
         fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
-
         frac = fracTemp < frac ? fracTemp : frac;
     }
-
     return frac;
 }
 

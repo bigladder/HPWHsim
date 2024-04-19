@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -629,6 +630,12 @@ class HPWH
     /// total heat content of the tank (relative to 0 degC), other terms can be incorporated
     double getHeatContent_kJ() const;
 
+    double getNthHeatSourceEnergyInput_kJ(int N) const;
+
+    double getNthHeatSourceEnergyOutput_kJ(int N) const;
+     
+    double getNthHeatSourceEnergyRemovedFromEnvironment_kJ(int N) const;
+
     ///////////////////////////////////////////////
     /* The following functions return energies in user-specified units */
 
@@ -668,6 +675,8 @@ class HPWH
     void getTankTs_C(std::vector<double>& tankTemps) const;
 
     void printTankTs_C();
+
+    double getAverageTankT_C() const;
 
     int setTankT_C(double tankT_C); /// assign uniform tank temperature
 
@@ -902,17 +911,17 @@ class HPWH
     bool isHeatSourceIndexValid(const int n) const;
 
     /// returns the energy input to the Nth heat source, with the specified units
-    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kWh) const;
+    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kJ) const;
 
     /// returns energy transferred from the Nth heat source to the water, with the specified
     /// units
-    double getNthHeatSourceEnergyOutput(int N, Units::Energy units = Units::Energy::kWh) const;
+    double getNthHeatSourceEnergyOutput(int N, Units::Energy units = Units::Energy::kJ) const;
 
     /// returns energy removed from the environment into the heat source, with the specified
     /// units
     double
     getNthHeatSourceEnergyRemovedFromEnvironment(int N,
-                                                 Units::Energy units = Units::Energy::kWh) const;
+                                                 Units::Energy units = Units::Energy::kJ) const;
 
     /// return the run time for the Nth heat source (min)
     /// note: they may sum to more than 1 time step for concurrently running heat sources
@@ -1043,6 +1052,133 @@ class HPWH
     static const std::vector<int> powers3;
     static const std::vector<std::pair<int, int>> powers6;
     static const std::vector<std::tuple<int, int, int>> powers11;
+
+    /// first-hour rating designations to determine draw pattern for 24-hr test
+    enum class FirstHourRatingDesig
+    {
+        VerySmall,
+        Low,
+        Medium,
+        High
+    };
+
+    struct FirstHourRating
+    {
+        FirstHourRatingDesig desig;
+        double drawVolume_L;
+    };
+
+    /// collection of information derived from standard test
+    struct StandardTestSummary
+    {
+        // first recovery values
+        double recoveryEfficiency = 0.; // eta_r
+        double recoveryDeliveredEnergy_kJ = 0.;
+        double recoveryStoredEnergy_kJ = 0.;
+        double recoveryUsedEnergy_kJ = 0.; // Q_r
+
+        //
+        double standbyPeriodTime_h = 0; // tau_stby,1
+
+        double standbyStartTankT_C = 0.; // T_su,0
+        double standbyEndTankT_C = 0.;   // T_su,f
+
+        double standbyStartEnergy_kJ = 0.; // Q_su,0
+        double standbyEndEnergy_kJ = 0.;   // Q_su,f
+        double standbyUsedEnergy_kJ = 0.;  // Q_stby
+
+        double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
+        double standbyLossCoefficient_kJperhC = 0.; // UA
+
+        double noDrawTotalTime_h = 0;        // tau_stby,2
+        double noDrawAverageAmbientT_C = 0.; // <T_a,stby,2>
+
+        // 24-hr values
+        double removedVolume_L = 0.;
+        double waterHeatingEnergy_kJ = 0.; // Q_HW
+        double avgOutletT_C = 0.;          // <Tdel,i>
+        double avgInletT_C = 0.;           // <Tin,i>
+
+        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
+        double usedElectricalEnergy_kJ = 0.;               // Q_e
+        double usedEnergy_kJ = 0.;                         // Q
+        double consumedHeatingEnergy_kJ = 0.;              // Q_d
+        double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
+        double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
+        double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
+        double UEF = 0.;
+
+        // (calculated) annual totals
+        double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
+        double annualConsumedEnergy_kJ = 0.;           // E_annual
+
+        bool qualifies = false;
+    };
+
+    struct StandardTestOptions
+    {
+        bool saveOutput = false;
+        bool changeSetpoint = false;
+        std::ofstream outputFile;
+        int nTestTCouples = 6;
+        double setpointT_C = 51.7;
+    };
+
+    /// perform a draw/heat cycle to prepare for test
+    bool prepForTest(StandardTestOptions& standardTestOptions);
+
+    /// determine first-hour rating
+    bool findFirstHourRating(FirstHourRating& firstHourRating,
+                             StandardTestOptions& standardTestOptions);
+
+    /// run 24-hr draw pattern and compute metrics
+    bool run24hrTest(const FirstHourRating firstHourRating,
+                     StandardTestSummary& standardTestSummary,
+                     StandardTestOptions& standardTestOptions);
+
+    /// specific information for a single draw
+    struct Draw
+    {
+        double startTime_min;
+        double volume_L;
+        double flowRate_Lper_min;
+
+        Draw(const double startTime_min_in,
+             const double volume_L_in,
+             const double flowRate_Lper_min_in)
+            : startTime_min(startTime_min_in)
+            , volume_L(volume_L_in)
+            , flowRate_Lper_min(flowRate_Lper_min_in)
+        {
+        }
+    };
+
+    /// sequence of draws in pattern
+    typedef std::vector<Draw> DrawPattern;
+
+    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes;
+
+    /// collection of standard draw patterns
+    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
+
+    /// fields for test output to csv
+    struct OutputData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
+    int writeRowAsCSV(std::ofstream& outFILE,
+                      OutputData& outputData,
+                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
   private:
     class HeatSource;
@@ -1513,7 +1649,7 @@ class HPWH::HeatSource
     double hysteresisOffsetT_C;
 
     ///  heat pumps can depress the temperature of their space in certain instances -
-    /// whether or not this occurs is a bool in HPWH, but a heat source must
+    ///  whether or not this occurs is a bool in HPWH, but a heat source must
     ///  know if it is capable of contributing to this effect or not
     ///  NOTE: this only works for 1 minute steps
     ///  ALSO:  this is set according the the heat source type, not user-specified

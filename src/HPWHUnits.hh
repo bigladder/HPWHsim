@@ -35,6 +35,11 @@ inline double H_TO_S(const double h) { return s_per_h * h; }
 inline double MIN_TO_H(const double min) { return S_TO_H(MIN_TO_S(min)); }
 inline double H_TO_MIN(const double h) { return S_TO_MIN(H_TO_S(h)); }
 
+inline double HM_TO_MIN(const double hours, const double minutes)
+{
+    return min_per_h * hours + minutes;
+}
+
 // temperature conversion
 inline double dC_TO_dF(const double dC) { return F_per_C * dC; }
 inline double dF_TO_dC(const double dF) { return dF / F_per_C; }
@@ -480,22 +485,22 @@ enum class UA
 
 template <>
 inline Converter<Time>::ConversionMap Converter<Time>::conversionMap = {
-    {{Time::h, Time::h}, &ident},
-    {{Time::min, Time::min}, &ident},
-    {{Time::s, Time::s}, &ident},
+    {{Time::h, Time::h}, ident},
+    {{Time::min, Time::min}, ident},
+    {{Time::s, Time::s}, ident},
     {{Time::h, Time::min}, H_TO_MIN},
-    {{Time::h, Time::s}, &H_TO_S},
+    {{Time::h, Time::s}, H_TO_S},
     {{Time::min, Time::h}, MIN_TO_H},
-    {{Time::min, Time::s}, &MIN_TO_S},
-    {{Time::s, Time::h}, &S_TO_H},
+    {{Time::min, Time::s}, MIN_TO_S},
+    {{Time::s, Time::h}, S_TO_H},
     {{Time::s, Time::min}, &S_TO_MIN}};
 
 template <>
 inline Converter<Temp /*,Mode::Abs*/>::ConversionMap Converter<Temp, Mode::Abs>::conversionMap = {
-    {{Temp::F, Temp::F}, &ident},
-    {{Temp::C, Temp::C}, &ident},
-    {{Temp::C, Temp::F}, &C_TO_F},
-    {{Temp::F, Temp::C}, &F_TO_C}};
+    {{Temp::F, Temp::F}, ident},
+    {{Temp::C, Temp::C}, ident},
+    {{Temp::C, Temp::F}, C_TO_F},
+    {{Temp::F, Temp::C}, F_TO_C}};
 
 template <>
 inline Converter<Temp, Mode::Diff>::ConversionMap Converter<Temp, Mode::Diff>::conversionMap = {
