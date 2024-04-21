@@ -132,6 +132,15 @@ enum class Mode
     Diff
 };
 
+template <typename T>
+using ConversionPair = std::pair<T, T>;
+
+using ConversionFnc =
+    std::pair<std::function<double(const double)>, std::function<double(const double)>>;
+
+template <typename T>
+using Conversion = std::pair<T, ConversionFnc>;
+
 template <typename T, Mode mode = Mode::Abs>
 struct Converter
 {
@@ -145,8 +154,43 @@ struct Converter
         }
     };
 
-    using ConversionMap =
+    using BaseMap =
         std::unordered_map<std::pair<T, T>, std::function<double(const double)>, PairHash>;
+
+    struct ConversionMap
+    {
+        BaseMap baseMap;
+        ConversionMap() : baseMap() {}
+        ConversionMap(const std::vector<Conversion<T>>& conversions) : baseMap()
+        {
+            for (auto pairIter1 = conversions.begin(); pairIter1 != conversions.end(); ++pairIter1)
+            {
+                auto t1 = pairIter1->first;
+                auto& f11 = pairIter1->second.first;
+                auto& f12 = pairIter1->second.second;
+
+                baseMap[{t1, t1}] = [](const double x) { return x; };
+
+                for (auto pairIter2 = pairIter1 + 1; pairIter2 != conversions.end(); ++pairIter2)
+                {
+                    auto t2 = pairIter2->first;
+                    auto& f21 = pairIter2->second.first;
+                    auto& f22 = pairIter2->second.second;
+                    baseMap[{t1, t2}] = [f22, f11](const double x) { return f22(f11(x)); };
+                    baseMap[{t2, t1}] = [f12, f21](const double x) { return f12(f21(x)); };
+                }
+            }
+        }
+
+        std::function<double(const double)> operator[](const ConversionPair<T>& conversionPair)
+        {
+            return baseMap[conversionPair];
+        }
+        std::function<double(const double)> at(const ConversionPair<T>& conversionPair)
+        {
+            return baseMap.at(conversionPair);
+        }
+    };
 
     static ConversionMap conversionMap;
 
@@ -483,109 +527,55 @@ enum class UA
     Btu_per_hF // british thermal units per hour degree Fahrenheit
 };
 
+/// instantiate conversion maps
 template <>
-inline Converter<Time>::ConversionMap Converter<Time>::conversionMap = {
-    {{Time::h, Time::h}, ident},
-    {{Time::min, Time::min}, ident},
-    {{Time::s, Time::s}, ident},
-    {{Time::h, Time::min}, H_TO_MIN},
-    {{Time::h, Time::s}, H_TO_S},
-    {{Time::min, Time::h}, MIN_TO_H},
-    {{Time::min, Time::s}, MIN_TO_S},
-    {{Time::s, Time::h}, S_TO_H},
-    {{Time::s, Time::min}, &S_TO_MIN}};
+inline Converter<Time>::ConversionMap Converter<Time>::conversionMap(
+    {{Time::s, {ident, ident}}, {Time::min, {MIN_TO_S, S_TO_MIN}}, {Time::h, {H_TO_S, S_TO_H}}});
 
 template <>
-inline Converter<Temp /*,Mode::Abs*/>::ConversionMap Converter<Temp, Mode::Abs>::conversionMap = {
-    {{Temp::F, Temp::F}, ident},
-    {{Temp::C, Temp::C}, ident},
-    {{Temp::C, Temp::F}, C_TO_F},
-    {{Temp::F, Temp::C}, F_TO_C}};
+inline Converter<Temp /*,Mode::Abs*/>::ConversionMap Converter<Temp, Mode::Abs>::conversionMap(
+    {{Temp::C, {ident, ident}}, {Temp::F, {F_TO_C, C_TO_F}}});
 
 template <>
-inline Converter<Temp, Mode::Diff>::ConversionMap Converter<Temp, Mode::Diff>::conversionMap = {
-    {{Temp::F, Temp::F}, ident},
-    {{Temp::C, Temp::C}, ident},
-    {{Temp::C, Temp::F}, dC_TO_dF},
-    {{Temp::F, Temp::C}, dF_TO_dC}};
+inline Converter<Temp, Mode::Diff>::ConversionMap Converter<Temp, Mode::Diff>::conversionMap(
+    {{Temp::C, {ident, ident}}, {Temp::F, {dF_TO_dC, dC_TO_dF}}});
 
 template <>
-inline Converter<Energy>::ConversionMap Converter<Energy>::conversionMap = {
-    {{Energy::kJ, Energy::kJ}, ident},
-    {{Energy::kWh, Energy::kWh}, ident},
-    {{Energy::Btu, Energy::Btu}, ident},
-    {{Energy::kJ, Energy::kWh}, KJ_TO_KWH},
-    {{Energy::kJ, Energy::Btu}, KJ_TO_BTU},
-    {{Energy::kWh, Energy::kJ}, KWH_TO_KJ},
-    {{Energy::kWh, Energy::Btu}, KWH_TO_BTU},
-    {{Energy::Btu, Energy::kJ}, BTU_TO_KJ},
-    {{Energy::Btu, Energy::kWh}, BTU_TO_KWH}};
+inline Converter<Energy>::ConversionMap
+    Converter<Energy>::conversionMap({{Energy::kJ, {ident, ident}},
+                                      {Energy::kWh, {KWH_TO_KJ, KJ_TO_KWH}},
+                                      {Energy::Btu, {BTU_TO_KJ, KJ_TO_BTU}}});
 
 template <>
-inline Converter<Power>::ConversionMap Converter<Power>::conversionMap = {
-    {{Power::kW, Power::kW}, ident},
-    {{Power::Btu_per_h, Power::Btu_per_h}, ident},
-    {{Power::W, Power::W}, ident},
-    {{Power::kJ_per_h, Power::kJ_per_h}, ident},
-    {{Power::kW, Power::Btu_per_h}, KW_TO_BTUperH},
-    {{Power::kW, Power::W}, KW_TO_W},
-    {{Power::kW, Power::kJ_per_h}, KW_TO_KJperH},
-    {{Power::Btu_per_h, Power::kW}, BTUperH_TO_KW},
-    {{Power::Btu_per_h, Power::W}, BTUperH_TO_W},
-    {{Power::Btu_per_h, Power::kJ_per_h}, BTUperH_TO_KJperH},
-    {{Power::W, Power::kW}, W_TO_KW},
-    {{Power::W, Power::Btu_per_h}, W_TO_BTUperH},
-    {{Power::W, Power::kJ_per_h}, W_TO_KJperH},
-    {{Power::kJ_per_h, Power::kW}, KJperH_TO_KW},
-    {{Power::kJ_per_h, Power::Btu_per_h}, KJperH_TO_BTUperH},
-    {{Power::kJ_per_h, Power::W}, KJperH_TO_W}};
+inline Converter<Power>::ConversionMap
+    Converter<Power>::conversionMap({{Power::kW, {ident, ident}},
+                                     {Power::Btu_per_h, {BTUperH_TO_KW, KW_TO_BTUperH}},
+                                     {Power::W, {W_TO_KW, KW_TO_W}},
+                                     {Power::kJ_per_h, {KJperH_TO_KW, KW_TO_KJperH}}});
 
 template <>
-inline Converter<Length>::ConversionMap Converter<Length>::conversionMap = {
-    {{Length::m, Length::m}, &ident},
-    {{Length::ft, Length::ft}, &ident},
-    {{Length::m, Length::ft}, &M_TO_FT},
-    {{Length::ft, Length::m}, &FT_TO_M}};
+inline Converter<Length>::ConversionMap Converter<Length>::conversionMap(
+    {{Length::m, {ident, ident}}, {Length::ft, {FT_TO_M, M_TO_FT}}});
 
 template <>
-inline Converter<Area>::ConversionMap Converter<Area>::conversionMap = {
-    {{Area::m2, Area::m2}, &ident},
-    {{Area::ft2, Area::ft2}, &ident},
-    {{Area::m2, Area::ft2}, &M2_TO_FT2},
-    {{Area::ft2, Area::m2}, &FT2_TO_M2}};
+inline Converter<Area>::ConversionMap Converter<Area>::conversionMap(
+    {{Area::m2, {ident, ident}}, {Area::ft2, {FT2_TO_M2, M2_TO_FT2}}});
 
 template <>
-inline Converter<Volume>::ConversionMap Converter<Volume>::conversionMap = {
-    {{Volume::L, Volume::L}, ident},
-    {{Volume::gal, Volume::gal}, ident},
-    {{Volume::m3, Volume::m3}, ident},
-    {{Volume::ft3, Volume::ft3}, ident},
-    {{Volume::L, Volume::gal}, L_TO_GAL},
-    {{Volume::L, Volume::m3}, L_TO_M3},
-    {{Volume::L, Volume::ft3}, L_TO_FT3},
-    {{Volume::gal, Volume::L}, GAL_TO_L},
-    {{Volume::gal, Volume::m3}, GAL_TO_M3},
-    {{Volume::gal, Volume::ft3}, GAL_TO_FT3},
-    {{Volume::ft3, Volume::L}, FT3_TO_L},
-    {{Volume::ft3, Volume::gal}, FT3_TO_GAL},
-    {{Volume::ft3, Volume::m3}, FT3_TO_M3},
-    {{Volume::m3, Volume::L}, M3_TO_L},
-    {{Volume::m3, Volume::gal}, M3_TO_GAL},
-    {{Volume::m3, Volume::ft3}, M3_TO_FT3}};
+inline Converter<Volume>::ConversionMap
+    Converter<Volume>::conversionMap({{Volume::L, {ident, ident}},
+                                      {Volume::gal, {GAL_TO_L, L_TO_GAL}},
+                                      {Volume::m3, {M3_TO_L, L_TO_M3}},
+                                      {Volume::ft3, {FT3_TO_L, L_TO_FT3}}});
 
 template <>
-inline Converter<UA>::ConversionMap Converter<UA>::conversionMap = {
-    {{UA::kJ_per_hC, UA::kJ_per_hC}, &ident},
-    {{UA::Btu_per_hF, UA::Btu_per_hF}, &ident},
-    {{UA::kJ_per_hC, UA::Btu_per_hF}, &KJperHC_TO_BTUperHF},
-    {{UA::Btu_per_hF, UA::kJ_per_hC}, &BTUperHF_TO_KJperHC}};
+inline Converter<UA>::ConversionMap
+    Converter<UA>::conversionMap({{UA::kJ_per_hC, {ident, ident}},
+                                  {UA::Btu_per_hF, {BTUperHF_TO_KJperHC, KJperHC_TO_BTUperHF}}});
 
 template <>
-inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap = {
-    {{FlowRate::L_per_s, FlowRate::L_per_s}, &ident},
-    {{FlowRate::gal_per_min, FlowRate::gal_per_min}, &ident},
-    {{FlowRate::L_per_s, FlowRate::gal_per_min}, &LPS_TO_GPM},
-    {{FlowRate::gal_per_min, FlowRate::L_per_s}, &GPM_TO_LPS}};
+inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap(
+    {{FlowRate::L_per_s, {ident, ident}}, {FlowRate::gal_per_min, {GPM_TO_LPS, LPS_TO_GPM}}});
 
 /// units-values partial specializations
 template <Time units>

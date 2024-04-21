@@ -633,7 +633,7 @@ class HPWH
     double getNthHeatSourceEnergyInput_kJ(int N) const;
 
     double getNthHeatSourceEnergyOutput_kJ(int N) const;
-     
+
     double getNthHeatSourceEnergyRemovedFromEnvironment_kJ(int N) const;
 
     ///////////////////////////////////////////////
@@ -911,7 +911,7 @@ class HPWH
     bool isHeatSourceIndexValid(const int n) const;
 
     /// returns the energy input to the Nth heat source, with the specified units
-    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kJ) const;
+    double getNthHeatSourceEnergyInput(int N, Units::Energy units = Units::Energy::kWh) const;
 
     /// returns energy transferred from the Nth heat source to the water, with the specified
     /// units

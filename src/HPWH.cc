@@ -1305,8 +1305,9 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
             setpointT_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
         {
             tempSetpoint_C = setpointT_C; // Store setpoint
-            setSetpointT_C(heatSourcePtr->maxOut_at_LowT
-                             .outT_C); // Reset to new setpoint as this is used in the add heat calc
+            setSetpointT_C(
+                heatSourcePtr->maxOut_at_LowT
+                    .outT_C); // Reset to new setpoint as this is used in the add heat calc
         }
     }
     // and add heat if it is
@@ -1471,8 +1472,8 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               getNthHeatSourceEnergyInput(iHS) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS) * 1000.);
+                               getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS, Units::Energy::kWh) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
@@ -2463,20 +2464,17 @@ double HPWH::getInputEnergy(const Units::Energy units /*kWh*/) const
 
 double HPWH::getNthHeatSourceEnergyInput_kJ(int N) const
 {
-    return (isHeatSourceIndexValid(N)) ? heatSources[N].energyInput_kJ
-                                       : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? heatSources[N].energyInput_kJ : double(HPWH_ABORT);
 }
 double HPWH::getNthHeatSourceEnergyOutput_kJ(int N) const
 {
-    return (isHeatSourceIndexValid(N)) ? heatSources[N].energyOutput_kJ
-                                       : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? heatSources[N].energyOutput_kJ : double(HPWH_ABORT);
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment_kJ(int N) const
 {
-    return (isHeatSourceIndexValid(N))
-               ? heatSources[N].energyRemovedFromEnvironment_kJ
-               : double(HPWH_ABORT);
+    return (isHeatSourceIndexValid(N)) ? heatSources[N].energyRemovedFromEnvironment_kJ
+                                       : double(HPWH_ABORT);
 }
 
 double HPWH::getOutputEnergy(const Units::Energy units /*kWh*/) const
@@ -2625,7 +2623,6 @@ double HPWH::getAverageTankT_C() const
     return totalT_C / static_cast<double>(getNumNodes());
 }
 
-
 double HPWH::getTankNodeT_C(const int nodeNum) const
 {
     if (tankTs_C.empty())
@@ -2663,8 +2660,7 @@ double HPWH::getMaxCompressorSetpointT_C() const
     return heatSources[compressorIndex].maxSetpointT_C;
 }
 
-double HPWH::getNthThermocoupleT_C(const int iTCouple,
-                                 const int nTCouple) const
+double HPWH::getNthThermocoupleT_C(const int iTCouple, const int nTCouple) const
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
@@ -2739,8 +2735,7 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
     return Units::Temp_C(getNthThermocoupleT_C(iTCouple, nTCouple))(units);
 }
 
-int HPWH::setSetpointT(const double setpointT,
-                                 const Units::Temp units /*C*/)
+int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
 {
 
     return setSetpointT_C(Units::Temp_C(setpointT, units));
@@ -2806,11 +2801,9 @@ bool HPWH::canApplySetpointT(const double newSetpointT,
     return result;
 }
 
-double HPWH::getTankNodeT(const int nodeNum,
-                                 const Units::Temp units /*C*/) const
+double HPWH::getTankNodeT(const int nodeNum, const Units::Temp units /*C*/) const
 {
     return Units::Temp_C(getTankNodeT_C(nodeNum))(units);
-
 }
 
 int HPWH::resetTankToSetpoint() { return setTankT_C(setpointT_C); }
@@ -5584,7 +5577,7 @@ bool HPWH::prepForTest(StandardTestOptions& testOptions)
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    inletT_C = 14.4;                    // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
@@ -5676,7 +5669,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     if (tankVolume_L < GAL_TO_L(20.))
         flowRate_Lper_min = GAL_TO_L(1.5);
 
-    inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    inletT_C = 14.4;                    // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
 
@@ -5775,7 +5768,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
                     drawVolume_L = 0.;
                     isDrawing = false;
                     drMode = DR_ALLOW;
-                    maxTankT_C = tankT_C;        // initialize for next pass
+                    maxTankT_C = tankT_C;     // initialize for next pass
                     maxOutletT_C = outletT_C; // initialize for next pass
                     prevAvgOutletT_C = avgOutletT_C;
                     prevMinOutletT_C = minOutletT_C;
@@ -5854,7 +5847,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
-    inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
+    inletT_C = 14.4;                    // EERE-2019-BT-TP-0032-0058, p. 40433
     constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
     constexpr double externalT_C = 19.7;
     DRMODES drMode = DR_ALLOW;
@@ -5913,8 +5906,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
                 outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS));
-                outputData.h_srcOut_kWh.push_back(
-                    getNthHeatSourceEnergyOutput(iHS));
+                outputData.h_srcOut_kWh.push_back(getNthHeatSourceEnergyOutput(iHS));
             }
 
             for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
@@ -6076,7 +6068,8 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh));
+                outputData.h_srcIn_kWh.push_back(
+                    getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh));
                 outputData.h_srcOut_kWh.push_back(
                     getNthHeatSourceEnergyOutput(iHS, Units::Energy::kWh));
             }
