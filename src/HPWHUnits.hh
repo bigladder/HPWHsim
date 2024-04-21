@@ -27,18 +27,13 @@ inline double ident(const double x) { return x; }
 
 // time conversion
 inline double S_TO_MIN(const double s) { return s / s_per_min; }
-inline double MIN_TO_S(const double min) { return s_per_min * min; }
-
 inline double S_TO_H(const double s) { return s / s_per_h; }
+
+inline double MIN_TO_S(const double min) { return s_per_min * min; }
 inline double H_TO_S(const double h) { return s_per_h * h; }
 
 inline double MIN_TO_H(const double min) { return S_TO_H(MIN_TO_S(min)); }
 inline double H_TO_MIN(const double h) { return S_TO_MIN(H_TO_S(h)); }
-
-inline double HM_TO_MIN(const double hours, const double minutes)
-{
-    return min_per_h * hours + minutes;
-}
 
 // temperature conversion
 inline double dC_TO_dF(const double dC) { return F_per_C * dC; }
@@ -49,9 +44,9 @@ inline double F_TO_C(const double F) { return (F - offsetF) / F_per_C; }
 
 // energy conversion
 inline double KJ_TO_KWH(const double kJ) { return kJ / s_per_h; }
-inline double KWH_TO_KJ(const double kWh) { return kWh * s_per_h; }
-
 inline double KJ_TO_BTU(const double kJ) { return Btu_per_kJ * kJ; }
+
+inline double KWH_TO_KJ(const double kWh) { return kWh * s_per_h; }
 inline double BTU_TO_KJ(const double Btu) { return kJ_per_Btu * Btu; }
 
 inline double KWH_TO_BTU(const double kWh) { return KJ_TO_BTU(KWH_TO_KJ(kWh)); }
@@ -59,28 +54,12 @@ inline double BTU_TO_KWH(const double Btu) { return KJ_TO_KWH(BTU_TO_KJ(Btu)); }
 
 // power conversion
 inline double KW_TO_BTUperH(const double kW) { return Btu_per_kJ * s_per_h * kW; }
-inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_per_h / s_per_h; }
-
 inline double KW_TO_W(const double kW) { return 1000. * kW; }
-inline double W_TO_KW(const double W) { return W / 1000.; }
-
 inline double KW_TO_KJperH(const double kW) { return kW * s_per_h; }
+
+inline double BTUperH_TO_KW(const double Btu_per_h) { return kJ_per_Btu * Btu_per_h / s_per_h; }
+inline double W_TO_KW(const double W) { return W / 1000.; }
 inline double KJperH_TO_KW(const double kJ_per_h) { return kJ_per_h / s_per_h; }
-
-inline double BTUperH_TO_W(const double Btu_per_h) { return KW_TO_W(BTUperH_TO_KW(Btu_per_h)); }
-inline double W_TO_BTUperH(const double W) { return KW_TO_BTUperH(W_TO_KW(W)); }
-
-inline double BTUperH_TO_KJperH(const double Btu_per_h)
-{
-    return KW_TO_KJperH(BTUperH_TO_KW(Btu_per_h));
-}
-inline double KJperH_TO_BTUperH(const double kJ_per_h)
-{
-    return KW_TO_BTUperH(KJperH_TO_KW(kJ_per_h));
-}
-
-inline double W_TO_KJperH(const double W) { return KW_TO_KJperH(W_TO_KW(W)); }
-inline double KJperH_TO_W(const double kJ_per_h) { return KW_TO_W(KJperH_TO_KW(kJ_per_h)); }
 
 // length conversion
 inline double M_TO_FT(const double m) { return ft_per_m * m; }
@@ -96,20 +75,12 @@ inline double L_TO_M3(const double L) { return L / L_per_m3; }
 inline double L_TO_FT3(const double L) { return ft3_per_L * L; }
 
 inline double GAL_TO_L(const double gal) { return gal / gal_per_L; }
-inline double GAL_TO_M3(const double gal) { return L_TO_M3(GAL_TO_L(gal)); }
-inline double GAL_TO_FT3(const double gal) { return L_TO_FT3(GAL_TO_L(gal)); }
-
-inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
-inline double FT3_TO_M3(const double ft3) { return L_TO_M3(FT3_TO_L(ft3)); }
-inline double FT3_TO_GAL(const double ft3) { return L_TO_GAL(FT3_TO_L(ft3)); }
-
 inline double M3_TO_L(const double m3) { return L_per_m3 * m3; }
-inline double M3_TO_GAL(const double m3) { return L_TO_GAL(M3_TO_L(m3)); }
-inline double M3_TO_FT3(const double m3) { return L_TO_FT3(M3_TO_L(m3)); }
+inline double FT3_TO_L(const double ft3) { return ft3 / ft3_per_L; }
 
 // flow-rate conversion
-inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / s_per_min); }
 inline double LPS_TO_GPM(const double lps) { return (gal_per_L * lps * s_per_min); }
+inline double GPM_TO_LPS(const double gpm) { return (gpm / gal_per_L / s_per_min); }
 
 // UA conversion
 inline double KJperHC_TO_BTUperHF(const double UA_kJperhC)

@@ -66,6 +66,11 @@ const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
 const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
 const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
+inline double HM_TO_MIN(const double hours, const double minutes)
+{
+    return min_per_h * hours + minutes;
+}
+
 std::unordered_map<HPWH::FirstHourRatingDesig, std::size_t> HPWH::firstDrawClusterSizes = {
     {HPWH::FirstHourRatingDesig::VerySmall, 5},
     {HPWH::FirstHourRatingDesig::Low, 3},
