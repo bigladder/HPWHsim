@@ -2736,6 +2736,13 @@ int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
     return setSetpointT_C(Units::Temp_C(setpointT, units));
 }
 
+int HPWH::setTankTs(std::vector<double> tankTs_in, const Units::Temp units /*C*/)
+{
+    for (auto& tankT: tankTs_in)
+        tankT = Units::Temp_C(tankT, units);
+    return setTankTs_C(tankTs_in);
+}
+
 bool HPWH::canApplySetpointT_C(double newSetpointT_C,
                                double& maxSetpointT_C,
                                std::string& why) const
