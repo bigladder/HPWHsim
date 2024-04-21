@@ -429,6 +429,41 @@ struct UnitsVect
     UnitsVal<T, units>* end() { return &fV[0] + fV.size(); }
 };
 
+/// units pairs, e.g., (Time::h, Time::min)
+template <class T, T units1, T units2>
+struct UnitsPair
+{
+  protected:
+    std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>> fPair;
+
+  public:
+    UnitsPair(const double x1_in, const double x2_in) : fPair({x1_in, x2_in}) {}
+
+    UnitsPair(const UnitsVal<T, units1> unitsVal1, const UnitsVal<T, units2> unitsVal2)
+        : fPair({unitsVal1, unitsVal2})
+    {
+    }
+
+    double to(const T toUnits) const { return fPair.first(toUnits) + fPair.second(toUnits); }
+    double operator()(const T toUnits) const { return to(toUnits); }
+
+    operator std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>>() const { return fPair; }
+
+    std::pair<double, double> as_pair() const { return fPair; }
+
+    template <T toUnits>
+    bool operator==(const UnitsVal<T, toUnits> unitsVal) const
+    {
+        return (unitsVal == to(toUnits));
+    }
+
+    template <T toUnits>
+    bool operator!=(const UnitsVal<T, toUnits> unitsVal) const
+    {
+        return !(operator==(unitsVal));
+    }
+};
+
 /* time units */
 enum class Time
 {
@@ -610,6 +645,10 @@ using FlowRateVect = UnitsVect<FlowRate, units>;
 template <UA units>
 using UAVect = UnitsVect<UA, units>;
 
+/// units-pair partial specialization
+template <Time units1, Time units2>
+using TimePair = UnitsPair<Time, units1, units2>;
+
 /// units-values full specializations
 typedef TimeVal<Time::s> Time_s;
 typedef TimeVal<Time::min> Time_min;
@@ -635,6 +674,10 @@ typedef AreaVect<Area::m2> AreaVect_m2;
 typedef VolumeVect<Volume::L> VolumeVect_L;
 typedef FlowRateVect<FlowRate::L_per_s> FlowRateVect_L_per_s;
 typedef UAVect<UA::kJ_per_hC> UAVect_kJ_per_hC;
+
+/// units-pair full specialization
+typedef TimePair<Time::h, Time::min> Time_h_min;
+
 } // namespace Units
 
 #endif
