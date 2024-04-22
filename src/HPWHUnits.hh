@@ -439,12 +439,7 @@ struct UnitsPair
   public:
     UnitsPair(const double x1_in, const double x2_in) : fPair({x1_in, x2_in}) {}
 
-    UnitsPair(const UnitsVal<T, units1> unitsVal1, const UnitsVal<T, units2> unitsVal2)
-        : fPair({unitsVal1, unitsVal2})
-    {
-    }
-
-    double to(const T toUnits) const { return fPair.first(toUnits) + fPair.second(toUnits); }
+    double to(const T toUnits) const { return fPair.first.to(toUnits) + fPair.second.to(toUnits); }
     double operator()(const T toUnits) const { return to(toUnits); }
 
     operator std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>>() const { return fPair; }

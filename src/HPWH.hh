@@ -25,6 +25,7 @@ class RegularGridInterpolator;
  * compiled library.  */
 
 #include "HPWHUnits.hh"
+
 #include "HPWHversion.hh"
 
 const double Pi = 4. * atan(1.);
