@@ -121,7 +121,7 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (hpwh->sender.info())
+    if (hpwh->info())
     {
         double smallestSoCChangeWhenHeatingNextNode =
             1. / maxSoC *
