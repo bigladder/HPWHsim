@@ -2738,7 +2738,7 @@ int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
 
 int HPWH::setTankTs(std::vector<double> tankTs_in, const Units::Temp units /*C*/)
 {
-    for (auto& tankT: tankTs_in)
+    for (auto& tankT : tankTs_in)
         tankT = Units::Temp_C(tankT, units);
     return setTankTs_C(tankTs_in);
 }
