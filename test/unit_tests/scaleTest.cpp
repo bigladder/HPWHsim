@@ -359,7 +359,8 @@ TEST(ScaleTest, getCompressorMP_capacity)
     const double airT_C = F_TO_C(61.7);
     const double setpointT_C = F_TO_C(126);
 
-    double capacity_kWH = hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C,Units::Power::kW,Units::Temp::C) /
+    double capacity_kWH = hpwh.getCompressorCapacity(
+                              airT_C, waterT_C, setpointT_C, Units::Power::kW, Units::Temp::C) /
                           60.; // div 60 to kWh because I know above only runs 1 minute
     getCompressorPerformance(hpwh, point0, waterT_C, airT_C, setpointT_C); // gives kWh
     EXPECT_NEAR(point0.output, capacity_kWH, tol);
