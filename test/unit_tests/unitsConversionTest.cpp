@@ -49,7 +49,7 @@ TEST(UnitsConversionTest, conversions)
 
         // test combining Diff and Abs modes
         T_C = 72.;
-        typedef Units::UnitsVal<Units::Temp, Units::Temp::F, Units::Mode::Diff> TempDiff_F;
+        typedef Units::UnitsVal<Units::Temp, Units::Temp::F, Units::Mode::Relative> TempDiff_F;
         EXPECT_EQ(T_C + TempDiff_F(18.), T_C + dF_TO_dC(18.));
         EXPECT_EQ(T_C + TempDiff_F(10., Units::Temp::C), T_C + TempDiff_F(18.));
 

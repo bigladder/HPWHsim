@@ -99,8 +99,8 @@ namespace Units
 /// unit-conversion utilities
 enum class Mode
 {
-    Abs,
-    Diff
+    Absolute,
+    Relative
 };
 
 template <typename T>
@@ -112,7 +112,7 @@ using ConversionFnc =
 template <typename T>
 using Conversion = std::pair<T, ConversionFnc>;
 
-template <typename T, Mode mode = Mode::Abs>
+template <typename T, Mode mode = Mode::Relative>
 struct Converter
 {
     struct PairHash
@@ -208,26 +208,26 @@ struct Converter
     }
 };
 
-template <class T, Mode mode = Mode::Abs>
+template <class T, Mode mode = Mode::Relative>
 static double convert(const double x, const T fromUnits, const T toUnits)
 {
     return Converter<T, mode>::convert(x, fromUnits, toUnits);
 }
 
-template <class T, Mode mode = Mode::Abs>
+template <class T, Mode mode = Mode::Relative>
 static double convert(const double x, const T fromUnits, const T toUnits, int power)
 {
     return Converter<T, mode>::convert(x, fromUnits, toUnits, power);
 }
 
-template <class T, Mode mode = Mode::Abs>
+template <class T, Mode mode = Mode::Relative>
 static std::vector<double>
 convert(const std::vector<double>& xV, const T fromUnits, const T toUnits)
 {
     return Converter<T, mode>::convert(xV, fromUnits, toUnits);
 }
 
-template <class T, Mode mode = Mode::Abs>
+template <class T, Mode mode = Mode::Relative>
 static std::vector<double>
 convert(const std::vector<double>& xV, const T fromUnits, const T toUnits, int power)
 {
@@ -235,7 +235,7 @@ convert(const std::vector<double>& xV, const T fromUnits, const T toUnits, int p
 }
 
 /// units values
-template <class T, T units, Mode mode = Mode::Abs>
+template <class T, T units, Mode mode = Mode::Relative>
 struct UnitsVal
 {
   protected:
@@ -353,11 +353,11 @@ struct UnitsVal
 };
 
 /// units vectors
-template <class T, T units, Mode mode = Mode::Abs>
+template <class T, T units, Mode mode = Mode::Relative>
 struct UnitsVect
 {
   public:
-    std::vector<UnitsVal<T, units>> fV;
+    std::vector<UnitsVal<T, units, mode>> fV;
 
     UnitsVect(const std::vector<double>& xV_in = {})
     {
@@ -373,7 +373,7 @@ struct UnitsVect
             fV.push_back(Converter<T, mode>::convert(x, fromUnits, units));
     }
 
-    template <T fromUnits, Mode fromMode = Mode::Abs>
+    template <T fromUnits, Mode fromMode = Mode::Relative>
     UnitsVect(const std::vector<UnitsVal<T, fromUnits, fromMode>>& xV_from)
     {
         fV.clear();
@@ -431,16 +431,16 @@ struct UnitsVect
 };
 
 /// units pairs, e.g., (Time::h, Time::min)
-template <class T, T units1, T units2>
+template <class T, T units1, T units2, Mode mode = Mode::Relative>
 struct UnitsPair
 {
   protected:
-    std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>> fPair;
+    std::pair<UnitsVal<T, units1, mode>, UnitsVal<T, units2, mode>> fPair;
 
   public:
     UnitsPair(const double x1_in = 0, const double x2_in = 0) : fPair({x1_in, x2_in}) {}
 
-    double to(const T toUnits) const {return fPair.first(toUnits) + fPair.second(toUnits); }
+    double to(const T toUnits) const { return fPair.first(toUnits) + fPair.second(toUnits); }
 
     double operator()(const T toUnits) const { return to(toUnits); }
 
@@ -449,13 +449,13 @@ struct UnitsPair
     std::pair<double, double> as_pair() const { return {fPair.first, fPair.second}; }
 
     template <T toUnits>
-    bool operator==(const UnitsVal<T, toUnits> unitsVal) const
+    bool operator==(const UnitsVal<T, toUnits, mode> unitsVal) const
     {
         return (unitsVal == to(toUnits));
     }
 
     template <T toUnits>
-    bool operator!=(const UnitsVal<T, toUnits> unitsVal) const
+    bool operator!=(const UnitsVal<T, toUnits, mode> unitsVal) const
     {
         return !(operator==(unitsVal));
     }
@@ -536,12 +536,14 @@ inline Converter<Time>::ConversionMap Converter<Time>::conversionMap(
     {{Time::s, {ident, ident}}, {Time::min, {MIN_TO_S, S_TO_MIN}}, {Time::h, {H_TO_S, S_TO_H}}});
 
 template <>
-inline Converter<Temp /*,Mode::Abs*/>::ConversionMap Converter<Temp, Mode::Abs>::conversionMap(
-    {{Temp::C, {ident, ident}}, {Temp::F, {F_TO_C, C_TO_F}}});
+inline Converter<Temp, Mode::Absolute>::ConversionMap
+    Converter<Temp, Mode::Absolute>::conversionMap({{Temp::C, {ident, ident}},
+                                                    {Temp::F, {F_TO_C, C_TO_F}}});
 
 template <>
-inline Converter<Temp, Mode::Diff>::ConversionMap Converter<Temp, Mode::Diff>::conversionMap(
-    {{Temp::C, {ident, ident}}, {Temp::F, {dF_TO_dC, dC_TO_dF}}});
+inline Converter<Temp /*, Mode::Relative*/>::ConversionMap
+    Converter<Temp /*, Mode::Relative*/>::conversionMap({{Temp::C, {ident, ident}},
+                                                         {Temp::F, {dF_TO_dC, dC_TO_dF}}});
 
 template <>
 inline Converter<Energy>::ConversionMap
@@ -585,10 +587,10 @@ template <Time units>
 using TimeVal = UnitsVal<Time, units>;
 
 template <Temp units>
-using TempVal = UnitsVal<Temp, units>;
+using TempVal = UnitsVal<Temp, units, Mode::Absolute>;
 
 template <Temp units>
-using TempDiffVal = UnitsVal<Temp, units, Mode::Diff>;
+using TempDiffVal = UnitsVal<Temp, units /*, Mode::Relative*/>;
 
 template <Energy units>
 using EnergyVal = UnitsVal<Energy, units>;
@@ -616,10 +618,10 @@ template <Time units>
 using TimeVect = UnitsVect<Time, units>;
 
 template <Temp units>
-using TempVect = UnitsVect<Temp, units>;
+using TempVect = UnitsVect<Temp, units, Mode::Absolute>;
 
 template <Temp units>
-using TempDiffVect = UnitsVect<Temp, units, Mode::Diff>;
+using TempDiffVect = UnitsVect<Temp, units /*, Mode::Relative*/>;
 
 template <Energy units>
 using EnergyVect = UnitsVect<Energy, units>;
