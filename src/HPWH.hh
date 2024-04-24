@@ -27,7 +27,55 @@ class RegularGridInterpolator;
 #include "HPWHversion.hh"
 #include "courier/helpers.h"
 
-class HPWH
+class Logger : public Courier::Courier
+{
+  public:
+    Logger() = default;
+
+    enum class MessageLevel
+    {
+        all,
+        debug,
+        info,
+        warning,
+        error
+    };
+    MessageLevel message_level {MessageLevel::error};
+
+  protected:
+    void receive_error(const std::string& message) override
+    {
+        write_message("ERROR", message);
+        throw std::runtime_error(message);
+    }
+    void receive_warning(const std::string& message) override
+    {
+        if (message_level <= MessageLevel::warning)
+        {
+            write_message("WARNING", message);
+        }
+    }
+    void receive_info(const std::string& message) override
+    {
+        if (message_level <= MessageLevel::info)
+        {
+            write_message("INFO", message);
+        }
+    }
+    void receive_debug(const std::string& message) override
+    {
+        if (message_level <= MessageLevel::debug)
+        {
+            write_message("DEBUG", message);
+        }
+    }
+    void write_message(const std::string& message_type, const std::string& message)
+    {
+        std::cout << fmt::format("[{}]{} {}", message_type, "", message) << std::endl;
+    }
+};
+
+class HPWH : public Courier::Sender
 {
   public:
     static const int version_major = HPWHVRSN_MAJOR;
@@ -65,74 +113,7 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    class Logger : public Courier::Courier
-    {
-      private:
-        void receive_error(const std::string& message) override
-        {
-            write_message("HPWH ERROR", message);
-            throw std::runtime_error(message);
-        }
-        void receive_warning(const std::string& message) override
-        {
-            write_message("HPWH WARNING", message);
-        }
-        void receive_info(const std::string& message) override
-        {
-            write_message("HPWH INFO", message);
-        }
-        void receive_debug(const std::string& message) override
-        {
-            write_message("HPWH DEBUG", message);
-        }
-        virtual void write_message(const std::string& message_type, const std::string& message)
-        {
-            std::cout << fmt::format("[{}] {}", message_type, message) << std::endl;
-        }
-    };
-
-    class Sender
-    {
-      private:
-        std::shared_ptr<Courier::Courier> courier;
-        unsigned loggerBits;
-        bool usingLogger;
-
-      public:
-#if NDEBUG
-        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
-            : courier(courier_in), loggerBits(0b1000)
-#else
-        Sender(const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
-            : courier(courier_in), loggerBits(0b1001)
-#endif
-        {
-            auto& c = *courier.get();
-            usingLogger = (typeid(c) == typeid(Logger));
-        }
-
-        static constexpr unsigned errorMask = 0b1000;
-        static constexpr unsigned warningMask = 0b0100;
-        static constexpr unsigned infoMask = 0b0010;
-        static constexpr unsigned debugMask = 0b0001;
-
-        unsigned getMode() const { return loggerBits; }
-        void setMode(const unsigned loggerBits_in) { loggerBits = loggerBits_in; }
-
-        bool debug() const { return !usingLogger || (debugMask & loggerBits); }
-        bool error() const { return !usingLogger || (errorMask & loggerBits); }
-        bool warning() const { return !usingLogger || (warningMask & loggerBits); }
-        bool info() const { return !usingLogger || (infoMask & loggerBits); }
-
-        void send_error(const std::string& message) const { courier->send_error(message); }
-        void send_warning(const std::string& message) const { courier->send_warning(message); }
-        void send_info(const std::string& message) const { courier->send_info(message); }
-        void send_debug(const std::string& message) const { courier->send_debug(message); }
-    };
-
-    Sender sender;
-
-    HPWH(const std::shared_ptr<Courier::Courier>& logger_in =
+    HPWH(const std::shared_ptr<Courier::Courier>& courier =
              std::make_shared<Logger>()); /**< default constructor */
     HPWH(const HPWH& hpwh);               /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
@@ -1630,12 +1611,5 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const std::vector<double>& nodeTemp_C,
                      const double setpointT_C);
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
-
-// clang-format off
-#define LOG_DEBUG(hpwh, f, ...)  {if (hpwh->sender.debug()) hpwh->sender.send_debug(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_ERROR(hpwh, f, ...)  {if (hpwh->sender.error()) hpwh->sender.send_error(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_WARNING(hpwh, f, ...)  {if (hpwh->sender.warning()) hpwh->sender.send_warning(fmt::format(f, ##__VA_ARGS__));}
-#define LOG_INFO(hpwh, f, ...) {if (hpwh->sender.info()) hpwh->sender.send_info(fmt::format(f, ##__VA_ARGS__));}
-// clang-format on
 
 #endif
