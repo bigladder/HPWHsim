@@ -1157,11 +1157,6 @@ class HPWH
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
 
-    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes;
-
-    /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns;
-
     /// fields for test output to csv
     struct OutputData
     {

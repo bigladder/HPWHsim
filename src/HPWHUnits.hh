@@ -267,6 +267,7 @@ struct UnitsVal
     }
 
     double to(const T toUnits) const { return Converter<T, mode>::convert(x, units, toUnits); }
+
     double to(const T toUnits, int power) const
     {
         return Converter<T, mode>::convert(x, units, toUnits, power);
@@ -437,14 +438,15 @@ struct UnitsPair
     std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>> fPair;
 
   public:
-    UnitsPair(const double x1_in, const double x2_in) : fPair({x1_in, x2_in}) {}
+    UnitsPair(const double x1_in = 0, const double x2_in = 0) : fPair({x1_in, x2_in}) {}
 
-    double to(const T toUnits) const { return fPair.first.to(toUnits) + fPair.second.to(toUnits); }
+    double to(const T toUnits) const {return fPair.first(toUnits); }
+
     double operator()(const T toUnits) const { return to(toUnits); }
 
-    operator std::pair<UnitsVal<T, units1>, UnitsVal<T, units2>>() const { return fPair; }
+    operator std::pair<double, double>() const { return {fPair.first, fPair.second}; }
 
-    std::pair<double, double> as_pair() const { return fPair; }
+    std::pair<double, double> as_pair() const { return {fPair.first, fPair.second}; }
 
     template <T toUnits>
     bool operator==(const UnitsVal<T, toUnits> unitsVal) const
