@@ -60,8 +60,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL ||
         hSource.followedByHeatSource != NULL)
     {
-        LOG_ERROR(hpwh,
-                  "HeatSources cannot be copied if they contain pointers to other HeatSources.")
+        hpwh->send_error(
+            "HeatSources cannot be copied if they contain pointers to other HeatSources.");
     }
     else
     {
@@ -156,19 +156,16 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
         {
             lock = true;
-            LOG_WARNING(hpwh,
-                        fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
-                                    heatSourceAmbientT_C,
-                                    minT));
+            hpwh->send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
+                                           heatSourceAmbientT_C,
+                                           minT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < minT)
         {
             lock = true;
-            LOG_WARNING(hpwh,
-                        fmt::format("lock-out: already below minT\tambient: {}\tminT: {}",
-                                    heatSourceAmbientT_C,
-                                    minT));
+            hpwh->send_warning(fmt::format(
+                "lock-out: already below minT\tambient: {}\tminT: {}", heatSourceAmbientT_C, minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
@@ -176,26 +173,21 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
         {
             lock = true;
-            LOG_WARNING(hpwh,
-                        fmt::format("lock-out: running above maxT\tambient: {}\tmaxT: {}",
-                                    heatSourceAmbientT_C,
-                                    maxT));
+            hpwh->send_warning(fmt::format(
+                "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
         {
             lock = true;
-            LOG_WARNING(hpwh,
-                        fmt::format("lock-out: already above maxT\tambient: {}\tmaxT: {}",
-                                    heatSourceAmbientT_C,
-                                    maxT));
+            hpwh->send_warning(fmt::format(
+                "lock-out: already above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            LOG_WARNING(
-                hpwh,
+            hpwh->send_warning(
                 fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
         }
 
@@ -227,17 +219,15 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT + hysteresis_dC)
             {
-                LOG_WARNING(hpwh,
-                            fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
-                                        heatSourceAmbientT_C,
-                                        minT));
+                hpwh->send_warning(fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
+                                               heatSourceAmbientT_C,
+                                               minT));
             }
             if (heatSourceAmbientT_C < maxT - hysteresis_dC)
             {
-                LOG_WARNING(hpwh,
-                            fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
-                                        heatSourceAmbientT_C,
-                                        maxT));
+                hpwh->send_warning(fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
+                                               heatSourceAmbientT_C,
+                                               maxT));
             }
         }
         // when not running, don't use hysteresis
@@ -246,17 +236,15 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT)
             {
-                LOG_WARNING(hpwh,
-                            fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
-                                        heatSourceAmbientT_C,
-                                        minT));
+                hpwh->send_warning(fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
+                                               heatSourceAmbientT_C,
+                                               minT));
             }
             if (heatSourceAmbientT_C < maxT)
             {
-                LOG_WARNING(hpwh,
-                            fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
-                                        heatSourceAmbientT_C,
-                                        maxT));
+                hpwh->send_warning(fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
+                                               heatSourceAmbientT_C,
+                                               maxT));
             }
         }
         return unlock;
@@ -300,9 +288,6 @@ bool HPWH::HeatSource::shouldHeat() const
 
     for (int i = 0; i < (int)turnOnLogicSet.size(); i++)
     {
-        LOG_INFO(hpwh,
-                 fmt::format("shouldHeat logic: {} ", turnOnLogicSet[i]->description.c_str()));
-
         double average = turnOnLogicSet[i]->getTankValue();
         double comparison = turnOnLogicSet[i]->getComparisonValue();
 
@@ -328,18 +313,15 @@ bool HPWH::HeatSource::shouldHeat() const
         if (shouldEngage)
         {
             // debugging message handling
-            LOG_INFO(hpwh, "engages!");
             break;
         }
 
-        LOG_INFO(hpwh, fmt::format("returns: {}", shouldEngage));
     } // end loop over set of logic conditions
 
     // if everything else wants it to come on, but if it would shut off anyways don't turn it on
     if (shouldEngage && shutsOff())
     {
         shouldEngage = false;
-        LOG_INFO(hpwh, "but is denied by shutsOff");
     }
 
     return shouldEngage;
@@ -352,28 +334,20 @@ bool HPWH::HeatSource::shutsOff() const
     if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C)
     {
         shutOff = true;
-        LOG_INFO(hpwh,
-                 fmt::format("shutsOff  bottom node hot: {} C returns true", hpwh->tankTemps_C[0]));
         return shutOff;
     }
 
     for (int i = 0; i < (int)shutOffLogicSet.size(); i++)
     {
-        LOG_INFO(hpwh, fmt::format("shutsOff logic: {}", shutOffLogicSet[i]->description.c_str()));
-
         double average = shutOffLogicSet[i]->getTankValue();
         double comparison = shutOffLogicSet[i]->getComparisonValue();
 
         if (shutOffLogicSet[i]->compare(average, comparison))
         {
             shutOff = true;
-
-            // debugging message handling
-            LOG_INFO(hpwh, fmt::format("shuts down {}", shutOffLogicSet[i]->description.c_str()));
         }
     }
 
-    LOG_INFO(hpwh, "returns: {}", shutOff);
     return shutOff;
 }
 
@@ -400,8 +374,6 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
 
     for (int i = 0; i < (int)shutOffLogicSet.size(); i++)
     {
-        LOG_INFO(hpwh, "shutsOff logic: %s ", shutOffLogicSet[i]->description.c_str());
-
         fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
         frac = fracTemp < frac ? fracTemp : frac;
     }
@@ -433,12 +405,6 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         {
             getCapacity(externalT_C, getTankTemp(), input_BTUperHr, cap_BTUperHr, cop);
         }
-        // some outputs for debugging
-        LOG_INFO(hpwh,
-                 "capacity_kWh: {}, \t\t cap_BTUperHr: {}",
-                 BTU_TO_KWH(cap_BTUperHr) * (minutesToRun) / min_per_hr,
-                 cap_BTUperHr)
-
         // the loop over nodes here is intentional - essentially each node that has
         // some amount of heatDistribution acts as a separate resistive element
         // maybe start from the top and go down?  test this with graphs
@@ -469,7 +435,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            LOG_ERROR(hpwh, "Internal error: Negative runtime = {} min", runtime_min)
+            hpwh->send_error(fmt::format("Internal error: Negative runtime = {} min", runtime_min));
         }
     }
     break;
@@ -520,7 +486,7 @@ double HPWH::HeatSource::getTankTemp() const
         // Note that condensity is normalized.
         ++j;
     }
-    LOG_INFO(hpwh, fmt::format("tank temp {}", tankTemp_C));
+
     return tankTemp_C;
 }
 
@@ -656,11 +622,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
     if (cop < 0.)
     {
-        LOG_WARNING(hpwh, "Warning: COP is Negative!")
+        hpwh->send_warning("Warning: COP is Negative!");
     }
     if (cop < 1.)
     {
-        LOG_WARNING(hpwh, "Warning: COP is Less than 1!")
+        hpwh->send_warning("Warning: COP is Less than 1!");
     }
 }
 
@@ -793,7 +759,7 @@ void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vec
     }
     catch (std::string message)
     {
-        LOG_ERROR(hpwh, message);
+        hpwh->send_error(message);
     }
     input_BTUperHr = result[0];
     cop = result[1];
@@ -951,8 +917,6 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         hpwh->condenserOutlet_C /= runTime_min;
     }
 
-    LOG_INFO(hpwh, fmt::format("final remaining time: {}", remainingTime_min));
-
     // return the time left
     return runTime_min;
 }
@@ -1070,8 +1034,6 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->condenserInlet_C /= elapsedTime_min;
         hpwh->condenserOutlet_C /= elapsedTime_min;
     }
-
-    LOG_INFO(hpwh, fmt::format("final remaining time: {}", remainingTime_min));
 
     // return the elapsed time
     return elapsedTime_min;
