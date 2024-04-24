@@ -96,6 +96,12 @@ TEST(UnitsConversionTest, conversions)
         Units::Volume_L volume_L = 60.;
         Units::VolumeVal<Units::Volume::gal> volume_gal = volume_L;
         EXPECT_NEAR_REL(volume_gal, L_TO_GAL(volume_L));
+
+        Units::VolumeVal<Units::Volume::m3> volume_m3 = volume_L;
+        EXPECT_NEAR_REL(volume_m3, L_TO_M3(volume_L));
+
+        Units::VolumeVal<Units::Volume::ft3> volume_ft3 = volume_L;
+        EXPECT_NEAR_REL(volume_ft3, L_TO_FT3(volume_L));
     }
 
     /* UA conversion */
