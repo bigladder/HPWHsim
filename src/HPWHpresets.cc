@@ -4188,13 +4188,13 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.perfMap.reserve(2);
 
         compressor.perfMap.push_back({50,                          // Temperature (F)
-                                      {187.064124, 1.939747, 0.0}, // Imput Power (W)
+                                      {187.064124, 1.939747, 0.0}, // Input Power (W)
                                       {4.29, -0.0243008, 0.0},     // COP Coeffs
                                       Units::Temp::F,
                                       Units::Power::W});
 
         compressor.perfMap.push_back({70,                        // Temperature (F)
-                                      {148.0418, 2.553291, 0.0}, // Imput Power (W)
+                                      {148.0418, 2.553291, 0.0}, // Input Power (W)
                                       {5.61, -0.0335265, 0.0},   // COP Coeffs
                                       Units::Temp::F,
                                       Units::Power::W});
@@ -4289,7 +4289,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.perfMap.push_back({50,                            // Temperature (F)
                                       {187.064124, 1.939747, 0.0},   // Input Power Coefficients (W)
-                                      {5.22288834, -0.0243008, 0.0}, // COP Coefficients
+                                      {5.22288834, -0.0243008, 0.0}, // COP Coeffs
                                       Units::Temp::F,
                                       Units::Power::W});
 
@@ -4410,8 +4410,8 @@ int HPWH::initPreset(MODELS presetNum)
         scaleVector(inputPower_coeffs_kW, scaleFactor);
 
         compressor.perfMap.push_back({105,                  // Temperature (F)
-                                      inputPower_coeffs_kW, // Input Power Coefficients (W)
-                                      COP_coeffs,           // COP Coefficients
+                                      inputPower_coeffs_kW, // Input Power Coeffs (W)
+                                      COP_coeffs,           // COP Coeffs
                                       Units::Temp::F,
                                       Units::Power::kW});
 

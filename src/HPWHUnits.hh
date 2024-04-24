@@ -440,7 +440,7 @@ struct UnitsPair
   public:
     UnitsPair(const double x1_in = 0, const double x2_in = 0) : fPair({x1_in, x2_in}) {}
 
-    double to(const T toUnits) const {return fPair.first(toUnits); }
+    double to(const T toUnits) const {return fPair.first(toUnits) + fPair.second(toUnits); }
 
     double operator()(const T toUnits) const { return to(toUnits); }
 
