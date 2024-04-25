@@ -187,6 +187,11 @@ class HPWH
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
+        MODELS_AWHSTier4Generic40 = 1175, /**< Generic AWHS Tier 4 40 gallons*/
+        MODELS_AWHSTier4Generic50 = 1176, /**< Generic AWHS Tier 4 50 gallons*/
+        MODELS_AWHSTier4Generic65 = 1177, /**< Generic AWHS Tier 4 65 gallons*/
+        MODELS_AWHSTier4Generic80 = 1178, /**< Generic AWHS Tier 4 80 gallons*/
+
         MODELS_StorageTank = 180, /**< Generic Tank without heaters */
 
         MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that
@@ -258,6 +263,8 @@ class HPWH
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
         MODELS_AquaThermAire = 400, // heat exchanger model
+
+        MODELS_GenericUEF217 = 410
     };
 
     /// specifies the modes for writing output
@@ -908,6 +915,11 @@ class HPWH
 
     int getResistancePosition(int elementIndex) const;
 
+    class HeatSource;
+
+    /// get a pointer to the Nth heat source
+    bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);
+
     /// check whether a valid heat source with index n exists
     bool isHeatSourceIndexValid(const int n) const;
 
@@ -1055,17 +1067,23 @@ class HPWH
     static const std::vector<std::tuple<int, int, int>> powers11;
 
     /// first-hour rating designations to determine draw pattern for 24-hr test
-    enum class FirstHourRatingDesig
-    {
-        VerySmall,
-        Low,
-        Medium,
-        High
-    };
-
     struct FirstHourRating
     {
-        FirstHourRatingDesig desig;
+        enum class Desig
+        {
+            VerySmall,
+            Low,
+            Medium,
+            High
+        };
+
+        static inline std::unordered_map<Desig, std::string> sDesigMap = {
+            {Desig::VerySmall, "Very Small"},
+            {Desig::Low, "Low"},
+            {Desig::Medium, "Medium"},
+            {Desig::High, "High"}};
+
+        Desig desig;
         double drawVolume_L;
     };
 
@@ -1119,6 +1137,8 @@ class HPWH
     struct StandardTestOptions
     {
         bool saveOutput = false;
+        std::string sOutputDirectory = "";
+        std::string sOutputFilename = "";
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
@@ -1176,11 +1196,21 @@ class HPWH
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-  private:
-    class HeatSource;
+    bool measureMetrics(FirstHourRating& firstHourRating,
+                        StandardTestOptions& standardTestOptions,
+                        StandardTestSummary& standardTestSummary);
 
-    /// sets all the values to defaults
-    void setAllDefaults();
+    struct CustomTestOptions
+    {
+        bool overrideFirstHourRating = false;
+        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+    } customTestOptions;
+
+    bool makeGeneric(const double targetUEF);
+
+  private:
+
+    void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
         double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
@@ -1544,8 +1574,6 @@ class HPWH::HeatSource
 
     PerfMap perfMap;
 
-    /// The axis values defining the regular grid for the performance data.
-    /// SP would have 3 axis, MP would have 2 axis
     std::vector<std::vector<double>> perfGrid;
 
     /// The values for input power and cop use matching to the grid. Should be long format with

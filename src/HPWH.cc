@@ -722,8 +722,7 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         if (hpwhVerbosity >= VRB_typical)
         {
-            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT "
-                "scheme "
+            msg("DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme "
                 " \n");
         }
     }
@@ -2412,6 +2411,18 @@ double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment_kJ(int N) const
                                        : double(HPWH_ABORT);
 }
 
+double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*kJ*/) const
+{
+    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyInput_kJ)(units)
+                                       : double(HPWH_ABORT);
+}
+
+double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*kJ*/) const
+{
+    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyOutput_kJ)(units)
+                                       : double(HPWH_ABORT);
+}
+
 double HPWH::getOutputEnergy(const Units::Energy units /*kWh*/) const
 {
     return Units::Energy_kJ(getOutputEnergy_kJ())(units);
@@ -2432,21 +2443,19 @@ double HPWH::getStandbyLosses(Units::Energy units /*kWh*/) const
     return Units::Energy_kJ(getStandbyLosses_kJ())(units);
 }
 
-double HPWH::getEnergyRemovedFromEnvironment(const Units::Energy units /*kJ*/) const
+bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
 {
-    return Units::Energy_kJ(getEnergyRemovedFromEnvironment_kJ())(units);
+    if (isHeatSourceIndexValid(N))
+    {
+        heatSource = &heatSources[N];
+        return true;
+    }   
+    return false;
 }
 
-double HPWH::getNthHeatSourceEnergyInput(int N, Units::Energy units /*kJ*/) const
+HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 {
-    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyInput_kJ)(units)
-                                       : double(HPWH_ABORT);
-}
-
-double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*kJ*/) const
-{
-    return (isHeatSourceIndexValid(N)) ? Units::Energy_kJ(heatSources[N].energyOutput_kJ)(units)
-                                       : double(HPWH_ABORT);
+    return isHeatSourceIndexValid(N) ? heatSources[N].typeOfHeatSource : HEATSOURCE_TYPE::TYPE_none;
 }
 
 double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy units /*kJ*/) const
@@ -2464,11 +2473,6 @@ double HPWH::getNthHeatSourceRunTime(int N) const
 int HPWH::isNthHeatSourceRunning(int N) const
 {
     return isHeatSourceIndexValid(N) ? (heatSources[N].isEngaged() ? 1 : 0) : HPWH_ABORT;
-}
-
-HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
-{
-    return isHeatSourceIndexValid(N) ? heatSources[N].typeOfHeatSource : HEATSOURCE_TYPE::TYPE_none;
 }
 
 double HPWH::getTankSize(Units::Volume units /*L*/) const
@@ -4209,9 +4213,29 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     {
         model = HPWH::MODELS_AWHSTier3Generic80;
     }
+    else if (modelName == "AWHSTier4Generic40") // Tier-4 Generic 40 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic40;
+    }
+    else if (modelName == "AWHSTier4Generic50") // Tier-4 Generic 50 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic50;
+    }
+    else if (modelName == "AWHSTier4Generic65") // Tier-4 Generic 65 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic65;
+    }
+    else if (modelName == "AWHSTier4Generic80") // Tier-4 Generic 80 gal
+    {
+        model = HPWH::MODELS_AWHSTier4Generic80;
+    }
     else if (modelName == "AquaThermAire")
     {
         model = HPWH::MODELS_AquaThermAire;
+    }
+    else if (modelName == "GenericUEF217")
+    {
+        model = HPWH::MODELS_GenericUEF217;
     }
     else
     {
@@ -4558,8 +4582,13 @@ int HPWH::initFromFile(string configFile)
         line_ss.str(line_s);
 
         // grab the first word, and start comparing
+        token = "";
         line_ss >> token;
-        if (token.at(0) == '#' || line_s.empty())
+        if (line_s.empty() || (token.length() == 0))
+        {
+            continue;
+        }
+        if (token.at(0) == '#')
         {
             // if you hit a comment, skip to next line
             continue;
@@ -5659,6 +5688,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     int elapsedTime_min = 0;
     while (!done)
     {
+
         // limit draw-volume increment to tank volume
         double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
         if (incrementalDrawVolume_L > tankVolume_L)
@@ -5753,22 +5783,30 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     }
 
     //
+
     if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::VerySmall;
+        firstHourRating.desig = FirstHourRating::Desig::VerySmall;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::Low;
+        firstHourRating.desig = FirstHourRating::Desig::Low;
     }
     else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
     {
-        firstHourRating.desig = FirstHourRatingDesig::Medium;
+        firstHourRating.desig = FirstHourRating::Desig::Medium;
     }
     else
     {
-        firstHourRating.desig = FirstHourRatingDesig::High;
+        firstHourRating.desig = FirstHourRating::Desig::High;
     }
+
+    const std::string sFirstHourRatingDesig =
+        HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+
+    std::cout << "\tFirst-Hour Rating:\n";
+    std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 
     return true;
 }
@@ -5785,14 +5823,14 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& testSummary,
                        StandardTestOptions& testOptions)
 {
-    static std::unordered_map<FirstHourRatingDesig, std::size_t> firstDrawClusterSizes = {
-        {HPWH::FirstHourRatingDesig::VerySmall, 5},
-        {HPWH::FirstHourRatingDesig::Low, 3},
-        {HPWH::FirstHourRatingDesig::Medium, 3},
-        {HPWH::FirstHourRatingDesig::High, 4}};
+    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes = {
+        {HPWH::FirstHourRating::Desig::VerySmall, 5},
+        {HPWH::FirstHourRating::Desig::Low, 3},
+        {HPWH::FirstHourRating::Desig::Medium, 3},
+        {HPWH::FirstHourRating::Desig::High, 4}};
 
-    static std::unordered_map<FirstHourRatingDesig, DrawPattern> drawPatterns = {
-        {FirstHourRatingDesig::VerySmall,
+    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns = {
+        {FirstHourRating::Desig::VerySmall,
          {{HM_TO_MIN(0, 00), 7.6, 3.8},
           {HM_TO_MIN(1, 00), 3.8, 3.8},
           {HM_TO_MIN(1, 05), 1.9, 3.8},
@@ -5803,7 +5841,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
           {HM_TO_MIN(9, 00), 5.7, 3.8},
           {HM_TO_MIN(9, 15), 3.8, 3.8}}},
 
-        {HPWH::FirstHourRatingDesig::Low,
+        {HPWH::FirstHourRating::Desig::Low,
          {{HM_TO_MIN(0, 00), 56.8, 6.4},
           {HM_TO_MIN(0, 30), 7.6, 3.8},
           {HM_TO_MIN(1, 00), 3.8, 3.8},
@@ -5816,7 +5854,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
           {HM_TO_MIN(16, 45), 7.6, 6.4},
           {HM_TO_MIN(17, 00), 11.4, 6.4}}},
 
-        {HPWH::FirstHourRatingDesig::Medium,
+        {HPWH::FirstHourRating::Desig::Medium,
          {{HM_TO_MIN(0, 00), 56.8, 6.4},
           {HM_TO_MIN(0, 30), 7.6, 3.8},
           {HM_TO_MIN(1, 40), 34.1, 6.4},
@@ -5830,7 +5868,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
           {HM_TO_MIN(16, 45), 7.6, 6.4},
           {HM_TO_MIN(17, 00), 26.5, 6.4}}},
 
-        {HPWH::FirstHourRatingDesig::High,
+        {HPWH::FirstHourRating::Desig::High,
          {{HM_TO_MIN(0, 00), 102, 11.4},
           {HM_TO_MIN(0, 30), 7.6, 3.8},
           {HM_TO_MIN(0, 40), 3.8, 3.8},
@@ -6357,4 +6395,472 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 
     return true;
+}
+
+bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
+                          StandardTestOptions& standardTestOptions,
+                          StandardTestSummary& standardTestSummary)
+{
+    if (standardTestOptions.saveOutput)
+    {
+
+        std::string sFullOutputFilename =
+            standardTestOptions.sOutputDirectory + "/" + standardTestOptions.sOutputFilename;
+        standardTestOptions.outputFile.open(sFullOutputFilename.c_str(), std::ifstream::out);
+        if (!standardTestOptions.outputFile.is_open())
+        {
+            std::cout << "Could not open output file " << sFullOutputFilename << "\n";
+            return false;
+        }
+        std::cout << "Output file: " << sFullOutputFilename << "\n";
+
+        std::string strPreamble;
+        std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
+
+        int csvOptions = HPWH::CSVOPT_NONE;
+        WriteCSVHeading(standardTestOptions.outputFile,
+                        sHeader.c_str(),
+                        standardTestOptions.nTestTCouples,
+                        csvOptions);
+    }
+
+    if (!findFirstHourRating(firstHourRating, standardTestOptions))
+    {
+        std::cout << "Unable to complete first-hour rating test.\n";
+        if (!customTestOptions.overrideFirstHourRating)
+        {
+            return false;
+        }
+    }
+
+    if (customTestOptions.overrideFirstHourRating)
+    {
+        firstHourRating.desig = customTestOptions.desig;
+        const std::string sFirstHourRatingDesig =
+            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+    }
+
+    if (run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    {
+
+        std::cout << "\t24-Hour Test Results:\n";
+        if (!standardTestSummary.qualifies)
+        {
+            std::cout << "\t\tDoes not qualify as consumer water heater.\n";
+        }
+
+        std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+
+        std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                  << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+
+        std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+
+        std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+                  << "\n";
+
+        std::cout << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
+                  << "\n";
+
+        std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+
+        std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+
+        std::cout << "\tAnnual Values:\n";
+        std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+
+        std::cout << "\t\tAnnual Energy Consumption (kWh): "
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+    }
+    else
+    {
+        std::cout << "Unable to complete 24-hr test.\n";
+        return false;
+    }
+
+    if (standardTestOptions.saveOutput)
+    {
+        standardTestOptions.outputFile.close();
+    }
+    return true;
+}
+
+bool HPWH::makeGeneric(const double targetUEF)
+{
+    static HPWH::FirstHourRating firstHourRating;
+    static HPWH::StandardTestOptions standardTestOptions;
+
+    struct Inverter
+    {
+        static bool getLeftDampedInv(const double nu,
+                                     const std::vector<double>& matV, // 1 x 2
+                                     std::vector<double>& invMatV     // 2 x 1
+        )
+        {
+            constexpr double thresh = 1.e-12;
+
+            if (matV.size() != 2)
+            {
+                return false;
+            }
+
+            double a = matV[0];
+            double b = matV[1];
+
+            double A = (1. + nu) * a * a;
+            double B = (1. + nu) * b * b;
+            double C = a * b;
+            double det = A * B - C * C;
+
+            if (abs(det) < thresh)
+            {
+                return false;
+            }
+
+            invMatV.resize(2);
+            invMatV[0] = (a * B - b * C) / det;
+            invMatV[1] = (-a * C + b * A) / det;
+            return true;
+        }
+    };
+
+    struct ParamInfo
+    {
+        enum class Type
+        {
+            none,
+            copCoef
+        };
+
+        virtual Type paramType() = 0;
+
+        virtual bool assign(HPWH& hpwh, double*& val) = 0;
+        virtual void showInfo(std::ostream& os) = 0;
+    };
+
+    struct CopCoefInfo : public ParamInfo
+    {
+        unsigned heatSourceIndex;
+        unsigned tempIndex;
+        unsigned power;
+
+        Type paramType() override { return Type::copCoef; }
+
+        CopCoefInfo(const unsigned heatSourceIndex_in,
+                    const unsigned tempIndex_in,
+                    const unsigned power_in)
+            : ParamInfo()
+            , heatSourceIndex(heatSourceIndex_in)
+            , tempIndex(tempIndex_in)
+            , power(power_in)
+        {
+        }
+
+        bool assign(HPWH& hpwh, double*& val) override
+        {
+            val = nullptr;
+            HPWH::HeatSource* heatSource;
+            if (!hpwh.getNthHeatSource(heatSourceIndex, heatSource))
+            {
+                std::cout << "Invalid heat source index.\n";
+                return false;
+            }
+
+            auto& perfMap = heatSource->perfMap;
+            if (tempIndex >= perfMap.size())
+            {
+                std::cout << "Invalid heat-source performance-map temperature index.\n";
+                return false;
+            }
+
+            auto& perfPoint = perfMap[tempIndex];
+            auto& copCoeffs = perfPoint.COP_coeffs;
+            if (power >= copCoeffs.size())
+            {
+                std::cout << "Invalid heat-source performance-map cop-coefficient power.\n";
+                return false;
+            }
+            std::cout << "Valid parameter:";
+            showInfo(std::cout);
+            std::cout << "\n";
+            val = &copCoeffs[power];
+            return true;
+        };
+
+        void showInfo(std::ostream& os) override
+        {
+            os << " heat-source index = " << heatSourceIndex;
+            os << ", temperature index = " << tempIndex;
+            os << ", power = " << power;
+        }
+    };
+
+    struct Param
+    {
+        double* val;
+        double dVal;
+
+        Param() : val(nullptr), dVal(1.e3) {}
+
+        virtual bool assignVal(HPWH& hpwh) = 0;
+        virtual void show(std::ostream& os) = 0;
+    };
+
+    struct CopCoef : public Param,
+                     CopCoefInfo
+    {
+        CopCoef(CopCoefInfo& copCoefInfo) : Param(), CopCoefInfo(copCoefInfo) { dVal = 1.e-9; }
+
+        bool assignVal(HPWH& hpwh) override { return assign(hpwh, val); }
+
+        void show(std::ostream& os) override
+        {
+            showInfo(os);
+            os << ": " << *val << "\n";
+        }
+    };
+
+    struct Merit
+    {
+        double val;
+        double targetVal;
+        double tolVal;
+
+        Merit() : val(0.), targetVal(0.), tolVal(1.e-6) {}
+
+        virtual bool eval(HPWH& hpwh) = 0;
+        virtual bool evalDiff(HPWH& hpwh, double& diff) = 0;
+    };
+
+    struct UEF_Merit : public Merit
+    {
+        UEF_Merit(double targetVal_in) : Merit() { targetVal = targetVal_in; }
+
+        bool eval(HPWH& hpwh) override
+        {
+            static HPWH::StandardTestSummary standardTestSummary;
+            if (!hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+            {
+                std::cout << "Unable to complete 24-hr test.\n";
+                return false;
+            }
+            val = standardTestSummary.UEF;
+            return true;
+        }
+
+        bool evalDiff(HPWH& hpwh, double& diff) override
+        {
+            if (eval(hpwh))
+            {
+                diff = (val - targetVal) / tolVal;
+                return true;
+            };
+            return false;
+        }
+    };
+
+    standardTestOptions.saveOutput = false;
+    standardTestOptions.changeSetpoint = true;
+    standardTestOptions.nTestTCouples = 6;
+    standardTestOptions.setpointT_C = 51.7;
+
+    if (!findFirstHourRating(firstHourRating, standardTestOptions))
+    {
+        std::cout << "Unable to complete first-hour rating test.\n";
+        if (!customTestOptions.overrideFirstHourRating)
+        {
+            return false;
+        }
+    }
+
+    if (customTestOptions.overrideFirstHourRating)
+    {
+        firstHourRating.desig = customTestOptions.desig;
+        const std::string sFirstHourRatingDesig =
+            HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
+        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+    }
+
+    // set up merit parameter
+    Merit* pMerit;
+    UEF_Merit uefMerit(targetUEF);
+    pMerit = &uefMerit;
+
+    // set up parameters
+    std::vector<Param*> pParams;
+
+    CopCoefInfo copT2constInfo = {2, 1, 0}; // heatSourceIndex, tempIndex, power
+    CopCoefInfo copT2linInfo = {2, 1, 1};   // heatSourceIndex, tempIndex, power
+
+    CopCoef copT2const(copT2constInfo);
+    CopCoef copT2lin(copT2linInfo);
+
+    pParams.push_back(&copT2const);
+    pParams.push_back(&copT2lin);
+
+    std::vector<double> dParams;
+
+    //
+    bool foundParams = true;
+    for (auto& pParam : pParams)
+    {
+        foundParams &= pParam->assignVal(*this);
+        dParams.push_back(pParam->dVal);
+    }
+    if (!foundParams)
+    {
+        return false;
+    }
+    auto nParams = pParams.size();
+
+    double nu = 0.1;
+    const int maxIters = 20;
+    for (auto iter = 0; iter < maxIters; ++iter)
+    {
+        if (!pMerit->eval(*this))
+        {
+            return false;
+        }
+        std::cout << iter << ": ";
+        std::cout << "UEF: " << pMerit->val << "; ";
+
+        bool first = true;
+        for (std::size_t j = 0; j < nParams; ++j)
+        {
+            if (!first)
+                std::cout << ",";
+
+            std::cout << " " << j << ": ";
+            std::cout << *(pParams[j]->val);
+            first = false;
+        }
+
+        double dMerit0 = 0.;
+        if (!(pMerit->evalDiff(*this, dMerit0)))
+        {
+            return false;
+        }
+        double FOM0 = dMerit0 * dMerit0;
+        double FOM1 = 0., FOM2 = 0.;
+        std::cout << ", FOM: " << FOM0 << "\n";
+
+        std::vector<double> paramV(nParams);
+        for (std::size_t i = 0; i < nParams; ++i)
+        {
+            paramV[i] = *(pParams[i]->val);
+        }
+
+        std::vector<double> jacobiV(nParams); // 1 x 2
+        for (std::size_t j = 0; j < nParams; ++j)
+        {
+            *(pParams[j]->val) = paramV[j] + (pParams[j]->dVal);
+            double dMerit;
+            if (!(pMerit->evalDiff(*this, dMerit)))
+            {
+                return false;
+            }
+            jacobiV[j] = (dMerit - dMerit0) / (pParams[j]->dVal);
+            *(pParams[j]->val) = paramV[j];
+        }
+
+        // try nu
+        std::vector<double> invJacobiV1;
+        bool got1 = Inverter::getLeftDampedInv(nu, jacobiV, invJacobiV1);
+
+        std::vector<double> inc1ParamV(2);
+        std::vector<double> paramV1 = paramV;
+        if (got1)
+        {
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                inc1ParamV[j] = -invJacobiV1[j] * dMerit0;
+                paramV1[j] += inc1ParamV[j];
+                *(pParams[j]->val) = paramV1[j];
+            }
+            double dMerit;
+            if (!pMerit->evalDiff(*this, dMerit))
+            {
+                return false;
+            }
+            FOM1 = dMerit * dMerit;
+
+            // restore
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                *(pParams[j]->val) = paramV[j];
+            }
+        }
+
+        // try nu / 2
+        std::vector<double> invJacobiV2;
+        bool got2 = Inverter::getLeftDampedInv(nu / 2., jacobiV, invJacobiV2);
+
+        std::vector<double> inc2ParamV(2);
+        std::vector<double> paramV2 = paramV;
+        if (got2)
+        {
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                inc2ParamV[j] = -invJacobiV2[j] * dMerit0;
+                paramV2[j] += inc2ParamV[j];
+                *(pParams[j]->val) = paramV2[j];
+            }
+            double dMerit;
+            if (!pMerit->evalDiff(*this, dMerit))
+            {
+                return false;
+            }
+            FOM2 = dMerit * dMerit;
+
+            // restore
+            for (std::size_t j = 0; j < nParams; ++j)
+            {
+                *(pParams[j]->val) = paramV[j];
+            }
+        }
+
+        // check for improvement
+        if (got1 && got2)
+        {
+            if ((FOM1 < FOM0) || (FOM2 < FOM0))
+            { // at least one improved
+                if (FOM1 < FOM2)
+                { // pick 1
+                    for (std::size_t i = 0; i < nParams; ++i)
+                    {
+                        *(pParams[i]->val) = paramV1[i];
+                        (pParams[i]->dVal) = inc1ParamV[i] / 1.e3;
+                        FOM0 = FOM1;
+                    }
+                }
+                else
+                { // pick 2
+                    for (std::size_t i = 0; i < nParams; ++i)
+                    {
+                        *(pParams[i]->val) = paramV2[i];
+                        (pParams[i]->dVal) = inc2ParamV[i] / 1.e3;
+                        FOM0 = FOM2;
+                    }
+                }
+            }
+            else
+            { // no improvement
+                nu *= 10.;
+                if (nu > 1.e6)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    return false;
 }
