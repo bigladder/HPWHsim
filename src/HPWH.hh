@@ -1209,7 +1209,6 @@ class HPWH
     bool makeGeneric(const double targetUEF);
 
   private:
-
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(

@@ -2449,7 +2449,7 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
     {
         heatSource = &heatSources[N];
         return true;
-    }   
+    }
     return false;
 }
 
