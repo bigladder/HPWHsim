@@ -2391,15 +2391,11 @@ double HPWH::getTankHeatContent_kJ() const
 
 double HPWH::getHeatContent_kJ() const { return getTankHeatContent_kJ(); }
 
-double HPWH::getInputEnergy(const Units::Energy units /*kWh*/) const
-{
-    return Units::Energy_kJ(getInputEnergy_kJ())(units);
-}
-
 double HPWH::getNthHeatSourceEnergyInput_kJ(int N) const
 {
     return (isHeatSourceIndexValid(N)) ? heatSources[N].energyInput_kJ : double(HPWH_ABORT);
 }
+
 double HPWH::getNthHeatSourceEnergyOutput_kJ(int N) const
 {
     return (isHeatSourceIndexValid(N)) ? heatSources[N].energyOutput_kJ : double(HPWH_ABORT);
@@ -2423,22 +2419,32 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, Units::Energy units /*kJ*/) con
                                        : double(HPWH_ABORT);
 }
 
-double HPWH::getOutputEnergy(const Units::Energy units /*kWh*/) const
+double HPWH::getInputEnergy(const Units::Energy units /*kJ*/) const
+{
+    return Units::Energy_kJ(getInputEnergy_kJ())(units);
+}
+
+double HPWH::getEnergyRemovedFromEnvironment(const Units::Energy units /*kJ*/) const
+{
+    return Units::Energy_kJ(getInputEnergy_kJ())(units);
+}
+
+double HPWH::getOutputEnergy(const Units::Energy units /*kJ*/) const
 {
     return Units::Energy_kJ(getOutputEnergy_kJ())(units);
 }
 
-double HPWH::getTankHeatContent(const Units::Energy units /*kWh*/) const
+double HPWH::getTankHeatContent(const Units::Energy units /*kJ*/) const
 {
     return Units::Energy_kJ(getTankHeatContent_kJ())(units);
 }
 
-double HPWH::getHeatContent(const Units::Energy units /*kWh*/) const
+double HPWH::getHeatContent(const Units::Energy units /*kJ*/) const
 {
     return Units::Energy_kJ(getHeatContent_kJ())(units);
 }
 
-double HPWH::getStandbyLosses(Units::Energy units /*kWh*/) const
+double HPWH::getStandbyLosses(Units::Energy units /*kJ*/) const
 {
     return Units::Energy_kJ(getStandbyLosses_kJ())(units);
 }

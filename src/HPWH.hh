@@ -647,17 +647,17 @@ class HPWH
     ///////////////////////////////////////////////
     /* The following functions return energies in user-specified units */
 
-    double getInputEnergy(const Units::Energy units = Units::Energy::kWh) const;
+    double getInputEnergy(const Units::Energy units = Units::Energy::kJ) const;
 
-    double getOutputEnergy(const Units::Energy units = Units::Energy::kWh) const;
+    double getOutputEnergy(const Units::Energy units = Units::Energy::kJ) const;
 
-    double getTankHeatContent(const Units::Energy units = Units::Energy::kWh) const;
+    double getTankHeatContent(const Units::Energy units = Units::Energy::kJ) const;
 
-    double getHeatContent(const Units::Energy units = Units::Energy::kWh) const;
+    double getHeatContent(const Units::Energy units = Units::Energy::kJ) const;
 
-    double getEnergyRemovedFromEnvironment(const Units::Energy units = Units::Energy::kWh) const;
+    double getEnergyRemovedFromEnvironment(const Units::Energy units = Units::Energy::kJ) const;
 
-    double getStandbyLosses(const Units::Energy units = Units::Energy::kWh) const;
+    double getStandbyLosses(const Units::Energy units = Units::Energy::kJ) const;
 
     ///////////////////////////////////////////////
     /* The following functions return, assign, or display temperatures (in degC) */
