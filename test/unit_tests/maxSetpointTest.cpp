@@ -13,7 +13,7 @@ const double expectedRE_maxT_C = 100.;
 TEST(MaxSetpointTest, resistanceTank)
 {
     HPWH hpwh;
-    EXPECT_EQ(hpwh.initResistanceTank(), 0) << "Could not initialize resistance tank.";
+    EXPECT_NO_THROW(hpwh.initResistanceTank()) << "Could not initialize resistance tank.";
 
     double num;
     std::string why;
@@ -37,7 +37,7 @@ TEST(MaxSetpointTest, scalableCompressor)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num;
     std::string why;
@@ -60,7 +60,7 @@ TEST(MaxSetpointTest, NyleC90A_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "NyleC90A_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num;
     std::string why;
@@ -85,7 +85,7 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num;
     std::string why;
@@ -110,7 +110,7 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num;
     std::string why;
@@ -142,7 +142,7 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithCAHP120"; // Hybrid unit with a compressor with R134A
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num;
     std::string why;
@@ -166,7 +166,7 @@ TEST(MaxSetpointTest, StorageTank)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank"; // Hybrid unit with a compressor with R134A
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
     ;
 
     double num;
@@ -190,7 +190,7 @@ TEST(MaxSetpointTest, Sanden80)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Sanden80"; // Fixed setpoint model
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     double num, num1;
     std::string why;
@@ -242,7 +242,7 @@ TEST(UtilityTest, setTemperatures)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Rheem2020Prem50"; // 12-node model
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     // test 1
     {
