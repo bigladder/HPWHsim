@@ -2426,7 +2426,7 @@ double HPWH::getInputEnergy(const Units::Energy units /*kJ*/) const
 
 double HPWH::getEnergyRemovedFromEnvironment(const Units::Energy units /*kJ*/) const
 {
-    return Units::Energy_kJ(getInputEnergy_kJ())(units);
+    return Units::Energy_kJ(getEnergyRemovedFromEnvironment_kJ())(units);
 }
 
 double HPWH::getOutputEnergy(const Units::Energy units /*kJ*/) const
