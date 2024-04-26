@@ -483,7 +483,7 @@ enum class Energy
 {
     kJ,  // kilojoules
     kWh, // kilowatt hours
-    Btu,  // british thermal units
+    Btu, // british thermal units
     J    // joules
 };
 
