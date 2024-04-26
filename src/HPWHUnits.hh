@@ -45,9 +45,11 @@ inline double F_TO_C(const double F) { return (F - offsetF) / F_per_C; }
 // energy conversion
 inline double KJ_TO_KWH(const double kJ) { return kJ / s_per_h; }
 inline double KJ_TO_BTU(const double kJ) { return Btu_per_kJ * kJ; }
+inline double KJ_TO_J(const double kJ) { return 1000. * kJ; }
 
 inline double KWH_TO_KJ(const double kWh) { return kWh * s_per_h; }
 inline double BTU_TO_KJ(const double Btu) { return kJ_per_Btu * Btu; }
+inline double J_TO_KJ(const double J) { return J / 1000.; }
 
 inline double KWH_TO_BTU(const double kWh) { return KJ_TO_BTU(KWH_TO_KJ(kWh)); }
 inline double BTU_TO_KWH(const double Btu) { return KJ_TO_KWH(BTU_TO_KJ(Btu)); }
@@ -481,7 +483,8 @@ enum class Energy
 {
     kJ,  // kilojoules
     kWh, // kilowatt hours
-    Btu  // british thermal units
+    Btu,  // british thermal units
+    J    // joules
 };
 
 /* power units */
@@ -549,7 +552,8 @@ template <>
 inline Converter<Energy>::ConversionMap
     Converter<Energy>::conversionMap({{Energy::kJ, {ident, ident}},
                                       {Energy::kWh, {KWH_TO_KJ, KJ_TO_KWH}},
-                                      {Energy::Btu, {BTU_TO_KJ, KJ_TO_BTU}}});
+                                      {Energy::Btu, {BTU_TO_KJ, KJ_TO_BTU}},
+                                      {Energy::J, {J_TO_KJ, KJ_TO_J}}});
 
 template <>
 inline Converter<Power>::ConversionMap
