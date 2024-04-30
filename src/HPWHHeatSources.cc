@@ -377,7 +377,6 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
         fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
         frac = fracTemp < frac ? fracTemp : frac;
     }
-
     return frac;
 }
 
