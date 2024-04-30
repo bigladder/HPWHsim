@@ -417,14 +417,16 @@ struct UnitsPair
 
 /// units values - relative
 template <class T, T units>
-struct UnitsValRel: public UnitsVal<T, units, Mode::Relative>
+struct UnitsValRel : public UnitsVal<T, units, Mode::Relative>
 {
-    UnitsValRel(const double x_in = 0.):UnitsVal<T, units>(x_in){}
+    UnitsValRel(const double x_in = 0.) : UnitsVal<T, units>(x_in) {}
 
-    UnitsValRel(const double x_in, const T fromUnits):UnitsVal<T, units>(x_in, fromUnits){}
+    UnitsValRel(const double x_in, const T fromUnits) : UnitsVal<T, units>(x_in, fromUnits) {}
 
     template <T inUnits>
-    UnitsValRel(const UnitsVal<T, inUnits, Mode::Relative>& unitsVal):UnitsVal<T, units>(unitsVal){}
+    UnitsValRel(const UnitsVal<T, inUnits, Mode::Relative>& unitsVal) : UnitsVal<T, units>(unitsVal)
+    {
+    }
 
     template <T inUnits>
     UnitsValRel operator+(const UnitsValRel<T, inUnits> unitsValRel) const
@@ -453,14 +455,20 @@ struct UnitsValRel: public UnitsVal<T, units, Mode::Relative>
 
 /// units values - absolute
 template <class T, T units>
-struct UnitsValAbs: public UnitsVal<T, units, Mode::Absolute>
+struct UnitsValAbs : public UnitsVal<T, units, Mode::Absolute>
 {
-    UnitsValAbs(const double x_in = 0.):UnitsVal<T, units, Mode::Absolute>(x_in){}
+    UnitsValAbs(const double x_in = 0.) : UnitsVal<T, units, Mode::Absolute>(x_in) {}
 
-    UnitsValAbs(const double x_in, const T fromUnits):UnitsVal<T, units, Mode::Absolute>(x_in, fromUnits){}
+    UnitsValAbs(const double x_in, const T fromUnits)
+        : UnitsVal<T, units, Mode::Absolute>(x_in, fromUnits)
+    {
+    }
 
     template <T fromUnits>
-    UnitsValAbs(const UnitsVal<T, fromUnits, Mode::Absolute>& unitsValAbs):UnitsVal<T, units, Mode::Absolute>(unitsValAbs){}
+    UnitsValAbs(const UnitsVal<T, fromUnits, Mode::Absolute>& unitsValAbs)
+        : UnitsVal<T, units, Mode::Absolute>(unitsValAbs)
+    {
+    }
 
     template <T toUnits>
     UnitsValAbs operator+(const UnitsValRel<T, toUnits>& unitsValRel) const
@@ -477,7 +485,8 @@ struct UnitsValAbs: public UnitsVal<T, units, Mode::Absolute>
     template <T toUnits>
     UnitsValRel<T, units> operator-(const UnitsValAbs<T, toUnits> unitsValAbs) const
     {
-        return UnitsValRel<T, units>(UnitsVal<T, units, Mode::Absolute>::as_double() - unitsValAbs(units));
+        return UnitsValRel<T, units>(UnitsVal<T, units, Mode::Absolute>::as_double() -
+                                     unitsValAbs(units));
     }
 
     template <T toUnits>
