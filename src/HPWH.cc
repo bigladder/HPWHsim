@@ -375,7 +375,7 @@ void HPWH::setAllDefaults()
     heatExchangerEffectiveness = 0.9;
 }
 
-HPWH::HPWH(const HPWH& hpwh) { *this = hpwh; }
+HPWH::HPWH(const HPWH& hpwh): Sender("HPWH", hpwh.courier) { *this = hpwh; }
 
 HPWH& HPWH::operator=(const HPWH& hpwh)
 {
