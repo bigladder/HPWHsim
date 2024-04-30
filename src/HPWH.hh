@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -12,6 +13,7 @@
 #include <cstdio>
 #include <cstdlib> //for exit
 #include <vector>
+#include <unordered_map>
 
 #include <courier/courier.h>
 
@@ -228,6 +230,11 @@ class HPWH : public Courier::Sender
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
+        MODELS_AWHSTier4Generic40 = 1175, /**< Generic AWHS Tier 4 40 gallons*/
+        MODELS_AWHSTier4Generic50 = 1176, /**< Generic AWHS Tier 4 50 gallons*/
+        MODELS_AWHSTier4Generic65 = 1177, /**< Generic AWHS Tier 4 65 gallons*/
+        MODELS_AWHSTier4Generic80 = 1178, /**< Generic AWHS Tier 4 80 gallons*/
+
         MODELS_StorageTank = 180, /**< Generic Tank without heaters */
 
         MODELS_TamScalable_SP = 190, /** < HPWH input passed off a poor preforming SP model that
@@ -299,6 +306,8 @@ class HPWH : public Courier::Sender
         MODELS_RHEEM_HPHD135VNU_483_MP = 353, // really bad fit to data due to inconsistency in data
 
         MODELS_AquaThermAire = 400, // heat exchanger model
+
+        MODELS_GenericUEF217 = 410
     };
 
     /// specifies the modes for writing output
@@ -650,7 +659,6 @@ class HPWH : public Courier::Sender
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
     int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
-    void getTankTemps(std::vector<double>& tankTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
     int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
@@ -785,16 +793,6 @@ class HPWH : public Courier::Sender
     /**< returns the index of the top node  */
     int getIndexTopNode() const;
 
-    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
-
-    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
-    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
-        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
-
     int getNumHeatSources() const;
     /**< returns the number of heat sources  */
 
@@ -881,16 +879,10 @@ class HPWH : public Courier::Sender
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
-    double getOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
-    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    class HeatSource;
 
-    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
-    /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    /// get a pointer to the Nth heat source
+    bool getNthHeatSource(int N, HPWH::HeatSource*& heatSource);
 
     double getExternalVolumeHeated(UNITS units = UNITS_L) const;
     /**< returns the volume of water heated in an external in the specified units
@@ -956,6 +948,40 @@ class HPWH : public Courier::Sender
     /**< resets variables for timer associated with the DR_TOT call  */
 
     double getLocationTemp_C() const;
+
+    void getTankTemps(std::vector<double>& tankTemps);
+
+    double getOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the outlet temperature in the specified units
+      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser inlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
+    /**< returns the condenser outlet temperature in the specified units
+    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+
+    double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
+    /**< returns the temperature of the water at the specified node - with specified units
+      or HPWH_ABORT for incorrect node number or unit failure  */
+
+    double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
+    /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
+        which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
+        1 at the bottom using specified units
+        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+
+    /// returns the tank temperature averaged uniformly
+    double getAverageTankTemp_C() const;
+
+    /// returns the tank temperature averaged over a distribution
+    double getAverageTankTemp_C(const std::vector<double>& dist) const;
+
+    /// returns the tank temperature averaged using weighted logic nodes
+    double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+
     int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
@@ -1001,9 +1027,154 @@ class HPWH : public Courier::Sender
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
 
-  private:
-    class HeatSource;
+    /// first-hour rating designations to determine draw pattern for 24-hr test
+    struct FirstHourRating
+    {
+        enum class Desig
+        {
+            VerySmall,
+            Low,
+            Medium,
+            High
+        };
 
+        static inline std::unordered_map<Desig, std::string> sDesigMap = {
+            {Desig::VerySmall, "Very Small"},
+            {Desig::Low, "Low"},
+            {Desig::Medium, "Medium"},
+            {Desig::High, "High"}};
+
+        Desig desig;
+        double drawVolume_L;
+    };
+
+    /// collection of information derived from standard test
+    struct StandardTestSummary
+    {
+        // first recovery values
+        double recoveryEfficiency = 0.; // eta_r
+        double recoveryDeliveredEnergy_kJ = 0.;
+        double recoveryStoredEnergy_kJ = 0.;
+        double recoveryUsedEnergy_kJ = 0.; // Q_r
+
+        //
+        double standbyPeriodTime_h = 0; // tau_stby,1
+
+        double standbyStartTankT_C = 0.; // T_su,0
+        double standbyEndTankT_C = 0.;   // T_su,f
+
+        double standbyStartEnergy_kJ = 0.; // Q_su,0
+        double standbyEndEnergy_kJ = 0.;   // Q_su,f
+        double standbyUsedEnergy_kJ = 0.;  // Q_stby
+
+        double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
+        double standbyLossCoefficient_kJperhC = 0.; // UA
+
+        double noDrawTotalTime_h = 0;        // tau_stby,2
+        double noDrawAverageAmbientT_C = 0.; // <T_a,stby,2>
+
+        // 24-hr values
+        double removedVolume_L = 0.;
+        double waterHeatingEnergy_kJ = 0.; // Q_HW
+        double avgOutletT_C = 0.;          // <Tdel,i>
+        double avgInletT_C = 0.;           // <Tin,i>
+
+        double usedFossilFuelEnergy_kJ = 0.;               // Q_f
+        double usedElectricalEnergy_kJ = 0.;               // Q_e
+        double usedEnergy_kJ = 0.;                         // Q
+        double consumedHeatingEnergy_kJ = 0.;              // Q_d
+        double standardWaterHeatingEnergy_kJ = 0.;         // Q_HW,T
+        double adjustedConsumedWaterHeatingEnergy_kJ = 0.; // Q_da
+        double modifiedConsumedWaterHeatingEnergy_kJ = 0.; // Q_dm
+        double UEF = 0.;
+
+        // (calculated) annual totals
+        double annualConsumedElectricalEnergy_kJ = 0.; // E_annual,e
+        double annualConsumedEnergy_kJ = 0.;           // E_annual
+
+        bool qualifies = false;
+    };
+
+    struct StandardTestOptions
+    {
+        bool saveOutput = false;
+        std::string sOutputDirectory = "";
+        std::string sOutputFilename = "";
+        bool changeSetpoint = false;
+        std::ofstream outputFile;
+        int nTestTCouples = 6;
+        double setpointT_C = 51.7;
+    };
+
+    /// perform a draw/heat cycle to prepare for test
+    bool prepForTest(StandardTestOptions& standardTestOptions);
+
+    /// determine first-hour rating
+    bool findFirstHourRating(FirstHourRating& firstHourRating,
+                             StandardTestOptions& standardTestOptions);
+
+    /// run 24-hr draw pattern and compute metrics
+    bool run24hrTest(const FirstHourRating firstHourRating,
+                     StandardTestSummary& standardTestSummary,
+                     StandardTestOptions& standardTestOptions);
+
+    /// specific information for a single draw
+    struct Draw
+    {
+        double startTime_min;
+        double volume_L;
+        double flowRate_Lper_min;
+
+        Draw(const double startTime_min_in,
+             const double volume_L_in,
+             const double flowRate_Lper_min_in)
+            : startTime_min(startTime_min_in)
+            , volume_L(volume_L_in)
+            , flowRate_Lper_min(flowRate_Lper_min_in)
+        {
+        }
+    };
+
+    /// sequence of draws in pattern
+    typedef std::vector<Draw> DrawPattern;
+
+    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
+
+    /// collection of standard draw patterns
+    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
+
+    /// fields for test output to csv
+    struct OutputData
+    {
+        int time_min;
+        double ambientT_C;
+        double setpointT_C;
+        double inletT_C;
+        double drawVolume_L;
+        DRMODES drMode;
+        std::vector<double> h_srcIn_kWh;
+        std::vector<double> h_srcOut_kWh;
+        std::vector<double> thermocoupleT_C;
+        double outletT_C;
+    };
+
+    int writeRowAsCSV(std::ofstream& outFILE,
+                      OutputData& outputData,
+                      const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
+
+    bool measureMetrics(FirstHourRating& firstHourRating,
+                        StandardTestOptions& standardTestOptions,
+                        StandardTestSummary& standardTestSummary);
+
+    struct CustomTestOptions
+    {
+        bool overrideFirstHourRating = false;
+        FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
+    } customTestOptions;
+
+    bool makeGeneric(const double targetUEF);
+
+  private:
     void setAllDefaults(); /**< sets all the defaults default */
 
     void updateTankTemps(
@@ -1026,9 +1197,6 @@ class HPWH : public Courier::Sender
 
     ///  "extra" heat added during a simulation step
     double extraEnergyInput_kWh;
-
-    double tankAvg_C(const std::vector<NodeWeight> nodeWeights) const;
-    /**< functions to calculate what the temperature in a portion of the tank is  */
 
     /// shift temperatures of tank nodes with indices in the range [mixBottomNode, mixBelowNode)
     /// by a factor mixFactor towards their average temperature
@@ -1296,6 +1464,16 @@ class HPWH::HeatSource
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    struct perfPoint
+    {
+        double T_F;
+        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
+        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
+    };
+
+    std::vector<perfPoint> perfMap;
+    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
+
   private:
     // start with a few type definitions
     enum COIL_CONFIG
@@ -1352,16 +1530,6 @@ class HPWH::HeatSource
         using the condensity and fixed parameters Talpha_C and Tbeta_C.
         Talpha_C and Tbeta_C are not intended to be settable
         see the hpwh_init functions for calculation of shrinkage */
-
-    struct perfPoint
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
-    };
-
-    std::vector<perfPoint> perfMap;
-    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
     std::vector<std::vector<double>> perfGrid;
     /**< The axis values defining the regular grid for the performance data.
@@ -1572,6 +1740,11 @@ inline double FT2_TO_M2(double feet2) { return (feet2 / ft2_per_m2); }
 
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
+
+inline double HM_TO_MIN(const double hours, const double minutes)
+{
+    return min_per_hr * hours + minutes;
+}
 
 inline HPWH::DRMODES operator|(HPWH::DRMODES a, HPWH::DRMODES b)
 {
