@@ -26,7 +26,7 @@ TEST(UnitsConversionTest, conversions)
 
         // test min<->h conversion
         t_min = 45.;
-        typedef Units::UnitsVal<Units::Time, Units::Time::h> Time_h;
+        typedef Units::TimeVal<Units::Time::h> Time_h;
         Time_h t_h = t_min;
         EXPECT_EQ(t_h, 0.75);
 
@@ -49,7 +49,7 @@ TEST(UnitsConversionTest, conversions)
 
         // test combining Diff and Abs modes
         T_C = 72.;
-        typedef Units::UnitsVal<Units::Temp, Units::Temp::F, Units::Mode::Relative> TempDiff_F;
+        typedef Units::TempDiffVal<Units::Temp::F> TempDiff_F;
         EXPECT_EQ(T_C + TempDiff_F(18.), T_C + dF_TO_dC(18.));
         EXPECT_EQ(T_C + TempDiff_F(10., Units::Temp::C), T_C + TempDiff_F(18.));
 

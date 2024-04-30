@@ -294,54 +294,6 @@ struct UnitsVal
         return !(operator==(unitsVal));
     }
 
-    template <T toUnits>
-    UnitsVal operator+(const UnitsVal<T, toUnits> unitsVal) const
-    {
-        return UnitsVal(x + unitsVal(units));
-    }
-
-    template <T toUnits, Mode toMode>
-    UnitsVal operator+(const UnitsVal<T, toUnits, toMode> unitsVal) const
-    {
-        return UnitsVal(x + unitsVal(units));
-    }
-
-    template <T toUnits>
-    UnitsVal operator-(const UnitsVal<T, toUnits> unitsVal) const
-    {
-        return UnitsVal(x - unitsVal(units));
-    }
-
-    template <T toUnits, Mode toMode>
-    UnitsVal operator-(const UnitsVal<T, toUnits, toMode> unitsVal) const
-    {
-        return UnitsVal(x - unitsVal(units));
-    }
-
-    template <T toUnits>
-    UnitsVal& operator+=(const UnitsVal<T, toUnits> unitsVal)
-    {
-        return *this = x + unitsVal(units);
-    }
-
-    template <T toUnits, Mode toMode>
-    UnitsVal& operator+=(const UnitsVal<T, toUnits, toMode> unitsVal)
-    {
-        return *this = x + unitsVal(units);
-    }
-
-    template <T toUnits>
-    UnitsVal& operator-=(const UnitsVal<T, toUnits> unitsVal)
-    {
-        return *this = x - unitsVal(units);
-    }
-
-    template <T toUnits, Mode toMode>
-    UnitsVal& operator-=(const UnitsVal<T, toUnits, toMode> unitsVal)
-    {
-        return *this = x - unitsVal(units);
-    }
-
     static std::vector<UnitsVal> convert(const std::vector<UnitsVal<T, units>>& xV, const T toUnits)
     {
         return Converter<T, mode>::convert(xV, units, toUnits);
@@ -460,6 +412,84 @@ struct UnitsPair
     bool operator!=(const UnitsVal<T, toUnits, mode> unitsVal) const
     {
         return !(operator==(unitsVal));
+    }
+};
+
+/// units values - relative
+template <class T, T units>
+struct UnitsValRel: public UnitsVal<T, units, Mode::Relative>
+{
+    UnitsValRel(const double x_in = 0.):UnitsVal<T, units>(x_in){}
+
+    UnitsValRel(const double x_in, const T fromUnits):UnitsVal<T, units>(x_in, fromUnits){}
+
+    template <T inUnits>
+    UnitsValRel(const UnitsVal<T, inUnits, Mode::Relative>& unitsVal):UnitsVal<T, units>(unitsVal){}
+
+    template <T inUnits>
+    UnitsValRel operator+(const UnitsValRel<T, inUnits> unitsValRel) const
+    {
+        return UnitsValRel(UnitsVal<T, units>::as_double() + unitsValRel(units));
+    }
+
+    template <T inUnits>
+    UnitsValRel operator-(const UnitsValRel<T, inUnits> unitsValRel) const
+    {
+        return UnitsVal(UnitsVal<T, units>::x - unitsValRel(units));
+    }
+
+    template <T toUnits>
+    UnitsValRel& operator+=(const UnitsValRel<T, toUnits> unitsValRel)
+    {
+        return *this = UnitsVal<T, units>::x + unitsValRel(units);
+    }
+
+    template <T toUnits>
+    UnitsValRel& operator-=(const UnitsValRel<T, toUnits> unitsValRel)
+    {
+        return *this = UnitsVal<T, units>::x - unitsValRel(units);
+    }
+};
+
+/// units values - absolute
+template <class T, T units>
+struct UnitsValAbs: public UnitsVal<T, units, Mode::Absolute>
+{
+    UnitsValAbs(const double x_in = 0.):UnitsVal<T, units, Mode::Absolute>(x_in){}
+
+    UnitsValAbs(const double x_in, const T fromUnits):UnitsVal<T, units, Mode::Absolute>(x_in, fromUnits){}
+
+    template <T fromUnits>
+    UnitsValAbs(const UnitsVal<T, fromUnits, Mode::Absolute>& unitsValAbs):UnitsVal<T, units, Mode::Absolute>(unitsValAbs){}
+
+    template <T toUnits>
+    UnitsValAbs operator+(const UnitsValRel<T, toUnits>& unitsValRel) const
+    {
+        return UnitsValAbs(UnitsVal<T, units, Mode::Absolute>::as_double() + unitsValRel(units));
+    }
+
+    template <T toUnits>
+    UnitsValAbs operator-(const UnitsValRel<T, toUnits> unitsValRel) const
+    {
+        return UnitsValAbs(UnitsVal<T, units, Mode::Absolute>::as_double() - unitsValRel(units));
+    }
+
+    template <T toUnits>
+    UnitsValRel<T, units> operator-(const UnitsValAbs<T, toUnits> unitsValAbs) const
+    {
+        return UnitsValRel<T, units>(UnitsVal<T, units, Mode::Absolute>::as_double() - unitsValAbs(units));
+    }
+
+    template <T toUnits>
+    UnitsValAbs& operator+=(const UnitsValRel<T, toUnits> unitsValRel)
+    {
+        return *this = UnitsVal<T, units, Mode::Absolute>::as_double() + unitsValRel(units);
+    }
+
+    template <T toUnits>
+    UnitsValAbs& operator-=(const UnitsValRel<T, toUnits> unitsValRel)
+    {
+        return *this = UnitsVal<T, units, Mode::Absolute>::as_double() - unitsValRel(units);
     }
 };
 
@@ -588,34 +618,34 @@ inline Converter<FlowRate>::ConversionMap Converter<FlowRate>::conversionMap(
 
 /// units-values partial specializations
 template <Time units>
-using TimeVal = UnitsVal<Time, units>;
+using TimeVal = UnitsValRel<Time, units>;
 
 template <Temp units>
-using TempVal = UnitsVal<Temp, units, Mode::Absolute>;
+using TempVal = UnitsValAbs<Temp, units>;
 
 template <Temp units>
-using TempDiffVal = UnitsVal<Temp, units /*, Mode::Relative*/>;
+using TempDiffVal = UnitsValRel<Temp, units>;
 
 template <Energy units>
-using EnergyVal = UnitsVal<Energy, units>;
+using EnergyVal = UnitsValRel<Energy, units>;
 
 template <Power units>
-using PowerVal = UnitsVal<Power, units>;
+using PowerVal = UnitsValRel<Power, units>;
 
 template <Length units>
-using LengthVal = UnitsVal<Length, units>;
+using LengthVal = UnitsValRel<Length, units>;
 
 template <Area units>
-using AreaVal = UnitsVal<Area, units>;
+using AreaVal = UnitsValRel<Area, units>;
 
 template <Volume units>
-using VolumeVal = UnitsVal<Volume, units>;
+using VolumeVal = UnitsValRel<Volume, units>;
 
 template <FlowRate units>
-using FlowRateVal = UnitsVal<FlowRate, units>;
+using FlowRateVal = UnitsValRel<FlowRate, units>;
 
 template <UA units>
-using UAVal = UnitsVal<UA, units>;
+using UAVal = UnitsValRel<UA, units>;
 
 /// units-vectors partial specializations
 template <Time units>
