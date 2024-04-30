@@ -71,20 +71,20 @@ TEST(StateOfChargeFunctionsTest, chargeBelowSetpoint)
     EXPECT_NEAR(chargeFraction, 1., tol);
 
     // Check state of charge returns 0 when tank below useful
-    hpwh.setTankToTemperature(F_TO_C(109.));
+    hpwh.setTankT_C(F_TO_C(109.));
     chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(140.));
     EXPECT_NEAR(chargeFraction, 0., tol);
 
     // Check some lower values with tank set at constant temperatures
-    hpwh.setTankToTemperature(F_TO_C(110.));
+    hpwh.setTankT_C(F_TO_C(110.));
     chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(140.));
     EXPECT_NEAR(chargeFraction, 0.625, tol);
 
-    hpwh.setTankToTemperature(F_TO_C(120.));
+    hpwh.setTankT_C(F_TO_C(120.));
     chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(140.));
     EXPECT_NEAR(chargeFraction, 0.75, tol);
 
-    hpwh.setTankToTemperature(F_TO_C(130.));
+    hpwh.setTankT_C(F_TO_C(130.));
     chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(140.));
     EXPECT_NEAR(chargeFraction, 0.875, tol);
 }
