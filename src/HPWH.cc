@@ -836,11 +836,8 @@ int HPWH::runNSteps(int N,
     for (int i = 0; i < N; i++)
     {
 
-        runOneStep(inletT_C[i],
-                   drawVolume_L[i],
-                   tankAmbientT_C[i],
-                   heatSourceAmbientT_C[i],
-                   DRstatus[i]);
+        runOneStep(
+            inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i], DRstatus[i]);
 
         energyRemovedFromEnvironment_kWh_SUM += energyRemovedFromEnvironment_kWh;
         standbyLosses_kWh_SUM += standbyLosses_kWh;
