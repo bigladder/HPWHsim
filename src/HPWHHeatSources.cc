@@ -752,14 +752,7 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
     std::vector<double> result;
-    try
-    {
-        result = perfRGI->get_values_at_target(target);
-    }
-    catch (std::string message)
-    {
-        hpwh->send_error(message);
-    }
+    result = perfRGI->get_values_at_target(target);
     input_BTUperHr = result[0];
     cop = result[1];
 }

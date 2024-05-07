@@ -510,7 +510,6 @@ int HPWH::runOneStep(double drawVolume_L,
     if (doTempDepression && (minutesPerStep != 1))
     {
         send_error("minutesPerStep must equal one for temperature depression to work.");
-        return HPWH_ABORT;
     }
 
     if ((DRstatus & (DR_TOO | DR_TOT)))
@@ -649,7 +648,7 @@ int HPWH::runOneStep(double drawVolume_L,
             {
                 heatSources[i].disengageHeatSource();
                 send_warning("lock-out triggered, but no backupHeatSource defined. Simulation will "
-                             "continue will lock out the heat source.");
+                             "continue with the heat source locked-out.");
             }
 
             // going through in order, check if the heat source is on
@@ -836,21 +835,12 @@ int HPWH::runNSteps(int N,
     // run the sim one step at a time, accumulating the outputs as you go
     for (int i = 0; i < N; i++)
     {
-        try
-        {
-            runOneStep(inletT_C[i],
-                       drawVolume_L[i],
-                       tankAmbientT_C[i],
-                       heatSourceAmbientT_C[i],
-                       DRstatus[i]);
-        }
-        catch (...)
-        {
-            send_warning(fmt::format(
-                "RunNSteps has encountered an error on step {} of N and has ceased running.",
-                i + 1));
-            return HPWH_ABORT;
-        }
+
+        runOneStep(inletT_C[i],
+                   drawVolume_L[i],
+                   tankAmbientT_C[i],
+                   heatSourceAmbientT_C[i],
+                   DRstatus[i]);
 
         energyRemovedFromEnvironment_kWh_SUM += energyRemovedFromEnvironment_kWh;
         standbyLosses_kWh_SUM += standbyLosses_kWh;
