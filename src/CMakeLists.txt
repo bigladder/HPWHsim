@@ -41,7 +41,7 @@ endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt courier)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)

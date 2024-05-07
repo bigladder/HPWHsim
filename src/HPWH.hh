@@ -122,6 +122,12 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
+    void set_courier(std::shared_ptr<Courier::Courier> courier_in)
+    {
+        courier = std::move(courier_in);
+    }
+    std::shared_ptr<Courier::Courier> get_courier() { return courier; };
+
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
     enum DRMODES

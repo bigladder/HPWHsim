@@ -2153,17 +2153,20 @@ int HPWH::initPreset(MODELS presetNum)
                            Btwxt::InterpolationMethod::linear,
                            Btwxt::ExtrapolationMethod::constant,
                            {-DBL_MAX, DBL_MAX},
-                           "TAir");
+                           "TAir",
+                           get_courier());
         Btwxt::GridAxis g1(compressor.perfGrid[1],
                            Btwxt::InterpolationMethod::linear,
                            Btwxt::ExtrapolationMethod::constant,
                            {-DBL_MAX, DBL_MAX},
-                           "TOut");
+                           "TOut",
+                           get_courier());
         Btwxt::GridAxis g2(compressor.perfGrid[2],
                            Btwxt::InterpolationMethod::linear,
                            Btwxt::ExtrapolationMethod::linear,
                            {-DBL_MAX, DBL_MAX},
-                           "Tin");
+                           "Tin",
+                           get_courier());
 
         std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
 
