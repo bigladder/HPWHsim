@@ -39,9 +39,17 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${library_sources})
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+add_subdirectory(data_model)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
+target_include_directories(${PROJECT_NAME}
+        PUBLIC ${PROJECT_BINARY_DIR}/src
+        PUBLIC ${PROJECT_SOURCE_DIR}/src
+        PUBLIC ${PROJECT_SOURCE_DIR}/src/data_model
+        )
+
+#find_package(nlohmann_json 3.11.3 REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
