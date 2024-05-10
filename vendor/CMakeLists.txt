@@ -17,3 +17,7 @@ if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
     mark_as_advanced(BUILD_GTEST BUILD_GMOCK INSTALL_GTEST)
 	add_subdirectory("${btwxt_SOURCE_DIR}/vendor/googletest")
 endif ()
+
+if (NOT TARGET json)
+    add_subdirectory(json)
+endif ()

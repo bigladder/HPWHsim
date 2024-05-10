@@ -1,0 +1,246 @@
+{
+    "metadata": {
+        "data_model": "ASHRAE205",
+        "schema_version": "1.0.0",
+        "schema": "RSINTEGRATEDWATERHEATER",
+        "description": "Rheem 2020 Premium, 50-gallon integrated heat-pump water heater",
+        "id": "6998e64f-7824-414c-9d48-57e43ee47071",
+        "data_timestamp": "2022-11-23T11:45Z",
+        "data_version": 1,
+        "data_source": null,
+        "disclaimer": null,
+        "notes": null
+    },
+    "description": {
+        "product_information": {
+            "manufacturer": "Rheem",
+            "model": "Rheem2020Prem50"
+        }
+    },
+    "performance": {
+        "number_of_nodes": 12,
+        "tank": {
+            "metadata": {
+                "schema_version": "1.0.0",
+                "data_model": "ASHRAE205",
+                "schema": "RS_TANK",
+                "description": "Generic tank",
+                "id": "XXXX-XXXX-XXXXX",
+                "data_timestamp": "2020-05-07T00:00Z",
+                "data_version": 1,
+                "disclaimer": "Example data not to be used for simulation",
+                "notes": "An example representation of a tank"
+            },
+            "description": {
+                "product_information": {
+                    "manufacturer": "Generic",
+                    "model_number": "XXXXXX"
+                }
+            },
+            "performance": {
+                "volume": 0.1707,
+                "ua": 0.003008333,
+                "bottom_fraction_of_tank_mixing_on_draw": 0.333
+            }
+        },
+        "heat_source_configurations": [
+            {
+                "heat_source": {
+                    "metadata": {
+                        "data_model": "ASHRAE205",
+                        "schema": "RSRESISTANCEWATERHEATSOURCE",
+                        "schema_version": "1.0.0",
+                        "description": "Thermistor",
+                        "id": "XXXX-XXXX-XXXXX",
+                        "data_timestamp": "2020-05-07T00:00Z",
+                        "data_version": 1,
+                        "disclaimer": "Example data not to be used for simulation",
+                        "notes": "An example representation of a resistive heat source"
+                    },
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "Generic",
+                            "model_number": "XXXXXX"
+                        }
+                    },
+                    "performance": {
+                        "input_power": 4500
+                    }
+                },
+                "heat_distribution": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "turn_on_logic": {
+                    "differential_temperature": 0,
+                    "logic_distribution": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "evaluation_criterion": "MAXIMUM",
+                    "comparison_type": "LESS_THAN",
+                    "hysteresis_temperature": 0
+                },
+                "maximum_setpoint": 373.15
+            },
+            {
+                "heat_source": {
+                    "metadata": {
+                        "data_model": "ASHRAE205",
+                        "schema": "RSCONDENSERWATERHEATSOURCE",
+                        "schema_version": "1.0.0",
+                        "description": "Condenser coil",
+                        "id": "XXXX-XXXX-XXXXX",
+                        "data_timestamp": "2020-05-07T00:00Z",
+                        "data_version": 1,
+                        "disclaimer": "Example data not to be used for simulation",
+                        "notes": "An example representation of a condenser heat source"
+                    },
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "Generic",
+                            "model_number": "XXXXXX"
+                        }
+                    },
+                    "performance": {
+                        "performance_map": {
+                            "grid_variables": {
+                                "evaporator_environment_temperature": [
+                                    293.15,
+                                    313.25
+                                ],
+                                "heat_source_temperature": [
+                                    293.15,
+                                    313.25
+                                ]
+                            },
+                            "lookup_variables": {
+                                "input_power": [
+                                    200,
+                                    300,
+                                    300,
+                                    400
+                                ],
+                                "cop": [
+                                    0.3,
+                                    0.4,
+                                    0.4,
+                                    0.5
+                                ]
+                            }
+                        },
+                        "standby_power": 50,
+                        "coil_configuration": "WRAPPED"
+                    }
+                },
+                "heat_distribution": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    0.2,
+                    0.2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "turn_on_logic": {
+                    "differential_temperature": 17.78,
+                    "logic_distribution": [
+                        1,
+                        0,
+                        0
+                    ],
+                    "evaluation_criterion": "WEIGHTED_AVERAGE",
+                    "comparison_type": "LESS_THAN",
+                    "temperature_hysteresis": 0.556
+                },
+                "standby_logic": {
+                    "differential_temperature": 5,
+                    "evaluation_criterion": "WEIGHTED_AVERAGE",
+                    "comparison_type": "LESS_THAN",
+                    "hysteresis_temperature": 0.556
+                },
+                "maximum_temperature": 275.93,
+                "minimum_temperature": 322.04,
+                "maximum_setpoint": 344.26
+            },
+            {
+                "heat_source": {
+                    "metadata": {
+                        "data_model": "ASHRAE205",
+                        "schema": "RSRESISTANCEWATERHEATSOURCE",
+                        "schema_version": "1.0.0",
+                        "description": "Thermistor",
+                        "id": "XXXX-XXXX-XXXXX",
+                        "data_timestamp": "2020-05-07T00:00Z",
+                        "data_version": 1,
+                        "disclaimer": "Example data not to be used for simulation",
+                        "notes": "An example representation of a resistive heat source"
+                    },
+                    "description": {
+                        "product_information": {
+                            "manufacturer": "Generic",
+                            "model_number": "XXXXXX"
+                        }
+                    },
+                    "performance": {
+                        "input_power": 4500
+                    }
+                },
+                "heat_distribution": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "shut_off_logic": {
+                    "differential_temperature": 55.56,
+                    "logic_distribution": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "evaluation_criterion": "MAXIMUM",
+                    "comparison_type": "LESS_THAN",
+                    "hysteresis_temperature": 2.22
+                },
+                "maximum_setpoint": 373.15
+            }
+        ]
+    }
+}
