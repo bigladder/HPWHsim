@@ -6,7 +6,7 @@
 #include <core.h>
 #include <enum-info.h>
 #include <rsintegratedwaterheater.h>
-#include <HeatSource.h>
+#include <heat-source.h>
 #include <rsinstance.h>
 #include <nlohmann/json.hpp>
 
@@ -45,7 +45,7 @@
 			const static std::string_view input_power_description;
 			const static std::string_view input_power_name;
 		};
-        struct RSRESISTANCEWATERHEATSOURCE: public HeatSource {
+        struct RSRESISTANCEWATERHEATSOURCE: public heatsource, RSInstance {
             void initialize (const nlohmann::json& j) override;
             static std::shared_ptr<Courier::Courier> logger;
 			core_ns::Metadata metadata;

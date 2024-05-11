@@ -8,7 +8,7 @@
 #include <vector>
 #include <enum-info.h>
 
-#include <HeatSource.h>
+#include <heat-source.h>
 #include <rsinstance.h>
 #include <courier/courier.h>
 #include <nlohmann/json.hpp>
@@ -91,7 +91,7 @@ namespace hpwh_data_model {
 
         struct HeatSourceConfiguration {
             HeatSourceType heat_source_type;
-            std::unique_ptr<HeatSource> heat_source;
+            std::unique_ptr<heatsource> heat_source;
             std::vector<double> heat_distribution;
             std::vector<HeatingLogic> turn_on_logic;
             std::vector<HeatingLogic> shut_off_logic;

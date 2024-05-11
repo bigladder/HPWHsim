@@ -38,7 +38,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "HPWH.hh"
+#include "HPWHsim.hh"
 #include <btwxt/btwxt.h>
 #include <fmt/format.h>
 
@@ -326,7 +326,7 @@ double findShrinkageT_C(const std::vector<double>& nodeDist)
         }
     }
     // condentropy shifts as ln(# of condensity nodes)
-    double size_factor = static_cast<double>(nodeDist.size()) / HPWH::CONDENSITY_SIZE;
+    double size_factor = static_cast<double>(nodeDist.size()) / HPWH::HeatSource::CONDENSITY_SIZE;
     double standard_condentropy = condentropy - log(size_factor);
 
     return alphaT_C + standard_condentropy * betaT_C;
@@ -5112,6 +5112,14 @@ int HPWH::initFromFile(string configFile)
     return 0;
 }
 #endif
+
+void HPWH::init(nlohmann::json j)
+{
+    //hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rs_hpwh;
+    //hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger = courier;
+    //rs_hpwh.initialize(j);
+    std::cout << j;
+}
 
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
