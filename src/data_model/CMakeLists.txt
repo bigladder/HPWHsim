@@ -9,7 +9,7 @@ set(data_model_headers
         rsresistancewaterheatsource.h
         rstank.h
         rsinstance.h
-        HeatSource.h
+        heat-source.h
         hpwh_data_model.h
         )
 
