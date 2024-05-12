@@ -19,6 +19,7 @@
 
 #include <nlohmann/json.hpp>
 #include "hpwh_data_model.h"
+#include "HPWHLogger.hh"
 
 namespace Btwxt
 {
@@ -31,56 +32,9 @@ class RegularGridInterpolator;
 
 #include "HPWHversion.hh"
 #include "courier/helpers.h"
+#include "HPWHLogger.hh"
 
-class Logger : public Courier::Courier
-{
-  public:
-    Logger() = default;
-
-    enum class MessageLevel
-    {
-        all,
-        debug,
-        info,
-        warning,
-        error
-    };
-    MessageLevel message_level {MessageLevel::error};
-
-  protected:
-    void receive_error(const std::string& message) override
-    {
-        write_message("ERROR", message);
-        throw std::runtime_error(message);
-    }
-    void receive_warning(const std::string& message) override
-    {
-        if (message_level <= MessageLevel::warning)
-        {
-            write_message("WARNING", message);
-        }
-    }
-    void receive_info(const std::string& message) override
-    {
-        if (message_level <= MessageLevel::info)
-        {
-            write_message("INFO", message);
-        }
-    }
-    void receive_debug(const std::string& message) override
-    {
-        if (message_level <= MessageLevel::debug)
-        {
-            write_message("DEBUG", message);
-        }
-    }
-    void write_message(const std::string& message_type, const std::string& message)
-    {
-        std::cout << fmt::format("[{}]{} {}", message_type, "", message) << std::endl;
-    }
-};
-
-class HPWH : public Courier::Sender
+class HPWH : public Dispatcher
 {
   public:
 
@@ -106,12 +60,6 @@ class HPWH : public Courier::Sender
 
     static const float UNINITIALIZED_LOCATIONTEMP; /**< this is used to tell the
    simulation when the location temperature has not been initialized */
-    static const float
-        ASPECTRATIO; /**< A constant to define the aspect ratio between the tank height and
-                     radius (H/R). Used to find the radius and tank height from the volume and then
-                     find the surface area. It is derived from the median value of 88
-                     insulated storage tanks currently available on the market from
-                     Sanden, AOSmith, HTP, Rheem, and Niles,  */
     static const double
         MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
     static const double
@@ -129,12 +77,6 @@ class HPWH : public Courier::Sender
                 eventually?   */
 
     void init(nlohmann::json j = {});
-
-    void set_courier(std::shared_ptr<Courier::Courier> courier_in)
-    {
-        courier = std::move(courier_in);
-    }
-    std::shared_ptr<Courier::Courier> get_courier() { return courier; };
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -505,6 +447,15 @@ class HPWH : public Courier::Sender
      */
 #endif
 
+    double minutesPerStep = 1.;
+    double secondsPerStep, hoursPerStep;
+
+    /// the HeatSources, in order of priority
+    std::vector<HeatSource> heatSources;
+
+    /// the tank
+    std::shared_ptr<Tank> tank;
+
     int runOneStep(double drawVolume_L,
                    double ambientT_C,
                    double externalT_C,
@@ -654,17 +605,13 @@ class HPWH : public Courier::Sender
     int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
-    int getFittingsUA(double& UA, UNITS units = UNITS_kJperHrC) const;
-    /**< Returns the UAof just the fittings, with or without units specified - default is metric,
-     * kJperHrC  */
-
-    int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
-    /**< This is a setter for the UA of just the fittings, with or without units specified - default
-     * is metric, kJperHrC */
+    int getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const;
+    int setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/);
 
     int setInletByFraction(double fractionalHeight);
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
+
     int setInlet2ByFraction(double fractionalHeight);
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
@@ -1089,14 +1036,11 @@ class HPWH : public Courier::Sender
   private:
     void setAllDefaults(); /**< sets all the defaults default */
 
-    void updateTankTemps(
-        double draw, double inletT_C, double ambientT_C, double inletVol2_L, double inletT2_L);
-    void mixTankInversions();
-    /**< Mixes the any temperature inversions in the tank after all the temperature calculations  */
     void updateSoCIfNecessary();
 
     bool areAllHeatSourcesOff() const;
     /**< test if all the heat sources are off  */
+
     void turnAllHeatSourcesOff();
     /**< disengage each heat source  */
 
@@ -1137,17 +1081,8 @@ class HPWH : public Courier::Sender
     bool setpointFixed;
     /**< does the HPWH allow the setpoint to vary  */
 
-    bool tankSizeFixed;
-    /**< does the HPWH have a constant tank size or can it be changed  */
-
-    bool canScale;
-    /**< can the HPWH scale capactiy and COP or not  */
-
     MODELS model;
     /**< The model id */
-
-    /// a std::vector containing the HeatSources, in order of priority
-    std::vector<HeatSource> heatSources;
 
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/
@@ -1164,50 +1099,11 @@ class HPWH : public Courier::Sender
     /**< The index of the VIP resistance element heat source (set to -1 if no VIP resistance
      * elements)*/
 
-    int inletHeight;
-    /**< the number of a node in the tank that the inlet water enters the tank at, must be between 0
-     * and numNodes-1  */
-
-    int inlet2Height;
-    /**< the number of a node in the tank that the 2nd inlet water enters the tank at, must be
-     * between 0 and numNodes-1  */
-
-    /**< the volume in liters of the tank  */
-    double tankVolume_L;
-
-    /**< the UA of the tank, in metric units  */
-    double tankUA_kJperHrC;
-
-    /**< the UA of the fittings for the tank, in metric units  */
-    double fittingsUA_kJperHrC;
-
-    /**< the volume (L) of a single node  */
-    double nodeVolume_L;
-
-    /**< heat capacity (kJ/degC) of the fluid (water, except for heat-exchange models) in a single
-     * node  */
-    double nodeCp_kJperC;
-
-    /**< the height in meters of the one node  */
-    double nodeHeight_m;
-
-    double fracAreaTop;
-    /**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
-    double fracAreaSide;
-    /**< the fraction of the UA on the sides of the tank, assuming it's a cylinder  */
-
     double currentSoCFraction;
     /**< the current state of charge according to the logic */
 
     double setpoint_C;
     /**< the setpoint of the tank  */
-
-    /**< holds the temperature of each node - 0 is the bottom node  */
-    std::vector<double> tankTemps_C;
-
-    /**< holds the future temperature of each node for the conduction calculation - 0 is the bottom
-     * node  */
-    std::vector<double> nextTankTemps_C;
 
     DRMODES prevDRstatus;
     /**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
@@ -1220,10 +1116,6 @@ class HPWH : public Courier::Sender
 
     bool usesSoCLogic;
 
-    // Some outputs
-    double outletTemp_C;
-    /**< the temperature of the outlet water - taken from top of tank, 0 if no flow  */
-
     double condenserInlet_C;
     /**< the temperature of the inlet water to the condensor either an average of tank nodes or
      * taken from the bottom, 0 if no flow or no compressor  */
@@ -1233,38 +1125,25 @@ class HPWH : public Courier::Sender
     double externalVolumeHeated_L;
     /**< the volume of water heated by an external source, 0 if no flow or no external heat source
      */
-
     double energyRemovedFromEnvironment_kWh;
     /**< the total energy removed from the environment, to heat the water  */
+
     double standbyLosses_kWh;
     /**< the amount of heat lost to standby  */
 
-    // special variables for adding abilities
-    bool tankMixesOnDraw;
-    /**<  whether or not the bottom fraction (defined by mixBelowFraction)
-    of the tank should mix during draws  */
-    double mixBelowFractionOnDraw;
-    /**<  mixes the tank below this fraction on draws iff tankMixesOnDraw  */
-
-    bool doTempDepression;
+     bool doTempDepression;
     /**<  whether the HPWH should use the alternate ambient temperature that
         gets depressed when a compressor is running
         NOTE: this only works for 1 minute steps  */
+
     double locationTemperature_C;
     /**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
+
     double maxDepression_C = 2.5;
     /** a couple variables to hold values which are typically inputs  */
+
     double member_inletT_C;
-
-    double minutesPerStep = 1.;
-    double secondsPerStep, hoursPerStep;
-
-    bool doInversionMixing;
-    /**<  If and only if true will model temperature inversion mixing in the tank  */
-
-    bool doConduction;
-    /**<  If and only if true will model conduction between the internal nodes of the tank  */
 
     struct resPoint
     {
@@ -1277,17 +1156,6 @@ class HPWH : public Courier::Sender
 
     /// Generates a vector of logical nodes
     std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
-
-    /// False: water is drawn from the tank itself; True: tank provides heat exchange only
-    bool hasHeatExchanger;
-
-    /// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by
-    /// heat-exchange models only).
-    double heatExchangerEffectiveness;
-
-    /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
-    /// line (derived from heatExchangerEffectiveness).
-    double nodeHeatExchangerEffectiveness;
 
 }; // end of HPWH class
 
@@ -1324,7 +1192,10 @@ inline double GPM_TO_LPS(double gpm) { return (gpm * L_per_gal / sec_per_min); }
 inline double LPS_TO_GPM(double lps) { return (lps * sec_per_min / L_per_gal); }
 
 inline double FT_TO_M(double feet) { return (feet / ft_per_m); }
-inline double FT2_TO_M2(double feet2) { return (feet2 / ft2_per_m2); }
+inline double FT2_TO_M2(double feet2) { return FT_TO_M(FT_TO_M(feet2)); }
+
+inline double M_TO_FT(double m) { return (ft_per_m * m); }
+inline double M2_TO_FT2(double m2) { return M_TO_FT(M_TO_FT(m2)); }
 
 inline double MIN_TO_SEC(double minute) { return minute * sec_per_min; }
 inline double MIN_TO_HR(double minute) { return minute / min_per_hr; }
