@@ -22,8 +22,6 @@ int HPWH::initResistanceTank(double tankVol_L,
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // return 0 on success, HPWH_ABORT for failure
 
-    heatSources.clear();
-
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
     if (lowerPower_W < 550)
     {
@@ -40,6 +38,9 @@ int HPWH::initResistanceTank(double tankVol_L,
         send_error("Energy Factor less than zero.");
         return HPWH_ABORT;
     }
+
+    tank = std::make_shared<Tank>(this);
+    heatSources.clear();
 
     setNumNodes(12);
 
