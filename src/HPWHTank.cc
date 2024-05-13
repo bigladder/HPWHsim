@@ -527,7 +527,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
     // Update nodeTs_C
     nodeTs_C = nextNodeTs_C;
 
-    standbyLosses_kJ += standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ;
+    standbyLosses_kJ = standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ;
 
      mixInversions();
 
