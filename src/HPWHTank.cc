@@ -41,7 +41,7 @@ void HPWH::Tank::setAllDefaults()
 
 void HPWH::Tank::calcSizeConstants()
 {
-    const double tankRad_m = getTankRadius(UNITS_M);
+    const double tankRad_m = getRadius_m();
     const double tankHeight_m = ASPECTRATIO * tankRad_m;
 
     nodeVolume_L = volume_L / getNumNodes();
@@ -118,6 +118,17 @@ HPWH::Tank::getRadius_m(double volume_L)
     return value_m;
 }
 
+
+double
+HPWH::Tank::getRadius_m() const
+{
+    double value_m = -1.;
+    if (volume_L >= 0.)
+    {
+        value_m = 0.1 * pow(volume_L / 3.14159 / ASPECTRATIO, 1. / 3.);
+    }
+    return value_m;
+}
 void HPWH::Tank::setNumNodes(const std::size_t num_nodes)
 {
     nodeTs_C.resize(num_nodes);
