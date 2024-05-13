@@ -10,7 +10,8 @@ class HPWH::HeatSource : public Dispatcher
 
     static const int CONDENSITY_SIZE = 12;
 
-    HeatSource(HPWH* hpwh_in = NULL, const std::shared_ptr<Courier::Courier>& courier =
+    HeatSource(HPWH* hpwh_in = NULL,
+               const std::shared_ptr<Courier::Courier>& courier =
                                          std::make_shared<Logger>());
     //HeatSource(HPWH* hpwh_in): hpwh(hpwh_in){}
 

@@ -13,7 +13,9 @@
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier>& courier): Dispatcher("HeatSource", courier), hpwh(hpwh_in)
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier>& courier)
+    : Dispatcher("HeatSource", courier)
+    , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
@@ -35,8 +37,9 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Couri
     , typeOfHeatSource(TYPE_none)
     , isMultipass(true)
     , extrapolationMethod(EXTRAP_LINEAR)
-{}
-    // public HPWH::HeatSource functions
+{
+}
+// public HPWH::HeatSource functions
 
 HPWH::HeatSource::HeatSource(const HeatSource& heatSource) { *this = heatSource; }
 
@@ -114,7 +117,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::init(nlohmann::json j) {std::cout << j;}
+void HPWH::HeatSource::init(nlohmann::json j) { std::cout << j; }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
 {
@@ -939,7 +942,8 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     do
     {
         // find node fraction to heat in remaining time
-        double nodeFrac = mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->tank->nodeVolume_L;
+        double nodeFrac =
+            mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->tank->nodeVolume_L;
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
             nodeFrac = 1.;
@@ -1090,4 +1094,3 @@ void HPWH::HeatSource::changeResistanceWatts(double watts)
         perfP.inputPower_coeffs[0] = watts;
     }
 }
-

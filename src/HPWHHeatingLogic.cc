@@ -94,10 +94,11 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // Find the fraction to heat the calc node to meet the target SoC fraction without heating the
     // node below up to tempMinUseful.
-    double maxSoC = hpwh->getNumNodes() *
-                    getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpoint_C);
-    double targetTemp = deltaSoCFraction * maxSoC + (hpwh->tank->nodeTs_C[calcNode] - getMainsT_C()) /
-                                                        (tempMinUseful_C - getMainsT_C());
+    double maxSoC =
+        hpwh->getNumNodes() * getChargePerNode(getMainsT_C(), tempMinUseful_C, hpwh->setpoint_C);
+    double targetTemp =
+        deltaSoCFraction * maxSoC +
+        (hpwh->tank->nodeTs_C[calcNode] - getMainsT_C()) / (tempMinUseful_C - getMainsT_C());
     targetTemp = targetTemp * (tempMinUseful_C - getMainsT_C()) + getMainsT_C();
 
     // Catch case where node temperature == setpoint
