@@ -107,12 +107,11 @@ int HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
 
 /*static*/ double HPWH::Tank::getSurfaceArea_m2(double vol)
 {
+    // retain legacy test values by unit conversion
     double vol_ft3 = L_TO_FT3(vol);
     double radius_ft = pow(vol_ft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
 
     double SA_ft2 = 2. * 3.14159 * pow(radius_ft, 2) * (ASPECTRATIO + 1.);
-    // double radius = getRadius_m(vol);
-
     double SA_m2 = FT2_TO_M2(SA_ft2);
     return SA_m2;
 }
