@@ -17,8 +17,11 @@ class HPWH::Tank : public Dispatcher
 
     HPWH* hpwh;
 
-    Tank(HPWH* hpwh_in = NULL, const std::shared_ptr<Courier::Courier>& courier =
-                                   std::make_shared<Logger>()) : Dispatcher("Tank", courier), hpwh(hpwh_in) {}
+    Tank(HPWH* hpwh_in = NULL,
+         const std::shared_ptr<Courier::Courier>& courier = std::make_shared<Logger>())
+        : Dispatcher("Tank", courier), hpwh(hpwh_in)
+    {
+    }
 
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
     Tank(const Tank& tank);            /// copy constructor
@@ -26,13 +29,13 @@ class HPWH::Tank : public Dispatcher
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void init(nlohmann::json j = {}) {std::cout << j;}
+    void init(nlohmann::json j = {}) { std::cout << j; }
 
     void setAllDefaults();
 
     void calcSizeConstants();
 
-    bool isVolumeFixed() const {return volumeFixed;}
+    bool isVolumeFixed() const { return volumeFixed; }
 
     /// set the volume
     int setVolume_L(double volume_L_in, bool forceChange = false);
@@ -112,12 +115,11 @@ class HPWH::Tank : public Dispatcher
     /// UA
     double UA_kJperHrC;
 
-   /// number of node at which the inlet water enters. must be between 0 and numNodes-1
+    /// number of node at which the inlet water enters. must be between 0 and numNodes-1
     int inletHeight;
 
     /// number of node at which the 2nd inlet water enters, must be between 0 and numNodes-1
     int inlet2Height;
-
 
     /// get the water inlet height node number
     int getInletHeight(int whichInlet) const;
@@ -153,23 +155,23 @@ class HPWH::Tank : public Dispatcher
 
     int setDoConduction(bool doCondu);
 
-   /// False: water is drawn from the tank itself; True: tank provides heat exchange only
-   bool hasHeatExchanger;
+    /// False: water is drawn from the tank itself; True: tank provides heat exchange only
+    bool hasHeatExchanger;
 
-   /// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by
-   /// heat-exchange models only).
-   double heatExchangerEffectiveness;
+    /// Coefficient (0-1) of effectiveness for heat exchange between tank and water line (used by
+    /// heat-exchange models only).
+    double heatExchangerEffectiveness;
 
-   /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
-   /// line (derived from heatExchangerEffectiveness).
-   double nodeHeatExchangerEffectiveness;
+    /// Coefficient (0-1) of effectiveness for heat exchange between a single tank node and water
+    /// line (derived from heatExchangerEffectiveness).
+    double nodeHeatExchangerEffectiveness;
 
-   /// temperature of the outlet water - taken from top of tank, 0 if no flow  */
+    /// temperature of the outlet water - taken from top of tank, 0 if no flow  */
     double outletT_C;
 
-    double getOutletT_C() const{ return outletT_C;}
+    double getOutletT_C() const { return outletT_C; }
 
-    void setOutletT_C(double outletT_C_in){ outletT_C = outletT_C_in;}
+    void setOutletT_C(double outletT_C_in) { outletT_C = outletT_C_in; }
 
     void mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
@@ -177,15 +179,14 @@ class HPWH::Tank : public Dispatcher
     void checkForInversion();
 
     void updateNodes(double drawVolume_L,
-        double inletT_C,
-        double tankAmbientT_C,
-        double inletVol2_L,
-        double inletT2_C);
+                     double inletT_C,
+                     double tankAmbientT_C,
+                     double inletVol2_L,
+                     double inletT2_C);
 
     int setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
     int setInletByFraction(double fractionalHeight);
     int setInlet2ByFraction(double fractionalHeight);
-
 
     double getStandbyLosses_kJ();
 
