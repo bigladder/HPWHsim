@@ -138,6 +138,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Dispatcher("HPWH", courier)
 {
+    tank = std::make_shared<Tank>(this, courier);
     setAllDefaults();
 }
 
@@ -493,6 +494,7 @@ int HPWH::runOneStep(double drawVolume_L,
     // settle outputs
 
     // outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
+    standbyLosses_kWh = KJ_TO_KWH(tank->standbyLosses_kJ);
 
     // sum energyRemovedFromEnvironment_kWh for each heat source;
     for (int i = 0; i < getNumHeatSources(); i++)
