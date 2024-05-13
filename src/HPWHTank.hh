@@ -18,7 +18,7 @@ class HPWH::Tank : public Dispatcher
     HPWH* hpwh;
 
     Tank(HPWH* hpwh_in = NULL, const std::shared_ptr<Courier::Courier>& courier =
-                                   std::make_shared<Logger>()): hpwh(hpwh_in) {}
+                                   std::make_shared<Logger>()) : Dispatcher("Tank", courier), hpwh(hpwh_in) {}
 
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
     Tank(const Tank& tank);            /// copy constructor
@@ -32,7 +32,7 @@ class HPWH::Tank : public Dispatcher
 
     void calcSizeConstants();
 
-    bool isVolumeFixed() const;
+    bool isVolumeFixed() const {return volumeFixed;}
 
     /// set the volume
     int setVolume_L(double volume_L_in, bool forceChange = false);
@@ -59,12 +59,11 @@ class HPWH::Tank : public Dispatcher
     /// get the UA
     double getUA_kJperHrC() const;
 
-    /// get the UA of the fittings
-    double getFittingsUA_kJperHrC() const {return fittingsUA_kJperHrC;}
+    double addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxHeatToT_C);
 
-    /**< This is a setter for the UA of just the fittings, with or without units specified - default
-    * is metric, kJperHrC */
-    void setFittingsUA_kJperHrC(double fittingsUA_kJperHrC_in) { fittingsUA_kJperHrC = fittingsUA_kJperHrC_in; }
+    void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
+
+    void modifyHeatDistribution(std::vector<double>& heatDistribution_W, double setpointT_C);
 
     /// volume (L)
     double volume_L;
@@ -74,7 +73,7 @@ class HPWH::Tank : public Dispatcher
 
     /// future node temperature of each node - 0 is the bottom
     std::vector<double> nextNodeTs_C;
-    
+
     /// heat lost to standby
     double standbyLosses_kJ;
 
@@ -92,7 +91,7 @@ class HPWH::Tank : public Dispatcher
     bool doConduction;
 
     /// whether size can be changed
-    bool sizeFixed;
+    bool volumeFixed;
 
     /// volume (L) of a single node
     double nodeVolume_L;
@@ -113,14 +112,12 @@ class HPWH::Tank : public Dispatcher
     /// UA
     double UA_kJperHrC;
 
-   /// UA of the fittings
-   double fittingsUA_kJperHrC;
-
    /// number of node at which the inlet water enters. must be between 0 and numNodes-1
     int inletHeight;
 
     /// number of node at which the 2nd inlet water enters, must be between 0 and numNodes-1
     int inlet2Height;
+
 
     /// get the water inlet height node number
     int getInletHeight(int whichInlet) const;
@@ -129,14 +126,28 @@ class HPWH::Tank : public Dispatcher
     void setNumNodes(const std::size_t num_nodes);
 
     /// get number of nodes
-    int getNumNodes() const;
+    int getNumNodes() const { return static_cast<int>(nodeTs_C.size()); }
 
     /// get index of the top node
-    int getIndexTopNode() const;
+    int getIndexTopNode() const { return getNumNodes() - 1; }
 
     int setNodeTs_C(std::vector<double> nodeTs_C_in);
 
     int setNodeT_C(double T_C) { return setNodeTs_C({T_C}); }
+
+    void getNodeTs_C(std::vector<double>& tankTemps) { tankTemps = nodeTs_C; }
+
+    double getAverageNodeT_C() const;
+
+    double getNodeT_C(int nodeNum) const;
+
+    double getAverageNodeT_C(const std::vector<double>& dist) const;
+
+    double getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const;
+
+    double getHeatContent_kJ() const;
+
+    double getNthSimTcouple(int iTCouple, int nTCouple) const;
 
     int setDoInversionMixing(bool doInvMix);
 
@@ -163,20 +174,22 @@ class HPWH::Tank : public Dispatcher
     void mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor);
 
     void mixInversions();
+    void checkForInversion();
 
     void updateNodes(double drawVolume_L,
         double inletT_C,
         double tankAmbientT_C,
         double inletVol2_L,
-        double inletT2_C,
-        double stepTime_min);
+        double inletT2_C);
 
     int setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
     int setInletByFraction(double fractionalHeight);
-    int setInlet2ByFraction(double fractionalHeight)l
+    int setInlet2ByFraction(double fractionalHeight);
 
 
     double getStandbyLosses_kJ();
+
+    double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
 
 }; // end of HPWH::Tank class
 

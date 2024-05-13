@@ -548,11 +548,10 @@ class HPWH : public Dispatcher
        tMains = current mains (cold) water temp,
        tMinUseful = minimum useful temp,
        tMax = nominal maximum temp.*/
+
     double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
-    double calcSoCFraction(double tMains_C, double tMinUseful_C) const
-    {
-        return calcSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
-    };
+    double calcSoCFraction(double tMains_C, double tMinUseful_C) const;
+
     /** Returns State of Charge calculated from the heating logics if this hpwh uses SoC logics. */
     double getSoCFraction() const;
 
@@ -604,6 +603,11 @@ class HPWH : public Dispatcher
 
     int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
+
+    /// UA of the fittings
+    double fittingsUA_kJperHrC;
+
+    double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC;}
 
     int getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const;
     int setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/);
@@ -797,7 +801,7 @@ class HPWH : public Dispatcher
     where the shut off logic is for the compressor. If the logic spans multiple nodes it
     returns the weighted average of the nodes */
 
-    bool isHPWHScalable() const;
+    bool isScalable() const;
     /**< returns if the HPWH is scalable or not*/
 
     bool shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const;
@@ -885,6 +889,8 @@ class HPWH : public Dispatcher
 
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
+
+    void mixTankInversions();
 
     /// first-hour rating designations to determine draw pattern for 24-hr test
     struct FirstHourRating
@@ -1070,8 +1076,6 @@ class HPWH : public Dispatcher
 
     int checkInputs();
     /**< a helper function to run a few checks on the HPWH input parameters  */
-
-    double getChargePerNode(double tCold, double tMix, double tHot) const;
 
     void calcAndSetSoCFraction();
 

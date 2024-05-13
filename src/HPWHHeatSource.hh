@@ -3,14 +3,15 @@
 
 #include "HPWH.hh"
 
-class HPWH::HeatSource
+class HPWH::HeatSource : public Dispatcher
 {
   public:
     friend class HPWH;
 
     static const int CONDENSITY_SIZE = 12;
 
-    HeatSource(HPWH* hpwh_in = NULL);
+    HeatSource(HPWH* hpwh_in = NULL, const std::shared_ptr<Courier::Courier>& courier =
+                                         std::make_shared<Logger>());
     //HeatSource(HPWH* hpwh_in): hpwh(hpwh_in){}
 
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */

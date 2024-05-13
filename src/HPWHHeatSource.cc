@@ -11,8 +11,9 @@
 #include "HPWH.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
+#include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in): hpwh(hpwh_in)
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier>& courier): Dispatcher("HeatSource", courier), hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
@@ -333,7 +334,7 @@ bool HPWH::HeatSource::shutsOff() const
 {
     bool shutOff = false;
 
-    if (hpwh->tankTemps_C[0] >= hpwh->setpoint_C)
+    if (hpwh->tank->nodeTs_C[0] >= hpwh->setpoint_C)
     {
         shutOff = true;
         return shutOff;
@@ -361,7 +362,7 @@ bool HPWH::HeatSource::maxedOut() const
     // shut off
     if (hpwh->setpoint_C > maxSetpoint_C)
     {
-        if (hpwh->tankTemps_C[0] >= maxSetpoint_C || shutsOff())
+        if (hpwh->tank->nodeTs_C[0] >= maxSetpoint_C || shutsOff())
         {
             maxed = true;
         }
@@ -476,7 +477,7 @@ double HPWH::HeatSource::getTankTemp() const
 {
 
     std::vector<double> resampledTankTemps(getCondensitySize());
-    resample(resampledTankTemps, hpwh->tankTemps_C);
+    resample(resampledTankTemps, hpwh->tank->nodeTs_C);
 
     double tankTemp_C = 0.;
 
@@ -771,7 +772,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpoint_C);
+            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tank->nodeTs_C, hpwh->setpoint_C);
     }
 }
 
@@ -807,7 +808,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
     do
     {
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tank->nodeTs_C[externalOutletHeight];
 
         // how much heat is available in remaining time
         getCapacity(externalT_C, externalOutletT_C, tempInput_BTUperHr, tempCap_BTUperHr, temp_cop);
@@ -828,7 +829,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
 
         // heat for outlet node to reach target temperature
-        double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
+        double nodeHeat_kJ = hpwh->tank->nodeCp_kJperC * deltaT_C;
 
         // assume one node will be heated this pass
         double neededHeat_kJ = nodeHeat_kJ;
@@ -876,9 +877,9 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         {
             double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tank->nodeTs_C[nodeIndex + 1];
+            hpwh->tank->nodeTs_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tank->nodeTs_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -892,7 +893,7 @@ double HPWH::HeatSource::addHeatExternal(double externalT_C,
         cap_BTUperHr += tempCap_BTUperHr * heatingTime_min;
         cop += temp_cop * heatingTime_min;
 
-        hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
+        hpwh->externalVolumeHeated_L += nodeFrac * hpwh->tank->nodeVolume_L;
 
         // if there's still time remaining and you haven't heated to the cutoff
         // specified in shutsOff logic, keep heating
@@ -938,7 +939,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     do
     {
         // find node fraction to heat in remaining time
-        double nodeFrac = mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->nodeVolume_L;
+        double nodeFrac = mpFlowRate_LPS * (remainingTime_min * sec_per_min) / hpwh->tank->nodeVolume_L;
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
             nodeFrac = 1.;
@@ -949,7 +950,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tank->nodeTs_C[externalOutletHeight];
 
         // find heating capacity
         getCapacityMP(
@@ -968,7 +969,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         double heatingCapacity_kJ = heatingPower_kW * (remainingTime_min * sec_per_min);
 
         // heat needed to raise temperature of one node by deltaT_C
-        double nodeHeat_kJ = hpwh->nodeCp_kJperC * deltaT_C;
+        double nodeHeat_kJ = hpwh->tank->nodeCp_kJperC * deltaT_C;
 
         // heat no more than one node this step
         double heatingTime_min = remainingTime_min;
@@ -997,9 +998,9 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         {
             double& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT_C
-                                 : hpwh->tankTemps_C[nodeIndex + 1];
-            hpwh->tankTemps_C[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTemps_C[nodeIndex] + nodeFrac * mixT_C;
+                                 : hpwh->tank->nodeTs_C[nodeIndex + 1];
+            hpwh->tank->nodeTs_C[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tank->nodeTs_C[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -1013,7 +1014,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         cap_BTUperHr += tempCap_BTUperHr * heatingTime_min;
         cop += temp_cop * heatingTime_min;
 
-        hpwh->externalVolumeHeated_L += nodeFrac * hpwh->nodeVolume_L;
+        hpwh->externalVolumeHeated_L += nodeFrac * hpwh->tank->nodeVolume_L;
 
         // continue until time expired or cutoff condition met
     } while ((remainingTime_min > 0.) && (!shutsOff()));
