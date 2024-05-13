@@ -39,7 +39,6 @@ int HPWH::initResistanceTank(double tankVol_L,
         return HPWH_ABORT;
     }
 
-    tank = std::make_shared<Tank>(this);
     heatSources.clear();
 
     setNumNodes(12);
