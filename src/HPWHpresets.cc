@@ -45,7 +45,7 @@ int HPWH::initResistanceTank(double tankVol_L,
     setNumNodes(12);
 
     // use tank size setting function since it has bounds checking
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
     if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
         return HPWH_ABORT;
@@ -57,7 +57,7 @@ int HPWH::initResistanceTank(double tankVol_L,
     resetTankToSetpoint();
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     HeatSource resistiveElementBottom(this);
     resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
@@ -98,15 +98,15 @@ int HPWH::initResistanceTank(double tankVol_L,
     double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
     double temp = 1.0 / (recoveryEfficiency * lowerPower_W * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-    tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator);
+    tank->UA_kJperHrC = UAf_TO_UAc(numerator / denominator);
 
-    if (tankUA_kJperHrC < 0.)
+    if (tank->UA_kJperHrC < 0.)
     {
-        if (tankUA_kJperHrC < -0.1)
+        if (tank->UA_kJperHrC < -0.1)
         {
-            send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+            send_warning("Computed tank->UA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA_kJperHrC = 0.0;
+        tank->UA_kJperHrC = 0.0;
     }
 
     model = MODELS_CustomResTank;
@@ -163,18 +163,17 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     setNumNodes(12);
 
     // set tank size function has bounds checking
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
     if (setTankSize(tankVol_L) == HPWH_ABORT)
     {
         return HPWH_ABORT;
     }
-    canScale = true;
 
     setpoint_C = F_TO_C(127.0);
     resetTankToSetpoint(); // start tank off at setpoint
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     // Deal with upper element
     if (upperPower_W > 0.)
@@ -211,15 +210,15 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     // Calc UA
     double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
     double tankUA_WperK = SA_M2 / rValue_m2KperW;
-    tankUA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
+    tank->UA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
 
-    if (tankUA_kJperHrC < 0.)
+    if (tank->UA_kJperHrC < 0.)
     {
-        if (tankUA_kJperHrC < -0.1)
+        if (tank->UA_kJperHrC < -0.1)
         {
-            send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+            send_warning("Computed tank->UA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA_kJperHrC = 0.0;
+        tank->UA_kJperHrC = 0.0;
     }
 
     model = HPWH::MODELS_CustomResTankGeneric;
@@ -260,14 +259,14 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     // start tank off at setpoint
     resetTankToSetpoint();
 
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
 
     // custom settings - these are set later
-    // tankVolume_L = GAL_TO_L(45);
-    // tankUA_kJperHrC = 6.5;
+    // tank->volume_L = GAL_TO_L(45);
+    // tank->UA_kJperHrC = 6.5;
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     HeatSource compressor(this);
     HeatSource resistiveElementBottom(this);
@@ -337,7 +336,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     //   curve fit by Jim Lutz, 5-25-2016
     double tankVol_gal = tankVol_L / GAL_TO_L(1.);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tankUA_kJperHrC = 0.0076183819 * v1 * v1;
+    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
 
     // do a linear interpolation to scale COP curve constant, using measured values
     //  Chip's attempt 24-May-2014
@@ -420,12 +419,12 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 0; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 0; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
@@ -455,12 +454,12 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        tankUA_kJperHrC = 500; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        tank->UA_kJperHrC = 500; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         // set up a resistive element at the bottom, 4500 kW
         HeatSource resistiveElementBottom(this);
@@ -490,13 +489,13 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 10; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 10; // 0 to turn off
 
         doTempDepression = false;
         // should eventually put tankmixes to true when testing progresses
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
@@ -527,12 +526,12 @@ int HPWH::initPreset(MODELS presetNum)
         initialTankT_C = F_TO_C(127.);
         hasInitialTankTemp = true;
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(80);
-        tankUA_kJperHrC = 10; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(80);
+        tank->UA_kJperHrC = 10; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
     }
 
     // basic compressor tank for testing
@@ -541,13 +540,13 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        tankUA_kJperHrC = 10; // 0 to turn off
-                              // tankUA_kJperHrC = 0; //0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        tank->UA_kJperHrC = 10; // 0 to turn off
+                              // tank->UA_kJperHrC = 0; //0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource resistiveElementBottom(this);
         HeatSource resistiveElementTop(this);
@@ -621,13 +620,13 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(96);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 0; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 0; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
 
@@ -678,11 +677,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 215.8;
-        tankUA_kJperHrC = 7.31;
+        tank->volume_L = 215.8;
+        tank->UA_kJperHrC = 7.31;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -758,11 +757,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 283.9;
-        tankUA_kJperHrC = 8.8;
+        tank->volume_L = 283.9;
+        tank->UA_kJperHrC = 8.8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -838,11 +837,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 172;
-        tankUA_kJperHrC = 6.8;
+        tank->volume_L = 172;
+        tank->UA_kJperHrC = 6.8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -923,13 +922,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         HeatSource compressor(this);
 
@@ -1174,13 +1173,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         HeatSource compressor(this);
 
@@ -1369,13 +1368,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
 
@@ -1621,13 +1620,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         HeatSource compressor(this);
 
@@ -1808,13 +1807,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         HeatSource compressor(this);
 
@@ -1905,12 +1904,12 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(96);
         setpoint_C = 65;
 
-        tankVolume_L = GAL_TO_L(500);
-        tankUA_kJperHrC = 12;
-        tankSizeFixed = false;
+        tank->volume_L = GAL_TO_L(500);
+        tank->UA_kJperHrC = 12;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
 
@@ -2192,21 +2191,21 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_SANCO2_119)
         {
-            tankVolume_L = GAL_TO_L(119);
-            tankUA_kJperHrC = 9;
+            tank->volume_L = GAL_TO_L(119);
+            tank->UA_kJperHrC = 9;
         }
         else
         {
-            tankVolume_L = 315;
-            tankUA_kJperHrC = 7;
+            tank->volume_L = 315;
+            tank->UA_kJperHrC = 7;
             if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
             {
-                tankSizeFixed = false;
+                tank->volumeFixed = false;
             }
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
 
@@ -2297,12 +2296,12 @@ int HPWH::initPreset(MODELS presetNum)
         setpoint_C = 65;
         setpointFixed = true;
 
-        tankVolume_L = 160;
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 5;
+        tank->volume_L = 160;
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 5;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
 
@@ -2390,11 +2389,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 171;
-        tankUA_kJperHrC = 6;
+        tank->volume_L = 171;
+        tank->UA_kJperHrC = 6;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -2496,16 +2495,16 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTU66)
         {
-            tankVolume_L = 244.6;
+            tank->volume_L = 244.6;
         }
         else
         {
-            tankVolume_L = 221.4;
+            tank->volume_L = 221.4;
         }
-        tankUA_kJperHrC = 8;
+        tank->UA_kJperHrC = 8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -2605,11 +2604,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 299.5;
-        tankUA_kJperHrC = 9;
+        tank->volume_L = 299.5;
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -2708,11 +2707,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 283.9;
-        tankUA_kJperHrC = 9;
+        tank->volume_L = 283.9;
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -2784,11 +2783,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
 
-        tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-        tankUA_kJperHrC = UAf_TO_UAc(3.94);
+        tank->volume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
+        tank->UA_kJperHrC = UAf_TO_UAc(3.94);
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -2879,21 +2878,21 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTS50)
         {
-            tankVolume_L = GAL_TO_L(45.6);
-            tankUA_kJperHrC = 6.403;
+            tank->volume_L = GAL_TO_L(45.6);
+            tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            tankVolume_L = GAL_TO_L(67.63);
-            tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
+            tank->volume_L = GAL_TO_L(67.63);
+            tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            tankVolume_L = GAL_TO_L(81.94);
-            tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
+            tank->volume_L = GAL_TO_L(81.94);
+            tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementTop(this);
@@ -2967,11 +2966,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3041,11 +3040,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3111,11 +3110,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3188,11 +3187,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3265,11 +3264,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3344,11 +3343,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(64);
-        tankUA_kJperHrC = 7.6;
+        tank->volume_L = GAL_TO_L(64);
+        tank->UA_kJperHrC = 7.6;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3421,27 +3420,27 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_Rheem2020Prem40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Prem50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.1);
+            tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Prem65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Prem80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3516,27 +3515,27 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_Rheem2020Build40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Build50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.1);
+            tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Build65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Build80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3608,31 +3607,31 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.0);
+            tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.0);
+            tank->UA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
             setpoint_C = F_TO_C(127.0);
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
 
@@ -3679,16 +3678,16 @@ int HPWH::initPreset(MODELS presetNum)
         setpoint_C = F_TO_C(127.0);
         if (presetNum == MODELS_RheemPlugInDedicated40)
         {
-            tankVolume_L = GAL_TO_L(36);
-            tankUA_kJperHrC = 5.5;
+            tank->volume_L = GAL_TO_L(36);
+            tank->UA_kJperHrC = 5.5;
         }
         else if (presetNum == MODELS_RheemPlugInDedicated50)
         {
-            tankVolume_L = GAL_TO_L(45);
-            tankUA_kJperHrC = 6.33;
+            tank->volume_L = GAL_TO_L(45);
+            tank->UA_kJperHrC = 6.33;
         }
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
 
@@ -3733,11 +3732,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 7;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 7;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3809,12 +3808,12 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127);
 
-        tankVolume_L = GAL_TO_L(56);
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 9;
+        tank->volume_L = GAL_TO_L(56);
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         HeatSource compressor(this);
         HeatSource resistiveElement(this);
@@ -3867,10 +3866,10 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 9;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 9;
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -3937,10 +3936,10 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 7.5;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 7.5;
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource compressor(this);
         HeatSource resistiveElementBottom(this);
@@ -4011,11 +4010,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 5;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         // set everything in its places
         HeatSource resistiveElementTop(this);
@@ -4087,11 +4086,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource resistiveElementTop(this);
         HeatSource resistiveElementBottom(this);
@@ -4162,23 +4161,23 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AWHSTier3Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic50)
         {
-            tankVolume_L = GAL_TO_L(45);
-            tankUA_kJperHrC = 6.5;
+            tank->volume_L = GAL_TO_L(45);
+            tank->UA_kJperHrC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic65)
         {
-            tankVolume_L = GAL_TO_L(64);
-            tankUA_kJperHrC = 7.6;
+            tank->volume_L = GAL_TO_L(64);
+            tank->UA_kJperHrC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier3Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
-            tankUA_kJperHrC = 10.;
+            tank->volume_L = GAL_TO_L(75.4);
+            tank->UA_kJperHrC = 10.;
         }
         else
         {
@@ -4187,7 +4186,7 @@ int HPWH::initPreset(MODELS presetNum)
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource resistiveElementTop(this);
         HeatSource resistiveElementBottom(this);
@@ -4259,14 +4258,13 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
-        canScale = true; // a fully scallable model
+        tank->volumeFixed = false; // a fully scalable model
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315;
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315;
+        tank->UA_kJperHrC = 7;
         setTankSize_adjustUA(600., UNITS_GAL);
 
         HeatSource resistiveElementTop(this);
@@ -4379,14 +4377,14 @@ int HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
-        canScale = true; // a fully scallable model
+        tank->volumeFixed = false;
+        tank->volumeFixed = false; // a fully scalable model
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         HeatSource resistiveElementTop(this);
         HeatSource resistiveElementBottom(this);
@@ -4465,15 +4463,15 @@ int HPWH::initPreset(MODELS presetNum)
         initialTankT_C = 49.32;
         hasInitialTankTemp = true;
 
-        tankVolume_L = GAL_TO_L(54.4);
-        tankUA_kJperHrC = 10.35;
+        tank->volume_L = GAL_TO_L(54.4);
+        tank->UA_kJperHrC = 10.35;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         // heat exchangers only
-        hasHeatExchanger = true;
-        heatExchangerEffectiveness = 0.93;
+        tank->hasHeatExchanger = true;
+        tank->heatExchangerEffectiveness = 0.93;
 
         HeatSource compressor(this);
 
@@ -4529,11 +4527,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.);
 
-        tankVolume_L = GAL_TO_L(58.5);
-        tankUA_kJperHrC = 8.5;
+        tank->volume_L = GAL_TO_L(58.5);
+        tank->UA_kJperHrC = 8.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource resistiveElementTop(this);
         HeatSource resistiveElementBottom(this);
@@ -4598,23 +4596,23 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AWHSTier4Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
-            tankUA_kJperHrC = 5.0;
+            tank->volume_L = GAL_TO_L(36.0);
+            tank->UA_kJperHrC = 5.0;
         }
         else if (presetNum == MODELS_AWHSTier4Generic50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 6.5;
+            tank->volume_L = GAL_TO_L(45.0);
+            tank->UA_kJperHrC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier4Generic65)
         {
-            tankVolume_L = GAL_TO_L(64.0);
-            tankUA_kJperHrC = 7.6;
+            tank->volume_L = GAL_TO_L(64.0);
+            tank->UA_kJperHrC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier4Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
-            tankUA_kJperHrC = 10.0;
+            tank->volume_L = GAL_TO_L(75.4);
+            tank->UA_kJperHrC = 10.0;
         }
         else
         {
@@ -4623,7 +4621,7 @@ int HPWH::initPreset(MODELS presetNum)
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         HeatSource resistiveElementTop(this);
         HeatSource resistiveElementBottom(this);

@@ -15,6 +15,7 @@ set(headers
         HPWHversion.in.hh
         HPWHsim.hh
         HPWHLogger.hh
+        HPWHUtils.hh
         HPWH.hh
         HPWHTank.hh
         HPWHHeatSource.hh
@@ -23,6 +24,7 @@ set(headers
 
 set(sources
         HPWHversion.cc
+        HPWHUtils.cc
         HPWHTank.cc
         HPWHHeatSource.cc
         HPWHHeatingLogic.cc
