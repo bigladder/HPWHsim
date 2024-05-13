@@ -542,7 +542,7 @@ int HPWH::initPreset(MODELS presetNum)
         tank->volumeFixed = false;
         tank->volume_L = 120;
         tank->UA_kJperHrC = 10; // 0 to turn off
-                              // tank->UA_kJperHrC = 0; //0 to turn off
+                                // tank->UA_kJperHrC = 0; //0 to turn off
 
         doTempDepression = false;
         tank->mixesOnDraw = false;

@@ -131,7 +131,7 @@ class HPWH::Tank : public Dispatcher
     /// get index of the top node
     int getIndexTopNode() const { return getNumNodes() - 1; }
 
-    int setNodeTs_C(std::vector<double> nodeTs_C_in);
+    int setNodeTs_C(const std::vector<double>& nodeTs_C_in);
 
     int setNodeT_C(double T_C) { return setNodeTs_C({T_C}); }
 

@@ -236,6 +236,7 @@ int HPWH::runOneStep(double drawVolume_L,
     externalVolumeHeated_L = 0.;
     energyRemovedFromEnvironment_kWh = 0.;
     standbyLosses_kWh = 0.;
+    tank->standbyLosses_kJ = 0.;
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
@@ -661,7 +662,8 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(tank->getOutletT_C()) : tank->getOutletT_C());
+        outFILE << fmt::format(",{:0.2f}",
+                               doIP ? C_TO_F(tank->getOutletT_C()) : tank->getOutletT_C());
     }
     else
     {
@@ -912,7 +914,6 @@ void HPWH::calcAndSetSoCFraction()
     currentSoCFraction = newSoCFraction;
 }
 
-
 double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
 {
     if (!hasACompressor())
@@ -986,9 +987,7 @@ int HPWH::setDoTempDepression(bool doTempDepress)
     return 0;
 }
 
-int HPWH::setTankSize_adjustUA(double volume,
-                               UNITS units /*=UNITS_L*/,
-                               bool forceChange /*=false*/)
+int HPWH::setTankSize_adjustUA(double volume, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
 {
     if (units == UNITS_L)
     {
@@ -1069,18 +1068,19 @@ HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /
     }
     else
     {
-       return HPWH_ABORT;
+        return HPWH_ABORT;
     }
     double radius = Tank::getRadius_m(vol);
     if (radiusUnits == UNITS_M)
-    {}
+    {
+    }
     else if (radiusUnits == UNITS_FT)
     {
-       radius = FT_TO_M(radius);
+        radius = FT_TO_M(radius);
     }
     else
     {
-       return HPWH_ABORT;
+        return HPWH_ABORT;
     }
     return radius;
 }
@@ -1119,15 +1119,9 @@ int HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChan
     return 0;
 }
 
-int HPWH::setDoInversionMixing(bool doInvMix)
-{
-    return tank->setDoInversionMixing(doInvMix);
-}
+int HPWH::setDoInversionMixing(bool doInvMix) { return tank->setDoInversionMixing(doInvMix); }
 
-int HPWH::setDoConduction(bool doCondu)
-{
-    return tank->setDoConduction(doCondu);
-}
+int HPWH::setDoConduction(bool doCondu) { return tank->setDoConduction(doCondu); }
 
 int HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
@@ -1229,13 +1223,13 @@ int HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExte
         {
             if (whichExternalPort == 1)
             {
-                returnVal = tank->setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalInletHeight);
+                returnVal = tank->setNodeNumFromFractionalHeight(
+                    fractionalHeight, heatSources[i].externalInletHeight);
             }
             else
             {
-                returnVal = tank->setNodeNumFromFractionalHeight(fractionalHeight,
-                                                           heatSources[i].externalOutletHeight);
+                returnVal = tank->setNodeNumFromFractionalHeight(
+                    fractionalHeight, heatSources[i].externalOutletHeight);
             }
 
             if (returnVal == HPWH_ABORT)
@@ -1298,10 +1292,7 @@ int HPWH::setTimerLimitTOT(double limit_min)
 
 double HPWH::getTimerLimitTOT_minute() const { return timerLimitTOT; }
 
-int HPWH::getInletHeight(int whichInlet) const
-{
-    return tank->getInletHeight(whichInlet);
-}
+int HPWH::getInletHeight(int whichInlet) const { return tank->getInletHeight(whichInlet); }
 
 int HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
 {
@@ -1755,10 +1746,7 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoi
         "larger draw", nodeWeights, decisionPoint, this, true);
 }
 
-void HPWH::setNumNodes(const std::size_t num_nodes)
-{
-    tank->setNumNodes(num_nodes);
-}
+void HPWH::setNumNodes(const std::size_t num_nodes) { tank->setNumNodes(num_nodes); }
 
 int HPWH::getNumNodes() const { return tank->getNumNodes(); }
 
@@ -2139,10 +2127,7 @@ double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C() const
-{
-    return tank->getAverageNodeT_C();
-}
+double HPWH::getAverageTankTemp_C() const { return tank->getAverageNodeT_C(); }
 
 double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
 {
@@ -2156,10 +2141,7 @@ double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeigh
 
 int HPWH::setTankToTemperature(double temp_C) { return tank->setNodeT_C(temp_C); }
 
-double HPWH::getTankHeatContent_kJ() const
-{
-    return tank->getHeatContent_kJ();
-}
+double HPWH::getTankHeatContent_kJ() const { return tank->getHeatContent_kJ(); }
 
 int HPWH::getModel() const { return model; }
 
@@ -2312,7 +2294,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
         useableFract = 1.;
     }
 
-    // Check if double's are approximately equally and adjust the relationship so it follows the
+    // Check if doubles are approximately equal and adjust the relationship so it follows the
     // relationship we expect. The tolerance plays with 0.1 mm in position if the tank is 1m tall...
     double temp = 1. - useableFract;
     if (aboutEqual(aquaFract, temp))
@@ -2323,7 +2305,10 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     return 0;
 }
 
-int HPWH::setInletByFraction(double fractionalHeight) { return tank->setInletByFraction(fractionalHeight);}
+int HPWH::setInletByFraction(double fractionalHeight)
+{
+    return tank->setInletByFraction(fractionalHeight);
+}
 
 bool HPWH::isScalable() const { return !(tank->volumeFixed); }
 
@@ -2539,10 +2524,7 @@ void HPWH::updateSoCIfNecessary()
 }
 
 // Inversion mixing modeled after bigladder EnergyPlus code PK
-void HPWH::mixTankInversions()
-{
-    tank->mixInversions();
-}
+void HPWH::mixTankInversions() { tank->mixInversions(); }
 
 double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 {
@@ -3474,7 +3456,7 @@ int HPWH::initFromFile(string configFile)
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
                 return HPWH_ABORT;
             }
-            tank->setVolume_L(tempDouble);
+            tank->volume_L = tempDouble;
         }
         else if (token == "UA")
         {
@@ -4236,9 +4218,9 @@ int HPWH::initFromFile(string configFile)
 
 void HPWH::init(nlohmann::json j)
 {
-    //hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rs_hpwh;
-    //hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger = courier;
-    //rs_hpwh.initialize(j);
+    // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rs_hpwh;
+    // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger = courier;
+    // rs_hpwh.initialize(j);
     std::cout << j;
 }
 
@@ -4444,7 +4426,7 @@ bool HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
                     drawVolume_L = 0.;
                     isDrawing = false;
                     drMode = DR_ALLOW;
-                    maxTankT_C = tankT_C;        // initialize for next pass
+                    maxTankT_C = tankT_C;                // initialize for next pass
                     maxOutletT_C = tank->getOutletT_C(); // initialize for next pass
                     prevAvgOutletT_C = avgOutletT_C;
                     prevMinOutletT_C = minOutletT_C;

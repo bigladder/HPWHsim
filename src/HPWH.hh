@@ -37,7 +37,6 @@ class RegularGridInterpolator;
 class HPWH : public Dispatcher
 {
   public:
-
     class Tank;
     class HeatSource;
     struct HeatingLogic;
@@ -49,7 +48,7 @@ class HPWH : public Dispatcher
     static const int version_patch = HPWHVRSN_PATCH;
     static const std::string version_maint;
 
-     static const int LOGIC_SIZE =
+    static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
 
     static const double DENSITYWATER_kgperL; /// mass density of water
@@ -327,17 +326,17 @@ class HPWH : public Dispatcher
     };
 
     std::shared_ptr<SoCBasedHeatingLogic> shutOffSoC(std::string desc,
-                                                           double targetSoC,
-                                                           double hystFract,
-                                                           double tempMinUseful_C,
-                                                           bool constMains,
-                                                           double mains_C);
+                                                     double targetSoC,
+                                                     double hystFract,
+                                                     double tempMinUseful_C,
+                                                     bool constMains,
+                                                     double mains_C);
     std::shared_ptr<SoCBasedHeatingLogic> turnOnSoC(std::string desc,
-                                                          double targetSoC,
-                                                          double hystFract,
-                                                          double tempMinUseful_C,
-                                                          bool constMains,
-                                                          double mains_C);
+                                                    double targetSoC,
+                                                    double hystFract,
+                                                    double tempMinUseful_C,
+                                                    bool constMains,
+                                                    double mains_C);
 
     std::shared_ptr<TempBasedHeatingLogic>
     wholeTank(double decisionPoint, const UNITS units = UNITS_C, const bool absolute = false);
@@ -369,7 +368,6 @@ class HPWH : public Dispatcher
 
     std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
-
 
     /** specifies the type of heat source  */
     enum HEATSOURCE_TYPE
@@ -607,7 +605,7 @@ class HPWH : public Dispatcher
     /// UA of the fittings
     double fittingsUA_kJperHrC;
 
-    double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC;}
+    double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC; }
 
     int getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const;
     int setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/);
@@ -1135,7 +1133,7 @@ class HPWH : public Dispatcher
     double standbyLosses_kWh;
     /**< the amount of heat lost to standby  */
 
-     bool doTempDepression;
+    bool doTempDepression;
     /**<  whether the HPWH should use the alternate ambient temperature that
         gets depressed when a compressor is running
         NOTE: this only works for 1 minute steps  */

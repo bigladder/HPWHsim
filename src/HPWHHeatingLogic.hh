@@ -6,7 +6,6 @@
 struct HPWH::HeatingLogic
 {
   public:
-
     static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
 
@@ -109,6 +108,5 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     bool isAbsolute;
     std::vector<NodeWeight> nodeWeights;
 };
-
 
 #endif

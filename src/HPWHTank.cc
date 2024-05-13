@@ -2,17 +2,9 @@
 #include "HPWH.hh"
 #include "HPWHTank.hh"
 
-HPWH::Tank::Tank(const HPWH::Tank& tank)
+HPWH::Tank::Tank(const HPWH::Tank& tank_in)
 {
-
-    volume_L = tank.volume_L;
-    UA_kJperHrC = tank.UA_kJperHrC;
-    nodeTs_C = tank.nodeTs_C;
-    nextNodeTs_C = tank.nextNodeTs_C;
-    mixesOnDraw = tank.mixesOnDraw;
-    mixBelowFractionOnDraw = tank.mixBelowFractionOnDraw;
-    doInversionMixing = tank.doInversionMixing;
-
+    *this = tank_in;
 }
 
 HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
@@ -21,6 +13,15 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     {
         return *this;
     }
+    hpwh = tank_in.hpwh;
+
+    volume_L = tank_in.volume_L;
+    UA_kJperHrC = tank_in.UA_kJperHrC;
+    nodeTs_C = tank_in.nodeTs_C;
+    nextNodeTs_C = tank_in.nextNodeTs_C;
+    mixesOnDraw = tank_in.mixesOnDraw;
+    mixBelowFractionOnDraw = tank_in.mixBelowFractionOnDraw;
+    doInversionMixing = tank_in.doInversionMixing;
 
     return *this;
 }
@@ -135,7 +136,7 @@ void HPWH::Tank::setNumNodes(const std::size_t num_nodes)
     nextNodeTs_C.resize(num_nodes);
 }
 
-int HPWH::Tank::setNodeTs_C(std::vector<double> nodeTs_C_in)
+int HPWH::Tank::setNodeTs_C(const std::vector<double>& nodeTs_C_in)
 {
     std::size_t numSetNodes = nodeTs_C_in.size();
     if (numSetNodes == 0)
@@ -335,7 +336,6 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
                            double inletVol2_L,
                            double inletT2_C)
 {
-
     if (drawVolume_L > 0.)
     {
         if (inletVol2_L > drawVolume_L)
@@ -527,9 +527,9 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
     // Update nodeTs_C
     nodeTs_C = nextNodeTs_C;
 
-    standbyLosses_kJ = standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ;
+    standbyLosses_kJ += standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ;
 
-     mixInversions();
+    mixInversions();
 
 } // end updateNodes
 
