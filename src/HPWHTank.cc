@@ -2,10 +2,7 @@
 #include "HPWH.hh"
 #include "HPWHTank.hh"
 
-HPWH::Tank::Tank(const HPWH::Tank& tank_in)
-{
-    *this = tank_in;
-}
+HPWH::Tank::Tank(const HPWH::Tank& tank_in) { *this = tank_in; }
 
 HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 {
@@ -57,10 +54,7 @@ void HPWH::Tank::calcSizeConstants()
         1. - pow(1. - heatExchangerEffectiveness, 1. / static_cast<double>(getNumNodes()));
 }
 
-double HPWH::Tank::getVolume_L() const
-{
-    return volume_L;
-}
+double HPWH::Tank::getVolume_L() const { return volume_L; }
 
 int HPWH::Tank::setVolume_L(double volume, bool forceChange /*=false*/)
 {
@@ -82,54 +76,49 @@ int HPWH::Tank::setVolume_L(double volume, bool forceChange /*=false*/)
 }
 
 /// set the UA
-void HPWH::Tank::setUA_kJperHrC(double UA_kJperHrC_in)
-{
-    UA_kJperHrC = UA_kJperHrC_in;
-}
+void HPWH::Tank::setUA_kJperHrC(double UA_kJperHrC_in) { UA_kJperHrC = UA_kJperHrC_in; }
 
 /// get the UA
-double HPWH::Tank::getUA_kJperHrC() const
+double HPWH::Tank::getUA_kJperHrC() const { return UA_kJperHrC; }
+
+/*static*/ double HPWH::Tank::getRadius_m(double volume_L)
 {
-    return UA_kJperHrC;
+    double value_m = -1.;
+    if (volume_L >= 0.)
+    {
+        double vol_ft3 = L_TO_FT3(volume_L);
+        double value_ft = pow(vol_ft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
+        value_m = FT_TO_M(value_ft);
+    }
+    return value_m;
 }
+
+double HPWH::Tank::getRadius_m() const { return getRadius_m(volume_L); }
 
 int HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
 {
-    double oldA = getSurfaceArea_m2(volume_L_in);
+    double newA = getSurfaceArea_m2(volume_L_in);
+    double oldA = getSurfaceArea_m2();
+
     setVolume_L(volume_L_in, forceChange);
-    setUA_kJperHrC(UA_kJperHrC / oldA * getSurfaceArea_m2(volume_L));
+    setUA_kJperHrC(UA_kJperHrC * (newA / oldA));
     return 0;
 }
 
 /*static*/ double HPWH::Tank::getSurfaceArea_m2(double vol)
 {
-    double radius = getRadius_m(vol);
-    double SA_m2 = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
+    double vol_ft3 = L_TO_FT3(vol);
+    double radius_ft = pow(vol_ft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
+
+    double SA_ft2 = 2. * 3.14159 * pow(radius_ft, 2) * (ASPECTRATIO + 1.);
+    // double radius = getRadius_m(vol);
+
+    double SA_m2 = FT2_TO_M2(SA_ft2);
     return SA_m2;
 }
 
-/*static*/ double
-HPWH::Tank::getRadius_m(double volume_L)
-{
-    double value_m = -1.;
-    if (volume_L >= 0.)
-    {
-        value_m = 0.1 * pow(volume_L / 3.14159 / ASPECTRATIO, 1. / 3.);
-    }
-    return value_m;
-}
+double HPWH::Tank::getSurfaceArea_m2() const { return getSurfaceArea_m2(volume_L); }
 
-
-double
-HPWH::Tank::getRadius_m() const
-{
-    double value_m = -1.;
-    if (volume_L >= 0.)
-    {
-        value_m = 0.1 * pow(volume_L / 3.14159 / ASPECTRATIO, 1. / 3.);
-    }
-    return value_m;
-}
 void HPWH::Tank::setNumNodes(const std::size_t num_nodes)
 {
     nodeTs_C.resize(num_nodes);
@@ -161,7 +150,6 @@ double HPWH::Tank::getNodeT_C(int nodeNum) const
     }
     return nodeTs_C[nodeNum];
 }
-
 
 //-----------------------------------------------------------------------------
 ///	@brief	Evaluates the tank temperature averaged uniformly
@@ -331,10 +319,10 @@ void HPWH::Tank::mixInversions()
 }
 
 void HPWH::Tank::updateNodes(double drawVolume_L,
-                           double inletT_C,
-                           double tankAmbientT_C,
-                           double inletVol2_L,
-                           double inletT2_C)
+                             double inletT_C,
+                             double tankAmbientT_C,
+                             double inletVol2_L,
+                             double inletT2_C)
 {
     if (drawVolume_L > 0.)
     {
@@ -402,8 +390,8 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
                         drawVolume_L;
                 }
                 outletT_C = (outletT_C / getNumNodes() * volume_L +
-                                nodeTs_C[0] * (drawVolume_L - volume_L)) /
-                               drawVolume_L * remainingDrawVolume_N;
+                             nodeTs_C[0] * (drawVolume_L - volume_L)) /
+                            drawVolume_L * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
             }
@@ -427,8 +415,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        nodeTs_C[i] +=
-                            incrementalDrawVolume_N * highInletFraction * highInletT_C;
+                        nodeTs_C[i] += incrementalDrawVolume_N * highInletFraction * highInletT_C;
                     }
                     if (i == lowInletNodeIndex)
                     {
@@ -520,7 +507,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
         // Internal nodes
         for (int i = 1; i < getNumNodes() - 1; i++)
         {
-            nextNodeTs_C[i] +=tau * (nodeTs_C[i + 1] - 2. * nodeTs_C[i] + nodeTs_C[i - 1]);
+            nextNodeTs_C[i] += tau * (nodeTs_C[i + 1] - 2. * nodeTs_C[i] + nodeTs_C[i - 1]);
         }
     }
 
