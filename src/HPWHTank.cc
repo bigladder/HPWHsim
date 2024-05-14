@@ -2,7 +2,7 @@
 #include "HPWH.hh"
 #include "HPWHTank.hh"
 
-HPWH::Tank::Tank(const HPWH::Tank& tank_in) { *this = tank_in; }
+HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Dispatcher(tank_in.get_sender()) { *this = tank_in; }
 
 HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 {

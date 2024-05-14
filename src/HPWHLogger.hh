@@ -56,7 +56,6 @@ class Logger : public Courier::Courier
 class Dispatcher : public Courier::Sender
 {
   public:
-    Dispatcher() = default;
     explicit Dispatcher(
         std::string name_in,
         const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
@@ -64,11 +63,16 @@ class Dispatcher : public Courier::Sender
     {
     }
 
+    explicit Dispatcher(Sender& sender) : Sender(sender) {}
+
     void set_courier(std::shared_ptr<Courier::Courier> courier_in)
     {
         courier = std::move(courier_in);
     }
-    std::shared_ptr<Courier::Courier> get_courier() { return courier; };
+
+    std::shared_ptr<Courier::Courier> get_courier() const { return courier; };
+
+    Dispatcher get_sender() const { return *this; };
 };
 
 #endif
