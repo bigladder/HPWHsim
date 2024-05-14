@@ -163,7 +163,6 @@ struct Performance
 struct RSINTEGRATEDWATERHEATER : public RSInstance
 {
     void initialize(const nlohmann::json& j) override;
-    ~RSINTEGRATEDWATERHEATER() override {}
     core_ns::Metadata metadata;
     Description description;
     Performance performance;
