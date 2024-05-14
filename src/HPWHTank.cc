@@ -23,6 +23,8 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
+void HPWH::Tank::init(nlohmann::json j) { std::cout << j; }
+
 void HPWH::Tank::setAllDefaults()
 {
     nodeTs_C.clear();

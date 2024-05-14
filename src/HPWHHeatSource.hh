@@ -329,4 +329,13 @@ class HPWH::HeatSource : public Dispatcher
 
 }; // end of HeatSource class
 
+class Condenser: public HPWH::HeatSource
+{
+
+};
+
+class Resistance: public HPWH::HeatSource
+{
+
+};
 #endif

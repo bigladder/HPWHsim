@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <algorithm>
 #include <regex>
+#include "hpwh_data_model.h"
 
 using std::cout;
 using std::endl;
@@ -4221,7 +4222,11 @@ void HPWH::init(nlohmann::json j)
     // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rs_hpwh;
     // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger = courier;
     // rs_hpwh.initialize(j);
-    std::cout << j;
+    //std::cout << j;
+    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+
+    rswh.initialize(j);
+    std::cout<<"\n";
 }
 
 //-----------------------------------------------------------------------------
