@@ -57,9 +57,12 @@ class Dispatcher : public Courier::Sender
 {
   public:
     Dispatcher() = default;
-    explicit Dispatcher(std::string name_in,
-                    const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
-        : Sender(name_in, courier_in) {}
+    explicit Dispatcher(
+        std::string name_in,
+        const std::shared_ptr<Courier::Courier>& courier_in = std::make_shared<Logger>())
+        : Sender(name_in, courier_in)
+    {
+    }
 
     void set_courier(std::shared_ptr<Courier::Courier> courier_in)
     {

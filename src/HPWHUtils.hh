@@ -12,8 +12,9 @@
 
 #include <nlohmann/json.hpp>
 
-
-double getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction);
+double getResampledValue(const std::vector<double>& sampleValues,
+                         double beginFraction,
+                         double endFraction);
 bool resample(std::vector<double>& values, const std::vector<double>& sampleValues);
 bool resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues);
 double expitFunc(double x, double offset);

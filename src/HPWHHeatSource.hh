@@ -11,15 +11,10 @@ class HPWH::HeatSource : public Dispatcher
     static const int CONDENSITY_SIZE = 12;
 
     HeatSource(HPWH* hpwh_in = NULL,
-               const std::shared_ptr<Courier::Courier>& courier =
-                                         std::make_shared<Logger>());
-    //HeatSource(HPWH* hpwh_in): hpwh(hpwh_in){}
+               const std::shared_ptr<Courier::Courier>& courier = std::make_shared<Logger>());
 
-    /**< constructor assigns a pointer to the hpwh that owns this heat source  */
-    HeatSource(const HeatSource& heatSource);            /// copy constructor
+    HeatSource(const HeatSource& heatSource);         /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
-    /**< the copy constructor and assignment operator basically just checks if there
-        are backup/companion pointers - these can't be copied */
 
     void init(nlohmann::json j = {});
 
