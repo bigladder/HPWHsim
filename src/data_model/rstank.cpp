@@ -113,5 +113,12 @@ const std::string_view RSTANK::description_name = "description";
 
 const std::string_view RSTANK::performance_name = "performance";
 
+void RSTANK::initialize(const nlohmann::json& j)
+{
+    json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
+    json_get<Description>(j, "description", description, description_is_set, false);
+    json_get<Performance>(j, "performance", performance, performance_is_set, true);
+
+}
 } // namespace rstank_ns
 } // namespace hpwh_data_model
