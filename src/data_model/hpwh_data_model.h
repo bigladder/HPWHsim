@@ -8,4 +8,6 @@
 #include <rscondenserwaterheatsource.h>
 #include <rsintegratedwaterheater.h>
 
+#define JSON_HAS_CPP_17
+
 #endif
