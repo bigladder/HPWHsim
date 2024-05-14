@@ -57,12 +57,8 @@ inline nlohmann::json load_json(const char* input_file)
 }
 
 template <class T>
-void json_get(nlohmann::json j,
-              Courier::Courier& logger,
-              const char* subnode,
-              T& object,
-              bool& object_is_set,
-              bool required = false)
+void json_get(
+    nlohmann::json j, const char* subnode, T& object, bool& object_is_set, bool required = false)
 {
     try
     {
@@ -74,7 +70,7 @@ void json_get(nlohmann::json j,
         object_is_set = false;
         if (required)
         {
-            logger.send_warning(ex.what());
+            // logger.send_warning(ex.what());
         }
     }
 }

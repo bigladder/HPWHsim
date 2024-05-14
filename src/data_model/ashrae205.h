@@ -136,8 +136,6 @@ struct Schema
 };
 class ASHRAE205
 {
-  public:
-    static std::shared_ptr<Courier::Courier> logger;
 };
 struct LiquidComponent
 {

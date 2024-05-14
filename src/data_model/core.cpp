@@ -17,66 +17,16 @@ const std::string_view Schema::schema_description =
 
 void from_json(const nlohmann::json& j, Metadata& x)
 {
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "schema_author",
-                          x.schema_author,
-                          x.schema_author_is_set,
-                          true);
-    json_get<ashrae205_ns::SchemaType>(j,
-                                       *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                                       "schema",
-                                       x.schema,
-                                       x.schema_is_set,
-                                       true);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "schema_version",
-                          x.schema_version,
-                          x.schema_version_is_set,
-                          true);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "description",
-                          x.description,
-                          x.description_is_set,
-                          true);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "timestamp",
-                          x.timestamp,
-                          x.timestamp_is_set,
-                          true);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "id",
-                          x.id,
-                          x.id_is_set,
-                          false);
-    json_get<int>(j,
-                  *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                  "version",
-                  x.version,
-                  x.version_is_set,
-                  false);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "data_source",
-                          x.data_source,
-                          x.data_source_is_set,
-                          false);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "disclaimer",
-                          x.disclaimer,
-                          x.disclaimer_is_set,
-                          false);
-    json_get<std::string>(j,
-                          *rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger,
-                          "notes",
-                          x.notes,
-                          x.notes_is_set,
-                          false);
+    json_get<std::string>(j, "schema_author", x.schema_author, x.schema_author_is_set, true);
+    json_get<ashrae205_ns::SchemaType>(j, "schema", x.schema, x.schema_is_set, true);
+    json_get<std::string>(j, "schema_version", x.schema_version, x.schema_version_is_set, true);
+    json_get<std::string>(j, "description", x.description, x.description_is_set, true);
+    json_get<std::string>(j, "timestamp", x.timestamp, x.timestamp_is_set, true);
+    json_get<std::string>(j, "id", x.id, x.id_is_set, false);
+    json_get<int>(j, "version", x.version, x.version_is_set, false);
+    json_get<std::string>(j, "data_source", x.data_source, x.data_source_is_set, false);
+    json_get<std::string>(j, "disclaimer", x.disclaimer, x.disclaimer_is_set, false);
+    json_get<std::string>(j, "notes", x.notes, x.notes_is_set, false);
 }
 const std::string_view Metadata::schema_author_units = "";
 

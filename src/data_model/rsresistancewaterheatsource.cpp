@@ -17,18 +17,8 @@ const std::string_view Schema::schema_description =
 
 void from_json(const nlohmann::json& j, ProductInformation& x)
 {
-    json_get<std::string>(j,
-                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                          "manufacturer",
-                          x.manufacturer,
-                          x.manufacturer_is_set,
-                          true);
-    json_get<std::string>(j,
-                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                          "model_number",
-                          x.model_number,
-                          x.model_number_is_set,
-                          true);
+    json_get<std::string>(j, "manufacturer", x.manufacturer, x.manufacturer_is_set, true);
+    json_get<std::string>(j, "model_number", x.model_number, x.model_number_is_set, true);
 }
 const std::string_view ProductInformation::manufacturer_units = "";
 
@@ -45,12 +35,7 @@ const std::string_view ProductInformation::model_number_name = "model_number";
 void from_json(const nlohmann::json& j, Description& x)
 {
     json_get<rsresistancewaterheatsource_ns::ProductInformation>(
-        j,
-        *RSRESISTANCEWATERHEATSOURCE::logger,
-        "product_information",
-        x.product_information,
-        x.product_information_is_set,
-        false);
+        j, "product_information", x.product_information, x.product_information_is_set, false);
 }
 const std::string_view Description::product_information_units = "";
 
@@ -61,12 +46,7 @@ const std::string_view Description::product_information_name = "product_informat
 
 void from_json(const nlohmann::json& j, Performance& x)
 {
-    json_get<double>(j,
-                     *RSRESISTANCEWATERHEATSOURCE::logger,
-                     "input_power",
-                     x.input_power,
-                     x.input_power_is_set,
-                     true);
+    json_get<double>(j, "input_power", x.input_power, x.input_power_is_set, true);
 }
 const std::string_view Performance::input_power_units = "W";
 
@@ -76,20 +56,11 @@ const std::string_view Performance::input_power_name = "input_power";
 
 void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x)
 {
-    json_get<core_ns::Metadata>(
-        j, *RSRESISTANCEWATERHEATSOURCE::logger, "metadata", x.metadata, x.metadata_is_set, true);
-    json_get<rsresistancewaterheatsource_ns::Description>(j,
-                                                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                                                          "description",
-                                                          x.description,
-                                                          x.description_is_set,
-                                                          false);
-    json_get<rsresistancewaterheatsource_ns::Performance>(j,
-                                                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                                                          "performance",
-                                                          x.performance,
-                                                          x.performance_is_set,
-                                                          true);
+    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
+    json_get<rsresistancewaterheatsource_ns::Description>(
+        j, "description", x.description, x.description_is_set, false);
+    json_get<rsresistancewaterheatsource_ns::Performance>(
+        j, "performance", x.performance, x.performance_is_set, true);
 }
 const std::string_view RSRESISTANCEWATERHEATSOURCE::metadata_units = "";
 
@@ -113,20 +84,9 @@ const std::string_view RSRESISTANCEWATERHEATSOURCE::performance_name = "performa
 
 void RSRESISTANCEWATERHEATSOURCE::initialize(const nlohmann::json& j)
 {
-    json_get<core_ns::Metadata>(
-        j, *RSRESISTANCEWATERHEATSOURCE::logger, "metadata", metadata, metadata_is_set, true);
-    json_get<Description>(j,
-                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                          "description",
-                          description,
-                          description_is_set,
-                          false);
-    json_get<Performance>(j,
-                          *RSRESISTANCEWATERHEATSOURCE::logger,
-                          "performance",
-                          performance,
-                          performance_is_set,
-                          true);
+    json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
+    json_get<Description>(j, "description", description, description_is_set, false);
+    json_get<Performance>(j, "performance", performance, performance_is_set, true);
 }
 } // namespace rsresistancewaterheatsource_ns
 } // namespace hpwh_data_model
