@@ -4,7 +4,7 @@
 #include <fstream>
 #include <memory>
 #include <nlohmann/json.hpp>
-
+#include "courier/helpers.h"
 /// @class RSInstanceBase RS_instance_base.h
 /// @brief This class is an abstract base for representation specification classes. It handles no
 /// resources.
