@@ -41,7 +41,10 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Couri
 }
 // public HPWH::HeatSource functions
 
-HPWH::HeatSource::HeatSource(const HeatSource& heatSource) { *this = heatSource; }
+HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Dispatcher(heatSource.get_sender())
+{
+    *this = heatSource;
+}
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
