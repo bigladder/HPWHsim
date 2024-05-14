@@ -900,7 +900,7 @@ double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C
 double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C) const
 {
     return calcSoCFraction(tMains_C, tMinUseful_C, getSetpoint());
-};
+}
 
 void HPWH::calcAndSetSoCFraction()
 {
