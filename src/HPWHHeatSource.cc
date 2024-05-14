@@ -64,8 +64,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL ||
         hSource.followedByHeatSource != NULL)
     {
-        hpwh->send_error(
-            "HeatSources cannot be copied if they contain pointers to other HeatSources.");
+        send_error("HeatSources cannot be copied if they contain pointers to other HeatSources.");
     }
     else
     {
@@ -162,15 +161,15 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
-                                           heatSourceAmbientT_C,
-                                           minT));
+            send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
+                                     heatSourceAmbientT_C,
+                                     minT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < minT)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
+            send_warning(fmt::format(
                 "lock-out: already below minT\tambient: {}\tminT: {}", heatSourceAmbientT_C, minT));
         }
 
@@ -179,21 +178,21 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
+            send_warning(fmt::format(
                 "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
+            send_warning(fmt::format(
                 "lock-out: already above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            hpwh->send_warning(
+            send_warning(
                 fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
         }
 
@@ -225,15 +224,15 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT + hysteresis_dC)
             {
-                hpwh->send_warning(fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
-                                               heatSourceAmbientT_C,
-                                               minT));
+                send_warning(fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
+                                         heatSourceAmbientT_C,
+                                         minT));
             }
             if (heatSourceAmbientT_C < maxT - hysteresis_dC)
             {
-                hpwh->send_warning(fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
-                                               heatSourceAmbientT_C,
-                                               maxT));
+                send_warning(fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
+                                         heatSourceAmbientT_C,
+                                         maxT));
             }
         }
         // when not running, don't use hysteresis
@@ -242,15 +241,15 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT)
             {
-                hpwh->send_warning(fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
-                                               heatSourceAmbientT_C,
-                                               minT));
+                send_warning(fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
+                                         heatSourceAmbientT_C,
+                                         minT));
             }
             if (heatSourceAmbientT_C < maxT)
             {
-                hpwh->send_warning(fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
-                                               heatSourceAmbientT_C,
-                                               maxT));
+                send_warning(fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
+                                         heatSourceAmbientT_C,
+                                         maxT));
             }
         }
         return unlock;
@@ -440,7 +439,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            hpwh->send_error(fmt::format("Internal error: Negative runtime = {} min", runtime_min));
+            send_error(fmt::format("Internal error: Negative runtime = {} min", runtime_min));
         }
     }
     break;
@@ -627,11 +626,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
     if (cop < 0.)
     {
-        hpwh->send_warning("Warning: COP is Negative!");
+        send_warning("Warning: COP is Negative!");
     }
     if (cop < 1.)
     {
-        hpwh->send_warning("Warning: COP is Less than 1!");
+        send_warning("Warning: COP is Less than 1!");
     }
 }
 

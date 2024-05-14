@@ -15,9 +15,8 @@ namespace hpwh_data_model
 {
 struct heatsource
 {
-    void initialize(const nlohmann::json& j) {std::cout << j;}
+    void initialize(const nlohmann::json& j) { std::cout << j; }
 };
-}
+} // namespace hpwh_data_model
 
 #endif
-

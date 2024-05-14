@@ -9,4 +9,3 @@
 #include <rsintegratedwaterheater.h>
 
 #endif
-
