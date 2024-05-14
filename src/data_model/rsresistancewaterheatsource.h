@@ -55,7 +55,6 @@ struct RSRESISTANCEWATERHEATSOURCE : public heatsource,
                                      RSInstance
 {
     void initialize(const nlohmann::json& j) override;
-    static std::shared_ptr<Courier::Courier> logger;
     core_ns::Metadata metadata;
     rsresistancewaterheatsource_ns::Description description;
     rsresistancewaterheatsource_ns::Performance performance;

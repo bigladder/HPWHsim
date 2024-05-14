@@ -17,18 +17,8 @@ const std::string_view Schema::schema_description =
 
 void from_json(const nlohmann::json& j, ProductInformation& x)
 {
-    json_get<std::string>(j,
-                          *RSINTEGRATEDWATERHEATER::logger,
-                          "manufacturer",
-                          x.manufacturer,
-                          x.manufacturer_is_set,
-                          true);
-    json_get<std::string>(j,
-                          *RSINTEGRATEDWATERHEATER::logger,
-                          "model_number",
-                          x.model_number,
-                          x.model_number_is_set,
-                          true);
+    json_get<std::string>(j, "manufacturer", x.manufacturer, x.manufacturer_is_set, true);
+    json_get<std::string>(j, "model_number", x.model_number, x.model_number_is_set, true);
 }
 const std::string_view ProductInformation::manufacturer_units = "";
 
@@ -44,12 +34,8 @@ const std::string_view ProductInformation::model_number_name = "model_number";
 
 void from_json(const nlohmann::json& j, Description& x)
 {
-    json_get<rsintegratedwaterheater_ns::ProductInformation>(j,
-                                                             *RSINTEGRATEDWATERHEATER::logger,
-                                                             "product_information",
-                                                             x.product_information,
-                                                             x.product_information_is_set,
-                                                             false);
+    json_get<rsintegratedwaterheater_ns::ProductInformation>(
+        j, "product_information", x.product_information, x.product_information_is_set, false);
 }
 const std::string_view Description::product_information_units = "";
 
@@ -60,26 +46,14 @@ const std::string_view Description::product_information_name = "product_informat
 
 void from_json(const nlohmann::json& j, Performance& x)
 {
-    json_get<rstank_ns::RSTANK>(
-        j, *RSINTEGRATEDWATERHEATER::logger, "tank", x.tank, x.tank_is_set, true);
+    json_get<rstank_ns::RSTANK>(j, "tank", x.tank, x.tank_is_set, true);
     json_get<HeatSourceConfiguration>(j,
-                                      *RSINTEGRATEDWATERHEATER::logger,
                                       "heat_source_configurations",
                                       x.heatSourceConfiguration,
                                       x.heat_source_configurations_is_set,
                                       false);
-    json_get<int>(j,
-                  *RSINTEGRATEDWATERHEATER::logger,
-                  "number_of_nodes",
-                  x.number_of_nodes,
-                  x.number_of_nodes_is_set,
-                  false);
-    json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
-                     "standby_power",
-                     x.standby_power,
-                     x.standby_power_is_set,
-                     false);
+    json_get<int>(j, "number_of_nodes", x.number_of_nodes, x.number_of_nodes_is_set, false);
+    json_get<double>(j, "standby_power", x.standby_power, x.standby_power_is_set, false);
 }
 const std::string_view Performance::tank_units = "";
 
@@ -110,26 +84,12 @@ const std::string_view Performance::standby_power_name = "standby_power";
 
 void from_json(const nlohmann::json& j, RSINTEGRATEDWATERHEATER& x)
 {
-    json_get<core_ns::Metadata>(
-        j, *RSINTEGRATEDWATERHEATER::logger, "metadata", x.metadata, x.metadata_is_set, true);
-    json_get<rsintegratedwaterheater_ns::Description>(j,
-                                                      *RSINTEGRATEDWATERHEATER::logger,
-                                                      "description",
-                                                      x.description,
-                                                      x.description_is_set,
-                                                      false);
-    json_get<rsintegratedwaterheater_ns::Performance>(j,
-                                                      *RSINTEGRATEDWATERHEATER::logger,
-                                                      "performance",
-                                                      x.performance,
-                                                      x.performance_is_set,
-                                                      true);
-    json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
-                     "standby_power",
-                     x.standby_power,
-                     x.standby_power_is_set,
-                     false);
+    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
+    json_get<rsintegratedwaterheater_ns::Description>(
+        j, "description", x.description, x.description_is_set, false);
+    json_get<rsintegratedwaterheater_ns::Performance>(
+        j, "performance", x.performance, x.performance_is_set, true);
+    json_get<double>(j, "standby_power", x.standby_power, x.standby_power_is_set, false);
 }
 const std::string_view RSINTEGRATEDWATERHEATER::metadata_units = "";
 
@@ -160,32 +120,18 @@ const std::string_view RSINTEGRATEDWATERHEATER::standby_power_name = "standby_po
 
 void from_json(const nlohmann::json& j, HeatingLogic& x)
 {
+    json_get<double>(
+        j, "absolute_temperature", x.absolute_temperature, x.absolute_temperature_is_set, true);
     json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
-                     "absolute_temperature",
-                     x.absolute_temperature,
-                     x.absolute_temperature_is_set,
-                     true);
-    json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
                      "differential_temperature",
                      x.differential_temperature,
                      x.differential_temperature_is_set,
                      true);
-    json_get<std::vector<double>>(j,
-                                  *RSINTEGRATEDWATERHEATER::logger,
-                                  "logic_distribution",
-                                  x.logic_distribution,
-                                  x.logic_distribution_is_set,
-                                  true);
-    json_get<rsintegratedwaterheater_ns::ComparisonType>(j,
-                                                         *RSINTEGRATEDWATERHEATER::logger,
-                                                         "comparison_type",
-                                                         x.comparison_type,
-                                                         x.comparison_type_is_set,
-                                                         true);
+    json_get<std::vector<double>>(
+        j, "logic_distribution", x.logic_distribution, x.logic_distribution_is_set, true);
+    json_get<rsintegratedwaterheater_ns::ComparisonType>(
+        j, "comparison_type", x.comparison_type, x.comparison_type_is_set, true);
     json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
                      "hysteresis_temperature",
                      x.hysteresis_temperature,
                      x.hysteresis_temperature_is_set,
@@ -228,12 +174,8 @@ const std::string_view HeatingLogic::hysteresis_temperature_name = "hysteresis_t
 
 void from_json(const nlohmann::json& j, HeatSourceConfiguration& x)
 {
-    json_get<rsintegratedwaterheater_ns::HeatSourceType>(j,
-                                                         *RSINTEGRATEDWATERHEATER::logger,
-                                                         "heat_source_type",
-                                                         x.heat_source_type,
-                                                         x.heat_source_type_is_set,
-                                                         true);
+    json_get<rsintegratedwaterheater_ns::HeatSourceType>(
+        j, "heat_source_type", x.heat_source_type, x.heat_source_type_is_set, true);
     if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE)
     {
         x.heat_source =
@@ -252,39 +194,15 @@ void from_json(const nlohmann::json& j, HeatSourceConfiguration& x)
             x.heat_source->initialize(j.at("heat_source"));
         }
     }
-    json_get<std::vector<double>>(j,
-                                  *RSINTEGRATEDWATERHEATER::logger,
-                                  "heat_distribution",
-                                  x.heat_distribution,
-                                  x.heat_distribution_is_set,
-                                  true);
+    json_get<std::vector<double>>(
+        j, "heat_distribution", x.heat_distribution, x.heat_distribution_is_set, true);
     json_get<std::vector<rsintegratedwaterheater_ns::HeatingLogic>>(
-        j,
-        *RSINTEGRATEDWATERHEATER::logger,
-        "turn_on_logic",
-        x.turn_on_logic,
-        x.turn_on_logic_is_set,
-        true);
+        j, "turn_on_logic", x.turn_on_logic, x.turn_on_logic_is_set, true);
     json_get<std::vector<rsintegratedwaterheater_ns::HeatingLogic>>(
-        j,
-        *RSINTEGRATEDWATERHEATER::logger,
-        "shut_off_logic",
-        x.shut_off_logic,
-        x.shut_off_logic_is_set,
-        false);
+        j, "shut_off_logic", x.shut_off_logic, x.shut_off_logic_is_set, false);
     json_get<std::vector<rsintegratedwaterheater_ns::HeatingLogic>>(
-        j,
-        *RSINTEGRATEDWATERHEATER::logger,
-        "standby_logic",
-        x.standby_logic,
-        x.standby_logic_is_set,
-        false);
-    json_get<double>(j,
-                     *RSINTEGRATEDWATERHEATER::logger,
-                     "maximum_setpoint",
-                     x.maximum_setpoint,
-                     x.maximum_setpoint_is_set,
-                     false);
+        j, "standby_logic", x.standby_logic, x.standby_logic_is_set, false);
+    json_get<double>(j, "maximum_setpoint", x.maximum_setpoint, x.maximum_setpoint_is_set, false);
 }
 const std::string_view HeatSourceConfiguration::heat_source_type_units = "";
 
@@ -335,12 +253,9 @@ const std::string_view HeatSourceConfiguration::maximum_setpoint_name = "maximum
 
 void RSINTEGRATEDWATERHEATER::initialize(const nlohmann::json& j)
 {
-    json_get<core_ns::Metadata>(
-        j, *RSINTEGRATEDWATERHEATER::logger, "metadata", metadata, metadata_is_set, true);
-    json_get<Description>(
-        j, *RSINTEGRATEDWATERHEATER::logger, "description", description, description_is_set, false);
-    json_get<Performance>(
-        j, *RSINTEGRATEDWATERHEATER::logger, "performance", performance, performance_is_set, true);
+    json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
+    json_get<Description>(j, "description", description, description_is_set, false);
+    json_get<Performance>(j, "performance", performance, performance_is_set, true);
 }
 } // namespace rsintegratedwaterheater_ns
 } // namespace hpwh_data_model

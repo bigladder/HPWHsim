@@ -163,7 +163,6 @@ struct Performance
 struct RSINTEGRATEDWATERHEATER : public RSInstance
 {
     void initialize(const nlohmann::json& j) override;
-    static std::shared_ptr<Courier::Courier> logger;
     core_ns::Metadata metadata;
     Description description;
     Performance performance;

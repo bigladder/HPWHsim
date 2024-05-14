@@ -16,10 +16,8 @@ const std::string_view Schema::schema_description =
 
 void from_json(const nlohmann::json& j, ProductInformation& x)
 {
-    json_get<std::string>(
-        j, *RSTANK::logger, "manufacturer", x.manufacturer, x.manufacturer_is_set, true);
-    json_get<std::string>(
-        j, *RSTANK::logger, "model_number", x.model_number, x.model_number_is_set, true);
+    json_get<std::string>(j, "manufacturer", x.manufacturer, x.manufacturer_is_set, true);
+    json_get<std::string>(j, "model_number", x.model_number, x.model_number_is_set, true);
 }
 const std::string_view ProductInformation::manufacturer_units = "";
 
@@ -35,12 +33,8 @@ const std::string_view ProductInformation::model_number_name = "model_number";
 
 void from_json(const nlohmann::json& j, Description& x)
 {
-    json_get<rstank_ns::ProductInformation>(j,
-                                            *RSTANK::logger,
-                                            "product_information",
-                                            x.product_information,
-                                            x.product_information_is_set,
-                                            false);
+    json_get<rstank_ns::ProductInformation>(
+        j, "product_information", x.product_information, x.product_information_is_set, false);
 }
 const std::string_view Description::product_information_units = "";
 
@@ -51,12 +45,11 @@ const std::string_view Description::product_information_name = "product_informat
 
 void from_json(const nlohmann::json& j, Performance& x)
 {
-    json_get<double>(j, *RSTANK::logger, "volume", x.volume, x.volume_is_set, true);
-    json_get<double>(j, *RSTANK::logger, "diameter", x.diameter, x.diameter_is_set, false);
-    json_get<double>(j, *RSTANK::logger, "ua", x.ua, x.ua_is_set, true);
-    json_get<double>(j, *RSTANK::logger, "fittings_ua", x.fittings_ua, x.fittings_ua_is_set, false);
+    json_get<double>(j, "volume", x.volume, x.volume_is_set, true);
+    json_get<double>(j, "diameter", x.diameter, x.diameter_is_set, false);
+    json_get<double>(j, "ua", x.ua, x.ua_is_set, true);
+    json_get<double>(j, "fittings_ua", x.fittings_ua, x.fittings_ua_is_set, false);
     json_get<double>(j,
-                     *RSTANK::logger,
                      "bottom_fraction_of_tank_mixing_on_draw",
                      x.bottom_fraction_of_tank_mixing_on_draw,
                      x.bottom_fraction_of_tank_mixing_on_draw_is_set,
@@ -96,12 +89,9 @@ const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_name 
 
 void from_json(const nlohmann::json& j, RSTANK& x)
 {
-    json_get<core_ns::Metadata>(
-        j, *RSTANK::logger, "metadata", x.metadata, x.metadata_is_set, true);
-    json_get<rstank_ns::Description>(
-        j, *RSTANK::logger, "description", x.description, x.description_is_set, false);
-    json_get<rstank_ns::Performance>(
-        j, *RSTANK::logger, "performance", x.performance, x.performance_is_set, true);
+    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
+    json_get<rstank_ns::Description>(j, "description", x.description, x.description_is_set, false);
+    json_get<rstank_ns::Performance>(j, "performance", x.performance, x.performance_is_set, true);
 }
 const std::string_view RSTANK::metadata_units = "";
 
