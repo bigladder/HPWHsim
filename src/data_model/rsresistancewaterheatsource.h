@@ -54,6 +54,7 @@ struct Performance
 struct RSRESISTANCEWATERHEATSOURCE : public heatsource,
                                      RSInstance
 {
+    ~RSRESISTANCEWATERHEATSOURCE() override {}
     void initialize(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
     rsresistancewaterheatsource_ns::Description description;
