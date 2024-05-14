@@ -115,6 +115,7 @@ struct Performance
 struct RSCONDENSERWATERHEATSOURCE : public heatsource,
                                     RSInstance
 {
+    ~RSCONDENSERWATERHEATSOURCE() override {}
     void initialize(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
     Description description;
