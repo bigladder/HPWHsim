@@ -5,9 +5,11 @@
 #include <vector>
 #include <courier/courier.h>
 #include <nlohmann/json.hpp>
+#include "courier/helpers.h"
 
 namespace hpwh_data_model
 {
+static std::shared_ptr<Courier::Courier> courier = std::make_shared<Courier::DefaultCourier>();
 
 inline void read_binary_file(const char* filename, std::vector<char>& bytes)
 {
@@ -70,7 +72,7 @@ void json_get(
         object_is_set = false;
         if (required)
         {
-            // logger.send_warning(ex.what());
+            courier->send_warning(ex.what());
         }
     }
 }
