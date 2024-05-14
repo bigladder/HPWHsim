@@ -74,7 +74,7 @@ struct RSTANK : public RSInstance
 {
     ~RSTANK() override {}
     void initialize(const nlohmann::json& j) override;
-     core_ns::Metadata metadata;
+    core_ns::Metadata metadata;
     rstank_ns::Description description;
     rstank_ns::Performance performance;
     bool metadata_is_set;
