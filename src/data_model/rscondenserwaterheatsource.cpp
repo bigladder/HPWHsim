@@ -34,7 +34,7 @@ const std::string_view ProductInformation::model_number_name = "model_number";
 
 void from_json(const nlohmann::json& j, Description& x)
 {
-    json_get<rscondenserwaterheatsource_ns::ProductInformation>(
+    json_get<ProductInformation>(
         j, "product_information", x.product_information, x.product_information_is_set, false);
 }
 const std::string_view Description::product_information_units = "";
@@ -93,9 +93,8 @@ const std::string_view LookupVariables::cop_name = "cop";
 
 void from_json(const nlohmann::json& j, PerformanceMap& x)
 {
-    json_get<rscondenserwaterheatsource_ns::GridVariables>(
-        j, "grid_variables", x.grid_variables, x.grid_variables_is_set, true);
-    json_get<rscondenserwaterheatsource_ns::LookupVariables>(
+    json_get<GridVariables>(j, "grid_variables", x.grid_variables, x.grid_variables_is_set, true);
+    json_get<LookupVariables>(
         j, "lookup_variables", x.lookup_variables, x.lookup_variables_is_set, true);
 }
 const std::string_view PerformanceMap::grid_variables_units = "";
@@ -114,10 +113,10 @@ const std::string_view PerformanceMap::lookup_variables_name = "lookup_variables
 
 void from_json(const nlohmann::json& j, Performance& x)
 {
-    json_get<rscondenserwaterheatsource_ns::PerformanceMap>(
+    json_get<PerformanceMap>(
         j, "performance_map", x.performance_map, x.performance_map_is_set, true);
     json_get<double>(j, "standby_power", x.standby_power, x.standby_power_is_set, false);
-    json_get<rscondenserwaterheatsource_ns::CoilConfiguration>(
+    json_get<CoilConfiguration>(
         j, "coil_configuration", x.coil_configuration, x.coil_configuration_is_set, true);
 }
 const std::string_view Performance::performance_map_units = "";
@@ -142,10 +141,8 @@ const std::string_view Performance::coil_configuration_name = "coil_configuratio
 void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x)
 {
     json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
-    json_get<rscondenserwaterheatsource_ns::Description>(
-        j, "description", x.description, x.description_is_set, false);
-    json_get<rscondenserwaterheatsource_ns::Performance>(
-        j, "performance", x.performance, x.performance_is_set, true);
+    json_get<Description>(j, "description", x.description, x.description_is_set, false);
+    json_get<Performance>(j, "performance", x.performance, x.performance_is_set, true);
 }
 const std::string_view RSCONDENSERWATERHEATSOURCE::metadata_units = "";
 

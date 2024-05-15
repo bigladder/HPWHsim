@@ -16,6 +16,7 @@
 #include <algorithm> // std::max
 #include <stdio.h>
 #include <fmt/format.h>
+#include <nlohmann/json.hpp>
 
 #define MAX_DIR_LENGTH 255
 
@@ -101,7 +102,8 @@ int main(int argc, char* argv[])
     }
     if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help"))
     {
-        cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] "
+        cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File/JSON] [model spec "
+                "Name] "
                 "[testName] [airtemp override F (optional)]\"\n";
         cout << "All input files should be located in the test directory, with these names:\n";
         cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv "
@@ -160,9 +162,27 @@ int main(int argc, char* argv[])
             exit(1);
         }
     }
+    else if (input1 == "JSON")
+    {
+        inputFile = input2 + ".json";
+        try
+        {
+            std::ifstream inputFILE(inputFile);
+            nlohmann::json data = nlohmann::json::parse(inputFILE);
+            hpwh.init(data);
+            std::cout << std::endl << "JSON loaded successfully." << std::endl;
+            exit(1);
+        }
+        catch (...)
+        {
+            cout << "Error, JSON model did not initialize.\n";
+            exit(1);
+        }
+    }
     else
     {
-        cout << "Invalid argument, received '" << input1 << "', expected 'Preset' or 'File'.\n";
+        cout << "Invalid argument, received '" << input1
+             << "', expected 'Preset', 'File', or 'JSON'.\n";
         exit(1);
     }
 

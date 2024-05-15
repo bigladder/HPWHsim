@@ -54,7 +54,7 @@ void from_json(const nlohmann::json& j, Performance& x)
                      x.bottom_fraction_of_tank_mixing_on_draw,
                      x.bottom_fraction_of_tank_mixing_on_draw_is_set,
                      false);
-}
+ }
 const std::string_view Performance::volume_units = "m";
 
 const std::string_view Performance::diameter_units = "m";

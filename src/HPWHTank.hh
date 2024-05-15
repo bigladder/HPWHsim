@@ -7,11 +7,8 @@ class HPWH::Tank : public Dispatcher
 {
   public:
     static const inline double ASPECTRATIO = 4.75;
-    /**< A constant to define the aspect ratio between the tank height and
-     radius (H/R). Used to find the radius and tank height from the volume and then
-     find the surface area. It is derived from the median value of 88
-     insulated storage tanks currently available on the market from
-     Sanden, AOSmith, HTP, Rheem, and Niles,  */
+    /// tank height / radius aspect ratio, derived from the median value of 88
+    /// insulated storage tanks currently available on the market.
 
     friend class HPWH;
 
@@ -29,7 +26,7 @@ class HPWH::Tank : public Dispatcher
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void init(nlohmann::json j = {}) { std::cout << j; }
+    void init(nlohmann::json j = {});
 
     void setAllDefaults();
 

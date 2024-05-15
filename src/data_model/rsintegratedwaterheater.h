@@ -6,12 +6,10 @@
 #include <rscondenserwaterheatsource.h>
 #include <string>
 #include <vector>
-#include <enum-info.h>
-
-#include <heat-source.h>
-#include <rsinstance.h>
-#include <courier/courier.h>
 #include <nlohmann/json.hpp>
+#include <enum-info.h>
+#include <heatsource.h>
+#include <rsinstance.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -72,33 +70,30 @@ struct Description
 };
 struct HeatingLogic
 {
-    double absolute_temperature;
-    double differential_temperature;
+    double temperature;
+    bool temperature_is_absolute;
     std::vector<double> logic_distribution;
     ComparisonType comparison_type;
     double hysteresis_temperature;
-    bool absolute_temperature_is_set;
-    bool differential_temperature_is_set;
+
+    bool temperature_is_set;
+    bool temperature_is_absolute_is_set;
     bool logic_distribution_is_set;
     bool comparison_type_is_set;
     bool hysteresis_temperature_is_set;
-    const static std::string_view absolute_temperature_units;
-    const static std::string_view differential_temperature_units;
+    const static std::string_view temperature_units;
     const static std::string_view logic_distribution_units;
     const static std::string_view comparison_type_units;
     const static std::string_view hysteresis_temperature_units;
-    const static std::string_view absolute_temperature_description;
-    const static std::string_view differential_temperature_description;
+    const static std::string_view temperature_description;
     const static std::string_view logic_distribution_description;
     const static std::string_view comparison_type_description;
     const static std::string_view hysteresis_temperature_description;
-    const static std::string_view absolute_temperature_name;
-    const static std::string_view differential_temperature_name;
+    const static std::string_view temperature_name;
     const static std::string_view logic_distribution_name;
     const static std::string_view comparison_type_name;
     const static std::string_view hysteresis_temperature_name;
 };
-
 struct HeatSourceConfiguration
 {
     HeatSourceType heat_source_type;
@@ -140,7 +135,7 @@ struct HeatSourceConfiguration
 struct Performance
 {
     rstank_ns::RSTANK tank;
-    HeatSourceConfiguration heatSourceConfiguration;
+    std::vector<HeatSourceConfiguration> heat_source_configurations;
     int number_of_nodes;
     double standby_power;
     bool tank_is_set;
@@ -184,7 +179,6 @@ struct RSINTEGRATEDWATERHEATER : public RSInstance
     const static std::string_view performance_name;
     const static std::string_view standby_power_name;
 };
-
 NLOHMANN_JSON_SERIALIZE_ENUM(HeatSourceType,
                              {
                                  {HeatSourceType::UNKNOWN, "UNKNOWN"},

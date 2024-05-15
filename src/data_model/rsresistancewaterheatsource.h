@@ -6,7 +6,7 @@
 #include <core.h>
 #include <enum-info.h>
 #include <rsintegratedwaterheater.h>
-#include <heat-source.h>
+#include <heatsource.h>
 #include <rsinstance.h>
 #include <nlohmann/json.hpp>
 
@@ -37,7 +37,7 @@ struct ProductInformation
 };
 struct Description
 {
-    rsresistancewaterheatsource_ns::ProductInformation product_information;
+    ProductInformation product_information;
     bool product_information_is_set;
     const static std::string_view product_information_units;
     const static std::string_view product_information_description;
@@ -56,8 +56,8 @@ struct RSRESISTANCEWATERHEATSOURCE : public heatsource,
 {
     void initialize(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
-    rsresistancewaterheatsource_ns::Description description;
-    rsresistancewaterheatsource_ns::Performance performance;
+    Description description;
+    Performance performance;
     bool metadata_is_set;
     bool description_is_set;
     bool performance_is_set;
