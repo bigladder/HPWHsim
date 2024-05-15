@@ -6,7 +6,7 @@
 #include <core.h>
 #include <enum-info.h>
 #include <rsintegratedwaterheater.h>
-#include <heat-source.h>
+#include <heatsource.h>
 #include <nlohmann/json.hpp>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!

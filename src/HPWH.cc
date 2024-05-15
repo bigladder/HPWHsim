@@ -4219,14 +4219,15 @@ int HPWH::initFromFile(string configFile)
 
 void HPWH::init(nlohmann::json j)
 {
-    // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rs_hpwh;
-    // hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER::logger = courier;
-    // rs_hpwh.initialize(j);
-    //std::cout << j;
+    std::cout << j.dump(2) << std::endl;
     hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+    hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
 
-    rswh.initialize(j);
-    std::cout<<"\n";
+    // auto md = rswh.metadata;
+    // auto desc = rswh.description;
+    // auto perf = rswh.performance;
+
+    std::cout << "\n";
 }
 
 //-----------------------------------------------------------------------------
