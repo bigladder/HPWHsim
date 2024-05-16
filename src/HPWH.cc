@@ -4217,16 +4217,35 @@ int HPWH::initFromFile(string configFile)
 }
 #endif
 
-void HPWH::init(nlohmann::json j)
+void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER &rswh)
 {
-    std::cout << j.dump(2) << std::endl;
-    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-    hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
 
-    // auto md = rswh.metadata;
-    // auto desc = rswh.description;
-    // auto perf = rswh.performance;
+    auto& performance = rswh.performance;
+    auto& rstank = performance.tank;
 
+
+    tank->init(rstank);
+    setpoint_C = F_TO_C(135.0);
+    tank->volumeFixed = false;
+
+    for (auto& heatSource: rswh.performance.heat_source_configurations)
+    {
+        switch (heatSource.heat_source_type)
+        {
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
+        {
+            break;
+        }
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
+        {
+            break;
+        }
+        default:
+        {
+            send_error("Invalid heat source.");
+        }
+        }
+    }
     std::cout << "\n";
 }
 

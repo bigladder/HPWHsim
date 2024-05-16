@@ -20,7 +20,6 @@
         }
     },
     "performance": {
-        "number_of_nodes": 12,
         "tank": {
             "metadata": {
                 "schema_version": "1.0.0",
@@ -43,7 +42,8 @@
             "performance": {
                 "volume": 0.1707,
                 "ua": 0.003008333,
-                "bottom_fraction_of_tank_mixing_on_draw": 0.333
+                "bottom_fraction_of_tank_mixing_on_draw": 0.333,
+                "number_of_nodes": 12
             }
         },
         "heat_source_configurations": [
@@ -86,8 +86,7 @@
                 ],
                 "turn_on_logic": [
                     {
-                        "temperature": 2,
-                        "temperature_is_absolute": false,
+                        "differential_temperature": 2,
                         "logic_distribution": [
                             0,
                             0,
@@ -169,8 +168,7 @@
                 ],
                 "turn_on_logic": [
                     {
-                        "temperature": 17.78,
-                        "temperature_is_absolute": false,
+                        "differential_temperature": 17.78,
                         "logic_distribution": [
                             1,
                             0,
@@ -183,8 +181,7 @@
                 ],
                 "standby_logic": [
                     {
-                        "temperature": 5,
-                        "temperature_is_absolute": false,
+                        "differential_temperature": 5,
                         "logic_distribution": [
                             1,
                             0,
@@ -238,8 +235,7 @@
                 ],
                 "turn_on_logic": [
                     {
-                        "temperature": 55.56,
-                        "temperature_is_absolute": false,
+                        "differential_temperature": 55.56,
                         "logic_distribution": [
                             1,
                             0,
