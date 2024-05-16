@@ -12,34 +12,42 @@
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
-namespace hpwh_data_model {
-namespace rsintegratedwaterheater_ns {
-enum class HeatSourceType {
+namespace hpwh_data_model
+{
+namespace rsintegratedwaterheater_ns
+{
+enum class HeatSourceType
+{
     RESISTANCE,
     CONDENSER,
     UNKNOWN
 };
 const static std::unordered_map<HeatSourceType, enum_info> HeatSourceType_info {
-    {HeatSourceType::RESISTANCE, {"RESISTANCE", "Resistance", "Heat sources that operate by electrical resistance"}},
-    {HeatSourceType::CONDENSER, {"CONDENSER", "Condenser", "Heat sources that operate by coolant condenser systems"}},
-    {HeatSourceType::UNKNOWN, {"UNKNOWN", "None","None"}}
-};
-enum class ComparisonType {
+    {HeatSourceType::RESISTANCE,
+     {"RESISTANCE", "Resistance", "Heat sources that operate by electrical resistance"}},
+    {HeatSourceType::CONDENSER,
+     {"CONDENSER", "Condenser", "Heat sources that operate by coolant condenser systems"}},
+    {HeatSourceType::UNKNOWN, {"UNKNOWN", "None", "None"}}};
+enum class ComparisonType
+{
     GREATER_THAN,
     LESS_THAN,
     UNKNOWN
 };
 const static std::unordered_map<ComparisonType, enum_info> ComparisonType_info {
-    {ComparisonType::GREATER_THAN, {"GREATER_THAN", "Greater than", "Decision value is greater than reference value"}},
-    {ComparisonType::LESS_THAN, {"LESS_THAN", "Less than", "Decision value is less than reference value"}},
-    {ComparisonType::UNKNOWN, {"UNKNOWN", "None","None"}}
-};
-struct Schema {
+    {ComparisonType::GREATER_THAN,
+     {"GREATER_THAN", "Greater than", "Decision value is greater than reference value"}},
+    {ComparisonType::LESS_THAN,
+     {"LESS_THAN", "Less than", "Decision value is less than reference value"}},
+    {ComparisonType::UNKNOWN, {"UNKNOWN", "None", "None"}}};
+struct Schema
+{
     const static std::string_view schema_title;
     const static std::string_view schema_version;
     const static std::string_view schema_description;
 };
-struct ProductInformation {
+struct ProductInformation
+{
     std::string manufacturer;
     std::string model_number;
     bool manufacturer_is_set;
@@ -51,14 +59,16 @@ struct ProductInformation {
     const static std::string_view manufacturer_name;
     const static std::string_view model_number_name;
 };
-struct Description {
+struct Description
+{
     rsintegratedwaterheater_ns::ProductInformation product_information;
     bool product_information_is_set;
     const static std::string_view product_information_units;
     const static std::string_view product_information_description;
     const static std::string_view product_information_name;
 };
-struct HeatingLogic {
+struct HeatingLogic
+{
     double absolute_temperature;
     double differential_temperature;
     std::vector<double> logic_distribution;
@@ -85,7 +95,8 @@ struct HeatingLogic {
     const static std::string_view comparison_type_name;
     const static std::string_view hysteresis_temperature_name;
 };
-struct HeatSourceConfiguration {
+struct HeatSourceConfiguration
+{
     rsintegratedwaterheater_ns::HeatSourceType heat_source_type;
     std::unique_ptr<HeatSourceBase> heat_source;
     std::vector<double> heat_distribution;
@@ -122,7 +133,8 @@ struct HeatSourceConfiguration {
     const static std::string_view standby_logic_name;
     const static std::string_view maximum_setpoint_name;
 };
-struct Performance {
+struct Performance
+{
     rstank_ns::RSTANK tank;
     std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration> heat_source_configurations;
     double standby_power;
@@ -139,7 +151,8 @@ struct Performance {
     const static std::string_view heat_source_configurations_name;
     const static std::string_view standby_power_name;
 };
-struct RSINTEGRATEDWATERHEATER {
+struct RSINTEGRATEDWATERHEATER
+{
     core_ns::Metadata metadata;
     rsintegratedwaterheater_ns::Description description;
     rsintegratedwaterheater_ns::Performance performance;
@@ -161,22 +174,24 @@ struct RSINTEGRATEDWATERHEATER {
     const static std::string_view performance_name;
     const static std::string_view standby_power_name;
 };
-NLOHMANN_JSON_SERIALIZE_ENUM (HeatSourceType, {
-                                                 {HeatSourceType::UNKNOWN, "UNKNOWN"},
-                                                 {HeatSourceType::RESISTANCE, "RESISTANCE"},
-                                                 {HeatSourceType::CONDENSER, "CONDENSER"},
-                                             })
-NLOHMANN_JSON_SERIALIZE_ENUM (ComparisonType, {
-                                                 {ComparisonType::UNKNOWN, "UNKNOWN"},
-                                                 {ComparisonType::GREATER_THAN, "GREATER_THAN"},
-                                                 {ComparisonType::LESS_THAN, "LESS_THAN"},
-                                             })
-void from_json (const nlohmann::json& j, RSINTEGRATEDWATERHEATER& x);
-void from_json (const nlohmann::json& j, Description& x);
-void from_json (const nlohmann::json& j, ProductInformation& x);
-void from_json (const nlohmann::json& j, Performance& x);
-void from_json (const nlohmann::json& j, HeatSourceConfiguration& x);
-void from_json (const nlohmann::json& j, HeatingLogic& x);
-}
-}
+NLOHMANN_JSON_SERIALIZE_ENUM(HeatSourceType,
+                             {
+                                 {HeatSourceType::UNKNOWN, "UNKNOWN"},
+                                 {HeatSourceType::RESISTANCE, "RESISTANCE"},
+                                 {HeatSourceType::CONDENSER, "CONDENSER"},
+                             })
+NLOHMANN_JSON_SERIALIZE_ENUM(ComparisonType,
+                             {
+                                 {ComparisonType::UNKNOWN, "UNKNOWN"},
+                                 {ComparisonType::GREATER_THAN, "GREATER_THAN"},
+                                 {ComparisonType::LESS_THAN, "LESS_THAN"},
+                             })
+void from_json(const nlohmann::json& j, RSINTEGRATEDWATERHEATER& x);
+void from_json(const nlohmann::json& j, Description& x);
+void from_json(const nlohmann::json& j, ProductInformation& x);
+void from_json(const nlohmann::json& j, Performance& x);
+void from_json(const nlohmann::json& j, HeatSourceConfiguration& x);
+void from_json(const nlohmann::json& j, HeatingLogic& x);
+} // namespace rsintegratedwaterheater_ns
+} // namespace hpwh_data_model
 #endif

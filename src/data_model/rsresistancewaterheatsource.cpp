@@ -54,10 +54,7 @@ const std::string_view Performance::input_power_description = "Input power";
 
 const std::string_view Performance::input_power_name = "input_power";
 
-void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x)
-{
-    x.from_json(j);
-}
+void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x) { x.from_json(j); }
 
 const std::string_view RSRESISTANCEWATERHEATSOURCE::metadata_units = "";
 
