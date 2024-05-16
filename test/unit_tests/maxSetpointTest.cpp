@@ -220,14 +220,14 @@ TEST(UtilityTest, resample)
     // test extensive resampling
     std::vector<double> values(10);
     std::vector<double> sampleValues {20., 40., 60., 40., 20.};
-    EXPECT_TRUE(resampleExtensive(values, sampleValues));
+    EXPECT_TRUE(HPWH::resampleExtensive(values, sampleValues));
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 10.); //
     EXPECT_NEAR_REL(values[5], 30.); //
 
     // test intensive resampling
-    EXPECT_TRUE(resampleIntensive(values, sampleValues));
+    EXPECT_TRUE(HPWH::resampleIntensive(values, sampleValues));
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 20.); //

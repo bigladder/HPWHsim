@@ -1,6 +1,7 @@
-﻿
+﻿/*
+* Implementation of static HPWH utility functions
+*/
 
-#include "HPWHUtils.hh"
 #include "HPWH.hh"
 #include "HPWHHeatSource.hh"
 #include <fmt/format.h>
@@ -21,7 +22,7 @@
 /// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
 double
-getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
+HPWH::getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
 {
     if (beginFraction > endFraction)
         std::swap(beginFraction, endFraction);
@@ -63,7 +64,7 @@ getResampledValue(const std::vector<double>& sampleValues, double beginFraction,
 ///	@param[in]		sampleValues	Contains values to replace with
 /// @return	Success: true; Failure: false
 //-----------------------------------------------------------------------------
-bool resample(std::vector<double>& values, const std::vector<double>& sampleValues)
+bool HPWH::resample(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (sampleValues.empty())
         return false;
@@ -105,7 +106,7 @@ bool resample(std::vector<double>& values, const std::vector<double>& sampleValu
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-bool resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
+bool HPWH::resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (resample(values, sampleValues))
     {
@@ -118,14 +119,14 @@ bool resampleExtensive(std::vector<double>& values, const std::vector<double>& s
     return false;
 }
 
-double expitFunc(double x, double offset)
+double HPWH::expitFunc(double x, double offset)
 {
     double val;
     val = 1 / (1 + exp(x - offset));
     return val;
 }
 
-void normalize(std::vector<double>& distribution)
+void HPWH::normalize(std::vector<double>& distribution)
 {
     size_t N = distribution.size();
 
@@ -172,7 +173,7 @@ void normalize(std::vector<double>& distribution)
 /// @param[in]	numTankNodes	number of nodes in tank
 /// @returns	index of lowest tank node
 //-----------------------------------------------------------------------------
-int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
+int HPWH::findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 {
     int lowest = 0;
     const int distSize = static_cast<int>(nodeDist.size());
@@ -196,7 +197,7 @@ int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 ///								is derived
 /// @returns	width parameter (in degC)
 //-----------------------------------------------------------------------------
-double findShrinkageT_C(const std::vector<double>& nodeDist)
+double HPWH::findShrinkageT_C(const std::vector<double>& nodeDist)
 {
     double alphaT_C = 1., betaT_C = 2.;
     double condentropy = 0.;
@@ -224,7 +225,7 @@ double findShrinkageT_C(const std::vector<double>& nodeDist)
 /// @param[in]	nodeTemp_C		node temperatures
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
-void calcThermalDist(std::vector<double>& thermalDist,
+void HPWH::calcThermalDist(std::vector<double>& thermalDist,
                      const double shrinkageT_C,
                      const int lowestNode,
                      const std::vector<double>& nodeT_C,
@@ -266,7 +267,7 @@ void calcThermalDist(std::vector<double>& thermalDist,
 /// @param[in/out]	coeffs		values to be scaled
 /// @param[in]	scaleFactor 	scaling factor
 //-----------------------------------------------------------------------------
-void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
+void HPWH::scaleVector(std::vector<double>& coeffs, const double scaleFactor)
 {
     if (scaleFactor != 1.)
     {
@@ -277,7 +278,7 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
     }
 }
 
-double getChargePerNode(double tCold, double tMix, double tHot)
+double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 {
     if (tHot < tMix)
     {

@@ -4,7 +4,6 @@ File of the heating logics available in HPWHsim
 
 #include "HPWHHeatingLogic.hh"
 #include "HPWHTank.hh"
-#include "HPWHUtils.hh"
 
 /* State of Charge Based Logic*/
 bool HPWH::SoCBasedHeatingLogic::isValid()
