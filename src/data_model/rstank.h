@@ -10,14 +10,18 @@
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
-namespace hpwh_data_model {
-namespace rstank_ns {
-struct Schema {
+namespace hpwh_data_model
+{
+namespace rstank_ns
+{
+struct Schema
+{
     const static std::string_view schema_title;
     const static std::string_view schema_version;
     const static std::string_view schema_description;
 };
-struct ProductInformation {
+struct ProductInformation
+{
     std::string manufacturer;
     std::string model_number;
     bool manufacturer_is_set;
@@ -29,14 +33,16 @@ struct ProductInformation {
     const static std::string_view manufacturer_name;
     const static std::string_view model_number_name;
 };
-struct Description {
+struct Description
+{
     rstank_ns::ProductInformation product_information;
     bool product_information_is_set;
     const static std::string_view product_information_units;
     const static std::string_view product_information_description;
     const static std::string_view product_information_name;
 };
-struct Performance {
+struct Performance
+{
     double volume;
     double diameter;
     double ua;
@@ -73,7 +79,8 @@ struct Performance {
     const static std::string_view fixed_volume_name;
     const static std::string_view number_of_nodes_name;
 };
-struct RSTANK {
+struct RSTANK
+{
     core_ns::Metadata metadata;
     rstank_ns::Description description;
     rstank_ns::Performance performance;
@@ -90,10 +97,10 @@ struct RSTANK {
     const static std::string_view description_name;
     const static std::string_view performance_name;
 };
-void from_json (const nlohmann::json& j, RSTANK& x);
-void from_json (const nlohmann::json& j, Description& x);
-void from_json (const nlohmann::json& j, ProductInformation& x);
-void from_json (const nlohmann::json& j, Performance& x);
-}
-}
+void from_json(const nlohmann::json& j, RSTANK& x);
+void from_json(const nlohmann::json& j, Description& x);
+void from_json(const nlohmann::json& j, ProductInformation& x);
+void from_json(const nlohmann::json& j, Performance& x);
+} // namespace rstank_ns
+} // namespace hpwh_data_model
 #endif

@@ -138,10 +138,7 @@ const std::string_view Performance::standby_power_name = "standby_power";
 
 const std::string_view Performance::coil_configuration_name = "coil_configuration";
 
-void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x)
-{
-    x.from_json(j);
-}
+void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x) { x.from_json(j); }
 const std::string_view RSCONDENSERWATERHEATSOURCE::metadata_units = "";
 
 const std::string_view RSCONDENSERWATERHEATSOURCE::description_units = "";

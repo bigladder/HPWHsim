@@ -75,8 +75,7 @@ class HPWH : public Dispatcher
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
 
-    void init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER &rswh);
-
+    void init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used

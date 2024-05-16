@@ -4217,18 +4217,17 @@ int HPWH::initFromFile(string configFile)
 }
 #endif
 
-void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER &rswh)
+void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
 
     auto& performance = rswh.performance;
     auto& rstank = performance.tank;
 
-
     tank->init(rstank);
     setpoint_C = F_TO_C(135.0);
     tank->volumeFixed = false;
 
-    for (auto& heatSource: rswh.performance.heat_source_configurations)
+    for (auto& heatSource : rswh.performance.heat_source_configurations)
     {
         switch (heatSource.heat_source_type)
         {
