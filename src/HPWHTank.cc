@@ -1,5 +1,4 @@
-﻿#include "HPWHUtils.hh"
-#include "HPWH.hh"
+﻿#include "HPWH.hh"
 #include "HPWHTank.hh"
 
 HPWH::Tank::Tank(const HPWH::Tank& tank_in) : Dispatcher(tank_in.get_sender()) { *this = tank_in; }
@@ -174,7 +173,7 @@ double HPWH::Tank::getAverageNodeT_C() const
 double HPWH::Tank::getAverageNodeT_C(const std::vector<double>& dist) const
 {
     std::vector<double> resampledTankTemps_C(dist.size());
-    resample(resampledTankTemps_C, nodeTs_C);
+    HPWH::resample(resampledTankTemps_C, nodeTs_C);
 
     double tankT_C = 0.;
 
@@ -193,7 +192,7 @@ double HPWH::Tank::getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWe
     double totWeight = 0;
 
     std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, nodeTs_C);
+    HPWH::resample(resampledTankTemps, nodeTs_C);
 
     for (auto& nodeWeight : nodeWeights)
     {

@@ -15,7 +15,6 @@ set(headers
         HPWHversion.in.hh
         HPWHsim.hh
         HPWHLogger.hh
-        HPWHUtils.hh
         HPWH.hh
         HPWHTank.hh
         HPWHHeatSource.hh
