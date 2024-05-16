@@ -6,7 +6,7 @@
 #include <core.h>
 #include <enum-info.h>
 #include <rsintegratedwaterheater.h>
-#include <heatsource.h>
+#include <heat-source-base.h>
 #include <nlohmann/json.hpp>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
@@ -112,10 +112,9 @@ struct Performance
     const static std::string_view standby_power_name;
     const static std::string_view coil_configuration_name;
 };
-struct RSCONDENSERWATERHEATSOURCE : public heatsource,
-                                    RSInstance
+struct RSCONDENSERWATERHEATSOURCE : public HeatSourceBase
 {
-    void initialize(const nlohmann::json& j) override;
+    void from_json(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
     Description description;
     Performance performance;

@@ -8,8 +8,7 @@ set(data_model_headers
         rsintegratedwaterheater.h
         rsresistancewaterheatsource.h
         rstank.h
-        rsinstance.h
-        heatsource.h
+        heat-source-base.h
         hpwh_data_model.h
         )
 

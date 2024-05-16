@@ -140,9 +140,7 @@ const std::string_view Performance::coil_configuration_name = "coil_configuratio
 
 void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x)
 {
-    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
-    json_get<Description>(j, "description", x.description, x.description_is_set, false);
-    json_get<Performance>(j, "performance", x.performance, x.performance_is_set, true);
+    x.from_json(j);
 }
 const std::string_view RSCONDENSERWATERHEATSOURCE::metadata_units = "";
 
@@ -164,7 +162,7 @@ const std::string_view RSCONDENSERWATERHEATSOURCE::description_name = "descripti
 
 const std::string_view RSCONDENSERWATERHEATSOURCE::performance_name = "performance";
 
-void RSCONDENSERWATERHEATSOURCE::initialize(const nlohmann::json& j)
+void RSCONDENSERWATERHEATSOURCE::from_json(const nlohmann::json& j)
 {
     json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
     json_get<Description>(j, "description", description, description_is_set, false);

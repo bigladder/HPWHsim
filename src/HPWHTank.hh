@@ -26,7 +26,7 @@ class HPWH::Tank : public Dispatcher
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void init(nlohmann::json j = {});
+    void init(hpwh_data_model::rstank_ns::RSTANK &rstank);
 
     void setAllDefaults();
 
