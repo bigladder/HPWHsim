@@ -3,10 +3,9 @@
 #include <ashrae205.h>
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
 #include <core.h>
 #include <enum-info.h>
-#include <courier/courier.h>
-#include <nlohmann/json.hpp>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -47,37 +46,62 @@ struct Performance
     double diameter;
     double ua;
     double fittings_ua;
-    double bottom_fraction_of_tank_mixing_on_draw;
     bool fixed_volume;
     int number_of_nodes;
+    bool do_conduction;
+    bool mixes_on_draw;
+    bool do_inversion_mixing;
+    double bottom_fraction_of_tank_mixing_on_draw;
+    bool has_heat_exchanger;
+    double heat_exchange_effectiveness;
     bool volume_is_set;
     bool diameter_is_set;
     bool ua_is_set;
     bool fittings_ua_is_set;
-    bool bottom_fraction_of_tank_mixing_on_draw_is_set;
     bool fixed_volume_is_set;
     bool number_of_nodes_is_set;
+    bool do_conduction_is_set;
+    bool mixes_on_draw_is_set;
+    bool do_inversion_mixing_is_set;
+    bool bottom_fraction_of_tank_mixing_on_draw_is_set;
+    bool has_heat_exchanger_is_set;
+    bool heat_exchange_effectiveness_is_set;
     const static std::string_view volume_units;
     const static std::string_view diameter_units;
     const static std::string_view ua_units;
     const static std::string_view fittings_ua_units;
-    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_units;
     const static std::string_view fixed_volume_units;
     const static std::string_view number_of_nodes_units;
+    const static std::string_view do_conduction_units;
+    const static std::string_view mixes_on_draw_units;
+    const static std::string_view do_inversion_mixing_units;
+    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_units;
+    const static std::string_view has_heat_exchanger_units;
+    const static std::string_view heat_exchange_effectiveness_units;
     const static std::string_view volume_description;
     const static std::string_view diameter_description;
     const static std::string_view ua_description;
     const static std::string_view fittings_ua_description;
-    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_description;
     const static std::string_view fixed_volume_description;
     const static std::string_view number_of_nodes_description;
+    const static std::string_view do_conduction_description;
+    const static std::string_view mixes_on_draw_description;
+    const static std::string_view do_inversion_mixing_description;
+    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_description;
+    const static std::string_view has_heat_exchanger_description;
+    const static std::string_view heat_exchange_effectiveness_description;
     const static std::string_view volume_name;
     const static std::string_view diameter_name;
     const static std::string_view ua_name;
     const static std::string_view fittings_ua_name;
-    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_name;
     const static std::string_view fixed_volume_name;
     const static std::string_view number_of_nodes_name;
+    const static std::string_view do_conduction_name;
+    const static std::string_view mixes_on_draw_name;
+    const static std::string_view do_inversion_mixing_name;
+    const static std::string_view bottom_fraction_of_tank_mixing_on_draw_name;
+    const static std::string_view has_heat_exchanger_name;
+    const static std::string_view heat_exchange_effectiveness_name;
 };
 struct RSTANK
 {

@@ -7,8 +7,10 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <core.h>
 #include <enum-info.h>
 #include <heat-source-base.h>
+#include <heating-logic-base.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -28,6 +30,16 @@ const static std::unordered_map<HeatSourceType, enum_info> HeatSourceType_info {
     {HeatSourceType::CONDENSER,
      {"CONDENSER", "Condenser", "Heat sources that operate by coolant condenser systems"}},
     {HeatSourceType::UNKNOWN, {"UNKNOWN", "None", "None"}}};
+enum class HeatingLogicType
+{
+    SOC_BASED,
+    TEMP_BASED,
+    UNKNOWN
+};
+const static std::unordered_map<HeatingLogicType, enum_info> HeatingLogicType_info {
+    {HeatingLogicType::SOC_BASED, {"SOC_BASED", "SoC based", "State-of-charge based"}},
+    {HeatingLogicType::TEMP_BASED, {"TEMP_BASED", "Temp based", "Temperature based"}},
+    {HeatingLogicType::UNKNOWN, {"UNKNOWN", "None", "None"}}};
 enum class ComparisonType
 {
     GREATER_THAN,
@@ -69,31 +81,21 @@ struct Description
 };
 struct HeatingLogic
 {
-    double absolute_temperature;
-    double differential_temperature;
-    std::vector<double> logic_distribution;
+    rsintegratedwaterheater_ns::HeatingLogicType heating_logic_type;
+    std::unique_ptr<HeatingLogicBase> heating_logic;
     rsintegratedwaterheater_ns::ComparisonType comparison_type;
-    double hysteresis_temperature;
-    bool absolute_temperature_is_set;
-    bool differential_temperature_is_set;
-    bool logic_distribution_is_set;
+    bool heating_logic_type_is_set;
+    bool heating_logic_is_set;
     bool comparison_type_is_set;
-    bool hysteresis_temperature_is_set;
-    const static std::string_view absolute_temperature_units;
-    const static std::string_view differential_temperature_units;
-    const static std::string_view logic_distribution_units;
+    const static std::string_view heating_logic_type_units;
+    const static std::string_view heating_logic_units;
     const static std::string_view comparison_type_units;
-    const static std::string_view hysteresis_temperature_units;
-    const static std::string_view absolute_temperature_description;
-    const static std::string_view differential_temperature_description;
-    const static std::string_view logic_distribution_description;
+    const static std::string_view heating_logic_type_description;
+    const static std::string_view heating_logic_description;
     const static std::string_view comparison_type_description;
-    const static std::string_view hysteresis_temperature_description;
-    const static std::string_view absolute_temperature_name;
-    const static std::string_view differential_temperature_name;
-    const static std::string_view logic_distribution_name;
+    const static std::string_view heating_logic_type_name;
+    const static std::string_view heating_logic_name;
     const static std::string_view comparison_type_name;
-    const static std::string_view hysteresis_temperature_name;
 };
 struct HeatSourceConfiguration
 {
@@ -104,6 +106,8 @@ struct HeatSourceConfiguration
     std::vector<rsintegratedwaterheater_ns::HeatingLogic> shut_off_logic;
     std::vector<rsintegratedwaterheater_ns::HeatingLogic> standby_logic;
     double maximum_setpoint;
+    double hysteresis_temperature_difference;
+    bool is_vip;
     bool heat_source_type_is_set;
     bool heat_source_is_set;
     bool heat_distribution_is_set;
@@ -111,6 +115,8 @@ struct HeatSourceConfiguration
     bool shut_off_logic_is_set;
     bool standby_logic_is_set;
     bool maximum_setpoint_is_set;
+    bool hysteresis_temperature_difference_is_set;
+    bool is_vip_is_set;
     const static std::string_view heat_source_type_units;
     const static std::string_view heat_source_units;
     const static std::string_view heat_distribution_units;
@@ -118,6 +124,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_units;
     const static std::string_view standby_logic_units;
     const static std::string_view maximum_setpoint_units;
+    const static std::string_view hysteresis_temperature_difference_units;
+    const static std::string_view is_vip_units;
     const static std::string_view heat_source_type_description;
     const static std::string_view heat_source_description;
     const static std::string_view heat_distribution_description;
@@ -125,6 +133,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_description;
     const static std::string_view standby_logic_description;
     const static std::string_view maximum_setpoint_description;
+    const static std::string_view hysteresis_temperature_difference_description;
+    const static std::string_view is_vip_description;
     const static std::string_view heat_source_type_name;
     const static std::string_view heat_source_name;
     const static std::string_view heat_distribution_name;
@@ -132,6 +142,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_name;
     const static std::string_view standby_logic_name;
     const static std::string_view maximum_setpoint_name;
+    const static std::string_view hysteresis_temperature_difference_name;
+    const static std::string_view is_vip_name;
 };
 struct Performance
 {
@@ -174,11 +186,65 @@ struct RSINTEGRATEDWATERHEATER
     const static std::string_view performance_name;
     const static std::string_view standby_power_name;
 };
+struct TempBasedHeatingLogic : public HeatingLogicBase
+{
+    void initialize(const nlohmann::json& j) override;
+    double absolute_temperature;
+    double differential_temperature;
+    std::vector<double> logic_distribution;
+    bool absolute_temperature_is_set;
+    bool differential_temperature_is_set;
+    bool logic_distribution_is_set;
+    const static std::string_view absolute_temperature_units;
+    const static std::string_view differential_temperature_units;
+    const static std::string_view logic_distribution_units;
+    const static std::string_view absolute_temperature_description;
+    const static std::string_view differential_temperature_description;
+    const static std::string_view logic_distribution_description;
+    const static std::string_view absolute_temperature_name;
+    const static std::string_view differential_temperature_name;
+    const static std::string_view logic_distribution_name;
+};
+struct SoCBasedHeatingLogic : public HeatingLogicBase
+{
+    void initialize(const nlohmann::json& j) override;
+    double decision_point;
+    double minimum_useful_temperature;
+    double hysteresis_fraction;
+    bool uses_constant_mains;
+    double constant_mains_temperature;
+    bool decision_point_is_set;
+    bool minimum_useful_temperature_is_set;
+    bool hysteresis_fraction_is_set;
+    bool uses_constant_mains_is_set;
+    bool constant_mains_temperature_is_set;
+    const static std::string_view decision_point_units;
+    const static std::string_view minimum_useful_temperature_units;
+    const static std::string_view hysteresis_fraction_units;
+    const static std::string_view uses_constant_mains_units;
+    const static std::string_view constant_mains_temperature_units;
+    const static std::string_view decision_point_description;
+    const static std::string_view minimum_useful_temperature_description;
+    const static std::string_view hysteresis_fraction_description;
+    const static std::string_view uses_constant_mains_description;
+    const static std::string_view constant_mains_temperature_description;
+    const static std::string_view decision_point_name;
+    const static std::string_view minimum_useful_temperature_name;
+    const static std::string_view hysteresis_fraction_name;
+    const static std::string_view uses_constant_mains_name;
+    const static std::string_view constant_mains_temperature_name;
+};
 NLOHMANN_JSON_SERIALIZE_ENUM(HeatSourceType,
                              {
                                  {HeatSourceType::UNKNOWN, "UNKNOWN"},
                                  {HeatSourceType::RESISTANCE, "RESISTANCE"},
                                  {HeatSourceType::CONDENSER, "CONDENSER"},
+                             })
+NLOHMANN_JSON_SERIALIZE_ENUM(HeatingLogicType,
+                             {
+                                 {HeatingLogicType::UNKNOWN, "UNKNOWN"},
+                                 {HeatingLogicType::SOC_BASED, "SOC_BASED"},
+                                 {HeatingLogicType::TEMP_BASED, "TEMP_BASED"},
                              })
 NLOHMANN_JSON_SERIALIZE_ENUM(ComparisonType,
                              {
@@ -192,6 +258,8 @@ void from_json(const nlohmann::json& j, ProductInformation& x);
 void from_json(const nlohmann::json& j, Performance& x);
 void from_json(const nlohmann::json& j, HeatSourceConfiguration& x);
 void from_json(const nlohmann::json& j, HeatingLogic& x);
+void from_json(const nlohmann::json& j, TempBasedHeatingLogic& x);
+void from_json(const nlohmann::json& j, SoCBasedHeatingLogic& x);
 } // namespace rsintegratedwaterheater_ns
 } // namespace hpwh_data_model
 #endif

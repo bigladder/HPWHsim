@@ -1,4 +1,3 @@
-#include <ashrae205.h>
 #include <rsresistancewaterheatsource.h>
 #include <load-object.h>
 
@@ -54,8 +53,14 @@ const std::string_view Performance::input_power_description = "Input power";
 
 const std::string_view Performance::input_power_name = "input_power";
 
-void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x) { x.from_json(j); }
-
+void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x)
+{
+    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
+    json_get<rsresistancewaterheatsource_ns::Description>(
+        j, "description", x.description, x.description_is_set, false);
+    json_get<rsresistancewaterheatsource_ns::Performance>(
+        j, "performance", x.performance, x.performance_is_set, true);
+}
 const std::string_view RSRESISTANCEWATERHEATSOURCE::metadata_units = "";
 
 const std::string_view RSRESISTANCEWATERHEATSOURCE::description_units = "";
@@ -76,11 +81,7 @@ const std::string_view RSRESISTANCEWATERHEATSOURCE::description_name = "descript
 
 const std::string_view RSRESISTANCEWATERHEATSOURCE::performance_name = "performance";
 
-void RSRESISTANCEWATERHEATSOURCE::from_json(const nlohmann::json& j)
-{
-    json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
-    json_get<Description>(j, "description", description, description_is_set, false);
-    json_get<Performance>(j, "performance", performance, performance_is_set, true);
-}
+void RSRESISTANCEWATERHEATSOURCE::initialize(const nlohmann::json& j) { from_json(j, *this); }
+
 } // namespace rsresistancewaterheatsource_ns
 } // namespace hpwh_data_model

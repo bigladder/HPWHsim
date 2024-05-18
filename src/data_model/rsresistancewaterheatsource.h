@@ -3,11 +3,10 @@
 #include <ashrae205.h>
 #include <string>
 #include <vector>
-#include <core.h>
-#include <enum-info.h>
-#include <rsintegratedwaterheater.h>
-#include <heat-source-base.h>
 #include <nlohmann/json.hpp>
+#include <enum-info.h>
+#include <heat-source-base.h>
+#include <rsintegratedwaterheater.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -36,7 +35,7 @@ struct ProductInformation
 };
 struct Description
 {
-    ProductInformation product_information;
+    rsresistancewaterheatsource_ns::ProductInformation product_information;
     bool product_information_is_set;
     const static std::string_view product_information_units;
     const static std::string_view product_information_description;
@@ -52,10 +51,10 @@ struct Performance
 };
 struct RSRESISTANCEWATERHEATSOURCE : public HeatSourceBase
 {
-    void from_json(const nlohmann::json& j) override;
+    void initialize(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
-    Description description;
-    Performance performance;
+    rsresistancewaterheatsource_ns::Description description;
+    rsresistancewaterheatsource_ns::Performance performance;
     bool metadata_is_set;
     bool description_is_set;
     bool performance_is_set;

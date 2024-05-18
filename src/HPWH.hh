@@ -1161,11 +1161,13 @@ class HPWH : public Dispatcher
 
   public:
     static double getResampledValue(const std::vector<double>& sampleValues,
-                             double beginFraction,
-                             double endFraction);
+                                    double beginFraction,
+                                    double endFraction);
     static bool resample(std::vector<double>& values, const std::vector<double>& sampleValues);
-    static bool resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues);
-    static inline bool resampleIntensive(std::vector<double>& values, const std::vector<double>& sampleValues)
+    static bool resampleExtensive(std::vector<double>& values,
+                                  const std::vector<double>& sampleValues);
+    static inline bool resampleIntensive(std::vector<double>& values,
+                                         const std::vector<double>& sampleValues)
     {
         return resample(values, sampleValues);
     }
@@ -1174,10 +1176,10 @@ class HPWH : public Dispatcher
     static int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes);
     static double findShrinkageT_C(const std::vector<double>& nodeDist);
     static void calcThermalDist(std::vector<double>& thermalDist,
-                         const double shrinkageT_C,
-                         const int lowestNode,
-                         const std::vector<double>& nodeT_C,
-                         const double setpointT_C);
+                                const double shrinkageT_C,
+                                const int lowestNode,
+                                const std::vector<double>& nodeT_C,
+                                const double setpointT_C);
     static void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
     static double getChargePerNode(double tCold, double tMix, double tHot);
 }; // end of HPWH class
