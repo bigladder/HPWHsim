@@ -49,27 +49,48 @@ void from_json(const nlohmann::json& j, Performance& x)
     json_get<double>(j, "diameter", x.diameter, x.diameter_is_set, false);
     json_get<double>(j, "ua", x.ua, x.ua_is_set, true);
     json_get<double>(j, "fittings_ua", x.fittings_ua, x.fittings_ua_is_set, false);
+    json_get<bool>(j, "fixed_volume", x.fixed_volume, x.fixed_volume_is_set, false);
+    json_get<int>(j, "number_of_nodes", x.number_of_nodes, x.number_of_nodes_is_set, false);
+    json_get<bool>(j, "do_conduction", x.do_conduction, x.do_conduction_is_set, false);
+    json_get<bool>(j, "mixes_on_draw", x.mixes_on_draw, x.mixes_on_draw_is_set, false);
+    json_get<bool>(
+        j, "do_inversion_mixing", x.do_inversion_mixing, x.do_inversion_mixing_is_set, false);
     json_get<double>(j,
                      "bottom_fraction_of_tank_mixing_on_draw",
                      x.bottom_fraction_of_tank_mixing_on_draw,
                      x.bottom_fraction_of_tank_mixing_on_draw_is_set,
                      false);
-    json_get<bool>(j, "fixed_volume", x.fixed_volume, x.fixed_volume_is_set, false);
-    json_get<int>(j, "number_of_nodes", x.number_of_nodes, x.number_of_nodes_is_set, false);
+    json_get<bool>(
+        j, "has_heat_exchanger", x.has_heat_exchanger, x.has_heat_exchanger_is_set, false);
+    json_get<double>(j,
+                     "heat_exchange_effectiveness",
+                     x.heat_exchange_effectiveness,
+                     x.heat_exchange_effectiveness_is_set,
+                     true);
 }
-const std::string_view Performance::volume_units = "m";
+const std::string_view Performance::volume_units = "m3";
 
 const std::string_view Performance::diameter_units = "m";
 
-const std::string_view Performance::ua_units = "W";
+const std::string_view Performance::ua_units = "W/K";
 
-const std::string_view Performance::fittings_ua_units = "W";
-
-const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_units = "-";
+const std::string_view Performance::fittings_ua_units = "W/K";
 
 const std::string_view Performance::fixed_volume_units = "";
 
 const std::string_view Performance::number_of_nodes_units = "";
+
+const std::string_view Performance::do_conduction_units = "";
+
+const std::string_view Performance::mixes_on_draw_units = "";
+
+const std::string_view Performance::do_inversion_mixing_units = "";
+
+const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_units = "-";
+
+const std::string_view Performance::has_heat_exchanger_units = "";
+
+const std::string_view Performance::heat_exchange_effectiveness_units = "-";
 
 const std::string_view Performance::volume_description = "";
 
@@ -79,13 +100,25 @@ const std::string_view Performance::ua_description = "";
 
 const std::string_view Performance::fittings_ua_description = "";
 
-const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_description =
-    "Bottom fraction of the tank that should mix during draws (simulation only?)";
-
 const std::string_view Performance::fixed_volume_description = "";
 
 const std::string_view Performance::number_of_nodes_description =
     "Number of nodes used for simulation";
+
+const std::string_view Performance::do_conduction_description = "Use conduction between nodes";
+
+const std::string_view Performance::mixes_on_draw_description = "Whether tank mixes on draws";
+
+const std::string_view Performance::do_inversion_mixing_description = "Use inversion mixing";
+
+const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_description =
+    "Bottom fraction of the tank that mixes on draws";
+
+const std::string_view Performance::has_heat_exchanger_description =
+    "Water is heated through a heat exchanger";
+
+const std::string_view Performance::heat_exchange_effectiveness_description =
+    "Effectiveness of heat exchange";
 
 const std::string_view Performance::volume_name = "volume";
 
@@ -95,12 +128,23 @@ const std::string_view Performance::ua_name = "ua";
 
 const std::string_view Performance::fittings_ua_name = "fittings_ua";
 
-const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_name =
-    "bottom_fraction_of_tank_mixing_on_draw";
-
 const std::string_view Performance::fixed_volume_name = "fixed_volume";
 
 const std::string_view Performance::number_of_nodes_name = "number_of_nodes";
+
+const std::string_view Performance::do_conduction_name = "do_conduction";
+
+const std::string_view Performance::mixes_on_draw_name = "mixes_on_draw";
+
+const std::string_view Performance::do_inversion_mixing_name = "do_inversion_mixing";
+
+const std::string_view Performance::bottom_fraction_of_tank_mixing_on_draw_name =
+    "bottom_fraction_of_tank_mixing_on_draw";
+
+const std::string_view Performance::has_heat_exchanger_name = "has_heat_exchanger";
+
+const std::string_view Performance::heat_exchange_effectiveness_name =
+    "heat_exchange_effectiveness";
 
 void from_json(const nlohmann::json& j, RSTANK& x)
 {
@@ -127,5 +171,6 @@ const std::string_view RSTANK::metadata_name = "metadata";
 const std::string_view RSTANK::description_name = "description";
 
 const std::string_view RSTANK::performance_name = "performance";
+
 } // namespace rstank_ns
 } // namespace hpwh_data_model

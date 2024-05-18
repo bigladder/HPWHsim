@@ -1,6 +1,6 @@
 ﻿/*
-* Implementation of static HPWH utility functions
-*/
+ * Implementation of static HPWH utility functions
+ */
 
 #include "HPWH.hh"
 #include "HPWHHeatSource.hh"
@@ -21,8 +21,9 @@
 ///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
 /// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-double
-HPWH::getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
+double HPWH::getResampledValue(const std::vector<double>& sampleValues,
+                               double beginFraction,
+                               double endFraction)
 {
     if (beginFraction > endFraction)
         std::swap(beginFraction, endFraction);
@@ -226,10 +227,10 @@ double HPWH::findShrinkageT_C(const std::vector<double>& nodeDist)
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
 void HPWH::calcThermalDist(std::vector<double>& thermalDist,
-                     const double shrinkageT_C,
-                     const int lowestNode,
-                     const std::vector<double>& nodeT_C,
-                     const double setpointT_C)
+                           const double shrinkageT_C,
+                           const int lowestNode,
+                           const std::vector<double>& nodeT_C,
+                           const double setpointT_C)
 {
 
     thermalDist.resize(nodeT_C.size());

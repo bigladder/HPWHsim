@@ -2,9 +2,8 @@
 #define CORE_H_
 #include <string>
 #include <vector>
-#include <ashrae205.h>
-#include <enum-info.h>
 #include <nlohmann/json.hpp>
+#include <enum-info.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -28,9 +27,9 @@ struct Metadata
     ashrae205_ns::SchemaType schema;
     std::string schema_version;
     std::string description;
+    std::string timestamp;
     std::string id;
-    std::string data_timestamp;
-    int data_version;
+    int version;
     std::string data_source;
     std::string disclaimer;
     std::string notes;
@@ -48,9 +47,9 @@ struct Metadata
     const static std::string_view schema_units;
     const static std::string_view schema_version_units;
     const static std::string_view description_units;
+    const static std::string_view timestamp_units;
     const static std::string_view id_units;
-    const static std::string_view data_timestamp_units;
-    const static std::string_view data_version_units;
+    const static std::string_view version_units;
     const static std::string_view data_source_units;
     const static std::string_view disclaimer_units;
     const static std::string_view notes_units;
@@ -58,7 +57,7 @@ struct Metadata
     const static std::string_view schema_description;
     const static std::string_view schema_version_description;
     const static std::string_view description_description;
-    const static std::string_view data_timestamp_description;
+    const static std::string_view timestamp_description;
     const static std::string_view id_description;
     const static std::string_view version_description;
     const static std::string_view data_source_description;
@@ -68,7 +67,7 @@ struct Metadata
     const static std::string_view schema_name;
     const static std::string_view schema_version_name;
     const static std::string_view description_name;
-    const static std::string_view data_timestamp_name;
+    const static std::string_view timestamp_name;
     const static std::string_view id_name;
     const static std::string_view version_name;
     const static std::string_view data_source_name;

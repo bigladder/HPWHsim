@@ -1,6 +1,5 @@
 #include <rscondenserwaterheatsource.h>
 #include <load-object.h>
-#include <enum-info.h>
 
 namespace hpwh_data_model
 {
@@ -34,7 +33,7 @@ const std::string_view ProductInformation::model_number_name = "model_number";
 
 void from_json(const nlohmann::json& j, Description& x)
 {
-    json_get<ProductInformation>(
+    json_get<rscondenserwaterheatsource_ns::ProductInformation>(
         j, "product_information", x.product_information, x.product_information_is_set, false);
 }
 const std::string_view Description::product_information_units = "";
@@ -93,8 +92,9 @@ const std::string_view LookupVariables::cop_name = "cop";
 
 void from_json(const nlohmann::json& j, PerformanceMap& x)
 {
-    json_get<GridVariables>(j, "grid_variables", x.grid_variables, x.grid_variables_is_set, true);
-    json_get<LookupVariables>(
+    json_get<rscondenserwaterheatsource_ns::GridVariables>(
+        j, "grid_variables", x.grid_variables, x.grid_variables_is_set, true);
+    json_get<rscondenserwaterheatsource_ns::LookupVariables>(
         j, "lookup_variables", x.lookup_variables, x.lookup_variables_is_set, true);
 }
 const std::string_view PerformanceMap::grid_variables_units = "";
@@ -113,10 +113,10 @@ const std::string_view PerformanceMap::lookup_variables_name = "lookup_variables
 
 void from_json(const nlohmann::json& j, Performance& x)
 {
-    json_get<PerformanceMap>(
+    json_get<rscondenserwaterheatsource_ns::PerformanceMap>(
         j, "performance_map", x.performance_map, x.performance_map_is_set, true);
     json_get<double>(j, "standby_power", x.standby_power, x.standby_power_is_set, false);
-    json_get<CoilConfiguration>(
+    json_get<rscondenserwaterheatsource_ns::CoilConfiguration>(
         j, "coil_configuration", x.coil_configuration, x.coil_configuration_is_set, true);
 }
 const std::string_view Performance::performance_map_units = "";
@@ -138,7 +138,14 @@ const std::string_view Performance::standby_power_name = "standby_power";
 
 const std::string_view Performance::coil_configuration_name = "coil_configuration";
 
-void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x) { x.from_json(j); }
+void from_json(const nlohmann::json& j, RSCONDENSERWATERHEATSOURCE& x)
+{
+    json_get<core_ns::Metadata>(j, "metadata", x.metadata, x.metadata_is_set, true);
+    json_get<rscondenserwaterheatsource_ns::Description>(
+        j, "description", x.description, x.description_is_set, false);
+    json_get<rscondenserwaterheatsource_ns::Performance>(
+        j, "performance", x.performance, x.performance_is_set, true);
+}
 const std::string_view RSCONDENSERWATERHEATSOURCE::metadata_units = "";
 
 const std::string_view RSCONDENSERWATERHEATSOURCE::description_units = "";
@@ -159,11 +166,7 @@ const std::string_view RSCONDENSERWATERHEATSOURCE::description_name = "descripti
 
 const std::string_view RSCONDENSERWATERHEATSOURCE::performance_name = "performance";
 
-void RSCONDENSERWATERHEATSOURCE::from_json(const nlohmann::json& j)
-{
-    json_get<core_ns::Metadata>(j, "metadata", metadata, metadata_is_set, true);
-    json_get<Description>(j, "description", description, description_is_set, false);
-    json_get<Performance>(j, "performance", performance, performance_is_set, true);
-}
+void RSCONDENSERWATERHEATSOURCE::initialize(const nlohmann::json& j) { from_json(j, *this); }
+
 } // namespace rscondenserwaterheatsource_ns
 } // namespace hpwh_data_model

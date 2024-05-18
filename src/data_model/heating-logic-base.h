@@ -1,5 +1,5 @@
-#ifndef HEATSOURCEBASE_H_
-#define HEATSOURCEBASE_H_
+#ifndef HEATINGLOGICBASE_H_
+#define HEATINGLOGICBASE_H_
 #include <ashrae205.h>
 
 #include <string>
@@ -10,10 +10,10 @@
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
-struct HeatSourceBase
+struct HeatingLogicBase
 {
     virtual void initialize(const nlohmann::json& j) = 0;
-    virtual ~HeatSourceBase() = default;
+    virtual ~HeatingLogicBase() = default;
 };
 
 #endif

@@ -3,11 +3,10 @@
 #include <ashrae205.h>
 #include <string>
 #include <vector>
-#include <core.h>
-#include <enum-info.h>
-#include <rsintegratedwaterheater.h>
-#include <heat-source-base.h>
 #include <nlohmann/json.hpp>
+#include <enum-info.h>
+#include <heat-source-base.h>
+#include <rsintegratedwaterheater.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -83,8 +82,8 @@ struct LookupVariables
 };
 struct PerformanceMap
 {
-    GridVariables grid_variables;
-    LookupVariables lookup_variables;
+    rscondenserwaterheatsource_ns::GridVariables grid_variables;
+    rscondenserwaterheatsource_ns::LookupVariables lookup_variables;
     bool grid_variables_is_set;
     bool lookup_variables_is_set;
     const static std::string_view grid_variables_units;
@@ -96,9 +95,9 @@ struct PerformanceMap
 };
 struct Performance
 {
-    PerformanceMap performance_map;
+    rscondenserwaterheatsource_ns::PerformanceMap performance_map;
     double standby_power;
-    CoilConfiguration coil_configuration;
+    rscondenserwaterheatsource_ns::CoilConfiguration coil_configuration;
     bool performance_map_is_set;
     bool standby_power_is_set;
     bool coil_configuration_is_set;
@@ -114,10 +113,10 @@ struct Performance
 };
 struct RSCONDENSERWATERHEATSOURCE : public HeatSourceBase
 {
-    void from_json(const nlohmann::json& j) override;
+    virtual void initialize(const nlohmann::json& j) override;
     core_ns::Metadata metadata;
-    Description description;
-    Performance performance;
+    rscondenserwaterheatsource_ns::Description description;
+    rscondenserwaterheatsource_ns::Performance performance;
     bool metadata_is_set;
     bool description_is_set;
     bool performance_is_set;
