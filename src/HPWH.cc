@@ -4218,31 +4218,17 @@ int HPWH::initFromFile(string configFile)
 
 void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
-
     auto& performance = rswh.performance;
     auto& rstank = performance.tank;
 
-    tank->init(rstank);
     setpoint_C = F_TO_C(135.0);
-    tank->volumeFixed = false;
 
-    for (auto& heatSource : rswh.performance.heat_source_configurations)
+    tank->init(rstank);
+    for (auto& heatsourceconfiguration : performance.heat_source_configurations)
     {
-        switch (heatSource.heat_source_type)
-        {
-        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
-        {
-            break;
-        }
-        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
-        {
-            break;
-        }
-        default:
-        {
-            send_error("Invalid heat source.");
-        }
-        }
+        HeatSource heatSource(this);
+        heatSource.init(heatsourceconfiguration);
+        heatSources.push_back(heatSource);
     }
     std::cout << "\n";
 }

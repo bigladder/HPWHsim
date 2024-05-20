@@ -18,6 +18,11 @@ class HPWH::HeatSource : public Dispatcher
 
     void init(nlohmann::json j = {});
 
+    void init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
+    void init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rscondenserwaterheatsource);
+    void init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rsresistancewaterheatsource);
+
+    void setConstantElementPower(double power_W);
     void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
     /**< configure the heat source to be a resisive element, positioned at the
         specified node, with the specified power in watts */
