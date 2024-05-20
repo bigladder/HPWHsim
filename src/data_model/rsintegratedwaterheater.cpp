@@ -96,6 +96,7 @@ void from_json(const nlohmann::json& j, HeatSourceConfiguration& x)
         if (x.heat_source)
         {
             x.heat_source->initialize(j.at("heat_source"));
+            x.heat_source_is_set = true;
         }
     }
     if (x.heat_source_type == HeatSourceType::CONDENSER)
@@ -105,6 +106,7 @@ void from_json(const nlohmann::json& j, HeatSourceConfiguration& x)
         if (x.heat_source)
         {
             x.heat_source->initialize(j.at("heat_source"));
+            x.heat_source_is_set = true;
         }
     }
     json_get<std::vector<double>>(

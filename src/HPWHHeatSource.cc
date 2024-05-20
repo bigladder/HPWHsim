@@ -39,12 +39,86 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Couri
     , extrapolationMethod(EXTRAP_LINEAR)
 {
 }
-// public HPWH::HeatSource functions
 
+// public HPWH::HeatSource functions
 HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Dispatcher(heatSource.get_sender())
 {
     *this = heatSource;
 }
+
+void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rscondenserwaterheatsource)
+{
+    auto& perf = rscondenserwaterheatsource.performance;
+    switch (perf.coil_configuration)
+    {
+    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
+    {
+        configuration = COIL_CONFIG::CONFIG_SUBMERGED;
+        break;
+    }
+    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
+    {
+        configuration = COIL_CONFIG::CONFIG_WRAPPED;
+        break;
+    }
+    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
+    {
+        configuration = COIL_CONFIG::CONFIG_EXTERNAL;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+}
+
+void HPWH::HeatSource::init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rsresistancewaterheatsource)
+{
+    auto& perf = rsresistancewaterheatsource.performance;
+    configuration = CONFIG_SUBMERGED;
+    setConstantElementPower(perf.input_power);
+}
+
+void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
+{
+    auto& config = heatsourceconfiguration;
+    setCondensity(config.heat_distribution);
+    checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint));
+    checkSetValue(isVIP, config.is_vip_is_set, config.is_vip);
+    checkSetValue(hysteresis_dC, config.hysteresis_temperature_difference_is_set, config.hysteresis_temperature_difference);
+
+    switch(config.heat_source_type)
+    {
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:{
+
+        typeOfHeatSource = TYPE_compressor;
+        if(config.heat_source_is_set)
+        {
+            auto rsconendserwaterheatsource_ptr = dynamic_cast<
+                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                config.heat_source.get());
+            init(*rsconendserwaterheatsource_ptr);
+        }
+        break;
+    }
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:{
+        typeOfHeatSource = TYPE_resistance;
+        if(config.heat_source_is_set)
+        {
+            auto rsresistancewaterheatsource_ptr = dynamic_cast<
+                hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+                config.heat_source.get());
+            init(*rsresistancewaterheatsource_ptr);
+        }
+        break;
+    }
+    default:
+    {}
+    }
+
+}
+
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
@@ -781,9 +855,9 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     }
 }
 
-bool HPWH::HeatSource::isACompressor() const { return this->typeOfHeatSource == TYPE_compressor; }
+bool HPWH::HeatSource::isACompressor() const { return typeOfHeatSource == TYPE_compressor; }
 
-bool HPWH::HeatSource::isAResistance() const { return this->typeOfHeatSource == TYPE_resistance; }
+bool HPWH::HeatSource::isAResistance() const { return typeOfHeatSource == TYPE_resistance; }
 bool HPWH::HeatSource::isExternalMultipass() const
 {
     return isMultipass && configuration == HeatSource::CONFIG_EXTERNAL;
@@ -1040,6 +1114,23 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
     return elapsedTime_min;
 }
 
+void HPWH::HeatSource::setConstantElementPower(double power_W)
+{
+    perfMap.reserve(2);
+    perfMap.clear();
+    perfMap.push_back({
+        50,                  // Temperature (T_F)
+        {power_W, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+        {1.0, 0.0, 0.0}      // COP Coefficients (COP_coeffs)
+    });
+
+    perfMap.push_back({
+        67,                  // Temperature (T_F)
+        {power_W, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+        {1.0, 0.0, 0.0}      // COP Coefficients (COP_coeffs)
+    });
+}
+
 void HPWH::HeatSource::setupAsResistiveElement(int node,
                                                double Watts,
                                                int condensitySize /* = CONDENSITY_SIZE*/)
@@ -1050,19 +1141,7 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
     condensity = std::vector<double>(condensitySize, 0.);
     condensity[node] = 1;
 
-    perfMap.reserve(2);
-
-    perfMap.push_back({
-        50,                // Temperature (T_F)
-        {Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
-    });
-
-    perfMap.push_back({
-        67,                // Temperature (T_F)
-        {Watts, 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
-    });
+    setConstantElementPower(Watts);
 
     configuration = CONFIG_SUBMERGED; // immersed in tank
 

@@ -10,10 +10,13 @@
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
+namespace hpwh_data_model
+{
 struct HeatSourceBase
 {
     virtual void initialize(const nlohmann::json& j) = 0;
     virtual ~HeatSourceBase() = default;
 };
+}
 
 #endif

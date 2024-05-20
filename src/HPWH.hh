@@ -1188,6 +1188,7 @@ constexpr double BTUperKWH =
     3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
 constexpr double FperC = 9. / 5.;   // degF / degC
 constexpr double offsetF = 32.;     // degF offset
+constexpr double absolute_zeroT_C = -273.15; // absolute zero (degC)
 constexpr double sec_per_min = 60.; // s / min
 constexpr double min_per_hr = 60.;  // min / hr
 constexpr double sec_per_hr = sec_per_min * min_per_hr; // s / hr
@@ -1201,6 +1202,7 @@ constexpr double BTUm2C_per_kWhft2F =
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
 inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
 inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
+inline double K_TO_C(double kelvin) {return (kelvin + absolute_zeroT_C);}
 inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
 inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }
@@ -1245,6 +1247,13 @@ inline bool aboutEqual(T a, T b)
 inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, const bool absolute)
 {
     return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
+}
+
+template <typename T>
+void checkSetValue(T& t, const bool is_set, const T t_new)
+{
+    if (is_set)
+        t = t_new;
 }
 
 #endif

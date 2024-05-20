@@ -6,8 +6,6 @@ namespace hpwh_data_model
 
 namespace core_ns
 {
-
-void from_json(const nlohmann::json& j, Schema& x) {}
 const std::string_view Schema::schema_title = "Core";
 
 const std::string_view Schema::schema_version = "0.1.0";

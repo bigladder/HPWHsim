@@ -24,6 +24,12 @@ enum class HeatSourceType
     CONDENSER,
     UNKNOWN
 };
+enum class HeatSourceCoilConfiguration
+{
+    RESISTANCE,
+    CONDENSER,
+    UNKNOWN
+};
 const static std::unordered_map<HeatSourceType, enum_info> HeatSourceType_info {
     {HeatSourceType::RESISTANCE,
      {"RESISTANCE", "Resistance", "Heat sources that operate by electrical resistance"}},
