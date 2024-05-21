@@ -47,6 +47,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     }
 
     hpwh = hSource.hpwh;
+
+    typeOfHeatSource = hSource.typeOfHeatSource;
     isOn = hSource.isOn;
     lockedOut = hSource.lockedOut;
     doDefrost = hSource.doDefrost;
@@ -156,16 +158,19 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
-                                           heatSourceAmbientT_C,
-                                           minT));
+            hpwh->send_warning(
+                fmt::format("lock-out: running below minT\tambient: {:g},\tminT: {:g}",
+                            heatSourceAmbientT_C,
+                            minT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < minT)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
-                "lock-out: already below minT\tambient: {}\tminT: {}", heatSourceAmbientT_C, minT));
+            hpwh->send_warning(
+                fmt::format("lock-out: already below minT\tambient: {:g}\tminT: {:g}",
+                            heatSourceAmbientT_C,
+                            minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
@@ -173,22 +178,26 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
-                "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
+            hpwh->send_warning(
+                fmt::format("lock-out: running above maxT\tambient: {:g}\tmaxT: {:g}",
+                            heatSourceAmbientT_C,
+                            maxT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
         {
             lock = true;
-            hpwh->send_warning(fmt::format(
-                "lock-out: already above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
+            hpwh->send_warning(
+                fmt::format("lock-out: already above maxT\tambient: {:g}\tmaxT: {:g}",
+                            heatSourceAmbientT_C,
+                            maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            hpwh->send_warning(
-                fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
+            hpwh->send_warning(fmt::format("lock-out: condenser water temperature above max: {:g}",
+                                           maxSetpoint_C));
         }
 
         return lock;
@@ -219,15 +228,17 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT + hysteresis_dC)
             {
-                hpwh->send_warning(fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
-                                               heatSourceAmbientT_C,
-                                               minT));
+                hpwh->send_warning(
+                    fmt::format("unlock: running above minT\tambient: {:g}\tminT: {:g}",
+                                heatSourceAmbientT_C,
+                                minT));
             }
             if (heatSourceAmbientT_C < maxT - hysteresis_dC)
             {
-                hpwh->send_warning(fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
-                                               heatSourceAmbientT_C,
-                                               maxT));
+                hpwh->send_warning(
+                    fmt::format("unlock: running below maxT\tambient: {:g}\tmaxT: {:g}",
+                                heatSourceAmbientT_C,
+                                maxT));
             }
         }
         // when not running, don't use hysteresis
@@ -236,15 +247,17 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             unlock = true;
             if (heatSourceAmbientT_C > minT)
             {
-                hpwh->send_warning(fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
-                                               heatSourceAmbientT_C,
-                                               minT));
+                hpwh->send_warning(
+                    fmt::format("unlock: already above minT\tambient: {:g}\tminT: {:g}",
+                                heatSourceAmbientT_C,
+                                minT));
             }
             if (heatSourceAmbientT_C < maxT)
             {
-                hpwh->send_warning(fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
-                                               heatSourceAmbientT_C,
-                                               maxT));
+                hpwh->send_warning(
+                    fmt::format("unlock: already below maxT\tambient: {:g}\tmaxT: {:g}",
+                                heatSourceAmbientT_C,
+                                maxT));
             }
         }
         return unlock;
@@ -434,7 +447,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            hpwh->send_error(fmt::format("Internal error: Negative runtime = {} min", runtime_min));
+            hpwh->send_error(
+                fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
         }
     }
     break;
@@ -773,9 +787,9 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     }
 }
 
-bool HPWH::HeatSource::isACompressor() const { return this->typeOfHeatSource == TYPE_compressor; }
+bool HPWH::HeatSource::isACompressor() const { return typeOfHeatSource == TYPE_compressor; }
 
-bool HPWH::HeatSource::isAResistance() const { return this->typeOfHeatSource == TYPE_resistance; }
+bool HPWH::HeatSource::isAResistance() const { return typeOfHeatSource == TYPE_resistance; }
 bool HPWH::HeatSource::isExternalMultipass() const
 {
     return isMultipass && configuration == HeatSource::CONFIG_EXTERNAL;

@@ -47,17 +47,28 @@ TEST_F(CompressorFncsTest, compressorSpecs)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_EQ(hpwh.initPreset(modelSpec.sModelName), 0)
+        EXPECT_NO_THROW(hpwh.initPreset(modelSpec.sModelName))
             << "Could not initialize model " << modelSpec.sModelName;
 
         EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
-            << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
-            << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
-            << modelSpec.sModelName;
+        if (modelSpec.hasCompressor)
+        {
+            EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
+                << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
+                << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
+                << modelSpec.sModelName;
+        }
+        else
+        {
+            EXPECT_ANY_THROW(hpwh.getCompressorCoilConfig()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorMultipass()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorExternalMultipass()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpoint()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMinOperatingTemp(HPWH::UNITS_F)) << modelSpec.sModelName;
+        }
     }
 }

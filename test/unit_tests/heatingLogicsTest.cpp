@@ -57,26 +57,26 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         }
 
         { // testSetEnteringWaterShuffOffOutOfBoundsIndex
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(10., false, -1), HPWH::HPWH_ABORT);
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(10., false, 15), HPWH::HPWH_ABORT);
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, -1));
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, 15));
         }
 
         { // testSetEnteringWaterShuffOffDeadbandToSmall
             double value = HPWH::MINSINGLEPASSLIFT - 1.;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()),
-                      HPWH::HPWH_ABORT);
+            EXPECT_ANY_THROW(
+                hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()));
 
             value = HPWH::MINSINGLEPASSLIFT;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(
+                hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()));
 
             value = hpwh.getSetpoint() - (HPWH::MINSINGLEPASSLIFT - 1);
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()),
-                      HPWH::HPWH_ABORT);
+            EXPECT_ANY_THROW(
+                hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()));
 
             value = hpwh.getSetpoint() - HPWH::MINSINGLEPASSLIFT;
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(
+                hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()));
         }
 
         { // testSetEnteringWaterHighTempShutOffAbsolute
@@ -94,18 +94,17 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // change entering water temp to below temp
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
+                highT_C - delta, doAbsolute, hpwh.getCompressorIndex()));
 
             // run a step and check we're not heating.
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // and reverse it
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
+                highT_C + delta, doAbsolute, hpwh.getCompressorIndex()));
+
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
         }
@@ -126,18 +125,17 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // change entering water temp to below temp
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          relativeHighT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
+                relativeHighT_C + delta, doAbsolute, hpwh.getCompressorIndex()));
 
             // run a step and check we're not heating.
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // and reverse it
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          relativeHighT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
-                      0);
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
+                relativeHighT_C - delta, doAbsolute, hpwh.getCompressorIndex()));
+
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
         }
@@ -162,7 +160,7 @@ TEST_F(HeatingLogicsTest, noShutOffMP_external)
 
         { // testCanNotSetEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(10., false, index), HPWH::HPWH_ABORT);
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, index));
         }
     }
 }
@@ -229,12 +227,12 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             // Test we can change the SoC and run a step and check we're heating
             if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()))
             {
-                EXPECT_EQ(
-                    hpwh.setEnteringWaterHighTempShutOff(
-                        setpointT_C - HPWH::MINSINGLEPASSLIFT, true, hpwh.getCompressorIndex()),
-                    0); // Force to ignore this part.
+                EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
+                    setpointT_C - HPWH::MINSINGLEPASSLIFT,
+                    true,
+                    hpwh.getCompressorIndex())); // Force to ignore this part.
             }
-            EXPECT_EQ(hpwh.setTankToTemperature(F_TO_C(100.)), 0); // .51
+            EXPECT_NO_THROW(hpwh.setTankToTemperature(F_TO_C(100.))); // .51
             hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
@@ -309,7 +307,7 @@ TEST_F(HeatingLogicsTest, noHighShutOffIntegrated)
         }
 
         { // testCannotSetEnteringWaterShutOff
-            EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(10., false, index), HPWH::HPWH_ABORT);
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, index));
         }
     }
 }

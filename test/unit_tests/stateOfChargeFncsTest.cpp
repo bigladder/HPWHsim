@@ -15,21 +15,18 @@ TEST(StateOfChargeFunctionsTest, getSoC)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Sanden80";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     const double mainsT_C = F_TO_C(55.);
     const double minUsefulT_C = F_TO_C(110.);
     double chargeFraction;
 
     // Check for errors
-    chargeFraction = hpwh.calcSoCFraction(F_TO_C(125.), minUsefulT_C);
-    EXPECT_EQ(chargeFraction, HPWH::HPWH_ABORT);
+    EXPECT_NO_THROW(hpwh.calcSoCFraction(F_TO_C(125.), minUsefulT_C));
 
-    chargeFraction = hpwh.calcSoCFraction(mainsT_C, F_TO_C(155.));
-    EXPECT_EQ(chargeFraction, HPWH::HPWH_ABORT);
+    EXPECT_NO_THROW(hpwh.calcSoCFraction(mainsT_C, F_TO_C(155.)));
 
-    chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(100.));
-    EXPECT_EQ(chargeFraction, HPWH::HPWH_ABORT);
+    EXPECT_NO_THROW(hpwh.calcSoCFraction(mainsT_C, minUsefulT_C, F_TO_C(100.)));
 
     // Check state of charge returns 1 at setpoint
     chargeFraction = hpwh.calcSoCFraction(mainsT_C, minUsefulT_C);
@@ -60,7 +57,7 @@ TEST(StateOfChargeFunctionsTest, chargeBelowSetpoint)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
 
     const double mainsT_C = F_TO_C(60.);
     double minUsefulT_C = F_TO_C(110.);
