@@ -22,16 +22,11 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
-    double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if (!useCostantMains)
     {
-        soCFraction = HPWH_ABORT;
+        hpwh->send_error("SoC-based heating logic used without constant mains.");
     }
-    else
-    {
-        soCFraction = hpwh->getSoCFraction();
-    }
-    return soCFraction;
+    return hpwh->getSoCFraction();
 }
 
 double HPWH::SoCBasedHeatingLogic::getMainsT_C()

@@ -20,7 +20,6 @@ void HPWH::initResistanceTank(double tankVol_L,
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // return 0 on success, HPWH_ABORT for failure
 
     heatSources.clear();
 
@@ -127,7 +126,6 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // return 0 on success, HPWH_ABORT for failure
     heatSources.clear();
 
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
@@ -223,9 +221,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
 
 void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
-
-    setAllDefaults(); // reset all defaults if you're re-initilizing
-                      // return 0 on success, HPWH_ABORT for failure
+    setAllDefaults(); // reset all defaults if you're re-initializing
     heatSources.clear();
 
     // except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
@@ -236,10 +232,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resetTankToSetpoint();
 
     tankSizeFixed = false;
-
-    // custom settings - these are set later
-    // tankVolume_L = GAL_TO_L(45);
-    // tankUA_kJperHrC = 6.5;
 
     doTempDepression = false;
     tankMixesOnDraw = true;
@@ -371,7 +363,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 void HPWH::initPreset(MODELS presetNum)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
-                      // return 0 on success, HPWH_ABORT for failure
 
     heatSources.clear();
 

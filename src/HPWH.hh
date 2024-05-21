@@ -500,10 +500,6 @@ class HPWH : public Courier::Sender
     std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
 
-    /// this is the value that the public functions will return in case of a simulation
-    /// destroying error
-    static inline const int HPWH_ABORT = -274000;
-
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
@@ -551,8 +547,6 @@ class HPWH : public Courier::Sender
      * This is similar to the way the HPWHsim currently operates, as used in SEEM,
      * but not quite as versatile.
      * My impression is that this could be a useful input paradigm for CSE
-     *
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
     void initPreset(const std::string& modelName);
@@ -564,7 +558,6 @@ class HPWH : public Courier::Sender
      * This is useful for testing new variations, and for the sort of variability
      * that we typically do when creating SEEM runs
      * Appropriate use of this function can be found in the documentation
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 #endif
 
@@ -577,8 +570,6 @@ class HPWH : public Courier::Sender
                    std::vector<double>* extraHeatDist_W = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
-     *
-     * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
      */
 
     /** An overloaded function that uses takes inletT_C  */
@@ -610,8 +601,6 @@ class HPWH : public Courier::Sender
     /**< This function will progress the simulation forward in time by N (equal) steps
      * The calculated values will be summed or averaged, as appropriate, and
      * then stored in the usual variables to be accessed through functions
-     *
-     * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
      */
 
     /** Setters for the what are typically input variables  */
@@ -836,21 +825,17 @@ class HPWH : public Courier::Sender
 
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
     /**< returns the energy input to the Nth heat source, with the specified units
-      energy used by the heat source is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
+      energy used by the heat source is positive - should always be positive */
 
     double getNthHeatSourceEnergyOutput(int N, UNITS units = UNITS_KWH) const;
     /**< returns the energy output from the Nth heat source, with the specified units
-      energy put into the water is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
+      energy put into the water is positive - should always be positive  */
 
     double getNthHeatSourceRunTime(int N) const;
     /**< returns the run time for the Nth heat source, in minutes
-      note: they may sum to more than 1 time step for concurrently running heat sources
-      returns HPWH_ABORT for N out of bounds  */
+      note: they may sum to more than 1 time step for concurrently running heat sources  */
     int isNthHeatSourceRunning(int N) const;
-    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
-        returns HPWH_ABORT for N out of bounds  */
+    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not  */
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
@@ -866,14 +851,12 @@ class HPWH : public Courier::Sender
     double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
     /**< get the total energy removed from the environment by all heat sources in specified units
       (not net energy - does not include standby)
-      moving heat from the space to the water is the positive direction
-      returns HPWH_ABORT for incorrect units  */
+      moving heat from the space to the water is the positive direction */
 
     double getStandbyLosses(UNITS units = UNITS_KWH) const;
     /**< get the amount of heat lost through the tank in specified units
       moving heat from the water to the space is the positive direction
-      negative should occur seldom
-      returns HPWH_ABORT for incorrect units  */
+      negative should occur seldom */
 
     double getTankHeatContent_kJ() const;
     /**< get the heat content of the tank, relative to zero celsius
@@ -888,13 +871,11 @@ class HPWH : public Courier::Sender
     /// compressor
     int isCompressorMultipass() const;
 
-    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass,
-    /// ABORT if no compressor
+    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass
     int isCompressorExternalMultipass() const;
 
     bool hasACompressor() const;
-    /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
-     */
+    /// Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
 
     /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
     int isCompressorRunning() const;
@@ -928,25 +909,23 @@ class HPWH : public Courier::Sender
 
     double getOutletTemp(UNITS units = UNITS_C) const;
     /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+      returns 0 when no draw occurs */
 
     double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
     /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    returns 0 when no HP not running occurs,  */
 
     double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
     /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    returns 0 when no HP not running occurs */
 
     double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
+    /**< returns the temperature of the water at the specified node - with specified units */
 
     double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
     /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
         which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+        1 at the bottom using specified units */
 
     /// returns the tank temperature averaged uniformly
     double getAverageTankTemp_C() const;
