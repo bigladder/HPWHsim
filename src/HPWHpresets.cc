@@ -7,16 +7,16 @@ File Containing all of the presets available in HPWHsim
 
 #include <algorithm>
 
-int HPWH::initResistanceTank()
+void HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
-    return initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
+    initResistanceTank(GAL_TO_L(47.5), 0.95, 4500, 4500);
 }
 
-int HPWH::initResistanceTank(double tankVol_L,
-                             double energyFactor,
-                             double upperPower_W,
-                             double lowerPower_W)
+void HPWH::initResistanceTank(double tankVol_L,
+                              double energyFactor,
+                              double upperPower_W,
+                              double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -28,27 +28,21 @@ int HPWH::initResistanceTank(double tankVol_L,
     if (lowerPower_W < 550)
     {
         send_error("Resistance tank lower element wattage below 550 W.");
-        return HPWH_ABORT;
     }
     if (upperPower_W < 0.)
     {
         send_error("Upper resistance tank wattage below 0 W.");
-        return HPWH_ABORT;
     }
     if (energyFactor <= 0.)
     {
         send_error("Energy Factor less than zero.");
-        return HPWH_ABORT;
     }
 
     setNumNodes(12);
 
     // use tank size setting function since it has bounds checking
     tankSizeFixed = false;
-    if (setTankSize(tankVol_L) == HPWH_ABORT)
-    {
-        return HPWH_ABORT;
-    }
+    setTankSize(tankVol_L);
 
     setpoint_C = F_TO_C(127.0);
 
@@ -113,11 +107,7 @@ int HPWH::initResistanceTank(double tankVol_L,
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT)
-    {
-        send_error("Invalid input.");
-        return HPWH_ABORT;
-    }
+    checkInputs();
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -128,14 +118,12 @@ int HPWH::initResistanceTank(double tankVol_L,
         }
         heatSources[i].sortPerformanceMap();
     }
-
-    return 0; // successful init returns 0
 }
 
-int HPWH::initResistanceTankGeneric(double tankVol_L,
-                                    double rValue_m2KperW,
-                                    double upperPower_W,
-                                    double lowerPower_W)
+void HPWH::initResistanceTankGeneric(double tankVol_L,
+                                     double rValue_m2KperW,
+                                     double upperPower_W,
+                                     double lowerPower_W)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -146,27 +134,21 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     if (lowerPower_W < 0)
     {
         send_error("Lower resistance tank wattage below 0 W.");
-        return HPWH_ABORT;
     }
     if (upperPower_W < 0.)
     {
         send_error("Upper resistance tank wattage below 0 W.");
-        return HPWH_ABORT;
     }
     if (rValue_m2KperW <= 0.)
     {
         send_error("R-Value is equal to or below 0.");
-        return HPWH_ABORT;
     }
 
     setNumNodes(12);
 
     // set tank size function has bounds checking
     tankSizeFixed = false;
-    if (setTankSize(tankVol_L) == HPWH_ABORT)
-    {
-        return HPWH_ABORT;
-    }
+    setTankSize(tankVol_L);
     canScale = true;
 
     setpoint_C = F_TO_C(127.0);
@@ -226,11 +208,7 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT)
-    {
-        send_error("Invalid input.");
-        return HPWH_ABORT;
-    }
+    checkInputs();
 
     isHeating = false;
     for (auto& source : heatSources)
@@ -241,11 +219,9 @@ int HPWH::initResistanceTankGeneric(double tankVol_L,
         }
         source.sortPerformanceMap();
     }
-
-    return 0; // successful init returns 0
 }
 
-int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
+void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 {
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
@@ -325,12 +301,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // set tank volume from input
     // use tank size setting function since it has bounds checking
-    int failure = this->setTankSize(tankVol_L);
-    if (failure == HPWH_ABORT)
-    {
-        send_error("Failure to set tank size in generic hpwh init.");
-        return failure;
-    }
+    setTankSize(tankVol_L);
 
     // derive conservative (high) UA from tank volume
     //   curve fit by Jim Lutz, 5-25-2016
@@ -384,11 +355,7 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT)
-    {
-        send_error("Invalid input.");
-        return HPWH_ABORT;
-    }
+    checkInputs();
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -399,11 +366,9 @@ int HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
         }
         heatSources[i].sortPerformanceMap();
     }
-
-    return 0;
 }
 
-int HPWH::initPreset(MODELS presetNum)
+void HPWH::initPreset(MODELS presetNum)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
                       // return 0 on success, HPWH_ABORT for failure
@@ -1794,7 +1759,10 @@ int HPWH::initPreset(MODELS presetNum)
 
         // Set up regular grid interpolator.
         compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-            Btwxt::RegularGridInterpolator(compressor.perfGrid, compressor.perfGridValues));
+            Btwxt::RegularGridInterpolator(compressor.perfGrid,
+                                           compressor.perfGridValues,
+                                           "RegularGridInterpolator",
+                                           get_courier()));
         compressor.useBtwxtGrid = true;
 
         // set everything in its places
@@ -2170,8 +2138,9 @@ int HPWH::initPreset(MODELS presetNum)
 
         std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
 
-        compressor.perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-            Btwxt::RegularGridInterpolator(gx, compressor.perfGridValues));
+        compressor.perfRGI =
+            std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
+                gx, compressor.perfGridValues, "RegularGridInterpolator", get_courier()));
 
         compressor.useBtwxtGrid = true;
 
@@ -4182,7 +4151,6 @@ int HPWH::initPreset(MODELS presetNum)
         else
         {
             send_error("Incorrect model specification.");
-            return HPWH_ABORT;
         }
 
         doTempDepression = false;
@@ -4618,7 +4586,6 @@ int HPWH::initPreset(MODELS presetNum)
         else
         {
             send_error("Incorrect model specification.");
-            return HPWH_ABORT;
         }
 
         doTempDepression = false;
@@ -4689,7 +4656,6 @@ int HPWH::initPreset(MODELS presetNum)
     else
     {
         send_error("You have tried to select a preset model which does not exist.");
-        return HPWH_ABORT;
     }
 
     if (hasInitialTankTemp)
@@ -4702,11 +4668,7 @@ int HPWH::initPreset(MODELS presetNum)
     // calculate oft-used derived values
     calcDerivedValues();
 
-    if (checkInputs() == HPWH_ABORT)
-    {
-        send_error("Invalid input.");
-        return HPWH_ABORT;
-    }
+    checkInputs();
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -4717,6 +4679,4 @@ int HPWH::initPreset(MODELS presetNum)
         }
         heatSources[i].sortPerformanceMap();
     }
-
-    return 0; // successful init returns 0
 } // end HPWHinit_presets

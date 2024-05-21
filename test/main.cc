@@ -276,22 +276,33 @@ int main(int argc, char* argv[])
 
     if (doInvMix == 0)
     {
-        outputCode += hpwh.setDoInversionMixing(false);
+        hpwh.setDoInversionMixing(false);
     }
 
     if (doCondu == 0)
     {
-        outputCode += hpwh.setDoConduction(false);
+        hpwh.setDoConduction(false);
     }
     if (newSetpoint > 0)
     {
-        if (!allSchedules[5].empty())
+        if (!hpwh.isSetpointFixed())
         {
-            hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
-        }
-        else
-        {
-            hpwh.setSetpoint(newSetpoint);
+            double maxAllowedSetpointT_C;
+            string why;
+            if (!allSchedules[5].empty())
+            {
+                if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT_C, why))
+                {
+                    hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
+                }
+            }
+            else
+            {
+                if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT_C, why))
+                {
+                    hpwh.setSetpoint(newSetpoint);
+                }
+            }
         }
         if (hasInitialTankTemp)
             hpwh.setTankToTemperature(initialTankT_C);
@@ -300,7 +311,7 @@ int main(int argc, char* argv[])
     }
     if (inletH > 0)
     {
-        outputCode += hpwh.setInletByFraction(inletH);
+        hpwh.setInletByFraction(inletH);
     }
     if (newTankSize > 0)
     {
@@ -308,7 +319,7 @@ int main(int argc, char* argv[])
     }
     if (tot_limit > 0)
     {
-        outputCode += hpwh.setTimerLimitTOT(tot_limit);
+        hpwh.setTimerLimitTOT(tot_limit);
     }
     if (useSoC)
     {
@@ -316,13 +327,7 @@ int main(int argc, char* argv[])
         {
             cout << "If useSoC is true need an SoCschedule.csv file \n";
         }
-        outputCode += hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
-    }
-
-    if (outputCode != 0)
-    {
-        cout << "Control file testInfo.txt has unsettable specifics in it. \n";
-        exit(1);
+        hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
     }
 
     // ----------------------Open the Output Files and Print the Header----------------------------
@@ -397,11 +402,7 @@ int main(int argc, char* argv[])
         // Change SoC schedule
         if (useSoC)
         {
-            if (hpwh.setTargetSoCFraction(allSchedules[6][i]) != 0)
-            {
-                cout << "ERROR: Can not set the target state of charge fraction. \n";
-                exit(1);
-            }
+            hpwh.setTargetSoCFraction(allSchedules[6][i]);
         }
 
         // Mix down for yearly tests with large compressors
