@@ -285,23 +285,20 @@ int main(int argc, char* argv[])
     }
     if (newSetpoint > 0)
     {
-        if (!hpwh.isSetpointFixed())
+        double maxAllowedSetpointT_C;
+        string why;
+        if (!allSchedules[5].empty())
         {
-            double maxAllowedSetpointT_C;
-            string why;
-            if (!allSchedules[5].empty())
+            if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT_C, why))
             {
-                if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT_C, why))
-                {
-                    hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
-                }
+                hpwh.setSetpoint(allSchedules[5][0]);
             }
-            else
+        }
+        else if (newSetpoint > 0)
+        {
+            if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT_C, why))
             {
-                if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT_C, why))
-                {
-                    hpwh.setSetpoint(newSetpoint);
-                }
+                hpwh.setSetpoint(newSetpoint);
             }
         }
         if (hasInitialTankTemp)
