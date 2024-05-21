@@ -7,8 +7,8 @@
 
 struct CompressorFncsTest : public testing::Test
 {
-    const int intAbort = HPWH::HPWH_ABORT;
-    const double dblAbort = static_cast<double>(HPWH::HPWH_ABORT);
+    const int intAbort = -1;
+    const double dblAbort = -1;
 
     struct ModelSpecs
     {
@@ -29,13 +29,13 @@ struct CompressorFncsTest : public testing::Test
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
         {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
         {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
-        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
-        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
         {"ColmacCxA_20_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"NyleC90A_MP", true, 2, true, true, F_TO_C(160.), 40.},
         {"NyleC90A_C_MP", true, 2, true, true, F_TO_C(160.), 35.},
-        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.}};
+        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.},
+        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
+        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort}};
 };
 
 /*

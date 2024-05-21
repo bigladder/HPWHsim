@@ -415,7 +415,7 @@ void HPWH::setAllDefaults()
     setpointFixed = false;
     tankSizeFixed = true;
     canScale = false;
-    member_inletT_C = HPWH_ABORT;
+    member_inletT_C = 20.;
     currentSoCFraction = 1.;
     doTempDepression = false;
     locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
@@ -502,7 +502,6 @@ int HPWH::runOneStep(double drawVolume_L,
                      double inletT2_C,
                      std::vector<double>* extraHeatDist_W)
 {
-    // returns 0 on successful completion, HPWH_ABORT on failure
 
     // check for errors
     if (doTempDepression && (minutesPerStep != 1))
@@ -817,8 +816,6 @@ void HPWH::runNSteps(int N,
                      double* heatSourceAmbientT_C,
                      DRMODES* DRstatus)
 {
-    // returns 0 on successful completion, HPWH_ABORT on failure
-
     // these are all the accumulating variables we'll need
     double energyRemovedFromEnvironment_kWh_SUM = 0;
     double standbyLosses_kWh_SUM = 0;
@@ -1240,7 +1237,6 @@ void HPWH::resetTankToSetpoint() { setTankToTemperature(setpoint_C); }
 ///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
 /// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
-/// @return	Success: 0; Failure: HPWH_ABORT
 //-----------------------------------------------------------------------------
 void HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
 {
@@ -2039,23 +2035,21 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
         send_error(
             "You have attempted to access the temperature of a tank node that does not exist.");
     }
+
+    double result = tankTemps_C[nodeNum];
+    if (units == UNITS_C)
+    {
+    }
+    else if (units == UNITS_F)
+    {
+        result = C_TO_F(result);
+    }
     else
     {
-        double result = tankTemps_C[nodeNum];
-        if (units == UNITS_C)
-        {
-            return result;
-        }
-        else if (units == UNITS_F)
-        {
-            return C_TO_F(result);
-        }
-        else
-        {
-            send_error("Incorrect unit specification for getTankNodeTemp.");
-        }
+        send_error("Incorrect unit specification for getTankNodeTemp.");
     }
-    return double(HPWH_ABORT);
+
+    return result;
 }
 
 double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
@@ -2064,23 +2058,22 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C
     {
         send_error("You have attempted to access a simulated thermocouple that does not exist.");
     }
+
     double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-
     double simTcoupleTemp_C = getResampledValue(tankTemps_C, beginFraction, endFraction);
     if (units == UNITS_C)
     {
-        return simTcoupleTemp_C;
     }
     else if (units == UNITS_F)
     {
-        return C_TO_F(simTcoupleTemp_C);
+        simTcoupleTemp_C = C_TO_F(simTcoupleTemp_C);
     }
     else
     {
         send_error("Incorrect unit specification for getNthSimTcouple.");
     }
-    return double(HPWH_ABORT);
+    return simTcoupleTemp_C;
 }
 
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
@@ -2255,8 +2248,7 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)
     {
-        send_warning("You have attempted to access the type of a heat source that does not exist.");
-        return HEATSOURCE_TYPE(HPWH_ABORT);
+        send_error("You have attempted to access the type of a heat source that does not exist.");
     }
     return heatSources[N].typeOfHeatSource;
 }
@@ -4117,7 +4109,6 @@ void HPWH::checkInputs()
 void HPWH::initFromFile(string configFile)
 {
     setAllDefaults(); // reset all defaults if you're re-initilizing
-    // return 0 on success, HPWH_ABORT for failure
 
     // open file, check and report errors
     std::ifstream inputFILE;
