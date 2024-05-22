@@ -604,7 +604,11 @@ class HPWH : public Courier::Sender
      */
 
     /** Setters for the what are typically input variables  */
-    void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
+    void setInletT(double newInletT_C)
+    {
+        member_inletT_C = newInletT_C;
+        haveInletT = true;
+    };
     void setMinutesPerStep(double newMinutesPerStep);
 
     int WriteCSVHeading(std::ofstream& outFILE,
@@ -1297,7 +1301,9 @@ class HPWH : public Courier::Sender
         ambient temperature if you are doing temp. depression  */
     double maxDepression_C = 2.5;
     /** a couple variables to hold values which are typically inputs  */
+
     double member_inletT_C;
+    bool haveInletT; /// needed for SoC-based heating logic
 
     double minutesPerStep = 1.;
     double secondsPerStep, hoursPerStep;
