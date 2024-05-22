@@ -415,7 +415,8 @@ void HPWH::setAllDefaults()
     setpointFixed = false;
     tankSizeFixed = true;
     canScale = false;
-    member_inletT_C = 20.;
+    member_inletT_C = -1.; // invalid unit setInletT called
+    haveInletT = false;
     currentSoCFraction = 1.;
     doTempDepression = false;
     locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
