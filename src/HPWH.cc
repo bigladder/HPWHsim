@@ -1007,15 +1007,16 @@ bool HPWH::isSetpointFixed() const { return setpointFixed; }
 void HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
 {
     double newSetpoint_C = newSetpoint;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         newSetpoint_C = F_TO_C(newSetpoint);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     double maxAllowedSetpointT_C;
     string why;
@@ -1035,16 +1036,16 @@ void HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
 double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
 {
     double result = setpoint_C;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         result = C_TO_F(result);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return result;
 }
 
@@ -1065,7 +1066,7 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
         returnVal = C_TO_F(returnVal);
     }
     else
-        send_warning("Invalid units: default units applied.");
+        send_error("Invalid units.");
 
     return returnVal;
 }
@@ -1077,15 +1078,16 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
 {
     double newSetpoint_C = newSetpoint;
     double maxAllowedSetpoint_C = -273.15;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         newSetpoint_C = F_TO_C(newSetpoint);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     bool returnVal = false;
 
@@ -1151,15 +1153,16 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
     }
 
     maxAllowedSetpoint = maxAllowedSetpoint_C;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return returnVal;
 }
@@ -1217,9 +1220,15 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
     }
 
     double result = heatSources[compressorIndex].minT;
-    if (units == UNITS_F)
+    switch (units)
     {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         result = C_TO_F(result);
+        break;
+    default:
+        send_error("Invalid units.");
     }
 
     return result;
@@ -1241,14 +1250,17 @@ void HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNIT
     }
 
     // convert setTankTemps to �C, if necessary
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
+    case UNITS_C:
+        break;
+    case UNITS_F:
         for (auto& T : setTankTemps)
             T = F_TO_C(T);
-    else
-        send_warning("Invalid units: default units applied.");
+        break;
+    default:
+        send_error("Invalid units.");
+    }
 
     // set node temps
     if (!resampleIntensive(tankTemps_C, setTankTemps))
@@ -1288,15 +1300,16 @@ void HPWH::setTankSize_adjustUA(double HPWH_size,
     double oldA = getTankSurfaceArea(UNITS_FT2);
 
     double HPWH_size_L = HPWH_size;
-    if (units == UNITS_L)
+    switch (units)
     {
-    }
-    else if (units == UNITS_GAL)
-    {
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
         HPWH_size_L = GAL_TO_L(HPWH_size);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     setTankSize(HPWH_size_L, UNITS_L, forceChange);
     setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
@@ -1312,11 +1325,17 @@ HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUni
     double radius = getTankRadius(vol, volUnits, UNITS_FT);
 
     double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
-
     if (value >= 0.)
     {
-        if (surfAUnits == UNITS_M2)
+        switch (surfAUnits)
+        {
+        case UNITS_FT2:
+            break;
+        case UNITS_M2:
             value = FT2_TO_M2(value);
+            break;
+        default:;
+        }
     }
     return value;
 }
@@ -1342,27 +1361,31 @@ HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /
     // HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is the same is the
     // actual tank.
     double volft3 = L_TO_FT3(vol);
-    if (volUnits == UNITS_L)
+    switch (volUnits)
     {
-    }
-    else if (volUnits == UNITS_GAL)
-    {
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
         volft3 = L_TO_FT3(GAL_TO_L(vol));
+        break;
+    default:;
     }
 
     double value = -1.;
     if (volft3 >= 0.)
     {
         value = pow(volft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
-        if (radiusUnits == UNITS_FT)
+        switch (radiusUnits)
         {
-        }
-        else if (radiusUnits == UNITS_M)
-        {
+        case UNITS_FT:
+            break;
+
+        case UNITS_M:
             value = FT_TO_M(value);
+            break;
+        default:;
         }
     }
-
     return value;
 }
 
@@ -1395,16 +1418,18 @@ void HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceCha
     }
     else
     {
-        tankVolume_L = HPWH_size;
-        if (units == UNITS_L)
+        switch (units)
         {
+        case UNITS_L:
+            tankVolume_L = HPWH_size;
+            break;
+
+        case UNITS_GAL:
+            tankVolume_L = GAL_TO_L(HPWH_size);
+            break;
+        default:
+            send_error("Invalid units.");
         }
-        else if (units == UNITS_GAL)
-        {
-            tankVolume_L = (GAL_TO_L(HPWH_size));
-        }
-        else
-            send_warning("Invalid units: default units applied.");
     }
     calcSizeConstants();
 }
@@ -1417,44 +1442,46 @@ void HPWH::setDoConduction(bool doConduction_in) { doConduction = doConduction_i
 
 void HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
-    tankUA_kJperHrC = UA;
-    if (units == UNITS_kJperHrC)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
+    case UNITS_kJperHrC:
+        tankUA_kJperHrC = UA;
+        break;
+    case UNITS_BTUperHrF:
         tankUA_kJperHrC = UAf_TO_UAc(UA);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 }
 
 void HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 {
-    UA = tankUA_kJperHrC;
-    if (units == UNITS_kJperHrC)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
+    case UNITS_kJperHrC:
+        UA = tankUA_kJperHrC;
+        break;
+    case UNITS_BTUperHrF:
         UA = tankUA_kJperHrC / UAf_TO_UAc(1.);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 }
 
 void HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
-    fittingsUA_kJperHrC = UA;
     if (units == UNITS_kJperHrC)
     {
+        fittingsUA_kJperHrC = UA;
     }
     else if (units == UNITS_BTUperHrF)
     {
         fittingsUA_kJperHrC = UAf_TO_UAc(UA);
     }
     else
-        send_warning("Invalid units: default units applied.");
+        send_error("Invalid units.");
 }
 void HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 {
@@ -1467,7 +1494,7 @@ void HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
         UA = UA / UAf_TO_UAc(1.);
     }
     else
-        send_warning("Invalid units: default units applied.");
+        send_error("Invalid units.");
 }
 
 void HPWH::setInletByFraction(double fractionalHeight)
@@ -1575,15 +1602,16 @@ int HPWH::getInletHeight(int whichInlet) const
 void HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
 {
     maxDepression_C = maxDepression;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         maxDepression_C = F_TO_C(maxDepression);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 }
 
 bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
@@ -1620,15 +1648,16 @@ void HPWH::setEnteringWaterHighTempShutOff(double highTemp,
     }
 
     double highTemp_C = highTemp;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         highTemp_C = F_TO_C(highTemp);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)
@@ -1718,16 +1747,17 @@ void HPWH::switchToSoCControls(double targetSoC,
 
     double tempMinUseful_C = tempMinUseful;
     double mainsT_C = mainsT;
-    if (tempUnits == UNITS_C)
+    switch (tempUnits)
     {
-    }
-    else if (tempUnits == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         tempMinUseful_C = F_TO_C(tempMinUseful);
         mainsT_C = F_TO_C(mainsT);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     if (mainsT_C >= tempMinUseful_C)
     {
@@ -2021,15 +2051,16 @@ double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
     }
 
     double result = tankTemps_C[nodeNum];
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         result = C_TO_F(result);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return result;
 }
@@ -2044,15 +2075,16 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C
     double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
     double simTcoupleTemp = getResampledValue(tankTemps_C, beginFraction, endFraction);
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         simTcoupleTemp = C_TO_F(simTcoupleTemp);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return simTcoupleTemp;
 }
@@ -2091,14 +2123,18 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     airTemp_C = airTemp;
     inletTemp_C = inletTemp;
     outTemp_C = outTemp;
-    if (tempUnit == UNITS_F)
+    switch (tempUnit)
     {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         airTemp_C = F_TO_C(airTemp);
         inletTemp_C = F_TO_C(inletTemp);
         outTemp_C = F_TO_C(outTemp);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     if (airTemp_C < heatSources[compressorIndex].minT ||
         airTemp_C > heatSources[compressorIndex].maxT)
@@ -2128,15 +2164,16 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
     }
 
     double outputCapacity = capTemp_BTUperHr;
-    if (pwrUnit == UNITS_BTUperHr)
+    switch (pwrUnit)
     {
-    }
-    else if (pwrUnit == UNITS_KW)
-    {
+    case UNITS_BTUperHr:
+        break;
+    case UNITS_KW:
         outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return outputCapacity;
 }
@@ -2151,19 +2188,19 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) cons
     }
 
     double energyInput = heatSources[N].energyInput_kWh;
-    if (units == UNITS_KWH)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTU)
-    {
+    case UNITS_KWH:
+        break;
+    case UNITS_BTU:
         energyInput = KWH_TO_BTU(heatSources[N].energyInput_kWh);
-    }
-    else if (units == UNITS_KJ)
-    {
+        break;
+    case UNITS_KJ:
         energyInput = KWH_TO_KJ(heatSources[N].energyInput_kWh);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return energyInput;
 }
@@ -2178,19 +2215,19 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) con
     }
 
     double energyOutput = heatSources[N].energyOutput_kWh;
-    if (units == UNITS_KWH)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTU)
-    {
+    case UNITS_KWH:
+        break;
+    case UNITS_BTU:
         energyOutput = KWH_TO_BTU(heatSources[N].energyOutput_kWh);
-    }
-    else if (units == UNITS_KJ)
-    {
+        break;
+    case UNITS_KJ:
         energyOutput = KWH_TO_KJ(heatSources[N].energyOutput_kWh);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return energyOutput;
 }
@@ -2244,31 +2281,32 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
 double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
 {
     double volume = tankVolume_L;
-    if (units == UNITS_L)
+    switch (units)
     {
-    }
-    else if (units == UNITS_GAL)
-    {
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
         volume = L_TO_GAL(tankVolume_L);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
     return volume;
 }
 
 double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
 {
     double volume = externalVolumeHeated_L;
-    if (units == UNITS_L)
+    switch (units)
     {
-    }
-    else if (units == UNITS_GAL)
-    {
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
         volume = L_TO_GAL(externalVolumeHeated_L);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return volume;
 }
 
@@ -2276,20 +2314,19 @@ double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const
 {
     // moving heat from the space to the water is the positive direction
     double energy = energyRemovedFromEnvironment_kWh;
-    if (units == UNITS_KWH)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTU)
-    {
+    case UNITS_KWH:
+        break;
+    case UNITS_BTU:
         energy = KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
-    }
-    else if (units == UNITS_KJ)
-    {
+        break;
+    case UNITS_KJ:
         energy = KWH_TO_KJ(energyRemovedFromEnvironment_kWh);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return energy;
 }
 
@@ -2297,68 +2334,67 @@ double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
 {
     // moving heat from the water to the space is the positive direction
     double energy = standbyLosses_kWh;
-    if (units == UNITS_KWH)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTU)
-    {
+    case UNITS_KWH:
+        break;
+    case UNITS_BTU:
         energy = KWH_TO_BTU(standbyLosses_kWh);
-    }
-    else if (units == UNITS_KJ)
-    {
+        break;
+    case UNITS_KJ:
         energy = KWH_TO_KJ(standbyLosses_kWh);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return energy;
 }
 
 double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
 {
     double temp = outletTemp_C;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         temp = C_TO_F(outletTemp_C);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return temp;
 }
 
 double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
 {
     double temp = condenserInlet_C;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         temp = C_TO_F(condenserInlet_C);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return temp;
 }
 
 double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
 {
     double temp = condenserOutlet_C;
-    if (units == UNITS_C)
+    switch (units)
     {
-    }
-    else if (units == UNITS_F)
-    {
+    case UNITS_C:
+        break;
+    case UNITS_F:
         temp = C_TO_F(condenserOutlet_C);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return temp;
 }
 
@@ -2508,7 +2544,7 @@ double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
         flowRate = LPS_TO_GPM(flowRate);
     }
     else
-        send_warning("Invalid units: default units applied.");
+        send_error("Invalid units.");
 
     return flowRate;
 }
@@ -2520,20 +2556,19 @@ double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const
         send_error("Current model does not have a compressor.");
     }
     double minimumRuntime = 10.;
-    if (units == UNITS_MIN)
+    switch (units)
     {
-    }
-    else if (units == UNITS_SEC)
-    {
+    case UNITS_MIN:
+        break;
+    case UNITS_SEC:
         minimumRuntime = MIN_TO_SEC(minimumRuntime);
-    }
-    else if (units == UNITS_HR)
-    {
+        break;
+    case UNITS_HR:
         minimumRuntime = MIN_TO_HR(minimumRuntime);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
-
     return minimumRuntime;
 }
 
@@ -2656,15 +2691,16 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
     }
     // Unit conversion
     double watts = 1000. * power;
-    if (pwrUnit == UNITS_KW)
+    switch (pwrUnit)
     {
-    }
-    else if (pwrUnit == UNITS_BTUperHr)
-    {
+    case UNITS_KW:
+        break;
+    case UNITS_BTUperHr:
         watts = BTU_TO_KWH(watts); // kBTU/h to W
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     // Whew so many checks...
     if (which == -1)
@@ -2739,15 +2775,16 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
 
     // Unit conversion
     returnPower /= 1000.; // W to KW
-    if (pwrUnit == UNITS_KW)
+    switch (pwrUnit)
     {
-    }
-    else if (pwrUnit == UNITS_BTUperHr)
-    {
+    case UNITS_KW:
+        break;
+    case UNITS_BTUperHr:
         returnPower = KWH_TO_BTU(returnPower); // kW to BTU/h
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    else
-        send_warning("Invalid units: default units applied.");
 
     return returnPower;
 }
@@ -4117,14 +4154,13 @@ void HPWH::initFromFile(string configFile)
             line_ss >> tempDouble >> units;
             tankVolume_L = tempDouble;
             if (units == "L")
-            {
-            }
+                ;
             else if (units == "gal")
             {
                 tankVolume_L = GAL_TO_L(tempDouble);
             }
             else
-                send_warning("Invalid units: default units applied.");
+                send_warning(fmt::format("Invalid units: {}", token));
         }
         else if (token == "UA")
         {
@@ -4177,12 +4213,11 @@ void HPWH::initFromFile(string configFile)
         {
             line_ss >> tempDouble >> units;
             if (units == "C")
-            {
-            }
+                ;
             else if (units == "F")
                 tempDouble = F_TO_C(tempDouble);
             else
-                send_warning("Invalid units: default units applied.");
+                send_warning(fmt::format("Invalid units: {}", token));
 
             setpoint_C = tempDouble;
             // tank will be set to setpoint at end of function
@@ -4208,7 +4243,7 @@ void HPWH::initFromFile(string configFile)
             else if (units == "F")
                 tempDouble = F_TO_C(tempDouble);
             else
-                send_warning("Invalid units: default units applied.");
+                send_warning(fmt::format("Invalid units: {}", token));
 
             initalTankT_C = tempDouble;
             hasInitialTankTemp = true;
@@ -4284,24 +4319,22 @@ void HPWH::initFromFile(string configFile)
                 line_ss >> tempDouble >> units;
                 heatSources[heatsource].minT = tempDouble;
                 if (units == "C")
-                {
-                }
+                    ;
                 else if (units == "F")
                     heatSources[heatsource].minT = F_TO_C(tempDouble);
                 else
-                    send_warning("Invalid units: default units applied.");
+                    send_warning(fmt::format("Invalid units: {}", token));
             }
             else if (token == "maxT")
             {
                 line_ss >> tempDouble >> units;
                 heatSources[heatsource].maxT = tempDouble;
                 if (units == "C")
-                {
-                }
+                    ;
                 else if (units == "F")
                     heatSources[heatsource].maxT = F_TO_C(tempDouble);
                 else
-                    send_warning("Invalid units: default units applied.");
+                    send_warning("Invalid units.");
             }
             else if (token == "onlogic" || token == "offlogic" || token == "standbylogic")
             {
@@ -4394,7 +4427,7 @@ void HPWH::initFromFile(string configFile)
                         }
                     }
                     else
-                        send_warning("Invalid units: default units applied.");
+                        send_warning(fmt::format("Invalid units: {}", token));
 
                     std::vector<NodeWeight> nodeWeights;
                     for (size_t i = 0; i < nodeNums.size(); i++)
@@ -4451,8 +4484,7 @@ void HPWH::initFromFile(string configFile)
 
                     line_ss >> units;
                     if (units == "C")
-                    {
-                    }
+                        ;
                     else if (units == "F")
                     {
                         if (absolute)
@@ -4465,7 +4497,7 @@ void HPWH::initFromFile(string configFile)
                         }
                     }
                     else
-                        send_warning("Invalid units: default units applied.");
+                        send_warning(fmt::format("Invalid units: {}", token));
 
                     if (tempString == "wholeTank")
                     {
@@ -4522,14 +4554,13 @@ void HPWH::initFromFile(string configFile)
                 {
                     line_ss >> tempDouble >> units;
                     if (units == "C")
-                    {
-                    }
+                        ;
                     else if (units == "F")
                     {
                         tempDouble = F_TO_C(tempDouble);
                     }
                     else
-                        send_warning("Invalid units: default units applied.");
+                        send_warning(fmt::format("Invalid units: {}", token));
 
                     if (tempString == "topNodeMaxTemp")
                     {
@@ -4647,7 +4678,6 @@ void HPWH::initFromFile(string configFile)
                         fmt::format("Improper %s for heat source %d\n", token.c_str(), heatsource));
                 }
             }
-
             else if (token == "condensity")
             {
                 double x;
@@ -4689,11 +4719,15 @@ void HPWH::initFromFile(string configFile)
                     }
                 }
                 line_ss >> tempDouble >> units;
-
                 if (units == "C")
                 {
                     tempDouble = C_TO_F(tempDouble);
                 }
+                else if (units == "F")
+                {
+                }
+                else
+                    send_warning(fmt::format("Invalid units: {}", token));
 
                 heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
             }
@@ -4759,10 +4793,14 @@ void HPWH::initFromFile(string configFile)
             else if (token == "hysteresis")
             {
                 line_ss >> tempDouble >> units;
-                if (units == "F")
+                if (units == "C")
+                    ;
+                else if (units == "F")
                 {
                     tempDouble = dF_TO_dC(tempDouble);
                 }
+                else
+                    send_warning(fmt::format("Invalid units: {}", token));
 
                 heatSources[heatsource].hysteresis_dC = tempDouble;
             }
