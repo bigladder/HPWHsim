@@ -22,7 +22,7 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
-    if (hpwh->haveInletT && (!useCostantMains))
+    if ((!hpwh->haveInletT) && (!useCostantMains))
     {
         hpwh->send_error("SoC-based heating logic used without constant mains.");
     }
