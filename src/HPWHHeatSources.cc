@@ -158,19 +158,11 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(
-                fmt::format("lock-out: running below minT\tambient: {:g},\tminT: {:g}",
-                            heatSourceAmbientT_C,
-                            minT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C < minT)
         {
             lock = true;
-            hpwh->send_warning(
-                fmt::format("lock-out: already below minT\tambient: {:g}\tminT: {:g}",
-                            heatSourceAmbientT_C,
-                            minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
@@ -178,19 +170,11 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
         {
             lock = true;
-            hpwh->send_warning(
-                fmt::format("lock-out: running above maxT\tambient: {:g}\tmaxT: {:g}",
-                            heatSourceAmbientT_C,
-                            maxT));
         }
         // when not running, don't use hysteresis
         else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
         {
             lock = true;
-            hpwh->send_warning(
-                fmt::format("lock-out: already above maxT\tambient: {:g}\tmaxT: {:g}",
-                            heatSourceAmbientT_C,
-                            maxT));
         }
 
         if (maxedOut())
@@ -226,39 +210,11 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             (heatSourceAmbientT_C < maxT - hysteresis_dC))
         {
             unlock = true;
-            if (heatSourceAmbientT_C > minT + hysteresis_dC)
-            {
-                hpwh->send_warning(
-                    fmt::format("unlock: running above minT\tambient: {:g}\tminT: {:g}",
-                                heatSourceAmbientT_C,
-                                minT));
-            }
-            if (heatSourceAmbientT_C < maxT - hysteresis_dC)
-            {
-                hpwh->send_warning(
-                    fmt::format("unlock: running below maxT\tambient: {:g}\tmaxT: {:g}",
-                                heatSourceAmbientT_C,
-                                maxT));
-            }
         }
         // when not running, don't use hysteresis
         else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
         {
             unlock = true;
-            if (heatSourceAmbientT_C > minT)
-            {
-                hpwh->send_warning(
-                    fmt::format("unlock: already above minT\tambient: {:g}\tminT: {:g}",
-                                heatSourceAmbientT_C,
-                                minT));
-            }
-            if (heatSourceAmbientT_C < maxT)
-            {
-                hpwh->send_warning(
-                    fmt::format("unlock: already below maxT\tambient: {:g}\tmaxT: {:g}",
-                                heatSourceAmbientT_C,
-                                maxT));
-            }
         }
         return unlock;
     }
