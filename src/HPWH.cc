@@ -645,8 +645,6 @@ int HPWH::runOneStep(double drawVolume_L,
             if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource == NULL)
             {
                 heatSources[i].disengageHeatSource();
-                send_warning("lock-out triggered, but no backupHeatSource defined. Simulation will "
-                             "continue with the heat source locked-out.");
             }
 
             // going through in order, check if the heat source is on
