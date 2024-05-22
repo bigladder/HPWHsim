@@ -510,12 +510,6 @@ int HPWH::runOneStep(double drawVolume_L,
         send_error("minutesPerStep must equal one for temperature depression to work.");
     }
 
-    if ((DRstatus & (DR_TOO | DR_TOT)))
-    {
-        send_warning(
-            "DR_TOO | DR_TOT use conflicting logic sets. The logic will follow a DR_TOT scheme.");
-    }
-
     // reset the output variables
     outletTemp_C = 0.;
     condenserInlet_C = 0.;
