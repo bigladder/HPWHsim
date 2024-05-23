@@ -72,6 +72,6 @@ void from_json(const nlohmann::json& j, RSRESISTANCEWATERHEATSOURCE& x);
 void from_json(const nlohmann::json& j, Description& x);
 void from_json(const nlohmann::json& j, ProductInformation& x);
 void from_json(const nlohmann::json& j, Performance& x);
-} // namespace rsresistancewaterheatsource_ns
-} // namespace hpwh_data_model
+}
+}
 #endif
