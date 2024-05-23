@@ -119,7 +119,6 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
 
 }
 
-
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
     if (this == &hSource)

@@ -83,5 +83,5 @@ const std::string_view RSRESISTANCEWATERHEATSOURCE::performance_name = "performa
 
 void RSRESISTANCEWATERHEATSOURCE::initialize(const nlohmann::json& j) { from_json(j, *this); }
 
-} // namespace rsresistancewaterheatsource_ns
-} // namespace hpwh_data_model
+}
+}

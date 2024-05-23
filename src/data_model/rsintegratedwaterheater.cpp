@@ -341,5 +341,5 @@ const std::string_view SoCBasedHeatingLogic::constant_mains_temperature_name =
 
 void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
 void TempBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
-} // namespace rsintegratedwaterheater_ns
-} // namespace hpwh_data_model
+}
+}
