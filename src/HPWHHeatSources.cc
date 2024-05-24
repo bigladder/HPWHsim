@@ -11,8 +11,9 @@
 #include "HPWH.hh"
 
 // public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(HPWH* parentInput)
-    : hpwh(parentInput)
+HPWH::HeatSource::HeatSource(HPWH* parentInput, const std::shared_ptr<Courier::Courier> courier /*std::make_shared<DefaultCourier>()*/)
+    : Sender("HeatSource", courier)
+    , hpwh(parentInput)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
@@ -37,7 +38,7 @@ HPWH::HeatSource::HeatSource(HPWH* parentInput)
 {
 }
 
-HPWH::HeatSource::HeatSource(const HeatSource& hSource) { *this = hSource; }
+HPWH::HeatSource::HeatSource(const HeatSource& hSource):Sender(hSource) { *this = hSource; }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
@@ -45,7 +46,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     {
         return *this;
     }
-
+    Sender::operator = (hSource);
     hpwh = hSource.hpwh;
 
     typeOfHeatSource = hSource.typeOfHeatSource;
@@ -62,7 +63,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL ||
         hSource.followedByHeatSource != NULL)
     {
-        hpwh->send_error(
+        send_error(
             "HeatSources cannot be copied if they contain pointers to other HeatSources.");
     }
     else
@@ -180,7 +181,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (maxedOut())
         {
             lock = true;
-            hpwh->send_warning(fmt::format("lock-out: condenser water temperature above max: {:g}",
+            send_warning(fmt::format("lock-out: condenser water temperature above max: {:g}",
                                            maxSetpoint_C));
         }
 
@@ -403,7 +404,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            hpwh->send_error(
+            send_error(
                 fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
         }
         break;
@@ -591,11 +592,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
     }
     if (cop < 0.)
     {
-        hpwh->send_warning("Warning: COP is Negative!");
+        send_warning("Warning: COP is Negative!");
     }
     if (cop < 1.)
     {
-        hpwh->send_warning("Warning: COP is Less than 1!");
+        send_warning("Warning: COP is Less than 1!");
     }
 }
 
