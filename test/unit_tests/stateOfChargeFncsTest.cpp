@@ -15,7 +15,7 @@ TEST(StateOfChargeFunctionsTest, getSoC)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Sanden80";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     const double mainsT_C = F_TO_C(55.);
     const double minUsefulT_C = F_TO_C(110.);
@@ -57,7 +57,7 @@ TEST(StateOfChargeFunctionsTest, chargeBelowSetpoint)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     const double mainsT_C = F_TO_C(60.);
     double minUsefulT_C = F_TO_C(110.);

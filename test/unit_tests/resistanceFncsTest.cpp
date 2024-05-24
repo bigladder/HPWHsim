@@ -14,7 +14,7 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "ColmacCxA_30_SP";
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(100.)); // Needs to be scalable
     }
@@ -23,7 +23,7 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "restankRealistic";
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(-100.));
         EXPECT_ANY_THROW(hpwh.setResistanceCapacity(100., 3));
@@ -119,7 +119,7 @@ TEST(ResistanceFunctionsTest, getResistancePositionInCompressorTank)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     EXPECT_EQ(hpwh.getResistancePosition(0), 9);        // Check top elements
     EXPECT_EQ(hpwh.getResistancePosition(1), 0);        // Check bottom elements
@@ -137,7 +137,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // init model
     HPWH hpwh;
-    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(800., 10., 0., elementPower_kW * 1000.))
+    hpwh.initResistanceTankGeneric(800., 10., 0., elementPower_kW * 1000.))
         << "Could not initialize generic resistance tank.";
 
     // Check only lowest setting works

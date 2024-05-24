@@ -20,7 +20,7 @@ TEST(EnergyBalanceTest, energyBalance)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "AOSmithHPTS50";
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model.";
+        hpwh.initPreset(sModelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
@@ -57,7 +57,7 @@ TEST(EnergyBalanceTest, energyBalance)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "StorageTank";
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model.";
+        hpwh.initPreset(sModelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;

@@ -406,8 +406,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
             hpwh->send_error(
                 fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
         }
+        break;
     }
-    break;
 
     case CONFIG_EXTERNAL:
         // Else the heat source is external. SANCO2 system is only current example
@@ -721,8 +721,7 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-    std::vector<double> result;
-    result = perfRGI->get_values_at_target(target);
+    std::vector<double> result = perfRGI->get_values_at_target(target);
     input_BTUperHr = result[0];
     cop = result[1];
 }

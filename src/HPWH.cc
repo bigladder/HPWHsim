@@ -777,7 +777,7 @@ int HPWH::runOneStep(double drawVolume_L,
             (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
     }
 
-#if NDEBUG
+#if !NDEBUG
     // cursory check for inverted temperature profile
     if (tankTemps_C[getNumNodes() - 1] < tankTemps_C[0])
     {
@@ -3506,7 +3506,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     if (fracEnergyDiff > fracEnergyTolerance)
     {
         send_warning(
-            fmt::format("Energy-balance error: {:g} kJ, {:g} %%", qBal_kJ, 100. * fracEnergyDiff));
+            fmt::format("Energy-balance error: {:g} kJ, {:g} %", qBal_kJ, 100. * fracEnergyDiff));
         return false;
     }
     return true;
@@ -4005,7 +4005,7 @@ void HPWH::checkInputs()
                 heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
             {
                 send_error(
-                    fmt::format("Heatsource %d is not an external heat source but has an external "
+                    fmt::format("Heatsource {:d} is not an external heat source but has an external "
                                 "secondary heat exchanger.",
                                 i));
             }
@@ -4399,7 +4399,7 @@ void HPWH::initFromFile(string configFile)
                     else
                     {
                         send_error(fmt::format(
-                            "Improper comparison, \"%s\", for heat source %d %s. Should be "
+                            "Improper comparison, \"{}\", for heat source {:d} {}. Should be "
                             "\"<\" or \">\".\n",
                             compareStr.c_str(),
                             heatsource,
@@ -4462,7 +4462,7 @@ void HPWH::initFromFile(string configFile)
                         else
                         {
                             send_error(fmt::format(
-                                "Improper comparison, \"%s\", for heat source %d %s. Should be "
+                                "Improper comparison, \"{}\", for heat source {:d} {}. Should be "
                                 "\"<\" or \">\".",
                                 compareStr.c_str(),
                                 heatsource,
@@ -4539,8 +4539,8 @@ void HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        send_error(fmt::format(
-                            "Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        send_error(
+                            fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
                 }
                 else if (token == "offlogic")
@@ -4584,8 +4584,8 @@ void HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        send_error(fmt::format(
-                            "Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        send_error(
+                            fmt::format("Improper {} for heat source {}", token.c_str(), heatsource));
                     }
                 }
             }
@@ -4603,7 +4603,7 @@ void HPWH::initFromFile(string configFile)
                 else
                 {
                     send_error(
-                        fmt::format("Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                 }
             }
             else if (token == "coilConfig")
@@ -4624,7 +4624,7 @@ void HPWH::initFromFile(string configFile)
                 else
                 {
                     send_error(
-                        fmt::format("Improper %s for heat source %d", token.c_str(), heatsource));
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                 }
             }
             else if (token == "heatCycle")
@@ -4641,7 +4641,7 @@ void HPWH::initFromFile(string configFile)
                 else
                 {
                     send_error(
-                        fmt::format("Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                 }
             }
 
@@ -4655,7 +4655,7 @@ void HPWH::initFromFile(string configFile)
                 else
                 {
                     send_error(
-                        fmt::format("Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                 }
             }
             else if (token == "externalOutlet")
@@ -4668,7 +4668,7 @@ void HPWH::initFromFile(string configFile)
                 else
                 {
                     send_error(
-                        fmt::format("Improper %s for heat source %d\n", token.c_str(), heatsource));
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
                 }
             }
             else if (token == "condensity")
@@ -4696,15 +4696,15 @@ void HPWH::initFromFile(string configFile)
                     if (maxTemps == 0)
                     {
                         send_error(fmt::format(
-                            "%s specified for heatsource %d before definition of nTemps.",
+                            "{} specified for heat source {:d} before definition of nTemps.",
                             token.c_str(),
                             heatsource));
                     }
                     else
                     {
                         send_error(fmt::format(
-                            "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
-                            "less than %d.  \n",
+                            "Incorrect specification for {} from heat source {:d}. nTemps, {}, is "
+                            "less than {}.  \n",
                             token.c_str(),
                             heatsource,
                             maxTemps,
@@ -4756,15 +4756,15 @@ void HPWH::initFromFile(string configFile)
                     if (maxTemps == 0)
                     {
                         send_error(fmt::format(
-                            "%s specified for heatsource %d before definition of nTemps.",
+                            "{} specified for heat source {:d} before definition of nTemps.",
                             token.c_str(),
                             heatsource));
                     }
                     else
                     {
                         send_error(fmt::format(
-                            "Incorrect specification for %s from heatsource %d. nTemps, %d, is "
-                            "less than %d.  \n",
+                            "Incorrect specification for {} from heat source {:d}. nTemps, {:d}, is "
+                            "less than {:d}.  \n",
                             token.c_str(),
                             heatsource,
                             maxTemps,
@@ -4815,13 +4815,13 @@ void HPWH::initFromFile(string configFile)
             else
             {
                 send_error(fmt::format(
-                    "Improper specifier (%s) for heat source %d\n", token.c_str(), heatsource));
+                    "Improper specifier ({:d}) for heat source {:g}", token.c_str(), heatsource));
             }
 
         } // end heatsource options
         else
         {
-            send_error(fmt::format("Improper keyword: %s", token.c_str()));
+            send_error(fmt::format("Improper keyword: {}", token.c_str()));
         }
 
     } // end while over lines
