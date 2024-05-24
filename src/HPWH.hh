@@ -300,14 +300,6 @@ class HPWH : public Dispatcher
         UNITS_LPS        /**< liters per second  */
     };
 
-    /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
-    enum EXTRAP_METHOD
-    {
-        EXTRAP_LINEAR, /**< the default extrapolates linearly */
-        EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest
-                          point  */
-    };
-
     /** specifies the unit type for outputs in the CSV file-s  */
     enum CSVOPTIONS
     {

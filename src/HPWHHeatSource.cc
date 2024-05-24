@@ -36,6 +36,7 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Couri
     , mpFlowRate_LPS(0.)
     , typeOfHeatSource(TYPE_none)
     , isMultipass(true)
+    , standbyPower_kW(0.)
     , extrapolationMethod(EXTRAP_LINEAR)
 {
 }
@@ -70,6 +71,39 @@ void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
     {
         break;
     }
+    }
+
+    // uses legacy interpolation
+    if (perf.performance_points_is_set)
+    {
+        auto& perf_points = perf.performance_points;
+        perfMap.reserve(perf_points.size());
+        for (auto& perf_point: perf_points)
+        {
+            PerfPoint perfPoint = {perf_point.heat_source_temperature, perf_point.input_power_coefficients, perf_point.cop_coefficients};
+            perfMap.push_back(perfPoint);
+        }
+        useBtwxtGrid = false;
+    }
+
+    // uses btxwxt performance-grid interpolation
+    if (perf.performance_map_is_set)
+    {
+        auto& perf_map = perf.performance_map;
+
+        auto& grid_variables = perf_map.grid_variables;
+        perfGrid.reserve(2);
+        perfGrid.push_back(grid_variables.evaporator_environment_temperature);
+        perfGrid.push_back(grid_variables.heat_source_temperature);
+
+        auto& lookup_variables = perf_map.lookup_variables;
+        perfGridValues.reserve(2);
+        perfGridValues.push_back(lookup_variables.input_power);
+        perfGridValues.push_back(lookup_variables.cop);
+
+        perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(perfGrid, perfGridValues));
+        useBtwxtGrid = true;
     }
 }
 
@@ -547,7 +581,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 {
     std::sort(perfMap.begin(),
               perfMap.end(),
-              [](const HPWH::HeatSource::perfPoint& a, const HPWH::HeatSource::perfPoint& b) -> bool
+              [](const PerfPoint& a, const PerfPoint& b) -> bool
               { return a.T_F < b.T_F; });
 }
 
@@ -634,7 +668,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 }
             }
 
-            // Calculate COP and Input Power at each of the two reference temepratures
+            // Calculate COP and Input Power at each of the two reference temperatures
             COP_T1 = perfMap[i_prev].COP_coeffs[0];
             COP_T1 += perfMap[i_prev].COP_coeffs[1] * condenserTemp_F;
             COP_T1 += perfMap[i_prev].COP_coeffs[2] * condenserTemp_F * condenserTemp_F;
