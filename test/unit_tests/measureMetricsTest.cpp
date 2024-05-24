@@ -28,7 +28,7 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AquaThermAire";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
@@ -50,7 +50,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS50";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
@@ -72,7 +72,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS80";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
     EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";

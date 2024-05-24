@@ -49,7 +49,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         { // testHasEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
@@ -151,7 +151,7 @@ TEST_F(HeatingLogicsTest, noShutOffMP_external)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         { // testDoesNotHaveEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
@@ -182,7 +182,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         if (!hpwh.isSetpointFixed())
         {
@@ -299,7 +299,7 @@ TEST_F(HeatingLogicsTest, noHighShutOffIntegrated)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
         { // testDoesNotHaveEnteringWaterShutOff
@@ -323,7 +323,7 @@ TEST(ExtraHeatTest, extraHeat)
 
     // get preset model
     HPWH hpwh;
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     const double ambientT_C = 20.;
     const double externalT_C = 20.;

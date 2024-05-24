@@ -415,22 +415,15 @@ int main(int argc, char* argv[])
         }
 
         // Run the step
-        try
-        {
-            hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
-                            GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-                            airTemp2,                     // Ambient Temp (C)
-                            allSchedules[3][i],           // External Temp (C)
-                            drStatus, // DDR Status (now an enum. Fixed for now as allow)
-                            1. * GAL_TO_L(allSchedules[1][i]),
-                            allSchedules[0][i],
-                            vectptr);
-        }
-        catch (...)
-        {
-            cout << "Error in hpwh.runOneStep.\n";
-            exit(1);
-        }
+        hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
+                        GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+                        airTemp2,                     // Ambient Temp (C)
+                        allSchedules[3][i],           // External Temp (C)
+                        drStatus, // DDR Status (now an enum. Fixed for now as allow)
+                        1. * GAL_TO_L(allSchedules[1][i]),
+                        allSchedules[0][i],
+                        vectptr);
+
         if (!hpwh.isEnergyBalanced(
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {

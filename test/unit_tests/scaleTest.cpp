@@ -71,7 +71,7 @@ TEST(ScaleTest, noScaleOutOfBounds)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num = 0;
     EXPECT_ANY_THROW(hpwh.setScaleCapacityCOP(num, 1.));
@@ -92,7 +92,7 @@ TEST(ScaleTest, nonScalable)
 
     // get preset model
     HPWH hpwh;
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     EXPECT_ANY_THROW(hpwh.setScaleCapacityCOP(1., 1.));
 }
@@ -106,7 +106,7 @@ TEST(ScaleTest, scalableScales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     Performance point0, point1;
     double num, anotherNum;
@@ -209,7 +209,7 @@ TEST(ScaleTest, scalableMP_scales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Scalable_MP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     Performance point0, point1;
     double num, anotherNum;
@@ -312,7 +312,7 @@ TEST(ScaleTest, getCompressorSP_capacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_20_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     Performance point0;
 
@@ -347,7 +347,7 @@ TEST(ScaleTest, getCompressorMP_capacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_20_MP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     Performance point0;
 
@@ -380,7 +380,7 @@ TEST(ScaleTest, getCompressorMP_outputCapacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Scalable_MP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double newCapacity_kW, num;
     double waterTempC = F_TO_C(44);
@@ -420,7 +420,7 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double newCapacity_kW, num;
     double waterTempC = F_TO_C(44);
@@ -469,7 +469,7 @@ TEST(ScaleTest, chipsCaseWithIP_units)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     const double waterT_F = 50;
     const double airT_F = 50;
@@ -494,7 +494,7 @@ TEST(ScaleTest, scaleRestank)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "restankRealistic";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     // Scale COP for restank fails.
     EXPECT_ANY_THROW(hpwh.setScaleCapacityCOP(2., 2.));
@@ -508,7 +508,7 @@ TEST(ScaleTest, resistanceScales)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double elementPower = 30.; // KW
 
@@ -544,7 +544,7 @@ TEST(ScaleTest, storageTankErrors)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     EXPECT_ANY_THROW(hpwh.setResistanceCapacity(1000.));
     EXPECT_ANY_THROW(hpwh.setScaleCapacityCOP(1., 1.));
