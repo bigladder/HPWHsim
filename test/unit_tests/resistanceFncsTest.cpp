@@ -137,8 +137,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric(800., 10., 0., elementPower_kW * 1000.))
-        << "Could not initialize generic resistance tank.";
+    hpwh.initResistanceTankGeneric(800., 10., 0., elementPower_kW * 1000.);
 
     // Check only lowest setting works
     double factor = 3.;
@@ -175,8 +174,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(800., 10., elementPower_kW * 1000., 0.))
-        << "Could not initialize resistance tank.";
+    hpwh.initResistanceTankGeneric(800., 10., elementPower_kW * 1000., 0.);
 
     // Check only bottom setting works
     double factor = 3.;
