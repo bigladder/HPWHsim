@@ -1381,7 +1381,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor.extrapolationMethod = EXTRAP_NEAREST;
+        compressor.extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
         compressor.perfMap.reserve(1);
@@ -1633,7 +1633,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
         compressor.setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor.extrapolationMethod = EXTRAP_NEAREST;
+        compressor.extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.hysteresis_dC = 0;
         compressor.externalOutletHeight = 0;

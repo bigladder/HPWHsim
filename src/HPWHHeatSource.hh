@@ -95,14 +95,14 @@ class HPWH::HeatSource : public Dispatcher
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
-    struct perfPoint
+    struct PerfPoint
     {
         double T_F;
         std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
         std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
     };
 
-    std::vector<perfPoint> perfMap;
+    std::vector<PerfPoint> perfMap;
     /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
   private:
@@ -112,6 +112,14 @@ class HPWH::HeatSource : public Dispatcher
         CONFIG_SUBMERGED,
         CONFIG_WRAPPED,
         CONFIG_EXTERNAL
+    };
+
+    /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
+    enum EXTRAP_METHOD
+    {
+        EXTRAP_LINEAR, /**< the default extrapolates linearly */
+        EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest
+                          point  */
     };
 
     /** the creator of the heat source, necessary to access HPWH variables */
@@ -277,6 +285,7 @@ class HPWH::HeatSource : public Dispatcher
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                                          pass is multipass*/
 
+    double standbyPower_kW;
     int lowestNode;
     /**< hold the number of the first non-zero condensity entry */
 
