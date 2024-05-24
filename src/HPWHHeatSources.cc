@@ -11,7 +11,9 @@
 #include "HPWH.hh"
 
 // public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(HPWH* parentInput, const std::shared_ptr<Courier::Courier> courier /*std::make_shared<DefaultCourier>()*/)
+HPWH::HeatSource::HeatSource(
+    HPWH* parentInput,
+    const std::shared_ptr<Courier::Courier> courier /*std::make_shared<DefaultCourier>()*/)
     : Sender("HeatSource", courier)
     , hpwh(parentInput)
     , isOn(false)
@@ -38,7 +40,7 @@ HPWH::HeatSource::HeatSource(HPWH* parentInput, const std::shared_ptr<Courier::C
 {
 }
 
-HPWH::HeatSource::HeatSource(const HeatSource& hSource):Sender(hSource) { *this = hSource; }
+HPWH::HeatSource::HeatSource(const HeatSource& hSource) : Sender(hSource) { *this = hSource; }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
@@ -46,7 +48,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     {
         return *this;
     }
-    Sender::operator = (hSource);
+    Sender::operator=(hSource);
     hpwh = hSource.hpwh;
 
     typeOfHeatSource = hSource.typeOfHeatSource;
@@ -63,8 +65,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     if (hSource.backupHeatSource != NULL || hSource.companionHeatSource != NULL ||
         hSource.followedByHeatSource != NULL)
     {
-        send_error(
-            "HeatSources cannot be copied if they contain pointers to other HeatSources.");
+        send_error("HeatSources cannot be copied if they contain pointers to other HeatSources.");
     }
     else
     {
@@ -182,7 +183,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         {
             lock = true;
             send_warning(fmt::format("lock-out: condenser water temperature above max: {:g}",
-                                           maxSetpoint_C));
+                                     maxSetpoint_C));
         }
 
         return lock;
@@ -404,8 +405,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            send_error(
-                fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
+            send_error(fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
         }
         break;
     }

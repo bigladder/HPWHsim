@@ -51,7 +51,7 @@ void HPWH::initResistanceTank(double tankVol_L,
     doTempDepression = false;
     tankMixesOnDraw = true;
 
-    HeatSource resistiveElementBottom(this);
+    HeatSource resistiveElementBottom(this, get_courier());
     resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
 
     // standard logic conditions
@@ -453,8 +453,8 @@ void HPWH::initPreset(MODELS presetNum)
         // should eventually put tankmixes to true when testing progresses
         tankMixesOnDraw = false;
 
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
@@ -504,9 +504,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
@@ -584,7 +584,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -639,9 +639,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -719,9 +719,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -799,9 +799,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -886,7 +886,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1137,7 +1137,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1332,7 +1332,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1584,7 +1584,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1774,7 +1774,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1870,7 +1870,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -2167,7 +2167,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -2263,7 +2263,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -2355,9 +2355,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -2466,9 +2466,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -2570,9 +2570,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -2673,9 +2673,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -2749,9 +2749,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -2854,9 +2854,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -2932,9 +2932,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3006,9 +3006,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3076,9 +3076,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3153,9 +3153,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3230,9 +3230,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3309,9 +3309,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3402,9 +3402,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3497,9 +3497,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3593,7 +3593,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3649,7 +3649,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3698,9 +3698,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3775,8 +3775,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElement(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElement(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -3831,9 +3831,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -3901,9 +3901,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -3977,9 +3977,9 @@ void HPWH::initPreset(MODELS presetNum)
         tankMixesOnDraw = true;
 
         // set everything in its places
-        HeatSource resistiveElementTop(this);
-        HeatSource compressor(this);
-        HeatSource resistiveElementBottom(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource compressor(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -4052,9 +4052,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -4147,9 +4147,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -4227,9 +4227,9 @@ void HPWH::initPreset(MODELS presetNum)
         tankUA_kJperHrC = 7;
         setTankSize_adjustUA(600., UNITS_GAL);
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -4346,9 +4346,9 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
         compressor.isOn = false;
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
@@ -4433,7 +4433,7 @@ void HPWH::initPreset(MODELS presetNum)
         hasHeatExchanger = true;
         heatExchangerEffectiveness = 0.93;
 
-        HeatSource compressor(this);
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -4493,9 +4493,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;
@@ -4582,9 +4582,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementTop(this);
-        HeatSource resistiveElementBottom(this);
-        HeatSource compressor(this);
+        HeatSource resistiveElementTop(this, get_courier());
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource compressor(this, get_courier());
 
         // compressor values
         compressor.isOn = false;

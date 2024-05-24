@@ -444,7 +444,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
         return *this;
     }
 
-    Sender::operator = (hpwh);
+    Sender::operator=(hpwh);
     isHeating = hpwh.isHeating;
 
     heatSources = hpwh.heatSources;
@@ -4005,10 +4005,10 @@ void HPWH::checkInputs()
             if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
                 heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
             {
-                send_error(
-                    fmt::format("Heatsource {:d} is not an external heat source but has an external "
-                                "secondary heat exchanger.",
-                                i));
+                send_error(fmt::format(
+                    "Heatsource {:d} is not an external heat source but has an external "
+                    "secondary heat exchanger.",
+                    i));
             }
         }
 
@@ -4540,8 +4540,8 @@ void HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        send_error(
-                            fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                        send_error(fmt::format(
+                            "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
                 }
                 else if (token == "offlogic")
@@ -4585,8 +4585,8 @@ void HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        send_error(
-                            fmt::format("Improper {} for heat source {}", token.c_str(), heatsource));
+                        send_error(fmt::format(
+                            "Improper {} for heat source {}", token.c_str(), heatsource));
                     }
                 }
             }
@@ -4763,13 +4763,13 @@ void HPWH::initFromFile(string configFile)
                     }
                     else
                     {
-                        send_error(fmt::format(
-                            "Incorrect specification for {} from heat source {:d}. nTemps, {:d}, is "
-                            "less than {:d}.  \n",
-                            token.c_str(),
-                            heatsource,
-                            maxTemps,
-                            nTemps));
+                        send_error(fmt::format("Incorrect specification for {} from heat source "
+                                               "{:d}. nTemps, {:d}, is "
+                                               "less than {:d}.  \n",
+                                               token.c_str(),
+                                               heatsource,
+                                               maxTemps,
+                                               nTemps));
                     }
                 }
                 line_ss >> tempDouble;
