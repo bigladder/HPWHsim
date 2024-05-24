@@ -62,13 +62,13 @@ void HPWH::initResistanceTank(double tankVol_L,
     {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
-        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementTop(this, get_courier());
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
 
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
 
-        // set everything in it's correct place
+        // set everything in its correct place
         heatSources.resize(2);
         heatSources[0] = resistiveElementTop;
         heatSources[1] = resistiveElementBottom;
@@ -160,7 +160,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
-        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementTop(this, get_courier());
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
@@ -172,7 +172,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     // Deal with bottom element
     if (lowerPower_W > 0.)
     {
-        HeatSource resistiveElementBottom(this);
+        HeatSource resistiveElementBottom(this, get_courier());
         resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
 
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
@@ -236,9 +236,9 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     doTempDepression = false;
     tankMixesOnDraw = true;
 
-    HeatSource compressor(this);
-    HeatSource resistiveElementBottom(this);
-    HeatSource resistiveElementTop(this);
+    HeatSource compressor(this, get_courier());
+    HeatSource resistiveElementBottom(this, get_courier());
+    HeatSource resistiveElementTop(this, get_courier());
 
     // compressor values
     compressor.isOn = false;
@@ -382,8 +382,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(8, 4500);
@@ -418,8 +418,8 @@ void HPWH::initPreset(MODELS presetNum)
         tankMixesOnDraw = false;
 
         // set up a resistive element at the bottom, 4500 kW
-        HeatSource resistiveElementBottom(this);
-        HeatSource resistiveElementTop(this);
+        HeatSource resistiveElementBottom(this, get_courier());
+        HeatSource resistiveElementTop(this, get_courier());
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);

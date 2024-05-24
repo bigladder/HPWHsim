@@ -444,6 +444,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
         return *this;
     }
 
+    Sender::operator = (hpwh);
     isHeating = hpwh.isHeating;
 
     heatSources = hpwh.heatSources;
