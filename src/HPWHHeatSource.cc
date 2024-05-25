@@ -13,8 +13,8 @@
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier>& courier)
-    : Dispatcher("HeatSource", courier)
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier> courier)
+    : Sender("HeatSource", courier)
     , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
@@ -42,7 +42,7 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Couri
 }
 
 // public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Dispatcher(heatSource.get_sender())
+HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Sender(heatSource)
 {
     *this = heatSource;
 }

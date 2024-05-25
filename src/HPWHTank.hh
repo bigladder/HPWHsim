@@ -3,7 +3,7 @@
 
 #include "HPWH.hh"
 
-class HPWH::Tank : public Dispatcher
+class HPWH::Tank : public Sender
 {
   public:
     static const inline double ASPECTRATIO = 4.75;
@@ -15,8 +15,8 @@ class HPWH::Tank : public Dispatcher
     HPWH* hpwh;
 
     Tank(HPWH* hpwh_in = NULL,
-         const std::shared_ptr<Courier::Courier>& courier = std::make_shared<Logger>())
-        : Dispatcher("Tank", courier), hpwh(hpwh_in)
+         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>())
+        : Sender("HeatSource", courier), hpwh(hpwh_in)
     {
     }
 
