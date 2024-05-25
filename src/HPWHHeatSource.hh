@@ -3,7 +3,7 @@
 
 #include "HPWH.hh"
 
-class HPWH::HeatSource : public Dispatcher
+class HPWH::HeatSource : public Sender
 {
   public:
     friend class HPWH;
@@ -11,7 +11,7 @@ class HPWH::HeatSource : public Dispatcher
     static const int CONDENSITY_SIZE = 12;
 
     HeatSource(HPWH* hpwh_in = NULL,
-               const std::shared_ptr<Courier::Courier>& courier = std::make_shared<Logger>());
+               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>());
 
     HeatSource(const HeatSource& heatSource);         /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator

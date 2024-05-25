@@ -136,13 +136,13 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Dispatcher("HPWH", courier)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", courier)
 {
     tank = std::make_shared<Tank>(this, courier);
     setAllDefaults();
 }
 
-HPWH::HPWH(const HPWH& hpwh) : Dispatcher("HPWH", hpwh.courier) { *this = hpwh; }
+HPWH::HPWH(const HPWH& hpwh) : Sender("HPWH", hpwh.courier) { *this = hpwh; }
 
 void HPWH::setAllDefaults()
 {
@@ -172,6 +172,9 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
         return *this;
     }
 
+    Sender::operator=(hpwh);
+    isHeating = hpwh.isHeating;
+
     tank = hpwh.tank;
     tank->hpwh = this;
 
@@ -180,8 +183,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     {
         heatSource.hpwh = this;
     }
-
-    isHeating = hpwh.isHeating;
 
     fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
@@ -403,10 +404,6 @@ int HPWH::runOneStep(double drawVolume_L,
                 // maxed out
                 if (heatSourcePtr->runtime_min < minutesToRun)
                 {
-                    send_debug(fmt::format("done heating! runtime_min minutesToRun %.2lf %.2lf\n",
-                                           heatSourcePtr->runtime_min,
-                                           minutesToRun));
-
                     // subtract time it ran and turn it off
                     minutesToRun -= heatSourcePtr->runtime_min;
                     heatSources[i].disengageHeatSource();

@@ -19,7 +19,6 @@
 
 #include <nlohmann/json.hpp>
 #include "hpwh_data_model.h"
-#include "HPWHLogger.hh"
 
 namespace Btwxt
 {
@@ -32,11 +31,27 @@ class RegularGridInterpolator;
 
 #include "HPWHversion.hh"
 #include "courier/helpers.h"
-#include "HPWHLogger.hh"
 
-class HPWH : public Dispatcher
+class HPWH : public Courier::Sender
 {
   public:
+    class DefaultCourier : public Courier::DefaultCourier
+    {
+      protected:
+        void write_message(const std::string& message_type, const std::string& message) override
+        {
+            static bool first_occurrence = true;
+            std::cout << fmt::format("  [{}] {}", message_type, message) << std::endl;
+            if (first_occurrence)
+            {
+                std::cout << "  Generated using HPWH::DefaultCourier. Consider deriving your own "
+                             "Courier class!"
+                          << std::endl;
+                first_occurrence = false;
+            }
+        }
+    };
+
     class Tank;
     class HeatSource;
     struct HeatingLogic;
@@ -69,11 +84,11 @@ class HPWH : public Dispatcher
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier =
-             std::make_shared<Logger>()); /**< default constructor */
-    HPWH(const HPWH& hpwh);               /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);    /**< assignment operator  */
+             std::make_shared<DefaultCourier>()); /**< default constructor */
+    HPWH(const HPWH& hpwh);                       /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);            /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
-                eventually?   */
+                                                     eventually?   */
 
     void init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
 
