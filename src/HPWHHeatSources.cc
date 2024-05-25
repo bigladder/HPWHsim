@@ -606,15 +606,15 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    double hotT_C = setpointT_C + secondaryHeatExchanger.hotSideOffsetT_C;
-    double coldT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
+    double effOutletT_C = setpointT_C + secondaryHeatExchanger.hotSideOffsetT_C;
+    double effCondenserT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
 
     // Get bounding performance map points for interpolation/extrapolation
     // bool extrapolate = false;
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_C, hotT_C, coldT_C};
+        std::vector<double> target {externalT_C, effOutletT_C, effCondenserT_C};
         btwxtInterp(input_kW, cop, target);
     }
     else
@@ -659,16 +659,16 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
             // Calculate COP and Input Power at each of the two reference temepratures
             double COP_T1 = // cop at ambient temperature T1
-                expandSeries(perfMap[i_prev].COP_coeffs, coldT_C);
+                expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT_C);
 
             double COP_T2 = // cop at ambient temperature T2
-                expandSeries(perfMap[i_next].COP_coeffs, coldT_C);
+                expandSeries(perfMap[i_next].COP_coeffs, effCondenserT_C);
 
             double inputPower_T1_kW = // input power at ambient temperature T1
-                expandSeries(perfMap[i_prev].inputPower_coeffs_kW, coldT_C);
+                expandSeries(perfMap[i_prev].inputPower_coeffs_kW, effCondenserT_C);
 
             double inputPower_T2_kW = // input power at ambient temperature T2
-                expandSeries(perfMap[i_next].inputPower_coeffs_kW, coldT_C);
+                expandSeries(perfMap[i_next].inputPower_coeffs_kW, effCondenserT_C);
 
             // Interpolate to get COP and input power at the current ambient temperature
             linearInterp(input_kW,
@@ -693,9 +693,9 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
             }
 
             regressedMethod(
-                input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, hotT_C, coldT_C);
+                input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, effOutletT_C, effCondenserT_C);
 
-            regressedMethod(cop, perfMap[0].COP_coeffs, externalT_C, hotT_C, coldT_C);
+            regressedMethod(cop, perfMap[0].COP_coeffs, externalT_C, effOutletT_C, effCondenserT_C);
         }
     }
 
@@ -736,7 +736,7 @@ void HPWH::HeatSource::getCapacityMP(
 {
     bool resDefrostHeatingOn = false;
 
-    double coldT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
+    double effCondenserT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
     if (resDefrost.inputPwr_kW > 0)
@@ -750,7 +750,7 @@ void HPWH::HeatSource::getCapacityMP(
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_C, coldT_C};
+        std::vector<double> target {externalT_C, effCondenserT_C};
         btwxtInterp(input_kW, cop, target);
     }
     else
@@ -765,8 +765,8 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, coldT_C);
-        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_C, coldT_C);
+        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, effCondenserT_C);
+        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_C, effCondenserT_C);
     }
 
     if (doDefrost)
