@@ -86,7 +86,7 @@ void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
         useBtwxtGrid = false;
     }
 
-    // uses btxwxt performance-grid interpolation
+    // uses btwxt performance-grid interpolation
     if (perf.performance_map_is_set)
     {
         auto& perf_map = perf.performance_map;
@@ -105,6 +105,11 @@ void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
             Btwxt::RegularGridInterpolator(perfGrid, perfGridValues));
         useBtwxtGrid = true;
     }
+
+    if (perf.use_defrost_map_is_set && perf.use_defrost_map)
+    {
+        setupDefrostMap();
+    }
 }
 
 void HPWH::HeatSource::init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rsresistancewaterheatsource)
@@ -121,6 +126,39 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
     checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint));
     checkSetValue(isVIP, config.is_vip_is_set, config.is_vip);
     checkSetValue(hysteresis_dC, config.hysteresis_temperature_difference_is_set, config.hysteresis_temperature_difference);
+
+    if (config.turn_on_logic_is_set)
+    {
+        for (auto& turn_on_logic: config.turn_on_logic)
+        {
+            auto heatingLogic = HeatingLogic::make(turn_on_logic, hpwh);
+            if (heatingLogic)
+            {
+                addTurnOnLogic(heatingLogic);
+            }
+        }
+    }
+
+    if (config.shut_off_logic_is_set)
+    {
+        for (auto& shut_off_logic: config.shut_off_logic)
+        {
+            auto heatingLogic = HeatingLogic::make(shut_off_logic, hpwh);
+            if (heatingLogic)
+            {
+                addShutOffLogic(heatingLogic);
+            }
+        }
+    }
+
+    if (config.standby_logic_is_set)
+    {
+        auto heatingLogic = HeatingLogic::make(config.standby_logic, hpwh);
+        if (heatingLogic)
+        {
+            standbyLogic = std::move(heatingLogic);
+        }
+    }
 
     switch(config.heat_source_type)
     {
@@ -150,7 +188,6 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
     default:
     {}
     }
-
 }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)

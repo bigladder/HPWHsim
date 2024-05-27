@@ -4221,12 +4221,49 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     setpoint_C = F_TO_C(135.0);
 
     tank->init(rstank);
-    for (auto& heatsourceconfiguration : performance.heat_source_configurations)
+
+    auto& configurations = performance.heat_sources_configurations;
+    std::size_t num_heat_sources = configurations.size();
+
+    heatSources.resize(num_heat_sources);
+
+    std::unordered_map<std::string, std::size_t> heat_source_lookup;
+    heat_source_lookup.reserve(num_heat_sources);
+
+    // heat-source priority is retained from the entry order
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
+        auto& configuration = configurations[iHeatSource];
         HeatSource heatSource(this);
-        heatSource.init(heatsourceconfiguration);
-        heatSources.push_back(heatSource);
+        heatSource.init(configuration);
+        heatSources[iHeatSource] = heatSource;
+        heat_source_lookup[configuration.label]  = iHeatSource;
     }
+
+    // set associations between heat sources
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        auto& configuration = configurations[iHeatSource];
+
+        if (configuration.backup_heat_source_label_is_set)
+        {
+            auto iBackup = heat_source_lookup[configuration.backup_heat_source_label];
+            heatSources[iHeatSource].backupHeatSource = &heatSources[iBackup];
+        }
+
+        if (configuration.followed_by_heat_source_label_is_set)
+        {
+            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_label];
+            heatSources[iHeatSource].followedByHeatSource = &heatSources[iFollowedBy];
+        }
+
+        if (configuration.companion_heat_source_label_is_set)
+        {
+            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_label];
+            heatSources[iHeatSource].companionHeatSource = &heatSources[iCompanion];
+        }
+    }
+
     std::cout << "\n";
 }
 

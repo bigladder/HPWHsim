@@ -273,3 +273,59 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     return nodeFrac;
 }
+
+/*static*/
+std::shared_ptr<HPWH::HeatingLogic> HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH *hpwh)
+{
+    std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
+    switch(logic.heating_logic_type)
+    {
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
+    {
+        auto soc_based_logic_ptr =
+            dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
+                logic.heating_logic.get());
+
+        heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
+            "name", soc_based_logic_ptr->decision_point, hpwh);
+
+        break;
+    }
+
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
+    default:
+    {
+        auto temp_based_logic_ptr =
+            dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
+                logic.heating_logic.get());
+
+        std::vector<double> nodes(HPWH::LOGIC_SIZE);
+        HPWH::resample(nodes, temp_based_logic_ptr->logic_distribution);
+
+        std::vector<HPWH::NodeWeight> nodeWeights;
+        for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
+        {
+            if (nodes[inode] > 0.)
+            {
+                nodeWeights.emplace_back(inode, nodes[inode]);
+            }
+        }
+
+        double temp = 20.;
+        if (temp_based_logic_ptr->differential_temperature_is_set)
+        {
+            temp = K_TO_C(temp_based_logic_ptr->differential_temperature);
+        }
+        else if (temp_based_logic_ptr->absolute_temperature_is_set)
+        {
+            temp = K_TO_C(temp_based_logic_ptr->absolute_temperature);
+        }
+
+        heatingLogic =
+            std::make_shared<HPWH::TempBasedHeatingLogic>("name", nodeWeights, temp, hpwh);
+        break;
+    }
+    }
+
+    return heatingLogic;
+}

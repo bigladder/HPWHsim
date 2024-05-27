@@ -106,22 +106,27 @@ struct Performance {
     rscondenserwaterheatsource_ns::PerformanceMap performance_map;
     double standby_power;
     rscondenserwaterheatsource_ns::CoilConfiguration coil_configuration;
+    bool use_defrost_map;
     bool performance_points_is_set;
     bool performance_map_is_set;
     bool standby_power_is_set;
     bool coil_configuration_is_set;
+    bool use_defrost_map_is_set;
     const static std::string_view performance_points_units;
     const static std::string_view performance_map_units;
     const static std::string_view standby_power_units;
     const static std::string_view coil_configuration_units;
+    const static std::string_view use_defrost_map_units;
     const static std::string_view performance_points_description;
     const static std::string_view performance_map_description;
     const static std::string_view standby_power_description;
     const static std::string_view coil_configuration_description;
+    const static std::string_view use_defrost_map_description;
     const static std::string_view performance_points_name;
     const static std::string_view performance_map_name;
     const static std::string_view standby_power_name;
     const static std::string_view coil_configuration_name;
+    const static std::string_view use_defrost_map_name;
 };
 struct RSCONDENSERWATERHEATSOURCE : public HeatSourceBase {
     void initialize(const nlohmann::json& j) override;

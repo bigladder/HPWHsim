@@ -40,6 +40,9 @@ struct HPWH::HeatingLogic
     double getDecisionPoint() { return decisionPoint; }
     bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
+    static std::shared_ptr<HeatingLogic>
+    make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
+
   protected:
     double decisionPoint;
     HPWH* hpwh;
