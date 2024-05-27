@@ -102,15 +102,21 @@ struct HeatingLogic {
 struct HeatSourceConfiguration {
     rsintegratedwaterheater_ns::HeatSourceType heat_source_type;
     std::unique_ptr<HeatSourceBase> heat_source;
+    std::string label;
     std::vector<double> heat_distribution;
     std::vector<rsintegratedwaterheater_ns::HeatingLogic> turn_on_logic;
     std::vector<rsintegratedwaterheater_ns::HeatingLogic> shut_off_logic;
-    std::vector<rsintegratedwaterheater_ns::HeatingLogic> standby_logic;
+    rsintegratedwaterheater_ns::HeatingLogic standby_logic;
     double maximum_setpoint;
     double hysteresis_temperature_difference;
     bool is_vip;
+    bool depresses_temperature;
+    std::string backup_heat_source_label;
+    std::string followed_by_heat_source_label;
+    std::string companion_heat_source_label;
     bool heat_source_type_is_set;
     bool heat_source_is_set;
+    bool label_is_set;
     bool heat_distribution_is_set;
     bool turn_on_logic_is_set;
     bool shut_off_logic_is_set;
@@ -118,8 +124,13 @@ struct HeatSourceConfiguration {
     bool maximum_setpoint_is_set;
     bool hysteresis_temperature_difference_is_set;
     bool is_vip_is_set;
+    bool depresses_temperature_is_set;
+    bool backup_heat_source_label_is_set;
+    bool followed_by_heat_source_label_is_set;
+    bool companion_heat_source_label_is_set;
     const static std::string_view heat_source_type_units;
     const static std::string_view heat_source_units;
+    const static std::string_view label_units;
     const static std::string_view heat_distribution_units;
     const static std::string_view turn_on_logic_units;
     const static std::string_view shut_off_logic_units;
@@ -127,8 +138,13 @@ struct HeatSourceConfiguration {
     const static std::string_view maximum_setpoint_units;
     const static std::string_view hysteresis_temperature_difference_units;
     const static std::string_view is_vip_units;
+    const static std::string_view depresses_temperature_units;
+    const static std::string_view backup_heat_source_label_units;
+    const static std::string_view followed_by_heat_source_label_units;
+    const static std::string_view companion_heat_source_label_units;
     const static std::string_view heat_source_type_description;
     const static std::string_view heat_source_description;
+    const static std::string_view label_description;
     const static std::string_view heat_distribution_description;
     const static std::string_view turn_on_logic_description;
     const static std::string_view shut_off_logic_description;
@@ -136,8 +152,13 @@ struct HeatSourceConfiguration {
     const static std::string_view maximum_setpoint_description;
     const static std::string_view hysteresis_temperature_difference_description;
     const static std::string_view is_vip_description;
+    const static std::string_view depresses_temperature_description;
+    const static std::string_view backup_heat_source_label_description;
+    const static std::string_view followed_by_heat_source_label_description;
+    const static std::string_view companion_heat_source_label_description;
     const static std::string_view heat_source_type_name;
     const static std::string_view heat_source_name;
+    const static std::string_view label_name;
     const static std::string_view heat_distribution_name;
     const static std::string_view turn_on_logic_name;
     const static std::string_view shut_off_logic_name;
@@ -145,22 +166,26 @@ struct HeatSourceConfiguration {
     const static std::string_view maximum_setpoint_name;
     const static std::string_view hysteresis_temperature_difference_name;
     const static std::string_view is_vip_name;
+    const static std::string_view depresses_temperature_name;
+    const static std::string_view backup_heat_source_label_name;
+    const static std::string_view followed_by_heat_source_label_name;
+    const static std::string_view companion_heat_source_label_name;
 };
 struct Performance {
     rstank_ns::RSTANK tank;
-    std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration> heat_source_configurations;
+    std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration> heat_sources_configurations;
     double standby_power;
     bool tank_is_set;
-    bool heat_source_configurations_is_set;
+    bool heat_sources_configurations_is_set;
     bool standby_power_is_set;
     const static std::string_view tank_units;
-    const static std::string_view heat_source_configurations_units;
+    const static std::string_view heat_sources_configurations_units;
     const static std::string_view standby_power_units;
     const static std::string_view tank_description;
-    const static std::string_view heat_source_configurations_description;
+    const static std::string_view heat_sources_configurations_description;
     const static std::string_view standby_power_description;
     const static std::string_view tank_name;
-    const static std::string_view heat_source_configurations_name;
+    const static std::string_view heat_sources_configurations_name;
     const static std::string_view standby_power_name;
 };
 struct RSINTEGRATEDWATERHEATER {
@@ -185,8 +210,8 @@ struct RSINTEGRATEDWATERHEATER {
     const static std::string_view performance_name;
     const static std::string_view standby_power_name;
 };
-struct TempBasedHeatingLogic : public HeatingLogicBase {
-    void initialize(const nlohmann::json& j) override;
+struct TempBasedHeatingLogic:public HeatingLogicBase {
+    void initialize(const nlohmann::json& j);
     double absolute_temperature;
     double differential_temperature;
     std::vector<double> logic_distribution;
@@ -203,8 +228,8 @@ struct TempBasedHeatingLogic : public HeatingLogicBase {
     const static std::string_view differential_temperature_name;
     const static std::string_view logic_distribution_name;
 };
-struct SoCBasedHeatingLogic : public HeatingLogicBase {
-    void initialize(const nlohmann::json& j) override;
+struct SoCBasedHeatingLogic:public HeatingLogicBase {
+    void initialize(const nlohmann::json& j);
     double decision_point;
     double minimum_useful_temperature;
     double hysteresis_fraction;

@@ -95,15 +95,29 @@ class HPWH::HeatSource : public Sender
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    /// Polynomials for evaluating input power and COP.
+    /// Three different representations of the temperature variations are used:
+    /// 1.  one-dimensional quadratic expansions (three terms each) wrt condenser temperature of
+    ///     input power and cop at the specified external temperature.
+    /// 2.  three-dimensional polynomial (11 terms each) wrt external, outlet, and condenser
+    ///     temperatures. The variation with external temperature
+    ///     is clipped at the specified temperature.
+    /// 3.  two-dimensional polynomial (six terms each) wrt external and condenser
+    ///     temperatures.The variation with external temperature
+    ///     is clipped at the specified temperature.
+
     struct PerfPoint
     {
         double T_F;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
+        std::vector<double> inputPower_coeffs;
+        std::vector<double> COP_coeffs;
     };
 
+    /// Performance map containing one or more performance points.
+    /// For case 1. above, the map typically contains multiple points, at various temperatures.
+    /// Linear interpolation is applied to the collection of points.
+    /// Only the first entry is used for cases 2. and 3.
     std::vector<PerfPoint> perfMap;
-    /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
   private:
     // start with a few type definitions
@@ -189,7 +203,7 @@ class HPWH::HeatSource : public Sender
     std::vector<std::shared_ptr<HeatingLogic>> shutOffLogicSet;
     /** a single logic that checks the bottom point is below a temperature so the system doesn't
      * short cycle*/
-    std::shared_ptr<TempBasedHeatingLogic> standbyLogic;
+    std::shared_ptr<HeatingLogic> standbyLogic;
 
     /** some compressors have a resistance element for defrost*/
     struct resistanceElementDefrost
