@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     std::vector<schedule> allSchedules(7);
 
     string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3,
-        inputFile, outputDirectory;
+        outputDirectory;
     string inputVariableName, firstCol;
     double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize,
         tot_limit, initialTankT_C;
@@ -128,8 +128,6 @@ int main(int argc, char* argv[])
     newSetpoint = 0;
     if (input1 == "Preset")
     {
-        inputFile = "";
-
         try
         {
             hpwh.initPreset(input2);
@@ -149,10 +147,9 @@ int main(int argc, char* argv[])
     }
     else if (input1 == "File")
     {
-        inputFile = input2 + ".txt";
-        try
+         try
         {
-            hpwh.initFromFile(inputFile);
+            hpwh.initFromFile(input2);
         }
         catch (...)
         {
