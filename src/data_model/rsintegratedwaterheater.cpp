@@ -6,7 +6,6 @@ namespace hpwh_data_model
 
 namespace rsintegratedwaterheater_ns
 {
-
 const std::string_view Schema::schema_title = "Integrated Heat-Pump Water Heater";
 
 const std::string_view Schema::schema_version = "0.1.0";
@@ -185,24 +184,24 @@ const std::string_view HeatSourceConfiguration::companion_heat_source_label_name
 
 void from_json(const nlohmann::json& j, Performance& x) {
     json_get<rstank_ns::RSTANK>(j, "tank", x.tank, x.tank_is_set, true);
-    json_get<std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration>>(j, "heat_sources_configurations", x.heat_sources_configurations, x.heat_sources_configurations_is_set, false);
+    json_get<std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration>>(j, "heat_source_configurations", x.heat_source_configurations, x.heat_source_configurations_is_set, false);
     json_get<double>(j, "standby_power", x.standby_power, x.standby_power_is_set, false);
 }
 const std::string_view Performance::tank_units = "";
 
-const std::string_view Performance::heat_sources_configurations_units = "";
+const std::string_view Performance::heat_source_configurations_units = "";
 
 const std::string_view Performance::standby_power_units = "";
 
 const std::string_view Performance::tank_description = "The corresponding Standard 205 tank representation";
 
-const std::string_view Performance::heat_sources_configurations_description = "";
+const std::string_view Performance::heat_source_configurations_description = "";
 
 const std::string_view Performance::standby_power_description = "Power drawn when system is in standby mode";
 
 const std::string_view Performance::tank_name = "tank";
 
-const std::string_view Performance::heat_sources_configurations_name = "heat_sources_configurations";
+const std::string_view Performance::heat_source_configurations_name = "heat_source_configurations";
 
 const std::string_view Performance::standby_power_name = "standby_power";
 
@@ -296,7 +295,8 @@ const std::string_view SoCBasedHeatingLogic::uses_constant_mains_name = "uses_co
 
 const std::string_view SoCBasedHeatingLogic::constant_mains_temperature_name = "constant_mains_temperature";
 
-void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
 void TempBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
+void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
 }
 }
+

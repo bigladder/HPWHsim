@@ -173,19 +173,19 @@ struct HeatSourceConfiguration {
 };
 struct Performance {
     rstank_ns::RSTANK tank;
-    std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration> heat_sources_configurations;
+    std::vector<rsintegratedwaterheater_ns::HeatSourceConfiguration> heat_source_configurations;
     double standby_power;
     bool tank_is_set;
-    bool heat_sources_configurations_is_set;
+    bool heat_source_configurations_is_set;
     bool standby_power_is_set;
     const static std::string_view tank_units;
-    const static std::string_view heat_sources_configurations_units;
+    const static std::string_view heat_source_configurations_units;
     const static std::string_view standby_power_units;
     const static std::string_view tank_description;
-    const static std::string_view heat_sources_configurations_description;
+    const static std::string_view heat_source_configurations_description;
     const static std::string_view standby_power_description;
     const static std::string_view tank_name;
-    const static std::string_view heat_sources_configurations_name;
+    const static std::string_view heat_source_configurations_name;
     const static std::string_view standby_power_name;
 };
 struct RSINTEGRATEDWATERHEATER {
@@ -210,7 +210,7 @@ struct RSINTEGRATEDWATERHEATER {
     const static std::string_view performance_name;
     const static std::string_view standby_power_name;
 };
-struct TempBasedHeatingLogic:public HeatingLogicBase {
+struct TempBasedHeatingLogic :public HeatingLogicBase{
     void initialize(const nlohmann::json& j);
     double absolute_temperature;
     double differential_temperature;
@@ -228,7 +228,7 @@ struct TempBasedHeatingLogic:public HeatingLogicBase {
     const static std::string_view differential_temperature_name;
     const static std::string_view logic_distribution_name;
 };
-struct SoCBasedHeatingLogic:public HeatingLogicBase {
+struct SoCBasedHeatingLogic :public HeatingLogicBase {
     void initialize(const nlohmann::json& j);
     double decision_point;
     double minimum_useful_temperature;
