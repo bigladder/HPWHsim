@@ -400,8 +400,9 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", courier)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("name", courier)
 {
+    class_name = "HPWH";
     setAllDefaults();
 }
 
@@ -495,6 +496,11 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 }
 
 HPWH::~HPWH() {}
+
+HPWH::HeatSource HPWH::makeHeatSource(const std::string& name_in)
+{
+    return HeatSource(name_in, this, get_courier());
+}
 
 int HPWH::runOneStep(double drawVolume_L,
                      double tankAmbientT_C,
@@ -3518,6 +3524,201 @@ bool compressorIsRunning(HPWH& hpwh)
     return (bool)hpwh.isNthHeatSourceRunning(hpwh.getCompressorIndex());
 }
 
+
+// Used to check a few inputs after the initialization of a tank model from a preset or a file.
+void HPWH::checkInputs()
+{
+    if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
+    {
+        send_error("You must have at least one HeatSource.");
+    }
+
+    double condensitySum;
+    // loop through all heat sources to check each for malconfigurations
+    for (int i = 0; i < getNumHeatSources(); i++)
+    {
+        // check the heat source type to make sure it has been set
+        if (heatSources[i].typeOfHeatSource == TYPE_none)
+        {
+            send_error(fmt::format(
+                "Heat source {} does not have a specified type.  Initialization failed.", i));
+        }
+        // check to make sure there is at least one onlogic or parent with onlogic
+        int parent = heatSources[i].findParent();
+        if (heatSources[i].turnOnLogicSet.size() == 0 &&
+            (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
+        {
+            send_error("You must specify at least one logic to turn on the element or the element "
+                       "must be set as a backup for another heat source with at least one logic.");
+        }
+
+        // Validate on logics
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].turnOnLogicSet)
+        {
+            if (!logic->isValid())
+            {
+                send_error(fmt::format("On logic at index {:d} is invalid", i));
+            }
+        }
+        // Validate off logics
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].shutOffLogicSet)
+        {
+            if (!logic->isValid())
+            {
+                send_error(fmt::format("Off logic at index {:d} is invalid", i));
+            }
+        }
+
+        // check is condensity sums to 1
+        condensitySum = 0;
+
+        for (int j = 0; j < heatSources[i].getCondensitySize(); j++)
+            condensitySum += heatSources[i].condensity[j];
+        if (fabs(condensitySum - 1.0) > 1e-6)
+        {
+            send_error(fmt::format("The condensity for heatsource {:d} does not sum to 1. "
+                                   "It sums to {:g}.",
+                                   i,
+                                   condensitySum));
+        }
+        // check that air flows are all set properly
+        if (heatSources[i].airflowFreedom > 1.0 || heatSources[i].airflowFreedom <= 0.0)
+        {
+            send_error(
+                fmt::format("The airflowFreedom must be between 0 and 1 for heatsource {}.", i));
+        }
+
+        if (heatSources[i].isACompressor())
+        {
+            if (heatSources[i].doDefrost)
+            {
+                if (heatSources[i].defrostMap.size() < 3)
+                {
+                    send_error("Defrost logic set to true but no valid defrost map of length 3 or "
+                               "greater set.");
+                }
+                if (heatSources[i].configuration != HeatSource::CONFIG_EXTERNAL)
+                {
+                    send_error("Defrost is only simulated for external compressors.");
+                }
+            }
+        }
+        if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
+        {
+
+            if (heatSources[i].shutOffLogicSet.size() != 1)
+            {
+                send_error("External heat sources can only have one shut off logic.");
+            }
+            if (0 > heatSources[i].externalOutletHeight ||
+                heatSources[i].externalOutletHeight > getNumNodes() - 1)
+            {
+                send_error("External heat sources need an external outlet height within the bounds"
+                           "from from 0 to numNodes-1.");
+            }
+            if (0 > heatSources[i].externalInletHeight ||
+                heatSources[i].externalInletHeight > getNumNodes() - 1)
+            {
+                send_error("External heat sources need an external inlet height within the bounds "
+                           "from from 0 to numNodes-1.");
+            }
+        }
+        else
+        {
+            if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
+                heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
+            {
+                send_error(fmt::format(
+                    "Heatsource {:d} is not an external heat source but has an external "
+                    "secondary heat exchanger.",
+                    i));
+            }
+        }
+
+        // Check performance map
+        // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and
+        // that ;
+        if (heatSources[i].useBtwxtGrid)
+        {
+            // If useBtwxtGrid is true that the perfMap is empty
+            if (heatSources[i].perfMap.size() != 0)
+            {
+                send_error(
+                    "Using the grid lookups but a regression based performance map is given.");
+            }
+
+            // Check length of vectors in perfGridValue are equal
+            if (heatSources[i].perfGridValues[0].size() !=
+                    heatSources[i].perfGridValues[1].size() &&
+                heatSources[i].perfGridValues[0].size() != 0)
+            {
+                send_error(
+                    "When using grid lookups for performance the vectors in perfGridValues must "
+                    "be the same length.");
+            }
+
+            // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
+            // lengths
+            size_t expLength = 1;
+            for (const auto& v : heatSources[i].perfGrid)
+            {
+                expLength *= v.size();
+            }
+            if (expLength != heatSources[i].perfGridValues[0].size())
+            {
+                send_error(
+                    "When using grid lookups for perfmance the vectors in perfGridValues must "
+                    "be the same length.");
+            }
+        }
+        else
+        {
+            // Check that perfmap only has 1 point if config_external and multipass
+            if (heatSources[i].isExternalMultipass() && heatSources[i].perfMap.size() != 1)
+            {
+                send_error("External multipass heat sources must have a perfMap of only one point "
+                           "with regression equations.");
+            }
+        }
+    }
+
+    // Check that the on logic and off logics are ordered properly
+    if (hasACompressor())
+    {
+        double aquaF = 0., useF = 1.;
+        getSizingFractions(aquaF, useF);
+        if (aquaF < (1. - useF))
+        {
+            send_error(
+                "The relationship between the on logic and off logic is not supported. The off "
+                "logic is beneath the on logic.");
+        }
+    }
+
+    double maxTemp;
+    string why;
+    double tempSetpoint = setpoint_C;
+    if (!isNewSetpointPossible(tempSetpoint, maxTemp, why))
+    {
+        send_error(fmt::format("Cannot set new setpoint. {}", why.c_str()));
+    }
+
+    // Check if the UA is out of bounds
+    if (tankUA_kJperHrC < 0.0)
+    {
+        send_error(
+            fmt::format("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
+                        "tankUA_kJperHrC is: {:g}",
+                        tankUA_kJperHrC));
+    }
+
+    // Check single-node heat-exchange effectiveness validity
+    if (heatExchangerEffectiveness > 1.)
+    {
+        send_error("Heat-exchanger effectiveness cannot exceed 1.");
+    }
+}
+
 /* static */ bool HPWH::mapNameToPreset(const std::string& modelName, HPWH::MODELS& model)
 {
     if (modelName == "Voltex60" || modelName == "AOSmithPHPT60")
@@ -3900,206 +4101,15 @@ void HPWH::initPreset(const std::string& modelName)
     {
         send_error("Unable to initialize model.");
     }
-}
-
-// Used to check a few inputs after the initialization of a tank model from a preset or a file.
-void HPWH::checkInputs()
-{
-    if (getNumHeatSources() <= 0 && (model != MODELS_StorageTank))
-    {
-        send_error("You must have at least one HeatSource.");
-    }
-
-    double condensitySum;
-    // loop through all heat sources to check each for malconfigurations
-    for (int i = 0; i < getNumHeatSources(); i++)
-    {
-        // check the heat source type to make sure it has been set
-        if (heatSources[i].typeOfHeatSource == TYPE_none)
-        {
-            send_error(fmt::format(
-                "Heat source {} does not have a specified type.  Initialization failed.", i));
-        }
-        // check to make sure there is at least one onlogic or parent with onlogic
-        int parent = heatSources[i].findParent();
-        if (heatSources[i].turnOnLogicSet.size() == 0 &&
-            (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
-        {
-            send_error("You must specify at least one logic to turn on the element or the element "
-                       "must be set as a backup for another heat source with at least one logic.");
-        }
-
-        // Validate on logics
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].turnOnLogicSet)
-        {
-            if (!logic->isValid())
-            {
-                send_error(fmt::format("On logic at index %i is invalid", i));
-            }
-        }
-        // Validate off logics
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].shutOffLogicSet)
-        {
-            if (!logic->isValid())
-            {
-                send_error(fmt::format("Off logic at index %i is invalid", i));
-            }
-        }
-
-        // check is condensity sums to 1
-        condensitySum = 0;
-
-        for (int j = 0; j < heatSources[i].getCondensitySize(); j++)
-            condensitySum += heatSources[i].condensity[j];
-        if (fabs(condensitySum - 1.0) > 1e-6)
-        {
-            send_error(fmt::format("The condensity for heatsource {} does not sum to 1. "
-                                   "It sums to {:g}.",
-                                   i,
-                                   condensitySum));
-        }
-        // check that air flows are all set properly
-        if (heatSources[i].airflowFreedom > 1.0 || heatSources[i].airflowFreedom <= 0.0)
-        {
-            send_error(
-                fmt::format("The airflowFreedom must be between 0 and 1 for heatsource {}.", i));
-        }
-
-        if (heatSources[i].isACompressor())
-        {
-            if (heatSources[i].doDefrost)
-            {
-                if (heatSources[i].defrostMap.size() < 3)
-                {
-                    send_error("Defrost logic set to true but no valid defrost map of length 3 or "
-                               "greater set.");
-                }
-                if (heatSources[i].configuration != HeatSource::CONFIG_EXTERNAL)
-                {
-                    send_error("Defrost is only simulated for external compressors.");
-                }
-            }
-        }
-        if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
-        {
-
-            if (heatSources[i].shutOffLogicSet.size() != 1)
-            {
-                send_error("External heat sources can only have one shut off logic.");
-            }
-            if (0 > heatSources[i].externalOutletHeight ||
-                heatSources[i].externalOutletHeight > getNumNodes() - 1)
-            {
-                send_error("External heat sources need an external outlet height within the bounds"
-                           "from from 0 to numNodes-1.");
-            }
-            if (0 > heatSources[i].externalInletHeight ||
-                heatSources[i].externalInletHeight > getNumNodes() - 1)
-            {
-                send_error("External heat sources need an external inlet height within the bounds "
-                           "from from 0 to numNodes-1.");
-            }
-        }
-        else
-        {
-            if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
-                heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
-            {
-                send_error(fmt::format(
-                    "Heatsource {:d} is not an external heat source but has an external "
-                    "secondary heat exchanger.",
-                    i));
-            }
-        }
-
-        // Check performance map
-        // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and
-        // that ;
-        if (heatSources[i].useBtwxtGrid)
-        {
-            // If useBtwxtGrid is true that the perfMap is empty
-            if (heatSources[i].perfMap.size() != 0)
-            {
-                send_error(
-                    "Using the grid lookups but a regression based performance map is given.");
-            }
-
-            // Check length of vectors in perfGridValue are equal
-            if (heatSources[i].perfGridValues[0].size() !=
-                    heatSources[i].perfGridValues[1].size() &&
-                heatSources[i].perfGridValues[0].size() != 0)
-            {
-                send_error(
-                    "When using grid lookups for performance the vectors in perfGridValues must "
-                    "be the same length.");
-            }
-
-            // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
-            // lengths
-            size_t expLength = 1;
-            for (const auto& v : heatSources[i].perfGrid)
-            {
-                expLength *= v.size();
-            }
-            if (expLength != heatSources[i].perfGridValues[0].size())
-            {
-                send_error(
-                    "When using grid lookups for perfmance the vectors in perfGridValues must "
-                    "be the same length.");
-            }
-        }
-        else
-        {
-            // Check that perfmap only has 1 point if config_external and multipass
-            if (heatSources[i].isExternalMultipass() && heatSources[i].perfMap.size() != 1)
-            {
-                send_error("External multipass heat sources must have a perfMap of only one point "
-                           "with regression equations.");
-            }
-        }
-    }
-
-    // Check that the on logic and off logics are ordered properly
-    if (hasACompressor())
-    {
-        double aquaF = 0., useF = 1.;
-        getSizingFractions(aquaF, useF);
-        if (aquaF < (1. - useF))
-        {
-            send_error(
-                "The relationship between the on logic and off logic is not supported. The off "
-                "logic is beneath the on logic.");
-        }
-    }
-
-    double maxTemp;
-    string why;
-    double tempSetpoint = setpoint_C;
-    if (!isNewSetpointPossible(tempSetpoint, maxTemp, why))
-    {
-        send_error(fmt::format("Cannot set new setpoint. {}", why.c_str()));
-    }
-
-    // Check if the UA is out of bounds
-    if (tankUA_kJperHrC < 0.0)
-    {
-        send_error(
-            fmt::format("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
-                        "tankUA_kJperHrC is: {:g}",
-                        tankUA_kJperHrC));
-    }
-
-    // Check single-node heat-exchange effectiveness validity
-    if (heatExchangerEffectiveness > 1.)
-    {
-        send_error("Heat-exchanger effectiveness cannot exceed 1.");
-    }
+    name = modelName;
 }
 
 #ifndef HPWH_ABRIDGED
-void HPWH::initFromFile(string configFile)
+void HPWH::initFromFile(string modelName)
 {
-    setAllDefaults(); // reset all defaults if you're re-initilizing
+    std::string configFile = modelName + ".txt";
+
+    setAllDefaults(); // reset all defaults if you're re-initializing
 
     // open file, check and report errors
     std::ifstream inputFILE;
@@ -4108,12 +4118,13 @@ void HPWH::initFromFile(string configFile)
     {
         send_error("Input file failed to open.");
     }
+    name = modelName;
 
     // some variables that will be handy
     std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
-    double initalTankT_C = F_TO_C(120.);
+    double initialTankT_C = F_TO_C(120.);
 
     string tempString, units;
     double tempDouble;
@@ -4239,7 +4250,7 @@ void HPWH::initFromFile(string configFile)
             else
                 send_warning(fmt::format("Invalid units: {}", token));
 
-            initalTankT_C = tempDouble;
+            initialTankT_C = tempDouble;
             hasInitialTankTemp = true;
         }
         else if (token == "hasHeatExchanger")
@@ -4271,7 +4282,7 @@ void HPWH::initFromFile(string configFile)
             heatSources.reserve(numHeatSources);
             for (std::size_t i = 0; i < numHeatSources; i++)
             {
-                heatSources.emplace_back(this);
+                heatSources.emplace_back(makeHeatSource("heat source"));
             }
         }
         else if (token == "heatsource")
@@ -4833,7 +4844,7 @@ void HPWH::initFromFile(string configFile)
     tankTemps_C.resize(num_nodes);
 
     if (hasInitialTankTemp)
-        setTankToTemperature(initalTankT_C);
+        setTankToTemperature(initialTankT_C);
     else
         resetTankToSetpoint();
 

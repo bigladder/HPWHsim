@@ -552,7 +552,7 @@ class HPWH : public Courier::Sender
     void initPreset(const std::string& modelName);
 
 #ifndef HPWH_ABRIDGED
-    void initFromFile(std::string configFile);
+    void initFromFile(std::string modelName);
     /**< Loads a HPWH model from a file
      * The file name is the input - there should be at most one set of parameters per file
      * This is useful for testing new variations, and for the sort of variability
@@ -1195,6 +1195,8 @@ class HPWH : public Courier::Sender
     /// a std::vector containing the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
+    HeatSource makeHeatSource(const std::string& name_in);
+
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/
 
@@ -1345,7 +1347,7 @@ class HPWH::HeatSource : public Courier::Sender
     friend class HPWH;
 
     HeatSource() {} /**< default constructor, does not create a useful HeatSource */
-    HeatSource(
+    HeatSource(const std::string& name_in,
         HPWH* parentHPWH,
         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>());
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */

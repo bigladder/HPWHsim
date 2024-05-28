@@ -12,9 +12,10 @@
 
 // public HPWH::HeatSource functions
 HPWH::HeatSource::HeatSource(
+    const std::string& name_in,
     HPWH* parentInput,
-    const std::shared_ptr<Courier::Courier> courier /*std::make_shared<DefaultCourier>()*/)
-    : Sender("HeatSource", courier)
+    const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/)
+    : Sender(name_in, courier_in)
     , hpwh(parentInput)
     , isOn(false)
     , lockedOut(false)
@@ -38,6 +39,8 @@ HPWH::HeatSource::HeatSource(
     , isMultipass(true)
     , extrapolationMethod(EXTRAP_LINEAR)
 {
+   class_name = "HeatSource";
+   parent_pointer = hpwh;
 }
 
 HPWH::HeatSource::HeatSource(const HeatSource& hSource) : Sender(hSource) { *this = hSource; }
