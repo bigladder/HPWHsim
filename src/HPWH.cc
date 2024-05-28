@@ -4222,7 +4222,7 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
 
     tank->init(rstank);
 
-    auto& configurations = performance.heat_sources_configurations;
+    auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
     heatSources.resize(num_heat_sources);
