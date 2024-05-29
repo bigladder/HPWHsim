@@ -39,8 +39,8 @@ HPWH::HeatSource::HeatSource(
     , isMultipass(true)
     , extrapolationMethod(EXTRAP_LINEAR)
 {
-   class_name = "HeatSource";
-   parent_pointer = hpwh;
+    class_name = "HeatSource";
+    parent_pointer = hpwh;
 }
 
 HPWH::HeatSource::HeatSource(const HeatSource& hSource) : Sender(hSource) { *this = hSource; }
