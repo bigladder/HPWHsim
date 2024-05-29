@@ -401,9 +401,8 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("name", courier)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", "name", courier)
 {
-    class_name = "HPWH";
     setAllDefaults();
 }
 
@@ -437,7 +436,7 @@ void HPWH::setAllDefaults()
     heatExchangerEffectiveness = 0.9;
 }
 
-HPWH::HPWH(const HPWH& hpwh) : Sender("HPWH", hpwh.courier) { *this = hpwh; }
+HPWH::HPWH(const HPWH& hpwh) : Sender("HPWH", "", hpwh.courier) { *this = hpwh; }
 
 HPWH& HPWH::operator=(const HPWH& hpwh)
 {
