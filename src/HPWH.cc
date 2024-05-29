@@ -4302,7 +4302,7 @@ void HPWH::initFromFile(string modelName)
             heatSources.reserve(numHeatSources);
             for (std::size_t i = 0; i < numHeatSources; i++)
             {
-                heatSources.emplace_back(makeHeatSource("heat source"));
+                heatSources.emplace_back(makeHeatSource(fmt::format("heat source {:d}", i)));
             }
         }
         else if (token == "heatsource")
@@ -4310,7 +4310,7 @@ void HPWH::initFromFile(string modelName)
             if (numHeatSources == 0)
             {
                 send_error(
-                    "You must specify the number of heatsources before setting their properties.");
+                    "You must specify the number of heat sources before setting their properties.");
             }
             line_ss >> heatsource >> token;
             if (token == "isVIP")
@@ -4323,7 +4323,7 @@ void HPWH::initFromFile(string modelName)
                 else
                 {
                     send_error(fmt::format(
-                        "Improper value for {} for heat source {}.", token.c_str(), heatsource));
+                        "Improper value for {} for heat source {:d}.", token.c_str(), heatsource));
                 }
             }
             else if (token == "isOn")
@@ -4336,7 +4336,7 @@ void HPWH::initFromFile(string modelName)
                 else
                 {
                     send_error(fmt::format(
-                        "Improper value for {} for heat source {}.", token.c_str(), heatsource));
+                        "Improper value for {} for heat source {:d}.", token.c_str(), heatsource));
                 }
             }
             else if (token == "minT")
@@ -4376,7 +4376,7 @@ void HPWH::initFromFile(string modelName)
                         if (nodeNum > LOGIC_SIZE + 1 || nodeNum < 0)
                         {
                             send_error(fmt::format(
-                                "Node number for heatsource {} {} must be between 0 and {}.",
+                                "Node number for heat source {:d} {} must be between 0 and {:d}.",
                                 heatsource,
                                 token.c_str(),
                                 LOGIC_SIZE + 1));
@@ -4403,8 +4403,8 @@ void HPWH::initFromFile(string modelName)
                     if (nodeNums.size() != weights.size())
                     {
                         send_error(fmt::format(
-                            "Number of weights for heatsource {} {} ({}) does not match number "
-                            "of nodes for {} ({}).",
+                            "Number of weights for heatsource {:d} {} ({:d}) does not match number "
+                            "of nodes for {} ({:d}).",
                             heatsource,
                             token.c_str(),
                             weights.size(),
@@ -4414,8 +4414,8 @@ void HPWH::initFromFile(string modelName)
                     if (nextToken != "absolute" && nextToken != "relative")
                     {
                         send_error(fmt::format(
-                            "Improper definition, \"{}\", for heat source {} {}. Should be "
-                            "\"relative\" or \"absoute\".",
+                            "Improper definition, \"{}\", for heat source {:d} {}. Should be "
+                            "\"relative\" or \"absolute\".",
                             nextToken.c_str(),
                             heatsource,
                             token.c_str()));
@@ -4617,7 +4617,7 @@ void HPWH::initFromFile(string modelName)
                     else
                     {
                         send_error(fmt::format(
-                            "Improper {} for heat source {}", token.c_str(), heatsource));
+                            "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
                 }
             }
