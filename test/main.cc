@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     }
     else if (input1 == "File")
     {
-         try
+        try
         {
             hpwh.initFromFile(input2);
         }
