@@ -1348,7 +1348,7 @@ class HPWH::HeatSource : public Courier::Sender
 
     HeatSource() {} /**< default constructor, does not create a useful HeatSource */
     HeatSource(const std::string& name_in,
-        HPWH* parentHPWH,
+        HPWH* hpwh_in,
         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>());
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
     HeatSource(const HeatSource& hSource);            /// copy constructor

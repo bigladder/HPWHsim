@@ -13,10 +13,10 @@
 // public HPWH::HeatSource functions
 HPWH::HeatSource::HeatSource(
     const std::string& name_in,
-    HPWH* parentInput,
+    HPWH* hpwh_in,
     const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/)
     : Sender(name_in, courier_in)
-    , hpwh(parentInput)
+    , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
