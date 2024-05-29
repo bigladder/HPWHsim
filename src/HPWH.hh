@@ -561,13 +561,13 @@ class HPWH : public Courier::Sender
      */
 #endif
 
-    int runOneStep(double drawVolume_L,
-                   double ambientT_C,
-                   double externalT_C,
-                   DRMODES DRstatus,
-                   double inletVol2_L = 0.,
-                   double inletT2_C = 0.,
-                   std::vector<double>* extraHeatDist_W = NULL);
+    void runOneStep(double drawVolume_L,
+                    double ambientT_C,
+                    double externalT_C,
+                    DRMODES DRstatus,
+                    double inletVol2_L = 0.,
+                    double inletT2_C = 0.,
+                    std::vector<double>* extraHeatDist_W = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
      */

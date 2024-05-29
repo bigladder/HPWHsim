@@ -196,7 +196,7 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 {
 
     // if it's already unlocked, keep it unlocked
-    if (isLockedOut() == false)
+    if (!isLockedOut())
     {
         return true;
     }
