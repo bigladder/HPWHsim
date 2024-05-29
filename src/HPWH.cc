@@ -502,13 +502,13 @@ HPWH::HeatSource HPWH::makeHeatSource(const std::string& name_in)
     return HeatSource(name_in, this, get_courier());
 }
 
-int HPWH::runOneStep(double drawVolume_L,
-                     double tankAmbientT_C,
-                     double heatSourceAmbientT_C,
-                     DRMODES DRstatus,
-                     double inletVol2_L,
-                     double inletT2_C,
-                     std::vector<double>* extraHeatDist_W)
+void HPWH::runOneStep(double drawVolume_L,
+                      double tankAmbientT_C,
+                      double heatSourceAmbientT_C,
+                      DRMODES DRstatus,
+                      double inletVol2_L,
+                      double inletT2_C,
+                      std::vector<double>* extraHeatDist_W)
 {
 
     // check for errors
@@ -805,8 +805,6 @@ int HPWH::runOneStep(double drawVolume_L,
     {
         resetTopOffTimer();
     }
-
-    return 0; // successful completion of the step returns 0
 } // end runOneStep
 
 void HPWH::runNSteps(int N,
@@ -2683,7 +2681,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
     }
     if (which < -1 || which > getNumResistanceElements() - 1)
     {
-        send_error("Out of bounds value for which in setResistanceCapacity().");
+        send_error("Out of bounds value for \"which\" in setResistanceCapacity().");
     }
     if (power < 0)
     {
@@ -2740,7 +2738,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     }
     if (which < -1 || which > getNumResistanceElements() - 1)
     {
-        send_error("Out of bounds value for which in getResistanceCapacity().");
+        send_error("Out of bounds value for \"which\" in getResistanceCapacity().");
     }
 
     double returnPower = 0;
@@ -3587,7 +3585,7 @@ void HPWH::checkInputs()
         if (heatSources[i].airflowFreedom > 1.0 || heatSources[i].airflowFreedom <= 0.0)
         {
             error_msgs.push(fmt::format(
-                "\n\tThe airflowFreedom must be between 0 and 1 for heatsource {}.", i));
+                "\n\tThe airflowFreedom must be between 0 and 1 for heatsource {:d}.", i));
         }
 
         if (heatSources[i].isACompressor())
