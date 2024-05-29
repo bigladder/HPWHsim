@@ -5111,7 +5111,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     }
 
     //
-
     if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
     {
         firstHourRating.desig = FirstHourRating::Desig::VerySmall;
