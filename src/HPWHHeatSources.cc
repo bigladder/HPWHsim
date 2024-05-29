@@ -15,7 +15,7 @@ HPWH::HeatSource::HeatSource(
     const std::string& name_in,
     HPWH* hpwh_in,
     const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/)
-    : Sender(name_in, courier_in)
+    : Sender("HeatSource", name_in, courier_in)
     , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
@@ -39,7 +39,6 @@ HPWH::HeatSource::HeatSource(
     , isMultipass(true)
     , extrapolationMethod(EXTRAP_LINEAR)
 {
-    class_name = "HeatSource";
     parent_pointer = hpwh;
 }
 
