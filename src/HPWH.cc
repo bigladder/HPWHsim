@@ -401,7 +401,8 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::string& name_in /*"hpwh"*/, const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", name_in, courier)
+HPWH::HPWH(const std::string& name_in /*"hpwh"*/, const std::shared_ptr<Courier::Courier>& courier)
+    : Sender("HPWH", name_in, courier)
 {
     setAllDefaults();
 }
@@ -497,10 +498,10 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
 HPWH::~HPWH() {}
 
-HPWH::HeatSource& HPWH::makeHeatSource(const std::string& name_in)
+HPWH::HeatSource* HPWH::addHeatSource(const std::string& name_in)
 {
     heatSources.emplace_back(name_in, this, get_courier());
-    return heatSources.back();
+    return &heatSources.back();
 }
 
 void HPWH::runOneStep(double drawVolume_L,
@@ -4303,7 +4304,7 @@ void HPWH::initFromFile(string modelName)
             heatSources.reserve(numHeatSources);
             for (std::size_t i = 0; i < numHeatSources; i++)
             {
-                makeHeatSource(fmt::format("heat source {:d}", i));
+                addHeatSource(fmt::format("heat source {:d}", i));
             }
         }
         else if (token == "heatsource")
