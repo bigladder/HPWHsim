@@ -184,7 +184,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (maxedOut())
         {
             lock = true;
-            send_warning(fmt::format("lock-out: condenser water temperature above max: {:g}",
+            send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
                                      maxSetpoint_C));
         }
 
@@ -407,7 +407,7 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            send_error(fmt::format("Internal error: Negative runtime = {:g} min", runtime_min));
+            send_error(fmt::format("Negative runtime: {:g} min", runtime_min));
         }
         break;
     }

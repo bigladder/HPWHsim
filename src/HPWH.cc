@@ -401,7 +401,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", "name", courier)
+HPWH::HPWH(const std::string& name_in /*"hpwh"*/, const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", name_in, courier)
 {
     setAllDefaults();
 }
@@ -497,9 +497,10 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
 HPWH::~HPWH() {}
 
-HPWH::HeatSource HPWH::makeHeatSource(const std::string& name_in)
+HPWH::HeatSource& HPWH::makeHeatSource(const std::string& name_in)
 {
-    return HeatSource(name_in, this, get_courier());
+    heatSources.emplace_back(name_in, this, get_courier());
+    return heatSources.back();
 }
 
 void HPWH::runOneStep(double drawVolume_L,
@@ -1025,7 +1026,7 @@ void HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
     else
     {
         send_error(fmt::format("Cannot set this setpoint for the currently selected model, "
-                               "max setpoint is {:g} C. {}",
+                               "max setpoint is {:0.2f} C. {}",
                                maxAllowedSetpointT_C,
                                why.c_str()));
     }
@@ -4302,7 +4303,7 @@ void HPWH::initFromFile(string modelName)
             heatSources.reserve(numHeatSources);
             for (std::size_t i = 0; i < numHeatSources; i++)
             {
-                heatSources.emplace_back(makeHeatSource(fmt::format("heat source {:d}", i)));
+                makeHeatSource(fmt::format("heat source {:d}", i));
             }
         }
         else if (token == "heatsource")

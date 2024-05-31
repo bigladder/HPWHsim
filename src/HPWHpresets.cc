@@ -51,34 +51,33 @@ void HPWH::initResistanceTank(double tankVol_L,
     doTempDepression = false;
     tankMixesOnDraw = true;
 
-    HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-    resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
-
-    // standard logic conditions
-    resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-    resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-
     if (upperPower_W > 0.)
     {
+        heatSources.reserve(2);
+
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
-
-        // set everything in its correct place
-        heatSources.resize(2);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-
-        heatSources[0].followedByHeatSource = &heatSources[1];
     }
     else
     {
-        heatSources.resize(1);
-        heatSources[0] = resistiveElementBottom;
+        heatSources.reserve(1);
+    }
+
+    HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+    resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
+
+    // standard logic conditions
+    resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+    resistiveElementBottom.addTurnOnLogic(standby(dF_TO_dC(10)));
+
+    if (getNumHeatSources() > 1)
+    {
+        heatSources[0].followedByHeatSource = &heatSources[1];
     }
 
     // (1/EnFac - 1/RecovEff) / (67.5 * ((24/41094) - 1/(RecovEff * Power_btuperHr)))
@@ -160,26 +159,24 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W);
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
 
         // Upper should always be first in heatSources if it exists.
-        heatSources.push_back(resistiveElementTop);
     }
 
     // Deal with bottom element
     if (lowerPower_W > 0.)
     {
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
         resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W);
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
+        resistiveElementBottom.addTurnOnLogic(standby(dF_TO_dC(10.)));
 
         // set everything in its correct place
-        heatSources.push_back(resistiveElementBottom);
     }
 
     if (getNumHeatSources() == 2)
@@ -188,7 +185,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     }
 
     // Calc UA
-    double SA_M2 = getTankSurfaceArea(tankVol_L, HPWH::UNITS_L, HPWH::UNITS_M2);
+    double SA_M2 = getTankSurfaceArea(tankVol_L, UNITS_L, UNITS_M2);
     double tankUA_WperK = SA_M2 / rValue_m2KperW;
     tankUA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
 
@@ -201,7 +198,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         tankUA_kJperHrC = 0.0;
     }
 
-    model = HPWH::MODELS_CustomResTankGeneric;
+    model = MODELS_CustomResTankGeneric;
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -236,9 +233,10 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     doTempDepression = false;
     tankMixesOnDraw = true;
 
-    HeatSource compressor = makeHeatSource("compressor");
-    HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-    HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+    heatSources.reserve(3);
+    HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+    HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+    HeatSource& compressor = makeHeatSource("compressor");
 
     // compressor values
     compressor.isOn = false;
@@ -278,16 +276,16 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
 
     // logic conditions
     // this is set customly, from input
-    // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
-    resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUse_C));
+    // resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
+    resistiveElementTop.addTurnOnLogic(topThird(resUse_C));
 
-    resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+    resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
-    compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-    compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
+    compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+    compressor.addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
     // custom adjustment for poorer performance
-    // compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+    // compressor.addShutOffLogic(lowT(F_TO_C(37)));
     //
     // end section of parameters from GE model
 
@@ -325,12 +323,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor.perfMap[1].inputPower_coeffs[0] /= genericFudge;
     compressor.perfMap[1].inputPower_coeffs[1] /= genericFudge;
     compressor.perfMap[1].inputPower_coeffs[2] /= genericFudge;
-
-    // set everything in its place
-    heatSources.resize(3);
-    heatSources[0] = resistiveElementTop;
-    heatSources[1] = resistiveElementBottom;
-    heatSources[2] = compressor;
 
     // and you have to do this after putting them into heatSources, otherwise
     // you don't get the right pointers
@@ -382,24 +374,19 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(2);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(8, 4500);
 
         // standard logic conditions
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        resistiveElementBottom.addTurnOnLogic(standby(dF_TO_dC(10)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop.isVIP = true;
-
-        // assign heat sources into array in order of priority
-        // set everything in its places
-        heatSources.resize(2);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
 
         heatSources[0].followedByHeatSource = &heatSources[1];
     }
@@ -418,23 +405,19 @@ void HPWH::initPreset(MODELS presetNum)
         tankMixesOnDraw = false;
 
         // set up a resistive element at the bottom, 4500 kW
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(2);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
 
         // standard logic conditions
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(15));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom.addTurnOnLogic(standby(15));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
+        resistiveElementTop.addTurnOnLogic(topThird(20));
         resistiveElementTop.isVIP = true;
-
-        // assign heat sources into array in order of priority
-        heatSources.resize(2);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
 
         heatSources[0].followedByHeatSource = &heatSources[1];
     }
@@ -453,23 +436,19 @@ void HPWH::initPreset(MODELS presetNum)
         // should eventually put tankmixes to true when testing progresses
         tankMixesOnDraw = false;
 
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(2);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
 
         // standard logic conditions
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(15));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom.addTurnOnLogic(standby(15));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
+        resistiveElementTop.addTurnOnLogic(topThird(20));
         resistiveElementTop.isVIP = true;
-
-        // set everything in its place
-        heatSources.resize(2);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
 
         heatSources[0].followedByHeatSource = &heatSources[1];
     }
@@ -504,9 +483,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& compressor = makeHeatSource("compressor");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
         resistiveElementTop.setupAsResistiveElement(9, 4500);
@@ -514,10 +494,10 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(4);
 
         // standard logic conditions
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(15));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(20));
+        resistiveElementBottom.addTurnOnLogic(standby(15));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(20));
+        resistiveElementTop.addTurnOnLogic(topThird(20));
         resistiveElementTop.isVIP = true;
 
         compressor.isOn = false;
@@ -552,14 +532,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(20));
-        compressor.addTurnOnLogic(HPWH::standby(15));
-
-        // set everything in its place
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = compressor;
-        heatSources[2] = resistiveElementBottom;
+        compressor.addTurnOnLogic(bottomThird(20));
+        compressor.addTurnOnLogic(standby(15));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -584,7 +558,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -617,15 +592,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.isMultipass = false;
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(20));
-        compressor.addTurnOnLogic(HPWH::standby(15));
+        compressor.addTurnOnLogic(bottomThird(20));
+        compressor.addTurnOnLogic(standby(15));
 
         // lowT cutoff
-        compressor.addShutOffLogic(HPWH::bottomNodeMaxTemp(20, true));
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
+        compressor.addShutOffLogic(bottomNodeMaxTemp(20, true));
     }
     // voltex 60 gallon
     else if (presetNum == MODELS_AOSmithPHPT60)
@@ -639,9 +610,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor = makeHeatSource("compressor");
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& compressor = makeHeatSource("compressor");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         // compressor values
         compressor.isOn = false;
@@ -687,18 +659,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(compStart));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = compressor;
-        heatSources[2] = resistiveElementBottom;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(25.0)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -719,9 +685,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor = makeHeatSource("compressor");
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& compressor = makeHeatSource("compressor");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         // compressor values
         compressor.isOn = false;
@@ -767,18 +734,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(compStart));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = compressor;
-        heatSources[2] = resistiveElementBottom;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(25.0)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -799,9 +760,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor = makeHeatSource("compressor");
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& compressor = makeHeatSource("compressor");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
 
         // compressor values
         compressor.isOn = false;
@@ -847,23 +809,17 @@ void HPWH::initPreset(MODELS presetNum)
         //     double compStart = dF_TO_dC(24.4);
         double compStart = dF_TO_dC(40.0);
         double standbyT = dF_TO_dC(5.2);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
-        // compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(66)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
+        // compressor.addShutOffLogic(largeDraw(F_TO_C(66)));
+        compressor.addShutOffLogic(largeDraw(F_TO_C(65)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
-        // resistiveElementBottom.addShutOffLogic(HPWH::lowTreheat(lowTcutoff));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(compStart));
+        // resistiveElementBottom.addShutOffLogic(lowTreheat(lowTcutoff));
         // GE element never turns off?
 
-        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31.0)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28.0)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = compressor;
-        heatSources[2] = resistiveElementBottom;
+        // resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(31.0)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(28.0)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -886,7 +842,8 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -903,13 +860,13 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(15), this));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -1118,10 +1075,6 @@ void HPWH::initPreset(MODELS presetNum)
                 });
             }
         } // End if MODELS_ColmacCxV_5_SP
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
 
     // if colmac multipass
@@ -1137,7 +1090,8 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1152,12 +1106,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
 
         compressor.depressesTemperature = false; // no temp depression
@@ -1314,10 +1268,6 @@ void HPWH::initPreset(MODELS presetNum)
                 });
             }
         }
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
     // If Nyle single pass preset
     else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
@@ -1332,7 +1282,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1364,13 +1315,13 @@ void HPWH::initPreset(MODELS presetNum)
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(15.), this, false));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -1565,10 +1516,6 @@ void HPWH::initPreset(MODELS presetNum)
                  4.87405E-06} // COP Coefficients (COP_coeffs)
             });
         }
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
 
     // If Nyle multipass presets
@@ -1584,7 +1531,8 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1610,12 +1558,12 @@ void HPWH::initPreset(MODELS presetNum)
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -1755,10 +1703,6 @@ void HPWH::initPreset(MODELS presetNum)
                                            "RegularGridInterpolator",
                                            get_courier()));
         compressor.useBtwxtGrid = true;
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
     // if rheem multipass
     else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
@@ -1774,7 +1718,8 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1789,12 +1734,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -1852,10 +1797,6 @@ void HPWH::initPreset(MODELS presetNum)
                  -0.0002491563} // COP Coefficients (COP_coeffs)
             });
         }
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
 
     else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
@@ -1870,7 +1811,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -1889,13 +1831,13 @@ void HPWH::initPreset(MODELS presetNum)
         // Turn on
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "eighth node absolute", nodeWeights, F_TO_C(110.), this, true));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false;
 
@@ -2136,10 +2078,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.useBtwxtGrid = true;
 
         compressor.secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
 
     else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
@@ -2167,7 +2105,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -2216,17 +2155,17 @@ void HPWH::initPreset(MODELS presetNum)
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(8);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "eighth node absolute", nodeWeights, F_TO_C(113), this, true));
         if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
         {
-            compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+            compressor.addTurnOnLogic(standby(dF_TO_dC(8.2639)));
             // Adds a bonus standby logic so the external heater does not cycle, recommended for any
             // external heater with standby
             std::vector<NodeWeight> nodeWeightStandby;
             nodeWeightStandby.emplace_back(0);
             compressor.standbyLogic =
-                std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
+                std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
                                                               nodeWeightStandby,
                                                               F_TO_C(113),
                                                               this,
@@ -2237,7 +2176,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(
-            std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
+            std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
                                                           nodeWeights1,
                                                           F_TO_C(135),
                                                           this,
@@ -2245,10 +2184,6 @@ void HPWH::initPreset(MODELS presetNum)
                                                           std::greater<double>(),
                                                           true));
         compressor.depressesTemperature = false; // no temp depression
-
-        // set everything in its place
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
     else if (presetNum == MODELS_SANCO2_43)
     {
@@ -2263,7 +2198,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        HeatSource compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        HeatSource& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -2315,11 +2251,11 @@ void HPWH::initPreset(MODELS presetNum)
         nodeWeights.emplace_back(4);
         std::vector<NodeWeight> nodeWeightStandby;
         nodeWeightStandby.emplace_back(0);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node absolute", nodeWeights, F_TO_C(113), this, true));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(8.2639)));
         compressor.standbyLogic =
-            std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
+            std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
                                                           nodeWeightStandby,
                                                           F_TO_C(113),
                                                           this,
@@ -2330,7 +2266,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(
-            std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth absolute",
+            std::make_shared<TempBasedHeatingLogic>("bottom twelfth absolute",
                                                           nodeWeights1,
                                                           F_TO_C(135),
                                                           this,
@@ -2338,10 +2274,6 @@ void HPWH::initPreset(MODELS presetNum)
                                                           std::greater<double>(),
                                                           true));
         compressor.depressesTemperature = false; // no temp depression
-
-        // set everything in its place
-        heatSources.resize(1);
-        heatSources[0] = compressor;
     }
     else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 ||
              presetNum == MODELS_RheemHBDR4550)
@@ -2355,9 +2287,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        HeatSource compressor = makeHeatSource("compressor");
-        HeatSource resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        HeatSource resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        HeatSource& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        HeatSource& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        HeatSource& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -2419,23 +2352,17 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
-        resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        resistiveElementTop.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        //		resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(28)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2466,9 +2393,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -2530,23 +2458,17 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
-        resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        resistiveElementTop.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        //		resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(31)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2570,15 +2492,16 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
         compressor.isVIP = false;
         compressor.typeOfHeatSource = TYPE_compressor;
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
         // double split = 1.0 / 3.0;
@@ -2633,24 +2556,18 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
         std::vector<NodeWeight> nodeWeights;
         //		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
-        resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        resistiveElementTop.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        //		resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(35)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2673,9 +2590,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -2716,19 +2634,13 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(34.1636);
         double standbyT = dF_TO_dC(7.1528);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80.108)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
-        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        // resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(39.9691)));
+        resistiveElementTop.addTurnOnLogic(topThird_absolute(F_TO_C(87)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2749,9 +2661,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -2803,21 +2716,15 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions for
         double compStart = dF_TO_dC(5.25);
         double standbyT = dF_TO_dC(5.); // Given CMP_T test
-        compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(secondSixth(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
         double resistanceStart = 12.;
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(resistanceStart));
-        resistiveElementBottom.addTurnOnLogic(HPWH::topThird(resistanceStart));
+        resistiveElementTop.addTurnOnLogic(topThird(resistanceStart));
+        resistiveElementBottom.addTurnOnLogic(topThird(resistanceStart));
 
-        resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(F_TO_C(117.)));
-        resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addShutOffLogic(fifthSixthMaxTemp(F_TO_C(117.)));
+        resistiveElementBottom.addShutOffLogic(secondSixthMaxTemp(F_TO_C(109.)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2854,9 +2761,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -2899,16 +2807,10 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(30.2);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(11.87)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(11.87)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -2932,9 +2834,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -2973,19 +2876,13 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-        //    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        //    compressor.addShutOffLogic(largeDraw(F_TO_C(65)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3006,9 +2903,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3041,21 +2939,15 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(12.392)));
         compressor.minT = F_TO_C(37);
-        //    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        //    compressor.addShutOffLogic(largeDraw(F_TO_C(65)));
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3076,9 +2968,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3118,21 +3011,15 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
+        resistiveElementTop.addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        // compressor.addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3153,9 +3040,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3195,21 +3083,15 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
+        resistiveElementTop.addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        // compressor.addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3230,9 +3112,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3272,22 +3155,16 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        //  resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
-        // resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        //  resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(topThird_absolute(F_TO_C(87)));
+        // resistiveElementTop.addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        // compressor.addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        // resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        // resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3309,9 +3186,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3351,21 +3229,15 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
+        resistiveElementTop.addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        // compressor.addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3402,9 +3274,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3430,7 +3303,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.minT = F_TO_C(37.0);
         compressor.maxT = F_TO_C(120.0);
         compressor.hysteresis_dC = dF_TO_dC(1);
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3444,17 +3317,11 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementTop.addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3497,9 +3364,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3526,7 +3394,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.maxT = F_TO_C(120.0);
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop.setupAsResistiveElement(8, 4500);
@@ -3539,17 +3407,11 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(30);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementTop.addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3593,7 +3455,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3618,18 +3481,14 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.minT = F_TO_C(37.0);
         compressor.maxT = F_TO_C(120.0);
         compressor.hysteresis_dC = dF_TO_dC(1);
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
         // logic conditions
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
     }
     else if (presetNum == MODELS_RheemPlugInDedicated40 ||
              presetNum == MODELS_RheemPlugInDedicated50)
@@ -3649,7 +3508,8 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(1);
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3675,17 +3535,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.maxT = F_TO_C(120.0);
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // logic conditions
         double compStart = dF_TO_dC(20);
         double standbyT = dF_TO_dC(9);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
     }
     else if (presetNum == MODELS_RheemHB50)
     {
@@ -3698,9 +3554,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3729,7 +3586,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.maxT = F_TO_C(120.0);
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
+        compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop.setupAsResistiveElement(8, 4200);
@@ -3742,18 +3599,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         double compStart = dF_TO_dC(38);
         double standbyT = dF_TO_dC(13.2639);
-        compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
-        compressor.addTurnOnLogic(HPWH::standby(standbyT));
+        compressor.addTurnOnLogic(bottomThird(compStart));
+        compressor.addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(76.7747)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3775,8 +3626,9 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElement = makeHeatSource("resistiveElement");
+        heatSources.reserve(2);
+        auto& compressor = makeHeatSource("compressor");
+        auto& resistiveElement = makeHeatSource("resistiveElement");
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -3807,15 +3659,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(6.5509)));
-        compressor.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        compressor.addTurnOnLogic(thirdSixth(dF_TO_dC(6.5509)));
+        compressor.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
         compressor.depressesTemperature = false; // no temp depression
-
-        // set everything in its places
-        heatSources.resize(2);
-        heatSources[0] = compressor;
-        heatSources[1] = resistiveElement;
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -3831,9 +3678,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = false;
@@ -3870,20 +3718,14 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.0)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor.addShutOffLogic(largeDraw(F_TO_C(65)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(110)));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(80)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(110)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(35)));
 
         heatSources[2].backupHeatSource = &heatSources[1];
         heatSources[1].backupHeatSource = &heatSources[2];
@@ -3901,9 +3743,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -3942,14 +3785,14 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(60)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor.addShutOffLogic(largeDraw(F_TO_C(60)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(80)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(40)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3976,9 +3819,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto compressor = makeHeatSource("compressor");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4018,19 +3862,13 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(55)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(40)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor.addShutOffLogic(largeDraw(F_TO_C(55)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(60)));
+        resistiveElementBottom.addTurnOnLogic(bottomThird(dF_TO_dC(60)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(40)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4051,9 +3889,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4092,18 +3931,12 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(18.6605)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(18.6605)));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(12.392)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4146,9 +3979,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4190,18 +4024,12 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(20)));
+        resistiveElementTop.addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4226,9 +4054,10 @@ void HPWH::initPreset(MODELS presetNum)
         tankUA_kJperHrC = 7;
         setTankSize_adjustUA(600., UNITS_GAL);
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -4296,13 +4125,13 @@ void HPWH::initPreset(MODELS presetNum)
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(15), this));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -4313,14 +4142,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         // standard logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(15)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(15)));
         resistiveElementTop.isVIP = true;
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4345,9 +4168,10 @@ void HPWH::initPreset(MODELS presetNum)
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
         tankUA_kJperHrC = 7;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         compressor.isOn = false;
         compressor.isVIP = true;
@@ -4362,12 +4186,12 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
-        compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights, dF_TO_dC(5.), this, false));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
-        compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
+        compressor.addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
             "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
 
@@ -4396,14 +4220,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         // standard logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(30)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(30)));
         resistiveElementTop.isVIP = true;
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4433,7 +4251,8 @@ void HPWH::initPreset(MODELS presetNum)
         hasHeatExchanger = true;
         heatExchangerEffectiveness = 0.93;
 
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4475,12 +4294,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.configuration = HeatSource::CONFIG_SUBMERGED;
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::wholeTank(111, UNITS_F, true));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
-
-        // set everything in its places
-        heatSources.resize(1);
-        heatSources[0] = compressor;
+        compressor.addTurnOnLogic(wholeTank(111, UNITS_F, true));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(14)));
     }
     else if (presetNum == MODELS_GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
@@ -4493,9 +4308,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4523,25 +4339,19 @@ void HPWH::initPreset(MODELS presetNum)
         compressor.hysteresis_dC = dF_TO_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(11.)));
 
         // top resistor values
         resistiveElementTop.setupAsResistiveElement(6, 4500.);
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.)));
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(19.)));
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500.);
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(F_TO_C(60.)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(85.)));
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(F_TO_C(60.)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(85.)));
         resistiveElementBottom.isVIP = false;
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
 
         heatSources[0].followedByHeatSource = &heatSources[1];
         heatSources[1].followedByHeatSource = &heatSources[2];
@@ -4582,9 +4392,10 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = true;
 
-        auto resistiveElementBottom = makeHeatSource("resistiveElementBottom");
-        auto resistiveElementTop = makeHeatSource("resistiveElementTop");
-        auto compressor = makeHeatSource("compressor");
+        heatSources.reserve(3);
+        auto& resistiveElementTop = makeHeatSource("resistiveElementTop");
+        auto& resistiveElementBottom = makeHeatSource("resistiveElementBottom");
+        auto& compressor = makeHeatSource("compressor");
 
         // compressor values
         compressor.isOn = false;
@@ -4623,17 +4434,11 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.hysteresis_dC = dF_TO_dC(2.);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(12.0)));
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.0)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(9.0)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
-
-        // set everything in its places
-        heatSources.resize(3);
-        heatSources[0] = resistiveElementTop;
-        heatSources[1] = resistiveElementBottom;
-        heatSources[2] = compressor;
+        resistiveElementTop.addTurnOnLogic(topThird(dF_TO_dC(12.0)));
+        compressor.addTurnOnLogic(bottomThird(dF_TO_dC(30.0)));
+        compressor.addTurnOnLogic(standby(dF_TO_dC(9.0)));
+        resistiveElementBottom.addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
+        resistiveElementBottom.addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
         //
         heatSources[1].backupHeatSource = &heatSources[2];

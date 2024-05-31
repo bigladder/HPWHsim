@@ -84,7 +84,7 @@ class HPWH : public Courier::Sender
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH(const std::shared_ptr<Courier::Courier>& courier =
+    HPWH(const std::string& name_in = "hpwh", const std::shared_ptr<Courier::Courier>& courier =
              std::make_shared<DefaultCourier>()); /**< default constructor */
     HPWH(const HPWH& hpwh);                       /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);            /**< assignment operator  */
@@ -1195,7 +1195,7 @@ class HPWH : public Courier::Sender
     /// a std::vector containing the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
 
-    HeatSource makeHeatSource(const std::string& name_in);
+    HeatSource& makeHeatSource(const std::string& name_in);
 
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/
