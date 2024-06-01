@@ -1354,6 +1354,9 @@ class HPWH::HeatSource : public Courier::Sender
         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>());
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
     HeatSource(const HeatSource& hSource);            /// copy constructor
+
+    ~HeatSource() {}
+
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */

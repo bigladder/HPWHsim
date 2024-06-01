@@ -18,7 +18,6 @@ void HPWH::initResistanceTank(double tankVol_L,
                               double upperPower_W,
                               double lowerPower_W)
 {
-
     setAllDefaults();
 
     heatSources.clear();
@@ -51,9 +50,10 @@ void HPWH::initResistanceTank(double tankVol_L,
     doTempDepression = false;
     tankMixesOnDraw = true;
 
-    HeatSource* resistiveElementTop = nullptr;
-    HeatSource* resistiveElementBottom = nullptr;
+    HeatSource* resistiveElementTop = NULL;
+    HeatSource* resistiveElementBottom = NULL;
 
+    heatSources.reserve(2);
     if (upperPower_W > 0.)
     {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
@@ -153,7 +153,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     HeatSource* resistiveElementTop = nullptr;
     HeatSource* resistiveElementBottom = nullptr;
 
-    // Deal with upper element
+    heatSources.reserve(2);
     if (upperPower_W > 0.)
     {
         resistiveElementTop = addHeatSource("resistiveElementTop");
