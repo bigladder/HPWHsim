@@ -401,7 +401,7 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier,const std::string& name_in /*"hpwh"*/)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/)
     : Sender("HPWH", name_in, courier)
 {
     setAllDefaults();
