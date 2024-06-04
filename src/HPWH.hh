@@ -84,9 +84,8 @@ class HPWH : public Courier::Sender
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH(const std::string& name_in = "hpwh",
-         const std::shared_ptr<Courier::Courier>& courier =
-             std::make_shared<DefaultCourier>()); /**< default constructor */
+    HPWH(const std::shared_ptr<Courier::Courier>& courier =
+             std::make_shared<DefaultCourier>(), const std::string& name_in = "hpwh"); /**< default constructor */
     HPWH(const HPWH& hpwh);                       /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);            /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
