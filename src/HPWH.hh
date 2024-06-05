@@ -84,7 +84,8 @@ class HPWH : public Courier::Sender
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier =
-             std::make_shared<DefaultCourier>()); /**< default constructor */
+             std::make_shared<DefaultCourier>(),
+            const std::string& name_in = "hpwh"); /**< default constructor */
     HPWH(const HPWH& hpwh);                       /**< copy constructor  */
     HPWH& operator=(const HPWH& hpwh);            /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
@@ -1257,10 +1258,12 @@ inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, con
 }
 
 template <typename T>
-void checkSetValue(T& t, const bool is_set, const T t_new)
+void checkSetValue(T& t, const bool is_set, const T t_new, const T t_default)
 {
     if (is_set)
         t = t_new;
+    else
+        t = t_default;
 }
 
 #endif

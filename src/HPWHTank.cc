@@ -27,6 +27,8 @@ void HPWH::Tank::init(hpwh_data_model::rstank_ns::RSTANK& rstank)
 {
     auto& performance = rstank.performance;
     setNumNodes(performance.number_of_nodes);
+
+    //heat_exchanger_effectiveness
 }
 
 void HPWH::Tank::setAllDefaults()

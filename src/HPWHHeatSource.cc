@@ -13,8 +13,9 @@
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier> courier)
-    : Sender("HeatSource", courier)
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier> courier,
+                             const std::string& name_in)
+    : Sender("HeatSource", name_in, courier)
     , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
@@ -123,9 +124,9 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
 {
     auto& config = heatsourceconfiguration;
     setCondensity(config.heat_distribution);
-    checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint));
-    checkSetValue(isVIP, config.is_vip_is_set, config.is_vip);
-    checkSetValue(hysteresis_dC, config.hysteresis_temperature_difference_is_set, config.hysteresis_temperature_difference);
+    checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
+    checkSetValue(isVIP, config.is_vip_is_set, config.is_vip, false);
+    checkSetValue(hysteresis_dC, config.hysteresis_temperature_difference_is_set, config.hysteresis_temperature_difference, 0.);
 
     if (config.turn_on_logic_is_set)
     {
