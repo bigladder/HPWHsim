@@ -136,13 +136,13 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier) : Sender("HPWH", courier)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/) : Sender("HPWH", name_in, courier)
 {
     tank = std::make_shared<Tank>(this, courier);
     setAllDefaults();
 }
 
-HPWH::HPWH(const HPWH& hpwh) : Sender("HPWH", hpwh.courier) { *this = hpwh; }
+HPWH::HPWH(const HPWH& hpwh) : Sender(hpwh) { *this = hpwh; }
 
 void HPWH::setAllDefaults()
 {

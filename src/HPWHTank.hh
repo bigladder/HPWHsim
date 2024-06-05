@@ -15,8 +15,9 @@ class HPWH::Tank : public Sender
     HPWH* hpwh;
 
     Tank(HPWH* hpwh_in = NULL,
-         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>())
-        : Sender("HeatSource", courier), hpwh(hpwh_in)
+         const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+             const std::string& name_in = "tank")
+        : Sender("HeatSource", name_in, courier), hpwh(hpwh_in)
     {
     }
 

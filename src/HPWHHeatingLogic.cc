@@ -278,29 +278,52 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 std::shared_ptr<HPWH::HeatingLogic> HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH *hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
+
+    std::function<bool(double, double)> comparison_type;
+    if (logic.comparison_type_is_set)
+    {
+        switch (logic.comparison_type)
+        {
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
+        {
+            comparison_type = std::greater<double>();
+        }
+
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
+        {
+            comparison_type = std::less<double>();
+        }
+
+        default:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::UNKNOWN:
+        {
+        }
+        }
+    }
+
     switch(logic.heating_logic_type)
     {
     case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
     {
-        auto soc_based_logic_ptr =
-            dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
-                logic.heating_logic.get());
+            auto soc_based_logic =
+                dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
+                    logic.heating_logic.get());
 
-        heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
-            "name", soc_based_logic_ptr->decision_point, hpwh);
+            heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
+                "name", soc_based_logic->decision_point, hpwh);
 
-        break;
+            break;
     }
 
     case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
     default:
     {
-        auto temp_based_logic_ptr =
+        auto temp_based_logic =
             dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
         std::vector<double> nodes(HPWH::LOGIC_SIZE);
-        HPWH::resample(nodes, temp_based_logic_ptr->logic_distribution);
+        HPWH::resample(nodes, temp_based_logic->logic_distribution);
 
         std::vector<HPWH::NodeWeight> nodeWeights;
         for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
@@ -312,20 +335,23 @@ std::shared_ptr<HPWH::HeatingLogic> HPWH::HeatingLogic::make(hpwh_data_model::rs
         }
 
         double temp = 20.;
-        if (temp_based_logic_ptr->differential_temperature_is_set)
+        if (temp_based_logic->differential_temperature_is_set)
         {
-            temp = K_TO_C(temp_based_logic_ptr->differential_temperature);
+            temp = K_TO_C(temp_based_logic->differential_temperature);
         }
-        else if (temp_based_logic_ptr->absolute_temperature_is_set)
+        else if (temp_based_logic->absolute_temperature_is_set)
         {
-            temp = K_TO_C(temp_based_logic_ptr->absolute_temperature);
+            temp = K_TO_C(temp_based_logic->absolute_temperature);
+        }
+        else
+        {
+            break;
         }
 
-        heatingLogic =
-            std::make_shared<HPWH::TempBasedHeatingLogic>("name", nodeWeights, temp, hpwh);
+        heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
+            "name", nodeWeights, temp, hpwh, temp_based_logic->absolute_temperature_is_set);
         break;
     }
     }
-
     return heatingLogic;
 }
