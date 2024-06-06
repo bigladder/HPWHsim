@@ -20,7 +20,7 @@ TEST(EnergyBalanceTest, energyBalance)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "AOSmithHPTS50";
-        EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+        hpwh.initPreset(sModelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
@@ -42,7 +42,8 @@ TEST(EnergyBalanceTest, energyBalance)
             double drawVol_L = flowFac * maxDrawVol_L;
 
             double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-            EXPECT_EQ(hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW), 0);
+            EXPECT_NO_THROW(hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW))
+                << "Failure in hpwh.runOneStep.";
             result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
 
             ++i_min;
@@ -56,7 +57,7 @@ TEST(EnergyBalanceTest, energyBalance)
         // get preset model
         HPWH hpwh;
         const std::string sModelName = "StorageTank";
-        EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+        hpwh.initPreset(sModelName);
 
         const double maxDrawVol_L = 1.;
         const double ambientT_C = 20.;
@@ -79,10 +80,9 @@ TEST(EnergyBalanceTest, energyBalance)
             double drawVol_L = flowFac * maxDrawVol_L;
 
             double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-            EXPECT_EQ(
-                hpwh.runOneStep(
-                    drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW, 0., 0., &nodePowerExtra_W),
-                0);
+            EXPECT_NO_THROW(hpwh.runOneStep(
+                drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW, 0., 0., &nodePowerExtra_W))
+                << "Failure in hpwh.runOneStep.";
             result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
 
             ++i_min;
