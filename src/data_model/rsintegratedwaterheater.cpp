@@ -71,19 +71,19 @@ namespace hpwh_data_model  {
 		const std::string_view HeatingLogic::comparison_type_name = "comparison_type";
 
 		void from_json(const nlohmann::json& j, HeatSourceConfiguration& x) {
-			json_get<rsintegratedwaterheater_ns::HeatSourceType>(j, "heat_source_type", x.heat_source_type, x.heat_source_type_is_set, true);
-			if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE) {
-				x.heat_source = std::make_unique<rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
-				if (x.heat_source) {
-					x.heat_source->initialize(j.at("heat_source"));
-				}
-			}
-			if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::CONDENSER) {
-				x.heat_source = std::make_unique<rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
-				if (x.heat_source) {
-					x.heat_source->initialize(j.at("heat_source"));
-				}
-			}
+            json_get<rsintegratedwaterheater_ns::HeatSourceType>(j, "heat_source_type", x.heat_source_type, x.heat_source_type_is_set, true);
+            if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE) {
+                x.heat_source = std::make_unique<rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
+                if (x.heat_source) {
+                    x.heat_source->initialize(j.at("heat_source"));
+                }
+            }
+            if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::CONDENSER) {
+                x.heat_source = std::make_unique<rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
+                if (x.heat_source) {
+                    x.heat_source->initialize(j.at("heat_source"));
+                }
+            }
 			json_get<std::string>(j, "label", x.label, x.label_is_set, true);
 			json_get<std::vector<double>>(j, "heat_distribution", x.heat_distribution, x.heat_distribution_is_set, true);
 			json_get<std::vector<rsintegratedwaterheater_ns::HeatingLogic>>(j, "turn_on_logic", x.turn_on_logic, x.turn_on_logic_is_set, true);

@@ -166,25 +166,19 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
     case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:{
 
         typeOfHeatSource = TYPE_compressor;
-        if(config.heat_source_is_set)
-        {
-            auto rsconendserwaterheatsource_ptr = dynamic_cast<
-                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-                config.heat_source.get());
-            init(*rsconendserwaterheatsource_ptr);
-        }
+        auto rsconendserwaterheatsource_ptr = dynamic_cast<
+            hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            config.heat_source.get());
+        init(*rsconendserwaterheatsource_ptr);
         break;
     }
     case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:{
         typeOfHeatSource = TYPE_resistance;
-        if(config.heat_source_is_set)
-        {
-            auto rsresistancewaterheatsource_ptr = dynamic_cast<
-                hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-                config.heat_source.get());
-            init(*rsresistancewaterheatsource_ptr);
-        }
-        break;
+        auto rsresistancewaterheatsource_ptr = dynamic_cast<
+            hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            config.heat_source.get());
+        init(*rsresistancewaterheatsource_ptr);
+    break;
     }
     default:
     {}
