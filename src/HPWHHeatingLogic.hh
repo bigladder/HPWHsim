@@ -36,7 +36,7 @@ struct HPWH::HeatingLogic
     /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
     virtual double getFractToMeetComparisonExternal() = 0;
 
-    virtual int setDecisionPoint(double value) = 0;
+    virtual void setDecisionPoint(double value) = 0;
     double getDecisionPoint() { return decisionPoint; }
     bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
@@ -73,8 +73,8 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     double getFractToMeetComparisonExternal();
     double getMainsT_C();
     double getTempMinUseful_C();
-    int setDecisionPoint(double value);
-    int setConstantMainsTemperature(double mains_C);
+    void setDecisionPoint(double value);
+    void setConstantMainsTemperature(double mains_C);
 
   private:
     double tempMinUseful_C;
@@ -102,8 +102,8 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     double nodeWeightAvgFract();
     double getFractToMeetComparisonExternal();
 
-    int setDecisionPoint(double value);
-    int setDecisionPoint(double value, bool absolute);
+    void setDecisionPoint(double value);
+    void setDecisionPoint(double value, bool absolute);
 
   private:
     bool areNodeWeightsValid();

@@ -63,12 +63,11 @@ double HPWH::getResampledValue(const std::vector<double>& sampleValues,
 ///			arbitrary size.
 /// @param[in,out]	values			Contains values to be replaced
 ///	@param[in]		sampleValues	Contains values to replace with
-/// @return	Success: true; Failure: false
 //-----------------------------------------------------------------------------
-bool HPWH::resample(std::vector<double>& values, const std::vector<double>& sampleValues)
+void HPWH::resample(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (sampleValues.empty())
-        return false;
+        return;
     double actualSize = static_cast<double>(values.size());
     double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
@@ -100,24 +99,19 @@ bool HPWH::resample(std::vector<double>& values, const std::vector<double>& samp
         }
         beginFraction = endFraction;
     }
-    return true;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-bool HPWH::resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
+void HPWH::resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
-    if (resample(values, sampleValues))
-    {
-        double scale =
-            static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
-        for (auto& value : values)
-            value *= scale;
-        return true;
-    }
-    return false;
+    resample(values, sampleValues);
+    double scale =
+        static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
+    for (auto& value : values)
+        value *= scale;
 }
 
 double HPWH::expitFunc(double x, double offset)

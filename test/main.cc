@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
     }
     else if (input1 == "JSON")
     {
-        inputFile = input2 + ".json";
+        auto inputFile = input2 + ".json";
         try
         {
             std::ifstream inputFILE(inputFile);
