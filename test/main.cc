@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     std::vector<schedule> allSchedules(7);
 
     string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3,
-        inputFile, outputDirectory;
+        outputDirectory;
     string inputVariableName, firstCol;
     double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize,
         tot_limit, initialTankT_C;
@@ -130,8 +130,6 @@ int main(int argc, char* argv[])
     newSetpoint = 0;
     if (input1 == "Preset")
     {
-        inputFile = "";
-
         try
         {
             hpwh.initPreset(input2);
@@ -151,10 +149,9 @@ int main(int argc, char* argv[])
     }
     else if (input1 == "File")
     {
-        inputFile = input2 + ".txt";
         try
         {
-            hpwh.initFromFile(inputFile);
+            hpwh.initFromFile(input2);
         }
         catch (...)
         {
@@ -299,22 +296,30 @@ int main(int argc, char* argv[])
 
     if (doInvMix == 0)
     {
-        outputCode += hpwh.setDoInversionMixing(false);
+        hpwh.setDoInversionMixing(false);
     }
 
     if (doCondu == 0)
     {
-        outputCode += hpwh.setDoConduction(false);
+        hpwh.setDoConduction(false);
     }
     if (newSetpoint > 0)
     {
+        double maxAllowedSetpointT_C;
+        string why;
         if (!allSchedules[5].empty())
         {
-            hpwh.setSetpoint(allSchedules[5][0]); // expect this to fail sometimes
+            if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT_C, why))
+            {
+                hpwh.setSetpoint(allSchedules[5][0]);
+            }
         }
-        else
+        else if (newSetpoint > 0)
         {
-            hpwh.setSetpoint(newSetpoint);
+            if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT_C, why))
+            {
+                hpwh.setSetpoint(newSetpoint);
+            }
         }
         if (hasInitialTankTemp)
             hpwh.setTankToTemperature(initialTankT_C);
@@ -323,7 +328,7 @@ int main(int argc, char* argv[])
     }
     if (inletH > 0)
     {
-        outputCode += hpwh.setInletByFraction(inletH);
+        hpwh.setInletByFraction(inletH);
     }
     if (newTankSize > 0)
     {
@@ -331,7 +336,7 @@ int main(int argc, char* argv[])
     }
     if (tot_limit > 0)
     {
-        outputCode += hpwh.setTimerLimitTOT(tot_limit);
+        hpwh.setTimerLimitTOT(tot_limit);
     }
     if (useSoC)
     {
@@ -339,13 +344,7 @@ int main(int argc, char* argv[])
         {
             cout << "If useSoC is true need an SoCschedule.csv file \n";
         }
-        outputCode += hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
-    }
-
-    if (outputCode != 0)
-    {
-        cout << "Control file testInfo.txt has unsettable specifics in it. \n";
-        exit(1);
+        hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
     }
 
     // ----------------------Open the Output Files and Print the Header----------------------------
@@ -420,11 +419,7 @@ int main(int argc, char* argv[])
         // Change SoC schedule
         if (useSoC)
         {
-            if (hpwh.setTargetSoCFraction(allSchedules[6][i]) != 0)
-            {
-                cout << "ERROR: Can not set the target state of charge fraction. \n";
-                exit(1);
-            }
+            hpwh.setTargetSoCFraction(allSchedules[6][i]);
         }
 
         // Mix down for yearly tests with large compressors
@@ -440,22 +435,15 @@ int main(int argc, char* argv[])
         }
 
         // Run the step
-        try
-        {
-            hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
-                            GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-                            airTemp2,                     // Ambient Temp (C)
-                            allSchedules[3][i],           // External Temp (C)
-                            drStatus, // DDR Status (now an enum. Fixed for now as allow)
-                            1. * GAL_TO_L(allSchedules[1][i]),
-                            allSchedules[0][i],
-                            vectptr);
-        }
-        catch (...)
-        {
-            cout << "Error in hpwh.runOneStep.\n";
-            exit(1);
-        }
+        hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
+                        GAL_TO_L(allSchedules[1][i]), // Flow in gallons
+                        airTemp2,                     // Ambient Temp (C)
+                        allSchedules[3][i],           // External Temp (C)
+                        drStatus, // DDR Status (now an enum. Fixed for now as allow)
+                        1. * GAL_TO_L(allSchedules[1][i]),
+                        allSchedules[0][i],
+                        vectptr);
+
         if (!hpwh.isEnergyBalanced(
                 GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
         {

@@ -23,16 +23,11 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
-    double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if ((!hpwh->haveInletT) && (!useCostantMains))
     {
-        soCFraction = HPWH_ABORT;
+        hpwh->send_error("SoC-based heating logic used without constant mains.");
     }
-    else
-    {
-        soCFraction = hpwh->getSoCFraction();
-    }
-    return soCFraction;
+    return hpwh->getSoCFraction();
 }
 
 double HPWH::SoCBasedHeatingLogic::getMainsT_C()
@@ -49,17 +44,12 @@ double HPWH::SoCBasedHeatingLogic::getMainsT_C()
 
 double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() { return tempMinUseful_C; }
 
-int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value)
-{
-    decisionPoint = value;
-    return 0;
-}
+void HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
 
-int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
+void HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
 {
     constantMains_C = mains_C;
     useCostantMains = true;
-    return 0;
 }
 
 double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
@@ -169,15 +159,11 @@ double HPWH::TempBasedHeatingLogic::getTankValue()
     return hpwh->getAverageTankTemp_C(nodeWeights);
 }
 
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
-{
-    decisionPoint = value;
-    return 0;
-}
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
 {
     isAbsolute = absolute;
-    return setDecisionPoint(value);
+    setDecisionPoint(value);
 }
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()

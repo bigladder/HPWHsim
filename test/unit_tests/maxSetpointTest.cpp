@@ -25,8 +25,8 @@ TEST(MaxSetpointTest, resistanceTank)
     EXPECT_EQ(expectedRE_maxT_C, num);
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(99.));
 }
 
 /*
@@ -37,7 +37,7 @@ TEST(MaxSetpointTest, scalableCompressor)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "TamScalable_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num;
     std::string why;
@@ -48,8 +48,8 @@ TEST(MaxSetpointTest, scalableCompressor)
     EXPECT_TRUE(hpwh.isNewSetpointPossible(100, num, why));   // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(50.));
 }
 
 /*
@@ -60,7 +60,7 @@ TEST(MaxSetpointTest, NyleC90A_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "NyleC90A_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num;
     std::string why;
@@ -73,8 +73,8 @@ TEST(MaxSetpointTest, NyleC90A_SP)
         hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(50.));
 }
 
 /*
@@ -85,7 +85,7 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num;
     std::string why;
@@ -98,8 +98,8 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
         hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(50.), 0);
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(50.));
 }
 
 /*
@@ -110,7 +110,7 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num;
     std::string why;
@@ -129,9 +129,9 @@ TEST(MaxSetpointTest, QAHV_N136TAU_HPB_SP)
         hpwh.isNewSetpointPossible(maxQAHVSetpoint - qAHVHotSideTemepratureOffset, num, why));
 
     // Check this carries over into setting the setpoint.
-    EXPECT_EQ(hpwh.setSetpoint(101), HPWH::HPWH_ABORT);
-    EXPECT_EQ(hpwh.setSetpoint(maxQAHVSetpoint), HPWH::HPWH_ABORT);
-    EXPECT_EQ(hpwh.setSetpoint(maxQAHVSetpoint - qAHVHotSideTemepratureOffset), 0);
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101));
+    EXPECT_ANY_THROW(hpwh.setSetpoint(maxQAHVSetpoint));
+    EXPECT_NO_THROW(hpwh.setSetpoint(maxQAHVSetpoint - qAHVHotSideTemepratureOffset));
 }
 
 /*
@@ -142,7 +142,7 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithCAHP120"; // Hybrid unit with a compressor with R134A
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num;
     std::string why;
@@ -154,8 +154,8 @@ TEST(MaxSetpointTest, AOSmithCAHP120)
     EXPECT_EQ(expectedRE_maxT_C, num);                        // Max is boiling
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);                 // Can go lower than boiling though
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(99.));   // Can go lower than boiling though
 }
 
 /*
@@ -166,7 +166,7 @@ TEST(MaxSetpointTest, StorageTank)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "StorageTank"; // Hybrid unit with a compressor with R134A
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
     ;
 
     double num;
@@ -178,8 +178,8 @@ TEST(MaxSetpointTest, StorageTank)
     EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));  // Can go low, albiet dumb
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), 0); // Can go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), 0);  // Can go lower than boiling though
+    EXPECT_NO_THROW(hpwh.setSetpoint(101.)); // Can go above boiling
+    EXPECT_NO_THROW(hpwh.setSetpoint(99.));  // Can go lower than boiling though
 }
 
 /*
@@ -190,7 +190,7 @@ TEST(MaxSetpointTest, Sanden80)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Sanden80"; // Fixed setpoint model
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double num, num1;
     std::string why;
@@ -206,10 +206,11 @@ TEST(MaxSetpointTest, Sanden80)
         num, num1, why)); // Check that the setpoint can be set to the setpoint.
 
     // Check this carries over into setting the setpoint
-    EXPECT_EQ(hpwh.setSetpoint(101.), HPWH::HPWH_ABORT); // Can't go above boiling
-    EXPECT_EQ(hpwh.setSetpoint(99.), HPWH::HPWH_ABORT);  // Can go lower than boiling though
-    EXPECT_EQ(hpwh.setSetpoint(60.), HPWH::HPWH_ABORT);  // Can't go to normalish
-    EXPECT_EQ(hpwh.setSetpoint(10.), HPWH::HPWH_ABORT);  // Can't go low, albiet dumb
+    EXPECT_ANY_THROW(hpwh.setSetpoint(101.)); // Can't go above boiling
+    EXPECT_ANY_THROW(hpwh.setSetpoint(99.));  //
+    EXPECT_ANY_THROW(hpwh.setSetpoint(60.));  // Can't go to normalish
+    EXPECT_ANY_THROW(hpwh.setSetpoint(10.));  // Can't go low, albiet dumb
+    EXPECT_ANY_THROW(hpwh.setSetpoint(10.));  // Can't go low, albiet dumb
 }
 
 /*
@@ -242,7 +243,7 @@ TEST(UtilityTest, setTemperatures)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "Rheem2020Prem50"; // 12-node model
-    EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     // test 1
     {

@@ -33,7 +33,7 @@ TEST_F(FixedSizeTest, tankSizeFixed)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_NO_THROW(hpwh.initPreset(sModelName)) << "Could not initialize model " << sModelName;
+        hpwh.initPreset(sModelName);
 
         // get the initial tank size
         double intitialTankSize_gal = hpwh.getTankSize(HPWH::UNITS_GAL);
@@ -42,16 +42,17 @@ TEST_F(FixedSizeTest, tankSizeFixed)
         double targetTankSize_gal = intitialTankSize_gal + 100.;
 
         // change the tank size
-        hpwh.setTankSize(targetTankSize_gal, HPWH::UNITS_GAL);
 
         // change tank size (unforced)
         if (hpwh.isTankSizeFixed())
         { // tank size should not have changed
+            EXPECT_ANY_THROW(hpwh.setTankSize(targetTankSize_gal, HPWH::UNITS_GAL));
             EXPECT_NEAR(intitialTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL), tol)
                 << "The tank size has changed when it should not.";
         }
         else
         { // tank size should have changed to target value
+            EXPECT_NO_THROW(hpwh.setTankSize(targetTankSize_gal, HPWH::UNITS_GAL));
             EXPECT_NEAR(targetTankSize_gal, hpwh.getTankSize(HPWH::UNITS_GAL), tol)
                 << "The tank size did not change to the target value.";
         }
