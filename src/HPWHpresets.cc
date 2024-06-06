@@ -142,7 +142,6 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     // set tank size function has bounds checking
     tank->volumeFixed = false;
     setTankSize(tankVol_L);
-    canScale = true;
 
     setpoint_C = F_TO_C(127.0);
     resetTankToSetpoint(); // start tank off at setpoint
@@ -1275,7 +1274,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = EXTRAP_NEAREST;
+        compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
@@ -2728,8 +2727,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTS50)
         {
-            tankVolume_L = GAL_TO_L(45.6);
-            tankUA_kJperHrC = 6.403;
+            tank->volume_L = GAL_TO_L(45.6);
+            tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
@@ -3396,8 +3395,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.0);
+            tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
