@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
             hpwh.init(rswh);
             std::cout << std::endl << "JSON loaded successfully." << std::endl;
-            exit(1);
+            //exit(1);
         }
         catch (...)
         {

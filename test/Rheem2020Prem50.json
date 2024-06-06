@@ -49,6 +49,7 @@
     "heat_source_configurations": [
       {
         "heat_source_type": "RESISTANCE",
+        "label": "top resistor",
         "heat_source": {
           "metadata": {
             "data_model": "ASHRAE205",
@@ -104,12 +105,12 @@
           }
         ],
         "maximum_setpoint": 373.15,
-        "label": "top resistor",
         "followed_by_heat_source_label": "compressor",
         "companion_heat_source_label": "compressor"
       },
       {
         "heat_source_type": "RESISTANCE",
+        "label": "bottom resistor",
         "heat_source": {
           "metadata": {
             "data_model": "ASHRAE205",
@@ -172,12 +173,12 @@
         ],
         "maximum_setpoint": 373.15,
         "hysteresis_temperature_difference": 4,
-        "label": "bottom resistor",
         "backup_heat_source_label": "condenser",
         "followed_by_heat_source_label": "condenser"
       },
       {
         "heat_source_type": "CONDENSER",
+        "label": "condenser",
         "heat_source": {
           "metadata": {
             "data_model": "ASHRAE205",
@@ -197,7 +198,6 @@
               "model_number": "XXXXXX"
             }
           },
-          "label": "condenser",
           "performance": {
             "performance_map": {
               "grid_variables": {
