@@ -14,21 +14,39 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
 
     volume_L = tank_in.volume_L;
     UA_kJperHrC = tank_in.UA_kJperHrC;
+    fittingsUA_kJperHrC = 0.;
     nodeTs_C = tank_in.nodeTs_C;
     nextNodeTs_C = tank_in.nextNodeTs_C;
     mixesOnDraw = tank_in.mixesOnDraw;
     mixBelowFractionOnDraw = tank_in.mixBelowFractionOnDraw;
     doInversionMixing = tank_in.doInversionMixing;
-
+    hasHeatExchanger = false;
     return *this;
 }
 
 void HPWH::Tank::init(hpwh_data_model::rstank_ns::RSTANK& rstank)
 {
-    auto& performance = rstank.performance;
-    setNumNodes(performance.number_of_nodes);
+    auto& perf = rstank.performance;
+    setNumNodes(perf.number_of_nodes_is_set ? perf.number_of_nodes : 12);
+    checkSetValue(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
+    checkSetValue(UA_kJperHrC, perf.ua_is_set, perf.ua, 0.);
+    checkSetValue(fittingsUA_kJperHrC, perf.fittings_ua_is_set, perf.fittings_ua, 0.);
+    checkSetValue(mixBelowFractionOnDraw,
+                  perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
+                  perf.bottom_fraction_of_tank_mixing_on_draw,
+                  0.);
+    checkSetValue(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
 
-    //heat_exchanger_effectiveness
+    hasHeatExchanger = perf.heat_exchanger_effectiveness_is_set;
+    if (hasHeatExchanger)
+    {
+        checkSetValue(heatExchangerEffectiveness,
+                      perf.heat_exchanger_effectiveness_is_set,
+                      perf.heat_exchanger_effectiveness,
+                      1.);
+    }
+
+    // bool diameter_is_set;
 }
 
 void HPWH::Tank::setAllDefaults()
@@ -478,7 +496,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
     // Standby losses from the sides of the tank
     {
         auto standbyLossRate_kJperHrC =
-            (UA_kJperHrC * fracAreaSide + hpwh->getFittingsUA_kJperHrC()) / getNumNodes();
+            (UA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
         for (int i = 0; i < getNumNodes(); i++)
         {
             double losses_kJ =

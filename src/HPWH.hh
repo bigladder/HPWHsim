@@ -83,11 +83,10 @@ class HPWH : public Courier::Sender
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH(const std::shared_ptr<Courier::Courier>& courier =
-             std::make_shared<DefaultCourier>(),
-            const std::string& name_in = "hpwh"); /**< default constructor */
-    HPWH(const HPWH& hpwh);                       /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh);            /**< assignment operator  */
+    HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
+         const std::string& name_in = "hpwh"); /**< default constructor */
+    HPWH(const HPWH& hpwh);                    /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
@@ -610,10 +609,7 @@ class HPWH : public Courier::Sender
     int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
-    /// UA of the fittings
-    double fittingsUA_kJperHrC;
-
-    double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC; }
+    double getFittingsUA_kJperHrC() const;
 
     int getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const;
     int setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/);
@@ -1193,12 +1189,12 @@ class HPWH : public Courier::Sender
 }; // end of HPWH class
 
 constexpr double BTUperKWH =
-    3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
-constexpr double FperC = 9. / 5.;   // degF / degC
-constexpr double offsetF = 32.;     // degF offset
-constexpr double absolute_zeroT_C = -273.15; // absolute zero (degC)
-constexpr double sec_per_min = 60.; // s / min
-constexpr double min_per_hr = 60.;  // min / hr
+    3412.14163312794;             // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
+constexpr double FperC = 9. / 5.; // degF / degC
+constexpr double offsetF = 32.;   // degF offset
+constexpr double absolute_zeroT_C = -273.15;            // absolute zero (degC)
+constexpr double sec_per_min = 60.;                     // s / min
+constexpr double min_per_hr = 60.;                      // min / hr
 constexpr double sec_per_hr = sec_per_min * min_per_hr; // s / hr
 constexpr double L_per_gal = 3.78541;                   // liters / gal
 constexpr double ft_per_m = 3.2808;                     // ft / m
@@ -1210,7 +1206,7 @@ constexpr double BTUm2C_per_kWhft2F =
 inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
 inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
 inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
-inline double K_TO_C(double kelvin) {return (kelvin + absolute_zeroT_C);}
+inline double K_TO_C(double kelvin) { return (kelvin + absolute_zeroT_C); }
 inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
 inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }

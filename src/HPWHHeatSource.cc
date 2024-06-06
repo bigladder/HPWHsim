@@ -13,7 +13,8 @@
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in, const std::shared_ptr<Courier::Courier> courier,
+HPWH::HeatSource::HeatSource(HPWH* hpwh_in,
+                             const std::shared_ptr<Courier::Courier> courier,
                              const std::string& name_in)
     : Sender("HeatSource", name_in, courier)
     , hpwh(hpwh_in)
@@ -48,7 +49,9 @@ HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Sender(heatSource)
     *this = heatSource;
 }
 
-void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rscondenserwaterheatsource)
+void HPWH::HeatSource::init(
+    hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+        rscondenserwaterheatsource)
 {
     auto& perf = rscondenserwaterheatsource.performance;
     switch (perf.coil_configuration)
@@ -79,9 +82,11 @@ void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
     {
         auto& perf_points = perf.performance_points;
         perfMap.reserve(perf_points.size());
-        for (auto& perf_point: perf_points)
+        for (auto& perf_point : perf_points)
         {
-            PerfPoint perfPoint = {perf_point.heat_source_temperature, perf_point.input_power_coefficients, perf_point.cop_coefficients};
+            PerfPoint perfPoint = {perf_point.heat_source_temperature,
+                                   perf_point.input_power_coefficients,
+                                   perf_point.cop_coefficients};
             perfMap.push_back(perfPoint);
         }
         useBtwxtGrid = false;
@@ -113,24 +118,30 @@ void HPWH::HeatSource::init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
     }
 }
 
-void HPWH::HeatSource::init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rsresistancewaterheatsource)
+void HPWH::HeatSource::init(
+    hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+        rsresistancewaterheatsource)
 {
     auto& perf = rsresistancewaterheatsource.performance;
     configuration = CONFIG_SUBMERGED;
     setConstantElementPower(perf.input_power);
 }
 
-void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
+void HPWH::HeatSource::init(
+    hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
 {
     auto& config = heatsourceconfiguration;
     setCondensity(config.heat_distribution);
     checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
     checkSetValue(isVIP, config.is_vip_is_set, config.is_vip, false);
-    checkSetValue(hysteresis_dC, config.hysteresis_temperature_difference_is_set, config.hysteresis_temperature_difference, 0.);
+    checkSetValue(hysteresis_dC,
+                  config.hysteresis_temperature_difference_is_set,
+                  config.hysteresis_temperature_difference,
+                  0.);
 
     if (config.turn_on_logic_is_set)
     {
-        for (auto& turn_on_logic: config.turn_on_logic)
+        for (auto& turn_on_logic : config.turn_on_logic)
         {
             auto heatingLogic = HeatingLogic::make(turn_on_logic, hpwh);
             if (heatingLogic)
@@ -142,7 +153,7 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
 
     if (config.shut_off_logic_is_set)
     {
-        for (auto& shut_off_logic: config.shut_off_logic)
+        for (auto& shut_off_logic : config.shut_off_logic)
         {
             auto heatingLogic = HeatingLogic::make(shut_off_logic, hpwh);
             if (heatingLogic)
@@ -161,9 +172,10 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
         }
     }
 
-    switch(config.heat_source_type)
+    switch (config.heat_source_type)
     {
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:{
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
+    {
 
         typeOfHeatSource = TYPE_compressor;
         auto rsconendserwaterheatsource_ptr = dynamic_cast<
@@ -172,16 +184,18 @@ void HPWH::HeatSource::init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSou
         init(*rsconendserwaterheatsource_ptr);
         break;
     }
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:{
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
+    {
         typeOfHeatSource = TYPE_resistance;
         auto rsresistancewaterheatsource_ptr = dynamic_cast<
             hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
             config.heat_source.get());
         init(*rsresistancewaterheatsource_ptr);
-    break;
+        break;
     }
     default:
-    {}
+    {
+    }
     }
 }
 
@@ -613,8 +627,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 {
     std::sort(perfMap.begin(),
               perfMap.end(),
-              [](const PerfPoint& a, const PerfPoint& b) -> bool
-              { return a.T_F < b.T_F; });
+              [](const PerfPoint& a, const PerfPoint& b) -> bool { return a.T_F < b.T_F; });
 }
 
 double HPWH::HeatSource::getTankTemp() const

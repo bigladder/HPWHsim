@@ -136,7 +136,8 @@ void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 }
 
 // public HPWH functions
-HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/) : Sender("HPWH", name_in, courier)
+HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/)
+    : Sender("HPWH", name_in, courier)
 {
     tank = std::make_shared<Tank>(this, courier);
     setAllDefaults();
@@ -157,7 +158,6 @@ void HPWH::setAllDefaults()
     doTempDepression = false;
     locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
 
-    fittingsUA_kJperHrC = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
     timerTOT = 0.;
@@ -183,8 +183,6 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     {
         heatSource.hpwh = this;
     }
-
-    fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
 
     setpoint_C = hpwh.setpoint_C;
 
@@ -1157,39 +1155,39 @@ int HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
     return 0;
 }
 
-int HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
+int HPWH::setFittingsUA(double fittingsUA, UNITS units /*=UNITS_kJperHrC*/)
 {
     if (units == UNITS_kJperHrC)
     {
     }
     else if (units == UNITS_BTUperHrF)
     {
-        UA = UAf_TO_UAc(UA);
+        fittingsUA = UAf_TO_UAc(fittingsUA);
     }
     else
     {
         send_warning("Incorrect unit specification for setFittingsUA.");
         return HPWH_ABORT;
     }
-    fittingsUA_kJperHrC = UA;
+    tank->setFittingsUA_kJperHrC(fittingsUA);
     return 0;
 }
 
-int HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
+int HPWH::getFittingsUA(double& fittingsUA, UNITS units /*=UNITS_kJperHrC*/) const
 {
-    UA = fittingsUA_kJperHrC;
+    fittingsUA = tank->getFittingsUA_kJperHrC();
     if (units == UNITS_kJperHrC)
     {
         // UA is already in correct units
     }
     else if (units == UNITS_BTUperHrF)
     {
-        UA = UA / UAf_TO_UAc(1.);
+        fittingsUA = fittingsUA / UAf_TO_UAc(1.);
     }
     else
     {
         send_warning("Incorrect unit specification for getUA.");
-        UA = -1.;
+        fittingsUA = -1.;
         return HPWH_ABORT;
     }
     return 0;
@@ -4237,7 +4235,7 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         HeatSource heatSource(this);
         heatSource.init(configuration);
         heatSources[iHeatSource] = heatSource;
-        heat_source_lookup[configuration.label]  = iHeatSource;
+        heat_source_lookup[configuration.label] = iHeatSource;
     }
 
     // set associations between heat sources
@@ -4264,7 +4262,22 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         }
     }
 
-    std::cout << "\n";
+    // calculate oft-used derived values
+    calcDerivedValues();
+    if (checkInputs() == HPWH_ABORT)
+    {
+        send_error("Invalid input.");
+    }
+    resetTankToSetpoint();
+    isHeating = false;
+    for (int i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i].isOn)
+        {
+            isHeating = true;
+        }
+        heatSources[i].sortPerformanceMap();
+    }
 }
 
 //-----------------------------------------------------------------------------
