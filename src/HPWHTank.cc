@@ -82,23 +82,17 @@ void HPWH::Tank::calcSizeConstants()
 
 double HPWH::Tank::getVolume_L() const { return volume_L; }
 
-int HPWH::Tank::setVolume_L(double volume, bool forceChange /*=false*/)
+void HPWH::Tank::setVolume_L(double volume_L_in, bool forceChange /*=false*/)
 {
     if (volumeFixed && !forceChange)
     {
-        send_warning("Can not change the tank size for your currently selected model.");
-        return HPWH_ABORT;
+        send_error("Can not change the tank size for your currently selected model.");
     }
-    if (volume <= 0)
+    if (volume_L_in <= 0)
     {
         send_error("You have attempted to set the tank volume outside of bounds.");
-        return HPWH_ABORT;
     }
-    else
-    {
-        volume_L = volume;
-    }
-    return 0;
+    volume_L = volume_L_in;
 }
 
 /// set the UA
@@ -121,14 +115,13 @@ double HPWH::Tank::getUA_kJperHrC() const { return UA_kJperHrC; }
 
 double HPWH::Tank::getRadius_m() const { return getRadius_m(volume_L); }
 
-int HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
+void HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
 {
     double newA = getSurfaceArea_m2(volume_L_in);
     double oldA = getSurfaceArea_m2();
 
     setVolume_L(volume_L_in, forceChange);
     setUA_kJperHrC(UA_kJperHrC * (newA / oldA));
-    return 0;
 }
 
 /*static*/ double HPWH::Tank::getSurfaceArea_m2(double vol)
@@ -150,20 +143,16 @@ void HPWH::Tank::setNumNodes(const std::size_t num_nodes)
     nextNodeTs_C.resize(num_nodes);
 }
 
-int HPWH::Tank::setNodeTs_C(const std::vector<double>& nodeTs_C_in)
+void HPWH::Tank::setNodeTs_C(const std::vector<double>& nodeTs_C_in)
 {
     std::size_t numSetNodes = nodeTs_C_in.size();
     if (numSetNodes == 0)
     {
-        send_warning("No temperatures provided.");
-        return HPWH_ABORT;
+        send_error("No temperatures provided.");
     }
 
     // set node temps
-    if (!resampleIntensive(nodeTs_C, nodeTs_C_in))
-        return HPWH_ABORT;
-
-    return 0;
+    resampleIntensive(nodeTs_C, nodeTs_C_in);
 }
 
 double HPWH::Tank::getNodeT_C(int nodeNum) const
@@ -265,21 +254,19 @@ int HPWH::Tank::getInletHeight(int whichInlet) const
     {
         return inlet2Height;
     }
-
-    send_warning("Invalid inlet chosen in getInletHeight.");
-    return HPWH_ABORT;
-}
-
-int HPWH::Tank::setDoInversionMixing(bool doInvMix)
-{
-    doInversionMixing = doInvMix;
+    else
+        send_error("Invalid inlet chosen in getInletHeight.");
     return 0;
 }
 
-int HPWH::Tank::setDoConduction(bool doCondu)
+void HPWH::Tank::setDoInversionMixing(bool doInversionMixing_in)
 {
-    doConduction = doCondu;
-    return 0;
+    doInversionMixing = doInversionMixing_in;
+}
+
+void HPWH::Tank::setDoConduction(bool doConduction_in)
+{
+    doConduction = doConduction_in;
 }
 
 void HPWH::Tank::mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
@@ -545,28 +532,25 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
 
 } // end updateNodes
 
-int HPWH::Tank::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
+void HPWH::Tank::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
 {
     if (fractionalHeight > 1. || fractionalHeight < 0.)
     {
-        send_warning("Out of bounds fraction for setInletByFraction.");
-        return HPWH_ABORT;
+        send_error("Out of bounds fraction for setInletByFraction.");
     }
 
     int node = (int)std::floor(getNumNodes() * fractionalHeight);
     inletNum = (node == getNumNodes()) ? getIndexTopNode() : node;
-
-    return 0;
 }
 
-int HPWH::Tank::setInletByFraction(double fractionalHeight)
+void HPWH::Tank::setInletByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
+    setNodeNumFromFractionalHeight(fractionalHeight, inletHeight);
 }
 
-int HPWH::Tank::setInlet2ByFraction(double fractionalHeight)
+void HPWH::Tank::setInlet2ByFraction(double fractionalHeight)
 {
-    return setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
+    setNodeNumFromFractionalHeight(fractionalHeight, inlet2Height);
 }
 
 void HPWH::Tank::checkForInversion()
@@ -585,12 +569,10 @@ double HPWH::Tank::calcSoCFraction(double tMains_C, double tMinUseful_C, double 
     if (tMains_C >= tMinUseful_C)
     {
         send_warning("tMains_C is greater than or equal tMinUseful_C.");
-        return HPWH_ABORT;
     }
     if (tMinUseful_C > tMax_C)
     {
         send_warning("tMinUseful_C is greater tMax_C.");
-        return HPWH_ABORT;
     }
 
     double chargeEquivalent = 0.;

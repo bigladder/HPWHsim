@@ -148,11 +148,14 @@ void HPWH::setAllDefaults()
     tank->setAllDefaults();
     heatSources.clear();
 
+    canScale = false;
+    member_inletT_C = -1.; // invalid unit setInletT called
+    haveInletT = false;
+
     isHeating = false;
     setpointFixed = false;
 
     member_inletT_C = -1.; // invalid unit setInletT called
-    haveInletT = false;
     currentSoCFraction = 1.;
     doTempDepression = false;
     locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
@@ -207,7 +210,7 @@ HPWH::~HPWH() {}
 
 HPWH::HeatSource* HPWH::addHeatSource(const std::string& name_in)
 {
-    heatSources.emplace_back(name_in, this, get_courier());
+    heatSources.emplace_back(this, get_courier(), name_in);
     return &heatSources.back();
 }
 
@@ -496,13 +499,6 @@ void HPWH::runOneStep(double drawVolume_L,
     }
 
     tank->checkForInversion();
-#if !NDEBUG
-    // cursory check for inverted temperature profile
-    if (tankTemps_C[getNumNodes() - 1] < tankTemps_C[0])
-    {
-        send_debug("The top of the tank is cooler than the bottom.");
-    }
-#endif
 
     // Handle DR timer
     prevDRstatus = DRstatus;
@@ -878,28 +874,6 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
     return returnVal;
 }
 
-double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
-{
-    // Note that volume is ignored in here since with even nodes it cancels out of the SoC
-    // fractional equation
-    if (tMains_C >= tMinUseful_C)
-    {
-        send_warning("tMains_C is greater than or equal tMinUseful_C.");
-    }
-    if (tMinUseful_C > tMax_C)
-    {
-        send_warning("tMinUseful_C is greater tMax_C.");
-    }
-
-    double chargeEquivalent = 0.;
-    for (auto& T : tankTemps_C)
-    {
-        chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, T);
-    }
-    double maxSoC = getNumNodes() * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
-    return chargeEquivalent / maxSoC;
-}
-
 double HPWH::getSoCFraction() const { return currentSoCFraction; }
 
 double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
@@ -946,7 +920,7 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
     return result;
 }
 
-int HPWH::resetTankToSetpoint() { return tank->setNodeT_C(setpoint_C); }
+void HPWH::resetTankToSetpoint() { tank->setNodeT_C(setpoint_C); }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
@@ -994,7 +968,9 @@ void HPWH::setAirFlowFreedom(double fanFraction)
 
 void HPWH::setDoTempDepression(bool doTempDepress) { doTempDepression = doTempDepress; }
 
-int HPWH::setTankSize_adjustUA(double volume, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
+void HPWH::setTankSize_adjustUA(double volume,
+                                UNITS units /*=UNITS_L*/,
+                                bool forceChange /*=false*/)
 {
     switch (units)
     {
@@ -1006,51 +982,31 @@ int HPWH::setTankSize_adjustUA(double volume, UNITS units /*=UNITS_L*/, bool for
     default:
         send_error("Invalid units.");
     }
-    return tank->setVolumeAndAdjustUA(volume, forceChange);
+    tank->setVolumeAndAdjustUA(volume, forceChange);
 }
 
 /*static*/ double
 HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUnits /*=UNITS_FT2*/)
 {
-    if (volUnits == UNITS_L)
+    switch (volUnits)
     {
-    }
-    else if (volUnits == UNITS_GAL)
-    // returns tank surface area, old defualt was in ft2
-    // Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith,
-    // HTP, Rheem, and Niles. Corresponds to the inner tank with volume tankVolume_L with the
-    // assumption that the aspect ratio is the same as the outer dimenisions of the whole unit.
-    double radius = getTankRadius(vol, volUnits, UNITS_FT);
-
-    double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
-    if (value >= 0.)
-    {
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
         vol = GAL_TO_L(vol);
+        break;
+    default:;
     }
-    else
-    {
-        return HPWH_ABORT;
-    }
+
     double value = Tank::getSurfaceArea_m2(vol);
-    if (surfAUnits == UNITS_M2)
+    switch (surfAUnits)
     {
-    }
-    else if (surfAUnits == UNITS_FT2)
-    {
-        value = M2_TO_FT2(value);
-    }
-    else
-    {
-        return HPWH_ABORT;
-        switch (surfAUnits)
-        {
-        case UNITS_FT2:
-            break;
-        case UNITS_M2:
-            value = FT2_TO_M2(value);
-            break;
-        default:;
-        }
+    case UNITS_FT2:
+        break;
+    case UNITS_M2:
+        value = FT2_TO_M2(value);
+        break;
+    default:;
     }
     return value;
 }
@@ -1058,23 +1014,15 @@ HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUni
 double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 {
     double value = Tank::getSurfaceArea_m2(tank->volume_L);
-    if (value < 0.)
+    switch (units)
     {
-        send_error("Incorrect value for getTankSurfaceArea.");
-        send_warning(fmt::format("Invalid volume for getTankSurfaceArea.", 0));
-        value = HPWH_ABORT;
-    }
-    if (units == UNITS_M2)
-    {
-    }
-    else if (units == UNITS_FT2)
-    {
+    case UNITS_M2:
+        break;
+    case UNITS_FT2:
         value = M2_TO_FT2(value);
-    }
-    else
-    {
-        send_warning("Incorrect unit specification for setTankSize_adjustUA.");
-        return HPWH_ABORT;
+        break;
+    default:
+        send_error("Invalid units.");
     }
     return value;
 }
@@ -1082,210 +1030,123 @@ double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
 /*static*/ double
 HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /*=UNITS_FT*/)
 {
-    if (volUnits == UNITS_L)
-{ // returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
-    // Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith,
-    // HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is the same is the
-    // actual tank.
-    double volft3 = L_TO_FT3(vol);
     switch (volUnits)
     {
     case UNITS_L:
         break;
     case UNITS_GAL:
-        volft3 = L_TO_FT3(GAL_TO_L(vol));
+        vol = GAL_TO_L(vol);
         break;
     default:;
     }
 
-    double value = -1.;
-    if (volft3 >= 0.)
-    {
-    }
-    else if (volUnits == UNITS_GAL)
-    {
-        vol = GAL_TO_L(vol);
-    }
-    else
-    {
-        return HPWH_ABORT;
-    }
     double radius = Tank::getRadius_m(vol);
-    if (radiusUnits == UNITS_M)
+    switch (radiusUnits)
     {
-    }
-    else if (radiusUnits == UNITS_FT)
-    {
+    case UNITS_M:
+        break;
+    case UNITS_FT:
         radius = FT_TO_M(radius);
-        value = pow(volft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
-        switch (radiusUnits)
-        {
-        case UNITS_FT:
-            break;
-
-        case UNITS_M:
-            value = FT_TO_M(value);
-            break;
-        default:;
-        }
-    }
-    else
-    {
-        return HPWH_ABORT;
+        break;
+    default:;
     }
     return radius;
 }
 
 double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
 {
-    double value = getTankRadius(tank->getVolume_L(), UNITS_L, units);
-    if (value < 0.)
-    {
-        send_error("Negative value for getTankRadius.");
-    }
-    return value;
+    return getTankRadius(tank->getVolume_L(), UNITS_L, units);
 }
 
 bool HPWH::isTankSizeFixed() const { return tank->volumeFixed; }
 
-void HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
+void HPWH::setTankSize(double volume, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
 {
-    if (isTankSizeFixed() && !forceChange)
+    switch (units)
     {
-        send_error("Can not change the tank size for your currently selected model.");
+    case UNITS_L:
+        break;
+    case UNITS_GAL:
+        volume = GAL_TO_L(volume);
+        break;
+    default:
+        send_error("Invalid units.");
     }
-    if (HPWH_size <= 0)
-    {
-        send_error("You have attempted to set the tank volume outside of bounds.");
-    }
-    else
-    {
-        switch (units)
-        {
-        case UNITS_L:
-            tankVolume_L = HPWH_size;
-            break;
-
-        case UNITS_GAL:
-            tankVolume_L = GAL_TO_L(HPWH_size);
-            break;
-        default:
-            send_error("Invalid units.");
-        }
-    if (units == UNITS_L)
-    {
-    }
-    else if (units == UNITS_GAL)
-    {
-        HPWH_size = GAL_TO_L(HPWH_size);
-    }
-    else
-    {
-        send_warning("Incorrect unit specification for setTankSize.");
-        return HPWH_ABORT;
-    }
-    tank->setVolume_L(HPWH_size, forceChange);
-
+    tank->setVolume_L(volume, forceChange);
     tank->calcSizeConstants();
-
-    return 0;
 }
 
-int HPWH::setDoInversionMixing(bool doInvMix) { return tank->setDoInversionMixing(doInvMix); }
-
-int HPWH::setDoConduction(bool doCondu) { return tank->setDoConduction(doCondu); }
-    calcSizeConstants();
-}
 void HPWH::setDoInversionMixing(bool doInversionMixing_in)
 {
-    doInversionMixing = doInversionMixing_in;
+    tank->setDoInversionMixing(doInversionMixing_in);
 }
 
-void HPWH::setDoConduction(bool doConduction) { tank->setDoConduction(doConduction); }
+void HPWH::setDoConduction(bool doConduction_in) { tank->setDoConduction(doConduction_in); }
 
 void HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
 {
     switch (units)
     {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UAf_TO_UAc(UA);
-    }
-    else
-    {
-        send_warning("Incorrect unit specification for setUA.");
-        return HPWH_ABORT;
     case UNITS_kJperHrC:
-        tankUA_kJperHrC = UA;
         break;
     case UNITS_BTUperHrF:
-        tankUA_kJperHrC = UAf_TO_UAc(UA);
+        UA = UAf_TO_UAc(UA);
         break;
     default:
         send_error("Invalid units.");
     }
     tank->setUA_kJperHrC(UA);
-    return 0;
 }
 
 void HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
 {
     UA = tank->getUA_kJperHrC();
-    if (units == UNITS_kJperHrC)
-    {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UA / UAf_TO_UAc(1.);
     switch (units)
     {
-    case UNITS_kJperHrC:
-        UA = tankUA_kJperHrC;
+    case UNITS_kJperHrC:;
         break;
     case UNITS_BTUperHrF:
-        UA = tankUA_kJperHrC / UAf_TO_UAc(1.);
+        UA = UA / UAf_TO_UAc(1.);
         break;
     default:
         send_error("Invalid units.");
     }
 }
 
-int HPWH::setFittingsUA(double fittingsUA, UNITS units /*=UNITS_kJperHrC*/)
+void HPWH::setFittingsUA(double fittingsUA, UNITS units /*=UNITS_kJperHrC*/)
 {
-    if (units == UNITS_kJperHrC)
+    switch (units)
     {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
+    case UNITS_kJperHrC:
+        break;
+    case UNITS_BTUperHrF:
         fittingsUA = UAf_TO_UAc(fittingsUA);
-    }
-    else
+        break;
+    default:
         send_error("Invalid units.");
-    tank->setFittingsUA_kJperHrC(fittingsUA)
+    }
+    tank->setFittingsUA_kJperHrC(fittingsUA);
 }
 
-void HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
+void HPWH::getFittingsUA(double& fittingsUA, UNITS units /*=UNITS_kJperHrC*/) const
 {
-    UA = fittingsUA_kJperHrC;
-    if (units == UNITS_kJperHrC)
+    fittingsUA = tank->getFittingsUA_kJperHrC();
+    switch (units)
     {
-        // UA is already in correct units
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UA / UAf_TO_UAc(1.);
-    }
-    else
+    case UNITS_kJperHrC:
+        break;
+    case UNITS_BTUperHrF:
+        fittingsUA = fittingsUA / UAf_TO_UAc(1.);
+        break;
+    default:
         send_error("Invalid units.");
+    }
 }
 
 void HPWH::setExternalInletHeightByFraction(double fractionalHeight)
 {
     setExternalPortHeightByFraction(fractionalHeight, 1);
 }
-
-void HPWH::setExternalOutletHeightByFraction(double fractionalHeight)
 
 void HPWH::setExternalOutletHeightByFraction(double fractionalHeight)
 {
@@ -1309,29 +1170,7 @@ void HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExt
     {
         setNodeNumFromFractionalHeight(fractionalHeight,
                                        heatSources[heatSourceIndex].externalOutletHeight);
-    int returnVal = 0;
-    for (int i = 0; i < getNumHeatSources(); i++)
-    {
-        if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
-        {
-            if (whichExternalPort == 1)
-            {
-                returnVal = tank->setNodeNumFromFractionalHeight(
-                    fractionalHeight, heatSources[i].externalInletHeight);
-            }
-            else
-            {
-                returnVal = tank->setNodeNumFromFractionalHeight(
-                    fractionalHeight, heatSources[i].externalOutletHeight);
-            }
-
-            if (returnVal == HPWH_ABORT)
-            {
-                return returnVal;
-            }
-        }
     }
-    return returnVal;
 }
 
 void HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum)
@@ -1379,22 +1218,6 @@ void HPWH::setTimerLimitTOT(double limit_min)
 
 double HPWH::getTimerLimitTOT_minute() const { return timerLimitTOT; }
 
-int HPWH::getInletHeight(int whichInlet) const
-{
-    auto result = inletHeight;
-    if (whichInlet == 1)
-    {
-    }
-    else if (whichInlet == 2)
-    {
-        result = inlet2Height;
-    }
-    else
-    {
-        send_error("Invalid inlet chosen in getInletHeight.");
-    }
-    return result;
-}
 int HPWH::getInletHeight(int whichInlet) const { return tank->getInletHeight(whichInlet); }
 
 void HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
@@ -1864,6 +1687,7 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C
         break;
     default:
         send_error("Invalid units.");
+    }
     return result;
 }
 
@@ -1889,7 +1713,6 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 {
     // calculate capacity btu/hr, input btu/hr, and cop
     double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
-
 
     if (!hasACompressor())
     {
@@ -2062,7 +1885,7 @@ double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
     case UNITS_L:
         break;
     case UNITS_GAL:
-        volume = L_TO_GAL(tankVolume_L);
+        volume = L_TO_GAL(volume);
         break;
     default:
         send_error("Invalid units.");
@@ -2134,7 +1957,7 @@ double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
     case UNITS_C:
         break;
     case UNITS_F:
-        temp = C_TO_F(outletTemp_C);
+        temp = C_TO_F(temp);
         break;
     default:
         send_error("Invalid units.");
@@ -2203,13 +2026,9 @@ double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeigh
     return tank->getAverageNodeT_C(nodeWeights);
 }
 
-int HPWH::setTankToTemperature(double temp_C) { return tank->setNodeT_C(temp_C); }
+void HPWH::setTankToTemperature(double temp_C) { tank->setNodeT_C(temp_C); }
 
-double HPWH::getTankHeatContent_kJ() const
-{
-    // returns tank heat content relative to 0 C using kJ
-    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getAverageTankTemp_C();
-}
+double HPWH::getTankHeatContent_kJ() const { return tank->getHeatContent_kJ(); }
 
 int HPWH::getModel() const { return model; }
 
@@ -2357,16 +2176,16 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     return 0;
 }
 
-int HPWH::setInletByFraction(double fractionalHeight)
+void HPWH::setInletByFraction(double fractionalHeight)
 {
-    return tank->setInletByFraction(fractionalHeight);
+    tank->setInletByFraction(fractionalHeight);
 }
 
-bool HPWH::isScalable() const { return !(tank->volumeFixed); }
+bool HPWH::isScalable() const { return canScale; }
 
 void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
 {
-    if (!isHPWHScalable())
+    if (!isScalable())
     {
         send_error("Cannot scale the HPWH Capacity or COP.");
     }
@@ -2384,8 +2203,6 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         scaleVector(perfP.inputPower_coeffs, scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
     }
-
-    return 0;
 }
 
 void HPWH::setCompressorOutputCapacity(double newCapacity,
@@ -2799,7 +2616,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
     double qOutWater_kJ =
-        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
+        drawCp_kJperC * (tank->getOutletT_C()  - member_inletT_C); // assumes only one inlet
     double expectedTankHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
         + qInElectrical_kJ        // electrical energy delivered to heat sources
@@ -3010,16 +2827,16 @@ void HPWH::checkInputs()
     }
 
     // Check if the UA is out of bounds
-    if (tankUA_kJperHrC < 0.0)
+    if (tank->UA_kJperHrC < 0.0)
     {
         error_msgs.push(
             fmt::format("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
                         "tankUA_kJperHrC is: {:g}",
-                        tankUA_kJperHrC));
+                        tank->getUA_kJperHrC()));
     }
 
     // Check single-node heat-exchange effectiveness validity
-    if (heatExchangerEffectiveness > 1.)
+    if (tank->heatExchangerEffectiveness > 1.)
     {
         error_msgs.push("Heat-exchanger effectiveness cannot exceed 1.");
     }
@@ -3479,15 +3296,6 @@ void HPWH::initFromFile(string modelName)
         else if (token == "volume")
         {
             line_ss >> tempDouble >> units;
-            tankVolume_L = tempDouble;
-            if (units == "L")
-                ;
-            else if (units == "gal")
-            {
-                tankVolume_L = GAL_TO_L(tempDouble);
-            }
-            else
-                send_warning(fmt::format("Invalid units: {}", token));
             if (units == "gal")
                 tempDouble = GAL_TO_L(tempDouble);
             else if (units == "L")
@@ -3495,7 +3303,6 @@ void HPWH::initFromFile(string modelName)
             else
             {
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
-                return HPWH_ABORT;
             }
             tank->volume_L = tempDouble;
         }
@@ -3505,10 +3312,8 @@ void HPWH::initFromFile(string modelName)
             if (units != "kJperHrC")
             {
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
-                return HPWH_ABORT;
             }
             tank->setUA_kJperHrC(tempDouble);
-            tankUA_kJperHrC = tempDouble;
         }
         else if (token == "depressTemp")
         {
@@ -3550,7 +3355,7 @@ void HPWH::initFromFile(string modelName)
                 send_error(fmt::format("Out of bounds value for {}. Should be between 0 and 1.",
                                        token.c_str()));
             }
-            mixBelowFractionOnDraw = tempDouble;
+            tank->mixBelowFractionOnDraw = tempDouble;
         }
         else if (token == "setpoint")
         {
@@ -4179,14 +3984,12 @@ void HPWH::initFromFile(string modelName)
     // take care of the non-input processing
     model = MODELS_CustomFile;
 
-    tankTemps_C.resize(num_nodes);
+    tank->setNumNodes(num_nodes);
 
     if (hasInitialTankTemp)
         setTankToTemperature(initialTankT_C);
     else
         resetTankToSetpoint();
-
-    nextTankTemps_C.resize(num_nodes);
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -4257,10 +4060,7 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
 
     // calculate oft-used derived values
     calcDerivedValues();
-    if (checkInputs() == HPWH_ABORT)
-    {
-        send_error("Invalid input.");
-    }
+    checkInputs();
     resetTankToSetpoint();
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)

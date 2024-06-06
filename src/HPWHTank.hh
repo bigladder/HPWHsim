@@ -36,13 +36,13 @@ class HPWH::Tank : public Sender
     bool isVolumeFixed() const { return volumeFixed; }
 
     /// set the volume
-    int setVolume_L(double volume_L_in, bool forceChange = false);
+    void setVolume_L(double volume_L_in, bool forceChange = false);
 
     /// get the volume
     double getVolume_L() const;
 
     /// set the tank size and adjust the UA such that U is unchanged
-    int setVolumeAndAdjustUA(double volume_L_in, bool forceChange = false);
+    void setVolumeAndAdjustUA(double volume_L_in, bool forceChange = false);
 
     double getSurfaceArea_m2() const;
 
@@ -131,9 +131,9 @@ class HPWH::Tank : public Sender
     /// get index of the top node
     int getIndexTopNode() const { return getNumNodes() - 1; }
 
-    int setNodeTs_C(const std::vector<double>& nodeTs_C_in);
+    void setNodeTs_C(const std::vector<double>& nodeTs_C_in);
 
-    int setNodeT_C(double T_C) { return setNodeTs_C({T_C}); }
+    void setNodeT_C(double T_C) { setNodeTs_C({T_C}); }
 
     void getNodeTs_C(std::vector<double>& tankTemps) { tankTemps = nodeTs_C; }
 
@@ -149,9 +149,9 @@ class HPWH::Tank : public Sender
 
     double getNthSimTcouple(int iTCouple, int nTCouple) const;
 
-    int setDoInversionMixing(bool doInvMix);
+    void setDoInversionMixing(bool doInversionMixing_in);
 
-    int setDoConduction(bool doCondu);
+    void setDoConduction(bool doConduction_in);
 
     /// False: water is drawn from the tank itself; True: tank provides heat exchange only
     bool hasHeatExchanger;
@@ -182,9 +182,9 @@ class HPWH::Tank : public Sender
                      double inletVol2_L,
                      double inletT2_C);
 
-    int setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
-    int setInletByFraction(double fractionalHeight);
-    int setInlet2ByFraction(double fractionalHeight);
+    void setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
+    void setInletByFraction(double fractionalHeight);
+    void setInlet2ByFraction(double fractionalHeight);
 
     double getStandbyLosses_kJ();
 
