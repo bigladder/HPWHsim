@@ -16,7 +16,7 @@ class HPWH::Tank : public Sender
 
     Tank(HPWH* hpwh_in = NULL,
          const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
-             const std::string& name_in = "tank")
+         const std::string& name_in = "tank")
         : Sender("HeatSource", name_in, courier), hpwh(hpwh_in)
     {
     }
@@ -189,6 +189,16 @@ class HPWH::Tank : public Sender
     double getStandbyLosses_kJ();
 
     double calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const;
+
+    /// UA of the fittings
+    double fittingsUA_kJperHrC;
+
+    double getFittingsUA_kJperHrC() { return fittingsUA_kJperHrC; }
+
+    void setFittingsUA_kJperHrC(double fittingsUA_kJperHrC_in)
+    {
+        fittingsUA_kJperHrC = fittingsUA_kJperHrC_in;
+    }
 
 }; // end of HPWH::Tank class
 

@@ -19,9 +19,12 @@ class HPWH::HeatSource : public Sender
 
     void init(nlohmann::json j = {});
 
-    void init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
-    void init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rscondenserwaterheatsource);
-    void init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rsresistancewaterheatsource);
+    void init(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+                  heatsourceconfiguration);
+    void init(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+                  rscondenserwaterheatsource);
+    void init(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+                  rsresistancewaterheatsource);
 
     void setConstantElementPower(double power_W);
     void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
