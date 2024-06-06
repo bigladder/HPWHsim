@@ -487,10 +487,6 @@ class HPWH : public Courier::Sender
         TYPE_compressor  /**< a vapor cycle compressor  */
     };
 
-    /// this is the value that the public functions will return in case of a simulation
-    /// destroying error
-    static const int HPWH_ABORT;
-
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
@@ -710,8 +706,6 @@ class HPWH : public Courier::Sender
     /**< Returns the UAof just the fittings, with or without units specified - default is metric,
      * kJperHrC  */
 
-    void getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const;
-    void setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/);
     void setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
     /**< This is a setter for the UA of just the fittings, with or without units specified - default
      * is metric, kJperHrC */
@@ -720,7 +714,6 @@ class HPWH : public Courier::Sender
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
 
-    int setInlet2ByFraction(double fractionalHeight);
     void setInlet2ByFraction(double fractionalHeight);
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
@@ -1181,9 +1174,6 @@ class HPWH : public Courier::Sender
     MODELS model;
     /**< The model id */
 
-    /// a std::vector containing the HeatSources, in order of priority
-    std::vector<HeatSource> heatSources;
-
     HeatSource* addHeatSource(const std::string& name_in);
 
     int compressorIndex;
@@ -1265,44 +1255,17 @@ class HPWH : public Courier::Sender
                                     double beginFraction,
                                     double endFraction);
     static bool resample(std::vector<double>& values, const std::vector<double>& sampleValues);
+
     static bool resampleExtensive(std::vector<double>& values,
                                   const std::vector<double>& sampleValues);
+
     static inline bool resampleIntensive(std::vector<double>& values,
                                          const std::vector<double>& sampleValues)
     {
         double outT_C;
         double airT_C;
     };
-    maxOut_minAir maxOut_at_LowT;
-    /**<  maximum output temperature at the minimum operating temperature of HPWH environment
-     * (minT)*/
 
-    struct SecondaryHeatExchanger
-    {
-        double coldSideTemperatureOffest_dC;
-        double hotSideTemperatureOffset_dC;
-        double extraPumpPower_W;
-    };
-
-    SecondaryHeatExchanger secondaryHeatExchanger; /**< adjustments for a approximating a secondary
-      heat exchanger by adding extra input energy for the pump and an increaes in the water to the
-      incoming waater temperature to the heatpump*/
-
-    void addTurnOnLogic(std::shared_ptr<HeatingLogic> logic);
-    void addShutOffLogic(std::shared_ptr<HeatingLogic> logic);
-    /**< these are two small functions to remove some of the cruft in initiation functions */
-    void clearAllTurnOnLogic();
-    void clearAllShutOffLogic();
-    void clearAllLogic();
-    /**< these are two small functions to remove some of the cruft in initiation functions */
-
-    void changeResistanceWatts(double watts);
-    /**< function to change the resistance wattage */
-
-    bool isACompressor() const;
-    /**< returns if the heat source uses a compressor or not */
-    bool isAResistance() const;
-    /**< returns if the heat source uses a resistance element or not */
     bool isExternalMultipass() const;
 
     double minT;
@@ -1339,57 +1302,8 @@ class HPWH : public Courier::Sender
 
     double mpFlowRate_LPS; /**< The multipass flow rate */
 
-    COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
-    HEATSOURCE_TYPE typeOfHeatSource; /**< compressor, resistance, extra, none */
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                          pass is multipass*/
-
-    int lowestNode;
-    /**< hold the number of the first non-zero condensity entry */
-
-    EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
-
-    // some private functions, mostly used for heating the water with the addHeat function
-
-    double addHeatExternal(double externalT_C,
-                           double minutesToRun,
-                           double& cap_BTUperHr,
-                           double& input_BTUperHr,
-                           double& cop);
-    /**<  Add heat from a source outside of the tank. Assume the condensity is where
-        the water is drawn from and hot water is put at the top of the tank. */
-
-    /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(double externalT_C,
-                             double minutesToRun,
-                             double& cap_BTUperHr,
-                             double& input_BTUperHr,
-                             double& cop);
-
-    /**  I wrote some methods to help with the add heat interface - MJL  */
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double setpointTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop);
-
-    /** An overloaded function that uses uses the setpoint temperature  */
-    void getCapacity(double externalT_C,
-                     double condenserTemp_C,
-                     double& input_BTUperHr,
-                     double& cap_BTUperHr,
-                     double& cop)
-    {
-        getCapacity(
-            externalT_C, condenserTemp_C, hpwh->getSetpoint(), input_BTUperHr, cap_BTUperHr, cop);
-    };
-    /** An equivalent getCapcity function just for multipass external (or split) HPWHs  */
-    void getCapacityMP(double externalT_C,
-                       double condenserTemp_C,
-                       double& input_BTUperHr,
-                       double& cap_BTUperHr,
-                       double& cop);
 
     void calcHeatDist(std::vector<double>& heatDistribution);
 
