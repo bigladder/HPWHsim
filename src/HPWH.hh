@@ -15,6 +15,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <courier/courier.h>
+
 namespace Btwxt
 {
 class RegularGridInterpolator;
@@ -25,10 +27,28 @@ class RegularGridInterpolator;
  * compiled library.  */
 
 #include "HPWHversion.hh"
+#include "courier/helpers.h"
 
-class HPWH
+class HPWH : public Courier::Sender
 {
   public:
+    class DefaultCourier : public Courier::DefaultCourier
+    {
+      protected:
+        void write_message(const std::string& message_type, const std::string& message) override
+        {
+            static bool first_occurrence = true;
+            std::cout << fmt::format("  [{}] {}", message_type, message) << std::endl;
+            if (first_occurrence)
+            {
+                std::cout << "  Generated using HPWH::DefaultCourier. Consider deriving your own "
+                             "Courier class!"
+                          << std::endl;
+                first_occurrence = false;
+            }
+        }
+    };
+
     static const int version_major = HPWHVRSN_MAJOR;
     static const int version_minor = HPWHVRSN_MINOR;
     static const int version_patch = HPWHVRSN_PATCH;
@@ -64,11 +84,18 @@ class HPWH
     static const double
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
-    HPWH();                            /**< default constructor */
-    HPWH(const HPWH& hpwh);            /**< copy constructor  */
-    HPWH& operator=(const HPWH& hpwh); /**< assignment operator  */
+    HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
+         const std::string& name_in = "hpwh"); /**< default constructor */
+    HPWH(const HPWH& hpwh);                    /**< copy constructor  */
+    HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                 eventually?   */
+
+    void set_courier(std::shared_ptr<Courier::Courier> courier_in)
+    {
+        courier = std::move(courier_in);
+    }
+    std::shared_ptr<Courier::Courier> get_courier() { return courier; };
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -356,7 +383,7 @@ class HPWH
         /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
         virtual double getFractToMeetComparisonExternal() = 0;
 
-        virtual int setDecisionPoint(double value) = 0;
+        virtual void setDecisionPoint(double value) = 0;
         double getDecisionPoint() { return decisionPoint; }
         bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
@@ -390,8 +417,8 @@ class HPWH
         double getFractToMeetComparisonExternal();
         double getMainsT_C();
         double getTempMinUseful_C();
-        int setDecisionPoint(double value);
-        int setConstantMainsTemperature(double mains_C);
+        void setDecisionPoint(double value);
+        void setConstantMainsTemperature(double mains_C);
 
       private:
         double tempMinUseful_C;
@@ -419,8 +446,8 @@ class HPWH
         double nodeWeightAvgFract();
         double getFractToMeetComparisonExternal();
 
-        int setDecisionPoint(double value);
-        int setDecisionPoint(double value, bool absolute);
+        void setDecisionPoint(double value);
+        void setDecisionPoint(double value, bool absolute);
 
       private:
         bool areNodeWeightsValid();
@@ -473,18 +500,14 @@ class HPWH
     std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
 
-    /// this is the value that the public functions will return in case of a simulation
-    /// destroying error
-    static const int HPWH_ABORT;
-
     static std::string getVersion();
     /**< This function returns a string with the current version number */
 
-    int initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
-    int initResistanceTank(double tankVol_L,
-                           double energyFactor,
-                           double upperPower_W,
-                           double lowerPower_W);
+    void initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
+    void initResistanceTank(double tankVol_L,
+                            double energyFactor,
+                            double upperPower_W,
+                            double lowerPower_W);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -496,10 +519,10 @@ class HPWH
      * to standard setting, with upper as VIP activating when the top third is too cold.
      */
 
-    int initResistanceTankGeneric(double tankVol_L,
-                                  double rValue_M2KperW,
-                                  double upperPower_W,
-                                  double lowerPower_W);
+    void initResistanceTankGeneric(double tankVol_L,
+                                   double rValue_M2KperW,
+                                   double upperPower_W,
+                                   double lowerPower_W);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -508,7 +531,7 @@ class HPWH
      * controls for the HPWHinit_resTank()
      */
 
-    int initGeneric(double tankVol_L, double energyFactor, double resUse_C);
+    void initGeneric(double tankVol_L, double energyFactor, double resUse_C);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
@@ -517,93 +540,76 @@ class HPWH
 
     static bool mapNameToPreset(const std::string& modelName, MODELS& model);
 
-    int initPreset(MODELS presetNum);
+    void initPreset(MODELS presetNum);
     /**< This function will reset all member variables to defaults and then
      * load in a set of parameters that are hardcoded in this function -
      * which particular set of parameters is selected by presetNum.
      * This is similar to the way the HPWHsim currently operates, as used in SEEM,
      * but not quite as versatile.
      * My impression is that this could be a useful input paradigm for CSE
-     *
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 
-    int initPreset(const std::string& modelName);
+    void initPreset(const std::string& modelName);
 
 #ifndef HPWH_ABRIDGED
-    int initFromFile(std::string configFile);
+    void initFromFile(std::string modelName);
     /**< Loads a HPWH model from a file
      * The file name is the input - there should be at most one set of parameters per file
      * This is useful for testing new variations, and for the sort of variability
      * that we typically do when creating SEEM runs
      * Appropriate use of this function can be found in the documentation
-     * The return value is 0 for successful initialization, HPWH_ABORT otherwise
      */
 #endif
 
-    int runOneStep(double drawVolume_L,
-                   double ambientT_C,
-                   double externalT_C,
-                   DRMODES DRstatus,
-                   double inletVol2_L = 0.,
-                   double inletT2_C = 0.,
-                   std::vector<double>* extraHeatDist_W = NULL);
+    void runOneStep(double drawVolume_L,
+                    double ambientT_C,
+                    double externalT_C,
+                    DRMODES DRstatus,
+                    double inletVol2_L = 0.,
+                    double inletT2_C = 0.,
+                    std::vector<double>* extraHeatDist_W = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
-     *
-     * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
      */
 
     /** An overloaded function that uses takes inletT_C  */
-    int runOneStep(double inletT_C,
-                   double drawVolume_L,
-                   double ambientT_C,
-                   double externalT_C,
-                   DRMODES DRstatus,
-                   double inletVol2_L = 0.,
-                   double inletT2_C = 0.,
-                   std::vector<double>* extraHeatDist_W = NULL)
+    void runOneStep(double inletT_C,
+                    double drawVolume_L,
+                    double ambientT_C,
+                    double externalT_C,
+                    DRMODES DRstatus,
+                    double inletVol2_L = 0.,
+                    double inletT2_C = 0.,
+                    std::vector<double>* extraHeatDist_W = NULL)
     {
         setInletT(inletT_C);
-        return runOneStep(drawVolume_L,
-                          ambientT_C,
-                          externalT_C,
-                          DRstatus,
-                          inletVol2_L,
-                          inletT2_C,
-                          extraHeatDist_W);
+        runOneStep(drawVolume_L,
+                   ambientT_C,
+                   externalT_C,
+                   DRstatus,
+                   inletVol2_L,
+                   inletT2_C,
+                   extraHeatDist_W);
     };
 
-    int runNSteps(int N,
-                  double* inletT_C,
-                  double* drawVolume_L,
-                  double* tankAmbientT_C,
-                  double* heatSourceAmbientT_C,
-                  DRMODES* DRstatus);
+    void runNSteps(int N,
+                   double* inletT_C,
+                   double* drawVolume_L,
+                   double* tankAmbientT_C,
+                   double* heatSourceAmbientT_C,
+                   DRMODES* DRstatus);
     /**< This function will progress the simulation forward in time by N (equal) steps
      * The calculated values will be summed or averaged, as appropriate, and
      * then stored in the usual variables to be accessed through functions
-     *
-     * The return value is 0 for successful simulation run, HPWH_ABORT otherwise
      */
 
     /** Setters for the what are typically input variables  */
-    void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; };
+    void setInletT(double newInletT_C)
+    {
+        member_inletT_C = newInletT_C;
+        haveInletT = true;
+    };
     void setMinutesPerStep(double newMinutesPerStep);
-
-    void setVerbosity(VERBOSITY hpwhVrb);
-    /**< sets the verbosity to the specified level  */
-    void setMessageCallback(void (*callbackFunc)(const std::string message, void* pContext),
-                            void* pContext);
-    /**< sets the function to be used for message passing  */
-    void printHeatSourceInfo();
-    /**< this prints out the heat source info, nicely formatted
-        specifically input/output energy/power, and runtime
-        will print to cout if messageCallback pointer is unspecified
-        does not use verbosity, as it is public and expected to be called only when needed  */
-    void printTankTemps();
-    /**< this prints out all the node temps, kind of nicely formatted
-        does not use verbosity, as it is public and expected to be called only when needed  */
 
     int WriteCSVHeading(std::ofstream& outFILE,
                         const char* preamble = "",
@@ -620,12 +626,13 @@ class HPWH
 
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
-    int setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
+    void setTankLayerTemperatures(std::vector<double> setTemps, const UNITS units = UNITS_C);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
-    int setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
-    /**< a function to change the setpoint - useful for dynamically setting it
-        The return value is 0 for successful setting, HPWH_ABORT for units failure  */
+
+    /// attempt to change the setpoint
+    void setSetpoint(double newSetpoint, UNITS units = UNITS_C); /**<default units C*/
+
     double getSetpoint(UNITS units = UNITS_C) const;
     /**< a function to check the setpoint - returns setpoint in celcius  */
 
@@ -658,20 +665,19 @@ class HPWH
     double getMinOperatingTemp(UNITS units = UNITS_C) const;
     /**< a function to return the minimum operating temperature of the compressor  */
 
-    int resetTankToSetpoint();
-    /**< this function resets the tank temperature profile to be completely at setpoint
-        The return value is 0 for successful completion  */
+    void resetTankToSetpoint();
+    /**< this function resets the tank temperature profile to be completely at setpoint  */
 
-    int setTankToTemperature(double temp_C);
+    void setTankToTemperature(double temp_C);
     /**< helper function for testing */
 
-    int setAirFlowFreedom(double fanFraction);
+    void setAirFlowFreedom(double fanFraction);
     /**< This is a simple setter for the AirFlowFreedom */
 
-    int setDoTempDepression(bool doTempDepress);
+    void setDoTempDepression(bool doTempDepress);
     /**< This is a simple setter for the temperature depression option */
 
-    int setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
+    void setTankSize_adjustUA(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
     /**< This sets the tank size and adjusts the UA the HPWH currently has to have the same U value
        but a new A. A is found via getTankSurfaceArea()*/
 
@@ -684,49 +690,49 @@ class HPWH
     /**< Returns the tank surface radius based off of real storage tanks*/
 
     bool isTankSizeFixed() const; /**< is the tank size allowed to be changed */
-    int setTankSize(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
+    void setTankSize(double HPWH_size, UNITS units = UNITS_L, bool forceChange = false);
     /**< Defualt units L. This is a simple setter for the tank volume in L or GAL */
 
     double getTankSize(UNITS units = UNITS_L) const;
     /**< returns the tank volume in L or GAL  */
 
-    int setDoInversionMixing(bool doInvMix);
+    void setDoInversionMixing(bool doInversionMixing_in);
     /**< This is a simple setter for the logical for running the inversion mixing method, default is
      * true */
 
-    int setDoConduction(bool doCondu);
+    void setDoConduction(bool doConduction_in);
     /**< This is a simple setter for doing internal conduction and nodal heatloss, default is true*/
 
-    int setUA(double UA, UNITS units = UNITS_kJperHrC);
+    void setUA(double UA, UNITS units = UNITS_kJperHrC);
     /**< This is a setter for the UA, with or without units specified - default is metric, kJperHrC
      */
 
-    int getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
+    void getUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UA, with or without units specified - default is metric, kJperHrC  */
 
-    int getFittingsUA(double& UA, UNITS units = UNITS_kJperHrC) const;
+    void getFittingsUA(double& UA, UNITS units = UNITS_kJperHrC) const;
     /**< Returns the UAof just the fittings, with or without units specified - default is metric,
      * kJperHrC  */
 
-    int setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
+    void setFittingsUA(double UA, UNITS units = UNITS_kJperHrC);
     /**< This is a setter for the UA of just the fittings, with or without units specified - default
      * is metric, kJperHrC */
 
-    int setInletByFraction(double fractionalHeight);
+    void setInletByFraction(double fractionalHeight);
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
-    int setInlet2ByFraction(double fractionalHeight);
+    void setInlet2ByFraction(double fractionalHeight);
     /**< This is a setter for the water inlet height which sets it as a fraction of the number of
      * nodes from the bottom up*/
 
-    int setExternalInletHeightByFraction(double fractionalHeight);
+    void setExternalInletHeightByFraction(double fractionalHeight);
     /**< This is a setter for the height at which the split system HPWH adds heated water to the
     storage tank, this sets it as a fraction of the number of nodes from the bottom up*/
-    int setExternalOutletHeightByFraction(double fractionalHeight);
+    void setExternalOutletHeightByFraction(double fractionalHeight);
     /**< This is a setter for the height at which the split system HPWH takes cold water out of the
     storage tank, this sets it as a fraction of the number of nodes from the bottom up*/
 
-    int setExternalPortHeightByFraction(double fractionalHeight, int whichPort);
+    void setExternalPortHeightByFraction(double fractionalHeight, int whichPort);
     /**< sets the external heater port heights inlet height node number */
 
     int getExternalInletHeight() const;
@@ -734,10 +740,10 @@ class HPWH
     int getExternalOutletHeight() const;
     /**< Returns the node where the split system HPWH takes cold water out of the storage tank*/
 
-    int setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
+    void setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum);
     /**< This is a setter for the water inlet height, by fraction. */
 
-    int setTimerLimitTOT(double limit_min);
+    void setTimerLimitTOT(double limit_min);
     /**< Sets the timer limit in minutes for the DR_TOT call. Must be > 0 minutes and < 1440
      * minutes. */
     double getTimerLimitTOT_minute() const;
@@ -776,12 +782,12 @@ class HPWH
     of a compressor. Outlet temperatures greater than the max allowable setpoints will return an
     error, but for compressors with a fixed setpoint the */
 
-    int setCompressorOutputCapacity(double newCapacity,
-                                    double airTemp = 19.722,
-                                    double inletTemp = 14.444,
-                                    double outTemp = 57.222,
-                                    UNITS pwrUnit = UNITS_KW,
-                                    UNITS tempUnit = UNITS_C);
+    void setCompressorOutputCapacity(double newCapacity,
+                                     double airTemp = 19.722,
+                                     double inletTemp = 14.444,
+                                     double outTemp = 57.222,
+                                     UNITS pwrUnit = UNITS_KW,
+                                     UNITS tempUnit = UNITS_C);
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
     inletTemp and outTemp since multi-pass models will increase the water temperature only a few
@@ -790,10 +796,10 @@ class HPWH
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
+    void setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
     /**< Scales the input capacity and COP*/
 
-    int setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
+    void setResistanceCapacity(double power, int which = -1, UNITS pwrUNIT = UNITS_KW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
     changes is given by "which"
     - If which (-1) sets all the resisistance elements in the tank.
@@ -823,21 +829,17 @@ class HPWH
 
     double getNthHeatSourceEnergyInput(int N, UNITS units = UNITS_KWH) const;
     /**< returns the energy input to the Nth heat source, with the specified units
-      energy used by the heat source is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
+      energy used by the heat source is positive - should always be positive */
 
     double getNthHeatSourceEnergyOutput(int N, UNITS units = UNITS_KWH) const;
     /**< returns the energy output from the Nth heat source, with the specified units
-      energy put into the water is positive - should always be positive
-      returns HPWH_ABORT for N out of bounds or incorrect units  */
+      energy put into the water is positive - should always be positive  */
 
     double getNthHeatSourceRunTime(int N) const;
     /**< returns the run time for the Nth heat source, in minutes
-      note: they may sum to more than 1 time step for concurrently running heat sources
-      returns HPWH_ABORT for N out of bounds  */
+      note: they may sum to more than 1 time step for concurrently running heat sources  */
     int isNthHeatSourceRunning(int N) const;
-    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not, and
-        returns HPWH_ABORT for N out of bounds  */
+    /**< returns 1 if the Nth heat source is currently engaged, 0 if it is not  */
     HEATSOURCE_TYPE getNthHeatSourceType(int N) const;
     /**< returns the enum value for what type of heat source the Nth heat source is  */
 
@@ -853,14 +855,12 @@ class HPWH
     double getEnergyRemovedFromEnvironment(UNITS units = UNITS_KWH) const;
     /**< get the total energy removed from the environment by all heat sources in specified units
       (not net energy - does not include standby)
-      moving heat from the space to the water is the positive direction
-      returns HPWH_ABORT for incorrect units  */
+      moving heat from the space to the water is the positive direction */
 
     double getStandbyLosses(UNITS units = UNITS_KWH) const;
     /**< get the amount of heat lost through the tank in specified units
       moving heat from the water to the space is the positive direction
-      negative should occur seldom
-      returns HPWH_ABORT for incorrect units  */
+      negative should occur seldom */
 
     double getTankHeatContent_kJ() const;
     /**< get the heat content of the tank, relative to zero celsius
@@ -875,18 +875,16 @@ class HPWH
     /// compressor
     int isCompressorMultipass() const;
 
-    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass,
-    /// ABORT if no compressor
+    /// returns 1 if compressor is external multipass, 0 if compressor is not external multipass
     int isCompressorExternalMultipass() const;
 
     bool hasACompressor() const;
-    /**< Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
-     */
+    /// Returns if the HPWH model has a compressor or not, could be a storage or resistance tank.
 
     /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
     int isCompressorRunning() const;
 
-    bool hasExternalHeatSource() const;
+    bool hasExternalHeatSource(int& heatSourceIndex) const;
     /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
      * resistance element. */
     double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
@@ -915,25 +913,23 @@ class HPWH
 
     double getOutletTemp(UNITS units = UNITS_C) const;
     /**< returns the outlet temperature in the specified units
-      returns 0 when no draw occurs, or HPWH_ABORT for incorrect unit specifier  */
+      returns 0 when no draw occurs */
 
     double getCondenserWaterInletTemp(UNITS units = UNITS_C) const;
     /**< returns the condenser inlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    returns 0 when no HP not running occurs,  */
 
     double getCondenserWaterOutletTemp(UNITS units = UNITS_C) const;
     /**< returns the condenser outlet temperature in the specified units
-    returns 0 when no HP not running occurs, or HPWH_ABORT for incorrect unit specifier  */
+    returns 0 when no HP not running occurs */
 
     double getTankNodeTemp(int nodeNum, UNITS units = UNITS_C) const;
-    /**< returns the temperature of the water at the specified node - with specified units
-      or HPWH_ABORT for incorrect node number or unit failure  */
+    /**< returns the temperature of the water at the specified node - with specified units */
 
     double getNthSimTcouple(int iTCouple, int nTCouple, UNITS units = UNITS_C) const;
     /**< returns the temperature from a set number of virtual "thermocouples" specified by nTCouple,
         which are constructed from the node temperature array.  Specify iTCouple from 1-nTCouple,
-        1 at the bottom using specified units
-        returns HPWH_ABORT for iTCouple < 0, > nTCouple, or incorrect units  */
+        1 at the bottom using specified units */
 
     /// returns the tank temperature averaged uniformly
     double getAverageTankTemp_C() const;
@@ -944,26 +940,26 @@ class HPWH
     /// returns the tank temperature averaged using weighted logic nodes
     double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
 
-    int setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
+    void setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
-    int setEnteringWaterHighTempShutOff(double highTemp,
-                                        bool tempIsAbsolute,
-                                        int heatSourceIndex,
-                                        UNITS units = UNITS_C);
+    void setEnteringWaterHighTempShutOff(double highTemp,
+                                         bool tempIsAbsolute,
+                                         int heatSourceIndex,
+                                         UNITS units = UNITS_C);
     /**< functions to check for and set specific high temperature shut off logics.
     HPWHs can only have one of these, which is at least typical */
 
-    int setTargetSoCFraction(double target);
+    void setTargetSoCFraction(double target);
 
     bool canUseSoCControls();
 
-    int switchToSoCControls(double targetSoC,
-                            double hysteresisFraction = 0.05,
-                            double tempMinUseful = 43.333,
-                            bool constantMainsT = false,
-                            double mainsT = 18.333,
-                            UNITS tempUnit = UNITS_C);
+    void switchToSoCControls(double targetSoC,
+                             double hysteresisFraction = 0.05,
+                             double tempMinUseful = 43.333,
+                             bool constantMainsT = false,
+                             double mainsT = 18.333,
+                             UNITS tempUnit = UNITS_C);
 
     bool isSoCControlled() const;
 
@@ -1069,14 +1065,14 @@ class HPWH
     };
 
     /// perform a draw/heat cycle to prepare for test
-    bool prepForTest(StandardTestOptions& standardTestOptions);
+    void prepForTest(StandardTestOptions& standardTestOptions);
 
     /// determine first-hour rating
-    bool findFirstHourRating(FirstHourRating& firstHourRating,
+    void findFirstHourRating(FirstHourRating& firstHourRating,
                              StandardTestOptions& standardTestOptions);
 
     /// run 24-hr draw pattern and compute metrics
-    bool run24hrTest(const FirstHourRating firstHourRating,
+    void run24hrTest(const FirstHourRating firstHourRating,
                      StandardTestSummary& standardTestSummary,
                      StandardTestOptions& standardTestOptions);
 
@@ -1124,7 +1120,7 @@ class HPWH
                       OutputData& outputData,
                       const CSVOPTIONS& options = CSVOPTIONS::CSVOPT_NONE) const;
 
-    bool measureMetrics(FirstHourRating& firstHourRating,
+    void measureMetrics(FirstHourRating& firstHourRating,
                         StandardTestOptions& standardTestOptions,
                         StandardTestSummary& standardTestSummary);
 
@@ -1134,7 +1130,7 @@ class HPWH
         FirstHourRating::Desig desig = FirstHourRating::Desig::VerySmall;
     } customTestOptions;
 
-    bool makeGeneric(const double targetUEF);
+    void makeGeneric(const double targetUEF);
 
   private:
     void setAllDefaults(); /**< sets all the defaults default */
@@ -1174,22 +1170,12 @@ class HPWH
     /**< a helper function for the inits, creating a mapping function for the position of the
     resistance elements to their indexes in heatSources. */
 
-    int checkInputs();
+    void checkInputs();
     /**< a helper function to run a few checks on the HPWH input parameters  */
 
     double getChargePerNode(double tCold, double tMix, double tHot) const;
 
     void calcAndSetSoCFraction();
-
-    void sayMessage(const std::string message) const;
-    /**< if the messagePriority is >= the hpwh verbosity,
-    either pass your message out to the callback functtargetModelion or print it to cout
-    otherwise do nothing  */
-    void msg(const char* fmt, ...) const;
-    void msgV(const char* fmt, va_list ap = NULL) const;
-
-    bool simHasFailed;
-    /**< did an internal error cause the simulation to fail?  */
 
     bool isHeating;
     /**< is the hpwh currently heating or not?  */
@@ -1203,19 +1189,13 @@ class HPWH
     bool canScale;
     /**< can the HPWH scale capactiy and COP or not  */
 
-    VERBOSITY hpwhVerbosity;
-    /**< an enum to let the sim know how much output to say  */
-
-    void (*messageCallback)(const std::string message, void* contextPtr);
-    /**< function pointer to indicate an external message processing function  */
-    void* messageCallbackContextPtr;
-    /**< caller context pointer for external message processing  */
-
     MODELS model;
     /**< The model id */
 
     /// a std::vector containing the HeatSources, in order of priority
     std::vector<HeatSource> heatSources;
+
+    HeatSource* addHeatSource(const std::string& name_in);
 
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/
@@ -1323,7 +1303,9 @@ class HPWH
         ambient temperature if you are doing temp. depression  */
     double maxDepression_C = 2.5;
     /** a couple variables to hold values which are typically inputs  */
+
     double member_inletT_C;
+    bool haveInletT; /// needed for SoC-based heating logic
 
     double minutesPerStep = 1.;
     double secondsPerStep, hoursPerStep;
@@ -1359,15 +1341,21 @@ class HPWH
 
 }; // end of HPWH class
 
-class HPWH::HeatSource
+class HPWH::HeatSource : public Courier::Sender
 {
   public:
     friend class HPWH;
 
     HeatSource() {} /**< default constructor, does not create a useful HeatSource */
-    HeatSource(HPWH* parentHPWH);
+    HeatSource(
+        const std::string& name_in,
+        HPWH* hpwh_in,
+        const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>());
     /**< constructor assigns a pointer to the hpwh that owns this heat source  */
-    HeatSource(const HeatSource& hSource);            /// copy constructor
+    HeatSource(const HeatSource& hSource); /// copy constructor
+
+    ~HeatSource() {}
+
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */

@@ -55,18 +55,12 @@ int main(int argc, char* argv[])
     bool validModel = false;
     if (sPresetOrFile == "preset")
     {
-        if (hpwh.initPreset(sModelName) == 0)
-        {
-            validModel = true;
-        }
+        hpwh.initPreset(sModelName);
     }
     else
     {
         std::string sInputFile = sModelName + ".txt";
-        if (hpwh.initFromFile(sInputFile) == 0)
-        {
-            validModel = true;
-        }
+        hpwh.initFromFile(sInputFile);
     }
 
     if (!validModel)
@@ -79,15 +73,11 @@ int main(int argc, char* argv[])
     std::cout << "Target UEF: " << targetUEF << "\n";
     std::cout << "Output directory: " << sOutputDirectory << "\n\n";
 
-    if (hpwh.makeGeneric(targetUEF))
-    {
-        std::cout << "Could not generate generic model.\n";
-        exit(1);
-    }
+    hpwh.makeGeneric(targetUEF);
 
     sPresetOrFile[0] =
         static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
     standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
-    return hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary) ? 0 : 1;
+    hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 }

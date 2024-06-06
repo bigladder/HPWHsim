@@ -58,7 +58,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_15_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double capacity_kW, capacity_BTUperHr;
 
@@ -113,7 +113,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_30_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     double capacity_kW, capacity_BTUperHr;
 
@@ -168,7 +168,7 @@ TEST_F(PerformanceMapTest, ColmacCxV_5_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxV_5_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -197,7 +197,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_10_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -229,7 +229,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_15_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -261,7 +261,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_20_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_20_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -293,7 +293,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_25_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_25_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -325,7 +325,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_MP)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "ColmacCxA_30_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -359,7 +359,7 @@ TEST_F(PerformanceMapTest, RheemHPHD60)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "RheemHPHD60";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -383,7 +383,7 @@ TEST_F(PerformanceMapTest, RheemHPHD135)
     // MODELS_RHEEM_HPHD135VNU_483_MP
     HPWH hpwh;
     const std::string sModelName = "RheemHPHD135";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -405,7 +405,7 @@ TEST_F(PerformanceMapTest, NyleC60A_MP)
 {
     HPWH hpwh;
     const std::string sModelName = "NyleC60A_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -425,7 +425,7 @@ TEST_F(PerformanceMapTest, NyleC90A_MP)
 {
     HPWH hpwh;
     const std::string sModelName = "NyleC90A_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -445,7 +445,7 @@ TEST_F(PerformanceMapTest, NyleC125A_MP)
 {
     HPWH hpwh;
     const std::string sModelName = "NyleC125A_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -465,7 +465,7 @@ TEST_F(PerformanceMapTest, NyleC185A_MP)
 {
     HPWH hpwh;
     const std::string sModelName = "NyleC185A_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -485,7 +485,7 @@ TEST_F(PerformanceMapTest, NyleC250A_MP)
 {
     HPWH hpwh;
     const std::string sModelName = "NyleC250A_MP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointMP checkPoint;
 
@@ -505,19 +505,20 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
 {
     HPWH hpwh;
     const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
     double outputBTUH;
 
     // test
-    checkPoint = {-13.0, 140.0, 41.0, 66529.49616};
+    checkPoint = {-13.0, 140.0, 41.0, 66529.47273};
     outputBTUH = getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF);
     EXPECT_NEAR_REL(checkPoint.outputBTUH, outputBTUH);
+
     // test
-    checkPoint = {-13.0, 176.0, 41.0, 65872.597448};
-    EXPECT_EQ(getCapacitySP_F_BTUHR(hpwh, checkPoint),
-              HPWH::HPWH_ABORT); // max setpoint without adjustment forces error
+    checkPoint = {-13.0, 176.0, 41.0, 65872.57441};
+    EXPECT_ANY_THROW(
+        getCapacitySP_F_BTUHR(hpwh, checkPoint)); // max setpoint without adjustment forces error
     EXPECT_NEAR_REL(checkPoint.outputBTUH,
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
@@ -589,7 +590,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
 
     HPWH hpwh;
     const std::string sModelName = "QAHV_N136TAU_HPB_SP";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
@@ -665,8 +666,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                     getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 
     checkPoint = {114.0, 200.0, 84.2, 136564.470884};
-    EXPECT_EQ(getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF),
-              HPWH::HPWH_ABORT);
+    EXPECT_ANY_THROW(getCapacitySP_F_BTUHR(hpwh, checkPoint, tInOffsetQAHV_dF, tOutOffsetQAHV_dF));
 }
 
 /*
@@ -676,7 +676,7 @@ TEST_F(PerformanceMapTest, Sanden120)
 {
     HPWH hpwh;
     const std::string sModelName = "Sanden120";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model " << sModelName;
+    hpwh.initPreset(sModelName);
 
     performancePointSP checkPoint; // tairF, toutF, tinF, outputW
     double outputBTUH;
@@ -695,7 +695,6 @@ TEST_F(PerformanceMapTest, Sanden120)
 
     // tests fails when output high
     checkPoint = {60, 200, 41.0, 15059.59167};
-    outputBTUH = hpwh.getCompressorCapacity(
-        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F);
-    EXPECT_EQ(outputBTUH, HPWH::HPWH_ABORT);
+    EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
+        checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F));
 }

@@ -77,18 +77,12 @@ int main(int argc, char* argv[])
     bool validModel = false;
     if (sPresetOrFile == "Preset")
     {
-        if (hpwh.initPreset(sModelName) == 0)
-        {
-            validModel = true;
-        }
+        hpwh.initPreset(sModelName);
     }
     else
     {
         std::string inputFile = sModelName + ".txt";
-        if (hpwh.initFromFile(inputFile) == 0)
-        {
-            validModel = true;
-        }
+        hpwh.initFromFile(inputFile);
     }
 
     if (!validModel)
@@ -132,5 +126,5 @@ int main(int argc, char* argv[])
     standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
     HPWH::FirstHourRating firstHourRating;
-    return hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary) ? 0 : 1;
+    hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 }

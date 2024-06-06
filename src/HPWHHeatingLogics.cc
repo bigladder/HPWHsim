@@ -1,5 +1,5 @@
 /*
-File of the presets heating logics available HPWHsim
+File of the heating logics available in HPWHsim
 */
 
 #include "HPWH.hh"
@@ -22,16 +22,11 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
-    double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if ((!hpwh->haveInletT) && (!useCostantMains))
     {
-        soCFraction = HPWH_ABORT;
+        hpwh->send_error("SoC-based heating logic used without constant mains.");
     }
-    else
-    {
-        soCFraction = hpwh->getSoCFraction();
-    }
-    return soCFraction;
+    return hpwh->getSoCFraction();
 }
 
 double HPWH::SoCBasedHeatingLogic::getMainsT_C()
@@ -48,17 +43,12 @@ double HPWH::SoCBasedHeatingLogic::getMainsT_C()
 
 double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() { return tempMinUseful_C; }
 
-int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value)
-{
-    decisionPoint = value;
-    return 0;
-}
+void HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
 
-int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
+void HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
 {
     constantMains_C = mains_C;
     useCostantMains = true;
-    return 0;
 }
 
 double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
@@ -121,20 +111,6 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        double smallestSoCChangeWhenHeatingNextNode =
-            1. / maxSoC *
-            (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
-                      (tempMinUseful_C - getMainsT_C()));
-        hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
-                  "deltaSoCFraction: %.6f\n",
-                  fractCalcNode,
-                  fractNextNode,
-                  smallestSoCChangeWhenHeatingNextNode,
-                  deltaSoCFraction);
-    }
-
     // if the fraction is enough to heat up the next node, do that minimum and handle the heating of
     // the next node next iteration.
     return std::min(fractCalcNode, fractNextNode);
@@ -181,15 +157,11 @@ double HPWH::TempBasedHeatingLogic::getTankValue()
     return hpwh->getAverageTankTemp_C(nodeWeights);
 }
 
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
-{
-    decisionPoint = value;
-    return 0;
-}
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
 {
     isAbsolute = absolute;
-    return setDecisionPoint(value);
+    setDecisionPoint(value);
 }
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()

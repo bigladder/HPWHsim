@@ -28,12 +28,12 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AquaThermAire";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
@@ -50,12 +50,12 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS50";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
@@ -72,12 +72,12 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS80";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
