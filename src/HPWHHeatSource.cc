@@ -13,10 +13,12 @@
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
 
-HPWH::HeatSource::HeatSource(HPWH* hpwh_in,
-                             const std::shared_ptr<Courier::Courier> courier,
-                             const std::string& name_in)
-    : Sender("HeatSource", name_in, courier)
+// public HPWH::HeatSource functions
+HPWH::HeatSource::HeatSource(
+    const std::string& name_in,
+    HPWH* hpwh_in,
+    const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/)
+    : Sender("HeatSource", name_in, courier_in)
     , hpwh(hpwh_in)
     , isOn(false)
     , lockedOut(false)
@@ -41,163 +43,10 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in,
     , standbyPower_kW(0.)
     , extrapolationMethod(EXTRAP_LINEAR)
 {
+    parent_pointer = hpwh;
 }
 
-// public HPWH::HeatSource functions
-HPWH::HeatSource::HeatSource(const HeatSource& heatSource) : Sender(heatSource)
-{
-    *this = heatSource;
-}
-
-void HPWH::HeatSource::init(
-    hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-        rscondenserwaterheatsource)
-{
-    auto& perf = rscondenserwaterheatsource.performance;
-    switch (perf.coil_configuration)
-    {
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
-    {
-        configuration = COIL_CONFIG::CONFIG_SUBMERGED;
-        break;
-    }
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
-    {
-        configuration = COIL_CONFIG::CONFIG_WRAPPED;
-        break;
-    }
-    case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
-    {
-        configuration = COIL_CONFIG::CONFIG_EXTERNAL;
-        break;
-    }
-    default:
-    {
-        break;
-    }
-    }
-
-    // uses legacy interpolation
-    if (perf.performance_points_is_set)
-    {
-        auto& perf_points = perf.performance_points;
-        perfMap.reserve(perf_points.size());
-        for (auto& perf_point : perf_points)
-        {
-            PerfPoint perfPoint = {perf_point.heat_source_temperature,
-                                   perf_point.input_power_coefficients,
-                                   perf_point.cop_coefficients};
-            perfMap.push_back(perfPoint);
-        }
-        useBtwxtGrid = false;
-    }
-
-    // uses btwxt performance-grid interpolation
-    if (perf.performance_map_is_set)
-    {
-        auto& perf_map = perf.performance_map;
-
-        auto& grid_variables = perf_map.grid_variables;
-        perfGrid.reserve(2);
-        perfGrid.push_back(grid_variables.evaporator_environment_temperature);
-        perfGrid.push_back(grid_variables.heat_source_temperature);
-
-        auto& lookup_variables = perf_map.lookup_variables;
-        perfGridValues.reserve(2);
-        perfGridValues.push_back(lookup_variables.input_power);
-        perfGridValues.push_back(lookup_variables.cop);
-
-        perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-            Btwxt::RegularGridInterpolator(perfGrid, perfGridValues));
-        useBtwxtGrid = true;
-    }
-
-    if (perf.use_defrost_map_is_set && perf.use_defrost_map)
-    {
-        setupDefrostMap();
-    }
-}
-
-void HPWH::HeatSource::init(
-    hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-        rsresistancewaterheatsource)
-{
-    auto& perf = rsresistancewaterheatsource.performance;
-    configuration = CONFIG_SUBMERGED;
-    setConstantElementPower(perf.input_power);
-}
-
-void HPWH::HeatSource::init(
-    hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
-{
-    auto& config = heatsourceconfiguration;
-    setCondensity(config.heat_distribution);
-    checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
-    checkSetValue(isVIP, config.is_vip_is_set, config.is_vip, false);
-    checkSetValue(hysteresis_dC,
-                  config.hysteresis_temperature_difference_is_set,
-                  config.hysteresis_temperature_difference,
-                  0.);
-
-    if (config.turn_on_logic_is_set)
-    {
-        for (auto& turn_on_logic : config.turn_on_logic)
-        {
-            auto heatingLogic = HeatingLogic::make(turn_on_logic, hpwh);
-            if (heatingLogic)
-            {
-                addTurnOnLogic(heatingLogic);
-            }
-        }
-    }
-
-    if (config.shut_off_logic_is_set)
-    {
-        for (auto& shut_off_logic : config.shut_off_logic)
-        {
-            auto heatingLogic = HeatingLogic::make(shut_off_logic, hpwh);
-            if (heatingLogic)
-            {
-                addShutOffLogic(heatingLogic);
-            }
-        }
-    }
-
-    if (config.standby_logic_is_set)
-    {
-        auto heatingLogic = HeatingLogic::make(config.standby_logic, hpwh);
-        if (heatingLogic)
-        {
-            standbyLogic = std::move(heatingLogic);
-        }
-    }
-
-    switch (config.heat_source_type)
-    {
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
-    {
-
-        typeOfHeatSource = TYPE_compressor;
-        auto rsconendserwaterheatsource_ptr = dynamic_cast<
-            hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-            config.heat_source.get());
-        init(*rsconendserwaterheatsource_ptr);
-        break;
-    }
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
-    {
-        typeOfHeatSource = TYPE_resistance;
-        auto rsresistancewaterheatsource_ptr = dynamic_cast<
-            hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-            config.heat_source.get());
-        init(*rsresistancewaterheatsource_ptr);
-        break;
-    }
-    default:
-    {
-    }
-    }
-}
+HPWH::HeatSource::HeatSource(const HeatSource& hSource) : Sender(hSource) { *this = hSource; }
 
 HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 {
@@ -205,8 +54,10 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     {
         return *this;
     }
-
+    Sender::operator=(hSource);
     hpwh = hSource.hpwh;
+
+    typeOfHeatSource = hSource.typeOfHeatSource;
     isOn = hSource.isOn;
     lockedOut = hSource.lockedOut;
     doDefrost = hSource.doDefrost;
@@ -350,6 +201,8 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
             lock = true;
             send_warning(
                 fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
+            send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
+                                     maxSetpoint_C));
         }
 
         return lock;
@@ -378,35 +231,11 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
             (heatSourceAmbientT_C < maxT - hysteresis_dC))
         {
             unlock = true;
-            if (heatSourceAmbientT_C > minT + hysteresis_dC)
-            {
-                send_warning(fmt::format("unlock: running above minT\tambient: {}\tminT: {}",
-                                         heatSourceAmbientT_C,
-                                         minT));
-            }
-            if (heatSourceAmbientT_C < maxT - hysteresis_dC)
-            {
-                send_warning(fmt::format("unlock: running below maxT\tambient: {}\tmaxT: {}",
-                                         heatSourceAmbientT_C,
-                                         maxT));
-            }
         }
         // when not running, don't use hysteresis
         else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
         {
             unlock = true;
-            if (heatSourceAmbientT_C > minT)
-            {
-                send_warning(fmt::format("unlock: already above minT\tambient: {}\tminT: {}",
-                                         heatSourceAmbientT_C,
-                                         minT));
-            }
-            if (heatSourceAmbientT_C < maxT)
-            {
-                send_warning(fmt::format("unlock: already below maxT\tambient: {}\tmaxT: {}",
-                                         heatSourceAmbientT_C,
-                                         maxT));
-            }
         }
         return unlock;
     }
@@ -595,10 +424,10 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
 
         if (runtime_min < -TOL_MINVALUE)
         {
-            send_error(fmt::format("Internal error: Negative runtime = {} min", runtime_min));
+            send_error(fmt::format("Negative runtime: {:g} min", runtime_min));
         }
+        break;
     }
-    break;
 
     case CONFIG_EXTERNAL:
         // Else the heat source is external. SANCO2 system is only current example
@@ -911,8 +740,7 @@ void HPWH::HeatSource::regressedMethodMP(double& ynew,
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
 {
-    std::vector<double> result;
-    result = perfRGI->get_values_at_target(target);
+    std::vector<double> result = perfRGI->get_values_at_target(target);
     input_BTUperHr = result[0];
     cop = result[1];
 }
@@ -1108,7 +936,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
         double tempInput_BTUperHr = 0., tempCap_BTUperHr = 0., temp_cop = 0.;
-        double& externalOutletT_C = hpwh->tank->nodeTs_C[externalOutletHeight];
+        double& externalOutletT_C = hpwh->tankTemps_C[externalOutletHeight];
 
         // find heating capacity
         getCapacityMP(

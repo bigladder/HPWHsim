@@ -7,8 +7,8 @@
 
 struct CompressorFncsTest : public testing::Test
 {
-    const int intAbort = HPWH::HPWH_ABORT;
-    const double dblAbort = static_cast<double>(HPWH::HPWH_ABORT);
+    const int intAbort = -1;
+    const double dblAbort = -1;
 
     struct ModelSpecs
     {
@@ -29,13 +29,13 @@ struct CompressorFncsTest : public testing::Test
         {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
         {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
         {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
-        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
-        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
         {"ColmacCxA_20_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
         {"NyleC90A_MP", true, 2, true, true, F_TO_C(160.), 40.},
         {"NyleC90A_C_MP", true, 2, true, true, F_TO_C(160.), 35.},
-        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.}};
+        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.},
+        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
+        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort}};
 };
 
 /*
@@ -47,17 +47,27 @@ TEST_F(CompressorFncsTest, compressorSpecs)
     {
         // get preset model
         HPWH hpwh;
-        EXPECT_EQ(hpwh.initPreset(modelSpec.sModelName), 0)
-            << "Could not initialize model " << modelSpec.sModelName;
+        hpwh.initPreset(modelSpec.sModelName);
 
         EXPECT_EQ(hpwh.hasACompressor(), modelSpec.hasCompressor) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
-            << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
-            << modelSpec.sModelName;
-        EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
-            << modelSpec.sModelName;
+        if (modelSpec.hasCompressor)
+        {
+            EXPECT_EQ(hpwh.getCompressorCoilConfig(), modelSpec.coilConfig) << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
+                << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
+                << modelSpec.sModelName;
+            EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
+                << modelSpec.sModelName;
+        }
+        else
+        {
+            EXPECT_ANY_THROW(hpwh.getCompressorCoilConfig()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorMultipass()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.isCompressorExternalMultipass()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpoint()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMinOperatingTemp(HPWH::UNITS_F)) << modelSpec.sModelName;
+        }
     }
 }
