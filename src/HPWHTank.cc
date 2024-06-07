@@ -124,10 +124,10 @@ void HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
     setUA_kJperHrC(UA_kJperHrC * (newA / oldA));
 }
 
-/*static*/ double HPWH::Tank::getSurfaceArea_m2(double vol)
+/*static*/ double HPWH::Tank::getSurfaceArea_m2(double volume_L)
 {
     // retain legacy test values by unit conversion
-    double vol_ft3 = L_TO_FT3(vol);
+    double vol_ft3 = L_TO_FT3(volume_L);
     double radius_ft = pow(vol_ft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
 
     double SA_ft2 = 2. * 3.14159 * pow(radius_ft, 2) * (ASPECTRATIO + 1.);
@@ -264,10 +264,7 @@ void HPWH::Tank::setDoInversionMixing(bool doInversionMixing_in)
     doInversionMixing = doInversionMixing_in;
 }
 
-void HPWH::Tank::setDoConduction(bool doConduction_in)
-{
-    doConduction = doConduction_in;
-}
+void HPWH::Tank::setDoConduction(bool doConduction_in) { doConduction = doConduction_in; }
 
 void HPWH::Tank::mixNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {

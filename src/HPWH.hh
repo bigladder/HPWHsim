@@ -493,7 +493,11 @@ class HPWH : public Courier::Sender
      */
 
     /** Setters for the what are typically input variables  */
-    void setInletT(double newInletT_C) { member_inletT_C = newInletT_C; haveInletT = true;};
+    void setInletT(double newInletT_C)
+    {
+        member_inletT_C = newInletT_C;
+        haveInletT = true;
+    };
     void setMinutesPerStep(double newMinutesPerStep);
 
     int WriteCSVHeading(std::ofstream& outFILE,
@@ -1172,12 +1176,12 @@ class HPWH : public Courier::Sender
 }; // end of HPWH class
 
 constexpr double BTUperKWH =
-    3412.14163312794;               // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
-constexpr double FperC = 9. / 5.;   // degF / degC
-constexpr double offsetF = 32.;     // degF offset
+    3412.14163312794;             // https://www.rapidtables.com/convert/energy/kWh_to_BTU.html
+constexpr double FperC = 9. / 5.; // degF / degC
+constexpr double offsetF = 32.;   // degF offset
 constexpr double absolute_zeroT_C = -273.15;            // absolute zero (degC)
-constexpr double sec_per_min = 60.; // s / min
-constexpr double min_per_hr = 60.;  // min / hr
+constexpr double sec_per_min = 60.;                     // s / min
+constexpr double min_per_hr = 60.;                      // min / hr
 constexpr double sec_per_hr = sec_per_min * min_per_hr; // s / hr
 constexpr double L_per_gal = 3.78541;                   // liters / gal
 constexpr double ft_per_m = 3.2808;                     // ft / m

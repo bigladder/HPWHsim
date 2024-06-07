@@ -985,30 +985,31 @@ void HPWH::setTankSize_adjustUA(double volume,
     tank->setVolumeAndAdjustUA(volume, forceChange);
 }
 
-/*static*/ double
-HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUnits /*=UNITS_FT2*/)
+/*static*/ double HPWH::getTankSurfaceArea(double volume_L,
+                                           UNITS volUnits /*=UNITS_L*/,
+                                           UNITS surfAUnits /*=UNITS_FT2*/)
 {
     switch (volUnits)
     {
     case UNITS_L:
         break;
     case UNITS_GAL:
-        vol = GAL_TO_L(vol);
+        volume_L = GAL_TO_L(volume_L);
         break;
     default:;
     }
 
-    double value = Tank::getSurfaceArea_m2(vol);
+    double SA = Tank::getSurfaceArea_m2(volume_L);
     switch (surfAUnits)
     {
-    case UNITS_FT2:
-        break;
     case UNITS_M2:
-        value = FT2_TO_M2(value);
+        break;
+    case UNITS_FT2:
+        SA = M2_TO_FT2(SA);
         break;
     default:;
     }
-    return value;
+    return SA;
 }
 
 double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
@@ -2616,7 +2617,7 @@ bool HPWH::isEnergyBalanced(const double drawVol_L,
     double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
     double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
     double qOutWater_kJ =
-        drawCp_kJperC * (tank->getOutletT_C()  - member_inletT_C); // assumes only one inlet
+        drawCp_kJperC * (tank->getOutletT_C() - member_inletT_C); // assumes only one inlet
     double expectedTankHeatContent_kJ =
         prevHeatContent_kJ        // previous heat content
         + qInElectrical_kJ        // electrical energy delivered to heat sources

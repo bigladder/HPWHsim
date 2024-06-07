@@ -142,6 +142,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     // set tank size function has bounds checking
     tank->volumeFixed = false;
     setTankSize(tankVol_L);
+    canScale = true;
 
     setpoint_C = F_TO_C(127.0);
     resetTankToSetpoint(); // start tank off at setpoint
@@ -4001,6 +4002,7 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false; // a fully scalable model
+        canScale = true;
 
         doTempDepression = false;
         tank->mixesOnDraw = false;
@@ -4114,7 +4116,7 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
         tank->volumeFixed = false;
-        tank->volumeFixed = false; // a fully scalable model
+        canScale = true;
 
         doTempDepression = false;
         tank->mixesOnDraw = false;
@@ -4204,7 +4206,6 @@ void HPWH::initPreset(MODELS presetNum)
         tank->hasHeatExchanger = true;
         tank->heatExchangerEffectiveness = 0.93;
 
-        heatSources.reserve(3);
         auto compressor = addHeatSource("compressor");
 
         // compressor values
