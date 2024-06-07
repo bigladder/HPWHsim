@@ -108,8 +108,7 @@ void HPWH::resample(std::vector<double>& values, const std::vector<double>& samp
 void HPWH::resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     resample(values, sampleValues);
-    double scale =
-        static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
+    double scale = static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
     for (auto& value : values)
         value *= scale;
 }
