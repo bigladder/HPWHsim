@@ -16,6 +16,6 @@ struct HeatingLogicBase
     virtual void initialize(const nlohmann::json& j) = 0;
     virtual ~HeatingLogicBase() = default;
 };
-}
+} // namespace hpwh_data_model
 
 #endif
