@@ -24,27 +24,47 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-void HPWH::Tank::init(hpwh_data_model::rstank_ns::RSTANK& rstank)
+void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
 {
     auto& perf = rstank.performance;
     setNumNodes(perf.number_of_nodes_is_set ? perf.number_of_nodes : 12);
-    checkSetValue(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
-    checkSetValue(UA_kJperHrC, perf.ua_is_set, perf.ua, 0.);
-    checkSetValue(fittingsUA_kJperHrC, perf.fittings_ua_is_set, perf.fittings_ua, 0.);
-    checkSetValue(mixBelowFractionOnDraw,
-                  perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
-                  perf.bottom_fraction_of_tank_mixing_on_draw,
-                  0.);
-    checkSetValue(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
+    checkFrom(volume_L, perf.volume_is_set, 1000. * perf.volume, 0.);
+    checkFrom(UA_kJperHrC, perf.ua_is_set, perf.ua, 0.);
+    checkFrom(fittingsUA_kJperHrC, perf.fittings_ua_is_set, perf.fittings_ua, 0.);
+    checkFrom(mixBelowFractionOnDraw,
+              perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
+              perf.bottom_fraction_of_tank_mixing_on_draw,
+              0.);
+    checkFrom(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
 
     hasHeatExchanger = perf.heat_exchanger_effectiveness_is_set;
     if (hasHeatExchanger)
     {
-        checkSetValue(heatExchangerEffectiveness,
-                      perf.heat_exchanger_effectiveness_is_set,
-                      perf.heat_exchanger_effectiveness,
-                      1.);
+        checkFrom(heatExchangerEffectiveness,
+                  perf.heat_exchanger_effectiveness_is_set,
+                  perf.heat_exchanger_effectiveness,
+                  1.);
     }
+
+    // bool diameter_is_set;
+}
+
+void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
+{
+    auto& perf = rstank.performance;
+    checkTo(getNumNodes(), perf.number_of_nodes_is_set, perf.number_of_nodes);
+    checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
+    checkTo(UA_kJperHrC, perf.ua_is_set, perf.ua);
+    checkTo(fittingsUA_kJperHrC, perf.fittings_ua_is_set, perf.fittings_ua);
+    checkTo(mixBelowFractionOnDraw,
+            perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
+            perf.bottom_fraction_of_tank_mixing_on_draw);
+    checkTo(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume);
+
+    if (hasHeatExchanger)
+        checkTo(heatExchangerEffectiveness,
+                perf.heat_exchanger_effectiveness_is_set,
+                perf.heat_exchanger_effectiveness);
 
     // bool diameter_is_set;
 }

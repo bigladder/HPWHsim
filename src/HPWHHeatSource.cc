@@ -94,7 +94,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     defrostMap = hSource.defrostMap;
     resDefrost = hSource.resDefrost;
 
-    // i think vector assignment works correctly here
     turnOnLogicSet = hSource.turnOnLogicSet;
     shutOffLogicSet = hSource.shutOffLogicSet;
     standbyLogic = hSource.standbyLogic;
@@ -123,7 +122,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::init(
+void HPWH::HeatSource::from(
     hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
         rscondenserwaterheatsource)
 {
@@ -192,7 +191,7 @@ void HPWH::HeatSource::init(
     }
 }
 
-void HPWH::HeatSource::init(
+void HPWH::HeatSource::from(
     hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
         rsresistancewaterheatsource)
 {
@@ -201,17 +200,17 @@ void HPWH::HeatSource::init(
     setConstantElementPower(perf.input_power);
 }
 
-void HPWH::HeatSource::init(
+void HPWH::HeatSource::from(
     hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
 {
     auto& config = heatsourceconfiguration;
     setCondensity(config.heat_distribution);
-    checkSetValue(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
-    checkSetValue(isVIP, config.is_vip_is_set, config.is_vip, false);
-    checkSetValue(hysteresis_dC,
-                  config.hysteresis_temperature_difference_is_set,
-                  config.hysteresis_temperature_difference,
-                  0.);
+    checkFrom(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
+    checkFrom(isVIP, config.is_vip_is_set, config.is_vip, false);
+    checkFrom(hysteresis_dC,
+              config.hysteresis_temperature_difference_is_set,
+              config.hysteresis_temperature_difference,
+              0.);
 
     if (config.turn_on_logic_is_set)
     {
@@ -255,7 +254,7 @@ void HPWH::HeatSource::init(
         auto rsconendserwaterheatsource_ptr = dynamic_cast<
             hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
             config.heat_source.get());
-        init(*rsconendserwaterheatsource_ptr);
+        from(*rsconendserwaterheatsource_ptr);
         break;
     }
     case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
@@ -264,13 +263,58 @@ void HPWH::HeatSource::init(
         auto rsresistancewaterheatsource_ptr = dynamic_cast<
             hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
             config.heat_source.get());
-        init(*rsresistancewaterheatsource_ptr);
+        from(*rsresistancewaterheatsource_ptr);
         break;
     }
     default:
     {
     }
     }
+}
+
+void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+                              heatsourceconfiguration) const
+{
+    auto& config = heatsourceconfiguration;
+    config.heat_distribution = condensity;
+}
+void HPWH::HeatSource::to(
+    hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+        rscondenserwaterheatsource) const
+{
+    auto& perf = rscondenserwaterheatsource.performance;
+    switch (configuration)
+    {
+    case COIL_CONFIG::CONFIG_SUBMERGED:
+    {
+        perf.coil_configuration =
+            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED;
+        break;
+    }
+    case COIL_CONFIG::CONFIG_WRAPPED:
+    {
+        perf.coil_configuration =
+            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED;
+        break;
+    }
+    case COIL_CONFIG::CONFIG_EXTERNAL:
+    {
+        perf.coil_configuration =
+            hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+}
+void HPWH::HeatSource::to(
+    hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+        rsresistancewaterheatsource) const
+{
+    auto& perf = rsresistancewaterheatsource.performance;
+    checkTo(perfMap[0].inputPower_coeffs[0], perf.input_power_is_set, perf.input_power);
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
