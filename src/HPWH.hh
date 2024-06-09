@@ -1173,6 +1173,7 @@ class HPWH : public Courier::Sender
                                 const double setpointT_C);
     static void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
     static double getChargePerNode(double tCold, double tMix, double tHot);
+    static void fromProto(nlohmann::json& j);
 }; // end of HPWH class
 
 constexpr double BTUperKWH =
@@ -1194,6 +1195,8 @@ inline double dF_TO_dC(double temperature) { return (temperature / FperC); }
 inline double F_TO_C(double temperature) { return ((temperature - offsetF) / FperC); }
 inline double C_TO_F(double temperature) { return ((FperC * temperature) + offsetF); }
 inline double K_TO_C(double kelvin) { return (kelvin + absolute_zeroT_C); }
+inline double C_TO_K(double C) { return (C - absolute_zeroT_C); }
+inline double F_TO_K(double F) { return C_TO_K(F_TO_C(F)); }
 inline double KWH_TO_BTU(double kwh) { return (BTUperKWH * kwh); }
 inline double KWH_TO_KJ(double kwh) { return (kwh * sec_per_hr); }
 inline double BTU_TO_KWH(double btu) { return (btu / BTUperKWH); }

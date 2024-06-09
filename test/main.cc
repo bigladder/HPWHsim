@@ -166,12 +166,14 @@ int main(int argc, char* argv[])
         {
             std::ifstream inputFILE(inputFile);
             nlohmann::json j = nlohmann::json::parse(inputFILE);
+            HPWH::fromProto(j);
+            std::cout << j.dump(2) << std::endl;
             hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
             hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
 
             hpwh.init(rswh);
             std::cout << std::endl << "JSON loaded successfully." << std::endl;
-            //exit(1);
+            // exit(1);
         }
         catch (...)
         {

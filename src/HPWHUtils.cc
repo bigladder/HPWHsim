@@ -12,15 +12,7 @@
 #include <algorithm>
 #include <regex>
 
-//-----------------------------------------------------------------------------
-///	@brief	Samples a std::vector to extract a single value spanning the fractional
-///			coordinate range from frac_begin to frac_end.
-/// @note	Bounding fractions are clipped or swapped, if needed.
-/// @param[in]	sampleValues	Contains values to be sampled
-///	@param[in]	beginFraction		Lower (left) bounding fraction (0 to 1)
-///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
-/// @return	Resampled value; 0 if undefined.
-//-----------------------------------------------------------------------------
+/*static*/
 double HPWH::getResampledValue(const std::vector<double>& sampleValues,
                                double beginFraction,
                                double endFraction)
@@ -58,12 +50,7 @@ double HPWH::getResampledValue(const std::vector<double>& sampleValues,
     return resampled_value;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Replaces the values in a std::vector by resampling another std::vector of
-///			arbitrary size.
-/// @param[in,out]	values			Contains values to be replaced
-///	@param[in]		sampleValues	Contains values to replace with
-//-----------------------------------------------------------------------------
+/*static*/
 void HPWH::resample(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (sampleValues.empty())
@@ -101,10 +88,7 @@ void HPWH::resample(std::vector<double>& values, const std::vector<double>& samp
     }
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Resample an extensive property (e.g., heat)
-///	@note	See definition of int resample.
-//-----------------------------------------------------------------------------
+/*static*/
 void HPWH::resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     resample(values, sampleValues);
@@ -113,6 +97,7 @@ void HPWH::resampleExtensive(std::vector<double>& values, const std::vector<doub
         value *= scale;
 }
 
+/*static*/
 double HPWH::expitFunc(double x, double offset)
 {
     double val;
@@ -120,6 +105,7 @@ double HPWH::expitFunc(double x, double offset)
     return val;
 }
 
+/*static*/
 void HPWH::normalize(std::vector<double>& distribution)
 {
     size_t N = distribution.size();
@@ -161,12 +147,7 @@ void HPWH::normalize(std::vector<double>& distribution)
     }
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Finds the lowest tank node with non-zero weighting
-/// @param[in]	nodeDist	weighting to be applied
-/// @param[in]	numTankNodes	number of nodes in tank
-/// @returns	index of lowest tank node
-//-----------------------------------------------------------------------------
+/*static*/
 int HPWH::findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 {
     int lowest = 0;
@@ -185,12 +166,7 @@ int HPWH::findLowestNode(const std::vector<double>& nodeDist, const int numTankN
     return lowest;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Calculates a width parameter for a thermal distribution
-/// @param[in]	nodeDist		original distribution from which theraml distribution
-///								is derived
-/// @returns	width parameter (in degC)
-//-----------------------------------------------------------------------------
+/*static*/
 double HPWH::findShrinkageT_C(const std::vector<double>& nodeDist)
 {
     double alphaT_C = 1., betaT_C = 2.;
@@ -210,15 +186,7 @@ double HPWH::findShrinkageT_C(const std::vector<double>& nodeDist)
     return alphaT_C + standard_condentropy * betaT_C;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Calculates a thermal distribution for heat distribution.
-/// @note	Fails if all nodeTemp_C values exceed setpointT_C
-/// @param[out]	thermalDist		resulting thermal distribution; does not require pre-allocation
-/// @param[in]	shrinkageT_C	width of distribution
-/// @param[in]	lowestNode		index of lowest non-zero contribution
-/// @param[in]	nodeTemp_C		node temperatures
-/// @param[in]	setpointT_C		distribution parameter
-//-----------------------------------------------------------------------------
+/*static*/
 void HPWH::calcThermalDist(std::vector<double>& thermalDist,
                            const double shrinkageT_C,
                            const int lowestNode,
@@ -256,11 +224,7 @@ void HPWH::calcThermalDist(std::vector<double>& thermalDist,
     }
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Scales all values of a std::vector<double> by a common factor.
-/// @param[in/out]	coeffs		values to be scaled
-/// @param[in]	scaleFactor 	scaling factor
-//-----------------------------------------------------------------------------
+/*static*/
 void HPWH::scaleVector(std::vector<double>& coeffs, const double scaleFactor)
 {
     if (scaleFactor != 1.)
@@ -272,6 +236,7 @@ void HPWH::scaleVector(std::vector<double>& coeffs, const double scaleFactor)
     }
 }
 
+/*static*/
 double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
 {
     if (tHot < tMix)
@@ -279,4 +244,321 @@ double HPWH::getChargePerNode(double tCold, double tMix, double tHot)
         return 0.;
     }
     return (tHot - tCold) / (tMix - tCold);
+}
+
+//
+template <typename T>
+void setValue(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_object())
+        {
+            T value = jp.at("value");
+            jp = value;
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+//
+template <typename T>
+void setValue(nlohmann::json& j, std::string_view sLabel, std::function<T(T, const std::string&)> f)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_object())
+        {
+            T value = f(jp.at("value"), jp.at("units"));
+            jp = value;
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+//
+template <typename T>
+void setVector(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_object())
+        {
+            std::vector<T> values = {};
+            for (auto& value : jp.at("value"))
+                values.push_back(value);
+            jp = values;
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+//
+template <typename T>
+void setVector(nlohmann::json& j,
+               std::string_view sLabel,
+               std::function<T(T, const std::string&)> f)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_object())
+        {
+            std::vector<T> values = {};
+            for (auto& value : jp.at("value"))
+                values.push_back(f(value, jp.at("units")));
+            jp = values;
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+double convertTemp_K(double value, const std::string& units)
+{
+    if (units == "F")
+    {
+        value = F_TO_K(value);
+    }
+    else if (units == "C")
+    {
+        value = C_TO_K(value);
+    }
+    return value;
+}
+
+double convertTempDiff_K(double value, const std::string& units)
+{
+    if (units == "F")
+    {
+        value = dF_TO_dC(value);
+    }
+    else if (units == "C")
+    {
+    }
+    return value;
+}
+
+double convertVolume_m3(double value, const std::string& units)
+{
+    if (units == "gal")
+    {
+        value = GAL_TO_L(value);
+    }
+    return value;
+}
+
+double convertUA_WperK(double value, const std::string& units)
+{
+    if (units == "kJ_per_hC")
+    {
+        // value = GAL_TO_L(value);
+    }
+    return value;
+}
+
+double convertPower_W(double value, const std::string& units)
+{
+    if (units == "kW")
+    {
+        value = 1000. * value;
+    }
+    return value;
+}
+
+void setTemp_K(nlohmann::json& j, std::string_view sLabel)
+{
+    setValue<double>(j, sLabel, &convertTemp_K);
+}
+
+void setTempDiff_K(nlohmann::json& j, std::string_view sLabel)
+{
+    setValue<double>(j, sLabel, &convertTempDiff_K);
+}
+
+void setVolume_m3(nlohmann::json& j, std::string_view sLabel)
+{
+    setValue<double>(j, sLabel, &convertVolume_m3);
+}
+
+void setUA_WperK(nlohmann::json& j, std::string_view sLabel)
+{
+    setValue<double>(j, sLabel, &convertUA_WperK);
+}
+
+void setPower_W(nlohmann::json& j, std::string_view sLabel)
+{
+    setValue<double>(j, sLabel, &convertPower_W);
+}
+
+void setPowerCoeffs(nlohmann::json& j, std::string_view sLabel)
+{
+    setVector<double>(j, sLabel, &convertPower_W);
+}
+
+void setCOP_Coeffs(nlohmann::json& j, std::string_view sLabel) { setVector<double>(j, sLabel); }
+
+void setPerformancePoints(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_array())
+        {
+            for (auto& point : jp)
+            {
+                setTemp_K(point, "heat_source_temperature");
+                setPowerCoeffs(point, "input_power_coefficients");
+                setCOP_Coeffs(point, "cop_coefficients");
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+void setPerformanceMap(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        setPowerCoeffs(jp, "input_power_coefficients");
+        setCOP_Coeffs(jp, "cop_coefficients");
+    }
+    catch (...)
+    {
+    }
+}
+
+void setTempBasedHeatingLogic(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+
+        setTempDiff_K(jp, "differential_temperature");
+        setTemp_K(jp, "absolute_temperature");
+    }
+    catch (...)
+    {
+    }
+}
+
+void setSoC_BasedHeatingLogic(nlohmann::json& j, std::string_view sLabel)
+{
+    try
+    {
+        auto& jp = j.at(sLabel);
+        setTemp_K(jp, "minimum_useful_temperature");
+    }
+    catch (...)
+    {
+    }
+}
+
+void setHeatingLogic(nlohmann::json& j, std::string_view sLabel)
+{
+
+    try
+    {
+        auto& jp = j.at(sLabel);
+        if (jp.is_array())
+        {
+            for (auto& element : jp)
+            {
+                auto& heating_logic_type = element.at("heating_logic_type");
+                if (heating_logic_type == "TEMP_BASED")
+                    setTempBasedHeatingLogic(element, "heating_logic");
+
+                if (heating_logic_type == "SOC_BASED")
+                    setSoC_BasedHeatingLogic(element, "heating_logic");
+            }
+        }
+        else
+        {
+            auto& heating_logic_type = jp.at("heating_logic_type");
+            if (heating_logic_type == "TEMP_BASED")
+                setTempBasedHeatingLogic(jp, "heating_logic");
+
+            if (heating_logic_type == "SOC_BASED")
+                setSoC_BasedHeatingLogic(jp, "heating_logic");
+        }
+    }
+    catch (...)
+    {
+    }
+}
+
+void setResistanceHeatSource(nlohmann::json& j)
+{
+    try
+    {
+        auto& heat_source_perf = j.at("performance");
+        setPower_W(heat_source_perf, "input_power");
+    }
+    catch (...)
+    {
+    }
+}
+
+void setCondenserHeatSource(nlohmann::json& j)
+{
+    try
+    {
+        auto& heat_source_perf = j.at("performance");
+        setPerformancePoints(heat_source_perf, "performance_points");
+        setPerformanceMap(heat_source_perf, "performance_map");
+        setPower_W(heat_source_perf, "standby_power");
+    }
+    catch (...)
+    {
+    }
+}
+
+/*static*/
+void HPWH::fromProto(nlohmann::json& j)
+{
+    auto& perf = j["performance"];
+
+    auto& tank = perf["tank"];
+    {
+        auto& tankperf = tank.at("performance");
+        setVolume_m3(tankperf, "volume");
+        setUA_WperK(tankperf, "ua");
+    }
+
+    auto& heat_source_configs = perf.at("heat_source_configurations");
+    {
+        for (auto& heat_source_config : heat_source_configs)
+        {
+            auto& heat_source = heat_source_config.at("heat_source");
+
+            if (heat_source_config.at("heat_source_type") == "RESISTANCE")
+                setResistanceHeatSource(heat_source);
+
+            if (heat_source_config.at("heat_source_type") == "CONDENSER")
+                setCondenserHeatSource(heat_source);
+
+            setTemp_K(heat_source_config, "maximum_temperature");
+            setTemp_K(heat_source_config, "minimum_temperature");
+            setTemp_K(heat_source_config, "maximum_setpoint");
+            setTemp_K(heat_source_config, "maximum_setpoint");
+            setTempDiff_K(heat_source_config, "hysteresis_temperature_difference");
+
+            setHeatingLogic(heat_source_config, "turn_on_logic");
+            setHeatingLogic(heat_source_config, "standby_logic");
+            setHeatingLogic(heat_source_config, "shut_off_logic");
+        }
+    }
 }
