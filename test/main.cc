@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
             hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
             hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
 
-            hpwh.init(rswh);
+            hpwh.from(rswh);
             std::cout << std::endl << "JSON loaded successfully." << std::endl;
             // exit(1);
         }

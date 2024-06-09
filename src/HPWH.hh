@@ -90,7 +90,8 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
-    void init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
+    void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
+    void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -1244,11 +1245,18 @@ inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, con
 }
 
 template <typename T>
-void checkSetValue(T& t, const bool is_set, const T t_new, const T t_default)
+void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)
 {
     if (is_set)
         t = t_new;
     else
         t = t_default;
+}
+
+template <typename T>
+void checkTo(const T t, bool& is_set, T& t_new)
+{
+    is_set = true;
+    t_new = t;
 }
 #endif

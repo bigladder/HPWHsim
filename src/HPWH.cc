@@ -4008,14 +4008,13 @@ void HPWH::initFromFile(string modelName)
 }
 #endif
 
-void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
-    auto& rstank = performance.tank;
-
     setpoint_C = F_TO_C(135.0);
 
-    tank->init(rstank);
+    auto& rstank = performance.tank;
+    tank->from(rstank);
 
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
@@ -4030,7 +4029,7 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     {
         auto& configuration = configurations[iHeatSource];
         HeatSource heatSource(this);
-        heatSource.init(configuration);
+        heatSource.from(configuration);
         heatSources[iHeatSource] = heatSource;
         heat_source_lookup[configuration.label] = iHeatSource;
     }
@@ -4072,6 +4071,14 @@ void HPWH::init(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         }
         heatSources[i].sortPerformanceMap();
     }
+}
+
+void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+{
+    auto& performance = rswh.performance;
+
+    auto& rstank = performance.tank;
+    tank->to(rstank);
 }
 
 //-----------------------------------------------------------------------------
