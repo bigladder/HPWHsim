@@ -1,3 +1,6 @@
 [submodule "vendor/btwxt"]
 	path = vendor/btwxt
 	url = https://github.com/bigladder/btwxt.git
+[submodule "vendor/CLI11"]
+	path = vendor/CLI11
+	url = https://github.com/CLIUtils/CLI11.git

@@ -1,5 +1,5 @@
 /*
- * Run a HPWH model using a test schedule.
+ * Simulate a HPWH model using a test schedule.
  */
 #include "HPWH.hh"
 #include <iostream>
@@ -62,10 +62,8 @@ void runCommand(const std::string& sSpecType,
     string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
     string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
     string strHeadSoC = "targetSoCFract,soCFract,";
-    .
 
-        cout
-        << "Testing HPWHsim version " << HPWH::getVersion() << endl;
+    cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
     if (airTemp > 0.)
     {
