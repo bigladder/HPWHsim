@@ -97,18 +97,9 @@ void runCommand(const std::string& sSpecType,
     newSetpoint = 0;
     if (sPresetOrFile == "Preset")
     {
-        try
-        {
-            hpwh.initPreset(sModelName);
-        }
-        catch (...)
-        {
-            cout << "Error, preset model did not initialize.\n";
-            exit(1);
-        }
 
+        hpwh.initPreset(sModelName);
         model = static_cast<HPWH::MODELS>(hpwh.getModel());
-
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
             newSetpoint = (149 - 32) / 1.8;
@@ -116,15 +107,8 @@ void runCommand(const std::string& sSpecType,
     }
     else if (sPresetOrFile == "File")
     {
-        try
-        {
-            hpwh.initFromFile(sModelName);
-        }
-        catch (...)
-        {
-            cout << "Error, file model did not initialize.\n";
-            exit(1);
-        }
+
+        hpwh.initFromFile(sModelName);
     }
     else
     {
