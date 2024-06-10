@@ -10,7 +10,6 @@ void measureCommand(const std::string& sSpecType,
                     std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
-    bool validNumArgs = false;
 
     HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = false;
