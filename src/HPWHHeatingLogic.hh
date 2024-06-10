@@ -43,6 +43,8 @@ struct HPWH::HeatingLogic
     static std::shared_ptr<HeatingLogic>
     make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
 
+    virtual void make(std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic) = 0;
+
   protected:
     double decisionPoint;
     HPWH* hpwh;
@@ -65,16 +67,18 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
         , hysteresisFraction(hF)
         , useCostantMains(constMains)
         , constantMains_C(mains_C) {};
-    bool isValid();
+    bool isValid() override;
 
-    double getComparisonValue();
-    double getTankValue();
-    double nodeWeightAvgFract();
-    double getFractToMeetComparisonExternal();
+    double getComparisonValue() override;
+    double getTankValue() override;
+    double nodeWeightAvgFract() override;
+    double getFractToMeetComparisonExternal() override;
     double getMainsT_C();
     double getTempMinUseful_C();
-    void setDecisionPoint(double value);
+    void setDecisionPoint(double value) override;
     void setConstantMainsTemperature(double mains_C);
+
+    void make(std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic) override;
 
   private:
     double tempMinUseful_C;
@@ -95,15 +99,17 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           bool isHTS = false)
         : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n) {};
 
-    bool isValid();
+    bool isValid() override;
 
-    double getComparisonValue();
-    double getTankValue();
-    double nodeWeightAvgFract();
-    double getFractToMeetComparisonExternal();
+    double getComparisonValue() override;
+    double getTankValue() override;
+    double nodeWeightAvgFract() override;
+    double getFractToMeetComparisonExternal() override;
 
-    void setDecisionPoint(double value);
+    void setDecisionPoint(double value) override;
     void setDecisionPoint(double value, bool absolute);
+
+    void make(std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic) override;
 
   private:
     bool areNodeWeightsValid();

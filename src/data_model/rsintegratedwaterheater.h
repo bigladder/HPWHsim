@@ -123,6 +123,8 @@ struct HeatSourceConfiguration
     std::vector<rsintegratedwaterheater_ns::HeatingLogic> shut_off_logic;
     rsintegratedwaterheater_ns::HeatingLogic standby_logic;
     double maximum_setpoint;
+    double maximum_temperature;
+    double minimum_temperature;
     double hysteresis_temperature_difference;
     bool is_vip;
     bool depresses_temperature;
@@ -137,6 +139,8 @@ struct HeatSourceConfiguration
     bool shut_off_logic_is_set;
     bool standby_logic_is_set;
     bool maximum_setpoint_is_set;
+    bool maximum_temperature_is_set;
+    bool minimum_temperature_is_set;
     bool hysteresis_temperature_difference_is_set;
     bool is_vip_is_set;
     bool depresses_temperature_is_set;
@@ -151,6 +155,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_units;
     const static std::string_view standby_logic_units;
     const static std::string_view maximum_setpoint_units;
+    const static std::string_view maximum_temperature_units;
+    const static std::string_view minimum_temperature_units;
     const static std::string_view hysteresis_temperature_difference_units;
     const static std::string_view is_vip_units;
     const static std::string_view depresses_temperature_units;
@@ -165,6 +171,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_description;
     const static std::string_view standby_logic_description;
     const static std::string_view maximum_setpoint_description;
+    const static std::string_view maximum_temperature_description;
+    const static std::string_view minimum_temperature_description;
     const static std::string_view hysteresis_temperature_difference_description;
     const static std::string_view is_vip_description;
     const static std::string_view depresses_temperature_description;
@@ -179,6 +187,8 @@ struct HeatSourceConfiguration
     const static std::string_view shut_off_logic_name;
     const static std::string_view standby_logic_name;
     const static std::string_view maximum_setpoint_name;
+    const static std::string_view maximum_temperature_name;
+    const static std::string_view minimum_temperature_name;
     const static std::string_view hysteresis_temperature_difference_name;
     const static std::string_view is_vip_name;
     const static std::string_view depresses_temperature_name;

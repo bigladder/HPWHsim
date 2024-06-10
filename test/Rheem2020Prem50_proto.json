@@ -166,7 +166,7 @@
           {
             "heating_logic_type": "TEMP_BASED",
             "heating_logic": {
-              "differential_temperature": {
+              "absolute_temperature": {
                 "value": 100,
                 "units": "F"
               },
@@ -185,7 +185,7 @@
                 0
               ]
             },
-            "comparison_type": "LESS_THAN"
+            "comparison_type": "GREATER_THAN"
           }
         ],
         "hysteresis_temperature_difference": {
@@ -258,7 +258,6 @@
                 ]
               }
             ],
-            "performance_temperature_units": "F",
             "standby_power": {
               "value": 50,
               "units": "W"

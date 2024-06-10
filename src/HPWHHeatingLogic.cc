@@ -325,7 +325,7 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
         double temp = 20.;
         if (temp_based_logic->differential_temperature_is_set)
         {
-            temp = K_TO_C(temp_based_logic->differential_temperature);
+            temp = temp_based_logic->differential_temperature;
         }
         else if (temp_based_logic->absolute_temperature_is_set)
         {
@@ -342,4 +342,18 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
     }
     }
     return heatingLogic;
+}
+
+void HPWH::SoCBasedHeatingLogic::make(
+    std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic)
+{
+    heating_logic =
+        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
+}
+
+void HPWH::TempBasedHeatingLogic::make(
+    std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic)
+{
+    heating_logic =
+        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
 }

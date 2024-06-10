@@ -157,7 +157,7 @@ void HPWH::HeatSource::from(
         perfMap.reserve(perf_points.size());
         for (auto& perf_point : perf_points)
         {
-            PerfPoint perfPoint = {perf_point.heat_source_temperature,
+            PerfPoint perfPoint = {C_TO_F(K_TO_C(perf_point.heat_source_temperature)),
                                    perf_point.input_power_coefficients,
                                    perf_point.cop_coefficients};
             perfMap.push_back(perfPoint);
@@ -204,8 +204,11 @@ void HPWH::HeatSource::from(
     hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
 {
     auto& config = heatsourceconfiguration;
+    checkFrom(name, config.label_is_set, config.label, std::string("heatsource"));
     setCondensity(config.heat_distribution);
-    checkFrom(maxT, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 0.);
+    checkFrom(maxSetpoint_C, config.maximum_setpoint_is_set, K_TO_C(config.maximum_setpoint), 100.);
+    checkFrom(maxT, config.maximum_temperature_is_set, K_TO_C(config.maximum_temperature), 100.);
+    checkFrom(minT, config.minimum_temperature_is_set, K_TO_C(config.minimum_temperature), 0.);
     checkFrom(isVIP, config.is_vip_is_set, config.is_vip, false);
     checkFrom(hysteresis_dC,
               config.hysteresis_temperature_difference_is_set,
@@ -275,9 +278,20 @@ void HPWH::HeatSource::from(
 void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
                               heatsourceconfiguration) const
 {
-    auto& config = heatsourceconfiguration;
-    config.heat_distribution = condensity;
+    heatsourceconfiguration.heat_distribution = condensity;
+
+    heatsourceconfiguration.turn_on_logic.resize(turnOnLogicSet.size());
+    std::size_t i = 0;
+    for (auto& turnOnLogic : turnOnLogicSet)
+    {
+        heatsourceconfiguration.turn_on_logic_is_set = true;
+
+        hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic logic;
+
+        turnOnLogic->make(heatsourceconfiguration.turn_on_logic[i].heating_logic);
+    }
 }
+
 void HPWH::HeatSource::to(
     hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
         rscondenserwaterheatsource) const
@@ -309,6 +323,7 @@ void HPWH::HeatSource::to(
     }
     }
 }
+
 void HPWH::HeatSource::to(
     hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
         rsresistancewaterheatsource) const

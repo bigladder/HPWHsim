@@ -117,6 +117,10 @@ void from_json(const nlohmann::json& j, HeatSourceConfiguration& x)
     json_get<rsintegratedwaterheater_ns::HeatingLogic>(
         j, "standby_logic", x.standby_logic, x.standby_logic_is_set, false);
     json_get<double>(j, "maximum_setpoint", x.maximum_setpoint, x.maximum_setpoint_is_set, false);
+    json_get<double>(
+        j, "maximum_temperature", x.maximum_temperature, x.maximum_temperature_is_set, false);
+    json_get<double>(
+        j, "minimum_temperature", x.minimum_temperature, x.minimum_temperature_is_set, false);
     json_get<double>(j,
                      "hysteresis_temperature_difference",
                      x.hysteresis_temperature_difference,
@@ -157,6 +161,10 @@ const std::string_view HeatSourceConfiguration::standby_logic_units = "";
 
 const std::string_view HeatSourceConfiguration::maximum_setpoint_units = "K";
 
+const std::string_view HeatSourceConfiguration::maximum_temperature_units = "K";
+
+const std::string_view HeatSourceConfiguration::minimum_temperature_units = "K";
+
 const std::string_view HeatSourceConfiguration::hysteresis_temperature_difference_units = "K";
 
 const std::string_view HeatSourceConfiguration::is_vip_units = "";
@@ -189,6 +197,12 @@ const std::string_view HeatSourceConfiguration::standby_logic_description =
 
 const std::string_view HeatSourceConfiguration::maximum_setpoint_description =
     "Maximum setpoint temperature";
+
+const std::string_view HeatSourceConfiguration::maximum_temperature_description =
+    "Maximum external temperature";
+
+const std::string_view HeatSourceConfiguration::minimum_temperature_description =
+    "Minimum external temperature";
 
 const std::string_view HeatSourceConfiguration::hysteresis_temperature_difference_description =
     "Hysteresis temperature difference for activation";
@@ -223,6 +237,10 @@ const std::string_view HeatSourceConfiguration::shut_off_logic_name = "shut_off_
 const std::string_view HeatSourceConfiguration::standby_logic_name = "standby_logic";
 
 const std::string_view HeatSourceConfiguration::maximum_setpoint_name = "maximum_setpoint";
+
+const std::string_view HeatSourceConfiguration::maximum_temperature_name = "maximum_temperature";
+
+const std::string_view HeatSourceConfiguration::minimum_temperature_name = "minimum_temperature";
 
 const std::string_view HeatSourceConfiguration::hysteresis_temperature_difference_name =
     "hysteresis_temperature_difference";
