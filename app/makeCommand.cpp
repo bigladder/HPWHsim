@@ -1,5 +1,5 @@
 /*
- * Utility to make HPWH generic models
+ * Make a HPWH generic model with specified UEF
  */
 
 #include <cmath>

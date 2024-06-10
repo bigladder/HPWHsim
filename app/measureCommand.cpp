@@ -1,5 +1,5 @@
 /*
- * Utility to measure HPWH performance metrics
+ * Measure the performance metrics of a HPWH model
  */
 
 #include "HPWH.hh"
