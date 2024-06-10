@@ -351,9 +351,13 @@ double convertTempDiff_K(double value, const std::string& units)
 
 double convertVolume_m3(double value, const std::string& units)
 {
-    if (units == "gal")
+    if (units == "L")
     {
-        value = GAL_TO_L(value);
+        value = value / 1000.;
+    }
+    else if (units == "gal")
+    {
+        value = GAL_TO_L(value) / 1000.;
     }
     return value;
 }
@@ -552,7 +556,6 @@ void HPWH::fromProto(nlohmann::json& j)
 
             setTemp_K(heat_source_config, "maximum_temperature");
             setTemp_K(heat_source_config, "minimum_temperature");
-            setTemp_K(heat_source_config, "maximum_setpoint");
             setTemp_K(heat_source_config, "maximum_setpoint");
             setTempDiff_K(heat_source_config, "hysteresis_temperature_difference");
 
