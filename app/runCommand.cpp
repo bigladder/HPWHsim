@@ -30,7 +30,7 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
 void runCommand(const std::string& sSpecType,
                 const std::string& sModelName,
-                std::string sTestName,
+                std::string testDirectory,
                 std::string sOutputDir,
                 double airTemp)
 {
@@ -50,8 +50,7 @@ void runCommand(const std::string& sSpecType,
     std::vector<string> scheduleNames;
     std::vector<schedule> allSchedules(7);
 
-    string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3,
-        outputDirectory;
+    string fileToOpen, fileToOpen2, scheduleName, var1;
     string inputVariableName, firstCol;
     double testVal, newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit,
         initialTankT_C;
@@ -91,15 +90,16 @@ void runCommand(const std::string& sSpecType,
     }
 
     // Only input file specified -- don't suffix with .csv
-    testDirectory = input3;
+
+    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
     // Parse the model
     newSetpoint = 0;
-    if (input1 == "Preset")
+    if (sPresetOrFile == "Preset")
     {
         try
         {
-            hpwh.initPreset(input2);
+            hpwh.initPreset(sModelName);
         }
         catch (...)
         {
@@ -114,11 +114,11 @@ void runCommand(const std::string& sSpecType,
             newSetpoint = (149 - 32) / 1.8;
         }
     }
-    else if (input1 == "File")
+    else if (sPresetOrFile == "File")
     {
         try
         {
-            hpwh.initFromFile(input2);
+            hpwh.initFromFile(sModelName);
         }
         catch (...)
         {
@@ -128,7 +128,8 @@ void runCommand(const std::string& sSpecType,
     }
     else
     {
-        cout << "Invalid argument, received '" << input1 << "', expected 'Preset' or 'File'.\n";
+        cout << "Invalid argument, received '" << sPresetOrFile
+             << "', expected 'Preset' or 'File'.\n";
         exit(1);
     }
 
@@ -159,7 +160,7 @@ void runCommand(const std::string& sSpecType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
-    cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
+    cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << testDirectory << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -298,7 +299,7 @@ void runCommand(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        fileToOpen = outputDirectory + "/DHW_YRLY.csv";
+        fileToOpen = sOutputDir + "/DHW_YRLY.csv";
         yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
         if (!yearOutFile.is_open())
         {
@@ -308,7 +309,8 @@ void runCommand(const std::string& sSpecType,
     }
     else
     {
-        fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
+        fileToOpen =
+            sOutputDir + "/" + testDirectory + "_" + sPresetOrFile + "_" + sModelName + ".csv";
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -461,7 +463,7 @@ void runCommand(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = input3 + "," + input1 + "," + input2;
+        firstCol = testDirectory + "," + sPresetOrFile + "," + sModelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
