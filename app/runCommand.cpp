@@ -1,23 +1,13 @@
-/*This is not a substitute for a proper HPWH Test Tool, it is merely a short program
- * to aid in the testing of the new HPWH.cc as it is being written.
- *
- * -NDK
- *
- * Bring on the HPWH Test Tool!!! -MJL
- *
- *
- *
+/*
+ * Run a HPWH model using a test schedule.
  */
 #include "HPWH.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <algorithm> // std::max
-#include <stdio.h>
+#include <algorithm>
 #include <fmt/format.h>
-
-#define MAX_DIR_LENGTH 255
 
 using std::cout;
 using std::endl;
@@ -72,12 +62,10 @@ void runCommand(const std::string& sSpecType,
     string strHead = "minutes,Ta,Tsetpoint,inletT,draw,";
     string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
     string strHeadSoC = "targetSoCFract,soCFract,";
+    .
 
-    //.......................................
-    // process command line arguments
-    //.......................................
-
-    cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
+        cout
+        << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
     if (airTemp > 0.)
     {
@@ -88,8 +76,6 @@ void runCommand(const std::string& sSpecType,
         airTemp = 0;
         HPWH_doTempDepress = false;
     }
-
-    // Only input file specified -- don't suffix with .csv
 
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
@@ -116,8 +102,6 @@ void runCommand(const std::string& sSpecType,
              << "', expected 'Preset' or 'File'.\n";
         exit(1);
     }
-
-    //  hpwh.HPWHinit_resSwingTank(80., .95, 0., 10000., F_TO_C(125.));
 
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions

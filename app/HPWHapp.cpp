@@ -1,3 +1,7 @@
+/*
+ * Process command-line input
+ */
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
