@@ -17,3 +17,8 @@ if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
     mark_as_advanced(BUILD_GTEST BUILD_GMOCK INSTALL_GTEST)
 	add_subdirectory("${btwxt_SOURCE_DIR}/vendor/googletest")
 endif ()
+
+# CLI11 library
+if (NOT TARGET CLI11)
+  add_subdirectory(CLI11)
+endif()
