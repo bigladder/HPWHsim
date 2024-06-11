@@ -45,7 +45,7 @@ endif ()
 
 add_subdirectory(vendor)
 add_subdirectory(src)
-add_subdirectory(app)
+#add_subdirectory(app)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
 	add_subdirectory(test)
