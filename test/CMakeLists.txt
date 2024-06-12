@@ -191,8 +191,6 @@ function(add_model_test)
 
     set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
-    #message(${hpwhArgs})
-
     if (${ARG_TEST_NAME} STREQUAL "testLockout")
         if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
             set(airTemp "48")
