@@ -19,6 +19,6 @@ if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
 endif ()
 
 # CLI11 library
-if (NOT TARGET CLI11)
+if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET CLI11)
   add_subdirectory(CLI11)
 endif()
