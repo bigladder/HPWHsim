@@ -35,7 +35,7 @@ int main(int argc, char** argv)
         const auto run = app.add_subcommand("run", "Run a schedule");
 
         static std::string sSpecType = "Preset";
-        run->add_option("-s,--spec_type", sSpecType, "Specification type (Preset, File)");
+        run->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
         static std::string sModelName = "";
         run->add_option("-m,--model", sModelName, "Model name")->required();
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         const auto measure = app.add_subcommand("measure", "Measure the metrics for a model");
 
         static std::string sSpecType = "Preset";
-        measure->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
+        measure->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
         static std::string sModelName = "";
         measure->add_option("-m,--model", sModelName, "Model name")->required();
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
         const auto make = app.add_subcommand("make", "Make a model with a specified UEF");
 
         static std::string sSpecType = "Preset";
-        make->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
+        make->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
 
         static std::string sModelName = "";
         make->add_option("-m,--model", sModelName, "Model name")->required();
