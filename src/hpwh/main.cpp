@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     // call with no subcommands is equivalent to subcommand "help"
     if (argc == 1)
     {
-        std::cout << "HPWH - Heat-Pump Water Heaters\n" << std::endl;
+        std::cout << "HPWHsim - Heat-Pump Water Heater simulator\n" << std::endl;
         std::cout << app.help() << std::endl;
     }
 
