@@ -31,55 +31,67 @@ int main(int argc, char** argv)
     app.require_subcommand(0);
 
     /// run
-    auto run = app.add_subcommand("run", "Run a schedule");
+    {
+        const auto run = app.add_subcommand("run", "Run a schedule");
 
-    std::string sSpecType;
-    run->add_option("-s,--spec_type", sSpecType, "Specification type (Preset, File)");
+        static std::string sSpecType = "Preset";
+        run->add_option("-s,--spec_type", sSpecType, "Specification type (Preset, File)");
 
-    std::string sModelName = "";
-    run->add_option("-m,--model", sModelName, "Model name")->required();
+        static std::string sModelName = "";
+        run->add_option("-m,--model", sModelName, "Model name")->required();
 
-    std::string sTestName = "";
-    run->add_option("-t,--test", sTestName, "Test directory name")->required();
+        static std::string sTestName = "";
+        run->add_option("-t,--test", sTestName, "Test directory name")->required();
 
-    std::string sOutputDir = ".";
-    run->add_option("-d,--dir", sOutputDir, "Output directory");
+        static std::string sOutputDir = ".";
+        run->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    double airTemp = -1000.;
-    run->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
+        static double airTemp = -1000.;
+        run->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    run->callback([&]() { runCommand(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+        run->callback([&]() { runCommand(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+    }
 
     /// measure
-    auto measure = app.add_subcommand("measure", "Measure the metrics for a model");
+    {
+        const auto measure = app.add_subcommand("measure", "Measure the metrics for a model");
 
-    measure->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
+        static std::string sSpecType = "Preset";
+        measure->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
 
-    measure->add_option("-m,--model", sModelName, "Model name")->required();
+        static std::string sModelName = "";
+        measure->add_option("-m,--model", sModelName, "Model name")->required();
 
-    measure->add_option("-d,--dir", sOutputDir, "Output directory");
+        static std::string sOutputDir = ".";
+        measure->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    std::string sCustomDrawProfile = "";
-    measure->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+        static std::string sCustomDrawProfile = "";
+        measure->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
-    measure->callback([&]()
-                      { measureCommand(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
+        measure->callback([&]()
+                          { measureCommand(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
+    }
 
     /// make
-    auto make = app.add_subcommand("make", "Make a model with a specified UEF");
+    {
+        const auto make = app.add_subcommand("make", "Make a model with a specified UEF");
 
-    make->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
+        static std::string sSpecType = "Preset";
+        make->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
 
-    make->add_option("-m,--model", sModelName, "Model name")->required();
+        static std::string sModelName = "";
+        make->add_option("-m,--model", sModelName, "Model name")->required();
 
-    double targetUEF = -1.;
-    make->add_option("-u,--uef", targetUEF, "target UEF")->required();
+        static double targetUEF = -1.;
+        make->add_option("-u,--uef", targetUEF, "target UEF")->required();
 
-    make->add_option("-d,--dir", sOutputDir, "Output directory");
+        static std::string sOutputDir = ".";
+        make->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    make->callback([&]() { makeCommand(sSpecType, sModelName, targetUEF, sOutputDir); });
+        make->callback([&]() { makeCommand(sSpecType, sModelName, targetUEF, sOutputDir); });
 
-    CLI11_PARSE(app, argc, argv);
+        CLI11_PARSE(app, argc, argv);
+    }
 
     // call with no subcommands is equivalent to subcommand "help"
     if (argc == 1)
