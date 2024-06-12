@@ -33,13 +33,13 @@ int main(int argc, char** argv)
         auto run = app.add_subcommand("run", "Run a schedule");
 
         std::string sSpecType;
-        run->add_option("-s,--spec_type", sSpecType, "Spec type (Preset, File)");
+        run->add_option("-s,--spec_type", sSpecType, "Specification type (Preset, File)");
 
         std::string sModelName = "";
         run->add_option("-m,--model", sModelName, "Model name")->required();
 
         std::string sTestName = "";
-        run->add_option("-t,--test_name", sTestName, "Test name")->required();
+        run->add_option("-t,--test", sTestName, "Test directory name")->required();
 
         std::string sOutputDir = ".";
         run->add_option("-d,--dir", sOutputDir, "Output directory");
