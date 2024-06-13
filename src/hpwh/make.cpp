@@ -5,6 +5,8 @@
 #include <cmath>
 #include "HPWH.hh"
 
+namespace hpwh_cli
+{
 void make(const std::string& sSpecType,
           const std::string& sModelName,
           double targetUEF,
@@ -53,3 +55,4 @@ void make(const std::string& sSpecType,
 
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 }
+} // namespace hpwh_cli

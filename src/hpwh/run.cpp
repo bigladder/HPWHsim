@@ -16,6 +16,8 @@ using std::string;
 
 typedef std::vector<double> schedule;
 
+namespace hpwh_cli
+{
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
 void run(const std::string& sSpecType,
@@ -524,3 +526,4 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
     return 0;
 }
+} // namespace hpwh_cli

@@ -9,21 +9,26 @@
 #include <unordered_set>
 #include <CLI/CLI.hpp>
 
+namespace hpwh_cli
+{
 void run(const std::string& sSpecType,
-                const std::string& sModelName,
-                std::string sTestName,
-                std::string sOutputDir,
-                double airTemp);
+         const std::string& sModelName,
+         std::string sTestName,
+         std::string sOutputDir,
+         double airTemp);
 
 void measure(const std::string& sSpecType,
-                    const std::string& sModelName,
-                    std::string sOutputDir,
-                    std::string sCustomDrawProfile);
+             const std::string& sModelName,
+             std::string sOutputDir,
+             std::string sCustomDrawProfile);
 
 void make(const std::string& sSpecType,
-                 const std::string& sModelName,
-                 double targetUEF,
-                 std::string sOutputDir);
+          const std::string& sModelName,
+          double targetUEF,
+          std::string sOutputDir);
+} // namespace hpwh_cli
+
+using namespace hpwh_cli;
 
 int main(int argc, char** argv)
 {
@@ -68,8 +73,8 @@ int main(int argc, char** argv)
         static std::string sCustomDrawProfile = "";
         subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
-        subcommand->callback(
-            [&]() { measure(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
+        subcommand->callback([&]()
+                             { measure(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
     }
 
     /// make
