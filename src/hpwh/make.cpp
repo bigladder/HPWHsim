@@ -5,10 +5,10 @@
 #include <cmath>
 #include "HPWH.hh"
 
-void makeCommand(const std::string& sSpecType,
-                 const std::string& sModelName,
-                 double targetUEF,
-                 std::string sOutputDir)
+void make(const std::string& sSpecType,
+          const std::string& sModelName,
+          double targetUEF,
+          std::string sOutputDir)
 {
     HPWH::FirstHourRating firstHourRating;
     HPWH::StandardTestSummary standardTestSummary;

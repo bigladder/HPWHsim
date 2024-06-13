@@ -18,11 +18,11 @@ typedef std::vector<double> schedule;
 
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
-void runCommand(const std::string& sSpecType,
-                const std::string& sModelName,
-                std::string testDirectory,
-                std::string sOutputDir,
-                double airTemp)
+void run(const std::string& sSpecType,
+         const std::string& sModelName,
+         std::string testDirectory,
+         std::string sOutputDir,
+         double airTemp)
 {
     HPWH hpwh;
 

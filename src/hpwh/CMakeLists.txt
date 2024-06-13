@@ -1,9 +1,9 @@
 # Build hpwh.exe
 set(source_files
         main.cpp
-        runCommand.cpp
-        makeCommand.cpp
-        measureCommand.cpp
+        run.cpp
+        make.cpp
+        measure.cpp
         )
 
 add_executable(hpwh ${source_files})
