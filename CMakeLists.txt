@@ -24,6 +24,14 @@ option(${PROJECT_NAME}_COVERAGE "Add ${PROJECT_NAME} coverage reports" OFF)
 #cmake_dependent_option(${PROJECT_NAME}_BUILD_EXAMPLES "Build ${PROJECT_NAME} examples" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 cmake_dependent_option(${PROJECT_NAME}_WARNINGS_AS_ERRORS "Treat warnings in ${PROJECT_NAME} as errors" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 
+if (HPWHSIM_OMIT_TESTTOOL)
+    set_property(GLOBAL PROPERTY ${PROJECT_NAME}_BUILD_TESTING OFF)
+endif ()
+
+if (HPWHSIM_ABRIDGED)
+    add_compile_definitions(HPWH_ABRIDGED)
+endif ()
+
 if (NOT ${PROJECT_NAME}_STATIC_LIB)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
@@ -37,10 +45,6 @@ if (${PROJECT_NAME}_BUILD_TESTING)
         set(ENABLE_COVERAGE ON CACHE BOOL " " FORCE)
         find_package(codecov)
     endif ()
-endif ()
-
-if (HPWHSIM_ABRIDGED)
-    add_compile_definitions(HPWH_ABRIDGED)
 endif ()
 
 add_subdirectory(vendor)

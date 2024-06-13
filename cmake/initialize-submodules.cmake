@@ -43,7 +43,7 @@ macro(initialize_submodule arg)
           string(REGEX REPLACE "\\s*url = .*/(.*).git" "\\1" submodule "${line}")
           string(STRIP "${submodule}" submodule)
 
-          if(${submodule} MATCHES arg)
+          if("${submodule}" MATCHES "${arg}")
             if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${submodule}")
               message(FATAL_ERROR "Submodule directory \"${CMAKE_CURRENT_SOURCE_DIR}/${submodule}\" does not exist")
             endif()
