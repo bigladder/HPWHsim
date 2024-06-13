@@ -1,6 +1,7 @@
 include(initialize-submodules)
-initialize_submodules()
+#initialize_submodules()
 
+initialize_submodule(btwxt)
 if (NOT TARGET btwxt)
   add_subdirectory(btwxt)
 endif ()
@@ -19,6 +20,9 @@ if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
 endif ()
 
 # CLI11 library
-if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET CLI11)
-  add_subdirectory(CLI11)
+if (${PROJECT_NAME}_BUILD_TESTING)
+    initialize_submodule(CLI11)
+    if (NOT TARGET CLI11)
+        add_subdirectory(CLI11)
+    endif()
 endif()
