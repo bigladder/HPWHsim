@@ -13,11 +13,44 @@ using std::cout;
 using std::endl;
 using std::ifstream;
 using std::string;
+#include <CLI/CLI.hpp>
 
 typedef std::vector<double> schedule;
 
 namespace hpwh_cli
 {
+
+/// run
+static void run(const std::string& sSpecType,
+                const std::string& sModelName,
+                std::string testDirectory,
+                std::string sOutputDir,
+                double airTemp);
+
+CLI::App* add_run(CLI::App& app)
+{
+    const auto subcommand = app.add_subcommand("run", "Run a schedule");
+
+    static std::string sSpecType = "Preset";
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+
+    static std::string sModelName = "";
+    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+
+    static std::string sTestName = "";
+    subcommand->add_option("-t,--test", sTestName, "Test directory name")->required();
+
+    static std::string sOutputDir = ".";
+    subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
+
+    static double airTemp = -1000.;
+    subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
+
+    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+
+    return subcommand;
+}
+
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
 void run(const std::string& sSpecType,
@@ -526,4 +559,5 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
     return 0;
 }
+
 } // namespace hpwh_cli
