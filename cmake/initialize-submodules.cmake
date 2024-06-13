@@ -49,7 +49,7 @@ macro(initialize_submodules)
   endif()
 endmacro()
 
-#update the name submodule iff it is listed in .gitmodules
+#update the named submodule iff it is listed in .gitmodules
 macro(initialize_submodule arg)
   make_submodules_list()
   if (DEFINED submoduleNames)
