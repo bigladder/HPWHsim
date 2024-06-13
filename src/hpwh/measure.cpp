@@ -4,10 +4,10 @@
 
 #include "HPWH.hh"
 
-void measureCommand(const std::string& sSpecType,
-                    const std::string& sModelName,
-                    std::string sOutputDir,
-                    std::string sCustomDrawProfile)
+void measure(const std::string& sSpecType,
+             const std::string& sModelName,
+             std::string sOutputDir,
+             std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
 
