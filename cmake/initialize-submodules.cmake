@@ -6,11 +6,6 @@ macro(initialize_submodules)
 
       foreach(line ${file_lines})
         if (${line} MATCHES "url =")
-        endif()
-      endforeach()
-
-      foreach(line ${file_lines})
-        if (${line} MATCHES "url =")
           string(REGEX REPLACE "\\s*url = .*/(.*).git" "\\1" submodule "${line}")
           string(STRIP "${submodule}" submodule)
           if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${submodule}")
