@@ -1,34 +1,63 @@
-/*This is not a substitute for a proper HPWH Test Tool, it is merely a short program
- * to aid in the testing of the new HPWH.cc as it is being written.
- *
- * -NDK
- *
- * Bring on the HPWH Test Tool!!! -MJL
- *
- *
- *
+/*
+ * Simulate a HPWH model using a test schedule.
  */
 #include "HPWH.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <algorithm> // std::max
-#include <stdio.h>
+#include <algorithm>
 #include <fmt/format.h>
-
-#define MAX_DIR_LENGTH 255
 
 using std::cout;
 using std::endl;
 using std::ifstream;
 using std::string;
+#include <CLI/CLI.hpp>
 
 typedef std::vector<double> schedule;
 
+namespace hpwh_cli
+{
+
+/// run
+static void run(const std::string& sSpecType,
+                const std::string& sModelName,
+                std::string testDirectory,
+                std::string sOutputDir,
+                double airTemp);
+
+CLI::App* add_run(CLI::App& app)
+{
+    const auto subcommand = app.add_subcommand("run", "Run a schedule");
+
+    static std::string sSpecType = "Preset";
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+
+    static std::string sModelName = "";
+    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+
+    static std::string sTestName = "";
+    subcommand->add_option("-t,--test", sTestName, "Test directory name")->required();
+
+    static std::string sOutputDir = ".";
+    subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
+
+    static double airTemp = -1000.;
+    subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
+
+    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+
+    return subcommand;
+}
+
 int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesOfTest);
 
-int main(int argc, char* argv[])
+void run(const std::string& sSpecType,
+         const std::string& sModelName,
+         std::string testDirectory,
+         std::string sOutputDir,
+         double airTemp)
 {
     HPWH hpwh;
 
@@ -46,11 +75,10 @@ int main(int argc, char* argv[])
     std::vector<string> scheduleNames;
     std::vector<schedule> allSchedules(7);
 
-    string testDirectory, fileToOpen, fileToOpen2, scheduleName, var1, input1, input2, input3,
-        outputDirectory;
+    string fileToOpen, fileToOpen2, scheduleName, var1;
     string inputVariableName, firstCol;
-    double testVal, newSetpoint, airTemp, airTemp2, tempDepressThresh, inletH, newTankSize,
-        tot_limit, initialTankT_C;
+    double testVal, newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit,
+        initialTankT_C;
     bool useSoC;
     int i, outputCode;
     long minutesToRun;
@@ -70,49 +98,10 @@ int main(int argc, char* argv[])
     string strHeadMP = "condenserInletT,condenserOutletT,externalVolGPM,";
     string strHeadSoC = "targetSoCFract,soCFract,";
 
-    //.......................................
-    // process command line arguments
-    //.......................................
-
     cout << "Testing HPWHsim version " << HPWH::getVersion() << endl;
 
-    // Obvious wrong number of command line arguments
-    if ((argc > 6))
+    if (airTemp > 0.)
     {
-        cout << "Invalid input. This program takes FOUR arguments: model specification type (ie. "
-                "Preset or File), model specification (ie. Sanden80),  test name (ie. test50) and "
-                "output directory\n";
-        exit(1);
-    }
-    // Help message
-    if (argc > 1)
-    {
-        input1 = argv[1];
-        input2 = argv[2];
-        input3 = argv[3];
-        outputDirectory = argv[4];
-    }
-    else
-    {
-        input1 = "asdf"; // Makes the next conditional not crash... a little clumsy but whatever
-        input2 = "def";
-        input3 = "ghi";
-        outputDirectory = ".";
-    }
-    if (argc < 5 || (argc > 6) || (input1 == "?") || (input1 == "help"))
-    {
-        cout << "Standard usage: \"hpwhTestTool.x [model spec type Preset/File] [model spec Name] "
-                "[testName] [airtemp override F (optional)]\"\n";
-        cout << "All input files should be located in the test directory, with these names:\n";
-        cout << "drawschedule.csv DRschedule.csv ambientTschedule.csv evaporatorTschedule.csv "
-                "inletTschedule.csv hpwhProperties.csv\n";
-        cout << "An output file, `modelname'Output.csv, will be written in the test directory\n";
-        exit(1);
-    }
-
-    if (argc == 6)
-    {
-        airTemp = std::stoi(argv[5]);
         HPWH_doTempDepress = true;
     }
     else
@@ -121,49 +110,31 @@ int main(int argc, char* argv[])
         HPWH_doTempDepress = false;
     }
 
-    // Only input file specified -- don't suffix with .csv
-    testDirectory = input3;
+    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
     // Parse the model
     newSetpoint = 0;
-    if (input1 == "Preset")
+    if (sPresetOrFile == "Preset")
     {
-        try
-        {
-            hpwh.initPreset(input2);
-        }
-        catch (...)
-        {
-            cout << "Error, preset model did not initialize.\n";
-            exit(1);
-        }
 
+        hpwh.initPreset(sModelName);
         model = static_cast<HPWH::MODELS>(hpwh.getModel());
-
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
             newSetpoint = (149 - 32) / 1.8;
         }
     }
-    else if (input1 == "File")
+    else if (sPresetOrFile == "File")
     {
-        try
-        {
-            hpwh.initFromFile(input2);
-        }
-        catch (...)
-        {
-            cout << "Error, file model did not initialize.\n";
-            exit(1);
-        }
+
+        hpwh.initFromFile(sModelName);
     }
     else
     {
-        cout << "Invalid argument, received '" << input1 << "', expected 'Preset' or 'File'.\n";
+        cout << "Invalid argument, received '" << sPresetOrFile
+             << "', expected 'Preset' or 'File'.\n";
         exit(1);
     }
-
-    //  hpwh.HPWHinit_resSwingTank(80., .95, 0., 10000., F_TO_C(125.));
 
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
@@ -190,7 +161,7 @@ int main(int argc, char* argv[])
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
-    cout << "Running: " << input2 << ", " << input1 << ", " << input3 << endl;
+    cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << testDirectory << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -329,7 +300,7 @@ int main(int argc, char* argv[])
 
     if (minutesToRun > 500000.)
     {
-        fileToOpen = outputDirectory + "/DHW_YRLY.csv";
+        fileToOpen = sOutputDir + "/DHW_YRLY.csv";
         yearOutFile.open(fileToOpen.c_str(), std::ifstream::app);
         if (!yearOutFile.is_open())
         {
@@ -339,7 +310,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        fileToOpen = outputDirectory + "/" + input3 + "_" + input1 + "_" + input2 + ".csv";
+        fileToOpen =
+            sOutputDir + "/" + testDirectory + "_" + sPresetOrFile + "_" + sModelName + ".csv";
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -368,10 +340,6 @@ int main(int argc, char* argv[])
     // Loop over the minutes in the test
     for (i = 0; i < minutesToRun; i++)
     {
-
-#if defined _DEBUG && 0
-        cout << "Now on minute: " << i << "\n";
-#endif
 
         if (HPWH_doTempDepress)
         {
@@ -496,7 +464,7 @@ int main(int argc, char* argv[])
 
     if (minutesToRun > 500000.)
     {
-        firstCol = input3 + "," + input1 + "," + input2;
+        firstCol = testDirectory + "," + sPresetOrFile + "," + sModelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
@@ -518,8 +486,6 @@ int main(int argc, char* argv[])
         yearOutFile.close();
     }
     controlFile.close();
-
-    return 0;
 }
 
 // this function reads the named schedule into the provided array
@@ -593,3 +559,5 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
     return 0;
 }
+
+} // namespace hpwh_cli

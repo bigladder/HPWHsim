@@ -963,7 +963,7 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     //
-    outFILE << fmt::format("{:g}", outputData.time_min);
+    outFILE << fmt::format("{:d}", outputData.time_min);
     outFILE << fmt::format(",{:0.2f}",
                            doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
     outFILE << fmt::format(",{:0.2f}",
