@@ -10,7 +10,6 @@ set(data_model_headers
         rstank.h
         heat-source-base.h
         heating-logic-base.h
-        hpwh_data_model.h
         )
 
 set(data_model_sources
