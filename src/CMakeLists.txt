@@ -45,7 +45,7 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${library_sources})
 endif ()
 
-add_subdirectory(data_model)
+add_subdirectory(data_model/cpp)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
