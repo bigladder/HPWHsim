@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <ashrae205.h>
 #include <enum-info.h>
 #include <courier/courier.h>
 

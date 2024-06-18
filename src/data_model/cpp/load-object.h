@@ -4,7 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <nlohmann/json.hpp>
-#include <courierr/courierr.h>
+#include <courier/courier.h>
 
 namespace data_model {
 
@@ -53,7 +53,7 @@ namespace data_model {
 
     template<class T>
     void json_get(nlohmann::json j,
-                  Courierr::Courierr* logger,
+                  Courier::Courier* logger,
                   const char *subnode,
                   T& object,
                   bool& object_is_set,

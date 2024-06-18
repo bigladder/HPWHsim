@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <core.h>
 #include <enum-info.h>
 #include <courier/courier.h>
+#include <heat-source-base.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -43,7 +45,8 @@ namespace data_model {
 			const static std::string_view input_power_description;
 			const static std::string_view input_power_name;
 		};
-		struct RSRESISTANCEWATERHEATSOURCE {
+		struct RSRESISTANCEWATERHEATSOURCE : HeatSourceBase {
+            void initialize(const nlohmann::json& j) override;
 			core_ns::Metadata metadata;
 			rsresistancewaterheatsource_ns::Description description;
 			rsresistancewaterheatsource_ns::Performance performance;

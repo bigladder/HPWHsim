@@ -10,6 +10,7 @@ set(data_model_headers
         rstank.h
         heat-source-base.h
         heating-logic-base.h
+        data-model.h
         )
 
 set(data_model_sources
@@ -19,6 +20,7 @@ set(data_model_sources
         rsintegratedwaterheater.cpp
         rsresistancewaterheatsource.cpp
         rstank.cpp
+        data-model.cpp
         )
 
 set(data_model_files

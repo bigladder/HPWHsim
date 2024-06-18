@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <core.h>
 #include <enum-info.h>
 #include <courier/courier.h>
 

@@ -262,7 +262,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
+HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
                          HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
@@ -272,18 +272,18 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
     {
         switch (logic.comparison_type)
         {
-        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
+        case data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
         {
             comparison_type = std::greater<double>();
         }
 
-        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
+        case data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
         {
             comparison_type = std::less<double>();
         }
 
         default:
-        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::UNKNOWN:
+        case data_model::rsintegratedwaterheater_ns::ComparisonType::UNKNOWN:
         {
         }
         }
@@ -291,10 +291,10 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
 
     switch (logic.heating_logic_type)
     {
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
+    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
     {
         auto soc_based_logic =
-            dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
+            dynamic_cast<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
         heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
@@ -303,11 +303,11 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
         break;
     }
 
-    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
+    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
     default:
     {
         auto temp_based_logic =
-            dynamic_cast<hpwh_data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
+            dynamic_cast<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
         std::vector<double> nodes(HPWH::LOGIC_SIZE);
@@ -345,15 +345,15 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
 }
 
 void HPWH::SoCBasedHeatingLogic::make(
-    std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic)
+    std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
 {
     heating_logic =
-        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
+        std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
 }
 
 void HPWH::TempBasedHeatingLogic::make(
-    std::unique_ptr<hpwh_data_model::HeatingLogicBase>& heating_logic)
+    std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
 {
     heating_logic =
-        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
+        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
 }

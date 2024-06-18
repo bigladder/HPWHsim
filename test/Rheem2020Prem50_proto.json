@@ -6,7 +6,7 @@
     "schema": "RSINTEGRATEDWATERHEATER",
     "description": "Rheem 2020 Premium, 50-gallon integrated heat-pump water heater",
     "id": "6998e64f-7824-414c-9d48-57e43ee47071",
-    "data_timestamp": "2022-11-23T11:45Z",
+    "timestamp": "2022-11-23T11:45Z",
     "data_version": 1,
     "data_source": "",
     "disclaimer": "",
@@ -28,7 +28,7 @@
         "schema_author": "Wolfgang",
         "description": "Generic tank",
         "id": "XXXX-XXXX-XXXXX",
-        "data_timestamp": "2020-05-07T00:00Z",
+        "timestamp": "2020-05-07T00:00Z",
         "data_version": 1,
         "disclaimer": "Example data not to be used for simulation",
         "notes": "An example representation of a tank"
@@ -130,7 +130,7 @@
             "schema_author": "Salome",
             "description": "Thermistor",
             "id": "XXXX-XXXX-XXXXX",
-            "data_timestamp": "2020-05-07T00:00Z",
+            "timestamp": "2020-05-07T00:00Z",
             "data_version": 1,
             "disclaimer": "Example data not to be used for simulation",
             "notes": "An example representation of a resistive heat source"
@@ -206,7 +206,7 @@
             "schema_author": "Olivia",
             "description": "Condenser coil",
             "id": "XXXX-XXXX-XXXXX",
-            "data_timestamp": "2020-05-07T00:00Z",
+            "timestamp": "2020-05-07T00:00Z",
             "data_version": 1,
             "disclaimer": "Example data not to be used for simulation",
             "notes": "An example representation of a condenser heat source"

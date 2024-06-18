@@ -7,9 +7,11 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <core.h>
 #include <enum-info.h>
 #include <courier/courier.h>
-#include <template.h>
+#include <heat-source-base.h>
+#include <heating-logic-base.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -84,7 +86,7 @@ namespace data_model {
 		};
 		struct HeatingLogic {
 			rsintegratedwaterheater_ns::HeatingLogicType heating_logic_type;
-			std::unique_ptr<Template> heating_logic;
+			std::unique_ptr<HeatingLogicBase> heating_logic;
 			rsintegratedwaterheater_ns::ComparisonType comparison_type;
 			bool heating_logic_type_is_set;
 			bool heating_logic_is_set;
@@ -101,7 +103,7 @@ namespace data_model {
 		};
 		struct HeatSourceConfiguration {
 			rsintegratedwaterheater_ns::HeatSourceType heat_source_type;
-			std::unique_ptr<Template> heat_source;
+			std::unique_ptr<HeatSourceBase> heat_source;
 			std::string label;
 			std::vector<double> heat_distribution;
 			std::vector<rsintegratedwaterheater_ns::HeatingLogic> turn_on_logic;
@@ -220,7 +222,8 @@ namespace data_model {
 			const static std::string_view performance_name;
 			const static std::string_view standby_power_name;
 		};
-		struct TempBasedHeatingLogic {
+		struct TempBasedHeatingLogic : HeatingLogicBase {
+            void initialize(const nlohmann::json& j) override;
 			double absolute_temperature;
 			double differential_temperature;
 			std::vector<double> logic_distribution;
@@ -237,7 +240,8 @@ namespace data_model {
 			const static std::string_view differential_temperature_name;
 			const static std::string_view logic_distribution_name;
 		};
-		struct SoCBasedHeatingLogic {
+		struct SoCBasedHeatingLogic : HeatingLogicBase {
+            void initialize(const nlohmann::json& j) override;
 			double decision_point;
 			double minimum_useful_temperature;
 			double hysteresis_fraction;
@@ -293,6 +297,6 @@ namespace data_model {
 		void from_json (const nlohmann::json& j, HeatingLogic& x);
 		void from_json (const nlohmann::json& j, TempBasedHeatingLogic& x);
 		void from_json (const nlohmann::json& j, SoCBasedHeatingLogic& x);
-	}
+ 	}
 }
 #endif
