@@ -7,8 +7,6 @@ namespace data_model  {
 	
 		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = std::move(value); }
 
-		void from_json(const nlohmann::json& j, Schema& x) {
-		}
 		const std::string_view Schema::schema_title = "Integrated Heat-Pump Water Heater";
 
 		const std::string_view Schema::schema_version = "0.1.0";
@@ -79,7 +77,7 @@ namespace data_model  {
 			if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE) {
 				x.heat_source = std::make_unique<rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
 				if (x.heat_source) {
-					x.heat_source->initialize(j.at("heat_source"));
+                    x.heat_source->initialize(j.at("heat_source"));
 				}
 			}
 			if (x.heat_source_type == rsintegratedwaterheater_ns::HeatSourceType::CONDENSER) {
@@ -312,6 +310,9 @@ namespace data_model  {
 
 		const std::string_view SoCBasedHeatingLogic::constant_mains_temperature_name = "constant_mains_temperature";
 
+        void TempBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
+
+        void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
 	}
 }
 

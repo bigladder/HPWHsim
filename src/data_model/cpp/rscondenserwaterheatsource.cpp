@@ -7,8 +7,6 @@ namespace data_model  {
 	
 		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = std::move(value); }
 
-		void from_json(const nlohmann::json& j, Schema& x) {
-		}
 		const std::string_view Schema::schema_title = "Condenser Water Heat Source";
 
 		const std::string_view Schema::schema_version = "0.1.0";
@@ -170,6 +168,8 @@ namespace data_model  {
 		const std::string_view RSCONDENSERWATERHEATSOURCE::description_name = "description";
 
 		const std::string_view RSCONDENSERWATERHEATSOURCE::performance_name = "performance";
+
+        void RSCONDENSERWATERHEATSOURCE::initialize(const nlohmann::json& j) { from_json(j, *this); }
 
 	}
 }

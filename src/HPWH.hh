@@ -18,7 +18,7 @@
 #include <courier/courier.h>
 
 #include <nlohmann/json.hpp>
-#include "hpwh_data_model.h"
+#include "data-model.h"
 
 namespace Btwxt
 {
@@ -90,8 +90,8 @@ class HPWH : public Courier::Sender
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
 
-    void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
-    void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
+    void from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
+    void to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used

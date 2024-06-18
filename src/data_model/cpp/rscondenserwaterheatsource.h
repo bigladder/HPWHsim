@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <core.h>
 #include <enum-info.h>
 #include <courier/courier.h>
+#include <heat-source-base.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -128,7 +130,8 @@ namespace data_model {
 			const static std::string_view coil_configuration_name;
 			const static std::string_view use_defrost_map_name;
 		};
-		struct RSCONDENSERWATERHEATSOURCE {
+		struct RSCONDENSERWATERHEATSOURCE : HeatSourceBase {
+            void initialize(const nlohmann::json& j) override;
 			core_ns::Metadata metadata;
 			rscondenserwaterheatsource_ns::Description description;
 			rscondenserwaterheatsource_ns::Performance performance;

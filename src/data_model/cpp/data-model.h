@@ -10,4 +10,8 @@
 
 #define JSON_HAS_CPP_17
 
+namespace data_model
+{
+void init(std::shared_ptr<Courier::Courier> logger_in);
+}
 #endif

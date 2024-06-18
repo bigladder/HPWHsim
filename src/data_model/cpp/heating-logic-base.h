@@ -9,7 +9,7 @@
 #include <nlohmann/json.hpp>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
-namespace hpwh_data_model
+namespace data_model
 {
 struct HeatingLogicBase
 {

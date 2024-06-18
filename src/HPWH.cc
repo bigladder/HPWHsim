@@ -4008,7 +4008,7 @@ void HPWH::initFromFile(string modelName)
 }
 #endif
 
-void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
     setpoint_C = F_TO_C(135.0);
@@ -4073,7 +4073,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     }
 }
 
-void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& performance = rswh.performance;
 

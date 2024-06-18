@@ -50,7 +50,7 @@ add_subdirectory(data_model/cpp)
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
         PUBLIC ${PROJECT_SOURCE_DIR}/src
-        PUBLIC ${PROJECT_SOURCE_DIR}/src/data_model
+        PUBLIC ${PROJECT_SOURCE_DIR}/src/data_model/cpp
         )
 
 #find_package(nlohmann_json 3.11.3 REQUIRED)
