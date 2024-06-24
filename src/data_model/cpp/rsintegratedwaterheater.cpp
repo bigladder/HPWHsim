@@ -5,7 +5,7 @@ namespace data_model  {
 
 	namespace rsintegratedwaterheater_ns  {
 	
-		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = std::move(value); }
+		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = value; }
 
 		const std::string_view Schema::schema_title = "Integrated Heat-Pump Water Heater";
 
