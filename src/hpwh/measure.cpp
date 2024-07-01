@@ -1,13 +1,46 @@
 /*
- * Utility to measure HPWH performance metrics
+ * Measure the performance metrics of a HPWH model
  */
 
+#include <CLI/CLI.hpp>
 #include "HPWH.hh"
 
-int main(int argc, char* argv[])
+namespace hpwh_cli
+{
+
+/// measure
+static void measure(const std::string& sSpecType,
+                    const std::string& sModelName,
+                    std::string sOutputDir,
+                    std::string sCustomDrawProfile);
+
+CLI::App* add_measure(CLI::App& app)
+{
+    const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
+
+    static std::string sSpecType = "Preset";
+    subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
+
+    static std::string sModelName = "";
+    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+
+    static std::string sOutputDir = ".";
+    subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
+
+    static std::string sCustomDrawProfile = "";
+    subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
+
+    subcommand->callback([&]() { measure(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
+
+    return subcommand;
+}
+
+void measure(const std::string& sSpecType,
+             const std::string& sModelName,
+             std::string sOutputDir,
+             std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
-    bool validNumArgs = false;
 
     HPWH::StandardTestOptions standardTestOptions;
     standardTestOptions.saveOutput = false;
@@ -18,50 +51,14 @@ int main(int argc, char* argv[])
     standardTestOptions.setpointT_C = 51.7;
 
     // process command line arguments
-    std::string sPresetOrFile = "Preset";
-    std::string sModelName;
-    bool useCustomDrawProfile = false;
-    std::string sCustomDrawProfile;
-    if (argc == 2)
+    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    if (sOutputDir != "")
     {
-        sModelName = argv[1];
-        validNumArgs = true;
-    }
-    else if (argc == 3)
-    {
-        sPresetOrFile = argv[1];
-        sModelName = argv[2];
-        validNumArgs = true;
-    }
-    else if (argc == 4)
-    {
-        sPresetOrFile = argv[1];
-        sModelName = argv[2];
-        standardTestOptions.sOutputDirectory = argv[3];
-        validNumArgs = true;
         standardTestOptions.saveOutput = true;
+        standardTestOptions.sOutputDirectory = sOutputDir;
     }
-    else if (argc == 5)
-    {
-        sPresetOrFile = argv[1];
-        sModelName = argv[2];
-        standardTestOptions.sOutputDirectory = argv[3];
-        sCustomDrawProfile = argv[4];
-        useCustomDrawProfile = true;
-        validNumArgs = true;
-        standardTestOptions.saveOutput = true;
-    }
-
-    if (!validNumArgs)
-    {
-        std::cout << "Invalid input:\n\
-            To determine performance metrics for a particular model spec, provide ONE, TWO, THREE, or FOUR arguments:\n\
-            \t[model spec Type, i.e., Preset (default) or File]\n\
-            \t[model spec Name, i.e., Sanden80]\n\
-            \t[output Directory, i.e., .\\output]\n\
-            \t[draw profile, i.e., Medium]\n";
-        exit(1);
-    }
+    standardTestOptions.saveOutput = true;
+    bool useCustomDrawProfile = (sCustomDrawProfile != "");
 
     for (auto& c : sPresetOrFile)
     {
@@ -74,7 +71,6 @@ int main(int argc, char* argv[])
     }
 
     HPWH hpwh;
-    bool validModel = false;
     if (sPresetOrFile == "Preset")
     {
         hpwh.initPreset(sModelName);
@@ -83,12 +79,6 @@ int main(int argc, char* argv[])
     {
         std::string inputFile = sModelName + ".txt";
         hpwh.initFromFile(inputFile);
-    }
-
-    if (!validModel)
-    {
-        std::cout << "Invalid input: Model name not found.\n";
-        exit(1);
     }
 
     if (useCustomDrawProfile)
@@ -128,3 +118,4 @@ int main(int argc, char* argv[])
     HPWH::FirstHourRating firstHourRating;
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 }
+} // namespace hpwh_cli
