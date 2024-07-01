@@ -1,12 +1,3 @@
-# Build test tool
-add_executable(testTool main.cc)
-
-set(libs ${PROJECT_NAME} ${PROJECT_NAME}_common_interface)
-
-target_link_libraries(testTool PRIVATE ${libs})
-
-target_compile_features(testTool PRIVATE cxx_std_17)
-
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
@@ -175,11 +166,11 @@ list(REMOVE_DUPLICATES extendedModelNames)
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(testToolArgs "${ARG_INP_SOURCE}" "${ARG_MODEL_NAME}" "${ARG_TEST_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/output")
+    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
     if (${ARG_TEST_NAME} STREQUAL "testLockout")
         if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
@@ -195,67 +186,67 @@ function(add_model_test)
         else ()
             return()
         endif ()
-        set(testToolArgs ${testToolArgs} ${airTemp})
+        set(hpwhArgs ${hpwhArgs} -a ${airTemp})
     endif ()
 
-    set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_INP_SOURCE}")
+    set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 
-    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTool> ${testToolArgs}
+    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:hpwh> ${hpwhArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
 endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Test(s) specifically for heat-exchange models
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add large compressor tests to the list
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
 #Add State of Charge tests to the list
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
 #Add small compressor yearly tests to the list
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add LARGE compressor yearly tests to the list
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
@@ -294,7 +285,7 @@ endforeach (test)
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
-    set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -302,9 +293,9 @@ function(add_regression_test)
         return()
     endif ()
 
-    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_INP_SOURCE}")
+    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}.csv"
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             )
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
@@ -312,29 +303,29 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add large compressor tests to the regression list
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add State of Charge tests to the list
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
@@ -343,13 +334,3 @@ add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_file
 
 # Add unit tests
 add_subdirectory(unit_tests)
-
-# Build measureMetrics
-add_executable(measureMetrics measureMetrics.cc)
-target_link_libraries(measureMetrics PRIVATE ${libs})
-target_compile_features(measureMetrics PRIVATE cxx_std_17)
-
-# Build makeGeneric
-add_executable(makeGeneric makeGeneric.cc)
-target_link_libraries(makeGeneric PRIVATE ${libs})
-target_compile_features(makeGeneric PRIVATE cxx_std_17)

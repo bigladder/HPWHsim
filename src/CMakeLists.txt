@@ -79,3 +79,6 @@ if (${PROJECT_NAME}_COVERAGE)
     add_coverage(${PROJECT_NAME})
 endif ()
 
+if (${PROJECT_NAME}_BUILD_TESTING)
+    add_subdirectory(hpwh)
+endif ()

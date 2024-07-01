@@ -1,6 +1,9 @@
 [submodule "vendor/btwxt"]
 	path = vendor/btwxt
 	url = https://github.com/bigladder/btwxt.git
+[submodule "CLI11"]
+	path = vendor/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
 
 [submodule "vendor/json"]
 	path = vendor/json
