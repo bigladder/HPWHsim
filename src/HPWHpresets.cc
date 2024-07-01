@@ -65,7 +65,7 @@ int HPWH::initResistanceTank(const double tankVol,
         return HPWH_ABORT;
     }
 
-    setpointT_C = F_TO_C(127.0);
+    setpointT_C = Units::F_to_C() * 127.0);
 
     // start tank off at setpoint
     resetTankToSetpoint();
@@ -77,8 +77,8 @@ int HPWH::initResistanceTank(const double tankVol,
     resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W, Units::Power::W);
 
     // standard logic conditions
-    resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-    resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
+    resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 40.));
+    resistiveElementBottom.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 10.);
 
     if (upperPower_W > 0.)
     {
@@ -87,10 +87,10 @@ int HPWH::initResistanceTank(const double tankVol,
         HeatSource resistiveElementTop(this);
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W, Units::Power::W);
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 20.));
         resistiveElementTop.isVIP = true;
 
-        // set everything in it's correct place
+        // set everything in its correct place
         heatSources.resize(2);
         heatSources[0] = resistiveElementTop;
         heatSources[1] = resistiveElementBottom;
@@ -112,7 +112,7 @@ int HPWH::initResistanceTank(const double tankVol,
     double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
     double temp = 1.0 / (recoveryEfficiency * lowerPower_W * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-    tankUA_kJperhC = BTUperHF_TO_KJperHC(numerator / denominator);
+    tankUA_kJperhC = Units::UA_kJ_per_hC(numerator / denominator, Units::UA::Btu_per_hF);
 
     if (tankUA_kJperhC < 0.)
     {
@@ -167,10 +167,8 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     double upperPower_W = Units::Power_kW(upperPower, unitsPower)(Units::Power::W);
     double lowerPower_W = Units::Power_kW(lowerPower, unitsPower)(Units::Power::W);
     double rValue_m2CperW =
-        Units::convert(Units::TempDiff_C(Units::Area_m2(rValue, unitsArea), unitsTemp),
-                       unitsPower,
-                       Units::Power::W,
-                       -1);
+
+        Units::scale(Units::Area::m2, unitsArea) * Units::scale(Units::Temp::C, unitsTemp) * Units::scale(Units::Power::W, unitsPower) * rValue;
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -213,7 +211,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     }
     canScale = true;
 
-    setpointT_C = F_TO_C(127.0);
+    setpointT_C = Units::F_to_C() * 127.0);
     resetTankToSetpoint(); // start tank off at setpoint
 
     doTempDepression = false;
@@ -226,7 +224,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
         // If the element is added this can mess with the intended logic.
         HeatSource resistiveElementTop(this);
         resistiveElementTop.setupAsResistiveElement(8, upperPower_W, Units::Power::W);
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(20)));
         resistiveElementTop.isVIP = true;
 
         // Upper should always be first in heatSources if it exists.
@@ -239,8 +237,8 @@ int HPWH::initResistanceTankGeneric(double tankVol,
         HeatSource resistiveElementBottom(this);
         resistiveElementBottom.setupAsResistiveElement(0, lowerPower_W, Units::Power::W);
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10.)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(40.)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(10.)));
 
         // set everything in it's correct place
         heatSources.push_back(resistiveElementBottom);
@@ -254,7 +252,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     // Calc UA
     double SA_m2 = getTankSurfaceArea(tankVol_L, Units::Volume::L, Units::Area::m2);
     double tankUA_WperC = SA_m2 / rValue_m2CperW;
-    tankUA_kJperhC = Units::convert(tankUA_WperC, Units::Power::W, Units::Power::kJ_per_h);
+    tankUA_kJperhC = Units::scale(Units::Power::W, Units::Power::kJ_per_h) * tankUA_WperC;
 
     if (tankUA_kJperhC < 0.)
     {
@@ -313,7 +311,7 @@ int HPWH::initGeneric(double tankVol,
 
     // except where noted, these values are taken from MODELS_GE2014STDMode on 5/17/16
     setNumNodes(12);
-    setpointT_C = F_TO_C(127.0);
+    setpointT_C = Units::F_to_C() * 127.0);
 
     // start tank off at setpoint
     resetTankToSetpoint();
@@ -321,7 +319,7 @@ int HPWH::initGeneric(double tankVol,
     tankSizeFixed = false;
 
     // custom settings - these are set later
-    // tankVolume_L = GAL_TO_L(45);
+    // tankVolume_L = Units::GAL_to_L(45);
     // tankUA_kJperhC = 6.5;
 
     doTempDepression = false;
@@ -352,9 +350,9 @@ int HPWH::initGeneric(double tankVol,
                                   Units::Temp::F,
                                   Units::Power::W});
 
-    compressor.minT_C = F_TO_C(45.);
-    compressor.maxT_C = F_TO_C(120.);
-    compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+    compressor.minT_C = Units::F_to_C() * 45.);
+    compressor.maxT_C = Units::F_to_C() * 120.);
+    compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
     compressor.configuration = HeatSource::CONFIG_WRAPPED;
     compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -365,20 +363,20 @@ int HPWH::initGeneric(double tankVol,
     // bottom resistor values
     resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
     resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+    resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
     // logic conditions
     // this is set customly, from input
-    // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+    // resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(19.6605)));
     resistiveElementTop.addTurnOnLogic(HPWH::topThird(resUseT_C));
 
-    resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+    resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 86.1111)));
 
-    compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-    compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
+    compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(33.6883)));
+    compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(12.392)));
 
     // custom adjustment for poorer performance
-    // compressor.addShutOffLogic(HPWH::lowT(F_TO_C(37)));
+    // compressor.addShutOffLogic(HPWH::lowT(Units::F_to_C() * 37)));
     //
     // end section of parameters from GE model
 
@@ -483,16 +481,16 @@ int HPWH::initPreset(MODELS presetNum)
     heatSources.clear();
 
     bool hasInitialTankTemp = false;
-    double initialTankT_C = F_TO_C(120.);
+    double initialTankT_C = Units::F_to_C() * 120.);
 
     // resistive with no UA losses for testing
     if (presetNum == MODELS_restankNoUA)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
+        tankVolume_L = Units::GAL_to_L(50);
         tankUA_kJperhC = 0; // 0 to turn off
 
         doTempDepression = false;
@@ -505,10 +503,10 @@ int HPWH::initPreset(MODELS presetNum)
         resistiveElementTop.setupAsResistiveElement(8, 4500, Units::Power::W);
 
         // standard logic conditions
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(40)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(10)));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(20)));
         resistiveElementTop.isVIP = true;
 
         // assign heat sources into array in order of priority
@@ -559,10 +557,10 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_restankRealistic)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
+        tankVolume_L = Units::GAL_to_L(50);
         tankUA_kJperhC = 10; // 0 to turn off
 
         doTempDepression = false;
@@ -595,11 +593,11 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpointT_C = 800.;
 
-        initialTankT_C = F_TO_C(127.);
+        initialTankT_C = Units::F_to_C() * 127.);
         hasInitialTankTemp = true;
 
         tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(80);
+        tankVolume_L = Units::GAL_to_L(80);
         tankUA_kJperhC = 10; // 0 to turn off
 
         doTempDepression = false;
@@ -627,7 +625,7 @@ int HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementTop.setupAsResistiveElement(9, 4500, Units::Power::W);
 
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // standard logic conditions
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(20));
@@ -659,8 +657,8 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Power::kW});
 
         compressor.minT_C = 0;
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -719,7 +717,7 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::kW});
 
-        compressor.maxT_C = F_TO_C(120.);
+        compressor.maxT_C = Units::F_to_C() * 120.);
         compressor.hysteresisOffsetT_C = 0; // no hysteresis
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
@@ -739,7 +737,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithPHPT60)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         tankVolume_L = 215.8;
         tankUA_kJperhC = 7.31;
@@ -774,9 +772,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::kW});
 
-        compressor.minT_C = F_TO_C(45.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
+        compressor.minT_C = Units::F_to_C() * 45.0);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -786,17 +784,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2000, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // logic conditions
-        double compStart = dF_TO_dC(43.6);
-        double standbyT = dF_TO_dC(23.8);
+        double compStart = Units::dF_to_dC(43.6);
+        double standbyT = Units::dF_to_dC(23.8);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(25.0)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -815,7 +813,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithPHPT80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         tankVolume_L = 283.9;
         tankUA_kJperhC = 8.8;
@@ -850,9 +848,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::kW});
 
-        compressor.minT_C = F_TO_C(45.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
+        compressor.minT_C = Units::F_to_C() * 45.0);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -862,17 +860,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2000, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // logic conditions
-        double compStart = dF_TO_dC(43.6);
-        double standbyT = dF_TO_dC(23.8);
+        double compStart = Units::dF_to_dC(43.6);
+        double standbyT = Units::dF_to_dC(23.8);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(25.0)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(25.0)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -891,7 +889,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2012)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * ) * 127.0;
 
         tankVolume_L = 172;
         tankUA_kJperhC = 6.8;
@@ -925,9 +923,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::kW});
 
-        compressor.minT_C = F_TO_C(45.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(4);
+        compressor.minT_C = Units::F_to_C() * 45.0);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(4);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -937,23 +935,23 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4200, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // logic conditions
-        //     double compStart = dF_TO_dC(24.4);
-        double compStart = dF_TO_dC(40.0);
-        double standbyT = dF_TO_dC(5.2);
+        //     double compStart = Units::dF_to_dC(24.4);
+        double compStart = Units::dF_to_dC() * 40.0;
+        double standbyT = Units::dF_to_dC() * 5.2;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
-        // compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(66)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        // compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 66)));
+        compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * ) * 65.));
 
         resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(compStart));
         // resistiveElementBottom.addShutOffLogic(HPWH::lowTreheat(lowTcutoff));
         // GE element never turns off?
 
-        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31.0)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28.0)));
+        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(31.0)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 28.0));
 
         // set everything in its places
         heatSources.resize(3);
@@ -973,7 +971,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
     {
         setNumNodes(96);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * ) * 135.0;
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1000,13 +998,13 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(15), this));
+            "fourth node", nodeWeights, Units::dF_to_dC(15), this));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "bottom node", nodeWeights1, Units::dF_to_dC() * 15., this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1016,7 +1014,7 @@ int HPWH::initPreset(MODELS presetNum)
         {
             setTankSizeWithSameU(200., Units::Volume::gal);
             // logic conditions
-            compressor.minT_C = F_TO_C(-4.0);
+            compressor.minT_C = Units::F_to_C() * ) * -4.0;
             compressor.maxSetpointT_C = MAXOUTLET_R410A;
 
             compressor.perfMap.push_back({100, // Temperature (F)
@@ -1051,7 +1049,7 @@ int HPWH::initPreset(MODELS presetNum)
         else
         {
             // logic conditions
-            compressor.minT_C = F_TO_C(40.);
+            compressor.minT_C = Units::F_to_C() * ) * 40.;
             compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
             if (presetNum == MODELS_ColmacCxA_10_SP)
@@ -1230,7 +1228,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * ) * 135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1255,12 +1253,12 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(5.), this));
+            "fourth node", nodeWeights, Units::dF_to_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
+            "fourth node", nodeWeights1, Units::dF_to_dC(0.), this, false, std::greater<double>()));
 
         compressor.depressesTemperature = false; // no temp depression
 
@@ -1270,12 +1268,12 @@ int HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_ColmacCxV_5_MP)
         {
             setTankSizeWithSameU(200., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(
                 9.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
             // logic conditions
-            compressor.minT_C = F_TO_C(-4.0);
-            compressor.maxT_C = F_TO_C(105.);
+            compressor.minT_C = Units::F_to_C() * ) * -4.0);
+            compressor.maxT_C = Units::F_to_C() * ) * 105.);
             compressor.maxSetpointT_C = MAXOUTLET_R410A;
             compressor.perfMap.push_back({100, // Temperature (F)
 
@@ -1299,14 +1297,14 @@ int HPWH::initPreset(MODELS presetNum)
         else
         {
             // logic conditions
-            compressor.minT_C = F_TO_C(40.);
-            compressor.maxT_C = F_TO_C(105.);
+            compressor.minT_C = Units::F_to_C() * ) * 40.);
+            compressor.maxT_C = Units::F_to_C() * ) * 105.);
             compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
             if (presetNum == MODELS_ColmacCxA_10_MP)
             {
                 setTankSizeWithSameU(500., Units::Volume::gal);
-                compressor.mpFlowRate_LPS = GPM_TO_LPS(18.);
+                compressor.mpFlowRate_LPS = Units::GPM_to_LPS(18.);
                 compressor.perfMap.push_back({100, // Temperature (F)
 
                                               {8.6918824405,
@@ -1329,7 +1327,7 @@ int HPWH::initPreset(MODELS presetNum)
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {
                 setTankSizeWithSameU(600., Units::Volume::gal);
-                compressor.mpFlowRate_LPS = GPM_TO_LPS(26.);
+                compressor.mpFlowRate_LPS = Units::GPM_to_LPS(26.);
                 compressor.perfMap.push_back({100, // Temperature (F)
 
                                               {12.4908723958,
@@ -1352,7 +1350,7 @@ int HPWH::initPreset(MODELS presetNum)
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
                 setTankSizeWithSameU(800., Units::Volume::gal);
-                compressor.mpFlowRate_LPS = GPM_TO_LPS(
+                compressor.mpFlowRate_LPS = Units::GPM_to_LPS(
                     36.); // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
                 compressor.perfMap.push_back({100, // Temperature (F)
@@ -1376,7 +1374,7 @@ int HPWH::initPreset(MODELS presetNum)
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
                 setTankSizeWithSameU(1000., Units::Volume::gal);
-                compressor.mpFlowRate_LPS = GPM_TO_LPS(32.);
+                compressor.mpFlowRate_LPS = Units::GPM_to_LPS(32.);
                 compressor.perfMap.push_back({100, // Temperature (F)
 
                                               {14.5805808222,
@@ -1398,7 +1396,7 @@ int HPWH::initPreset(MODELS presetNum)
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
                 setTankSizeWithSameU(1200., Units::Volume::gal);
-                compressor.mpFlowRate_LPS = GPM_TO_LPS(41.);
+                compressor.mpFlowRate_LPS = Units::GPM_to_LPS(41.);
                 compressor.perfMap.push_back({100, // Temperature (F)
 
                                               {14.5824911644,
@@ -1427,7 +1425,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
     {
         setNumNodes(96);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * ) * 135.0);
         tankSizeFixed = false;
 
         tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
@@ -1452,30 +1450,30 @@ int HPWH::initPreset(MODELS presetNum)
         // logic conditions
         if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
         {                                    // If not cold weather package
-            compressor.minT_C = F_TO_C(40.); // Min air temperature sans Cold Weather Package
+            compressor.minT_C = Units::F_to_C() * ) * 40.); // Min air temperature sans Cold Weather Package
         }
         else
         {
-            compressor.minT_C = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+            compressor.minT_C = Units::F_to_C() * ) * 35.); // Min air temperature WITH Cold Weather Package
         }
-        compressor.maxT_C = F_TO_C(120.0); // Max air temperature
+        compressor.maxT_C = Units::F_to_C() * ) * 120.0); // Max air temperature
         compressor.hysteresisOffsetT_C = 0;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // Defines the maximum outlet temperature at the a low air temperature
-        compressor.maxOut_at_LowT.outT_C = F_TO_C(140.);
-        compressor.maxOut_at_LowT.airT_C = F_TO_C(40.);
+        compressor.maxOut_at_LowT.outT_C = Units::F_to_C() * ) * 140.);
+        compressor.maxOut_at_LowT.airT_C = Units::F_to_C() * ) * 40.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(15.), this, false));
+            "fourth node", nodeWeights, Units::dF_to_dC(15.), this, false));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "bottom node", nodeWeights1, Units::dF_to_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1685,7 +1683,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * ) * 135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1709,24 +1707,24 @@ int HPWH::initPreset(MODELS presetNum)
         // logic conditions//logic conditions
         if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
         {                                    // If not cold weather package
-            compressor.minT_C = F_TO_C(40.); // Min air temperature sans Cold Weather Package
+            compressor.minT_C = Units::F_to_C() * ) * 40.); // Min air temperature sans Cold Weather Package
         }
         else
         {
-            compressor.minT_C = F_TO_C(35.); // Min air temperature WITH Cold Weather Package
+            compressor.minT_C = Units::F_to_C() * ) * 35.); // Min air temperature WITH Cold Weather Package
         }
-        compressor.maxT_C = F_TO_C(130.0); // Max air temperature
-        compressor.maxSetpointT_C = F_TO_C(160.);
+        compressor.maxT_C = Units::F_to_C() * ) * 130.0); // Max air temperature
+        compressor.maxSetpointT_C = Units::F_to_C() * ) * 160.);
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(5.), this));
+            "fourth node", nodeWeights, Units::dF_to_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
+            "fourth node", nodeWeights1, Units::dF_to_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1747,7 +1745,7 @@ int HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
             setTankSizeWithSameU(360., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(13.);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(13.);
             if (presetNum == MODELS_NyleC60A_C_MP)
             {
                 compressor.resDefrost = {4.5,  // inputPwr (kW)
@@ -1771,7 +1769,7 @@ int HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
         {
             setTankSizeWithSameU(480., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(20.);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(20.);
             if (presetNum == MODELS_NyleC90A_C_MP)
             {
                 compressor.resDefrost = {5.4,  // inputPwr (kW)
@@ -1795,7 +1793,7 @@ int HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
         {
             setTankSizeWithSameU(600., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(28.);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(28.);
             if (presetNum == MODELS_NyleC125A_C_MP)
             {
                 compressor.resDefrost = {9.0,  // inputPwr (kW)
@@ -1819,7 +1817,7 @@ int HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
         {
             setTankSizeWithSameU(960., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(40.);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(40.);
             if (presetNum == MODELS_NyleC185A_C_MP)
             {
                 compressor.resDefrost = {7.2,  // inputPwr (kW)
@@ -1844,7 +1842,7 @@ int HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
         {
             setTankSizeWithSameU(960., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(50.);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(50.);
             if (presetNum == MODELS_NyleC250A_C_MP)
             {
                 compressor.resDefrost = {18.0, // inputPwr (kW)
@@ -1881,7 +1879,7 @@ int HPWH::initPreset(MODELS presetNum)
              presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * ) * 135.0);
         tankSizeFixed = false;
 
         doTempDepression = false;
@@ -1906,27 +1904,27 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(5.), this));
+            "fourth node", nodeWeights, Units::dF_to_dC(5.), this));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
+            "fourth node", nodeWeights1, Units::dF_to_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
 
         // Defrost Derate
         compressor.setupDefrostMap();
 
         // logic conditions
-        compressor.minT_C = F_TO_C(45.);
-        compressor.maxT_C = F_TO_C(110.);
+        compressor.minT_C = Units::F_to_C() * ) * 45.);
+        compressor.maxT_C = Units::F_to_C() * ) * 110.);
         compressor.maxSetpointT_C = MAXOUTLET_R134A; // data says 150...
 
         if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
             presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
         {
             setTankSizeWithSameU(250., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(17.4);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(17.4);
             compressor.perfMap.push_back({110, // Temperature (F)
 
                                           {1.8558438453,
@@ -1950,7 +1948,7 @@ int HPWH::initPreset(MODELS presetNum)
                  presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
         {
             setTankSizeWithSameU(500., Units::Volume::gal);
-            compressor.mpFlowRate_LPS = GPM_TO_LPS(34.87);
+            compressor.mpFlowRate_LPS = Units::GPM_to_LPS(34.87);
             compressor.perfMap.push_back({110, // Temperature (F)
 
                                           {5.1838201136,
@@ -1981,7 +1979,7 @@ int HPWH::initPreset(MODELS presetNum)
         setNumNodes(96);
         setpointT_C = 65;
 
-        tankVolume_L = GAL_TO_L(500);
+        tankVolume_L = Units::GAL_to_L(500);
         tankUA_kJperhC = 12;
         tankSizeFixed = false;
 
@@ -1993,7 +1991,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isOn = false;
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
-        compressor.minT_C = F_TO_C(-13.);
+        compressor.minT_C = Units::F_to_C() * ) * -13.);
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.externalOutletNodeIndex = 0;
         compressor.externalInletNodeIndex = getNumNodes() - 1;
@@ -2002,19 +2000,19 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.hysteresisOffsetT_C = 4;
         compressor.configuration = HeatSource::CONFIG_EXTERNAL;
         compressor.isMultipass = false;
-        compressor.maxSetpointT_C = F_TO_C(176.1);
+        compressor.maxSetpointT_C = Units::F_to_C() * ) * 176.1);
 
         // Turn on
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "eighth node absolute", nodeWeights, F_TO_C(110.), this, true));
+            "eighth node absolute", nodeWeights, Units::F_to_C() * ) * 110.), this, true));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "bottom node", nodeWeights1, Units::dF_to_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false;
 
         // Performance grid: externalT_C, outT_C, condenserT_C
@@ -2254,7 +2252,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         compressor.useBtwxtGrid = true;
 
-        compressor.secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
+        compressor.secondaryHeatExchanger = {Units::dF_to_dC(10.), Units::dF_to_dC(15.), 27.};
 
         // set everything in its places
         heatSources.resize(1);
@@ -2270,7 +2268,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_SANCO2_119)
         {
-            tankVolume_L = GAL_TO_L(119);
+            tankVolume_L = Units::GAL_to_L(119);
             tankUA_kJperhC = 9;
         }
         else
@@ -2291,7 +2289,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isOn = false;
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
-        compressor.minT_C = F_TO_C(-25.);
+        compressor.minT_C = Units::F_to_C() * ) * -25.);
         compressor.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor.externalOutletNodeIndex = 0;
         compressor.externalInletNodeIndex = getNumNodes() - 1;
@@ -2336,10 +2334,10 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(8);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "eighth node absolute", nodeWeights, F_TO_C(113), this, true));
+            "eighth node absolute", nodeWeights, Units::F_to_C() * ) * 113), this, true));
         if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
         {
-            compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+            compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(8.2639)));
             // Adds a bonus standby logic so the external heater does not cycle, recommended
             // for any external heater with standby
             std::vector<NodeWeight> nodeWeightStandby;
@@ -2347,7 +2345,7 @@ int HPWH::initPreset(MODELS presetNum)
             compressor.standbyLogic =
                 std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
                                                               nodeWeightStandby,
-                                                              F_TO_C(113),
+                                                              Units::F_to_C() * ) * 113),
                                                               this,
                                                               true,
                                                               std::greater<double>());
@@ -2358,7 +2356,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.addShutOffLogic(
             std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
                                                           nodeWeights1,
-                                                          F_TO_C(135),
+                                                          Units::F_to_C() * ) * 135),
                                                           this,
                                                           true,
                                                           std::greater<double>(),
@@ -2387,7 +2385,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.isOn = false;
         compressor.isVIP = true;
         compressor.typeOfHeatSource = TYPE_compressor;
-        compressor.minT_C = F_TO_C(-25.);
+        compressor.minT_C = Units::F_to_C() * ) * -25.);
         compressor.externalOutletNodeIndex = 0;
         compressor.externalInletNodeIndex = getTopNodeIndex();
 
@@ -2435,12 +2433,12 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeightStandby;
         nodeWeightStandby.emplace_back(0);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node absolute", nodeWeights, F_TO_C(113), this, true));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(8.2639)));
+            "fourth node absolute", nodeWeights, Units::F_to_C() * ) * 113), this, true));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(8.2639)));
         compressor.standbyLogic =
             std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node absolute",
                                                           nodeWeightStandby,
-                                                          F_TO_C(113),
+                                                          Units::F_to_C() * ) * 113),
                                                           this,
                                                           true,
                                                           std::greater<double>());
@@ -2451,7 +2449,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.addShutOffLogic(
             std::make_shared<HPWH::TempBasedHeatingLogic>("bottom twelfth absolute",
                                                           nodeWeights1,
-                                                          F_TO_C(135),
+                                                          Units::F_to_C() * ) * 135),
                                                           this,
                                                           true,
                                                           std::greater<double>(),
@@ -2466,7 +2464,7 @@ int HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4550)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * ) * 127.0);
 
         tankVolume_L = 171;
         tankUA_kJperhC = 6;
@@ -2507,9 +2505,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(42.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * ) * 42.0);
+        compressor.maxT_C = Units::F_to_C() * ) * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2533,22 +2531,22 @@ int HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(35);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC(35);
+        double standbyT = Units::dF_to_dC(9);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * ) * 100)));
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
         resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(28)));
+            "top sixth absolute", nodeWeights, Units::F_to_C() * ) * 105), this, true));
+        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(28)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -2570,7 +2568,7 @@ int HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4565)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * ) * 127.0);
 
         if (presetNum == MODELS_AOSmithHPTU66)
         {
@@ -2618,9 +2616,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(42.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 42.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2644,22 +2642,22 @@ int HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(35);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC(35);
+        double standbyT = Units::dF_to_dC(9);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100.));
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
         resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(31)));
+            "top sixth absolute", nodeWeights, Units::F_to_C() * 105., this, true));
+        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(31)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -2681,7 +2679,7 @@ int HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemHBDR4580)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
         tankVolume_L = 299.5;
         tankUA_kJperhC = 9;
@@ -2723,9 +2721,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(42.0);
-        compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
+        compressor.minT_C = Units::F_to_C() * 42.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
 
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2280)
@@ -2747,23 +2745,23 @@ int HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         }
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(35);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC(35);
+        double standbyT = Units::dF_to_dC(9);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100.));
 
         std::vector<NodeWeight> nodeWeights;
         //		nodeWeights.emplace_back(9); nodeWeights.emplace_back(10);
         nodeWeights.emplace_back(11);
         nodeWeights.emplace_back(12);
         resistiveElementTop.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "top sixth absolute", nodeWeights, F_TO_C(105), this, true));
-        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
+            "top sixth absolute", nodeWeights, Units::F_to_C() * 105., this, true));
+        //		resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(35)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -2784,7 +2782,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithHPTU80_DR)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
         tankVolume_L = 283.9;
         tankUA_kJperhC = 9;
@@ -2819,9 +2817,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(42.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 42.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
@@ -2830,18 +2828,18 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(34.1636);
-        double standbyT = dF_TO_dC(7.1528);
+        double compStart = Units::dF_to_dC() * 34.1636;
+        double standbyT = Units::dF_to_dC() * 7.1528;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80.108)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80.108));
 
-        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(39.9691)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
+        // resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(39.9691)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(Units::F_to_C() * 87));
 
         // set everything in its places
         heatSources.resize(3);
@@ -2860,10 +2858,10 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_AOSmithCAHP120)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(150.0);
+        setpointT_C = Units::F_to_C() * 150.0;
 
-        tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-        tankUA_kJperhC = BTUperHF_TO_KJperHC(3.94);
+        tankVolume_L = Units::GAL_to_L() * 111.76; // AOSmith docs say 111.76
+        tankUA_kJperhC = Units::UA_kJ_per_hC(3.94, Units::UA::Btu_per_hF);
 
         doTempDepression = false;
         tankMixesOnDraw = false;
@@ -2904,9 +2902,9 @@ int HPWH::initPreset(MODELS presetNum)
              Units::Power::W});
 
         compressor.minT_C =
-            F_TO_C(47.0); // Product documentation says 45F doesn't look like it in CMP-T test//
-        compressor.maxT_C = F_TO_C(110.0);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+            Units::F_to_C() * 47.0; // Product documentation says 45F doesn't look like it in CMP-T test//
+        compressor.maxT_C = Units::F_to_C() * 110.0;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -2918,13 +2916,13 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, powerRE_W, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
         resistiveElementBottom.setCondensity(
             {0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
 
         // logic conditions for
-        double compStart = dF_TO_dC(5.25);
-        double standbyT = dF_TO_dC(5.); // Given CMP_T test
+        double compStart = Units::dF_to_dC(5.25);
+        double standbyT = Units::dF_to_dC(5.); // Given CMP_T test
         compressor.addTurnOnLogic(HPWH::secondSixth(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
@@ -2932,8 +2930,8 @@ int HPWH::initPreset(MODELS presetNum)
         resistiveElementTop.addTurnOnLogic(HPWH::topThird(resistanceStart));
         resistiveElementBottom.addTurnOnLogic(HPWH::topThird(resistanceStart));
 
-        resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(F_TO_C(117.)));
-        resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(F_TO_C(109.)));
+        resistiveElementTop.addShutOffLogic(HPWH::fifthSixthMaxTemp(Units::F_to_C() * 117.));
+        resistiveElementBottom.addShutOffLogic(HPWH::secondSixthMaxTemp(Units::F_to_C() * 109.));
 
         // set everything in its places
         heatSources.resize(3);
@@ -2956,21 +2954,21 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
         if (presetNum == MODELS_AOSmithHPTS50)
         {
-            tankVolume_L = GAL_TO_L(45.6);
+            tankVolume_L = Units::GAL_to_L() * 45.6;
             tankUA_kJperhC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            tankVolume_L = GAL_TO_L(67.63);
+            tankVolume_L = Units::GAL_to_L() * 67.63;
             tankUA_kJperhC = BTUperHF_TO_KJperHC(1.5) * 6.403 / BTUperHF_TO_KJperHC(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            tankVolume_L = GAL_TO_L(81.94);
+            tankVolume_L = Units::GAL_to_L() * 81.94;
             tankUA_kJperhC = BTUperHF_TO_KJperHC(1.73) * 6.403 / BTUperHF_TO_KJperHC(1.16);
         }
         doTempDepression = false;
@@ -3006,9 +3004,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1.);
+        compressor.minT_C = Units::F_to_C() * 37.;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3016,15 +3014,15 @@ int HPWH::initPreset(MODELS presetNum)
         resistiveElementTop.isVIP = true;
 
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(30.2);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC() * 30.2;
+        double standbyT = Units::dF_to_dC() * 9.;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(11.87)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 11.87));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3046,9 +3044,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014STDMode)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(45);
+        tankVolume_L = Units::GAL_to_L() * 45.;
         tankUA_kJperhC = 6.5;
 
         doTempDepression = false;
@@ -3079,9 +3077,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3092,16 +3090,16 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 19.6605));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 86.1111)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-        //    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 12.392));
+        //    compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 65)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3120,9 +3118,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014STDMode_80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(75.4);
+        tankVolume_L = Units::GAL_to_L() * 75.4;
         tankUA_kJperhC = 10.;
 
         doTempDepression = false;
@@ -3160,17 +3158,17 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.6605)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 19.6605));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 86.1111));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
-        compressor.minT_C = F_TO_C(37);
-        //    compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 12.392));
+        compressor.minT_C = Units::F_to_C() * 37.;
+        //    compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 65)));
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // set everything in its places
@@ -3190,9 +3188,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(45);
+        tankVolume_L = Units::GAL_to_L() * 45.;
         tankUA_kJperhC = 6.5;
 
         doTempDepression = false;
@@ -3224,9 +3222,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3237,18 +3235,18 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 20.));
+        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(Units::F_to_C() * 116.6358));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 11.0648));
+        // compressor.addShutOffLogic(HPWH::largerDraw(Units::F_to_C() * 62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC() * 60.));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3267,9 +3265,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014_80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
+        tankVolume_L = Units::GAL_to_L(75.4);
         tankUA_kJperhC = 10.;
 
         doTempDepression = false;
@@ -3301,9 +3299,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3314,18 +3312,18 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(20)));
+        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(Units::F_to_C() * 116.6358));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 11.0648));
+        // compressor.addShutOffLogic(HPWH::largerDraw(Units::F_to_C() * 62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC() * 60.));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80.));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3344,9 +3342,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014_80DR)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(75.4);
+        tankVolume_L = Units::GAL_to_L() * 75.4;
         tankUA_kJperhC = 10.;
 
         doTempDepression = false;
@@ -3378,9 +3376,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3391,19 +3389,19 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        //  resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(F_TO_C(87)));
-        // resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        //  resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(20)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird_absolute(Units::F_to_C() * 87.));
+        // resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(Units::F_to_C() * 116.6358));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 11.0648));
+        // compressor.addShutOffLogic(HPWH::largerDraw(Units::F_to_C() * 62.4074)));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        // resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC() * 60.));
+        // resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3423,9 +3421,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_BWC2020_65)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(64);
+        tankVolume_L = Units::GAL_to_L() * 64.;
         tankUA_kJperhC = 7.6;
 
         doTempDepression = false;
@@ -3457,9 +3455,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3470,18 +3468,18 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 20.));
+        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(Units::F_to_C() * 116.6358));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        // compressor.addShutOffLogic(HPWH::largerDraw(F_TO_C(62.4074)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 33.6883));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 11.0648));
+        // compressor.addShutOffLogic(HPWH::largerDraw(Units::F_to_C() * 62.4074));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC() * 60.));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80.));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3498,26 +3496,26 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_Rheem2020Prem40 <= presetNum && presetNum <= MODELS_Rheem2020Prem80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
         if (presetNum == MODELS_Rheem2020Prem40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
+            tankVolume_L = Units::GAL_to_L() * 36.1;
             tankUA_kJperhC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Prem50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
+            tankVolume_L = Units::GAL_to_L() * 45.1;
             tankUA_kJperhC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Prem65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
+            tankVolume_L = Units::GAL_to_L() * 58.5;
             tankUA_kJperhC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Prem80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
+            tankVolume_L = Units::GAL_to_L() * 72.0;
             tankUA_kJperhC = 10.83;
         }
 
@@ -3549,9 +3547,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3561,16 +3559,16 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // logic conditions
-        double compStart = dF_TO_dC(32);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC() * 32.;
+        double standbyT = Units::dF_to_dC() * 9.;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100.));
+        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(Units::dF_to_dC() * 20.4167));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3593,26 +3591,26 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_Rheem2020Build40 <= presetNum && presetNum <= MODELS_Rheem2020Build80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
         if (presetNum == MODELS_Rheem2020Build40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
+            tankVolume_L = Units::GAL_to_L() * 36.1;
             tankUA_kJperhC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Build50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
+            tankVolume_L = Units::GAL_to_L() * 45.1;
             tankUA_kJperhC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Build65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
+            tankVolume_L = Units::GAL_to_L() * 58.5;
             tankUA_kJperhC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Build80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
+            tankVolume_L = Units::GAL_to_L() * 72.0;
             tankUA_kJperhC = 10.83;
         }
 
@@ -3643,9 +3641,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.0);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
@@ -3656,16 +3654,16 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(4);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(4);
 
         // logic conditions
-        double compStart = dF_TO_dC(30);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC() * 30.;
+        double standbyT = Units::dF_to_dC() * 9.;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100.));
+        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(Units::dF_to_dC() * 20.4167));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3689,27 +3687,27 @@ int HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
+            tankVolume_L = Units::GAL_to_L() * 36.0;
             tankUA_kJperhC = 9.5;
-            setpointT_C = F_TO_C(140.0);
+            setpointT_C = Units::F_to_C() * 140.0;
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
+            tankVolume_L = Units::GAL_to_L() * 45.0;
             tankUA_kJperhC = 8.55;
-            setpointT_C = F_TO_C(140.0);
+            setpointT_C = Units::F_to_C() * 140.0;
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
+            tankVolume_L = Units::GAL_to_L() * 58.5;
             tankUA_kJperhC = 10.64;
-            setpointT_C = F_TO_C(127.0);
+            setpointT_C = Units::F_to_C() * 127.0;
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
+            tankVolume_L = Units::GAL_to_L() * 72.0;
             tankUA_kJperhC = 10.83;
-            setpointT_C = F_TO_C(127.0);
+            setpointT_C = Units::F_to_C() * 127.0;
         }
 
         doTempDepression = false;
@@ -3737,15 +3735,15 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.0);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // logic conditions
-        double compStart = dF_TO_dC(32);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC() * 32.;
+        double standbyT = Units::dF_to_dC() * 9.;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
@@ -3757,15 +3755,15 @@ int HPWH::initPreset(MODELS presetNum)
              presetNum == MODELS_RheemPlugInDedicated50)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
         if (presetNum == MODELS_RheemPlugInDedicated40)
         {
-            tankVolume_L = GAL_TO_L(36);
+            tankVolume_L = Units::GAL_to_L() * 36.;
             tankUA_kJperhC = 5.5;
         }
         else if (presetNum == MODELS_RheemPlugInDedicated50)
         {
-            tankVolume_L = GAL_TO_L(45);
+            tankVolume_L = Units::GAL_to_L() * 45.;
             tankUA_kJperhC = 6.33;
         }
         doTempDepression = false;
@@ -3792,16 +3790,16 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.0);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 1.;
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
 
         // logic conditions
-        double compStart = dF_TO_dC(20);
-        double standbyT = dF_TO_dC(9);
+        double compStart = Units::dF_to_dC() * 20.;
+        double standbyT = Units::dF_to_dC() * 9.;
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
@@ -3812,9 +3810,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_RheemHB50)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(45);
+        tankVolume_L = Units::GAL_to_L() * 45.;
         tankUA_kJperhC = 7;
 
         doTempDepression = false;
@@ -3846,9 +3844,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
-        compressor.minT_C = F_TO_C(40.0);
-        compressor.maxT_C = F_TO_C(120.0);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(1);
+        compressor.minT_C = Units::F_to_C() * 40.0;
+        compressor.maxT_C = Units::F_to_C() * 120.0;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         compressor.configuration = HPWH::HeatSource::CONFIG_WRAPPED;
@@ -3859,17 +3857,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 2250, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        double compStart = dF_TO_dC(38);
-        double standbyT = dF_TO_dC(13.2639);
+        double compStart = Units::dF_to_dC(38);
+        double standbyT = Units::dF_to_dC(13.2639);
         compressor.addTurnOnLogic(HPWH::bottomThird(compStart));
         compressor.addTurnOnLogic(HPWH::standby(standbyT));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(76.7747)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 76.7747));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(dF_TO_dC(20.4167)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topSixth(Units::dF_to_dC() * 20.4167));
 
         // set everything in its places
         heatSources.resize(3);
@@ -3888,9 +3886,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_Stiebel220E)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127);
+        setpointT_C = Units::F_to_C() * 127;
 
-        tankVolume_L = GAL_TO_L(56);
+        tankVolume_L = Units::GAL_to_L() * 56.;
         // tankUA_kJperhC = 10; //0 to turn off
         tankUA_kJperhC = 9;
 
@@ -3905,7 +3903,7 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.typeOfHeatSource = TYPE_compressor;
 
         resistiveElement.setupAsResistiveElement(0, 1500, Units::Power::W);
-        resistiveElement.hysteresisOffsetT_C = dF_TO_dC(0);
+        resistiveElement.hysteresisOffsetT_C = Units::dF_to_dC(0);
 
         compressor.setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
@@ -3923,14 +3921,14 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(32.0);
-        compressor.maxT_C = F_TO_C(120.);
+        compressor.minT_C = Units::F_to_C() * 32.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
         compressor.hysteresisOffsetT_C = 0; // no hysteresis
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
-        compressor.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(6.5509)));
-        compressor.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        compressor.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC() * 6.5509));
+        compressor.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100.));
 
         compressor.depressesTemperature = false; // no temp depression
 
@@ -3946,9 +3944,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_Generic1)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(50);
+        tankVolume_L = Units::GAL_to_L() * 50.;
         tankUA_kJperhC = 9;
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -3977,9 +3975,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(45.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 45.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -3989,17 +3987,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40.0)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(65)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 40.0));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 10.));
+        compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 65));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(110)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 80.));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 110.));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(35)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 35.));
 
         // set everything in its places
         heatSources.resize(3);
@@ -4016,9 +4014,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_Generic2)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(50);
+        tankVolume_L = Units::GAL_to_L() * 50.;
         tankUA_kJperhC = 7.5;
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -4049,9 +4047,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(40.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 40.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4061,17 +4059,17 @@ int HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(60)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 40.));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 10.));
+        compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 60));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(80)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(100)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 80.));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 100));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(40)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -4090,9 +4088,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_Generic3)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0;
 
-        tankVolume_L = GAL_TO_L(50);
+        tankVolume_L = Units::GAL_to_L() * 50.;
         tankUA_kJperhC = 5;
 
         doTempDepression = false;
@@ -4126,9 +4124,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(35.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 35.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
@@ -4138,16 +4136,16 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500, Units::Power::W);
         resistiveElementBottom.setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(40)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(10)));
-        compressor.addShutOffLogic(HPWH::largeDraw(F_TO_C(55)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 40.));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC() * 10.));
+        compressor.addShutOffLogic(HPWH::largeDraw(Units::F_to_C() * 55.));
 
-        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(60)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC() * 60.));
 
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(40)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC() * 40.));
 
         // set everything in its places
         heatSources.resize(3);
@@ -4166,9 +4164,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_UEF2generic)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
-        tankVolume_L = GAL_TO_L(45);
+        tankVolume_L = Units::GAL_to_L(45);
         tankUA_kJperhC = 6.5;
 
         doTempDepression = false;
@@ -4199,9 +4197,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(37.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 37.0;
+        compressor.maxT_C = Units::F_to_C() * 120.;
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4212,15 +4210,15 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC() * 2.;
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(18.6605)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(18.6605)));
 
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 86.1111)));
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(12.392)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(33.6883)));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(12.392)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -4239,26 +4237,26 @@ int HPWH::initPreset(MODELS presetNum)
     else if (MODELS_AWHSTier3Generic40 <= presetNum && presetNum <= MODELS_AWHSTier3Generic80)
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         if (presetNum == MODELS_AWHSTier3Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
+            tankVolume_L = Units::GAL_to_L(36.1);
             tankUA_kJperhC = 5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic50)
         {
-            tankVolume_L = GAL_TO_L(45);
+            tankVolume_L = Units::GAL_to_L(45);
             tankUA_kJperhC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic65)
         {
-            tankVolume_L = GAL_TO_L(64);
+            tankVolume_L = Units::GAL_to_L(64);
             tankUA_kJperhC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier3Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
+            tankVolume_L = Units::GAL_to_L(75.4);
             tankUA_kJperhC = 10.;
         }
         else
@@ -4299,9 +4297,9 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(42.0);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 42.0);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
@@ -4312,15 +4310,15 @@ int HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4000, Units::Power::W);
         resistiveElementBottom.setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(20)));
-        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(F_TO_C(116.6358)));
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(33.6883)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.0648)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(20)));
+        resistiveElementTop.addShutOffLogic(HPWH::topNodeMaxTemp(Units::F_to_C() * 116.6358)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(33.6883)));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(11.0648)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC(60)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80)));
 
         // set everything in its places
         heatSources.resize(3);
@@ -4340,7 +4338,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if ((MODELS_TamScalable_SP <= presetNum) && (presetNum <= MODELS_TamScalable_SP_Half))
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * 135.0);
         tankSizeFixed = false;
         canScale = true; // a fully scallable model
 
@@ -4416,19 +4414,19 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Power::kW});
 
         // logic conditions
-        compressor.minT_C = F_TO_C(40.);
+        compressor.minT_C = Units::F_to_C() * 40.);
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(15), this));
+            "fourth node", nodeWeights, Units::dF_to_dC(15), this));
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "bottom node", nodeWeights1, Units::dF_to_dC(15.), this, false, std::greater<double>(), true));
         compressor.depressesTemperature = false; // no temp depression
 
         // Scale the resistance-element power
@@ -4438,7 +4436,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         // standard logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(15)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(15)));
         resistiveElementTop.isVIP = true;
 
         // set everything in its places
@@ -4460,7 +4458,7 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_Scalable_MP)
     {
         setNumNodes(24);
-        setpointT_C = F_TO_C(135.0);
+        setpointT_C = Units::F_to_C() * 135.0);
         tankSizeFixed = false;
         canScale = true; // a fully scallable model
 
@@ -4487,24 +4485,24 @@ int HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         compressor.addTurnOnLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights, dF_TO_dC(5.), this, false));
+            "fourth node", nodeWeights, Units::dF_to_dC(5.), this, false));
 
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor.addShutOffLogic(std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, dF_TO_dC(0.), this, false, std::greater<double>()));
+            "fourth node", nodeWeights1, Units::dF_to_dC(0.), this, false, std::greater<double>()));
         compressor.depressesTemperature = false; // no temp depression
         compressor.setupDefrostMap();
 
         // Defrost Derate
 
         // logic conditions
-        compressor.minT_C = F_TO_C(40.);
-        compressor.maxT_C = F_TO_C(105.);
+        compressor.minT_C = Units::F_to_C() * 40.);
+        compressor.maxT_C = Units::F_to_C() * 105.);
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         setTankSizeWithSameU(600., Units::Volume::gal);
-        compressor.mpFlowRate_LPS = GPM_TO_LPS(25.);
+        compressor.mpFlowRate_LPS = Units::GPM_to_LPS(25.);
         compressor.perfMap.push_back(
             PerfPoint(100,                                                // Temperature (F)
                       {12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696}, // Input Power Coeffs (kW)
@@ -4517,7 +4515,7 @@ int HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         // standard logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(30)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(30)));
         resistiveElementTop.isVIP = true;
 
         // set everything in its places
@@ -4544,7 +4542,7 @@ int HPWH::initPreset(MODELS presetNum)
         initialTankT_C = 49.32;
         hasInitialTankTemp = true;
 
-        tankVolume_L = GAL_TO_L(54.4);
+        tankVolume_L = Units::GAL_to_L(54.4);
         tankUA_kJperhC = 10.35;
 
         doTempDepression = false;
@@ -4590,14 +4588,14 @@ int HPWH::initPreset(MODELS presetNum)
                                       Units::Temp::F,
                                       Units::Power::W});
 
-        compressor.minT_C = F_TO_C(-25);
-        compressor.maxT_C = F_TO_C(125.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1);
+        compressor.minT_C = Units::F_to_C() * -25);
+        compressor.maxT_C = Units::F_to_C() * 125.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(1);
         compressor.configuration = HeatSource::CONFIG_SUBMERGED;
 
         // logic conditions
-        compressor.addTurnOnLogic(HPWH::wholeTank(F_TO_C(111), true));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(14)));
+        compressor.addTurnOnLogic(HPWH::wholeTank(Units::F_to_C() * 111), true));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(14)));
 
         // set everything in its places
         heatSources.resize(1);
@@ -4606,9 +4604,9 @@ int HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.);
+        setpointT_C = Units::F_to_C() * 127.);
 
-        tankVolume_L = GAL_TO_L(58.5);
+        tankVolume_L = Units::GAL_to_L(58.5);
         tankUA_kJperhC = 8.5;
 
         doTempDepression = false;
@@ -4639,23 +4637,23 @@ int HPWH::initPreset(MODELS presetNum)
             {6.556322712161, -0.03974367485016, 0.} // COP Coefficients
         });
 
-        compressor.minT_C = F_TO_C(45);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(2);
+        compressor.minT_C = Units::F_to_C() * 45);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(2);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
 
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(11.)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(30.)));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(11.)));
 
         // top resistor values
         resistiveElementTop.setupAsResistiveElement(6, 4500.);
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(19.)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(19.)));
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500.);
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(F_TO_C(60.)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(85.)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::F_to_C() * 60.)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 85.)));
         resistiveElementBottom.isVIP = false;
 
         // set everything in its places
@@ -4673,26 +4671,26 @@ int HPWH::initPreset(MODELS presetNum)
     else if ((MODELS_AWHSTier4Generic40 <= presetNum) && (presetNum <= MODELS_AWHSTier4Generic80))
     {
         setNumNodes(12);
-        setpointT_C = F_TO_C(127.0);
+        setpointT_C = Units::F_to_C() * 127.0);
 
         if (presetNum == MODELS_AWHSTier4Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
+            tankVolume_L = Units::GAL_to_L(36.0);
             tankUA_kJperhC = 5.0;
         }
         else if (presetNum == MODELS_AWHSTier4Generic50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
+            tankVolume_L = Units::GAL_to_L(45.0);
             tankUA_kJperhC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier4Generic65)
         {
-            tankVolume_L = GAL_TO_L(64.0);
+            tankVolume_L = Units::GAL_to_L(64.0);
             tankUA_kJperhC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier4Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
+            tankVolume_L = Units::GAL_to_L(75.4);
             tankUA_kJperhC = 10.0;
         }
         else
@@ -4732,27 +4730,27 @@ int HPWH::initPreset(MODELS presetNum)
             {8.833, -0.04431, 0.0} // COP Coefficients (COP_coeffs)
         });
 
-        compressor.minT_C = F_TO_C(37.);
-        compressor.maxT_C = F_TO_C(120.);
-        compressor.hysteresisOffsetT_C = dF_TO_dC(1.);
+        compressor.minT_C = Units::F_to_C() * 37.);
+        compressor.maxT_C = Units::F_to_C() * 120.);
+        compressor.hysteresisOffsetT_C = Units::dF_to_dC(1.);
         compressor.configuration = HeatSource::CONFIG_WRAPPED;
         compressor.maxSetpointT_C = MAXOUTLET_R134A;
 
         // top resistor values
         resistiveElementTop.setupAsResistiveElement(8, 4500);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(0.);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(0.);
         resistiveElementTop.isVIP = true;
 
         // bottom resistor values
         resistiveElementBottom.setupAsResistiveElement(0, 4500);
-        resistiveElementBottom.hysteresisOffsetT_C = dF_TO_dC(2.);
+        resistiveElementBottom.hysteresisOffsetT_C = Units::dF_to_dC(2.);
 
         // logic conditions
-        resistiveElementTop.addTurnOnLogic(HPWH::topThird(dF_TO_dC(12.0)));
-        compressor.addTurnOnLogic(HPWH::bottomThird(dF_TO_dC(30.0)));
-        compressor.addTurnOnLogic(HPWH::standby(dF_TO_dC(9.0)));
-        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(dF_TO_dC(60)));
-        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(F_TO_C(80)));
+        resistiveElementTop.addTurnOnLogic(HPWH::topThird(Units::dF_to_dC(12.0)));
+        compressor.addTurnOnLogic(HPWH::bottomThird(Units::dF_to_dC(30.0)));
+        compressor.addTurnOnLogic(HPWH::standby(Units::dF_to_dC(9.0)));
+        resistiveElementBottom.addTurnOnLogic(HPWH::thirdSixth(Units::dF_to_dC(60)));
+        resistiveElementBottom.addShutOffLogic(HPWH::bottomTwelfthMaxTemp(Units::F_to_C() * 80)));
 
         // set everything in its places
         heatSources.resize(3);

@@ -1785,4 +1785,22 @@ void regressedMethod(
 /// applies five-term regression for MP split systems
 void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
 
+/// convenience funcs
+auto F_to_C(const double x) { return Units::F_to_C() * x; }
+auto C_to_F(const double x) { return Units::C_to_F(); }
+
+auto dF_to_dC(const double x) { return Units::dF_to_dC() * x; }
+auto dC_to_dF(const double x) { return Units::dC_to_dF() * x; }
+
+auto KJ_to_KWH(const double x) { return Units::KJ_to_KWH() * x; }
+auto KWH_to_KWH(const double x) { return Units::KWH_to_KWH() * x; }
+
+auto MIN_to_S(const double x) { return Units::MIN_to_S() * x; }
+auto MIN_to_H(const double x) { return Units::MIN_to_H() * x; }
+
+auto GAL_to_L(const double x) { return Units::GAL_to_L() * x; }
+auto L_to_GAL(const double x) { return Units::L_to_GAL() * x; }
+
+auto GPM_to_LPS(const double x) { return Units::GPM_to_LPS() * x; }
+
 #endif
