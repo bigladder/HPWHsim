@@ -6,26 +6,26 @@
 # 2 - alternate reference name
 macro(add_submodule module_name)
 
-  message(STATUS "Attempting to add \"${module_name}\"")
-  #check of specific path is provided
-  set(MacroArgs ${ARGN})
-  list(LENGTH MacroArgs NumArgs)
+  message(STATUS "Attempting to add \"${module_name}\" to project \"${PROJECT_NAME}\"")
 
   set(have_submodule FALSE)
   set(have_path FALSE)
 
-  # first optional argument is module path
-  if(NumArgs GREATER 0)
-    set(module_path ${ARGV1})
-  else()
-    set(module_path ${CMAKE_CURRENT_SOURCE_DIR}/${module_name})
-  endif()
+  set(Args ${ARGN})
+  list(LENGTH Args NumArgs)
 
-  # second optional argument is module reference
-  if(NumArgs GREATER 1)
-    set(module_ref_name ${ARGV2})
+  # first optional argument is module reference
+  if(NumArgs GREATER 0)
+    set(module_ref_name ${ARGV1})
   else()
     set(module_ref_name ${module_name})
+  endif()
+
+  # second optional argument is module path
+  if(NumArgs GREATER 1)
+    set(module_path ${ARGV2})
+  else()
+    set(module_path ${CMAKE_CURRENT_SOURCE_DIR}/${module_name})
   endif()
 
   set(is_submodule FALSE)
@@ -39,7 +39,7 @@ macro(add_submodule module_name)
         if (NOT is_submodule)
           string(COMPARE EQUAL ${line} "[submodule \"${module_ref_name}\"]" is_submodule)
           if (is_submodule)
-            message(STATUS "\"${module_name}\" is a submodule of this project.")
+            message(STATUS "\"${module_name}\" is a submodule of project \"${PROJECT_NAME}\"")
             continue()
           endif()
         endif()
@@ -69,7 +69,7 @@ macro(add_submodule module_name)
           endif()
         endif()
       else()
-        message(STATUS "\"${module_name}\" is not a submodule of this project")
+        message(STATUS "\"${module_name}\" is not a submodule of project \"${PROJECT_NAME}\"")
       endif()
 
     endif()
@@ -79,7 +79,7 @@ macro(add_submodule module_name)
     message(STATUS "Submodule \"${module_name}\" is a target.")
   else()
     if(EXISTS "${module_path}")
-      message(STATUS "Adding subdirectory ${module_path} to this project")
+      message(STATUS "Adding subdirectory ${module_path} to project \"${PROJECT_NAME}\"")
       add_subdirectory(${module_path})
     endif()
   endif()
