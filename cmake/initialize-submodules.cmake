@@ -1,63 +1,89 @@
-#make a list of all submodules in .gitmodules
-macro(make_submodules_list)
+#update the named submodule
+
+#attempt to add the submodule
+#optional arguments:
+# 1 - path
+# 2 - alternate reference name
+macro(add_submodule module_name)
+
+  message(STATUS "Attempting to add \"${module_name}\"")
+  #check of specific path is provided
+  set(MacroArgs ${ARGN})
+  list(LENGTH MacroArgs NumArgs)
+
+  set(have_submodule FALSE)
+  set(have_path FALSE)
+
+  # first optional argument is module path
+  if(NumArgs GREATER 0)
+    set(module_path ${ARGV1})
+  else()
+    set(module_path ${CMAKE_CURRENT_SOURCE_DIR}/${module_name})
+  endif()
+
+  # second optional argument is module reference
+  if(NumArgs GREATER 1)
+    set(module_ref_name ${ARGV2})
+  else()
+    set(module_ref_name ${module_name})
+  endif()
+
+  set(is_submodule FALSE)
   if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     set(git_modules_file "${PROJECT_SOURCE_DIR}/.gitmodules")
     if (EXISTS ${git_modules_file})
       file(STRINGS ${git_modules_file} file_lines)
-      set(submoduleNames)
+      set(have_path FALSE)
+
       foreach(line ${file_lines})
-        if (${line} MATCHES "url =")
-          string(REGEX REPLACE "\\s*url = .*/(.*).git" "\\1" name "${line}")
-          string(STRIP "${name}" name)
-          if (DEFINED submoduleNames)
-            set(submoduleNames ${submoduleNames} ${name})
-          else()
-            set(submoduleNames ${name})
+        if (NOT is_submodule)
+          string(COMPARE EQUAL ${line} "[submodule \"${module_ref_name}\"]" is_submodule)
+          if (is_submodule)
+            message(STATUS "\"${module_name}\" is a submodule of this project.")
+            continue()
+          endif()
+        endif()
+
+        if (is_submodule AND (NOT have_path))
+          string(FIND ${line} "path =" pos)
+          set(have_path NOT(pos EQUALS -1))
+          if (have_path)
+            string(REPLACE "path =" "" submodule_path ${line})
+            string(STRIP "${submodule_path}" submodule_path)
+            set(submodule_path "${PROJECT_SOURCE_DIR}/${submodule_path}")
+            continue()
           endif()
         endif()
       endforeach()
-    endif()
-  endif()
-endmacro()
 
-#update the named submodule
-macro(update_submodule arg)
-  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${arg}")
-    message(FATAL_ERROR "Submodule directory \"${CMAKE_CURRENT_SOURCE_DIR}/${arg}\" does not exist")
-  endif()
-
-  # Initialize submodule if it hasn't already been cloned
-  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${arg}/.git")
-    message(STATUS "Initialize ${arg} submodule")
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive "${CMAKE_CURRENT_SOURCE_DIR}/${arg}"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-      message(FATAL_ERROR "git submodule update --init --recursive ${CMAKE_CURRENT_SOURCE_DIR}/${arg} failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-    endif()
-  endif()
-endmacro()
-
-#update all submodules listed in .gitmodules
-macro(initialize_submodules)
-  make_submodules_list()
-  if (DEFINED submoduleNames)
-    foreach (submoduleName ${submoduleNames})
-      update_submodule(${submoduleName})
-    endforeach()
-    unset(submoduleNames)
-  endif()
-endmacro()
-
-#update the named submodule iff it is listed in .gitmodules
-macro(initialize_submodule arg)
-  make_submodules_list()
-  if (DEFINED submoduleNames)
-    foreach (submoduleName ${submoduleNames})
-      if("${submoduleName}" MATCHES "${arg}")
-        update_submodule(${submoduleName})
+      if(is_submodule)
+        if(have_path)
+          message(STATUS "Updating submodule \"${module_name}\" at ${submodule_path}")
+          execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive "${submodule_path}"
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                  RESULT_VARIABLE GIT_SUBMOD_RESULT)
+          if(GIT_SUBMOD_RESULT EQUAL "0")
+            message(STATUS "Successfully updated submodule \"${module_name}\"")
+          else()
+            message(FATAL_ERROR "Unable to update submodule \"${module_name}\"")
+          endif()
+        endif()
+      else()
+        message(STATUS "\"${module_name}\" is not a submodule of this project")
       endif()
-    endforeach()
-    unset(submoduleNames)
+
+    endif()
   endif()
+
+  if (TARGET ${module_name})
+    message(STATUS "Submodule \"${module_name}\" is a target.")
+  else()
+    if(EXISTS "${module_path}")
+      message(STATUS "Adding subdirectory ${module_path} to this project")
+      add_subdirectory(${module_path})
+    endif()
+  endif()
+
+  message("")
+
 endmacro()
