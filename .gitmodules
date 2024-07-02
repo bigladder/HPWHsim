@@ -1,7 +1,8 @@
-[submodule "btwxt"]
+[submodule "vendor/btwxt"]
 	path = vendor/btwxt
 	url = https://github.com/bigladder/btwxt.git
 
-[submodule "CLI11"]
+[submodule "vendor/CLI11"]
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
+	ignore = untracked
