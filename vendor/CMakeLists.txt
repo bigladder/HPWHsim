@@ -1,5 +1,6 @@
 include(initialize-submodules)
 
+# btwxt library
 add_submodule(btwxt vendor/btwxt)
 
 # googletest library
