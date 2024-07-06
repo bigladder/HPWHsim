@@ -1,7 +1,7 @@
 include(initialize-submodules)
 
 # btwxt library
-add_submodule(btwxt vendor/btwxt)
+add_submodule(btwxt)
 
 # googletest library
 if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
@@ -13,10 +13,10 @@ if (${PROJECT_NAME}_BUILD_TESTING AND NOT TARGET gtest)
     set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
     mark_as_advanced(BUILD_GTEST BUILD_GMOCK INSTALL_GTEST)
-	add_submodule(gtest vendor/googletest "${btwxt_SOURCE_DIR}/vendor/googletest")
+	add_submodule(gtest "${btwxt_SOURCE_DIR}/vendor/googletest")
 endif ()
 
 # CLI11 library
 if (${PROJECT_NAME}_BUILD_TESTING)
-    add_submodule(CLI11 vendor/CLI11)
+    add_submodule(CLI11)
 endif()
