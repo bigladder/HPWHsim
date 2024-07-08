@@ -51,10 +51,10 @@ const double HPWH::TOL_MINVALUE = 0.0001;
 const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
 const float HPWH::ASPECTRATIO = 4.75f;
 
-const double HPWH::MAXOUTLET_R134A = Units::F_to_C(160.);
-const double HPWH::MAXOUTLET_R410A = Units::F_to_C(140.);
-const double HPWH::MAXOUTLET_R744 = Units::F_to_C(190.);
-const double HPWH::MINSINGLEPASSLIFT = Units::dF_to_dC(15.);
+const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
+const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
+const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
+const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
 
 static inline double HM_TO_MIN(const double hours, const double minutes)
 {
@@ -536,32 +536,32 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const Units::Temp unitsTemp_in /*C*/,
                            const Units::Power unitsPower_in /*kW*/)
 {
-    T_C = Units::Temp_C(T_in, unitsTemp_in);
+    T_C = Units::Temp_C(T_in, unitsTemp_in)();
 
-    inputPower_coeffs_kW = Units::PowerVect_kW(inputPower_coeffs_in, unitsPower_in);
+    inputPower_coeffs_kW = Units::PowerVect_kW(inputPower_coeffs_in, unitsPower_in)();
     COP_coeffs = COP_coeffs_in;
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
     {
         inputPower_coeffs_kW =
-            changeSeriesUnitsTemp3(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
-        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp_in, Units::Temp::C);
+            changeSeriesUnitsTemp3(inputPower_coeffs_kW, unitsTemp_in, Units::C);
+        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp_in, Units::C);
         return;
     }
 
     if (inputPower_coeffs_in.size() == 11) // use regressMethod
     {
         inputPower_coeffs_kW =
-            changeSeriesUnitsTemp11(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
-        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp_in, Units::Temp::C);
+            changeSeriesUnitsTemp11(inputPower_coeffs_kW, unitsTemp_in, Units::C);
+        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp_in, Units::C);
         return;
     }
 
     if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
     {
         inputPower_coeffs_kW =
-            changeSeriesUnitsTemp6(inputPower_coeffs_kW, unitsTemp_in, Units::Temp::C);
-        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, Units::Temp::C);
+            changeSeriesUnitsTemp6(inputPower_coeffs_kW, unitsTemp_in, Units::C);
+        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, Units::C);
         return;
     }
 }
@@ -583,9 +583,9 @@ HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in 
                                                        const Units::Temp unitsTemp_in /*C*/,
                                                        const Units::Power unitsPower_in /*kW*/)
 {
-    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in);
-    constLiftT_C = Units::TempDiff_C(constLiftT_in, unitsTemp_in);
-    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in);
+    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in)();
+    constLiftT_C = Units::TempDiff_C(constLiftT_in, unitsTemp_in)();
+    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in)();
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -1419,7 +1419,7 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? Units::C_to_F(outletT_C) : outletT_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outletT_C) : outletT_C);
     }
     else
     {
@@ -1440,12 +1440,12 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     //
     outFILE << fmt::format("{}", outputData.time_min);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? Units::C_to_F(outputData.ambientT_C) : outputData.ambientT_C);
+                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? Units::C_to_F(outputData.setpointT_C) : outputData.setpointT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? Units::C_to_F(outputData.inletT_C) : outputData.inletT_C);
+                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? Units::L_to_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
+                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
     outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
 
     //
@@ -1459,14 +1459,14 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     //
     for (auto thermocoupleT_C : outputData.thermocoupleT_C)
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? Units::C_to_F(thermocoupleT_C) : thermocoupleT_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
     }
 
     //
     if (outputData.drawVolume_L > 0.)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               doIP ? Units::C_to_F(outputData.outletT_C) : outputData.outletT_C);
+                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
     }
     else
     {
@@ -2291,9 +2291,9 @@ double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
         return double(HPWH_ABORT);
     }
 
-    airTemp_C = Units::Temp_C(airTemp, tempUnit);
-    inletTemp_C = Units::Temp_C(inletTemp, tempUnit);
-    outTemp_C = Units::Temp_C(outTemp, tempUnit);
+    airTemp_C = Units::Temp_C(airTemp, tempUnit)();
+    inletTemp_C = Units::Temp_C(inletTemp, tempUnit)();
+    outTemp_C = Units::Temp_C(outTemp, tempUnit)();
 
     if (airTemp_C < heatSources[compressorIndex].minT_C ||
         airTemp_C > heatSources[compressorIndex].maxT_C)
@@ -2683,13 +2683,13 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
 int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
 {
 
-    return setSetpointT_C(Units::Temp_C(setpointT, units));
+    return setSetpointT_C(Units::Temp_C(setpointT, units)());
 }
 
 int HPWH::setTankTs(std::vector<double> tankTs_in, const Units::Temp units /*C*/)
 {
     for (auto& tankT : tankTs_in)
-        tankT = Units::Temp_C(tankT, units);
+        tankT = Units::Temp_C(tankT, units)();
     return setTankTs_C(tankTs_in);
 }
 
@@ -3423,7 +3423,7 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 
     if (hpwhVerbosity >= VRB_emetic)
     {
-        msg("node %2d   cap_kwh %.4lf \n", nodeNum, KJ_to_KWH(qAdd_kJ));
+        msg("node %2d   cap_kwh %.4lf \n", nodeNum, KJ_TO_KWH(qAdd_kJ));
     }
 
     // find number of nodes at or above nodeNum with the same temperature
@@ -3597,7 +3597,7 @@ void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
         if (heatDistribution_W[i] != 0)
         {
             double powerAdd_kW = heatDistribution_W[i] / 1000.;
-            double qAdd_kJ = Units::MIN_to_S(minutesPerStep) * powerAdd_kW;
+            double qAdd_kJ = MIN_TO_S(minutesPerStep) * powerAdd_kW;
             addExtraHeatAboveNode(qAdd_kJ, i);
             tot_qAdded_kJ += qAdd_kJ;
         }
@@ -4566,7 +4566,7 @@ int HPWH::initFromFile(string configFile)
     std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
-    double initalTankT_C = Units::F_to_C(120.);
+    double initalTankT_C = F_TO_C(120.);
 
     struct PerfMapStore : std::vector<PerfPointStore>
     {
@@ -4690,7 +4690,7 @@ int HPWH::initFromFile(string configFile)
         {
             line_ss >> tempDouble >> units;
             if (units == "F")
-                tempDouble = Units::F_to_C(tempDouble);
+                tempDouble = F_TO_C(tempDouble);
             else if (units == "C")
                 ; // do nothing, lol
             else
@@ -4724,7 +4724,7 @@ int HPWH::initFromFile(string configFile)
         {
             line_ss >> tempDouble >> units;
             if (units == "F")
-                tempDouble = Units::F_to_C(tempDouble);
+                tempDouble = F_TO_C(tempDouble);
             else if (units == "C")
                 ;
             else
@@ -4850,7 +4850,7 @@ int HPWH::initFromFile(string configFile)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "F")
-                    tempDouble = Units::F_to_C(tempDouble);
+                    tempDouble = F_TO_C(tempDouble);
                 else if (units == "C")
                     ; // do nothing, lol
                 else
@@ -4867,7 +4867,7 @@ int HPWH::initFromFile(string configFile)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "F")
-                    tempDouble = Units::F_to_C(tempDouble);
+                    tempDouble = F_TO_C(tempDouble);
                 else if (units == "C")
                     ; // do nothing, lol
                 else
@@ -4975,7 +4975,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         if (absolute)
                         {
-                            tempDouble = Units::F_to_C(tempDouble);
+                            tempDouble = F_TO_C(tempDouble);
                         }
                         else
                         {
@@ -5055,7 +5055,7 @@ int HPWH::initFromFile(string configFile)
                     {
                         if (absolute)
                         {
-                            tempDouble = Units::F_to_C(tempDouble);
+                            tempDouble = F_TO_C(tempDouble);
                         }
                         else
                         {
@@ -5131,7 +5131,7 @@ int HPWH::initFromFile(string configFile)
                 {
                     line_ss >> tempDouble >> units;
                     if (units == "F")
-                        tempDouble = Units::F_to_C(tempDouble);
+                        tempDouble = F_TO_C(tempDouble);
                     else if (units == "C")
                         ; // do nothing, lol
                     else
@@ -5369,10 +5369,10 @@ int HPWH::initFromFile(string configFile)
                 }
                 line_ss >> tempDouble >> units;
                 if (units == "F")
-                    tempDouble = Units::F_to_C(tempDouble);
+                    tempDouble = F_TO_C(tempDouble);
                 //        else if (units == "C") ; //do nothing, lol
                 else if (units == "C")
-                    ; // tempDouble = Units::C_to_F(tempDouble);
+                    ; // tempDouble = C_TO_F(tempDouble);
                 else
                 {
                     if (hpwhVerbosity >= VRB_reluctant)
@@ -5999,7 +5999,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
     bool hasHeated = false;
 
-    int endTime_min = 24 * static_cast<int>(min_per_h);
+    int endTime_min = H_TO_MIN(24);
     std::size_t iDraw = 0;
     double remainingDrawVolume_L = 0.;
     double drawVolume_L = 0.;
@@ -6199,7 +6199,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     standbySumTimeTankT_minC += (1.) * tankT_C;
                     standbySumTimeAmbientT_minC += (1.) * ambientT_C;
 
-                    if (runTime_min >= standbyStartTime_min + 8 * min_per_h)
+                    if (runTime_min >= standbyStartTime_min + H_TO_MIN(8))
                     {
                         hasStandbyPeriodEnded = true;
                         standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
@@ -6226,9 +6226,9 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
                                 standbyStartT_C = tankT_C;                             // Tsu,0
 
                                 if (isDrawPatternComplete &&
-                                    (runTime_min + 8 * min_per_h > endTime_min))
+                                    (runTime_min + MIN_TO_H(8) > endTime_min))
                                 {
-                                    endTime_min = runTime_min + 8 * static_cast<int>(min_per_h);
+                                    endTime_min = runTime_min + MIN_TO_H(8);
                                 }
                             }
                         }
@@ -6302,7 +6302,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     testSummary.standbyUsedEnergy_kJ = standbyEndTankEnergy_kJ - standbyStartTankEnergy_kJ;
 
     int standbyPeriodTime_min = standbyEndTime_min - standbyStartTime_min - 1;
-    testSummary.standbyPeriodTime_h = standbyPeriodTime_min / min_per_h; // tau_stby,1
+    testSummary.standbyPeriodTime_h = MIN_TO_H(standbyPeriodTime_min); // tau_stby,1
     if ((testSummary.standbyPeriodTime_h > 0) && (testSummary.recoveryEfficiency > 0.))
     {
         double standardTankEnergy_kJ = tankHeatCapacity_kJperC * (standbyEndT_C - standbyStartT_C) /
@@ -6323,7 +6323,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     }
 
     //
-    testSummary.noDrawTotalTime_h = noDrawTotalTime_min / min_per_h; // tau_stby,2
+    testSummary.noDrawTotalTime_h = MIN_TO_H(noDrawTotalTime_min); // tau_stby,2
     if (noDrawTotalTime_min > 0)
     {
         testSummary.noDrawAverageAmbientT_C =
@@ -6386,7 +6386,7 @@ bool HPWH::run24hrTest(const FirstHourRating firstHourRating,
     if (testSummary.UEF > 0.)
     {
         constexpr double days_per_year = 365.;
-        const double nominalDifferenceT_C = Units::F_to_C(67.);
+        const double nominalDifferenceT_C = F_TO_C(67.);
         testSummary.annualConsumedEnergy_kJ =
             days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.UEF;
     }
@@ -6472,20 +6472,20 @@ bool HPWH::measureMetrics(FirstHourRating& firstHourRating,
         std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
 
         std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                  << Units::KJ_to_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+                  << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
 
         std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-                  << Units::KJ_to_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+                  << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
 
         std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-                  << Units::KJ_to_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+                  << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
 
         std::cout << "\tAnnual Values:\n";
         std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
-                  << Units::KJ_to_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
         std::cout << "\t\tAnnual Energy Consumption (kWh): "
-                  << Units::KJ_to_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+                  << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
     }
     else
     {

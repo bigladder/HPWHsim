@@ -41,8 +41,8 @@ struct PerformanceMapTest : public testing::Test
                               Units::Power unitsPower = Units::Power::Btu_per_h,
                               Units::Temp unitsTemp = Units::Temp::F)
     {
-        double inOffsetT = Units::convert(10., Units::Temp::F, unitsTemp);
-        double outOffsetT = Units::convert(15., Units::Temp::F, unitsTemp);
+        double inOffsetT = Units::Temp_F(10.)(unitsTemp);
+        double outOffsetT = Units::Temp_F(15.)(unitsTemp);
         return hpwh.getCompressorCapacity(
             point.airT, point.inT - inOffsetT, point.outT - outOffsetT, unitsPower, unitsTemp);
     }
