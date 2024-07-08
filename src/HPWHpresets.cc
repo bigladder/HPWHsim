@@ -20,7 +20,7 @@ int HPWH::initResistanceTank(const double tankVol,
                              const Units::Volume unitsVolume /*L*/,
                              const Units::Power unitsPower /*kW*/)
 {
-    double tankVol_L = Units::Volume_L(tankVol, unitsVolume)();
+    double tankVol_L = Units::Volume_L(tankVol, unitsVolume);
     double upperPower_W = Units::Power_kW(upperPower, unitsPower)(Units::W);
     double lowerPower_W = Units::Power_kW(lowerPower, unitsPower)(Units::W);
 
@@ -112,7 +112,7 @@ int HPWH::initResistanceTank(const double tankVol,
     double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
     double temp = 1.0 / (recoveryEfficiency * lowerPower_W * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-    tankUA_kJperhC = Units::UA_kJ_per_hC(numerator / denominator, Units::Btu_per_hF)();
+    tankUA_kJperhC = Units::UA_kJ_per_hC(numerator / denominator, Units::Btu_per_hF);
 
     if (tankUA_kJperhC < 0.)
     {
@@ -163,7 +163,7 @@ int HPWH::initResistanceTankGeneric(double tankVol,
                                     const Units::Temp unitsTemp /*C*/,
                                     const Units::Power unitsPower /*kW*/)
 {
-    double tankVol_L = Units::Volume_L(tankVol, unitsVolume)();
+    double tankVol_L = Units::Volume_L(tankVol, unitsVolume);
     double upperPower_W = Units::Power_kW(upperPower, unitsPower)(Units::W);
     double lowerPower_W = Units::Power_kW(lowerPower, unitsPower)(Units::W);
     double rValue_m2CperW =
@@ -301,8 +301,8 @@ int HPWH::initGeneric(double tankVol,
                       const Units::Temp unitsTemp /*C*/)
 {
 
-    double tankVol_L = Units::Volume_L(tankVol, unitsVolume)();
-    double resUseT_C = Units::Temp_C(resUseT, unitsTemp)();
+    double tankVol_L = Units::Volume_L(tankVol, unitsVolume);
+    double resUseT_C = Units::Temp_C(resUseT, unitsTemp);
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init
@@ -1735,14 +1735,14 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.perfGridValues.reserve(2);
 
         // Nyle MP models are all on the same grid axes
-        auto tV = Units::TempVect_C({40., 60., 80., 90.}, // Grid Axis 1 Tair (F)
-                                    Units::F)();
         compressor.perfGrid.push_back(
             Units::TempVect_C({40., 60., 80., 90.}, // Grid Axis 1 Tair (F)
-                              Units::F)());
+                              Units::F));
+
         compressor.perfGrid.push_back(
             Units::TempVect_C({40., 60., 80., 100., 130., 150.}, // Grid Axis 2 Tin (F)
-                              Units::F)());
+                              Units::F));
+
 
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
@@ -2019,18 +2019,15 @@ int HPWH::initPreset(MODELS presetNum)
         compressor.perfGrid.reserve(2);
         compressor.perfGridValues.reserve(2);
 
-        auto tV = Units::TempVect_C(
-                      {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
-                       28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
-                       71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
-                      Units::Temp ::F);
-
-        compressor.perfGrid.push_back(tV());
+        compressor.perfGrid.push_back(Units::TempVect_C({-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
+                                       28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
+                                       71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}, // Grid Axis 1 Tair (F)
+                                      Units::F));
         compressor.perfGrid.push_back(Units::TempVect_C({140., 158., 176.}, // Grid Axis 2 Tout (F)
-                                                        Units::F)());
+                                                        Units::F));
         compressor.perfGrid.push_back(
             Units::TempVect_C({41, 48.2, 62.6, 75.2, 84.2}, // Grid Axis 3 Tin (F)
-                              Units::F)());
+                              Units::F));
 
         // Grid values in long format, table 1, input power (Btu/hr)
         compressor.perfGridValues.push_back(Units::PowerVect_kW(
@@ -2162,7 +2159,7 @@ int HPWH::initPreset(MODELS presetNum)
              30194.85226,      30194.85226,      32391.491036,     34156.010248,
              36748.771988,     37756.062628,     36779.657412,     39342.226364,
              41825.090996,     43359.446924},
-            Units::Btu_per_h)());
+            Units::Btu_per_h));
 
         // Grid values in long format, table 2, COP
         compressor.perfGridValues.push_back(
@@ -2864,7 +2861,7 @@ int HPWH::initPreset(MODELS presetNum)
         setpointT_C = F_TO_C(150.0);
 
         tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-        tankUA_kJperhC = Units::UA_kJ_per_hC(3.94, Units::Btu_per_hF)();
+        tankUA_kJperhC = Units::UA_kJ_per_hC(3.94, Units::Btu_per_hF);
 
         doTempDepression = false;
         tankMixesOnDraw = false;

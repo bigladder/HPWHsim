@@ -536,9 +536,9 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
                            const Units::Temp unitsTemp_in /*C*/,
                            const Units::Power unitsPower_in /*kW*/)
 {
-    T_C = Units::Temp_C(T_in, unitsTemp_in)();
+    T_C = Units::Temp_C(T_in, unitsTemp_in);
 
-    inputPower_coeffs_kW = Units::PowerVect_kW(inputPower_coeffs_in, unitsPower_in)();
+    inputPower_coeffs_kW = Units::PowerVect_kW(inputPower_coeffs_in, unitsPower_in);
     COP_coeffs = COP_coeffs_in;
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
@@ -583,9 +583,9 @@ HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in 
                                                        const Units::Temp unitsTemp_in /*C*/,
                                                        const Units::Power unitsPower_in /*kW*/)
 {
-    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in)();
-    constLiftT_C = Units::TempDiff_C(constLiftT_in, unitsTemp_in)();
-    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in)();
+    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in);
+    constLiftT_C = Units::TempDiff_C(constLiftT_in, unitsTemp_in);
+    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in);
 }
 
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
@@ -2291,9 +2291,9 @@ double HPWH::getCompressorCapacity(double airTemp /*19.722*/,
         return double(HPWH_ABORT);
     }
 
-    airTemp_C = Units::Temp_C(airTemp, tempUnit)();
-    inletTemp_C = Units::Temp_C(inletTemp, tempUnit)();
-    outTemp_C = Units::Temp_C(outTemp, tempUnit)();
+    airTemp_C = Units::Temp_C(airTemp, tempUnit);
+    inletTemp_C = Units::Temp_C(inletTemp, tempUnit);
+    outTemp_C = Units::Temp_C(outTemp, tempUnit);
 
     if (airTemp_C < heatSources[compressorIndex].minT_C ||
         airTemp_C > heatSources[compressorIndex].maxT_C)
@@ -2683,13 +2683,13 @@ double HPWH::getNthThermocoupleT(const int iTCouple,
 int HPWH::setSetpointT(const double setpointT, const Units::Temp units /*C*/)
 {
 
-    return setSetpointT_C(Units::Temp_C(setpointT, units)());
+    return setSetpointT_C(Units::Temp_C(setpointT, units));
 }
 
 int HPWH::setTankTs(std::vector<double> tankTs_in, const Units::Temp units /*C*/)
 {
     for (auto& tankT : tankTs_in)
-        tankT = Units::Temp_C(tankT, units)();
+        tankT = Units::Temp_C(tankT, units);
     return setTankTs_C(tankTs_in);
 }
 

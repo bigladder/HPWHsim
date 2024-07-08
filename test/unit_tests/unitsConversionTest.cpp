@@ -20,16 +20,16 @@ TEST(UnitsConversionTest, conversions)
         Units::Time_min t_min(0.25);
 
         EXPECT_EQ(t_s, t_min);
-        EXPECT_EQ(t_s(Units::min), t_min());
-        EXPECT_EQ(t_s(), t_min(Units::Time::s));
-        EXPECT_NE(t_s(), 0.25);
-        EXPECT_NE(t_min(), 15.);
+        EXPECT_EQ(t_s(Units::min), t_min);
+        EXPECT_EQ(t_s, t_min(Units::s));
+        EXPECT_NE(t_s, 0.25);
+        EXPECT_NE(t_min, 15.);
 
         // test min<->h conversion
         t_min = 45.;
         typedef Units::TimeVal<Units::Time::h> Time_h;
         Time_h t_h = t_min;
-        EXPECT_EQ(t_h(), 0.75);
+        EXPECT_EQ(t_h, 0.75);
 
         // test vector min<->s conversion
         Units::TimeVect_min tV_min({10., 20., 30., 60., 120., 360., 12.});
@@ -45,17 +45,17 @@ TEST(UnitsConversionTest, conversions)
 
         // test F<->C conversion
         T_F = 212.;
-        T_C = T_F();
-        EXPECT_EQ(T_C(), F_TO_C(T_F()));
+        T_C = T_F;
+        EXPECT_EQ(T_C, F_TO_C(T_F));
 
         // test combining Diff and Abs modes
         T_C = 72.;
         typedef Units::TempDiffVal<Units::Temp::F> TempDiff_F;
         EXPECT_EQ(T_C + TempDiff_F(18.), T_C + TempDiff_F(18.));
-        EXPECT_EQ(T_C + TempDiff_F(10.)(Units::C), T_C + TempDiff_F(18.)());
+        EXPECT_EQ(T_C + TempDiff_F(10.)(Units::C), T_C + TempDiff_F(18.));
 
-        EXPECT_EQ(T_C + TempDiff_F(18.), T_C() + dF_TO_dC(18.));
-        EXPECT_EQ(T_C() - TempDiff_F(10.)(Units::C), T_C - TempDiff_F(18.)(Units::C));
+        EXPECT_EQ(T_C + TempDiff_F(18.), T_C + dF_TO_dC(18.));
+        EXPECT_EQ(T_C - TempDiff_F(10.)(Units::C), T_C - TempDiff_F(18.)(Units::C));
     }
 
     /* energy conversions */

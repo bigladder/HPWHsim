@@ -18,6 +18,8 @@ template <typename D,typename T> struct Transform {
 
     static auto ident() {T::ident();}
 
+
+
     virtual double operator*(const double x) const = 0;
 };
 
@@ -183,6 +185,7 @@ template <typename U> struct ScaleOffseter : Transformer<U, ScaleOffset> {
     }
 };
 
+/// front-facing fncs
 template <class U> Scale scale(const U fromUnits, const U toUnits) {
     return Scaler<U>::transform(fromUnits, toUnits);
 }
@@ -191,7 +194,6 @@ template <class U> ScaleOffset scaleOffset(const U fromUnits, const U toUnits) {
     return ScaleOffseter<U>::transform(fromUnits, toUnits);
 }
 
-/// transform fncs
 template <class U>
 double scale(const U fromUnits, const U toUnits, const double x) {
     return scale(fromUnits, toUnits) * x;
@@ -202,7 +204,7 @@ double scaleOffset(const U fromUnits, const U toUnits, const double x) {
     return scaleOffset(fromUnits, toUnits) * x;
 }
 
-/// convert values
+/// transform values
 template <class U, typename datatype, U units> struct TransformVal {
   protected:
     double x;
@@ -213,6 +215,8 @@ template <class U, typename datatype, U units> struct TransformVal {
     template <U fromUnits>
     TransformVal(const TransformVal<U, datatype, fromUnits> transformVal)
         : x(transformVal.to(units)) {}
+
+    virtual ~TransformVal() {}
 
     virtual double operator()(const U toUnits) const = 0;
 
@@ -231,7 +235,6 @@ template <class U, typename datatype, U units> struct TransformVal {
     }
 };
 
-/// scale values
 template <class U, U units> struct ScaleVal : TransformVal<U, Scale, units> {
     ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
 
@@ -249,7 +252,6 @@ template <class U, U units> struct ScaleVal : TransformVal<U, Scale, units> {
     }
 };
 
-/// scale-offset values
 template <class U, U units>
 struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units> {
     ScaleOffsetVal(const double x_in = 0.)
@@ -291,15 +293,14 @@ template <class U, U units> struct ScaleVect : std::vector<ScaleVal<U, units>> {
     using std::vector<ScaleVal<U, units>>::clear;
     using std::vector<ScaleVal<U, units>>::push_back;
 
-    ScaleVect(const std::vector<double> &xV, const U fromUnits = units) {
-        clear();
+    ScaleVect(const std::vector<double> &xV = {}, const U fromUnits = units) :
+        std::vector<ScaleVal<U, units>>({}){
         for (auto x : xV)
             push_back(scale(fromUnits, units) * x);
     }
 
     template <U fromUnits>
-    ScaleVect(const std::vector<ScaleVal<U, fromUnits>> &sV) {
-        clear();
+    ScaleVect(const std::vector<ScaleVal<U, fromUnits>> &sV):ScaleVect({}, fromUnits) {
         for (auto s : sV)
             push_back(scale(fromUnits, units) * s);
     }
@@ -335,15 +336,13 @@ struct ScaleOffsetVect : std::vector<ScaleOffsetVal<U, units>> {
     using std::vector<ScaleOffsetVal<U, units>>::clear;
     using std::vector<ScaleOffsetVal<U, units>>::push_back;
 
-    ScaleOffsetVect(const std::vector<double> &xV, const U fromUnits = units) {
-        clear();
+    ScaleOffsetVect(const std::vector<double> &xV = {}, const U fromUnits = units):std::vector<ScaleOffsetVal<U, units>>({}) {
         for (auto x : xV)
             push_back(scaleOffset(fromUnits, units) * x);
     }
 
     template <U fromUnits>
-    ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, fromUnits>> &sV) {
-        clear();
+    ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, fromUnits>> &sV):ScaleOffsetVect(sV, fromUnits) {
         for (auto s : sV)
             push_back(scaleOffset(fromUnits, units) * s);
     }
@@ -379,28 +378,28 @@ enum class Time {
     h,   // hours
     min, // minutes
     s    // seconds
-} h = Time::h,
+} inline h = Time::h,
   min = Time::min, s = Time::s;
 
 /* temperature units */
 enum class Temp {
     C, // celsius
     F  // fahrenheit
-} C = Temp::C,
+} inline C = Temp::C,
   F = Temp::F;
 
 /* length units */
 enum class Length {
     m, // meters
     ft // feet
-} m = Length::m,
+} inline m = Length::m,
   ft = Length::ft;
 
 /* area units */
 enum class Area {
     m2, // square meters
     ft2 // square feet
-} m2 = Area::m2,
+} inline m2 = Area::m2,
   ft2 = Area::ft2;
 
 /* volume units */
@@ -409,7 +408,7 @@ enum class Volume {
     gal, // gallons
     m3,  // cubic meters
     ft3  // cubic feet
-} L = Volume::L,
+} inline L = Volume::L,
   gal = Volume::gal, m3 = Volume::m3, ft3 = Volume::ft3;
 
 /* energy units */
@@ -418,7 +417,7 @@ enum class Energy {
     kWh, // kilowatt hours
     Btu, // british thermal units
     J    // joules
-} kJ = Energy::kJ,
+} inline kJ = Energy::kJ,
   kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J;
 
 /* power units */
@@ -427,21 +426,21 @@ enum class Power {
     Btu_per_h, // BTU per hour
     W,         // watts
     kJ_per_h,  // kilojoules per hour
-} kW = Power::kW,
+} inline kW = Power::kW,
   Btu_per_h = Power::Btu_per_h, W = Power::W, kJ_per_h = Power::kJ_per_h;
 
 /* flow-rate units */
 enum class FlowRate {
     L_per_s,    // liters per second
     gal_per_min // gallons per minute
-} L_per_s = FlowRate::L_per_s,
+} inline L_per_s = FlowRate::L_per_s,
   gal_per_min = FlowRate::gal_per_min;
 
 /* UA units */
 enum class UA {
     kJ_per_hC, // kilojoules per hour degree celsius
     Btu_per_hF // british thermal units per hour degree Fahrenheit
-} kJ_per_hC = UA::kJ_per_hC,
+} inline kJ_per_hC = UA::kJ_per_hC,
   Btu_per_hF = UA::Btu_per_hF;
 
 /// reference transform factors
@@ -465,55 +464,55 @@ constexpr double ft3_per_L = ft_per_m * ft_per_m * ft_per_m / 1000.; // ft^3 / L
 /// transform maps
 template <>
 inline Scaler<Length>::ScaleMap
-    Scaler<Length>::scaleMap(Length::m, {{Length::ft, ft_per_m}});
+    Scaler<Length>::scaleMap(m, {{ft, ft_per_m}});
 
 template <>
 inline Scaler<Time>::ScaleMap Scaler<Time>::scaleMap(
-    Time::s, {{Time::min, 1. / s_per_min}, {Time::h, 1. / s_per_h}});
+    s, {{min, 1. / s_per_min}, {h, 1. / s_per_h}});
 
 template <>
-inline Scaler<Temp>::ScaleMap Scaler<Temp>::scaleMap(Temp::C,
-                                                     {{Temp::F, F_per_C}});
+inline Scaler<Temp>::ScaleMap Scaler<Temp>::scaleMap(C,
+                                                     {{F, F_per_C}});
 
 template <>
 inline ScaleOffseter<Temp>::ScaleOffsetMap
-    ScaleOffseter<Temp>::scaleOffsetMap(Temp::C,
-                                        {{Temp::F, {F_per_C, offsetF}}});
+    ScaleOffseter<Temp>::scaleOffsetMap(C,
+                                        {{F, {F_per_C, offsetF}}});
 
 template <>
 inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
-    Energy::kJ,
-    {{Energy::kWh, s_per_h}, {Energy::Btu, kJ_per_Btu}, {Energy::J, 1000.}});
+    kJ,
+    {{kWh, s_per_h}, {Btu, kJ_per_Btu}, {J, 1000.}});
 
 template <>
 inline Scaler<Power>::ScaleMap
-    Scaler<Power>::scaleMap(Power::kW,
-                            {{Power::Btu_per_h, scale(Energy::kJ, Energy::Btu) /
-                                                    scale(Time::s, Time::h)},
-                             {Power::W, 1000.},
-                             {Power::kJ_per_h, 1.}});
+    Scaler<Power>::scaleMap(kW,
+                            {{Btu_per_h, scale(kJ, Btu) /
+                                             scale(s, h)},
+                             {W, 1000.},
+                             {kJ_per_h, 1.}});
 
 template <>
 inline Scaler<Area>::ScaleMap Scaler<Area>::scaleMap(
-    Area::m2, {{Area::ft2, Scale(std::pow(scale(Length::m, Length::ft), 2.))}});
+    m2, {{ft2, Scale(std::pow(scale(m, ft), 2.))}});
 
 template <>
 inline Scaler<Volume>::ScaleMap
-    Scaler<Volume>::scaleMap(Volume::L, {{Volume::gal, gal_per_L},
-                                         {Volume::m3, 1. / L_per_m3},
-                                         {Volume::ft3, ft3_per_L}});
+    Scaler<Volume>::scaleMap(L, {{gal, gal_per_L},
+                                 {m3, 1. / L_per_m3},
+                                 {ft3, ft3_per_L}});
 
 template <>
 inline Scaler<UA>::ScaleMap
-    Scaler<UA>::scaleMap(UA::kJ_per_hC,
-                         {{UA::Btu_per_hF, scale(Energy::kJ, Energy::Btu) *
-                                               scale(Temp::C, Temp::F)}});
+    Scaler<UA>::scaleMap(kJ_per_hC,
+                         {{Btu_per_hF, scale(kJ, Btu) *
+                                           scale(C, F)}});
 
 template <>
 inline Scaler<FlowRate>::ScaleMap Scaler<FlowRate>::scaleMap(
-    FlowRate::L_per_s,
-    {{FlowRate::gal_per_min,
-      scale(Volume::L, Volume::gal) / scale(Time::s, Time::min)}});
+    L_per_s,
+    {{gal_per_min,
+      scale(L, gal) / scale(s,min)}});
 
 /// units-values partial specializations
 template <Time units> using TimeVal = ScaleVal<Time, units>;
