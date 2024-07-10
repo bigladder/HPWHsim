@@ -584,7 +584,7 @@ HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in 
                                                        const Units::Power unitsPower_in /*kW*/)
 {
     inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in);
-    constLiftT_C = Units::TempDiff_C(constLiftT_in, unitsTemp_in);
+    constLiftT_C = Units::dTemp_C(constLiftT_in, unitsTemp_in);
     onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in);
 }
 

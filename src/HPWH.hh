@@ -1787,8 +1787,8 @@ void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1
 
 /// convenience funcs
 inline auto MIN_TO_S(const double x) { using namespace Units; return scale(min, s) * x; }
-inline auto MIN_TO_H(const double x) { using namespace Units; return scale(min, h, x); }
-inline auto H_TO_MIN(const double x) { using namespace Units; return scale(h, min, x); }
+inline auto MIN_TO_H(const double x) { using namespace Units; return scale(min, h) * x; }
+inline auto H_TO_MIN(const double x) { using namespace Units; return scale(h, min) * x; }
 
 inline auto F_TO_C(const double x) { using namespace Units; return scaleOffset(F, C) * x; }
 inline auto C_TO_F(const double x) { using namespace Units; return scaleOffset(C, F) * x; }
@@ -1805,7 +1805,7 @@ inline auto KJ_TO_BTU(const double x) { using namespace Units; return scale(kJ, 
 inline auto KWH_TO_KWH(const double x) { using namespace Units; return scale(kWh, kJ) * x; }
 inline auto KWH_TO_BTU(const double x) { using namespace Units; return scale(kWh, Btu) * x; }
 
-inline auto W_TO_KW(const double x) { using namespace Units; return scale(W, kW, x); }
+inline auto W_TO_KW(const double x) { using namespace Units; return scale(W, kW) * x;  }
 inline auto KW_TO_BTUperH(const double x) { using namespace Units; return scale(kW, Btu_per_h) * x; }
 inline auto BTUperH_TO_KW(const double x) { using namespace Units; return scale(Btu_per_h, kW) * x; }
 
@@ -1815,9 +1815,14 @@ inline auto L_TO_M3(const double x) { using namespace Units; return scale(L, m3)
 inline auto M3_TO_L(const double x) { using namespace Units; return scale(m3, L) * x; }
 inline auto L_TO_FT3(const double x) { using namespace Units; return scale(L, ft3) * x; }
 
-inline auto GPM_TO_LPS(const double x) { using namespace Units; return scale(gal_per_min, L_per_s, x); }
+inline auto GPM_TO_LPS(const double x) { using namespace Units; return scale(gal_per_min, L_per_s) * x;  }
 
-inline auto BTUperHF_TO_KJperHC(const double x) { using namespace Units; return scale(Btu_per_hF, kJ_per_hC, x); }
-inline auto KJperHC_TO_BTUperHF(const double x) { using namespace Units; return scale(kJ_per_hC, Btu_per_hF, x); }
+inline auto BTUperHF_TO_KJperHC(const double x) { using namespace Units; return scale(Btu_per_hF, kJ_per_hC) * x;  }
+inline auto KJperHC_TO_BTUperHF(const double x) { using namespace Units; return scale(kJ_per_hC, Btu_per_hF) * x;  }
+
+//
+inline auto m2_from(const Units::Area unitsArea){return Units::scale(unitsArea, Units::m2);}
+inline auto dC_from(const Units::Temp unitsTemp){return Units::scale(unitsTemp, Units::C);}
+inline auto W_from(const Units::Power unitsPower){return Units::scale(unitsPower, Units::W);}
 
 #endif

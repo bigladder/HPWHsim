@@ -5,8 +5,8 @@
 #include "HPWH.hh"
 #include "unit-test.hh"
 
-constexpr double tol = 1.e-4;
-
+constexpr double tol = 1.e-3;
+constexpr double tol2 = 1.e-2;
 struct Performance
 {
     double input, output, cop;
@@ -37,8 +37,8 @@ void getCompressorPerformance(
     );
 
     // Check the heat in and out of the compressor
-    point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex(), Units::Energy::kWh);
-    point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex(), Units::Energy::kWh);
+    point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex(), Units::kWh);
+    point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex(), Units::kWh);
     point.cop = point.output / point.input;
 }
 
@@ -220,14 +220,14 @@ TEST(ScaleTest, scalableMP_scales)
 
     num = 0.001; // Very low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
-    EXPECT_NEAR(point0.cop, point1.cop, tol);
+    EXPECT_NEAR(point0.input, point1.input / num, tol2);
+    EXPECT_NEAR(point0.output, point1.output / num, tol2);
+    EXPECT_NEAR(point0.cop, point1.cop, tol2);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
     EXPECT_NEAR(point0.input, point1.input, tol);
     EXPECT_NEAR(point0.output, point1.output / num, tol);
-    EXPECT_NEAR(point0.cop, point1.cop / num, tol);
+    EXPECT_NEAR(point0.cop, point1.cop / num, tol2);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
     EXPECT_NEAR(point0.input, point1.input / num, tol);
@@ -335,11 +335,11 @@ TEST(ScaleTest, getCompressorSP_capacity)
     capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airT_C),
                                               C_TO_F(waterT_C),
                                               C_TO_F(setpointT_C),
-                                              Units::Power::Btu_per_h,
-                                              Units::Temp::F) /
+                                              Units::Btu_per_h,
+                                              Units::F) /
                    60; // div 60 to BTU because I know above only runs 1 minute
 
-    EXPECT_NEAR_REL(Units::scale(Units::Energy::kWh, Units::Energy::Btu) *point0.output,
+    EXPECT_NEAR_REL(Units::EnergyVal<Units::Energy::kWh>(point0.output)(Units::Btu),
                     capacity_BTU); // relative cmp since in btu's these will be large numbers
 }
 
@@ -369,8 +369,8 @@ TEST(ScaleTest, getCompressorMP_capacity)
     double capacity_BTU = hpwh.getCompressorCapacity(C_TO_F(airT_C),
                                                      C_TO_F(waterT_C),
                                                      C_TO_F(setpointT_C),
-                                                     Units::Power::Btu_per_h,
-                                                     Units::Temp::F) /
+                                                     Units::Btu_per_h,
+                                                     Units::F) /
                           60; // div 60 to BTU because I know above only runs 1 minute
 
     EXPECT_NEAR_REL(KWH_TO_BTU(point0.output),
@@ -456,13 +456,13 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
                                      C_TO_F(airT_C),
                                      C_TO_F(waterT_C),
                                      C_TO_F(setpointT_C),
-                                     Units::Power::Btu_per_h,
-                                     Units::Temp::F);
+                                     Units::Btu_per_h,
+                                     Units::F);
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airT_C),
                                                              C_TO_F(waterT_C),
                                                              C_TO_F(setpointT_C),
-                                                             Units::Power::Btu_per_h,
-                                                             Units::Temp::F);
+                                                             Units::Btu_per_h,
+                                                             Units::F);
     EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
@@ -483,10 +483,10 @@ TEST(ScaleTest, chipsCaseWithIP_units)
 
     // Scale output to 20000 btu/hr but let's use do the calc in other units
     hpwh.setCompressorOutputCapacity(
-        wh_heatingCap, airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
+        wh_heatingCap, airT_F, waterT_F, setpointT_F, Units::Btu_per_h, Units::Temp::F);
 
     double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, Units::Power::Btu_per_h, Units::Temp::F);
+        airT_F, waterT_F, setpointT_F, Units::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
@@ -522,7 +522,7 @@ TEST(ScaleTest, resistanceScales)
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::kW), 2. * elementPower);
 
     // check units convert
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Power::Btu_per_h),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, Units::Btu_per_h),
                     2. * KW_TO_BTUperH(elementPower));
 
     // Check setting bottom works

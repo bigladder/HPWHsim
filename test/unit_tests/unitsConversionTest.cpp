@@ -19,7 +19,7 @@ TEST(UnitsConversionTest, conversions)
         Units::Time_s t_s(15.);
         Units::Time_min t_min(0.25);
 
-        EXPECT_EQ(t_s, t_min);
+        EXPECT_EQ(t_s, t_min(Units::s));
         EXPECT_EQ(t_s(Units::min), t_min);
         EXPECT_EQ(t_s, t_min(Units::s));
         EXPECT_NE(t_s, 0.25);
@@ -48,21 +48,13 @@ TEST(UnitsConversionTest, conversions)
         T_C = T_F;
         EXPECT_EQ(T_C, F_TO_C(T_F));
 
-        // test combining Diff and Abs modes
-        T_C = 72.;
-        typedef Units::TempDiffVal<Units::Temp::F> TempDiff_F;
-        EXPECT_EQ(T_C + TempDiff_F(18.), T_C + TempDiff_F(18.));
-        EXPECT_EQ(T_C + TempDiff_F(10.)(Units::C), T_C + TempDiff_F(18.));
-
-        EXPECT_EQ(T_C + TempDiff_F(18.), T_C + dF_TO_dC(18.));
-        EXPECT_EQ(T_C - TempDiff_F(10.)(Units::C), T_C - TempDiff_F(18.)(Units::C));
     }
 
     /* energy conversions */
     {
         Units::Energy_kJ E_kJ = 100.;
         Units::EnergyVal<Units::Energy::Btu> E_Btu = E_kJ;
-        EXPECT_EQ(E_Btu, E_kJ);
+        EXPECT_EQ(E_Btu, E_kJ(Units::Btu));
         EXPECT_EQ(E_Btu, KJ_TO_BTU(E_kJ));
 
         Units::EnergyVect_kJ EV_kJ({100., 200., 300.});

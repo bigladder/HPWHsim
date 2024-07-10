@@ -808,20 +808,20 @@ TEST_F(PerformanceMapTest, Sanden120)
     performancePointSP checkPoint = {60, 149.0, 41.0};
     double capData = 15059.59167;
     double cap = hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Btu_per_h, Units::F);
     EXPECT_NEAR_REL(capData, cap);
 
     // Cold outlet temperature
     checkPoint = {60, 125.0, 41.0};
     capData = 15059.59167;
     cap = hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Btu_per_h, Units::F);
     EXPECT_NEAR_REL(capData, cap);
 
     // tests fails when output high
     checkPoint = {60, 200, 41.0};
     capData = 15059.59167;
     cap = hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Power::Btu_per_h, Units::Temp::F);
+        checkPoint.airT, checkPoint.inT, checkPoint.outT, Units::Btu_per_h, Units::F);
     EXPECT_EQ(HPWH::HPWH_ABORT, cap);
 }

@@ -82,7 +82,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         { // testSetEnteringWaterHighTempShutOffAbsolute
             const double drawVolume_L = 0.;
             const double externalT_C = 20.;
-            const double delta = 2.;
+            const double deltaT_C = 2.;
             const double highT_C = 20.;
             const bool doAbsolute = true;
 
@@ -95,7 +95,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // change entering water temp to below temp
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C - delta, doAbsolute, hpwh.getCompressorIndex()),
+                          highT_C - deltaT_C, doAbsolute, hpwh.getCompressorIndex()),
                       0);
 
             // run a step and check we're not heating.
@@ -104,7 +104,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // and reverse it
             EXPECT_EQ(hpwh.setEnteringWaterHighTempShutOff(
-                          highT_C + delta, doAbsolute, hpwh.getCompressorIndex()),
+                          highT_C + deltaT_C, doAbsolute, hpwh.getCompressorIndex()),
                       0)
                 << sModelName;
             hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);

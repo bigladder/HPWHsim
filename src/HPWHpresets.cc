@@ -164,11 +164,11 @@ int HPWH::initResistanceTankGeneric(double tankVol,
                                     const Units::Power unitsPower /*kW*/)
 {
     double tankVol_L = Units::Volume_L(tankVol, unitsVolume);
-    double upperPower_W = Units::Power_kW(upperPower, unitsPower)(Units::W);
-    double lowerPower_W = Units::Power_kW(lowerPower, unitsPower)(Units::W);
+    double upperPower_W = W_from(unitsPower) * upperPower;
+    double lowerPower_W = W_from(unitsPower) * lowerPower;
     double rValue_m2CperW =
 
-        Units::scale(Units::Area::m2, unitsArea) * Units::scale(Units::Temp::C, unitsTemp) * Units::scale(Units::W, unitsPower) * rValue;
+          rValue / m2_from(unitsArea) / dC_from(unitsTemp) / W_from(unitsPower);
 
     setAllDefaults(); // reset all defaults if you're re-initilizing
     // sets simHasFailed = true; this gets cleared on successful completion of init

@@ -9,7 +9,7 @@
 /// units specifications
 namespace Units {
 
-template <typename D,typename T> struct Transform {
+template <typename D,typename T,typename Ti = T> struct Transform {
     D data;
 
     Transform(const D &data_in) : data(data_in) {}
@@ -18,9 +18,12 @@ template <typename D,typename T> struct Transform {
 
     static auto ident() {T::ident();}
 
-
+    virtual Ti inverse() const = 0;
 
     virtual double operator*(const double x) const = 0;
+
+    friend double operator/(const double x, const Transform& t ) { return t.inverse() * x;}
+
 };
 
 struct Offset;
@@ -31,19 +34,13 @@ struct Scale : Transform<double, Scale> {
 
     static Scale ident() { return 1.; }
 
-    Scale inverse() const { return 1. / data; }
+    Scale inverse() const override{ return 1. / data; }
 
     double operator*(const double x) const override { return data * x; }
 
     Scale operator*(const Scale &s) const { return data * s; }
 
-    Scale operator/(const Scale &s) const { return inverse() * s; }
-
     double scale() const { return data; }
-
-    friend double operator/(const double x, const Scale &scale) {
-        return scale.inverse() * x;
-    }
 };
 
 struct Offset : Transform<double, Offset> {
@@ -55,7 +52,7 @@ struct Offset : Transform<double, Offset> {
 
     static Offset ident() { return 0.; }
 
-    Offset inverse() const { return -data; }
+    Offset inverse() const override { return -data; }
 
     double operator*(const double x) const override { return x + data; }
 
@@ -64,10 +61,6 @@ struct Offset : Transform<double, Offset> {
     Offset operator/(const Offset &o) const { return data - o.data; }
 
     double offset() const { return data; }
-
-    friend double operator/(const double x, const Offset &offset) {
-        return offset.inverse() * x;
-    }
 };
 
 using ScaleOffsetSeq = std::pair<Scale, Offset>;
@@ -98,10 +91,6 @@ struct ScaleOffset : Transform<ScaleOffsetSeq, ScaleOffset> {
     Scale scale() const { return data.first; }
 
     Offset offset() const { return data.second; }
-
-    friend double operator/(const double x, const ScaleOffset &scaleOffset) {
-        return scaleOffset.inverse() * x;
-    }
 };
 
 template <typename U> struct PairHash {
@@ -205,7 +194,7 @@ double scaleOffset(const U fromUnits, const U toUnits, const double x) {
 }
 
 /// transform values
-template <class U, typename datatype, U units> struct TransformVal {
+template <class U, typename T, U units> struct TransformVal {
   protected:
     double x;
 
@@ -213,7 +202,7 @@ template <class U, typename datatype, U units> struct TransformVal {
     TransformVal(const double x_in = 0.) : x(x_in) {}
 
     template <U fromUnits>
-    TransformVal(const TransformVal<U, datatype, fromUnits> transformVal)
+    TransformVal(const TransformVal<U, T, fromUnits> transformVal)
         : x(transformVal.to(units)) {}
 
     virtual ~TransformVal() {}
@@ -224,13 +213,14 @@ template <class U, typename datatype, U units> struct TransformVal {
 
     double operator=(double x_in) { return x = x_in; }
 
+
     template <U toUnits>
-    bool operator==(const TransformVal<U, datatype, toUnits> transformVal) const {
+    bool operator==(const TransformVal<U, T, toUnits> transformVal) const {
         return (transformVal.to(units) == x);
     }
 
     template <U toUnits>
-    bool operator!=(const TransformVal<U, datatype, toUnits> transformVal) const {
+    bool operator!=(const TransformVal<U, T, toUnits> transformVal) const {
         return !(operator==(transformVal));
     }
 };
@@ -244,6 +234,9 @@ template <class U, U units> struct ScaleVal : TransformVal<U, Scale, units> {
     template <U fromUnits>
     ScaleVal(const ScaleVal<U, fromUnits> &scaleVal)
         : TransformVal<U, Scale, units>(scale(fromUnits, units) * scaleVal) {}
+
+    template <U toUnits>
+    auto operator()() {return ScaleVal<U, toUnits>(x, units);}
 
     using TransformVal<U, Scale, units>::x;
 
@@ -379,28 +372,28 @@ enum class Time {
     min, // minutes
     s    // seconds
 } inline h = Time::h,
-  min = Time::min, s = Time::s;
+         min = Time::min, s = Time::s;
 
 /* temperature units */
 enum class Temp {
     C, // celsius
     F  // fahrenheit
 } inline C = Temp::C,
-  F = Temp::F;
+         F = Temp::F;
 
 /* length units */
 enum class Length {
     m, // meters
     ft // feet
 } inline m = Length::m,
-  ft = Length::ft;
+         ft = Length::ft;
 
 /* area units */
 enum class Area {
     m2, // square meters
     ft2 // square feet
 } inline m2 = Area::m2,
-  ft2 = Area::ft2;
+         ft2 = Area::ft2;
 
 /* volume units */
 enum class Volume {
@@ -409,7 +402,7 @@ enum class Volume {
     m3,  // cubic meters
     ft3  // cubic feet
 } inline L = Volume::L,
-  gal = Volume::gal, m3 = Volume::m3, ft3 = Volume::ft3;
+         gal = Volume::gal, m3 = Volume::m3, ft3 = Volume::ft3;
 
 /* energy units */
 enum class Energy {
@@ -418,7 +411,7 @@ enum class Energy {
     Btu, // british thermal units
     J    // joules
 } inline kJ = Energy::kJ,
-  kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J;
+         kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J;
 
 /* power units */
 enum class Power {
@@ -427,21 +420,21 @@ enum class Power {
     W,         // watts
     kJ_per_h,  // kilojoules per hour
 } inline kW = Power::kW,
-  Btu_per_h = Power::Btu_per_h, W = Power::W, kJ_per_h = Power::kJ_per_h;
+         Btu_per_h = Power::Btu_per_h, W = Power::W, kJ_per_h = Power::kJ_per_h;
 
 /* flow-rate units */
 enum class FlowRate {
     L_per_s,    // liters per second
     gal_per_min // gallons per minute
 } inline L_per_s = FlowRate::L_per_s,
-  gal_per_min = FlowRate::gal_per_min;
+         gal_per_min = FlowRate::gal_per_min;
 
 /* UA units */
 enum class UA {
     kJ_per_hC, // kilojoules per hour degree celsius
     Btu_per_hF // british thermal units per hour degree Fahrenheit
 } inline kJ_per_hC = UA::kJ_per_hC,
-  Btu_per_hF = UA::Btu_per_hF;
+         Btu_per_hF = UA::Btu_per_hF;
 
 /// reference transform factors
 constexpr double s_per_min = 60.;    // s / min
@@ -517,7 +510,7 @@ inline Scaler<FlowRate>::ScaleMap Scaler<FlowRate>::scaleMap(
 /// units-values partial specializations
 template <Time units> using TimeVal = ScaleVal<Time, units>;
 template <Temp units> using TempVal = ScaleOffsetVal<Temp, units>;
-template <Temp units> using TempDiffVal = ScaleVal<Temp, units>;
+template <Temp units> using dTempVal = ScaleVal<Temp, units>;
 template <Energy units> using EnergyVal = ScaleVal<Energy, units>;
 template <Power units> using PowerVal = ScaleVal<Power, units>;
 template <Length units> using LengthVal = ScaleVal<Length, units>;
@@ -539,26 +532,26 @@ template <Power units> using PowerVect = ScaleVect<Power, units>;
 /// units-values full specializations
 typedef TimeVal<Time::s> Time_s;
 typedef TimeVal<Time::min> Time_min;
-typedef TempVal<Temp::C> Temp_C;
-typedef TempVal<Temp::F> Temp_F;
-typedef TempDiffVal<Temp::C> TempDiff_C;
-typedef EnergyVal<Energy::kJ> Energy_kJ;
-typedef PowerVal<Power::kW> Power_kW;
-typedef LengthVal<Length::m> Length_m;
-typedef AreaVal<Area::m2> Area_m2;
-typedef VolumeVal<Volume::L> Volume_L;
-typedef FlowRateVal<FlowRate::L_per_s> FlowRate_L_per_s;
-typedef UAVal<Units::UA::kJ_per_hC> UA_kJ_per_hC;
+typedef TempVal<Temp::C> Temp_C, T_C;
+typedef TempVal<Temp::F> Temp_F, T_F;
+typedef dTempVal<Temp::C> dTemp_C, dT_C;
+typedef EnergyVal<Energy::kJ> Energy_kJ, E_kJ;
+typedef PowerVal<Power::kW> Power_kW, P_kW;
+typedef LengthVal<Length::m> Length_m, L_m;
+typedef AreaVal<Area::m2> Area_m2, A_m2;
+typedef VolumeVal<Volume::L> Volume_L, V_L;
+typedef FlowRateVal<FlowRate::L_per_s> FlowRate_L_per_s, FR_L_per_s;
+typedef UAVal<UA::kJ_per_hC> UA_kJ_per_hC;
 
 /// units-pair full specialization
 typedef TimePair<Time::h, Time::min> Time_h_min;
 
 /// units-vectors full specialization
-typedef TimeVect<Time::s> TimeVect_s;
-typedef TimeVect<Time::min> TimeVect_min;
-typedef TempVect<Temp::C> TempVect_C;
-typedef EnergyVect<Energy::kJ> EnergyVect_kJ;
-typedef PowerVect<Power::kW> PowerVect_kW;
+typedef TimeVect<Time::s> TimeVect_s, TimeV_s;
+typedef TimeVect<Time::min> TimeVect_min, TimeV_min;
+typedef TempVect<Temp::C> TempVect_C, TempV_C;
+typedef EnergyVect<Energy::kJ> EnergyVect_kJ, EnergyV_kJ;
+typedef PowerVect<Power::kW> PowerVect_kW, PowerV_kW;
 
 } // namespace Units
 
