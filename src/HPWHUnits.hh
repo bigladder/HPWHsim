@@ -456,12 +456,12 @@ constexpr double ft3_per_L = ft_per_m * ft_per_m * ft_per_m / 1000.; // ft^3 / L
 
 /// transform maps
 template <>
-inline Scaler<Length>::ScaleMap
-    Scaler<Length>::scaleMap(m, {{ft, ft_per_m}});
-
-template <>
 inline Scaler<Time>::ScaleMap Scaler<Time>::scaleMap(
     s, {{min, 1. / s_per_min}, {h, 1. / s_per_h}});
+
+template <>
+inline Scaler<Length>::ScaleMap
+    Scaler<Length>::scaleMap(m, {{ft, ft_per_m}});
 
 template <>
 inline Scaler<Temp>::ScaleMap Scaler<Temp>::scaleMap(C,
@@ -475,7 +475,7 @@ inline ScaleOffseter<Temp>::ScaleOffsetMap
 template <>
 inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
     kJ,
-    {{kWh, s_per_h}, {Btu, kJ_per_Btu}, {J, 1000.}});
+    {{kWh, s_per_h}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}});
 
 template <>
 inline Scaler<Power>::ScaleMap

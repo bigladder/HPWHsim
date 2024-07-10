@@ -606,8 +606,8 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    double effOutletT_C = setpointT_C + secondaryHeatExchanger.hotSideOffsetT_C;
     double effCondenserT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
+    double effOutletT_C = setpointT_C + secondaryHeatExchanger.hotSideOffsetT_C;
 
     // Get bounding performance map points for interpolation/extrapolation
     // bool extrapolate = false;
