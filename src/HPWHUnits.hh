@@ -218,7 +218,7 @@ struct TransformVal
     TransformVal(const double x_in = 0.) : x(x_in) {}
 
     template <U fromUnits>
-    TransformVal(const TransformVal<U, T, fromUnits> transformVal) : x(transformVal.to(units))
+    TransformVal(const TransformVal<U, T, fromUnits> transformVal) : x(transformVal(units))
     {
     }
 
@@ -233,7 +233,7 @@ struct TransformVal
     template <U toUnits>
     bool operator==(const TransformVal<U, T, toUnits> transformVal) const
     {
-        return (transformVal.to(units) == x);
+        return (transformVal(units) == x);
     }
 
     template <U toUnits>
@@ -246,6 +246,8 @@ struct TransformVal
 template <class U, U units>
 struct ScaleVal : TransformVal<U, Scale, units>
 {
+    using TransformVal<U, Scale, units>::x;
+
     ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
 
     ScaleVal(const double x_in, const U fromUnits)
@@ -265,14 +267,14 @@ struct ScaleVal : TransformVal<U, Scale, units>
         return ScaleVal<U, toUnits>(x, units);
     }
 
-    using TransformVal<U, Scale, units>::x;
-
     double operator()(const U toUnits) const override { return scale(units, toUnits) * x; }
 };
 
 template <class U, U units>
 struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
 {
+    using TransformVal<U, ScaleOffset, units>::x;
+
     ScaleOffsetVal(const double x_in = 0.) : TransformVal<U, ScaleOffset, units>(x_in) {}
 
     ScaleOffsetVal(const double x_in, const U fromUnits)
@@ -285,8 +287,6 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
         : TransformVal<U, ScaleOffset, units>(scaleOffset(fromUnits, units) * scaleOffsetVal)
     {
     }
-
-    using TransformVal<U, ScaleOffset, units>::x;
 
     double operator()(const U toUnits) const override { return scaleOffset(units, toUnits) * x; }
 };

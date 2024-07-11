@@ -757,7 +757,7 @@ int HPWH::runOneStep(double drawVolume_L,
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = 0;
+        heatSources[i].runtime = 0;
         heatSources[i].energyInput_kJ = 0.;
         heatSources[i].energyOutput_kJ = 0.;
         heatSources[i].energyRemovedFromEnvironment_kJ = 0.;
@@ -974,18 +974,18 @@ int HPWH::runOneStep(double drawVolume_L,
 
                 // if it finished early. i.e. shuts off early like if the heatsource met
                 // setpoint or maxed out
-                if (heatSourcePtr->runtime_min < minutesToRun)
+                if (heatSourcePtr->runtime(Units::min) < minutesToRun)
                 {
                     // debugging message handling
                     if (hpwhVerbosity >= VRB_emetic)
                     {
                         msg("done heating! runtime_min minutesToRun %.2lf %.2lf\n",
-                            heatSourcePtr->runtime_min,
+                            heatSourcePtr->runtime(Units::min),
                             minutesToRun);
                     }
 
                     // subtract time it ran and turn it off
-                    minutesToRun -= heatSourcePtr->runtime_min;
+                    minutesToRun -= heatSourcePtr->runtime(Units::min);
                     heatSources[i].disengageHeatSource();
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
@@ -1016,11 +1016,12 @@ int HPWH::runOneStep(double drawVolume_L,
                             // turn it on
                             backupHeatSourcePtr->engageHeatSource(DRstatus);
                             // add heat if it hasn't heated up this whole minute already
-                            if (backupHeatSourcePtr->runtime_min >= 0.)
+                            if (backupHeatSourcePtr->runtime >= 0.)
                             {
                                 addHeatParent(backupHeatSourcePtr,
                                               heatSourceAmbientT_C,
-                                              minutesToRun - backupHeatSourcePtr->runtime_min);
+                                              minutesToRun -
+                                                  backupHeatSourcePtr->runtime(Units::min));
                             }
                         }
                     }
@@ -1212,7 +1213,7 @@ int HPWH::runNSteps(int N,
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = heatSources_runTimes_SUM[i];
+        heatSources[i].runtime = Units::Time_min(heatSources_runTimes_SUM[i]);
         heatSources[i].energyInput_kJ = heatSources_energyInputs_SUM[i];
         heatSources[i].energyOutput_kJ = heatSources_energyOutputs_SUM[i];
     }
@@ -1300,7 +1301,8 @@ void HPWH::msgV(const char* fmt, va_list ap /*=NULL*/) const
 void HPWH::printHeatSourceInfo()
 {
     std::stringstream ss;
-    double runtime = 0, outputVar = 0;
+    double outputVar = 0;
+    ValTime runtime = 0.;
 
     ss << std::left;
     ss << std::fixed;
@@ -1319,10 +1321,10 @@ void HPWH::printHeatSourceInfo()
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        runtime = getNthHeatSourceRunTime(i);
+        runtime = from(Units::min) * getNthHeatSourceRunTime(i);
         if (runtime != 0)
         {
-            outputVar = getNthHeatSourceEnergyInput(i) / (runtime / 60.0);
+            outputVar = getNthHeatSourceEnergyInput(i) / runtime(Units::h);
         }
         else
         {
@@ -1340,10 +1342,10 @@ void HPWH::printHeatSourceInfo()
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        runtime = getNthHeatSourceRunTime(i);
+        runtime = from(Units::min) * getNthHeatSourceRunTime(i);
         if (runtime != 0)
         {
-            outputVar = getNthHeatSourceEnergyOutput(i) / (runtime / 60.0);
+            outputVar = getNthHeatSourceEnergyOutput(i) / runtime(Units::h);
         }
         else
         {
@@ -2470,7 +2472,7 @@ double HPWH::getNthHeatSourceEnergyRemovedFromEnvironment(int N, Units::Energy u
 
 double HPWH::getNthHeatSourceRunTime(int N) const
 {
-    return isHeatSourceIndexValid(N) ? heatSources[N].runtime_min : double(HPWH_ABORT);
+    return isHeatSourceIndexValid(N) ? heatSources[N].runtime(Units::min) : double(HPWH_ABORT);
 }
 
 int HPWH::isNthHeatSourceRunning(int N) const

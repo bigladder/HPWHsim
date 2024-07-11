@@ -18,7 +18,7 @@ HPWH::HeatSource::HeatSource(HPWH* hpwh_in /* = nullptr */)
     , isOn(false)
     , lockedOut(false)
     , doDefrost(false)
-    , runtime_min(0.)
+    , runtime(0.)
     , energyInput_kJ(0.)
     , energyOutput_kJ(0.)
     , energyRemovedFromEnvironment_kJ(0.)
@@ -61,7 +61,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     lockedOut = hSource.lockedOut;
     doDefrost = hSource.doDefrost;
 
-    runtime_min = hSource.runtime_min;
+    runtime = hSource.runtime;
     energyInput_kJ = hSource.energyInput_kJ;
     energyOutput_kJ = hSource.energyOutput_kJ;
     energyRemovedFromEnvironment_kJ = hSource.energyRemovedFromEnvironment_kJ;
@@ -529,12 +529,12 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
-        runtime_min = (1. - (leftoverCap_kJ / effectiveCap_kJ)) * minutesToRun;
-        if (runtime_min < -TOL_MINVALUE)
+        runtime = from(Units::min) * (1. - (leftoverCap_kJ / effectiveCap_kJ)) * minutesToRun;
+        if (runtime(Units::min) < -TOL_MINVALUE)
         {
             if (hpwh->hpwhVerbosity >= VRB_reluctant)
             {
-                hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime_min);
+                hpwh->msg("Internal error: Negative runtime = %0.3f min\n", runtime(Units::min));
             }
         }
         break;
@@ -546,17 +546,19 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         //  n, and cap/input_BTUperHr, cop are outputs
         if (isMultipass)
         {
-            runtime_min = addHeatExternalMP(externalT_C, minutesToRun, cap_kW, input_kW, cop);
+            runtime = from(Units::min) *
+                      addHeatExternalMP(externalT_C, minutesToRun, cap_kW, input_kW, cop);
         }
         else
         {
-            runtime_min = addHeatExternal(externalT_C, minutesToRun, cap_kW, input_kW, cop);
+            runtime = from(Units::min) *
+                      addHeatExternal(externalT_C, minutesToRun, cap_kW, input_kW, cop);
         }
         break;
     }
     // Accumulate the energies
-    double heatingEnergy_kJ = cap_kW * MIN_TO_S(runtime_min);
-    double inputEnergy_kJ = input_kW * MIN_TO_S(runtime_min);
+    double heatingEnergy_kJ = cap_kW * runtime(Units::s);
+    double inputEnergy_kJ = input_kW * runtime(Units::s);
     double outputEnergy_kJ = heatingEnergy_kJ;
     double removedEnergy_kJ = outputEnergy_kJ - inputEnergy_kJ;
 

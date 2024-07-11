@@ -38,9 +38,11 @@ class HPWH
     static const int version_patch = HPWHVRSN_PATCH;
     static const std::string version_maint;
 
-    static constexpr auto unitsT = Units::Temp::C;
+    static constexpr auto UnitsTime = Units::Time::h;
+    static constexpr auto UnitsTemp = Units::Temp::C;
 
-    typedef Units::TempVal<unitsT> ValT;
+    typedef Units::TimeVal<UnitsTime> ValTime;
+    typedef Units::TempVal<UnitsTemp> ValTemp;
 
     /// number of condensity nodes associated with each heat source
     static const int CONDENSITY_SIZE = 12;
@@ -888,8 +890,7 @@ class HPWH
     /// scale the input capacity and COP
     int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 
-    int
-    setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::kW);
+    int setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::kW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
     changes is given by "which"
     - If which (-1) sets all the resisistance elements in the tank.
@@ -1536,7 +1537,7 @@ class HPWH::HeatSource
     bool doDefrost;
 
     /// tracks the time that heat source was running
-    double runtime_min;
+    ValTime runtime;
 
     /// energy supplied to the heat source in the previous time step
     double energyInput_kJ;
@@ -1928,5 +1929,7 @@ inline auto KJperHC_TO_BTUperHF(const double x)
 inline auto m2_from(const Units::Area unitsArea) { return Units::scale(unitsArea, Units::m2); }
 inline auto dC_from(const Units::Temp unitsTemp) { return Units::scale(unitsTemp, Units::C); }
 inline auto W_from(const Units::Power unitsPower) { return Units::scale(unitsPower, Units::W); }
+
+inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
 
 #endif
