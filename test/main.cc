@@ -473,8 +473,7 @@ int main(int argc, char* argv[])
             {
                 strPreamble += std::to_string(hpwh.getCondenserInletT_C()) + ", " +
                                std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(Units::gal)) +
-                               ", ";
+                               std::to_string(hpwh.getExternalVolumeHeated(Units::gal)) + ", ";
             }
             if (useSoC)
             {
@@ -493,8 +492,7 @@ int main(int argc, char* argv[])
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
                 cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, Units::kWh) * 1000.;
-                cumHeatOut[iHS] +=
-                    hpwh.getNthHeatSourceEnergyOutput(iHS, Units::kWh) * 1000.;
+                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, Units::kWh) * 1000.;
             }
         }
     }
