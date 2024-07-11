@@ -47,7 +47,6 @@ TEST(UnitsConversionTest, conversions)
         T_F = 212.;
         T_C = T_F;
         EXPECT_EQ(T_C, F_TO_C(T_F));
-
     }
 
     /* energy conversions */

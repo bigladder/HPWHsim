@@ -501,9 +501,8 @@ void HPWH::HeatSource::addHeat(double externalT_C, double minutesToRun)
         // some outputs for debugging
         if (hpwh->hpwhVerbosity >= VRB_typical)
         {
-            hpwh->msg("capacity_kWh %.2lf \t\t cap_kW %.2lf \n",
-                      cap_kW * MIN_TO_H(minutesToRun),
-                      cap_kW);
+            hpwh->msg(
+                "capacity_kWh %.2lf \t\t cap_kW %.2lf \n", cap_kW * MIN_TO_H(minutesToRun), cap_kW);
         }
 
         // the loop over nodes here is intentional - essentially each node that has
@@ -692,8 +691,11 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
                 }
             }
 
-            regressedMethod(
-                input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, effOutletT_C, effCondenserT_C);
+            regressedMethod(input_kW,
+                            perfMap[0].inputPower_coeffs_kW,
+                            externalT_C,
+                            effOutletT_C,
+                            effCondenserT_C);
 
             regressedMethod(cop, perfMap[0].COP_coeffs, externalT_C, effOutletT_C, effCondenserT_C);
         }

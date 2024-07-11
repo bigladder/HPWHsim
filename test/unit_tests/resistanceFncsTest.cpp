@@ -19,7 +19,8 @@ inline Units::Scaler<rFactor>::ScaleMap
                          {{Btu_per_hF, scale(kJ, Btu) *
                                            scale(C, F)}});
 
-inline auto FT2HFperBTU_TO_M2CperW(const double x) { using namespace Units; return scale(kJ_per_hC, ft2hF_per_Btu) * x;  }
+inline auto FT2HFperBTU_TO_M2CperW(const double x) { using namespace Units; return scale(kJ_per_hC,
+ft2hF_per_Btu) * x;  }
 */
 
 /*
@@ -57,9 +58,7 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 {
     HPWH hpwh;
     double lowerElementPower_W = 1000;
-    EXPECT_EQ(hpwh.initResistanceTank(
-                  100., 0.95, 0., lowerElementPower_W, Units::L, Units::W),
-              0)
+    EXPECT_EQ(hpwh.initResistanceTank(100., 0.95, 0., lowerElementPower_W, Units::L, Units::W), 0)
         << "Could not initialize resistance tank.";
 
     double returnVal;
@@ -82,59 +81,28 @@ TEST(ResistanceFunctionsTest, commercialTankInitErrors)
     HPWH hpwh;
 
     // init model
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(-800.,
-                                             10.,
-                                             100.,
-                                             100.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  -800., 10., 100., 100., Units::L, Units::m2, Units::C, Units::W),
               HPWH::HPWH_ABORT); // negative volume
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             -100.,
-                                             100.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., -100., 100., Units::L, Units::m2, Units::C, Units::W),
               HPWH::HPWH_ABORT); // negative element
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             100.,
-                                             -100.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 100., -100., Units::L, Units::m2, Units::C, Units::W),
               HPWH::HPWH_ABORT); // negative element
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             -10.,
-                                             100.,
-                                             100.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., -10., 100., 100., Units::L, Units::m2, Units::C, Units::W),
               HPWH::HPWH_ABORT); // negative r value
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             0.,
-                                             100.,
-                                             100.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 0., 100., 100., Units::L, Units::m2, Units::C, Units::W),
               HPWH::HPWH_ABORT); // 0 r value
 
     EXPECT_EQ(
-        hpwh.initResistanceTankGeneric(
-            800., 10., 0., 0., Units::L, Units::m2, Units::C, Units::W),
+        hpwh.initResistanceTankGeneric(800., 10., 0., 0., Units::L, Units::m2, Units::C, Units::W),
         HPWH::HPWH_ABORT); // Check needs one element
 }
 
@@ -145,36 +113,18 @@ TEST(ResistanceFunctionsTest, getNumResistanceElements)
 {
     HPWH hpwh;
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             0.,
-                                             1000.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 0., 1000., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             1000.,
-                                             0.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 1000., 0., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             1000.,
-                                             1000.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 1000., 1000., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getNumResistanceElements(), 2); // Check 2 elements
 }
@@ -186,40 +136,22 @@ TEST(ResistanceFunctionsTest, getResistancePositionInRE_tank)
 {
     HPWH hpwh;
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             0.,
-                                             1000.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 0., 1000., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getResistancePosition(0), 0);                // Check lower element is there
     EXPECT_EQ(hpwh.getResistancePosition(1), HPWH::HPWH_ABORT); // Check no element
     EXPECT_EQ(hpwh.getResistancePosition(2), HPWH::HPWH_ABORT); // Check no element
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             1000.,
-                                             0.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 1000., 0., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);                // Check upper element there
     EXPECT_EQ(hpwh.getResistancePosition(1), HPWH::HPWH_ABORT); // Check no elements
     EXPECT_EQ(hpwh.getResistancePosition(2), HPWH::HPWH_ABORT); // Check no elements
 
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             1000.,
-                                             1000.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 1000., 1000., Units::L, Units::m2, Units::C, Units::W),
               0);
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);                // Check upper element there
     EXPECT_EQ(hpwh.getResistancePosition(1), 0);                // Check lower element is there
@@ -253,14 +185,8 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // init model
     HPWH hpwh;
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             0.,
-                                             elementPower_kW * 1000.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., 0., elementPower_kW * 1000., Units::L, Units::m2, Units::C, Units::W),
               0)
         << "Could not initialize generic resistance tank.";
 
@@ -301,14 +227,8 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    EXPECT_EQ(hpwh.initResistanceTankGeneric(800.,
-                                             10.,
-                                             elementPower_kW * 1000.,
-                                             0.,
-                                             Units::L,
-                                             Units::m2,
-                                             Units::C,
-                                             Units::W),
+    EXPECT_EQ(hpwh.initResistanceTankGeneric(
+                  800., 10., elementPower_kW * 1000., 0., Units::L, Units::m2, Units::C, Units::W),
               0)
         << "Could not initialize resistance tank.";
 
@@ -335,8 +255,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
               HPWH::HPWH_ABORT); // error on non existant bottom
 
     // set bottom returns error
-    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, Units::kW),
-              HPWH::HPWH_ABORT);
+    EXPECT_EQ(hpwh.setResistanceCapacity(factor * elementPower_kW, 2, Units::kW), HPWH::HPWH_ABORT);
 }
 
 struct InsulationPoint
@@ -346,18 +265,18 @@ struct InsulationPoint
     double expectedUA_kJperhC;
 };
 
-#define FT2HFperBTU_TO_M2CperW(r_ft2hF_per_Btu)                                                  \
-     m2_from(Units::ft2) * dC_from(Units::F) * r_ft2hF_per_Btu / W_from(Units::Btu_per_h)
+#define FT2HFperBTU_TO_M2CperW(r_ft2hF_per_Btu)                                                    \
+    m2_from(Units::ft2) * dC_from(Units::F) * r_ft2hF_per_Btu / W_from(Units::Btu_per_h)
 
 #define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower_W)                                   \
     EXPECT_EQ(hpwh.initResistanceTankGeneric(point.volume_L,                                       \
                                              FT2HFperBTU_TO_M2CperW(point.r_ft2hF_per_Btu),        \
                                              elementPower_W,                                       \
                                              elementPower_W,                                       \
-                                             Units::L,                                     \
-                                             Units::m2,                                      \
-                                             Units::C,                                       \
-                                             Units::W),                                     \
+                                             Units::L,                                             \
+                                             Units::m2,                                            \
+                                             Units::C,                                             \
+                                             Units::W),                                            \
               0)                                                                                   \
         << "Could not initialize generic resistance tank.";
 

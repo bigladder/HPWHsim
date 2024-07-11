@@ -543,8 +543,7 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
 
     if (inputPower_coeffs_in.size() == 3) // use expandSeries
     {
-        inputPower_coeffs_kW =
-            changeSeriesUnitsTemp3(inputPower_coeffs_kW, unitsTemp_in, Units::C);
+        inputPower_coeffs_kW = changeSeriesUnitsTemp3(inputPower_coeffs_kW, unitsTemp_in, Units::C);
         COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp_in, Units::C);
         return;
     }
@@ -559,8 +558,7 @@ HPWH::PerfPoint::PerfPoint(const double T_in /* 0.*/,
 
     if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
     {
-        inputPower_coeffs_kW =
-            changeSeriesUnitsTemp6(inputPower_coeffs_kW, unitsTemp_in, Units::C);
+        inputPower_coeffs_kW = changeSeriesUnitsTemp6(inputPower_coeffs_kW, unitsTemp_in, Units::C);
         COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, Units::C);
         return;
     }
@@ -1412,9 +1410,8 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
-        outFILE << fmt::format(
-            ",{:0.2f}",
-            getNthThermocoupleT(iTC + 1, nTCouples, doIP ? Units::F : Units::C));
+        outFILE << fmt::format(",{:0.2f}",
+                               getNthThermocoupleT(iTC + 1, nTCouples, doIP ? Units::F : Units::C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)

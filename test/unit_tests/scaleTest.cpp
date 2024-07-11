@@ -359,9 +359,9 @@ TEST(ScaleTest, getCompressorMP_capacity)
     const double airT_C = F_TO_C(61.7);
     const double setpointT_C = F_TO_C(126);
 
-    double capacity_kWH = hpwh.getCompressorCapacity(
-                              airT_C, waterT_C, setpointT_C, Units::kW, Units::C) /
-                          60.; // div 60 to kWh because I know above only runs 1 minute
+    double capacity_kWH =
+        hpwh.getCompressorCapacity(airT_C, waterT_C, setpointT_C, Units::kW, Units::C) /
+        60.; // div 60 to kWh because I know above only runs 1 minute
     getCompressorPerformance(hpwh, point0, waterT_C, airT_C, setpointT_C); // gives kWh
     EXPECT_NEAR(point0.output, capacity_kWH, tol);
 
@@ -452,17 +452,10 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
 
     // Scale output to 1000 kW but let's do the calc in other units
     num = KW_TO_BTUperH(num);
-    hpwh.setCompressorOutputCapacity(num,
-                                     C_TO_F(airT_C),
-                                     C_TO_F(waterT_C),
-                                     C_TO_F(setpointT_C),
-                                     Units::Btu_per_h,
-                                     Units::F);
-    double newCapacity_BTUperHr = hpwh.getCompressorCapacity(C_TO_F(airT_C),
-                                                             C_TO_F(waterT_C),
-                                                             C_TO_F(setpointT_C),
-                                                             Units::Btu_per_h,
-                                                             Units::F);
+    hpwh.setCompressorOutputCapacity(
+        num, C_TO_F(airT_C), C_TO_F(waterT_C), C_TO_F(setpointT_C), Units::Btu_per_h, Units::F);
+    double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
+        C_TO_F(airT_C), C_TO_F(waterT_C), C_TO_F(setpointT_C), Units::Btu_per_h, Units::F);
     EXPECT_NEAR_REL(num, newCapacity_BTUperHr);
 }
 
@@ -485,8 +478,8 @@ TEST(ScaleTest, chipsCaseWithIP_units)
     hpwh.setCompressorOutputCapacity(
         wh_heatingCap, airT_F, waterT_F, setpointT_F, Units::Btu_per_h, Units::Temp::F);
 
-    double newCapacity_BTUperHr = hpwh.getCompressorCapacity(
-        airT_F, waterT_F, setpointT_F, Units::Btu_per_h, Units::Temp::F);
+    double newCapacity_BTUperHr =
+        hpwh.getCompressorCapacity(airT_F, waterT_F, setpointT_F, Units::Btu_per_h, Units::Temp::F);
 
     EXPECT_NEAR_REL(wh_heatingCap, newCapacity_BTUperHr);
 }
