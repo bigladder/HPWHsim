@@ -346,8 +346,8 @@ struct InsulationPoint
     double expectedUA_kJperhC;
 };
 
-#define FT2HFperBTU_TO_M2CperW(r_ft2hF_per_Btu)                                                    \
-    W_TO_KW(KWH_TO_BTU(dF_TO_dC(FT2_TO_M2(r_ft2hF_per_Btu))))
+#define FT2HFperBTU_TO_M2CperW(r_ft2hF_per_Btu)                                                  \
+     m2_from(Units::ft2) * dC_from(Units::F) * r_ft2hF_per_Btu / W_from(Units::Btu_per_h)
 
 #define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower_W)                                   \
     EXPECT_EQ(hpwh.initResistanceTankGeneric(point.volume_L,                                       \

@@ -445,8 +445,8 @@ int main(int argc, char* argv[])
         // Check flow for external MP
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(Units::Volume::gal);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(Units::FlowRate::gal_per_min) *
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(Units::gal);
+            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(Units::gal_per_min) *
                                       hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
@@ -473,7 +473,7 @@ int main(int argc, char* argv[])
             {
                 strPreamble += std::to_string(hpwh.getCondenserInletT_C()) + ", " +
                                std::to_string(hpwh.getCondenserOutletT_C()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(Units::Volume::gal)) +
+                               std::to_string(hpwh.getExternalVolumeHeated(Units::gal)) +
                                ", ";
             }
             if (useSoC)
@@ -492,9 +492,9 @@ int main(int argc, char* argv[])
         {
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh) * 1000.;
+                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, Units::kWh) * 1000.;
                 cumHeatOut[iHS] +=
-                    hpwh.getNthHeatSourceEnergyOutput(iHS, Units::Energy::kWh) * 1000.;
+                    hpwh.getNthHeatSourceEnergyOutput(iHS, Units::kWh) * 1000.;
             }
         }
     }

@@ -1406,15 +1406,15 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               getNthHeatSourceEnergyInput(iHS, Units::Energy::kWh) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS, Units::Energy::kWh) * 1000.);
+                               getNthHeatSourceEnergyInput(iHS, Units::kWh) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS, Units::kWh) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
         outFILE << fmt::format(
             ",{:0.2f}",
-            getNthThermocoupleT(iTC + 1, nTCouples, doIP ? Units::Temp::F : Units::Temp::C));
+            getNthThermocoupleT(iTC + 1, nTCouples, doIP ? Units::F : Units::C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)

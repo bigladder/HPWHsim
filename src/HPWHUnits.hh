@@ -475,7 +475,7 @@ inline ScaleOffseter<Temp>::ScaleOffsetMap
 template <>
 inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
     kJ,
-    {{kWh, s_per_h}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}});
+    {{kWh, scale(s, h)}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}});
 
 template <>
 inline Scaler<Power>::ScaleMap
@@ -483,7 +483,7 @@ inline Scaler<Power>::ScaleMap
                             {{Btu_per_h, scale(kJ, Btu) /
                                              scale(s, h)},
                              {W, 1000.},
-                             {kJ_per_h, 1.}});
+                             {kJ_per_h, 1. / scale(s, h)}});
 
 template <>
 inline Scaler<Area>::ScaleMap Scaler<Area>::scaleMap(

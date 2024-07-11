@@ -250,9 +250,9 @@ int HPWH::initResistanceTankGeneric(double tankVol,
     }
 
     // Calc UA
-    double SA_m2 = getTankSurfaceArea(tankVol_L, Units::Volume::L, Units::Area::m2);
+    double SA_m2 = getTankSurfaceArea(tankVol_L, Units::L, Units::m2);
     double tankUA_WperC = SA_m2 / rValue_m2CperW;
-    tankUA_kJperhC = Units::scale(Units::W, Units::Power::kJ_per_h) * tankUA_WperC;
+    tankUA_kJperhC = Units::scale(Units::W, Units::kJ_per_h) * tankUA_WperC;
 
     if (tankUA_kJperhC < 0.)
     {
