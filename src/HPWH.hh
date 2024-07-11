@@ -38,6 +38,10 @@ class HPWH
     static const int version_patch = HPWHVRSN_PATCH;
     static const std::string version_maint;
 
+    static constexpr auto unitsT = Units::Temp::C;
+
+    typedef Units::TempVal<unitsT> ValT;
+
     /// number of condensity nodes associated with each heat source
     static const int CONDENSITY_SIZE = 12;
 
@@ -477,7 +481,7 @@ class HPWH
                            const double upperPower,
                            const double lowerPower,
                            const Units::Volume unitsVolume = Units::Volume::L,
-                           const Units::Power unitsPower = Units::Power::kW);
+                           const Units::Power unitsPower = Units::kW);
     /**< This function will initialize a HPWH object to be a resistance tank.  Since
      * resistance tanks are so simple, they can be specified with only four variables:
      * tank volume, energy factor, and the power of the upper and lower elements.  Energy
@@ -496,7 +500,7 @@ class HPWH
                                   const Units::Volume unitsVolume = Units::Volume::L,
                                   const Units::Area unitsArea = Units::Area::m2,
                                   const Units::Temp unitsTemp = Units::Temp::C,
-                                  const Units::Power unitsPower = Units::Power::kW);
+                                  const Units::Power unitsPower = Units::kW);
     /**< This function will initialize a HPWH object to be a generic resistance storage water
      * heater, with a specific R-Value defined at initalization.
      *
@@ -695,7 +699,7 @@ class HPWH
     int setSetpointT_C(const double setpointT_C_in);
 
     /// change the setpoint T, if possible
-    int setSetpointT(const double setpointT, const Units::Temp units = Units::Temp::C);
+    int setSetpointT(const double setpointT, const Units::Temp units = Units::C);
 
     /// assign tank node temperatures by mapping the provided vector of temperatures
     int setTankTs_C(std::vector<double> tankTs_C_in);
@@ -703,27 +707,27 @@ class HPWH
     ///////////////////////////////////////////////
     /* The following functions return temperatures in user-specified units */
 
-    double getSetpointT(const Units::Temp units = Units::Temp::C) const;
+    double getSetpointT(const Units::Temp units = Units::C) const;
 
-    double getMinOperatingT(const Units::Temp units = Units::Temp::C) const;
+    double getMinOperatingT(const Units::Temp units = Units::C) const;
 
-    double getTankNodeT(const int nodeNum, const Units::Temp units = Units::Temp::C) const;
+    double getTankNodeT(const int nodeNum, const Units::Temp units = Units::C) const;
 
     double getNthThermocoupleT(const int iTCouple,
                                const int nTCouple,
-                               const Units::Temp units = Units::Temp::C) const;
+                               const Units::Temp units = Units::C) const;
 
-    double getOutletT(const Units::Temp units = Units::Temp::C) const;
+    double getOutletT(const Units::Temp units = Units::C) const;
 
-    double getCondenserInletT(const Units::Temp units = Units::Temp::C) const;
+    double getCondenserInletT(const Units::Temp units = Units::C) const;
 
-    double getCondenserOutletT(const Units::Temp units = Units::Temp::C) const;
+    double getCondenserOutletT(const Units::Temp units = Units::C) const;
 
-    double getMaxCompressorSetpointT(const Units::Temp units = Units::Temp::C) const;
+    double getMaxCompressorSetpointT(const Units::Temp units = Units::C) const;
 
-    int setMaxDepressionT(double maxDepression, const Units::Temp units = Units::Temp::C);
+    int setMaxDepressionT(double maxDepression, const Units::Temp units = Units::C);
 
-    int setTankTs(std::vector<double> tankTs_in, const Units::Temp units = Units::Temp::C);
+    int setTankTs(std::vector<double> tankTs_in, const Units::Temp units = Units::C);
 
     /// return whether specified new setpoint is physically possible for the compressor. If
     /// there is no compressor then checks that the new setpoint is less than boiling. The
@@ -732,7 +736,7 @@ class HPWH
     bool canApplySetpointT(const double newSetpointT,
                            double& maxSetpointT,
                            std::string& why,
-                           Units::Temp units = Units::Temp::C) const;
+                           Units::Temp units = Units::C) const;
 
     ///////////////////////////////////////////////
     int resetTankToSetpoint(); /// reset tank to setpoint temperature
@@ -860,8 +864,8 @@ class HPWH
     double getCompressorCapacity(double airTemp = 19.722,
                                  double inletTemp = 14.444,
                                  double outTemp = 57.222,
-                                 Units::Power pwrUnit = Units::Power::kW,
-                                 Units::Temp tempUnit = Units::Temp::C);
+                                 Units::Power pwrUnit = Units::kW,
+                                 Units::Temp tempUnit = Units::C);
     /**< Returns the heating output capacity of the compressor for the current HPWH model.
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor. Outlet temperatures greater than the max allowable setpoints will return an
@@ -871,8 +875,8 @@ class HPWH
                                     double airTemp = 19.722,
                                     double inletTemp = 14.444,
                                     double outTemp = 57.222,
-                                    Units::Power pwrUnit = Units::Power::kW,
-                                    Units::Temp tempUnit = Units::Temp::C);
+                                    Units::Power pwrUnit = Units::kW,
+                                    Units::Temp tempUnit = Units::C);
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
     inletTemp and outTemp since multi-pass models will increase the water temperature only a few
@@ -885,7 +889,7 @@ class HPWH
     int setScaleCapacityCOP(double scaleCapacity = 1., double scaleCOP = 1.);
 
     int
-    setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::Power::kW);
+    setResistanceCapacity(double power, int which = -1, Units::Power pwrUNIT = Units::kW);
     /**< Scale the resistance elements in the heat source list. Which heat source is chosen is
     changes is given by "which"
     - If which (-1) sets all the resisistance elements in the tank.
@@ -899,7 +903,7 @@ class HPWH
     compressor.
     */
 
-    double getResistanceCapacity(int which = -1, Units::Power pwrUNIT = Units::Power::kW);
+    double getResistanceCapacity(int which = -1, Units::Power pwrUNIT = Units::kW);
     /**< Returns the resistance elements capacity. Which heat source is chosen is changes is
     given by "which"
     - If which (-1) gets all the resisistance elements in the tank.
@@ -998,7 +1002,7 @@ class HPWH
     int setEnteringWaterHighTempShutOff(double highTemp,
                                         bool tempIsAbsolute,
                                         int heatSourceIndex,
-                                        Units::Temp units = Units::Temp::C);
+                                        Units::Temp units = Units::C);
 
     int setTargetSoCFraction(double target);
 
@@ -1009,7 +1013,7 @@ class HPWH
                             double tempMinUseful = 43.333,
                             bool constantMainsT = false,
                             double mainsT = 18.333,
-                            Units::Temp tempUnit = Units::Temp::C);
+                            Units::Temp tempUnit = Units::C);
 
     bool isSoCControlled() const;
 
@@ -1051,12 +1055,12 @@ class HPWH
         PerfPoint(const double T_in = 0.,
                   const std::vector<double>& inputPower_coeffs_in = {},
                   const std::vector<double>& COP_coeffs_in = {},
-                  const Units::Temp unitsTemp = Units::Temp::C,
-                  const Units::Power unitsPower = Units::Power::kW);
+                  const Units::Temp unitsTemp = Units::C,
+                  const Units::Power unitsPower = Units::kW);
 
         PerfPoint(const PerfPointStore& perfPointStore,
-                  const Units::Temp unitsTemp = Units::Temp::C,
-                  const Units::Power unitsPower = Units::Power::kW);
+                  const Units::Temp unitsTemp = Units::C,
+                  const Units::Power unitsPower = Units::kW);
     };
 
     /// A map with input/COP quadratic curve coefficients at a given external temperature
@@ -1457,7 +1461,7 @@ class HPWH::HeatSource
     /// specified node, with the specified power in watts
     void setupAsResistiveElement(const int node,
                                  const double power,
-                                 const Units::Power units = Units::Power::kW,
+                                 const Units::Power units = Units::kW,
                                  const int condensitySize = CONDENSITY_SIZE);
 
     bool isEngaged() const;                             /// true if on
@@ -1606,8 +1610,8 @@ class HPWH::HeatSource
         ResistanceDefrost(const double inputPwr_in = 0.,
                           const double constLiftT_in = 0.,
                           const double onBelowT_in = 0.,
-                          const Units::Temp unitsTemp_in = Units::Temp::C,
-                          const Units::Power unitsPower_in = Units::Power::kW);
+                          const Units::Temp unitsTemp_in = Units::C,
+                          const Units::Power unitsPower_in = Units::kW);
     } resDefrost;
 
     struct defrostPoint
@@ -1647,7 +1651,7 @@ class HPWH::HeatSource
     void clearAllLogic();
 
     /// change the resistance wattage
-    void changeResistancePower(const double power, const Units::Power units = Units::Power::kW);
+    void changeResistancePower(const double power, const Units::Power units = Units::kW);
 
     /// returns if the heat source uses a compressor or not
     bool isACompressor() const;
