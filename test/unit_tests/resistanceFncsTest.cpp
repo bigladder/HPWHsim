@@ -170,11 +170,11 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
  */
 TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 {
-    const double elementPower_kW = 10.; // KW
+    const HPWH::Power_t elementPower(10., Units::kW);
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric(800., 10., elementPower_kW * 1000., 0.);
+    hpwh.initResistanceTankGeneric(HPWH::Volume_t(800., Units::L), HPWH::RFactor_t(10., Units::), elementPower);
 
     // Check only bottom setting works
     double factor = 3.;
@@ -203,19 +203,15 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
 struct InsulationPoint
 {
-    double volume_L;
-    double r_ft2hFperBTU; // ft^2.degF/(BTU/h)
-    double expectedUA_SI;
+    HPWH::Volume_t volume;
+    HPWH::RFactor_t rFactor; // ft^2.degF/(BTU/h)
+    HPWH::UA_t expectedUA;
 };
 
-#define FT2HFperBTU_TO_M2CperW(r_ft2hFperBTU) BTUm2C_per_kWhft2F* r_ft2hFperBTU / 1000.
-
-// #define R_TO_RSI(rvalue) rvalue * 0.176110
-#define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower_W)                                   \
-    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(point.volume_L,                                 \
-                                                   FT2HFperBTU_TO_M2CperW(point.r_ft2hFperBTU),    \
-                                                   elementPower_W,                                 \
-                                                   elementPower_W))                                \
+#define TEST_INIT_RESISTANCE_TANK_GENERIC(point, elementPower)                                     \
+    EXPECT_EQ(                                                                                     \
+        hpwh.initResistanceTankGeneric(point.volume, point.rFactor, elementPower, elementPower),   \
+        0)                                                                                         \
         << "Could not initialize generic resistance tank.";
 
 /*
@@ -231,49 +227,49 @@ TEST(ResistanceFunctionsTest, commercialTankInit)
     const InsulationPoint testPoint2000 = {2000., 16., 12.0886496};
     const InsulationPoint testPoint20000 = {20000., 6., 149.628109};
 
-    const double elementPower_W = 1.e4;
-    double UA;
+    const HPWH::Power_t elementPower(1.e4, Units::W);
+    HPWH::UA_t UA;
 
     HPWH hpwh;
 
     // Check UA is as expected at 800 gal
-    TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint800, elementPower_W);
+    TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint800, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint800.expectedUA_SI);
+    EXPECT_NEAR_REL(UA(Units::kJ_per_hC), testPoint800.expectedUA(Units::kJ_per_hC));
 
     // Check UA independent of elements
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint800, elementPower_W / 1000.);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint800.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint800.expectedUA_kJperhC);
 
     // Check UA is as expected at 2 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint2, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint2.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint2.expectedUA_kJperhC);
 
     // Check UA is as expected at 50 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint50, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint50.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint50.expectedUA_kJperhC);
 
     // Check UA is as expected at 200 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint200, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint200.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint200.expectedUA_kJperhC);
 
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint200B, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint200B.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint200B.expectedUA_kJperhC);
 
     // Check UA is as expected at 2000 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint2000, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint2000.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint2000.expectedUA_kJperhC);
 
     // Check UA is as expected at 20000 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint20000, elementPower_W);
-    hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint20000.expectedUA_SI);
+    hpwh.getUA(UA_kJperhC);
+    EXPECT_NEAR_REL(UA_kJperhC, testPoint20000.expectedUA_kJperhC);
 }
 
 #undef TEST_INIT_RESISTANCE_TANK_GENERIC

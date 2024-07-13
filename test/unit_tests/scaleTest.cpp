@@ -13,25 +13,25 @@ struct Performance
 };
 
 void getCompressorPerformance(
-    HPWH& hpwh, Performance& point, double waterTempC, double airTempC, double setpointC)
+    HPWH& hpwh, Performance& point, HPWH::Temp_t waterT, HPWH::Temp_t  airT, HPWH::Temp_t setpointT)
 {
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
       // temperature of the lift
-        hpwh.setSetpoint((waterTempC + setpointC) / 2.);
+        hpwh.setSetpointT((waterT + setpointT) / 2.);
     }
     else
     {
-        hpwh.setSetpoint(waterTempC);
+        hpwh.setSetpointT(waterT);
     }
     hpwh.resetTankToSetpoint(); // Force tank cold
-    hpwh.setSetpoint(setpointC);
+    hpwh.setSetpointT(setpointT);
 
     // Run the step
-    hpwh.runOneStep(waterTempC, // Inlet water temperature (C )
-                    0.,         // Flow in gallons
-                    airTempC,   // Ambient Temp (C)
-                    airTempC,   // External Temp (C)
+    hpwh.runOneStep(waterT, // Inlet water temperature
+                    0.,         // Flow
+                    airT,   // Ambient Temp
+                    airT,   // External Temp
                     // HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
                     (HPWH::DR_TOO | HPWH::DR_LOR) // DR Status (now an enum. Fixed for now as allow)
     );
@@ -512,28 +512,28 @@ TEST(ScaleTest, resistanceScales)
 
     double elementPower = 30.; // KW
 
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), 2. * elementPower);
 
     // check units convert
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_BTUperHr),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
                     2. * KW_TO_BTUperH(elementPower));
 
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW),
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
                     factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1, HPWH::UNITS_KW), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1, HPWH::UNITS_KW), 2. * factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), 2. * factor * elementPower);
 }
 
 /*
@@ -546,6 +546,6 @@ TEST(ScaleTest, storageTankErrors)
     const std::string sModelName = "StorageTank";
     hpwh.initPreset(sModelName);
 
-    EXPECT_ANY_THROW(hpwh.setResistanceCapacity(1000.));
+    EXPECT_ANY_THROW(hpwh.setResistanceCapacity(1000., Units::W);
     EXPECT_ANY_THROW(hpwh.setScaleCapacityCOP(1., 1.));
 }
