@@ -1000,7 +1000,7 @@ double HPWH::HeatSource::addHeatExternalMP(double externalT_C,
 }
 
 void HPWH::HeatSource::setupAsResistiveElement(int node,
-                                               double Watts,
+                                               Power_t power,
                                                int condensitySize /* = CONDENSITY_SIZE*/)
 {
 

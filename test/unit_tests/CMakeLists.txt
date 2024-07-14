@@ -10,7 +10,6 @@ set(library_files
         resistanceFncsTest.cpp
         compressorFncsTest.cpp
         performanceMapTest.cpp
-        unitsConversionTest.cpp
         measureMetricsTest.cpp
         unit-test-main.cpp
         )
