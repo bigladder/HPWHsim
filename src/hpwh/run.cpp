@@ -253,20 +253,20 @@ void run(const std::string& sSpecType,
     }
     if (newSetpoint > 0)
     {
-        double maxAllowedSetpointT_C;
+        HPWH::Temp_t maxAllowedSetpointT;
         string why;
         if (!allSchedules[5].empty())
         {
-            if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT_C, why))
+            if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT, why))
             {
-                hpwh.setSetpoint(allSchedules[5][0]);
+                hpwh.setSetpointT(allSchedules[5][0]);
             }
         }
         else if (newSetpoint > 0)
         {
-            if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT_C, why))
+            if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT, why))
             {
-                hpwh.setSetpoint(newSetpoint);
+                hpwh.setSetpointT({newSetpoint, Units::F});
             }
         }
         if (hasInitialTankTemp)
@@ -280,7 +280,7 @@ void run(const std::string& sSpecType,
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize(newTankSize, HPWH::UNITS_GAL);
+        hpwh.setTankSize({newTankSize, Units::gal});
     }
     if (tot_limit > 0)
     {
@@ -410,9 +410,9 @@ void run(const std::string& sSpecType,
         // Check flow for external MP
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
-            double volumeHeated_Gal = hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate(HPWH::UNITS_GPM) *
-                                      hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex());
+            double volumeHeated_Gal = hpwh.getExternalVolumeHeated()(Units::gal);
+            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate()(Units::gal_per_min) *
+                                      hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex())(Units::min);
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "
@@ -427,18 +427,18 @@ void run(const std::string& sSpecType,
             // Copy current status into the output file
             if (HPWH_doTempDepress)
             {
-                airTemp2 = hpwh.getLocationTemp_C();
+                airTemp2 = hpwh.getLocationT()(Units::C);
             }
             strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
-                          std::to_string(hpwh.getSetpoint()) + ", " +
+                          std::to_string(hpwh.getSetpointT()(Units::C)) + ", " +
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
             // Add some more outputs for mp tests
             if (hpwh.isCompressorExternalMultipass() == 1)
             {
-                strPreamble += std::to_string(hpwh.getCondenserWaterInletTemp()) + ", " +
-                               std::to_string(hpwh.getCondenserWaterOutletTemp()) + ", " +
-                               std::to_string(hpwh.getExternalVolumeHeated(HPWH::UNITS_GAL)) + ", ";
+                strPreamble += std::to_string(hpwh.getCondenserWaterInletT()(Units::C)) + ", " +
+                               std::to_string(hpwh.getCondenserWaterOutletT()(Units::C)) + ", " +
+                               std::to_string(hpwh.getExternalVolumeHeated()(Units::gal)) + ", ";
             }
             if (useSoC)
             {
@@ -456,8 +456,8 @@ void run(const std::string& sSpecType,
         {
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
-                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH) * 1000.;
-                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH) * 1000.;
+                cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS)(Units::kWh) * 1000.;
+                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS(Units::kWh) * 1000.;
             }
         }
     }

@@ -17,6 +17,8 @@
 
 #include <courier/courier.h>
 
+#include "../vendor/Unity/Units.hpp"
+
 namespace Btwxt
 {
 class RegularGridInterpolator;
@@ -26,7 +28,7 @@ class RegularGridInterpolator;
 /**<  Definition of HPWH_ABRIDGED excludes some functions to reduce the size of the
  * compiled library.  */
 
-#include "HPWHUnits.hh"
+//#include "HPWHUnits.hh"
 #include "HPWHversion.hh"
 #include "courier/helpers.h"
 
@@ -83,7 +85,7 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::UA, UnitsUA> UA_t;
     typedef Units::ScaleVal<Units::RFactor, UnitsRFactor> RFactor_t;
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
-    typedef union{Temp_t T; dTemp_t dT;} GenTemp_t;
+    typedef std::variant<Temp_t,dTemp_t> GenTemp_t;
 
     //////
     static const int CONDENSITY_SIZE =
@@ -93,9 +95,9 @@ class HPWH : public Courier::Sender
     static const int MAXOUTSTRING =
         200; /**< this is the maximum length for a debuging output string */
 
-    static const double DENSITYWATER_kgperL; /// mass density of water
-    static const double KWATER_WpermC;       /// thermal conductivity of water
-    static const double CPWATER_kJperkgC;    /// specific heat capcity of water
+    static const double DENSITYWATER_kg_per_L; /// mass density of water
+    static const double KWATER_W_per_mC;       /// thermal conductivity of water
+    static const double CPWATER_kJ_per_kgC;    /// specific heat capcity of water
     static constexpr double TOL_MINVALUE = 0.0001; /**< any amount of heat distribution less than this is reduced
                                          to 0 this saves on computations */
 
@@ -328,30 +330,6 @@ class HPWH : public Courier::Sender
         VRB_emetic = 30     /**< print all the things  */
     };
 
-    enum UNITS
-    {
-        UNITS_C,         /**< celsius  */
-        UNITS_F,         /**< fahrenheit  */
-        UNITS_KWH,       /**< kilowatt hours  */
-        UNITS_BTU,       /**< british thermal units  */
-        UNITS_KJ,        /**< kilojoules  */
-        UNITS_KW,        /**< kilowatt  */
-        UNITS_BTUperHr,  /**< british thermal units per Hour  */
-        UNITS_GAL,       /**< gallons  */
-        UNITS_L,         /**< liters  */
-        UNITS_kJperHrC,  /**< UA, metric units  */
-        UNITS_BTUperHrF, /**< UA, imperial units  */
-        UNITS_FT,        /**< feet  */
-        UNITS_M,         /**< meters  */
-        UNITS_FT2,       /**< square feet  */
-        UNITS_M2,        /**< square meters  */
-        UNITS_MIN,       /**< minutes  */
-        UNITS_SEC,       /**< seconds  */
-        UNITS_HR,        /**< hours  */
-        UNITS_GPM,       /**< gallons per minute  */
-        UNITS_LPS        /**< liters per second  */
-    };
-
     /** specifies the type of heat source  */
     enum HEATSOURCE_TYPE
     {
@@ -432,9 +410,9 @@ class HPWH : public Courier::Sender
                              double decisionPoint,
                              HPWH* hpwh,
                              double hF = -0.05,
-                             Temp_t tM_C = Temp_t(43.333, Units::C),
+                             Temp_t tM_C = {43.333, Units::C},
                              bool constMains = false,
-                             Temp_t mainsT = Temp_t(18.333, Units::C),
+                             Temp_t mainsT = {18.333, Units::C},
                              std::function<bool(double, double)> c = std::less<double>())
             : HeatingLogic(desc, decisionPoint, hpwh, c, false)
             , minUsefulT(tM_C)
@@ -461,15 +439,16 @@ class HPWH : public Courier::Sender
 
     struct TempBasedHeatingLogic : HeatingLogic
     {
+
       public:
         TempBasedHeatingLogic(std::string desc,
                               std::vector<NodeWeight> n,
-                              double decisionPoint,
+                              GenTemp_t decisionT,
                               HPWH* hpwh,
-                              bool a = false,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n) {};
+            : HeatingLogic(desc, (decisionT.index() == 0) ? std::get<Temp_t>(decisionT) : std::get<dTemp_t>(decisionT), hpwh, c, isHTS), nodeWeights(n) {};
+
 
         bool isValid();
 
@@ -502,36 +481,33 @@ class HPWH : public Courier::Sender
                                                           bool constMains,
                                                           Temp_t mainsT);
 
+    std::shared_ptr<TempBasedHeatingLogic> wholeTank(GenTemp_t& decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> topThird(GenTemp_t decisionT);
     std::shared_ptr<TempBasedHeatingLogic>
-    wholeTank(double decisionPoint, const bool absolute = false);
-    std::shared_ptr<TempBasedHeatingLogic> topThird(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topThird_absolute(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic>
-    secondThird(double decisionPoint, const bool absolute = false);
-    std::shared_ptr<TempBasedHeatingLogic> bottomThird(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomHalf(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomSixth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomSixth_absolute(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> secondSixth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> thirdSixth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> fourthSixth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> fifthSixth(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topSixth(double decisionPoint);
+    secondThird(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomThird(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomHalf(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomSixth(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> secondSixth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> thirdSixth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fourthSixth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fifthSixth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> topSixth(Temp_t decisionT);
 
-    std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> standby(Temp_t decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(Temp_t decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic>
-    bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff = false);
-    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(double decisionPoint);
+    bottomNodeMaxTemp(Temp_t decisionPoint, bool isEnteringWaterHighTempShutoff = false);
+    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(Temp_t decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(Temp_t decisionT);
 
-    std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> largeDraw(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> largerDraw(Temp_t decisionT);
 
     static std::string getVersion();
     /**< This function returns a string with the current version number */
@@ -564,7 +540,7 @@ class HPWH : public Courier::Sender
      * controls for the HPWHinit_resTank()
      */
 
-    void initGeneric(const Volume_t tankVol, RFactor_t rFactor, double resUse_C);
+    void initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_t resUseT);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
@@ -598,8 +574,8 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inletVol2 = 0.,
-                    Temp_t inletT2_C = 0.,
+                    Volume_t inlet2Vol = 0.,
+                    Temp_t inlet2T = 0.,
                     std::vector<Power_t>* extraHeatDist = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
@@ -611,8 +587,8 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inletVol2 = 0.,
-                    Temp_t inletT2_C = 0.,
+                    Volume_t inlet2Vol = 0.,
+                    Temp_t inlet2T = 0.,
                     std::vector<Power_t>* extraHeatDist = NULL)
     {
         setInletT(inletT);
@@ -620,8 +596,8 @@ class HPWH : public Courier::Sender
                    ambientT,
                    externalT,
                    DRstatus,
-                   inletVol2,
-                   inletT2_C,
+                   inlet2Vol,
+                   inlet2T,
                    extraHeatDist);
     };
 
@@ -934,7 +910,7 @@ class HPWH : public Courier::Sender
     void resetTopOffTimer();
     /**< resets variables for timer associated with the DR_TOT call  */
 
-    double getLocationTemp_C() const;
+    Temp_t getLocationT() const;
 
     void getTankTemps(std::vector<Temp_t>& tankTs_out);
 
@@ -1177,7 +1153,7 @@ class HPWH : public Courier::Sender
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
     void modifyHeatDistribution(std::vector<double>& heatDistribution);
-    void addExtraHeat(std::vector<Energy_t>& extraHeatDist_W);
+    void addExtraHeat(std::vector<Energy_t>& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
     Energy_t extraEnergyInput;
@@ -1258,12 +1234,12 @@ class HPWH : public Courier::Sender
     /**< the volume (L) of a single node  */
     Volume_t nodeVolume;
 
-    /**< heat capacity (kJ/degC) of the fluid (water, except for heat-exchange models) in a single
+    /**< heat capacity of the fluid (water, except for heat-exchange models) in a single
      * node  */
-    double nodeCp_kJperC;
+    Cp_t nodeCp;
 
-    /**< the height in meters of the one node  */
-    double nodeHeight_m;
+    /**< the height of the one node  */
+    Length_t nodeHeight;
 
     double fracAreaTop;
     /**< the fraction of the UA on the top and bottom of the tank, assuming it's a cylinder */
@@ -1386,7 +1362,7 @@ class HPWH::HeatSource : public Courier::Sender
     /**< the copy constructor and assignment operator basically just checks if there
         are backup/companion pointers - these can't be copied */
 
-    void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
+    void setupAsResistiveElement(int node, Power_t power, int condensitySize = CONDENSITY_SIZE);
     /**< configure the heat source to be a resisive element, positioned at the
         specified node, with the specified power in watts */
 
@@ -1450,7 +1426,7 @@ class HPWH::HeatSource : public Courier::Sender
     void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
 
-    void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
+    void btwxtInterp(Power_t& inputPower, double& cop, std::vector<double>& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
     void setupDefrostMap(double derate35 = 0.8865);
@@ -1739,22 +1715,6 @@ void calcThermalDist(std::vector<double>& thermalDist,
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 /// convenience funcs
-inline auto MIN_TO_S(const double x)
-{
-    using namespace Units;
-    return scale(min, s) * x;
-}
-inline auto MIN_TO_H(const double x)
-{
-    using namespace Units;
-    return scale(min, h) * x;
-}
-inline auto H_TO_MIN(const double x)
-{
-    using namespace Units;
-    return scale(h, min) * x;
-}
-
 inline auto F_TO_C(const double x)
 {
     using namespace Units;
@@ -1771,22 +1731,13 @@ inline auto dF_TO_dC(const double x)
     using namespace Units;
     return scale(F, C) * x;
 }
-inline auto dC_TO_dF(const double x)
-{
-    using namespace Units;
-    return scale(C, F) * x;
-}
 
 inline auto M_TO_FT(const double x)
 {
     using namespace Units;
     return scale(m, ft) * x;
 }
-inline auto FT2_TO_M2(const double x)
-{
-    using namespace Units;
-    return scale(ft2, m2) * x;
-}
+
 inline auto M2_TO_FT2(const double x)
 {
     using namespace Units;
@@ -1803,22 +1754,13 @@ inline auto KJ_TO_BTU(const double x)
     using namespace Units;
     return scale(kJ, Btu) * x;
 }
-inline auto KWH_TO_KWH(const double x)
-{
-    using namespace Units;
-    return scale(kWh, kJ) * x;
-}
+
 inline auto KWH_TO_BTU(const double x)
 {
     using namespace Units;
     return scale(kWh, Btu) * x;
 }
 
-inline auto W_TO_KW(const double x)
-{
-    using namespace Units;
-    return scale(W, kW) * x;
-}
 inline auto KW_TO_BTUperH(const double x)
 {
     using namespace Units;
@@ -1845,11 +1787,7 @@ inline auto L_TO_M3(const double x)
     using namespace Units;
     return scale(L, m3) * x;
 }
-inline auto M3_TO_L(const double x)
-{
-    using namespace Units;
-    return scale(m3, L) * x;
-}
+
 inline auto L_TO_FT3(const double x)
 {
     using namespace Units;
@@ -1862,11 +1800,6 @@ inline auto GPM_TO_LPS(const double x)
     return scale(gal_per_min, L_per_s) * x;
 }
 
-inline auto BTUperHF_TO_KJperHC(const double x)
-{
-    using namespace Units;
-    return scale(Btu_per_hF, kJ_per_hC) * x;
-}
 inline auto KJperHC_TO_BTUperHF(const double x)
 {
     using namespace Units;
@@ -1878,19 +1811,8 @@ inline auto HM_TO_MIN(const double h, const double min)
     return Units::Time_h_min(h, min)(Units::min);
 }
 
-//
-inline auto m2_from(const Units::Area unitsArea) { return Units::scale(unitsArea, Units::m2); }
-inline auto dC_from(const Units::Temp unitsTemp) { return Units::scale(unitsTemp, Units::C); }
-inline auto W_from(const Units::Power unitsPower) { return Units::scale(unitsPower, Units::W); }
-
 inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
 inline auto from(const Units::UA unitsUA) { return Units::scale(unitsUA, HPWH::UnitsUA); }
 
-
-/// Generate an absolute or relative temperature in degC.
-inline double convertTempToC(const double T_F_or_C, const HPWH::UNITS units, const bool absolute)
-{
-    return (units == HPWH::UNITS_C) ? T_F_or_C : (absolute ? F_TO_C(T_F_or_C) : dF_TO_dC(T_F_or_C));
-}
 
 #endif
