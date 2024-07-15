@@ -462,8 +462,6 @@ class HPWH : public Courier::Sender
 
       private:
         bool areNodeWeightsValid();
-
-        bool isAbsolute;
         std::vector<NodeWeight> nodeWeights;
     };
 
@@ -483,31 +481,29 @@ class HPWH : public Courier::Sender
 
     std::shared_ptr<TempBasedHeatingLogic> wholeTank(GenTemp_t& decisionT);
     std::shared_ptr<TempBasedHeatingLogic> topThird(GenTemp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic>
-    secondThird(GenTemp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> bottomThird(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> bottomHalf(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> secondThird(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomThird(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomHalf(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfth(GenTemp_t decisionT);
     std::shared_ptr<TempBasedHeatingLogic> bottomSixth(GenTemp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> secondSixth(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> thirdSixth(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> fourthSixth(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> fifthSixth(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> topSixth(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> secondSixth(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> thirdSixth(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fourthSixth(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fifthSixth(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> topSixth(GenTemp_t decisionT);
 
-    std::shared_ptr<TempBasedHeatingLogic> standby(Temp_t decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(Temp_t decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic>
-    bottomNodeMaxTemp(Temp_t decisionPoint, bool isEnteringWaterHighTempShutoff = false);
-    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(Temp_t decisionPoint);
-    std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> standby(GenTemp_t decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(GenTemp_t decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> bottomNodeMaxTemp(GenTemp_t decisionT, bool enteringHighTempShutoff = false);
+    std::shared_ptr<TempBasedHeatingLogic> bottomTwelfthMaxTemp(GenTemp_t decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topThirdMaxTemp(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> bottomSixthMaxTemp(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> secondSixthMaxTemp(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> fifthSixthMaxTemp(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> topSixthMaxTemp(GenTemp_t decisionT);
 
-    std::shared_ptr<TempBasedHeatingLogic> largeDraw(Temp_t decisionT);
-    std::shared_ptr<TempBasedHeatingLogic> largerDraw(Temp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> largeDraw(GenTemp_t decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> largerDraw(GenTemp_t decisionT);
 
     static std::string getVersion();
     /**< This function returns a string with the current version number */
@@ -635,7 +631,7 @@ class HPWH : public Courier::Sender
 
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
-    void setTankLayerTemperatures(std::vector<Temp_t> setTemps);
+    void setTankLayerTs(std::vector<Temp_t> setTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
 
@@ -654,7 +650,7 @@ class HPWH : public Courier::Sender
        element, but the compressor will not operate above this temperature. maxAllowedSetpoint_C
        returns the */
 
-    double getMaxCompressorSetpointT() const;
+    Temp_t getMaxCompressorSetpointT() const;
     /**< a function to return the max operating temperature of the compressor which can be different
        than the value returned in isNewSetpointPossible() if there are resistance elements. */
 
@@ -676,7 +672,7 @@ class HPWH : public Courier::Sender
     void resetTankToSetpoint();
     /**< this function resets the tank temperature profile to be completely at setpoint  */
 
-    void setTankToTemperature(double temp_C);
+    void setTankToT(Temp_t T);
     /**< helper function for testing */
 
     void setAirFlowFreedom(double fanFraction);
@@ -912,7 +908,7 @@ class HPWH : public Courier::Sender
 
     Temp_t getLocationT() const;
 
-    void getTankTemps(std::vector<Temp_t>& tankTs_out);
+    void getTankTs(std::vector<Temp_t>& tankTs_out);
 
     Temp_t getOutletT() const;
     /**< returns the outlet temperature in the specified units
@@ -971,18 +967,18 @@ class HPWH : public Courier::Sender
                           const double fracEnergyTolerance = 0.001);
 
     /// Overloaded version of above that allows specification of inlet temperature.
-    bool isEnergyBalanced(const double drawVol_L,
-                          double inletT_C_in,
-                          const double prevHeatContent_kJ,
+    bool isEnergyBalanced(Volume_t drawVol,
+                          Temp_t inletT_in,
+                          Energy_t prevHeatContent,
                           const double fracEnergyTolerance)
     {
-        setInletT(inletT_C_in);
-        return isEnergyBalanced(drawVol_L, prevHeatContent_kJ, fracEnergyTolerance);
+        setInletT(inletT_in);
+        return isEnergyBalanced(drawVol, prevHeatContent, fracEnergyTolerance);
     }
 
     /// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent
     /// exceeding maximum or setpoint
-    double addHeatAboveNode(double qAdd_kJ, const int nodeNum, const double maxT_C);
+    Energy_t addHeatAboveNode(Energy_t qAdd_kJ, const int nodeNum, Temp_t maxT);
 
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
@@ -1018,26 +1014,26 @@ class HPWH : public Courier::Sender
         Energy_t recoveryUsedEnergy = 0.; // Q_r
 
         //
-        Time_t standbyPeriodTime_h = 0; // tau_stby,1
+        Time_t standbyPeriodTime = 0; // tau_stby,1
 
-        double standbyStartTankT_C = 0.; // T_su,0
-        double standbyEndTankT_C = 0.;   // T_su,f
+        Temp_t standbyStartTankT = 0.; // T_su,0
+        Temp_t standbyEndTankT = 0.;   // T_su,f
 
         Energy_t standbyStartEnergy = 0.; // Q_su,0
         Energy_t standbyEndEnergy = 0.;   // Q_su,f
         Energy_t standbyUsedEnergy = 0.;  // Q_stby
 
-        double standbyHourlyLossEnergy_kJperh = 0.; // Q_hr
-        double standbyLossCoefficient_kJperhC = 0.; // UA
+        Power_t standbyHourlyLossEnergy = 0.; // Q_hr
+        UA_t standbyLossCoefficient = 0.; // UA
 
         Time_t noDrawTotalTime = 0;        // tau_stby,2
-        double noDrawAverageAmbientT_C = 0.; // <T_a,stby,2>
+        Temp_t noDrawAverageAmbientT = 0.; // <T_a,stby,2>
 
         // 24-hr values
         Volume_t removedVolume = 0.;
         Energy_t waterHeatingEnergy = 0.; // Q_HW
-        double avgOutletT_C = 0.;          // <Tdel,i>
-        double avgInletT_C = 0.;           // <Tin,i>
+        Temp_t avgOutletT = 0.;          // <Tdel,i>
+        Temp_t avgInletT = 0.;           // <Tin,i>
 
         Energy_t usedFossilFuelEnergy = 0.;               // Q_f
         Energy_t usedElectricalEnergy = 0.;               // Q_e
@@ -1063,7 +1059,7 @@ class HPWH : public Courier::Sender
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
-        double setpointT_C = 51.7;
+        Temp_t setpointT = {51.7, Units::C};
     };
 
     /// perform a draw/heat cycle to prepare for test
@@ -1107,15 +1103,15 @@ class HPWH : public Courier::Sender
     struct OutputData
     {
         Time_t time;
-        double ambientT_C;
-        double setpointT_C;
-        double inletT_C;
+        Temp_t ambientT;
+        Temp_t setpointT;
+        Temp_t inletT;
         Volume_t drawVolume;
         DRMODES drMode;
         std::vector<Energy_t> h_srcIn;
         std::vector<Energy_t> h_srcOut;
-        std::vector<double> thermocoupleT_C;
-        double outletT_C;
+        std::vector<Temp_t> thermocoupleT;
+        Temp_t outletT;
     };
 
     int writeRowAsCSV(std::ofstream& outFILE,
@@ -1152,7 +1148,7 @@ class HPWH : public Courier::Sender
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
-    void modifyHeatDistribution(std::vector<double>& heatDistribution);
+    void modifyHeatDistribution(std::vector<Power_t>& heatDistribution);
     void addExtraHeat(std::vector<Energy_t>& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
@@ -1175,7 +1171,7 @@ class HPWH : public Courier::Sender
     void checkInputs();
     /**< a helper function to run a few checks on the HPWH input parameters  */
 
-    double getChargePerNode(double tCold, double tMix, double tHot) const;
+    double getChargePerNode(Temp_t coldT, Temp_t mixT, Temp_t hotT) const;
 
     void calcAndSetSoCFraction();
 
