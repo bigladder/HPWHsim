@@ -954,10 +954,9 @@ class HPWH : public Courier::Sender
 
     void switchToSoCControls(double targetSoC,
                              double hysteresisFraction = 0.05,
-                             double tempMinUseful = 43.333,
+                             Temp_t tempMinUseful = {43.333, Units::C},
                              bool constantMainsT = false,
-                             double mainsT = 18.333,
-                             UNITS tempUnit = UNITS_C);
+                             Temp_t mainsT = {18.333, Units::C});
 
     bool isSoCControlled() const;
 
