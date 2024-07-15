@@ -1,5 +1,5 @@
 /*
-File of the presets heating logics available HPWHsim
+File of the heating logics available in HPWHsim
 */
 
 #include "HPWH.hh"
@@ -22,16 +22,11 @@ double HPWH::SoCBasedHeatingLogic::getComparisonValue()
 
 double HPWH::SoCBasedHeatingLogic::getTankValue()
 {
-    double soCFraction;
-    if (hpwh->member_inletT_C == HPWH_ABORT && !useCostantMains)
+    if ((!hpwh->haveInletT) && (!useCostantMains))
     {
-        soCFraction = HPWH_ABORT;
+        hpwh->send_error("SoC-based heating logic used without constant mains.");
     }
-    else
-    {
-        soCFraction = hpwh->getSoCFraction();
-    }
-    return soCFraction;
+    return hpwh->getSoCFraction();
 }
 
 double HPWH::SoCBasedHeatingLogic::getMainsT_C()
@@ -48,17 +43,12 @@ double HPWH::SoCBasedHeatingLogic::getMainsT_C()
 
 double HPWH::SoCBasedHeatingLogic::getTempMinUseful_C() { return tempMinUseful_C; }
 
-int HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value)
-{
-    decisionPoint = value;
-    return 0;
-}
+void HPWH::SoCBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
 
-int HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
+void HPWH::SoCBasedHeatingLogic::setConstantMainsTemperature(double mains_C)
 {
     constantMains_C = mains_C;
     useCostantMains = true;
-    return 0;
 }
 
 double HPWH::SoCBasedHeatingLogic::nodeWeightAvgFract() { return getComparisonValue(); }
@@ -121,20 +111,6 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
                            (hpwh->tankTemps_C[calcNode] - hpwh->tankTemps_C[calcNode - 1]);
     fractNextNode += HPWH::TOL_MINVALUE;
 
-    if (hpwh->hpwhVerbosity >= VRB_emetic)
-    {
-        double smallestSoCChangeWhenHeatingNextNode =
-            1. / maxSoC *
-            (1. + fractNextNode * (hpwh->setpoint_C - hpwh->tankTemps_C[calcNode]) /
-                      (tempMinUseful_C - getMainsT_C()));
-        hpwh->msg("fractThisNode %.6f, fractNextNode %.6f,  smallestSoCChangeWithNextNode:  %.6f, "
-                  "deltaSoCFraction: %.6f\n",
-                  fractCalcNode,
-                  fractNextNode,
-                  smallestSoCChangeWhenHeatingNextNode,
-                  deltaSoCFraction);
-    }
-
     // if the fraction is enough to heat up the next node, do that minimum and handle the heating of
     // the next node next iteration.
     return std::min(fractCalcNode, fractNextNode);
@@ -176,17 +152,16 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
 }
 
-double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->tankAvg_C(nodeWeights); }
-
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value)
+double HPWH::TempBasedHeatingLogic::getTankValue()
 {
-    decisionPoint = value;
-    return 0;
+    return hpwh->getAverageTankTemp_C(nodeWeights);
 }
-int HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
+
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
+void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
 {
     isAbsolute = absolute;
-    return setDecisionPoint(value);
+    setDecisionPoint(value);
 }
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
@@ -202,7 +177,7 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
             return 1. / (double)hpwh->getNumNodes();
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
+        else if (nodeWeight.nodeNum == LOGIC_SIZE + 1)
         {
             return 1.;
         }
@@ -215,75 +190,70 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 
     logicNode = calcNodes / totWeight;
 
-    return logicNode / static_cast<double>(LOGIC_NODE_SIZE);
+    return logicNode / static_cast<double>(LOGIC_SIZE);
 }
 
 double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 {
-    double fracTemp;
-    double diff;
     int calcNode = 0;
     int firstNode = -1;
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_NODE_SIZE);
+    std::vector<double> resampledTankTemps(LOGIC_SIZE);
     resample(resampledTankTemps, hpwh->tankTemps_C);
-    double comparison = getComparisonValue();
-    comparison += HPWH::TOL_MINVALUE; // Make this possible so we do slightly over heat
+    double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
-    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_NODE_SIZE;
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
     for (auto nodeWeight : nodeWeights)
     {
-
-        // bottom calc node only
         if (nodeWeight.nodeNum == 0)
         { // bottom-most tank node only
             firstNode = calcNode = 0;
-            double nodeTemp = hpwh->tankTemps_C.front();
-            sum = nodeTemp * nodeWeight.weight;
+            double nodeT_C = hpwh->tankTemps_C.front();
+            sum = nodeT_C * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
         // top calc node only
-        else if (nodeWeight.nodeNum == LOGIC_NODE_SIZE + 1)
+        else if (nodeWeight.nodeNum == LOGIC_SIZE + 1)
         { // top-most tank node only
-            calcNode = firstNode = hpwh->getNumNodes() - 1;
-            double nodeTemp = hpwh->tankTemps_C.back();
-            sum = nodeTemp * nodeWeight.weight;
+            firstNode = calcNode = hpwh->getNumNodes() - 1;
+            double nodeT_C = hpwh->tankTemps_C.back();
+            sum = nodeT_C * nodeWeight.weight;
             totWeight = nodeWeight.weight;
         }
         else
-        { // all tank nodes corresponding to logical node
-            firstNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum - 1));
-            calcNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum)) - 1;
-            double nodeTemp = resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)];
-            sum += nodeTemp * nodeWeight.weight;
+        { // logical nodes
+            firstNode = static_cast<int>(nodeDensity *
+                                         (nodeWeight.nodeNum - 1)); // first tank node in logic node
+            calcNode = static_cast<int>(nodeDensity * (nodeWeight.nodeNum)) -
+                       1; // last tank node in logical node
+            auto logicNode = static_cast<std::size_t>(nodeWeight.nodeNum - 1);
+            double logicNodeT_C = resampledTankTemps[logicNode];
+            sum += logicNodeT_C * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
     }
 
-    if (calcNode == hpwh->getNumNodes() - 1)
-    { // top node calc
-        diff = hpwh->getSetpoint() - hpwh->tankTemps_C[firstNode];
-    }
-    else
-    {
-        diff = hpwh->tankTemps_C[calcNode + 1] - hpwh->tankTemps_C[firstNode];
-    }
-    // if totWeight * comparison - sum < 0 then the shutoff condition is already true and you
+    double averageT_C = sum / totWeight;
+    double targetT_C = (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTemps_C[calcNode + 1]
+                                                            : hpwh->getSetpoint();
+
+    double nodeDiffT_C = targetT_C - hpwh->tankTemps_C[firstNode];
+    double logicNodeDiffT_C = comparisonT_C - averageT_C;
+
+    // if averageT_C > comparison then the shutoff condition is already true and you
     // shouldn't be here. Will revaluate shut off condition at the end the do while loop of
     // addHeatExternal, in the mean time lets not shift anything around.
-    if (compare(sum, totWeight * comparison))
-    {                  // Then should shut off
-        fracTemp = 0.; // 0 means shift no nodes
-    }
-    else
-    {
-        // if the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
-        // about, so shift a whole node. factor of hpwh->nodeDensity included below to reproduce
-        // original algorithm
-        fracTemp = diff > 0. ? (totWeight * comparison - sum) * nodeDensity / diff : 1.;
-    }
+    // Then should shut off, 0 means shift no nodes
 
-    return fracTemp;
+    // If the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
+    // about, so shift a whole node.
+    // factor of nodeDensity converts logic-node fraction to tank-node fraction
+    double nodeFrac =
+        compare(averageT_C, comparisonT_C)
+            ? 0.
+            : ((nodeDiffT_C > 0.) ? nodeDensity * logicNodeDiffT_C / nodeDiffT_C : 1.);
+
+    return nodeFrac;
 }
