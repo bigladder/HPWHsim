@@ -91,7 +91,7 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
 
     if (tankUA < 0.)
     {
-        if (tankUA < -0.1)
+        if (tankUA(Units::kJ_per_hC) < -0.1)
         {
             send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
