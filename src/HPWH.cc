@@ -861,7 +861,7 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
                          double minutesToRun)
 {
 
-    Temp_t tempSetpointT(-273.15, Unitc::C);
+    Temp_t tempSetpointT(-273.15, Units::C);
 
     // Check the air temprature and setpoint against maxOut_at_LowT
     if (heatSourcePtr->isACompressor())
@@ -958,14 +958,14 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     //
-    outFILE << fmt::format("{:d}", outputData.time_min);
+    outFILE << fmt::format("{:d}", outputData.time(Units::min));
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
+                           doIP ? outputData.ambientT(Units::C) : outputData.(Units::C);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
+                           doIP ? outputData.setpointT(Units::C) : outputData.setpointT(Units::C);
+    outFILE << fmt::format(",{:0.2f}", doIP ? outputData.inletT(Units::C) : outputData.inletT(Units::C);
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
+                           doIP ? outputData.drawVolume(Units::gal) : outputData.drawVolume(Units::gal);
     outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
 
     //
@@ -977,16 +977,16 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     }
 
     //
-    for (auto thermocoupleT_C : outputData.thermocoupleT_C)
+    for (auto thermocoupleT_C : outputData.thermocoupleT(Units::C))
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
+        outFILE << fmt::format(",{:0.2f}", doIP ? thermocoupleT(Units::C) : thermocoupleT(Units::C);
     }
 
     //
     if (outputData.drawVolume_L > 0.)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
+                               doIP ? outputData.outletT(Units::C) : outputData.outletT(Units::C);
     }
     else
     {
@@ -3698,7 +3698,7 @@ void HPWH::initFromFile(string modelName)
     std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
-    double initialTankT_C = F_TO_C(120.);
+    double initialTankT = Temp_t(120., Units::F);
 
     string tempString, units;
     double tempDouble;
@@ -3731,12 +3731,12 @@ void HPWH::initFromFile(string modelName)
         else if (token == "volume")
         {
             line_ss >> tempDouble >> units;
-            tankVolume_L = tempDouble;
+
             if (units == "L")
-                ;
+                tankVolume = Volume_t(tempDouble, Units::L);
             else if (units == "gal")
             {
-                tankVolume_L = GAL_TO_L(tempDouble);
+                tankVolume = Volume_t(tempDouble, Units::gal);
             }
             else
                 send_warning(fmt::format("Invalid units: {}", token));
@@ -3744,7 +3744,7 @@ void HPWH::initFromFile(string modelName)
         else if (token == "UA")
         {
             line_ss >> tempDouble >> units;
-            tankUA_kJperHrC = tempDouble;
+            tankUA = UA_t(tempDouble, Units::kJ_per_hC);
         }
         else if (token == "depressTemp")
         {
@@ -3792,13 +3792,11 @@ void HPWH::initFromFile(string modelName)
         {
             line_ss >> tempDouble >> units;
             if (units == "C")
-                ;
+                setpointT = Temp_t(tempDouble, Units::C);
             else if (units == "F")
-                tempDouble = F_TO_C(tempDouble);
+                setpointT = Temp_t(tempDouble, Units::F);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
-
-            setpoint_C = tempDouble;
             // tank will be set to setpoint at end of function
         }
         else if (token == "setpointFixed")
@@ -3818,13 +3816,13 @@ void HPWH::initFromFile(string modelName)
             line_ss >> tempDouble >> units;
             if (units == "C")
             {
+                initialTankT = Temp_t(tempDouble, Units::C);
             }
             else if (units == "F")
-                tempDouble = F_TO_C(tempDouble);
+                initialTankT = Temp_t(tempDouble, Units::F);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
 
-            initialTankT_C = tempDouble;
             hasInitialTankTemp = true;
         }
         else if (token == "hasHeatExchanger")
@@ -3896,22 +3894,20 @@ void HPWH::initFromFile(string modelName)
             else if (token == "minT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].minT = tempDouble;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].minT = Temp_t(tempDouble, Units::C);
                 else if (units == "F")
-                    heatSources[heatsource].minT = F_TO_C(tempDouble);
+                    heatSources[heatsource].minT = Temp_t(tempDouble, Units::F);
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
             }
             else if (token == "maxT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].maxT = tempDouble;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].maxT = Temp_t(tempDouble, Units::C);
                 else if (units == "F")
-                    heatSources[heatsource].maxT = F_TO_C(tempDouble);
+                    heatSources[heatsource].maxT = Temp_t(tempDouble, Units::F);
                 else
                     send_warning("Invalid units.");
             }
@@ -3991,31 +3987,42 @@ void HPWH::initFromFile(string modelName)
                             heatsource,
                             token.c_str()));
                     }
-                    if (units == "C")
-                    {
-                    }
-                    else if (units == "F")
-                    {
-                        if (absolute)
-                        {
-                            tempDouble = F_TO_C(tempDouble);
-                        }
-                        else
-                        {
-                            tempDouble = dF_TO_dC(tempDouble);
-                        }
-                    }
-                    else
-                        send_warning(fmt::format("Invalid units: {}", token));
 
                     std::vector<NodeWeight> nodeWeights;
                     for (size_t i = 0; i < nodeNums.size(); i++)
                     {
                         nodeWeights.emplace_back(nodeNums[i], weights[i]);
                     }
-                    std::shared_ptr<HPWH::TempBasedHeatingLogic> logic =
-                        std::make_shared<HPWH::TempBasedHeatingLogic>(
-                            "custom", nodeWeights, tempDouble, this, absolute, compare);
+
+                    GenTemp_t logicT;
+                    if(absolute)
+                    {
+                        if (units == "C")
+                        {
+                            logicT = Temp_t(tempDouble, Units::C);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = Temp_t(tempDouble, Units::F);
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
+                    else
+                    {
+                        if (units == "C")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::F);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::C);
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
+                    auto logic = std::make_shared<HPWH::TempBasedHeatingLogic>(
+                        "custom", nodeWeights, logicT, this, compare);
                     if (token == "onlogic")
                     {
                         heatSources[heatsource].addTurnOnLogic(logic);
@@ -4028,7 +4035,7 @@ void HPWH::initFromFile(string modelName)
                     { // standby logic
                         heatSources[heatsource].standbyLogic =
                             std::make_shared<HPWH::TempBasedHeatingLogic>(
-                                "standby logic", nodeWeights, tempDouble, this, absolute, compare);
+                                "standby logic", nodeWeights, logicT, this, compare);
                     }
                 }
                 else if (token == "onlogic")
@@ -4062,66 +4069,78 @@ void HPWH::initFromFile(string modelName)
                     }
 
                     line_ss >> units;
-                    if (units == "C")
-                        ;
-                    else if (units == "F")
+                    GenTemp_t logicT;
+                    if(absolute)
                     {
-                        if (absolute)
+                        if (units == "C")
                         {
-                            tempDouble = F_TO_C(tempDouble);
+                            logicT = Temp_t(tempDouble, Units::C);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = Temp_t(tempDouble, Units::F);
                         }
                         else
-                        {
-                            tempDouble = dF_TO_dC(tempDouble);
-                        }
+                            send_warning(fmt::format("Invalid units: {}", token));
                     }
                     else
-                        send_warning(fmt::format("Invalid units: {}", token));
+                    {
+                        if (units == "C")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::F);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::C);
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
 
                     if (tempString == "wholeTank")
                     {
                         heatSources[heatsource].addTurnOnLogic(
-                            HPWH::wholeTank(tempDouble, UNITS_C, absolute));
+                            HPWH::wholeTank(logicT));
                     }
                     else if (tempString == "topThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(logicT));
                     }
                     else if (tempString == "bottomThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(logicT));
                     }
                     else if (tempString == "standby")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(logicT));
                     }
                     else if (tempString == "bottomSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(logicT));
                     }
                     else if (tempString == "secondSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(logicT));
                     }
                     else if (tempString == "thirdSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(logicT));
                     }
                     else if (tempString == "fourthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(logicT));
                     }
                     else if (tempString == "fifthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(logicT));
                     }
                     else if (tempString == "topSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(logicT));
                     }
                     else if (tempString == "bottomHalf")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(logicT));
                     }
                     else
                     {
@@ -4132,41 +4151,60 @@ void HPWH::initFromFile(string modelName)
                 else if (token == "offlogic")
                 {
                     line_ss >> tempDouble >> units;
-                    if (units == "C")
-                        ;
-                    else if (units == "F")
+                    GenTemp_t logicT;
+                    if(absolute)
                     {
-                        tempDouble = F_TO_C(tempDouble);
+                        if (units == "C")
+                        {
+                            logicT = Temp_t(tempDouble, Units::C);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = Temp_t(tempDouble, Units::F);
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
                     }
                     else
-                        send_warning(fmt::format("Invalid units: {}", token));
+                    {
+                        if (units == "C")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::F);
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = dTemp_t(tempDouble, Units::C);
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
 
                     if (tempString == "topNodeMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(logicT));
                     }
                     else if (tempString == "bottomNodeMaxTemp")
                     {
                         heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomNodeMaxTemp(tempDouble));
+                            HPWH::bottomNodeMaxTemp(logicT));
                     }
                     else if (tempString == "bottomTwelfthMaxTemp")
                     {
                         heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomTwelfthMaxTemp(tempDouble));
+                            HPWH::bottomTwelfthMaxTemp(logicT));
                     }
                     else if (tempString == "bottomSixthMaxTemp")
                     {
                         heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomSixthMaxTemp(tempDouble));
+                            HPWH::bottomSixthMaxTemp(logicT));
                     }
                     else if (tempString == "largeDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::largeDraw(logicT));
                     }
                     else if (tempString == "largerDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::largerDraw(logicT));
                     }
                     else
                     {
@@ -4373,15 +4411,13 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].hysteresisT = dTemp_t(tempDouble, Units::C);
                 else if (units == "F")
                 {
-                    tempDouble = dF_TO_dC(tempDouble);
+                    heatSources[heatsource].hysteresisT = dTemp_t(tempDouble, Units::F);
                 }
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
-
-                heatSources[heatsource].hysteresis_dC = tempDouble;
             }
             else if (token == "backupSource")
             {
@@ -4418,7 +4454,7 @@ void HPWH::initFromFile(string modelName)
     tankTs.resize(num_nodes);
 
     if (hasInitialTankTemp)
-        setTankToTemperature(initialTankT_C);
+        setTankToT(initialTankT);
     else
         resetTankToSetpoint();
 
