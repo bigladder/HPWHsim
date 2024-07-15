@@ -1,66 +1,7 @@
-# Build test tool
-add_executable(testTool main.cc)
-
-# TODO: Migrate to googletest framework
-add_executable(testTankSizeFixed testTankSizeFixed.cc)
-add_executable(testScaleHPWH testScaleHPWH.cc)
-add_executable(testMaxSetpoint testMaxSetpoint.cc)
-add_executable(testSizingFractions testSizingFractions.cc)
-add_executable(testResistanceFcts testResistanceFcts.cc)
-add_executable(testCompressorFcts testCompressorFcts.cc)
-add_executable(testPerformanceMaps testPerformanceMaps.cc)
-add_executable(testStateOfChargeFcts testStateOfChargeFcts.cc)
-add_executable(testHeatingLogics testHeatingLogics.cc)
-add_executable(testEnergyBalance testEnergyBalance.cc)
-
-set(libs libHPWHsim ${PROJECT_NAME}_common_interface)
-
-target_link_libraries(testTool PRIVATE ${libs})
-target_link_libraries(testTankSizeFixed PRIVATE ${libs})
-target_link_libraries(testScaleHPWH PRIVATE ${libs})
-target_link_libraries(testMaxSetpoint PRIVATE ${libs})
-target_link_libraries(testSizingFractions PRIVATE ${libs})
-target_link_libraries(testResistanceFcts PRIVATE ${libs})
-target_link_libraries(testCompressorFcts PRIVATE ${libs})
-target_link_libraries(testPerformanceMaps PRIVATE ${libs})
-target_link_libraries(testStateOfChargeFcts PRIVATE ${libs})
-target_link_libraries(testHeatingLogics PRIVATE ${libs})
-target_link_libraries(testEnergyBalance PRIVATE ${libs})
-
-target_compile_features(testTool PRIVATE cxx_std_17)
-
 # Add output directory for test results
 add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/output")
 
-# Clear output file for yearly tests
-#add_custom_target(do_always ALL COMMAND ${CMAKE_COMMAND} file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv") )
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
-
-cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-
-if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
-    message(STATUS "Installing python packages")
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-    message("Poetry success? ${result} ${errors} ${outputs}")
-    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
-endif ()
-
-# Run Unit tests
-add_test(NAME "testScaleHPWH" COMMAND $<TARGET_FILE:testScaleHPWH> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testMaxSetpoint" COMMAND $<TARGET_FILE:testMaxSetpoint> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testSizingFractions" COMMAND $<TARGET_FILE:testSizingFractions> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testResistanceFcts" COMMAND $<TARGET_FILE:testResistanceFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testCompressorFcts" COMMAND $<TARGET_FILE:testCompressorFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testPerformanceMaps" COMMAND $<TARGET_FILE:testPerformanceMaps> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testStateOfChargeFcts" COMMAND $<TARGET_FILE:testStateOfChargeFcts> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testHeatingLogics" COMMAND $<TARGET_FILE:testHeatingLogics> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-add_test(NAME "testEnergyBalance" COMMAND $<TARGET_FILE:testEnergyBalance> ${testArgs} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-#add_test(NAME "testREGoesTo99C.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99C"
-#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-#add_test(NAME "testREGoesTo99CCold.AOSmithCAHP120" COMMAND $<TARGET_FILE:testTool> "Preset" "AOSmithCAHP120" "testREGoesTo99CCold"
-#"${CMAKE_CURRENT_BINARY_DIR}/output" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Run model tests and unit tests on models
 set(testNames
@@ -222,36 +163,14 @@ set(stateOfChargeCompressorNames
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
-# Unit tests
-function(add_TankSizeFixed_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    set(testArgs "${ARG_MODEL_NAME}")
-
-    set(TEST_TITLE "TankSizeFixed.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTankSizeFixed> ${testArgs}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-endfunction()
-
-foreach (model ${extendedModelNames})
-    add_TankSizeFixed_test(MODEL_NAME "${model}")
-endforeach (model)
-foreach (model ${largeCompressorNames})
-    add_TankSizeFixed_test(MODEL_NAME "${model}")
-endforeach (model)
-
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(testToolArgs "${ARG_INP_SOURCE}" "${ARG_MODEL_NAME}" "${ARG_TEST_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/output")
+    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
     if (${ARG_TEST_NAME} STREQUAL "testLockout")
         if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
@@ -267,18 +186,19 @@ function(add_model_test)
         else ()
             return()
         endif ()
-        set(testToolArgs ${testToolArgs} ${airTemp})
+        set(hpwhArgs ${hpwhArgs} -a ${airTemp})
     endif ()
 
-    set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_INP_SOURCE}")
+    set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 
-    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:testTool> ${testToolArgs}
+    add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:hpwh> ${hpwhArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
-    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_INP_SOURCE} STREQUAL "File")
+
+    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_SPEC_TYPE} STREQUAL "File")
         set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measurements.csv")
         if (EXISTS ${measurementsPath})
-            set(simulationOutputName "${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}")
+            set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
             set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
             set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
@@ -292,55 +212,55 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Test(s) specifically for heat-exchange models
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add large compressor tests to the list
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
 #Add State of Charge tests to the list
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
 #Add small compressor yearly tests to the list
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add LARGE compressor yearly tests to the list
 foreach (test ${yearLargeTests})
     foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
@@ -379,7 +299,7 @@ endforeach (test)
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
-    set(oneValueArgs INP_SOURCE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -387,9 +307,9 @@ function(add_regression_test)
         return()
     endif ()
 
-    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_INP_SOURCE}")
+    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_INP_SOURCE}_${ARG_MODEL_NAME}.csv"
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             )
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
@@ -397,31 +317,34 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "File")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add large compressor tests to the regression list
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add State of Charge tests to the list
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" INP_SOURCE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
+
+# Add unit tests
+add_subdirectory(unit_tests)
