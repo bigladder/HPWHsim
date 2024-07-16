@@ -62,6 +62,7 @@ class HPWH : public Courier::Sender
     //////
     static constexpr auto UnitsTime = Units::Time::h;
     static constexpr auto UnitsTemp = Units::Temp::C;
+    static constexpr auto UnitsTemp_d = Units::Temp_d::C;
     static constexpr auto UnitsLength = Units::Length::m;
     static constexpr auto UnitsArea = Units::Area::m2;
     static constexpr auto UnitsVolume = Units::Volume::L;
@@ -75,7 +76,7 @@ class HPWH : public Courier::Sender
 
     typedef Units::TimeVal<UnitsTime> Time_t;
     typedef Units::TempVal<UnitsTemp> Temp_t;
-    typedef Units::dTempVal<UnitsTemp> dTemp_t;
+    typedef Units::Temp_dVal<UnitsTemp_d> Temp_d_t;
     typedef Units::LengthVal<UnitsLength> Length_t;
     typedef Units::AreaVal<UnitsArea> Area_t;
     typedef Units::VolumeVal<UnitsVolume> Volume_t;
@@ -85,7 +86,7 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::UA, UnitsUA> UA_t;
     typedef Units::ScaleVal<Units::RFactor, UnitsRFactor> RFactor_t;
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
-    typedef std::variant<Temp_t,dTemp_t> GenTemp_t;
+    typedef std::variant<Temp_t,Temp_d_t> GenTemp_t;
 
     //////
     static const int CONDENSITY_SIZE =
