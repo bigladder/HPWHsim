@@ -939,11 +939,10 @@ class HPWH : public Courier::Sender
     /// returns the tank temperature averaged using weighted logic nodes
     Temp_t getAverageTankT(const std::vector<NodeWeight>& nodeWeights) const;
 
-    void setMaxTempDepression(dTemp_t maxDepression);
+    void setMaxDepressionT(dTemp_t maxDepressionT_in);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
     void setEnteringWaterHighTempShutOff(GenTemp_t highT,
-                                         bool tempIsAbsolute,
                                          int heatSourceIndex);
     /**< functions to check for and set specific high temperature shut off logics.
     HPWHs can only have one of these, which is at least typical */
@@ -1299,7 +1298,7 @@ class HPWH : public Courier::Sender
     Temp_t locationT;
     /**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
-    double maxDepression_C = 2.5;
+    dTemp_t maxDepressionT = 2.5;
     /** a couple variables to hold values which are typically inputs  */
 
     Temp_t member_inletT;
