@@ -4404,6 +4404,73 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
+    else if (presetNum == MODELS_AeroTherm2023)
+    {
+        setNumNodes(12);
+        setpoint_C = F_TO_C(127.0);
+
+        tankVolume_L = GAL_TO_L(50);
+        tankUA_kJperHrC = 6.5;
+
+        doTempDepression = false;
+        tankMixesOnDraw = true;
+
+        heatSources.reserve(3);
+        auto resistiveElementTop = addHeatSource("resistiveElementTop");
+        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto compressor = addHeatSource("compressor");
+
+        // compressor values
+        compressor->isOn = false;
+        compressor->isVIP = false;
+        compressor->typeOfHeatSource = TYPE_compressor;
+
+        compressor->setCondensity({1., 0., 0.});
+
+        compressor->perfMap.reserve(2);
+
+        compressor->perfMap.push_back({
+            50,                          // Temperature (T_F)
+            {187.064124, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+            {5.4977772, -0.0243008, 0.0} // COP Coefficients (COP_coeffs)
+        });
+
+        compressor->perfMap.push_back({
+            70,                         // Temperature (T_F)
+            {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
+            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+        });
+
+        compressor->minT = F_TO_C(37.0);
+        compressor->maxT = F_TO_C(120.);
+        compressor->hysteresis_dC = dF_TO_dC(2);
+        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->maxSetpoint_C = MAXOUTLET_R134A;
+
+        // top resistor values
+        resistiveElementTop->setupAsResistiveElement(6, 4000);
+        resistiveElementTop->isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
+
+        // logic conditions
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
+
+        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
+
+        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+
+        //
+        compressor->backupHeatSource = resistiveElementBottom;
+        resistiveElementBottom->backupHeatSource = compressor;
+
+        resistiveElementTop->followedByHeatSource = resistiveElementBottom;
+        resistiveElementBottom->followedByHeatSource = compressor;
+    }
     else
     {
         send_error("You have tried to select a preset model which does not exist.");
