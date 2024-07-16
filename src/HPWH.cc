@@ -509,7 +509,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
                       DRMODES DRstatus,
                       Volume_t inlet2Vol,
                       Temp_t inlet2T,
-                      std::vector<Power_t>* extraHeatDist)
+                      std::vector<Energy_t>* extraHeatDist)
 {
 
     // check for errors
@@ -928,18 +928,18 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
                                getNthHeatSourceEnergyInput(iHS)(Units::kWh) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS(Units::kWh) * 1000.);
+                               getNthHeatSourceEnergyOutput(iHS)(Units::kWh) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+                               getNthSimTcouple(iTC + 1, nTCouples)(doIP ? Units::F: Units::C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
+        outFILE << fmt::format(",{:0.2f}", outletT(doIP ? Units::F: Units::C);
     }
     else
     {
@@ -972,8 +972,8 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               outputData.h_srcIn_kWh[iHS] * 1000.,
-                               outputData.h_srcOut_kWh[iHS] * 1000.);
+                               outputData.h_srcIn[iHS](Units::kWh) * 1000.,
+                               outputData.h_srcOut[iHS](Units::kWh) * 1000.);
     }
 
     //
@@ -986,7 +986,7 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     if (outputData.drawVolume_L > 0.)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               doIP ? outputData.outletT(Units::C) : outputData.outletT(Units::C);
+                               outputData.outletT(doIP ? Units::F : Units::C);
     }
     else
     {
@@ -1398,19 +1398,9 @@ int HPWH::getInletHeight(int whichInlet) const
     return result;
 }
 
-void HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
+void HPWH::setMaxDepressionT(dTemp_t maxDepressionT_in)
 {
-    maxDepression_C = maxDepression;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        maxDepression_C = F_TO_C(maxDepression);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
+    maxDepressionT = maxDepressionT_in;
 }
 
 bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
@@ -1436,27 +1426,14 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
     return retVal;
 }
 
-void HPWH::setEnteringWaterHighTempShutOff(double highTemp,
-                                           bool tempIsAbsolute,
-                                           int heatSourceIndex,
-                                           UNITS units /*=UNITS_C*/)
+void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT,
+                                           int heatSourceIndex)
 {
     if (!hasEnteringWaterHighTempShutOff(heatSourceIndex))
     {
         send_error("You have attempted to access a heating logic that does not exist.");
     }
 
-    double highTemp_C = highTemp;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        highTemp_C = F_TO_C(highTemp);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
 
     bool highTempIsNotValid = false;
     if (tempIsAbsolute)

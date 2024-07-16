@@ -388,8 +388,8 @@ void HPWH::initPreset(MODELS presetNum)
         setpointT = 50;
 
         tankSizeFixed = false;
-        tankVolume  = Volume_t(120, Units::L);
-        tankUA = UA_t(500, Units::kJ_per_hC);
+        tankVolume  = {120, Units::L};
+        tankUA = {500, Units::kJ_per_hC};
 
         doTempDepression = false;
         tankMixesOnDraw = false;
@@ -3630,8 +3630,8 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpointT =Temp_t(127.0, Units::F);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA = UA_t(9, Units::kJ_per_hC);
+        tankVolume = {50, Units::gal};
+        tankUA = {9, Units::kJ_per_hC};
         doTempDepression = false;
         tankMixesOnDraw = true;
 
@@ -4181,7 +4181,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->companionHeatSource = compressor;
     }
     else if (presetNum == MODELS_AquaThermAire)
-    { // AquaThermAire
+    {
         setNumNodes(12);
         setpointT = {50., Units::C};
 
@@ -4212,25 +4212,25 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(4);
 
         compressor->perfMap.push_back({
-            5,                     // Temperature (T_F)
+            {5, Units::F},                   // Temperature (T_F)
             {-1356, 39.80, 0.},    // Input Power Coefficients (inputPower_coeffs)
             {2.003, -0.003637, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
-            34,                    // Temperature (T_F)
+            {34, Units::F},                    // Temperature (T_F)
             {-1485, 43.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
             {2.805, -0.005092, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
-            67,                    // Temperature (T_F)
+            {67, Units::F},                    // Temperature (T_F)
             {-1632, 47.93, 0.},    // Input Power Coefficients (inputPower_coeffs)
             {4.076, -0.007400, 0.} // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
-            95,                    // Temperature (T_F)
+            {95, Units::F},                    // Temperature (T_F)
             {-1757, 51.60, 0.},    // Input Power Coefficients (inputPower_coeffs)
             {6.843, -0.012424, 0.} // COP Coefficients (COP_coeffs)
         });
@@ -4354,13 +4354,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(2);
 
         compressor->perfMap.push_back({
-            50,                    // Temperature (T_F)
+            {50, Units::F},                    // Temperature (T_F)
             {126.9, 2.215, 0.0},   // Input Power Coefficients (inputPower_coeffs)
             {6.931, -0.03395, 0.0} // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
-            67.5,                  // Temperature (T_F)
+            {67.5, Units::F},                  // Temperature (T_F)
             {116.6, 2.467, 0.0},   // Input Power Coefficients (inputPower_coeffs)
             {8.833, -0.04431, 0.0} // COP Coefficients (COP_coeffs)
         });
