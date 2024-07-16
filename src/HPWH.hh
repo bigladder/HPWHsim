@@ -282,7 +282,8 @@ class HPWH : public Courier::Sender
 
         MODELS_AquaThermAire = 400, // heat exchanger model
 
-        MODELS_GenericUEF217 = 410
+        MODELS_GenericUEF217 = 410,
+        MODELS_AeroTherm2023 = 411
     };
 
     /// specifies the modes for writing output
