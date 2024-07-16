@@ -4297,7 +4297,7 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setupAsResistiveElement(0, {4500, Units::W});
         resistiveElementBottom->addTurnOnLogic(thirdSixth(Temp_t(60., Units::F)));
-        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(Temp_t(85., Units::F)));
+        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp({85., Units::F}));
         resistiveElementBottom->isVIP = false;
 
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
