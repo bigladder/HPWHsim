@@ -61,7 +61,7 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
         resistiveElementTop = addHeatSource("resistiveElementTop");
         resistiveElementTop->setupAsResistiveElement(8, upperPower);
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
         resistiveElementTop->isVIP = true;
     }
 
@@ -70,8 +70,8 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
     resistiveElementBottom->setupAsResistiveElement(0, lowerPower);
 
     // standard logic conditions
-    resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t(40, Units::F)));
-    resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(10, Units::F)));
+    resistiveElementBottom->addTurnOnLogic(bottomThird({40, Units::dF}));
+    resistiveElementBottom->addTurnOnLogic(standby({10, Units::dF}));
 
     if (resistiveElementTop && resistiveElementBottom)
     {
@@ -161,7 +161,7 @@ void HPWH::initResistanceTankGeneric(Volume_t tankVol,
         resistiveElementTop = addHeatSource("resistiveElementTop");
         resistiveElementTop->setupAsResistiveElement(8, upperPower);
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
         resistiveElementTop->isVIP = true;
     }
 
@@ -170,8 +170,8 @@ void HPWH::initResistanceTankGeneric(Volume_t tankVol,
         resistiveElementBottom = addHeatSource("resistiveElementBottom");
         resistiveElementBottom->setupAsResistiveElement(0, lowerPower);
 
-        resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t(40., Units::F)));
-        resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(10., Units::F)));
+        resistiveElementBottom->addTurnOnLogic(bottomThird({40., Units::dF}));
+        resistiveElementBottom->addTurnOnLogic(standby({10., Units::dF}));
     }
 
     if (resistiveElementTop && resistiveElementBottom)
@@ -273,10 +273,10 @@ void HPWH::initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_t resUseT
     // resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(19.6605, Units::F)));
     resistiveElementTop->addTurnOnLogic(topThird(resUseT));
 
-    resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(Temp_t(86.1111, Units::F)));
+    resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp({86.1111, Units::F}));
 
-    compressor->addTurnOnLogic(bottomThird(dTemp_t(33.6883, Units::F)));
-    compressor->addTurnOnLogic(standby(dTemp_t(12.392, Units::F)));
+    compressor->addTurnOnLogic(bottomThird({33.6883, Units::dF}));
+    compressor->addTurnOnLogic(standby({12.392, Units::dF}));
 
     // custom adjustment for poorer performance
     // compressor->addShutOffLogic(lowT(Temp_t(37, Units::F)));
@@ -355,10 +355,10 @@ void HPWH::initPreset(MODELS presetNum)
     if (presetNum == MODELS_restankNoUA)
     {
         setNumNodes(12);
-        setpointT = Temp_t(127.0, Units::F);
+        setpointT = {127.0, Units::F};
 
         tankSizeFixed = false;
-        tankVolume = Volume_t(50, Units::gal);
+        tankVolume = {50, Units::gal};
         tankUA = 0; // 0 to turn off
 
         doTempDepression = false;
@@ -368,14 +368,14 @@ void HPWH::initPreset(MODELS presetNum)
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
         auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
 
-        resistiveElementBottom->setupAsResistiveElement(0, Power_t(4500, Units::W));
-        resistiveElementTop->setupAsResistiveElement(8, Power_t(4500, Units::W));
+        resistiveElementBottom->setupAsResistiveElement(0, {4500, Units::W});
+        resistiveElementTop->setupAsResistiveElement(8, {4500, Units::W});
 
         // standard logic conditions
-        resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t(40, Units::F)));
-        resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(10, Units::F)));
+        resistiveElementBottom->addTurnOnLogic(bottomThird({40, Units::dF}));
+        resistiveElementBottom->addTurnOnLogic(standby({10, Units::dF}));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
         resistiveElementTop->isVIP = true;
 
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
@@ -403,10 +403,10 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->setupAsResistiveElement(9, {4500, Units::W});
 
         // standard logic conditions
-        resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t{20, Units::C}));
-        resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(15, Units::C)));
+        resistiveElementBottom->addTurnOnLogic(bottomThird({20, Units::dC}));
+        resistiveElementBottom->addTurnOnLogic(standby({15, Units::dC}));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::C)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dC}));
         resistiveElementTop->isVIP = true;
 
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
@@ -434,10 +434,10 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->setupAsResistiveElement(9, {4500, Units::W});
 
         // standard logic conditions
-        resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t(20, Units::C)));
-        resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(15, Units::C)));
+        resistiveElementBottom->addTurnOnLogic(bottomThird({20, Units::dC}));
+        resistiveElementBottom->addTurnOnLogic(standby({15, Units::dC}));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::C)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dC}));
         resistiveElementTop->isVIP = true;
 
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
@@ -480,13 +480,13 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->setupAsResistiveElement(0, {4500, Units::W});
         resistiveElementTop->setupAsResistiveElement(9, {4500, Units::W});
 
-        resistiveElementBottom->hysteresisT= dTemp_t(4, Units::F);
+        resistiveElementBottom->hysteresisT= {4, Units::dF};
 
         // standard logic conditions
-        resistiveElementBottom->addTurnOnLogic(bottomThird(dTemp_t(20, Units::C)));
-        resistiveElementBottom->addTurnOnLogic(standby(dTemp_t(15, Units::C)));
+        resistiveElementBottom->addTurnOnLogic(bottomThird({20, Units::dF}));
+        resistiveElementBottom->addTurnOnLogic(standby({15, Units::dF}));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(20, Units::C)));
+        resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
         resistiveElementTop->isVIP = true;
 
         compressor->isOn = false;
@@ -515,14 +515,14 @@ void HPWH::initPreset(MODELS presetNum)
             {5.60, -0.0252, 0.00000254} // COP Coefficients (COP_coeffs)
         });
 
-        compressor->minT = Temp_t(0., Units::F);
-        compressor->maxT = Temp_t(120., Units::F);
-        compressor->hysteresisT = dTemp_t(4, Units::F);
+        compressor->minT = {0., Units::F};
+        compressor->maxT = {120., Units::F};
+        compressor->hysteresisT = {4, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
         compressor->maxSetpointT = MAXOUTLET_R134A;
 
-        compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
+        compressor->addTurnOnLogic(bottomThird({20, Units::dF}));
+        compressor->addTurnOnLogic(standby({20, Units::dC}));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -579,11 +579,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isMultipass = false;
         compressor->maxSetpointT = MAXOUTLET_R134A;
 
-        compressor->addTurnOnLogic(bottomThird(dTemp_t(20, Units::C)));
-        compressor->addTurnOnLogic(standby(dTemp_t(15, Units::C)));
+        compressor->addTurnOnLogic(bottomThird({20, Units::dC}));
+        compressor->addTurnOnLogic(standby({15, Units::C}));
 
         // lowT cutoff
-        compressor->addShutOffLogic(bottomNodeMaxTemp(20, true));
+        compressor->addShutOffLogic(bottomNodeMaxTemp({20, Units::C}, true));
     }
     // voltex 60 gallon
     else if (presetNum == MODELS_AOSmithPHPT60)
@@ -641,17 +641,17 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setupAsResistiveElement(0, {2000, Units::W});
-        resistiveElementBottom->hysteresisT = dTemp_t(4, Units::F);
+        resistiveElementBottom->hysteresisT = {4, Units::F};
 
         // logic conditions
-        dTemp_t compStartT = {43.6, Units::F};
-        dTemp_t standbyT = {23.8, Units::F};
+        Temp_d_t compStartT = {43.6, Units::dF};
+        Temp_d_t standbyT = {23.8, Units::dF};
         compressor->addTurnOnLogic(bottomThird(compStartT));
         compressor->addTurnOnLogic(standby(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStartT));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(25, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({25, Units::dF}));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -718,14 +718,14 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->hysteresisT = {4, Units::F};
 
         // logic conditions
-        Temp_t compStart = {43.6, Units::F};
-        Temp_t standbyT = {23.8, Units::F};
-        compressor->addTurnOnLogic(bottomThird(compStart));
+        Temp_d_t compStartT = {43.6, Units::dF};
+        Temp_d_t standbyT = {23.8, Units::dF};
+        compressor->addTurnOnLogic(bottomThird(compStartT));
         compressor->addTurnOnLogic(standby(standbyT));
 
-        resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
+        resistiveElementBottom->addTurnOnLogic(bottomThird(compStartT));
 
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t{25.0, Units::F}));
+        resistiveElementTop->addTurnOnLogic(topThird({25.0, Units::dF}));
 
         // and you have to do this after putting them into heatSources, otherwise
         // you don't get the right pointers
@@ -4381,11 +4381,11 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->hysteresisT = {2., Units::F};
 
         // logic conditions
-        resistiveElementTop->addTurnOnLogic(topThird(dTemp_t(12.0, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({12.0, Units::dF}));
         compressor->addTurnOnLogic(bottomThird(dTemp_t(30.0, Units::F)));
         compressor->addTurnOnLogic(standby(dTemp_t(9.0, Units::F)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dTemp_t(60, Units::F)));
-        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(Temp_t(80, Units::F)));
+        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp({80, Units::F}));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
