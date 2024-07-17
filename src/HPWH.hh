@@ -86,7 +86,12 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::UA, UnitsUA> UA_t;
     typedef Units::ScaleVal<Units::RFactor, UnitsRFactor> RFactor_t;
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
-    typedef std::variant<Temp_t,Temp_d_t> GenTemp_t;
+
+    struct GenTemp_t: std::variant<Temp_t, Temp_d_t>
+    {
+        GenTemp_t(double val, Units::Temp temp){emplace<0>(val, temp);}
+        GenTemp_t(double val, Units::Temp_d temp_d){emplace<1>(val, temp_d);}
+    };
 
     //////
     static const int CONDENSITY_SIZE =
@@ -116,7 +121,7 @@ class HPWH : public Courier::Sender
         MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
     static const Temp_t
         MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
-    static const dTemp_t
+    static const Temp_d_t
         MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
@@ -448,7 +453,7 @@ class HPWH : public Courier::Sender
                               HPWH* hpwh,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, (decisionT.index() == 0) ? std::get<Temp_t>(decisionT) : std::get<dTemp_t>(decisionT), hpwh, c, isHTS), nodeWeights(n) {};
+            : HeatingLogic(desc, (decisionT.index() == 0) ? std::get<Temp_t>(decisionT) : std::get<Temp_d_t>(decisionT), hpwh, c, isHTS), nodeWeights(n) {};
 
 
         bool isValid();
@@ -940,7 +945,7 @@ class HPWH : public Courier::Sender
     /// returns the tank temperature averaged using weighted logic nodes
     Temp_t getAverageTankT(const std::vector<NodeWeight>& nodeWeights) const;
 
-    void setMaxDepressionT(dTemp_t maxDepressionT_in);
+    void setMaxDepressionT(Temp_d_t maxDepressionT_in);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
     void setEnteringWaterHighTempShutOff(GenTemp_t highT,
@@ -1299,7 +1304,7 @@ class HPWH : public Courier::Sender
     Temp_t locationT;
     /**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
-    dTemp_t maxDepressionT = 2.5;
+    Temp_d_t maxDepressionT = 2.5;
     /** a couple variables to hold values which are typically inputs  */
 
     Temp_t member_inletT;
@@ -1492,7 +1497,7 @@ class HPWH::HeatSource : public Courier::Sender
     //  by specifying the entire condensity in one node. */
     std::vector<double> condensity;
 
-    dTemp_t shrinkageT;
+    Temp_d_t shrinkageT;
     /**< Tshrinkage_C is a derived from the condentropy (conditional entropy),
         using the condensity and fixed parameters Talpha_C and Tbeta_C.
         Talpha_C and Tbeta_C are not intended to be settable
@@ -1548,8 +1553,8 @@ class HPWH::HeatSource : public Courier::Sender
 
     struct SecondaryHeatExchanger
     {
-        dTemp_t coldSideOffsetT;
-        dTemp_t hotSideOffsetT;
+        Temp_d_t coldSideOffsetT;
+        Temp_d_t hotSideOffsetT;
         Power_t extraPumpPower;
     };
 
@@ -1583,7 +1588,7 @@ class HPWH::HeatSource : public Courier::Sender
     Temp_t maxSetpointT;
     /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
-    dTemp_t hysteresisT;
+    Temp_d_t hysteresisT;
     /**< a hysteresis term that prevents short cycling due to heat pump self-interaction
       when the heat source is engaged, it is subtracted from lowT cutoffs and
       added to lowTreheat cutoffs */
@@ -1701,9 +1706,9 @@ bool resampleExtensive(std::vector<double>& values, const std::vector<double>& s
 double expitFunc(double x, double offset);
 void normalize(std::vector<double>& distribution);
 int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes);
-HPWH::dTemp_t findShrinkageT_C(const std::vector<double>& nodeDist);
+HPWH::Temp_d_t findShrinkageT_C(const std::vector<double>& nodeDist);
 void calcThermalDist(std::vector<double>& thermalDist,
-                     HPWH::dTemp_t shrinkageT,
+                     HPWH::Temp_d_t shrinkageT,
                      int lowestNode,
                      const std::vector<HPWH::Temp_t>& nodeTs,
                      const HPWH::Temp_t setpointT);
