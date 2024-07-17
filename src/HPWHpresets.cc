@@ -4409,8 +4409,8 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 6.5;
+        tankVolume_L = GAL_TO_L(45);
+        tankUA_kJperHrC = 6.85;
 
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -4438,7 +4438,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.push_back({
             70,                         // Temperature (T_F)
             {148.0418, 2.553291, 0.0},  // Input Power Coefficients (inputPower_coeffs)
-            {7.207307, -0.0335265, 0.0} // COP Coefficients (COP_coeffs)
+            {7.56773, -0.0324076, 0.0} // COP Coefficients (COP_coeffs)
         });
 
         compressor->minT = F_TO_C(37.0);
@@ -4457,7 +4457,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.6605))); // change
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
