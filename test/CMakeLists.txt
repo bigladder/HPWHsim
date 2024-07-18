@@ -162,7 +162,8 @@ set(BradfordWhiteModelNames
         AeroTherm2023
         )
 set(BradfordWhiteTests
-        BradfordWhiteSched50
+        RE2H50_UEF50
+        RE2H50_UEF67
         )
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
