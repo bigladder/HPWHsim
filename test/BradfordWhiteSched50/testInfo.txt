@@ -1,3 +1,0 @@
-setpoint 51.1
-length_of_test 1441
-initialTankT_C 51.1
