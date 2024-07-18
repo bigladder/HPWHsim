@@ -163,6 +163,8 @@ set(stateOfChargeCompressorNames
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
+cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
     message(STATUS "Installing python packages")
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
