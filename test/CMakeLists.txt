@@ -202,6 +202,7 @@ function(add_model_test)
             set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
             set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
+
             set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
             add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/create_test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath})
             set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
