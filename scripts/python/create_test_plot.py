@@ -116,15 +116,27 @@ df_simulated = call_csv(simulated_path, 0)
 
 # convert measured power from kW to W
 df_measured["Power_kW"] = convert_values(df_measured["Power_kW"], "kW", "W")
+
+i = 1
+src_exists = True
+while src_exists:
+
+    col_label = f"h_src{i}In (Wh)"
+    src_exists = df_simulated.columns.isin([col_label]).any()
+    if src_exists:
+        if i == 1:
+         df_simulated["Power_kW"]= df_simulated[col_label]
+        else:
+         df_simulated["Power_kW"] = df_simulated["Power_kW"] + df_simulated[col_label]
+    i = i + 1
+
 # convert simulated energy consumption (Wh) for every minute to power (W)
-df_simulated["h_src1In (Wh)"] = convert_values(
-    df_simulated["h_src1In (Wh)"], "Wh/min", "W"
-)
+df_simulated["Power_kW"] = convert_values(df_simulated["Power_kW"], "Wh/min", "W")
 
 variables = {
     "Y-Variables": {
         "Power Input": {
-            "Column Names": {"Measured": ["Power_kW"], "Simulated": ["h_src1In (Wh)"]},
+            "Column Names": {"Measured": ["Power_kW"], "Simulated": ["Power_kW"]},
             "Labels": ["Power Input"],
             "Units": "W",
             "Colors": ["red"],

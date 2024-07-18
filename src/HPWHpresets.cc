@@ -4457,7 +4457,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
-        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(100))); // change
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20))); // change
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 

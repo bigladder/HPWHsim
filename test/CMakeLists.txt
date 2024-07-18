@@ -158,7 +158,12 @@ set(stateOfChargeCompressorNames
         Sanden120
         NyleC25A_SP
         )
-
+set(BradfordWhiteModelNames
+        AeroTherm2023
+        )
+set(BradfordWhiteTests
+        BradfordWhiteSched50
+        )
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
@@ -168,7 +173,7 @@ cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python
 if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
     message(STATUS "Installing python packages")
     set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
     message("Poetry success? ${result} ${errors} ${outputs}")
     set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 endif ()
@@ -231,6 +236,13 @@ endforeach (test)
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White models
+foreach (test ${BradfordWhiteTests})
+    foreach (model ${BradfordWhiteModelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
