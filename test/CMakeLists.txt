@@ -163,6 +163,14 @@ set(stateOfChargeCompressorNames
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
+if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
+    message(STATUS "Installing python packages")
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/scripts/python" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
+    message("Poetry success? ${result} ${errors} ${outputs}")
+    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+endif ()
+
 #Tests for successful runs
 function(add_model_test)
     set(options)
@@ -201,7 +209,6 @@ function(add_model_test)
             set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
             set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
             set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
-
 
             set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
             add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/create_test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath})
