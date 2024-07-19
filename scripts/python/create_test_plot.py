@@ -63,9 +63,9 @@ def calculate_average_tank_temperature(variable_type):
     TEMPERATURE_DETAILS = {
         "Measured": [
             "Storage Tank Average Temperature",
-            "T_Out_water",
-            "T_In_water",
-            "T_Plenum_In",
+            "Outlet Temperature(℃)",
+            "Inlet Temperature(℃)",
+            "DB(℃)",
         ],
         "Simulated": [
             "Storage Tank Average Temperature",
@@ -114,29 +114,31 @@ def add_temperature_details():
 df_measured = call_csv(measured_path, 0)
 df_simulated = call_csv(simulated_path, 0)
 
-# convert measured power from kW to W
-df_measured["Power_kW"] = convert_values(df_measured["Power_kW"], "kW", "W")
+#
+power_col_label_meas = "Power(W)"
+power_col_label = "Power_W"
+df_measured[power_col_label] = df_measured[power_col_label_meas]
 
+#sum sim power it multiple heat sources
 i = 1
 src_exists = True
 while src_exists:
-
     col_label = f"h_src{i}In (Wh)"
     src_exists = df_simulated.columns.isin([col_label]).any()
     if src_exists:
-        if i == 1:
-         df_simulated["Power_kW"]= df_simulated[col_label]
-        else:
-         df_simulated["Power_kW"] = df_simulated["Power_kW"] + df_simulated[col_label]
+      if i == 1:
+        df_simulated[power_col_label]= df_simulated[col_label]
+      else:
+        df_simulated[power_col_label] = df_simulated[power_col_label] + df_simulated[col_label]
     i = i + 1
 
 # convert simulated energy consumption (Wh) for every minute to power (W)
-df_simulated["Power_kW"] = convert_values(df_simulated["Power_kW"], "Wh/min", "W")
+df_simulated[power_col_label] = convert_values(df_simulated[power_col_label], "Wh/min", "W")
 
 variables = {
     "Y-Variables": {
         "Power Input": {
-            "Column Names": {"Measured": ["Power_kW"], "Simulated": ["Power_kW"]},
+            "Column Names": {"Measured": [power_col_label], "Simulated": [power_col_label]},
             "Labels": ["Power Input"],
             "Units": "W",
             "Colors": ["red"],
@@ -144,7 +146,7 @@ variables = {
             "Line Visibility": [True],
         },
         "Flow Rate": {
-            "Column Names": {"Measured": ["flow_out_gpm"], "Simulated": ["draw"]},
+            "Column Names": {"Measured": ["Flow Rate (GPM)"], "Simulated": ["draw"]},
             "Labels": ["Flow Rate"],
             "Units": "gal/min",
             "Colors": ["green"],
@@ -154,7 +156,7 @@ variables = {
         "Temperature": {
             "Column Names": {
                 "Measured": [
-                    f"T_Tank_{str(number)}"
+                    f"Tank Temp #{number}(℃)"
                     for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
                 ],
                 "Simulated": [
