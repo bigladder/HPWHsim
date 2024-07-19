@@ -19,10 +19,10 @@ heatsource 0 condensity 0 0 0 0 0 0 1 0 0 0 0 0
 heatsource 0 nTemps 2
 heatsource 0 T1 50 F
 heatsource 0 T2 70 F
-heatsource 0 inPowT1const 4000
+heatsource 0 inPowT1const 400
 heatsource 0 inPowT1lin 0.0
 heatsource 0 inPowT1quad 0.0
-heatsource 0 inPowT2const 4000
+heatsource 0 inPowT2const 400
 heatsource 0 inPowT2lin 0.0
 heatsource 0 inPowT2quad 0.0
 heatsource 0 copT1const 1.0
@@ -42,10 +42,10 @@ heatsource 1 condensity 0 .2 .8 0 0 0 0 0 0 0 0 0
 heatsource 1 nTemps 2
 heatsource 1 T1 50 F
 heatsource 1 T2 70 F
-heatsource 1 inPowT1const 4000
+heatsource 1 inPowT1const 400
 heatsource 1 inPowT1lin 0.0
 heatsource 1 inPowT1quad 0.0
-heatsource 1 inPowT2const 4000
+heatsource 1 inPowT2const 400
 heatsource 1 inPowT2lin 0.0
 heatsource 1 inPowT2quad 0.0
 heatsource 1 copT1const 1.0
