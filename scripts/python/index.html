@@ -18,8 +18,8 @@
 
 
 <script>
-async function runPythonFunction() {
-    const response = await fetch('http://localhost:8000/run_function');
+async function simulate_and_plot() {
+    const response = await fetch('http://localhost:8000/run_python_function');
     const result = await response.text();
     document.getElementById('output').innerText = result;
 }
@@ -29,8 +29,8 @@ async function runPythonFunction() {
     <table style="width:100%">
         <tr height="80px">
             <td>
-							<button onClick="runPythonFunction();window.location.reload();">run plot</button>
-						</td>
+			    <button onClick="simulate_and_plot();window.location.reload();">simulate and plot</button>
+			</td>
         </tr>
      </table>
 </div>
