@@ -17,7 +17,7 @@ def main():
 	model_name = 'AeroTherm2023'
 	test_name = 'RE2H50_UEF67'
 	plot_name = 'aplot.html'
-	measurements_name = 'measurements.csv'
+	measurements_name = 'measurements_test.csv'
 	output_name = test_name + '_' + model_spec + '_' + model_name + ".csv"
 
 	test_dir = os.path.join(repo_path, "test")
