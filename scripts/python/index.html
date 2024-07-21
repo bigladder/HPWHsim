@@ -1,0 +1,40 @@
+
+<!doctype html>
+
+<htm>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HPWH measured vs. simulation</title>
+
+</head>
+
+
+
+<body>
+<iframe src="../../build/test/output/aplot.html" title="Plots" width=1200 height=800></iframe>
+
+
+<script>
+async function runPythonFunction() {
+    const response = await fetch('http://localhost:8000/run_function');
+    const result = await response.text();
+    document.getElementById('output').innerText = result;
+}
+</script>
+
+<div style = "margin-top: 50px;">
+    <table style="width:100%">
+        <tr height="80px">
+            <td>
+							<button onClick="runPythonFunction();window.location.reload();">run plot</button>
+						</td>
+        </tr>
+     </table>
+</div>
+
+</body>
+
+</html>

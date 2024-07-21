@@ -6,26 +6,33 @@ from pathlib import Path
 from run_simulation import run
 from add_plots import add
 
-#
-repo_path = "/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim"
-model_spec = 'File'
-model_name = 'AeroTherm2023'
-test_name = 'RE2H50_UEF67'
-dest_name = 'aplot.html'
+def main_fnc():
+	#
+	orig_path = str(Path.cwd())
+	os.chdir('../..')
+	repo_path = str(Path.cwd())
+	print("path is " + repo_path)
 
-dest_path = os.path.join(repo_path, "build", "test", "output")
-run(repo_path, model_spec, model_name, test_name, dest_path)
+	model_spec = 'File'
+	model_name = 'AeroTherm2023'
+	test_name = 'RE2H50_UEF67'
+	dest_name = 'aplot.html'
 
-#
-test_path = os.path.join(repo_path, "test")
-measured_path = os.path.join(test_path, test_name, "measurements.csv")
+	output_path = os.path.join(repo_path, "build", "test", "output")
+	run(repo_path, model_spec, model_name, test_name, output_path)
 
-build_path = os.path.join(repo_path, "build", "test", "output")
-simulated_path=os.path.join(build_path, test_name + '_' + model_spec + '_' + model_name + ".csv")
+	#
+	test_path = os.path.join(repo_path, "test")
+	measured_path = os.path.join(test_path, test_name, "measurements.csv")
 
-output_path = os.path.join(dest_path, dest_name)
+	build_path = os.path.join(repo_path, "build", "test", "output")
+	simulated_path=os.path.join(build_path, test_name + '_' + model_spec + '_' + model_name + ".csv")
 
-print(measured_path)
-print(simulated_path)
-print(dest_path)
-add(measured_path, simulated_path, output_path)
+	output_path = os.path.join(output_path, dest_name)
+
+	print(measured_path)
+	print(simulated_path)
+	print(output_path)
+	add(measured_path, simulated_path, output_path)
+	
+	os.chdir(orig_path)
