@@ -21,21 +21,24 @@ RED_BLUE_DIVERGING_PALLETTE = [
 
 NUMBER_OF_THERMOCOUPLES = 6
 
+
 def call_csv(path, skip_rows):
     data = pd.read_csv(path, skiprows=skip_rows)
     df = pd.DataFrame(data)
     return df
 
+
 def convert_values(df_column, from_units, to_units):
     converted_column = df_column.apply(lambda x: convert(x, from_units, to_units))
     return converted_column
+
 
 def filter_dataframe_range(df, variable_type, variables):
     column_time_name = variables["X-Variables"]["Time"]["Column Names"][variable_type]
     return df[(df[column_time_name] > 0) & (df[column_time_name] <= 1440)].reset_index()
 
-def calculate_average_tank_temperature(df_measured, df_simulated, variable_type, variables):
 
+def calculate_average_tank_temperature(df_measured, df_simulated, variable_type, variables):
     if variable_type == "Measured":
         df = df_measured
     elif variable_type == "Simulated":
@@ -95,17 +98,20 @@ def add_temperature_details(variables):
                 index, TEMPERATURE_DETAILS[key][index]
             )
 
+
 def retrieve_dataframe(df_measured, df_simulated, variable_type):
     if variable_type == "Measured":
         return df_measured
     elif variable_type == "Simulated":
         return df_simulated
 
+
 def retrieve_line_type(variable_type):
     if variable_type == "Measured":
         return None
     elif variable_type == "Simulated":
         return "dot"
+
 
 def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row):
     df = retrieve_dataframe(df_measured, df_simulated, variable_type)
@@ -147,110 +153,111 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
         axis_name=variable,
     )
 
+
 #
 def plot(measured_path, simulated_path, output_path):
+    power_col_label_meas = "Power(W)"
+    power_col_label = "Power_W"
 
-  power_col_label_meas = "Power(W)"
-  power_col_label = "Power_W"
-  
-  df_measured = call_csv(measured_path, 0)
-  df_simulated = call_csv(simulated_path, 0)
+    df_measured = call_csv(measured_path, 0)
+    df_simulated = call_csv(simulated_path, 0)
 
-  variables = {
-	    "Y-Variables": {
-	        "Power Input": {
-	            "Column Names": {"Measured": [power_col_label], "Simulated": [power_col_label]},
-	            "Labels": ["Power Input"],
-	            "Units": "W",
-	            "Colors": ["red"],
-	            "Line Mode": ["lines"],
-	            "Line Visibility": [True],
-	        },
-	        "Flow Rate": {
-	            "Column Names": {"Measured": ["Flow Rate (GPM)"], "Simulated": ["draw"]},
-	            "Labels": ["Flow Rate"],
-	            "Units": "gal/min",
-	            "Colors": ["green"],
-	            "Line Mode": ["lines"],
-	            "Line Visibility": [True],
-	        },
-	        "Temperature": {
-	            "Column Names": {
-	                "Measured": [
-	                    f"Tank Temp #{number}(℃)"
-	                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
-	                ],
-	                "Simulated": [
-	                    f"tcouple{number} (C)"
-	                    for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
-	                ],
-	            },
-	            "Labels": [
-	                f"Storage Tank Temperature {number}"
-	                for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
-	            ],
-	            "Units": f"{DEGREE_SIGN}F",
-	            "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
-	            "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
-	            "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
-	        },
-	    },
-	    "X-Variables": {
-	        "Time": {
-	            "Column Names": {"Measured": "minutes", "Simulated": "minutes"},
-	            "Units": "Min",
-	        }
-	    },
-	}
+    variables = {
+        "Y-Variables": {
+            "Power Input": {
+                "Column Names": {"Measured": [power_col_label], "Simulated": [power_col_label]},
+                "Labels": ["Power Input"],
+                "Units": "W",
+                "Colors": ["red"],
+                "Line Mode": ["lines"],
+                "Line Visibility": [True],
+            },
+            "Flow Rate": {
+                "Column Names": {"Measured": ["Flow Rate (GPM)"], "Simulated": ["draw"]},
+                "Labels": ["Flow Rate"],
+                "Units": "gal/min",
+                "Colors": ["green"],
+                "Line Mode": ["lines"],
+                "Line Visibility": [True],
+            },
+            "Temperature": {
+                "Column Names": {
+                    "Measured": [
+                        f"Tank Temp #{number}(℃)"
+                        for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+                    ],
+                    "Simulated": [
+                        f"tcouple{number} (C)"
+                        for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+                    ],
+                },
+                "Labels": [
+                    f"Storage Tank Temperature {number}"
+                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+                ],
+                "Units": f"{DEGREE_SIGN}F",
+                "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+                "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
+                "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
+            },
+        },
+        "X-Variables": {
+            "Time": {
+                "Column Names": {"Measured": "minutes", "Simulated": "minutes"},
+                "Units": "Min",
+            }
+        },
+    }
 
-  df_measured = calculate_average_tank_temperature(df_measured, df_simulated,"Measured", variables)
-  df_simulated = calculate_average_tank_temperature(df_measured, df_simulated,"Simulated", variables)
+    df_measured = calculate_average_tank_temperature(df_measured, df_simulated, "Measured", variables)
+    df_simulated = calculate_average_tank_temperature(df_measured, df_simulated, "Simulated", variables)
 
- # remove rows from dataframes outside of inclusive range [1,1440]
-  df_measured = filter_dataframe_range(df_measured, "Measured", variables)
-  df_simulated = filter_dataframe_range(df_simulated, "Simulated", variables)
+    # remove rows from dataframes outside of inclusive range [1,1440]
+    df_measured = filter_dataframe_range(df_measured, "Measured", variables)
+    df_simulated = filter_dataframe_range(df_simulated, "Simulated", variables)
 
-  df_measured[power_col_label] = df_measured[power_col_label_meas]
+    df_measured[power_col_label] = df_measured[power_col_label_meas]
 
-  #sum sim power it multiple heat sources
-  i = 1
-  src_exists = True
-  while src_exists:
-    col_label = f"h_src{i}In (Wh)"
-    src_exists = df_simulated.columns.isin([col_label]).any()
-    if src_exists:
-      if i == 1:
-        df_simulated[power_col_label]= df_simulated[col_label]
-      else:
-        df_simulated[power_col_label] = df_simulated[power_col_label] + df_simulated[col_label]
-    i = i + 1
+    # sum sim power it multiple heat sources
+    i = 1
+    src_exists = True
+    while src_exists:
+        col_label = f"h_src{i}In (Wh)"
+        src_exists = df_simulated.columns.isin([col_label]).any()
+        if src_exists:
+            if i == 1:
+                df_simulated[power_col_label] = df_simulated[col_label]
+            else:
+                df_simulated[power_col_label] = df_simulated[power_col_label] + df_simulated[col_label]
+        i = i + 1
 
-	# convert simulated energy consumption (Wh) for every minute to power (W)
-  df_simulated[power_col_label] = convert_values(df_simulated[power_col_label], "Wh/min", "W") 
- 
-  # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
-  add_temperature_details(variables)
-  plot = dimes.TimeSeriesPlot(
-    df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
-  )
+    # convert simulated energy consumption (Wh) for every minute to power (W)
+    df_simulated[power_col_label] = convert_values(df_simulated[power_col_label], "Wh/min", "W")
 
-  for row, variable in enumerate(variables["Y-Variables"].keys()):
-    for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
-      for value in range(
-          len(variables["Y-Variables"][variable]["Column Names"][variable_type])
-      ):
-          plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
+    # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
+    add_temperature_details(variables)
+    plot = dimes.TimeSeriesPlot(
+        df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
+    )
 
-  plot.write_html_plot(output_path)
+    for row, variable in enumerate(variables["Y-Variables"].keys()):
+        for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
+            for value in range(
+                    len(variables["Y-Variables"][variable]["Column Names"][variable_type])
+            ):
+                plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
+
+    plot.write_html_plot(output_path)
+
 
 #  main
 if __name__ == "__main__":
     n_args = len(sys.argv) - 1
     if n_args == 3:
-      measured_path = Path(sys.argv[1])
-      simulated_path = Path(sys.argv[2])
-      output_path = Path(sys.argv[3])  
-      plot(measured_path, simulated_path, output_path)
+        measured_path = Path(sys.argv[1])
+        simulated_path = Path(sys.argv[2])
+        output_path = Path(sys.argv[3])
+        plot(measured_path, simulated_path, output_path)
     else:
         sys.exit(
             "Incorrect number of arguments. Must be three: Measured Path, Simulated Path, Output Path"
