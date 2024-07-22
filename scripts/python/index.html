@@ -14,26 +14,50 @@
 
 
 <body>
-<iframe src="../../build/test/output/aplot.html" title="Plots" width=1200 height=800></iframe>
+    <iframe src="../../build/test/output/aplot.html" title="Plots" width=1200 height=800></iframe>
 
+     <form id="functionForm">
+        <label for="arg1">model spec:</label>
+        <input type="text" id="arg1" name="arg1" required><br><br>
 
-<script>
-async function simulate_and_plot() {
-    const response = await fetch('http://localhost:8000/run_python_function');
-    const result = await response.text();
-    document.getElementById('output').innerText = result;
-}
-</script>
+        <label for="arg2">model name:</label>
+        <input type="text" id="arg2" name="arg2" required><br><br>
 
-<div style = "margin-top: 50px;">
-    <table style="width:100%">
-        <tr height="80px">
-            <td>
-			    <button onClick="simulate_and_plot();window.location.reload();">simulate and plot</button>
-			</td>
-        </tr>
-     </table>
-</div>
+        <label for="arg3">test name:</label>
+        <input type="text" id="arg3" name="arg3" required><br><br>
+
+        <label for="arg4">plot name:</label>
+        <input type="text" id="arg4" name="arg4" required><br><br>
+
+        <label for="arg5">measurements name:</label>
+        <input type="text" id="arg5" name="arg5" required><br><br>
+
+        <button type="button" onclick="simulate_and_plot();">simulate and plot</button>
+    </form>
+
+    <div id="output"></div>
+
+    <script>
+        async function simulate_and_plot() {
+            const form = document.getElementById('functionForm');
+            const farg1 = form.arg1.value;
+            const farg2 = form.arg2.value;
+            const farg3 = form.arg3.value;
+            const farg4 = form.arg4.value;
+            const farg5 = form.arg5.value;
+            fst = 'arg1=' + farg1;
+            fst += '&arg2=' +farg2;
+            fst += '&arg3=' +farg3;
+            fst += '&arg4=' +farg4;
+            fst += '&arg5=' +farg5;
+
+            const response = await fetch('http://localhost:8000/run_python_function?' + fst)
+            const result = await response.text();
+            window.location.reload();
+            document.getElementById('output').innerText = result;
+        }
+    </script>
+
 
 </body>
 
