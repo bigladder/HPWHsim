@@ -245,7 +245,7 @@ plot = dimes.TimeSeriesPlot(
 for row, variable in enumerate(variables["Y-Variables"].keys()):
     for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
         for value in range(
-            len(variables["Y-Variables"][variable]["Column Names"][variable_type])
+                len(variables["Y-Variables"][variable]["Column Names"][variable_type])
         ):
             plot_graphs(variable_type, variable, value, row + 1)
 
