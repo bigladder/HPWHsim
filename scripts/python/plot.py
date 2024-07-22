@@ -9,7 +9,7 @@ from koozie import convert  # type: ignore
 DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
 GRID_LINES_COLOR = "rgba(128,128,128,0.3)"
-# TODO: reverse colors in list below, arunnd revert reverse in variables dictionary
+# TODO: reverse colors in list below, and revert reverse in variables dictionary
 RED_BLUE_DIVERGING_PALLETTE = [
     "#750e13",
     "#da1e28",
@@ -250,7 +250,7 @@ if __name__ == "__main__":
       measured_path = Path(sys.argv[1])
       simulated_path = Path(sys.argv[2])
       output_path = Path(sys.argv[3])  
-      add(measured_path, simulated_path, output_path)
+      plot(measured_path, simulated_path, output_path)
     else:
         sys.exit(
             "Incorrect number of arguments. Must be three: Measured Path, Simulated Path, Output Path"
