@@ -17,7 +17,7 @@
 
 #include <courier/courier.h>
 
-#include "../vendor/Unity/Units.hpp"
+#include "../vendor/Unity/src/Units.hpp"
 
 namespace Btwxt
 {
@@ -73,7 +73,6 @@ class HPWH : public Courier::Sender
     static constexpr auto UnitsRFactor = Units::RFactor::m2C_per_W;
     static constexpr auto UnitsCp = Units::Cp::kJ_per_C;
 
-
     typedef Units::TimeVal<UnitsTime> Time_t;
     typedef Units::TempVal<UnitsTemp> Temp_t;
     typedef Units::Temp_dVal<UnitsTemp_d> Temp_d_t;
@@ -86,9 +85,15 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::UA, UnitsUA> UA_t;
     typedef Units::ScaleVal<Units::RFactor, UnitsRFactor> RFactor_t;
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
+    typedef Units::TempVect<UnitsTemp> TempVect_t;
+    typedef Units::PowerVect<UnitsPower> PowerVect_t;
 
-    struct GenTemp_t: std::variant<Temp_t, Temp_d_t>
+    typedef std::pair<PowerVect_t, Units::Temp> PowerCoeffs_t;
+
+    struct GenTemp_t:public std::variant<Temp_t, Temp_d_t>
     {
+        GenTemp_t(Temp_d_t temp_d_t): std::variant<Temp_t, Temp_d_t>(temp_d_t){}
+        GenTemp_t(Temp_t temp_t): std::variant<Temp_t, Temp_d_t>(temp_t){}
         GenTemp_t(double val, Units::Temp temp){emplace<0>(val, temp);}
         GenTemp_t(double val, Units::Temp_d temp_d){emplace<1>(val, temp_d);}
     };
@@ -485,7 +490,7 @@ class HPWH : public Courier::Sender
                                                           bool constMains,
                                                           Temp_t mainsT);
 
-    std::shared_ptr<TempBasedHeatingLogic> wholeTank(GenTemp_t& decisionT);
+    std::shared_ptr<TempBasedHeatingLogic> wholeTank(GenTemp_t decisionT);
     std::shared_ptr<TempBasedHeatingLogic> topThird(GenTemp_t decisionT);
     std::shared_ptr<TempBasedHeatingLogic> secondThird(GenTemp_t decisionT);
     std::shared_ptr<TempBasedHeatingLogic> bottomThird(GenTemp_t decisionT);
@@ -542,7 +547,7 @@ class HPWH : public Courier::Sender
      * controls for the HPWHinit_resTank()
      */
 
-    void initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_t resUseT);
+    void initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_d_t resUse_dT);
     /**< This function will initialize a HPWH object to be a non-specific HPWH model
      * with an energy factor as specified.  Since energy
      * factor is not strongly correlated with energy use, most settings
@@ -945,7 +950,7 @@ class HPWH : public Courier::Sender
     /// returns the tank temperature averaged using weighted logic nodes
     Temp_t getAverageTankT(const std::vector<NodeWeight>& nodeWeights) const;
 
-    void setMaxDepressionT(Temp_d_t maxDepressionT_in);
+    void setMaxDepression_dT(Temp_d_t maxDepression_dT_in);
 
     bool hasEnteringWaterHighTempShutOff(int heatSourceIndex);
     void setEnteringWaterHighTempShutOff(GenTemp_t highT,
@@ -966,8 +971,8 @@ class HPWH : public Courier::Sender
     bool isSoCControlled() const;
 
     /// Checks whether energy is balanced during a simulation step.
-    bool isEnergyBalanced(const double drawVol_L,
-                          const double prevHeatContent_kJ,
+    bool isEnergyBalanced(const Volume_t drawVol,
+                          const Energy_t prevHeatContent,
                           const double fracEnergyTolerance = 0.001);
 
     /// Overloaded version of above that allows specification of inlet temperature.
@@ -985,9 +990,32 @@ class HPWH : public Courier::Sender
     Energy_t addHeatAboveNode(Energy_t qAdd_kJ, const int nodeNum, Temp_t maxT);
 
     /// Addition of extra heat handled separately from normal heat sources
-    void addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum);
+    void addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum);
 
+    struct PerfPointStore
+    {
+        Temp_t T;
+        PowerVect_t inputPower_coeffs;
+        std::vector<double> COP_coeffs;
+    };
+
+    struct PerfPoint
+    {
+        Temp_t T;
+        PowerVect_t inputPower_coeffs; // with appropriate temperature factors
+        std::vector<double> COP_coeffs;
+
+        PerfPoint(const PerfPointStore& perfPointStore);
+    };
+
+    /// A map with input/COP quadratic curve coefficients at a given external temperature
+    typedef std::vector<PerfPoint> PerfMap;
+
+    static const std::vector<int> powers3;
+    static const std::vector<std::pair<int, int>> powers6;
+    static const std::vector<std::tuple<int, int, int>> powers11;
     /// first-hour rating designations to determine draw pattern for 24-hr test
+
     struct FirstHourRating
     {
         enum class Desig
@@ -1153,7 +1181,7 @@ class HPWH : public Courier::Sender
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
     void modifyHeatDistribution(std::vector<Power_t>& heatDistribution);
-    void addExtraHeat(std::vector<Energy_t>& extraHeatDist);
+    void addExtraHeat(std::vector<Power_t>& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
     Energy_t extraEnergyInput;
@@ -1304,7 +1332,7 @@ class HPWH : public Courier::Sender
     Temp_t locationT;
     /**<  this is the special location temperature that stands in for the the
         ambient temperature if you are doing temp. depression  */
-    Temp_d_t maxDepressionT = 2.5;
+    Temp_d_t maxDepression_dT = {2.5, Units::dC};
     /** a couple variables to hold values which are typically inputs  */
 
     Temp_t member_inletT;
@@ -1426,7 +1454,7 @@ class HPWH::HeatSource : public Courier::Sender
     void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
 
-    void btwxtInterp(Power_t& inputPower, double& cop, std::vector<double>& target);
+    void btwxtInterp(Power_t& inputPower, double& cop, TempVect_t& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
     void setupDefrostMap(double derate35 = 0.8865);
@@ -1434,14 +1462,7 @@ class HPWH::HeatSource : public Courier::Sender
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
-    struct perfPoint
-    {
-        Temp_t T;
-        std::vector<double> inputPower_coeffs; // c0 + c1*T + c2*T*T
-        std::vector<double> COP_coeffs;        // c0 + c1*T + c2*T*T
-    };
-
-    std::vector<perfPoint> perfMap;
+    std::vector<PerfPoint> perfMap;
     /**< A map with input/COP quadratic curve coefficients at a given external temperature */
 
   private:
@@ -1553,8 +1574,8 @@ class HPWH::HeatSource : public Courier::Sender
 
     struct SecondaryHeatExchanger
     {
-        Temp_d_t coldSideOffsetT;
-        Temp_d_t hotSideOffsetT;
+        Temp_d_t coldSideOffset_dT;
+        Temp_d_t hotSideOffset_dT;
         Power_t extraPumpPower;
     };
 
@@ -1588,7 +1609,7 @@ class HPWH::HeatSource : public Courier::Sender
     Temp_t maxSetpointT;
     /**< the maximum setpoint of the heat source can create, used for compressors predominately */
 
-    Temp_d_t hysteresisT;
+    Temp_d_t hysteresis_dT;
     /**< a hysteresis term that prevents short cycling due to heat pump self-interaction
       when the heat source is engaged, it is subtracted from lowT cutoffs and
       added to lowTreheat cutoffs */
@@ -1625,7 +1646,7 @@ class HPWH::HeatSource : public Courier::Sender
 
     // some private functions, mostly used for heating the water with the addHeat function
 
-    double addHeatExternal(Temp_t externalT,
+    Time_t addHeatExternal(Temp_t externalT,
                            Time_t duration,
                            Power_t& outputPower,
                            Power_t& inputPower, //***
@@ -1634,10 +1655,10 @@ class HPWH::HeatSource : public Courier::Sender
         the water is drawn from and hot water is put at the top of the tank. */
 
     /// Add heat from external source using a multi-pass configuration
-    double addHeatExternalMP(Temp_t externalT,
+    Time_t addHeatExternalMP(Temp_t externalT,
                              Time_t duration,
                              Power_t& outputPower,
-                             Power_t& inputPower, //***
+                             Power_t& inputPower,
                              double& cop);
 
     /**  I wrote some methods to help with the add heat interface - MJL  */
@@ -1749,11 +1770,6 @@ inline auto KJ_TO_KWH(const double x)
     using namespace Units;
     return scale(kJ, kWh) * x;
 }
-inline auto KJ_TO_BTU(const double x)
-{
-    using namespace Units;
-    return scale(kJ, Btu) * x;
-}
 
 inline auto KWH_TO_BTU(const double x)
 {
@@ -1777,38 +1793,12 @@ inline auto GAL_TO_L(const double x)
     using namespace Units;
     return scale(gal, L) * x;
 }
-inline auto L_TO_GAL(const double x)
-{
-    using namespace Units;
-    return scale(L, gal) * x;
-}
-inline auto L_TO_M3(const double x)
-{
-    using namespace Units;
-    return scale(L, m3) * x;
-}
 
-inline auto L_TO_FT3(const double x)
-{
-    using namespace Units;
-    return scale(L, ft3) * x;
-}
-
-inline auto GPM_TO_LPS(const double x)
-{
-    using namespace Units;
-    return scale(gal_per_min, L_per_s) * x;
-}
-
-inline auto KJperHC_TO_BTUperHF(const double x)
-{
-    using namespace Units;
-    return scale(kJ_per_hC, Btu_per_hF) * x;
-}
+typedef Units::TimePair<Units::Time::h, Units::Time::min> Time_h_min;
 
 inline auto HM_TO_MIN(const double h, const double min)
 {
-    return Units::Time_h_min(h, min)(Units::min);
+    return Time_h_min(h, min)(Units::min);
 }
 
 inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
