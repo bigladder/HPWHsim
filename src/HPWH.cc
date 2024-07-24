@@ -60,7 +60,7 @@ const double HPWH::CPWATER_kJ_per_kgC = 4.180;    /// specific heat capcity of w
 const HPWH::Temp_t HPWH::MAXOUTLET_R134A(160., Units::F);
 const HPWH::Temp_t HPWH::MAXOUTLET_R410A(140., Units::F);
 const HPWH::Temp_t HPWH::MAXOUTLET_R744(190., Units::F);
-const HPWH::dTemp_t HPWH::MINSINGLEPASSLIFT(15., Units::F);
+const HPWH::Temp_d_t HPWH::MINSINGLEPASSLIFT(15., Units::dF);
 
 std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
     {HPWH::FirstHourRating::Desig::VerySmall, 5},
@@ -312,7 +312,7 @@ int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 /// @returns	width parameter (in degC)
 //-----------------------------------------------------------------------------
 template <typename T>
-HPWH::dTemp_t findShrinkageT(const std::vector<T>& nodeDist)
+HPWH::Temp_d_t findShrinkageT(const std::vector<T>& nodeDist)
 {
     double condentropy = 0.;
     for (std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode)
@@ -327,8 +327,8 @@ HPWH::dTemp_t findShrinkageT(const std::vector<T>& nodeDist)
     double size_factor = static_cast<double>(nodeDist.size()) / HPWH::CONDENSITY_SIZE;
     double standard_condentropy = condentropy - log(size_factor);
 
-    HPWH::dTemp_t alphaT(1., Units::C), betaT(2., Units::C);
-    return alphaT + standard_condentropy * betaT;
+    Temp_d_t alpha_dT(1., Units::dC), beta_dT(2., Units::dC);
+    return alpha_dT + standard_condentropy * beta_dT;
 }
 
 //-----------------------------------------------------------------------------
@@ -341,7 +341,7 @@ HPWH::dTemp_t findShrinkageT(const std::vector<T>& nodeDist)
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
 void calcThermalDist(std::vector<double>& thermalDist,
-                     HPWH::dTemp_t shrinkageT,
+                     HPWH::Temp_d_t shrinkage_dT,
                      int lowestNode,
                      const std::vector<HPWH::Temp_t>& nodeTs,
                      HPWH::Temp_t setpointT)
@@ -356,10 +356,10 @@ void calcThermalDist(std::vector<double>& thermalDist,
         double dist = 0.;
         if (i >= lowestNode)
         {
-            HPWH::dTemp_t standardOffsetT(1.0, Units::F);
-            HPWH::dTemp_t offsetT(5.0, Units::F);
-            double offset = offsetT / standardOffsetT; // dimensionless
-            dist = expitFunc((nodeTs[i] - nodeTs[lowestNode]) / shrinkageT, offset);
+            HPWH::Temp_d_t standardOffset_dT(1.0, Units::dF);
+            HPWH::Temp_d_t offset_dT(5.0, Units::dF);
+            double offset = offset_dT / standardOffset_dT; // dimensionless
+            dist = expitFunc((nodeTs[i] - nodeTs[lowestNode]) / shrinkage_dT, offset);
             dist *= (setpointT - nodeTs[i]);
             if (dist < 0.)
                 dist = 0.;
@@ -392,6 +392,254 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
                        coeffs.begin(),
                        std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
     }
+}
+
+
+template <typename D>
+void linearInterp(D& ynew, D xnew, D x0, D x1, D y0, D y1)
+{
+    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+}
+
+template <typename D>
+double expandSeries(const std::vector<D>& coeffs, const double x)
+{
+
+    double y = 0.;
+    for (auto pCoeff = coeffs.rbegin(); pCoeff != coeffs.rend(); ++pCoeff)
+    {
+        y = (*pCoeff) + y * x;
+    }
+    return y;
+}
+
+template <typename T, typename D>
+std::vector<D>
+changeSeriesUnits(const std::vector<D>& coeffs, const T fromUnits, const T toUnits)
+{
+    std::vector<D> newCoeffs = coeffs;
+    for (std::size_t j = 0; j < coeffs.size(); ++j)
+    {
+        for (std::size_t i = j + 1; i < coeffs.size(); ++i)
+        {
+            newCoeffs[i] = Units::scale(fromUnits, toUnits, coeffs[i]);
+        }
+    }
+    return newCoeffs;
+}
+
+double factorial(const int n)
+{
+    double f = 1.;
+    for (int i = 1; i <= n; ++i)
+        f *= i;
+    return f;
+}
+
+double choose(const int n, const int i)
+{
+    double f = 0.;
+    if (i <= n)
+    {
+        f = factorial(n) / factorial(i) / factorial(n - i);
+    }
+    return f;
+}
+
+void regressedMethod(
+    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
+{
+    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
+           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
+           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
+           coefficents[10] * x1 * x2 * x3;
+}
+
+void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2)
+{
+    // Const Tair Tin Tair2 Tin2 TairTin
+    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
+           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
+}
+
+const std::vector<int> HPWH::powers3 = {0, 1, 2};
+
+const std::vector<std::pair<int, int>> HPWH::powers6 = {
+    {0, 0}, {1, 0}, {0, 1}, {2, 0}, {0, 2}, {1, 1}};
+
+const std::vector<std::tuple<int, int, int>> HPWH::powers11 = {{0, 0, 0},
+                                                               {1, 0, 0},
+                                                               {0, 1, 0},
+                                                               {0, 0, 1},
+                                                               {2, 0, 0},
+                                                               {0, 2, 0},
+                                                               {0, 0, 2},
+                                                               {1, 1, 0},
+                                                               {1, 0, 1},
+                                                               {0, 1, 1},
+                                                               {1, 1, 1}};
+
+HPWH::PowerVect_t changeSeriesUnitsTemp3(const HPWH::PowerVect_t& coeffs,
+                                           const Units::Temp fromUnits,
+                                            const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleOffset(fromUnits, toUnits);
+    double alpha = t.offset(), beta = t.scale();
+
+    auto& powers = HPWH::powers3;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i = powers[i];
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j = powers[j];
+            double fac = choose(power_j, power_i) * std::pow(alpha, power_j - power_i) *
+                         std::pow(beta, power_i);
+
+            newCoeffs[i] += fac * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp6(const HPWH::PowerVect_t& coeffs,
+                                           const Units::Temp fromUnits,
+                                           const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleOffset(fromUnits, toUnits);
+    double alpha = t.offset(), beta = t.scale();
+
+    auto& powers = HPWH::powers6;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            newCoeffs[i] += fac0 * fac1 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp11(const HPWH::PowerVect_t& coeffs,
+                                            const Units::Temp fromUnits,
+                                            const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleOffset(fromUnits, toUnits);
+    double alpha = t.offset(), beta = t.scale();
+
+    auto& powers = HPWH::powers11;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        int power_i2 = std::get<2>(powers[i]);
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+            int power_j2 = std::get<2>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            double fac2 = choose(power_j2, power_i2) * std::pow(alpha, power_j2 - power_i2) *
+                          std::pow(beta, power_i2);
+
+            newCoeffs[i] += fac0 * fac1 * fac2 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+HPWH::PerfPoint::PerfPoint(const Temp_t T_in,
+                           const PowerVect_t& inputPower_coeffs_in,
+                           const std::vector<double>& COP_coeffs_in,
+                           const Units::Temp unitsTemp)
+{
+
+    inputPower_coeffs = inputPower_coeffs_in;
+    COP_coeffs = COP_coeffs_in;
+
+    if (inputPower_coeffs_in.size() == 3) // use expandSeries
+    {
+        inputPower_coeffs = changeSeriesUnitsTemp3(inputPower_coeffs, unitsTemp, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp, UnitsTemp);
+        return;
+    }
+
+    if (inputPower_coeffs_in.size() == 11) // use regressMethod
+    {
+        inputPower_coeffs =
+            changeSeriesUnitsTemp11(inputPower_coeffs, unitsTemp, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp, UnitsTemp);
+        return;
+    }
+
+    if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
+    {
+        inputPower_coeffs = changeSeriesUnitsTemp6(inputPower_coeffs, unitsTemp, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp, UnitsTemp);
+        return;
+    }
+}
+
+
+
+std::tuple<std::vector<double>, Units::Power, Units::Temp> inputPower_coeffs;
+std::pair<std::vector<double>, Units::Temp> COP_coeffs;
+
+HPWH::PerfPoint::PerfPoint(const PerfPointStore& perfPointStore)
+    : PerfPoint(perfPointStore.T,
+                perfPointStore.inputPower_coeffs,
+                perfPointStore.COP_coeffs,
+                perfPointStore.T)
+{
+}
+
+HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in /*0.*/,
+                                                       const double constLiftT_in /*0.*/,
+                                                       const double onBelowT_in /*0.*/,
+                                                       const Units::Temp unitsTemp_in /*C*/,
+                                                       const Units::Power unitsPower_in /*kW*/)
+{
+    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in);
+    constLiftT_C = Units::dTemp_C(constLiftT_in, unitsTemp_in);
+    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in);
 }
 
 void HPWH::setStepTime(const Time_t stepTime_in)
@@ -509,7 +757,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
                       DRMODES DRstatus,
                       Volume_t inlet2Vol,
                       Temp_t inlet2T,
-                      std::vector<Energy_t>* extraHeatDist)
+                      std::vector<Power_t>* extraHeatDist)
 {
 
     // check for errors
@@ -758,7 +1006,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
 
         if (compressorRan)
         {
-            temperatureGoal -= maxDepression_C; // hardcoded 4.5 degree total drop - from
+            temperatureGoal -= maxDepression_dT; // hardcoded 4.5 degree total drop - from
                                                 // experimental data. Changed to an input
         }
         else
@@ -960,7 +1208,7 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     //
     outFILE << fmt::format("{:d}", outputData.time(Units::min));
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? outputData.ambientT(Units::C) : outputData.(Units::C);
+                           doIP ? outputData.ambientT(Units::C) : outputData(Units::C);
     outFILE << fmt::format(",{:0.2f}",
                            doIP ? outputData.setpointT(Units::C) : outputData.setpointT(Units::C);
     outFILE << fmt::format(",{:0.2f}", doIP ? outputData.inletT(Units::C) : outputData.inletT(Units::C);
@@ -1993,7 +2241,7 @@ HPWH::Temp_t HPWH::getAverageTankT() const
     Temp_t totalT;
     for (auto& T : tankTs)
     {
-        totalT += dTemp_t(T);
+        totalT += Temp_d_t(T);
     }
     return totalT / static_cast<double>(getNumNodes());
 }
@@ -2013,7 +2261,7 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
     std::size_t j = 0;
     for (auto& nodeT : resampledTankTs)
     {
-        tankT += dTemp_t(dist[j] * nodeT);
+        tankT += Temp_d_t(dist[j] * nodeT);
         ++j;
     }
     return tankT;
@@ -3010,39 +3258,39 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 ///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
 /// @return	true if balanced; false otherwise.
 //-----------------------------------------------------------------------------
-bool HPWH::isEnergyBalanced(const double drawVol_L,
-                            const double prevHeatContent_kJ,
+bool HPWH::isEnergyBalanced(const Volume_t drawVol,
+                            const Energy_t prevHeatContent,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
-    double drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
+    Cp_t drawCp =
+    {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVol(Units::L), Units::kJ_per_C}; // heat capacity of draw
 
     // Check energy balancing.
-    double qInElectrical_kJ = 0.;
+    Energy_t qInElectrical = 0.;
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+        qInElectrical += getNthHeatSourceEnergyInput(iHS);
     }
 
-    double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
-    double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
-    double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-    double qOutWater_kJ =
-        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
-    double expectedTankHeatContent_kJ =
-        prevHeatContent_kJ        // previous heat content
-        + qInElectrical_kJ        // electrical energy delivered to heat sources
-        + qInExtra_kJ             // extra energy delivered to heat sources
-        + qInHeatSourceEnviron_kJ // heat extracted from environment by condenser
-        - qOutTankEnviron_kJ      // heat released from tank to environment
-        - qOutWater_kJ;           // heat expelled to outlet by water flow
+    Energy_t qInExtra = extraEnergyInput;
+    Energy_t qInHeatSourceEnviron = getEnergyRemovedFromEnvironment();
+    Energy_t qOutTankEnviron = standbyLosses;
+    Energy_t qOutWater =
+        {drawCp(Units::kJ_per_C) * (outletT(Units::C) - member_inletT(Units::C)), Units::kJ}; // assumes only one inlet
+    Energy_t expectedTankHeatContent =
+        prevHeatContent        // previous heat content
+        + qInElectrical        // electrical energy delivered to heat sources
+        + qInExtra             // extra energy delivered to heat sources
+        + qInHeatSourceEnviron // heat extracted from environment by condenser
+        - qOutTankEnviron      // heat released from tank to environment
+        - qOutWater;           // heat expelled to outlet by water flow
 
-    double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
-    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+    Energy_t qBal = getTankHeatContent() - expectedTankHeatContent;
+    double fracEnergyDiff = fabs(qBal(Units::kJ)) / std::max(prevHeatContent(Units::kJ), 1.);
     if (fracEnergyDiff > fracEnergyTolerance)
     {
         send_warning(
-            fmt::format("Energy-balance error: {:g} kJ, {:g} %", qBal_kJ, 100. * fracEnergyDiff));
+            fmt::format("Energy-balance error: {:g} kJ, {:g} %", qBal(Units::kJ), 100. * fracEnergyDiff));
         return false;
     }
     return true;
@@ -3159,8 +3407,8 @@ void HPWH::checkInputs()
         }
         else
         {
-            if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
-                heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
+            if (heatSources[i].secondaryHeatExchanger.extraPumpPower != 0 ||
+                heatSources[i].secondaryHeatExchanger.extraPumpPower)
             {
                 error_msgs.push(fmt::format(
                     "Heatsource {:d} is not an external heat source but has an external "
@@ -4388,10 +4636,10 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    heatSources[heatsource].hysteresisT = dTemp_t(tempDouble, Units::C);
+                    heatSources[heatsource].hysteresis_dT = dTemp_t(tempDouble, Units::C);
                 else if (units == "F")
                 {
-                    heatSources[heatsource].hysteresisT = dTemp_t(tempDouble, Units::F);
+                    heatSources[heatsource].hysteresis_dT = dTemp_t(tempDouble, Units::F);
                 }
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
