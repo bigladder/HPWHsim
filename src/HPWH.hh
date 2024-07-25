@@ -374,6 +374,7 @@ class HPWH : public Courier::Sender
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
     };
 
+    template <typename T>
     struct HeatingLogic
     {
       public:
@@ -381,7 +382,7 @@ class HPWH : public Courier::Sender
         std::function<bool(double, double)> compare;
 
         HeatingLogic(std::string desc,
-                     double decisionPoint_in,
+                     T decisionPoint_in,
                      HPWH* hpwh_in,
                      std::function<bool(double, double)> c,
                      bool isHTS)
@@ -404,17 +405,17 @@ class HPWH : public Courier::Sender
         /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
         virtual double getFractToMeetComparisonExternal() = 0;
 
-        virtual void setDecisionPoint(double value) = 0;
+        virtual void setDecisionPoint(T value) = 0;
         double getDecisionPoint() { return decisionPoint; }
         bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
       protected:
-        double decisionPoint;
+        T decisionPoint;
         HPWH* hpwh;
         bool isEnteringWaterHighTempShutoff;
     };
 
-    struct SoCBasedHeatingLogic : HeatingLogic
+    struct SoCBasedHeatingLogic : HeatingLogic<double>
     {
       public:
         SoCBasedHeatingLogic(std::string desc,
@@ -448,7 +449,7 @@ class HPWH : public Courier::Sender
         Temp_t constantMainsT;
     };
 
-    struct TempBasedHeatingLogic : HeatingLogic
+    struct TempBasedHeatingLogic : HeatingLogic<GenTemp_t>
     {
 
       public:
@@ -458,7 +459,7 @@ class HPWH : public Courier::Sender
                               HPWH* hpwh,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, (decisionT.index() == 0) ? std::get<Temp_t>(decisionT) : std::get<Temp_d_t>(decisionT), hpwh, c, isHTS), nodeWeights(n) {};
+            : HeatingLogic(desc, decisionT, hpwh, c, isHTS), nodeWeights(n) {};
 
 
         bool isValid();
