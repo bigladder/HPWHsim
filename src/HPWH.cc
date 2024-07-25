@@ -586,60 +586,34 @@ std::vector<double> changeSeriesUnitsTemp11(const HPWH::PowerVect_t& coeffs,
     return newCoeffs;
 }
 
-HPWH::PerfPoint::PerfPoint(const Temp_t T_in,
-                           const PowerVect_t& inputPower_coeffs_in,
-                           const std::vector<double>& COP_coeffs_in,
-                           const Units::Temp unitsTemp)
+HPWH::PerfPoint::PerfPoint(const PerfPointStore& perfPointStore)
 {
 
-    inputPower_coeffs = inputPower_coeffs_in;
-    COP_coeffs = COP_coeffs_in;
+    inputPower_coeffs = perfPointStore.inputPower_coeffs;
+    COP_coeffs = perfPointStore.COP_coeffs;
 
-    if (inputPower_coeffs_in.size() == 3) // use expandSeries
+    auto unitsTempStore = perfPointStore.T;
+    if (inputPower_coeffs.size() == 3) // use expandSeries
     {
-        inputPower_coeffs = changeSeriesUnitsTemp3(inputPower_coeffs, unitsTemp, UnitsTemp);
-        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTemp, UnitsTemp);
+        inputPower_coeffs = changeSeriesUnitsTemp3(inputPower_coeffs, unitsTempStore, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs, unitsTempStore, UnitsTemp);
         return;
     }
 
-    if (inputPower_coeffs_in.size() == 11) // use regressMethod
+    if (inputPower_coeffs.size() == 11) // use regressMethod
     {
         inputPower_coeffs =
-            changeSeriesUnitsTemp11(inputPower_coeffs, unitsTemp, UnitsTemp);
-        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp, UnitsTemp);
+            changeSeriesUnitsTemp11(inputPower_coeffs, unitsTempStore, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTempStore, UnitsTemp);
         return;
     }
 
-    if (inputPower_coeffs_in.size() == 6) // use regressMethodMP
+    if (inputPower_coeffs.size() == 6) // use regressMethodMP
     {
-        inputPower_coeffs = changeSeriesUnitsTemp6(inputPower_coeffs, unitsTemp, UnitsTemp);
-        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp, UnitsTemp);
+        inputPower_coeffs = changeSeriesUnitsTemp6(inputPower_coeffs, unitsTempStore, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTempStore, UnitsTemp);
         return;
     }
-}
-
-
-
-std::tuple<std::vector<double>, Units::Power, Units::Temp> inputPower_coeffs;
-std::pair<std::vector<double>, Units::Temp> COP_coeffs;
-
-HPWH::PerfPoint::PerfPoint(const PerfPointStore& perfPointStore)
-    : PerfPoint(perfPointStore.T,
-                perfPointStore.inputPower_coeffs,
-                perfPointStore.COP_coeffs,
-                perfPointStore.T)
-{
-}
-
-HPWH::HeatSource::ResistanceDefrost::ResistanceDefrost(const double inputPwr_in /*0.*/,
-                                                       const double constLiftT_in /*0.*/,
-                                                       const double onBelowT_in /*0.*/,
-                                                       const Units::Temp unitsTemp_in /*C*/,
-                                                       const Units::Power unitsPower_in /*kW*/)
-{
-    inputPwr_kW = Units::Power_kW(inputPwr_in, unitsPower_in);
-    constLiftT_C = Units::dTemp_C(constLiftT_in, unitsTemp_in);
-    onBelowT_C = Units::Temp_C(onBelowT_in, unitsTemp_in);
 }
 
 void HPWH::setStepTime(const Time_t stepTime_in)
@@ -1304,7 +1278,7 @@ bool HPWH::isNewSetpointPossible(Temp_t newSetpointT,
 
             maxAllowedSetpointT =
                 heatSources[compressorIndex].maxSetpointT -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffsetT;
+                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffset_dT;
 
             if (newSetpointT > maxAllowedSetpointT && lowestElementIndex == -1)
             {
@@ -1380,7 +1354,7 @@ void HPWH::calcAndSetSoCFraction()
     std::shared_ptr<SoCBasedHeatingLogic> logicSoC =
         std::dynamic_pointer_cast<SoCBasedHeatingLogic>(
             heatSources[compressorIndex].turnOnLogicSet[0]);
-    newSoCFraction = calcSoCFraction(logicSoC->getMainsT(), logicSoC->getTempMinUseful());
+    newSoCFraction = calcSoCFraction(logicSoC->getMainsT(), logicSoC->getMinUsefulT());
 
     currentSoCFraction = newSoCFraction;
 }
@@ -1455,7 +1429,7 @@ int HPWH::setTankSizeWithSameU(Volume_t vol,
     double oldTankU_kJperhCm2 = tankUA(Units::kJ_per_hC) / getTankSurfaceArea()(Units::m2);
 
     setTankSize(vol, forceChange);
-    tankUA = Units::UA_kJ_per_hC(oldTankU_kJperhCm2 * getTankSurfaceArea()(Units::m2));
+    tankUA = {oldTankU_kJperhCm2 * getTankSurfaceArea()(Units::m2), Units::kJ_per_hC};
     return 0;
 }
 
@@ -1467,7 +1441,7 @@ int HPWH::setTankSizeWithSameU(Volume_t vol,
     // tankVolume_L with the assumption that the aspect ratio is the same as the outer
     // dimenisions of the whole unit.
     Length_t radius = getTankRadius(vol);
-    return Units::Area_m2(2. * Pi * pow(radius(Units::m), 2) * (ASPECTRATIO + 1.));
+    return {2. * Pi * pow(radius(Units::m), 2) * (ASPECTRATIO + 1.), Units::m2};
 }
 
 HPWH::Area_t HPWH::getTankSurfaceArea() const
@@ -1483,7 +1457,7 @@ HPWH::getTankRadius(const Volume_t vol)
     // actual tank.
 
     if(vol < 0.) return 0.;
-    return Length_t(std::pow(vol(Units::m3) /Pi / ASPECTRATIO, 1. / 3.), UnitsLength));
+    return {std::pow(vol(Units::m3) /Pi / ASPECTRATIO, 1. / 3.), Units::m};
 }
 
 HPWH::Length_t HPWH::getTankRadius() const
@@ -1646,9 +1620,9 @@ int HPWH::getInletHeight(int whichInlet) const
     return result;
 }
 
-void HPWH::setMaxDepressionT(dTemp_t maxDepressionT_in)
+void HPWH::setMaxDepression_dT(Temp_d_t maxDepression_dT_in)
 {
-    maxDepressionT = maxDepressionT_in;
+    maxDepression_dT = maxDepression_dT_in;
 }
 
 bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
@@ -1682,23 +1656,25 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT,
         send_error("You have attempted to access a heating logic that does not exist.");
     }
 
-
     bool highTempIsNotValid = false;
-    if (tempIsAbsolute)
+    if(highT.index() == 0)
     {
-        // check differnce with setpoint
-        if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT)
+        // check difference with setpoint
+        auto T = std::get<Temp_t>(highT);
+        if (Temp_t(setpointT(Units::C) - std::get<Temp_t>(highT)(Units::C), Units::C) < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
     }
     else
     {
-        if (highTemp_C < MINSINGLEPASSLIFT)
+        auto dT = std::get<Temp_d_t>(highT);
+        if (dT < MINSINGLEPASSLIFT)
         {
             highTempIsNotValid = true;
         }
     }
+
     if (highTempIsNotValid)
     {
         send_error(fmt::format("High temperature shut off is too close to the setpoint, expected "
@@ -1711,7 +1687,7 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT,
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
             std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)
-                ->setDecisionPoint(highTemp_C, tempIsAbsolute);
+                ->setDecisionPoint(highT);
             break;
         }
     }
@@ -1758,12 +1734,11 @@ bool HPWH::canUseSoCControls()
 }
 
 void HPWH::switchToSoCControls(double targetSoC,
-                               double hysteresisFraction /*= 0.05*/,
-                               double tempMinUseful /*= 43.333*/,
-                               bool constantMainsT /*= false*/,
-                               double mainsT /*= 18.333*/,
-                               UNITS tempUnits /*= UNITS_C*/)
-{
+                                double hysteresisFraction /*0.05*/,
+                                Temp_t tempMinUseful /*{43.333, Units::C}*/,
+                                bool constantMainsT /*false*/,
+                                Temp_t mainsT /*{18.333, Units::C});*/)
+                                {
     if (!canUseSoCControls())
     {
         send_error("Cannot set up state of charge controls for integrated or wrapped HPWHs.");
