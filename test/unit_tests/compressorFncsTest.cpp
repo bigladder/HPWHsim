@@ -17,23 +17,23 @@ struct CompressorFncsTest : public testing::Test
         int coilConfig; // 1: Wrapped, 2: External
         int isMultipass;
         int isExternalMultipass;
-        double maxSetpointT_C;
-        double minT_F;
+        HPWH::Temp_t maxSetpointT;
+        HPWH::Temp_t minT;
     };
 
     const std::vector<ModelSpecs> modelSpecs = {
-        {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A, 42.},
-        {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A, 32.},
-        {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A, 47.},
-        {"Sanden80", true, 2, false, false, HPWH::MAXOUTLET_R744, -25.},
-        {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, -4.},
-        {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
-        {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, 40.},
-        {"ColmacCxA_20_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
-        {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, 40.},
-        {"NyleC90A_MP", true, 2, true, true, F_TO_C(160.), 40.},
-        {"NyleC90A_C_MP", true, 2, true, true, F_TO_C(160.), 35.},
-        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, F_TO_C(176.1), -13.},
+        {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A, {42., Units::F}},
+        {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A, {32., Units::F}},
+        {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A, {47., Units::F}},
+        {"Sanden80", true, 2, false, false, HPWH::MAXOUTLET_R744, {-25., Units::F}},
+        {"ColmacCxV_5_SP", true, 2, false, false, HPWH::MAXOUTLET_R410A, {-4., Units::F}},
+        {"ColmacCxA_20_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, {40., Units::F}},
+        {"TamScalable_SP", true, 2, false, false, HPWH::MAXOUTLET_R134A, {40., Units::F}},
+        {"ColmacCxA_20_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, {40., Units::F}},
+        {"Scalable_MP", true, 2, true, true, HPWH::MAXOUTLET_R134A, {40., Units::F}},
+        {"NyleC90A_MP", true, 2, true, true, {160., Units::F}, {40., Units::F}},
+        {"NyleC90A_C_MP", true, 2, true, true, {160., Units::F}, {35., Units::F}},
+        {"QAHV_N136TAU_HPB_SP", true, 2, false, false, {176.1, Units::F}, {-13., Units::F}},
         {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
         {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort}};
 };
@@ -56,9 +56,9 @@ TEST_F(CompressorFncsTest, compressorSpecs)
             EXPECT_EQ(hpwh.isCompressorMultipass(), modelSpec.isMultipass) << modelSpec.sModelName;
             EXPECT_EQ(hpwh.isCompressorExternalMultipass(), modelSpec.isExternalMultipass)
                 << modelSpec.sModelName;
-            EXPECT_EQ(hpwh.getMaxCompressorSetpoint(), modelSpec.maxSetpointT_C)
+            EXPECT_EQ(hpwh.getMaxCompressorSetpointT(), modelSpec.maxSetpointT)
                 << modelSpec.sModelName;
-            EXPECT_EQ(hpwh.getMinOperatingTemp(HPWH::UNITS_F), modelSpec.minT_F)
+            EXPECT_EQ(hpwh.getMinOperatingT(), modelSpec.minT)
                 << modelSpec.sModelName;
         }
         else
@@ -66,8 +66,8 @@ TEST_F(CompressorFncsTest, compressorSpecs)
             EXPECT_ANY_THROW(hpwh.getCompressorCoilConfig()) << modelSpec.sModelName;
             EXPECT_ANY_THROW(hpwh.isCompressorMultipass()) << modelSpec.sModelName;
             EXPECT_ANY_THROW(hpwh.isCompressorExternalMultipass()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpoint()) << modelSpec.sModelName;
-            EXPECT_ANY_THROW(hpwh.getMinOperatingTemp(HPWH::UNITS_F)) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMaxCompressorSetpointT()) << modelSpec.sModelName;
+            EXPECT_ANY_THROW(hpwh.getMinOperatingT()) << modelSpec.sModelName;
         }
     }
 }

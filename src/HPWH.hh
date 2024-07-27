@@ -92,6 +92,7 @@ class HPWH : public Courier::Sender
 
     struct GenTemp_t:public std::variant<Temp_t, Temp_d_t>
     {
+        GenTemp_t(): GenTemp_t(0, Units::dC){}
         GenTemp_t(Temp_d_t temp_d_t): std::variant<Temp_t, Temp_d_t>(temp_d_t){}
         GenTemp_t(Temp_t temp_t): std::variant<Temp_t, Temp_d_t>(temp_t){}
         GenTemp_t(double val, Units::Temp temp){emplace<0>(val, temp);}
@@ -374,7 +375,6 @@ class HPWH : public Courier::Sender
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
     };
 
-    template <typename T>
     struct HeatingLogic
     {
       public:
@@ -382,13 +382,11 @@ class HPWH : public Courier::Sender
         std::function<bool(double, double)> compare;
 
         HeatingLogic(std::string desc,
-                     T decisionPoint_in,
                      HPWH* hpwh_in,
                      std::function<bool(double, double)> c,
                      bool isHTS)
             : description(desc)
             , compare(c)
-            , decisionPoint(decisionPoint_in)
             , hpwh(hpwh_in)
             , isEnteringWaterHighTempShutoff(isHTS) {};
 
@@ -405,76 +403,80 @@ class HPWH : public Courier::Sender
         /**< gets the fraction of a node that has to be heated up to met the turnoff condition*/
         virtual double getFractToMeetComparisonExternal() = 0;
 
-        virtual void setDecisionPoint(T value) = 0;
-        double getDecisionPoint() { return decisionPoint; }
+        virtual double getDecisionPoint() = 0;
         bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
       protected:
-        T decisionPoint;
-        HPWH* hpwh;
+         HPWH* hpwh;
         bool isEnteringWaterHighTempShutoff;
     };
 
-    struct SoCBasedHeatingLogic : HeatingLogic<double>
+    struct SoCBasedHeatingLogic : HeatingLogic
     {
       public:
         SoCBasedHeatingLogic(std::string desc,
-                             double decisionPoint,
+                             double decisionPoint_in,
                              HPWH* hpwh,
                              double hF = -0.05,
-                             Temp_t tM_C = {43.333, Units::C},
+                             Temp_t minUsefulT_in = {43.333, Units::C},
                              bool constMains = false,
                              Temp_t mainsT = {18.333, Units::C},
                              std::function<bool(double, double)> c = std::less<double>())
-            : HeatingLogic(desc, decisionPoint, hpwh, c, false)
-            , minUsefulT(tM_C)
+            : HeatingLogic(desc, hpwh, c, false)
+            , minUsefulT(minUsefulT_in)
             , hysteresisFraction(hF)
             , useConstantMains(constMains)
-            , constantMainsT(mainsT) {};
-        bool isValid();
+            , constantMainsT(mainsT)
+            , decisionPoint(decisionPoint_in){}
 
-        double getComparisonValue();
-        double getTankValue();
-        double nodeWeightAvgFract();
-        double getFractToMeetComparisonExternal();
+        bool isValid() override;
+
+        double getComparisonValue() override;
+        double getTankValue() override;
+        double nodeWeightAvgFract() override;
+        double getFractToMeetComparisonExternal() override;
         Temp_t getMainsT();
         Temp_t getMinUsefulT();
-        void setDecisionPoint(double value);
-        void setConstantMainsT(Temp_t mainsT);
+        void setConstantMainsT(Temp_t constantMainsT_in);
+        void setDecisionPoint(double decisionPoint_in) { decisionPoint = decisionPoint_in;}
+        double getDecisionPoint() override {return decisionPoint;}
 
       private:
         Temp_t minUsefulT;
         double hysteresisFraction;
         bool useConstantMains;
         Temp_t constantMainsT;
+        double decisionPoint;
     };
 
-    struct TempBasedHeatingLogic : HeatingLogic<GenTemp_t>
+    struct TempBasedHeatingLogic : HeatingLogic
     {
 
       public:
         TempBasedHeatingLogic(std::string desc,
                               std::vector<NodeWeight> n,
-                              GenTemp_t decisionT,
+                              GenTemp_t decisionT_in,
                               HPWH* hpwh,
                               std::function<bool(double, double)> c = std::less<double>(),
                               bool isHTS = false)
-            : HeatingLogic(desc, decisionT, hpwh, c, isHTS), nodeWeights(n) {};
+            : HeatingLogic(desc, hpwh, c, isHTS), nodeWeights(n), decisionT(decisionT_in) {};
 
 
-        bool isValid();
+        bool isValid() override;
 
-        double getComparisonValue();
-        double getTankValue();
-        double nodeWeightAvgFract();
-        double getFractToMeetComparisonExternal();
+        double getComparisonValue() override;
+        double getTankValue() override;
+        double nodeWeightAvgFract() override;
+        double getFractToMeetComparisonExternal() override;
 
-        void setDecisionPoint(double value);
-        void setDecisionPoint(double value, bool absolute);
+        void setDecisionPoint(GenTemp_t decisionT_in) { decisionT = decisionT_in; }
+        double getDecisionPoint() override {return (decisionT.index() == 0)? std::get<Temp_t>(decisionT)(UnitsTemp): std::get<Temp_d_t>(decisionT)(UnitsTemp_d);}
 
       private:
         bool areNodeWeightsValid();
         std::vector<NodeWeight> nodeWeights;
+        GenTemp_t decisionT;
+        ;
     };
 
     std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc,
@@ -488,7 +490,7 @@ class HPWH : public Courier::Sender
                                                           double targetSoC,
                                                           double hystFract,
                                                           Temp_t minUsefulT,
-                                                          bool constMains,
+                                                          bool constantMainsT,
                                                           Temp_t mainsT);
 
     std::shared_ptr<TempBasedHeatingLogic> wholeTank(GenTemp_t decisionT);
@@ -584,7 +586,7 @@ class HPWH : public Courier::Sender
                     DRMODES DRstatus,
                     Volume_t inlet2Vol = 0.,
                     Temp_t inlet2T = 0.,
-                    std::vector<Power_t>* extraHeatDist = NULL);
+                    PowerVect_t* extraHeatDist = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
      */
@@ -597,7 +599,7 @@ class HPWH : public Courier::Sender
                     DRMODES DRstatus,
                     Volume_t inlet2Vol = 0.,
                     Temp_t inlet2T = 0.,
-                    std::vector<Power_t>* extraHeatDist = NULL)
+                    PowerVect_t* extraHeatDist = NULL)
     {
         setInletT(inletT);
         runOneStep(drawVolume,
@@ -993,20 +995,15 @@ class HPWH : public Courier::Sender
     /// Addition of extra heat handled separately from normal heat sources
     void addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum);
 
-    struct PerfPointStore
-    {
-        Temp_t T;
-        PowerVect_t inputPower_coeffs;
-        std::vector<double> COP_coeffs;
-    };
-
     struct PerfPoint
     {
         Temp_t T;
         PowerVect_t inputPower_coeffs; // with appropriate temperature factors
         std::vector<double> COP_coeffs;
 
-        PerfPoint(const PerfPointStore& perfPointStore);
+        PerfPoint(Temp_t T_in = {0, Units::C},
+                  PowerVect_t inputPower_coeffs_in = {},
+                  std::vector<double> COP_coeffs_in = {});
     };
 
     /// A map with input/COP quadratic curve coefficients at a given external temperature
@@ -1143,7 +1140,7 @@ class HPWH : public Courier::Sender
         DRMODES drMode;
         std::vector<Energy_t> h_srcIn;
         std::vector<Energy_t> h_srcOut;
-        std::vector<Temp_t> thermocoupleT;
+        TempVect_t thermocoupleT;
         Temp_t outletT;
     };
 
@@ -1182,7 +1179,7 @@ class HPWH : public Courier::Sender
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
     void modifyHeatDistribution(std::vector<Power_t>& heatDistribution);
-    void addExtraHeat(std::vector<Power_t>& extraHeatDist);
+    void addExtraHeat(PowerVect_t& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
     Energy_t extraEnergyInput;
@@ -1445,22 +1442,12 @@ class HPWH::HeatSource : public Courier::Sender
 
     int getCondensitySize() const;
 
-    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
-    /**< Does a simple linear interpolation between two points to the xnew point */
-
-    void regressedMethod(
-        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
     void btwxtInterp(Power_t& inputPower, double& cop, TempVect_t& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
     void setupDefrostMap(double derate35 = 0.8865);
     /**< configure the heat source with a default for the defrost derating */
-    void defrostDerate(double& to_derate, double airT_C);
+    void defrostDerate(double& to_derate, Temp_t airT);
     /**< Derates the COP of a system based on the air temperature */
 
     std::vector<PerfPoint> perfMap;
@@ -1519,7 +1506,7 @@ class HPWH::HeatSource : public Courier::Sender
     //  by specifying the entire condensity in one node. */
     std::vector<double> condensity;
 
-    Temp_d_t shrinkageT;
+    Temp_d_t shrinkage_dT;
     /**< Tshrinkage_C is a derived from the condentropy (conditional entropy),
         using the condensity and fixed parameters Talpha_C and Tbeta_C.
         Talpha_C and Tbeta_C are not intended to be settable
@@ -1549,15 +1536,15 @@ class HPWH::HeatSource : public Courier::Sender
     /** some compressors have a resistance element for defrost*/
     struct resistanceElementDefrost
     {
-        double inputPwr_kW {0.0};
-        double constTempLift_dF {0.0};
-        double onBelowT_F {-999};
+        Power_t inputPwr {0.0};
+        Temp_d_t constLift_dT {0.0};
+        Temp_t onBelowT {-999, Units::C};
     };
     resistanceElementDefrost resDefrost;
 
     struct defrostPoint
     {
-        double T_F;
+        Temp_t T;
         double derate_fraction;
     };
     std::vector<defrostPoint> defrostMap;
@@ -1727,8 +1714,8 @@ bool resampleExtensive(std::vector<double>& values, const std::vector<double>& s
 ///  helper functions
 double expitFunc(double x, double offset);
 void normalize(std::vector<double>& distribution);
-int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes);
-HPWH::Temp_d_t findShrinkageT_C(const std::vector<double>& nodeDist);
+int findLowestNode(const std::vector<HPWH::Power_t>& nodeDist, const int numTankNodes);
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double>& nodeDist);
 void calcThermalDist(std::vector<double>& thermalDist,
                      HPWH::Temp_d_t shrinkageT,
                      int lowestNode,
@@ -1736,64 +1723,20 @@ void calcThermalDist(std::vector<double>& thermalDist,
                      const HPWH::Temp_t setpointT);
 void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
-/// convenience funcs
-inline auto F_TO_C(const double x)
-{
-    using namespace Units;
-    return scaleOffset(F, C) * x;
-}
-inline auto C_TO_F(const double x)
-{
-    using namespace Units;
-    return scaleOffset(C, F) * x;
-}
+template <typename D>
+void linearInterp(D& ynew, double xnew, double x0, double x1, D y0, D y1);
 
-inline auto dF_TO_dC(const double x)
-{
-    using namespace Units;
-    return scale(F, C) * x;
-}
+template <typename D>
+double expandSeries(const std::vector<D>& coeffs, const double x);
 
-inline auto M_TO_FT(const double x)
-{
-    using namespace Units;
-    return scale(m, ft) * x;
-}
+/// applies ten-term regression
+template <typename D>
+void regressedMethod(
+    D& ynew, std::vector<D>& coefficents, double x1, double x2, double x3);
 
-inline auto M2_TO_FT2(const double x)
-{
-    using namespace Units;
-    return scale(m2, ft2) * x;
-}
-
-inline auto KJ_TO_KWH(const double x)
-{
-    using namespace Units;
-    return scale(kJ, kWh) * x;
-}
-
-inline auto KWH_TO_BTU(const double x)
-{
-    using namespace Units;
-    return scale(kWh, Btu) * x;
-}
-
-inline auto KW_TO_BTUperH(const double x)
-{
-    using namespace Units;
-    return scale(kW, Btu_per_h) * x;
-}
-inline auto BTUperH_TO_KW(const double x)
-{
-    using namespace Units;
-    return scale(Btu_per_h, kW) * x;
-}
-
-inline auto GAL_TO_L(const double x)
-{
-    using namespace Units;
-    return scale(gal, L) * x;
-}
+/// applies five-term regression for MP split systems
+template <typename D>
+void regressedMethodMP(D& ynew, std::vector<D>& coefficents, double x1, double x2);
 
 typedef Units::TimePair<Units::Time::h, Units::Time::min> Time_h_min;
 

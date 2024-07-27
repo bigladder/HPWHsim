@@ -78,7 +78,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 
     condensity = hSource.condensity;
 
-    shrinkageT = hSource.shrinkageT;
+    shrinkage_dT = hSource.shrinkage_dT;
 
     perfMap = hSource.perfMap;
 
@@ -159,7 +159,7 @@ bool HPWH::HeatSource::shouldLockOut(Temp_t heatSourceAmbientT) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() && heatSourceAmbientT < minT - hysteresis_dT)
+        if (isEngaged() && (heatSourceAmbientT < minT - hysteresis_dT))
         {
             lock = true;
         }
@@ -463,7 +463,7 @@ HPWH::Temp_t HPWH::HeatSource::getTankT() const
 
 void HPWH::HeatSource::getCapacity(Temp_t externalT,
                                    Temp_t condenserT,
-                                   Temp_t setpointT,
+                                   Temp_t tempSetpointT,
                                    Power_t& inputPower,
                                    Power_t& outputPower,
                                    double& cop)
@@ -472,8 +472,8 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
 
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    double effCondenserT = condenserT + secondaryHeatExchanger.coldSideOffset_dT;
-    double effOutletT = setpointT + secondaryHeatExchanger.hotSideOffset_dT;
+    Temp_t effCondenserT = {condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
+    Temp_t effOutletT = {tempSetpointT(Units::C) + secondaryHeatExchanger.hotSideOffset_dT(Units::dC), Units::C};
 
     // Get bounding performance map points for interpolation/extrapolation
     // bool extrapolate = false;
@@ -487,7 +487,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
     {
         if (perfMap.empty())
         { // Avoid using empty perfMap
-            input_kW = 0.;
+            inputPower = 0.;
             cop = 0.;
         }
         else if (perfMap.size() > 1)
@@ -496,7 +496,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
             size_t i_next = 1;
             for (size_t i = 0; i < perfMap.size(); ++i)
             {
-                if (externalT_C < perfMap[i].T_C)
+                if (externalT < perfMap[i].T)
                 {
                     if (i == 0)
                     {
@@ -525,56 +525,56 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
 
             // Calculate COP and Input Power at each of the two reference temepratures
             double COP_T1 = // cop at ambient temperature T1
-                expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT_C);
+                expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
 
             double COP_T2 = // cop at ambient temperature T2
-                expandSeries(perfMap[i_next].COP_coeffs, effCondenserT_C);
+                expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
 
-            double inputPower_T1_kW = // input power at ambient temperature T1
-                expandSeries(perfMap[i_prev].inputPower_coeffs_kW, effCondenserT_C);
+            Power_t inputPower_T1 = // input power at ambient temperature T1
+                expandSeries(perfMap[i_prev].inputPower_coeffs, effCondenserT);
 
-            double inputPower_T2_kW = // input power at ambient temperature T2
-                expandSeries(perfMap[i_next].inputPower_coeffs_kW, effCondenserT_C);
+            Power_t inputPower_T2 = // input power at ambient temperature T2
+                expandSeries(perfMap[i_next].inputPower_coeffs, effCondenserT);
 
             // Interpolate to get COP and input power at the current ambient temperature
-            linearInterp(input_kW,
-                         externalT_C,
-                         perfMap[i_prev].T_C,
-                         perfMap[i_next].T_C,
-                         inputPower_T1_kW,
-                         inputPower_T2_kW);
+            linearInterp(inputPower,
+                         externalT,
+                         perfMap[i_prev].T,
+                         perfMap[i_next].T,
+                         inputPower_T1,
+                         inputPower_T2);
 
             linearInterp(
-                cop, externalT_C, perfMap[i_prev].T_C, perfMap[i_next].T_C, COP_T1, COP_T2);
+                cop, externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
         }
         else
         { // perfMap.size() == 1 or we've got an issue.
-            if (externalT_C > perfMap[0].T_C)
+            if (externalT > perfMap[0].T)
             {
                 // extrapolate = true;
                 if (extrapolationMethod == EXTRAP_NEAREST)
                 {
-                    externalT_C = perfMap[0].T_C;
+                    externalT = perfMap[0].T;
                 }
             }
 
-            regressedMethod(input_kW,
-                            perfMap[0].inputPower_coeffs_kW,
-                            externalT_C,
-                            effOutletT_C,
-                            effCondenserT_C);
+            regressedMethod(inputPower,
+                            perfMap[0].inputPower_coeffs,
+                            externalT,
+                            effOutletT,
+                            effCondenserT);
 
-            regressedMethod(cop, perfMap[0].COP_coeffs, externalT_C, effOutletT_C, effCondenserT_C);
+            regressedMethod(cop, perfMap[0].COP_coeffs, externalT, effOutletT, effCondenserT);
         }
     }
 
     if (doDefrost)
     {
         // adjust COP by the defrost factor
-        defrostDerate(cop, externalT_C);
+        defrostDerate(cop, externalT);
     }
 
-    cap_kW = cop * input_kW;
+    outputPower = cop * inputPower;
 
     // here is where the scaling for flow restriction happens
     // the input power doesn't change, we just scale the cop by a small percentage
@@ -586,70 +586,70 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
         double airflow = 375 * airflowFreedom;
         cop *= 0.00056 * airflow + 0.79;
     }
-    if (hpwh->hpwhVerbosity >= VRB_typical)
+    if (cop < 0.)
     {
-        hpwh->msg("cop: %.2lf \tinput_kW: %.2lf \tcap_kW: %.2lf \n", cop, input_kW, cap_kW);
-        if (cop < 0.)
-        {
-            hpwh->msg(" Warning: COP is Negative! \n");
-        }
-        if (cop < 1.)
-        {
-            hpwh->msg(" Warning: COP is Less than 1! \n");
-        }
+        send_warning("Warning: COP is Negative!");
+    }
+    if (cop < 1.)
+    {
+        send_warning("Warning: COP is Less than 1!");
     }
 }
 
 void HPWH::HeatSource::getCapacityMP(
-    double externalT_C, double condenserT_C, double& input_kW, double& cap_kW, double& cop)
+    Temp_t externalT,
+    Temp_t condenserT,
+    Power_t& inputPower,
+    Power_t& outputPower,
+    double& cop)
 {
     bool resDefrostHeatingOn = false;
 
-    double effCondenserT_C = condenserT_C + secondaryHeatExchanger.coldSideOffsetT_C;
+    Temp_t effCondenserT = {condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
-    if (resDefrost.inputPwr_kW > 0)
+    if (resDefrost.inputPwr > 0)
     {
-        if (externalT_C < resDefrost.onBelowT_C)
+        if (externalT < resDefrost.onBelowT)
         {
-            externalT_C += resDefrost.constLiftT_C;
+            externalT = {externalT(Units::C) + resDefrost.constLift_dT(Units::dC), Units::C};
             resDefrostHeatingOn = true;
         }
     }
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_C, effCondenserT_C};
-        btwxtInterp(input_kW, cop, target);
+        TempVect_t target = {{externalT(Units::C), effCondenserT(Units::C)}, Units::C};
+        btwxtInterp(inputPower, cop, target);
     }
     else
     {
         // Get bounding performance map points for interpolation/extrapolation
-        if (externalT_C > perfMap[0].T_C)
+        if (externalT > perfMap[0].T)
         {
             if (extrapolationMethod == EXTRAP_NEAREST)
             {
-                externalT_C = perfMap[0].T_C;
+                externalT = perfMap[0].T;
             }
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(input_kW, perfMap[0].inputPower_coeffs_kW, externalT_C, effCondenserT_C);
-        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT_C, effCondenserT_C);
+        regressedMethodMP(inputPower, perfMap[0].inputPower_coeffs, externalT, effCondenserT);
+        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT, effCondenserT);
     }
 
     if (doDefrost)
     {
         // adjust COP by the defrost factor
-        defrostDerate(cop, externalT_C);
+        defrostDerate(cop, externalT);
     }
 
-    cap_kW = cop * input_kW;
+    outputPower = cop * inputPower;
 
     // For accounting add the resistance defrost to the input energy
     if (resDefrostHeatingOn)
     {
-        input_kW += resDefrost.inputPwr_kW;
+        inputPower += resDefrost.inputPwr;
     }
 }
 
@@ -657,9 +657,9 @@ void HPWH::HeatSource::setupDefrostMap(double derate35 /*=0.8865*/)
 {
     doDefrost = true;
     defrostMap.reserve(3);
-    defrostMap.push_back({F_TO_C(17.), 1.});
-    defrostMap.push_back({F_TO_C(35.), derate35});
-    defrostMap.push_back({F_TO_C(47.), 1.});
+    defrostMap.push_back({{17., Units::F}, 1.});
+    defrostMap.push_back({{35., Units::F}, derate35});
+    defrostMap.push_back({{47., Units::F}, 1.});
 }
 
 void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
@@ -680,79 +680,18 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
         }
     }
     linearInterp(derate_factor,
-                 airT_C,
-                 defrostMap[i_prev].T_C,
-                 defrostMap[i_prev + 1].T_C,
+                 airT,
+                 defrostMap[i_prev].T,
+                 defrostMap[i_prev + 1].T,
                  defrostMap[i_prev].derate_fraction,
                  defrostMap[i_prev + 1].derate_fraction);
     to_derate *= derate_factor;
 }
 
-void HPWH::HeatSource::setupDefrostMap(double derate35 /*=0.8865*/)
-{
-    doDefrost = true;
-    defrostMap.reserve(3);
-    defrostMap.push_back({17., 1.});
-    defrostMap.push_back({35., derate35});
-    defrostMap.push_back({47., 1.});
-}
-
-void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_F)
-{
-    if (airT_F <= defrostMap[0].T_F || airT_F >= defrostMap[defrostMap.size() - 1].T_F)
-    {
-        return; // Air temperature outside bounds of the defrost map. There is no extrapolation
-                // here.
-    }
-    double derate_factor = 1.;
-    size_t i_prev = 0;
-    for (size_t i = 1; i < defrostMap.size(); ++i)
-    {
-        if (airT_F <= defrostMap[i].T_F)
-        {
-            i_prev = i - 1;
-            break;
-        }
-    }
-    linearInterp(derate_factor,
-                 airT_F,
-                 defrostMap[i_prev].T_F,
-                 defrostMap[i_prev + 1].T_F,
-                 defrostMap[i_prev].derate_fraction,
-                 defrostMap[i_prev + 1].derate_fraction);
-    to_derate *= derate_factor;
-}
-
-template <typename U>
-void HPWH::HeatSource::linearInterp(
-    U& ynew, U xnew, U x0, U x1, U y0, U y1)
-{
-    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
-}
-
-void HPWH::HeatSource::regressedMethod(
-    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
-{
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
-           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
-           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
-           coefficents[10] * x1 * x2 * x3;
-}
-
-void HPWH::HeatSource::regressedMethodMP(double& ynew,
-                                         std::vector<double>& coefficents,
-                                         double x1,
-                                         double x2)
-{
-    // Const Tair Tin Tair2 Tin2 TairTin
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
-           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
-}
-
-void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, TempVect_t& target)
+void HPWH::HeatSource::btwxtInterp(Power_t& inputPower, double& cop, TempVect_t& target)
 {
     std::vector<double> result = perfRGI->get_values_at_target(target);
-    input_BTUperHr = result[0];
+    inputPower = result[0];
     cop = result[1];
 }
 
@@ -768,7 +707,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
         calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tankTemps_C, hpwh->setpoint_C);
+            heatDistribution, shrinkage_dT, lowestNode, hpwh->tankTs, hpwh->setpointT);
     }
 }
 
@@ -856,7 +795,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
         Time_t heatingTime = remainingTime;
         if (heatingCapacity > neededHeat)
         {
-            heatingTime = (neededHeat / heatingCapacity) * heatingTime;
+            heatingTime *= (neededHeat / heatingCapacity);
             remainingTime -= heatingTime;
         }
         else
@@ -1037,7 +976,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         outputPower = {outputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
         cop /= elapsedTime(Units::s);
         hpwh->condenserInletT = condenserInletT_sum / elapsedTime;
-        hpwh->condenserOutletT = condenserInletT_sum / elapsedTime;
+        hpwh->condenserOutletT = condenserOutletT_sum / elapsedTime;
     }
 
     // return the elapsed time
@@ -1058,13 +997,13 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
 
     perfMap.push_back({
         {50, Units::F},                // Temperature (T_F)
-        {power(Units::W), 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+        {{power(Units::W), 0.0, 0.0}, Units::W}, // Input Power Coefficients (inputPower_coeffs)
         {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
     });
 
     perfMap.push_back({
         {67, Units::F},                // Temperature (T_F)
-        {power(Units::W), 0.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+        {{power(Units::W), 0.0, 0.0}, Units::W}, // Input Power Coefficients (inputPower_coeffs)
         {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
     });
 
