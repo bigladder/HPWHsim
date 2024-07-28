@@ -494,6 +494,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
         {
             size_t i_prev = 0;
             size_t i_next = 1;
+            std::vector<double> pNext = perfMap[i_prev].inputPower_coeffs;
             for (size_t i = 0; i < perfMap.size(); ++i)
             {
                 if (externalT < perfMap[i].T)
@@ -523,29 +524,29 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
+            auto pPrev = pNext;
+            pNext = perfMap[i_next].inputPower_coeffs;
             // Calculate COP and Input Power at each of the two reference temepratures
-            double COP_T1 = // cop at ambient temperature T1
-                expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
+            double COP_T1 = 0; // cop at ambient temperature T1
+                //expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
 
-            double COP_T2 = // cop at ambient temperature T2
-                expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
+            double COP_T2 = 0;// cop at ambient temperature T2
+                //expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
 
-            Power_t inputPower_T1 = // input power at ambient temperature T1
-                expandSeries(perfMap[i_prev].inputPower_coeffs, effCondenserT);
+            Power_t inputPower_T1 = 0;// input power at ambient temperature T1
+                //expandSeries(pPrev, effCondenserT);
 
-            Power_t inputPower_T2 = // input power at ambient temperature T2
-                expandSeries(perfMap[i_next].inputPower_coeffs, effCondenserT);
+            Power_t inputPower_T2 = 0;// input power at ambient temperature T2
+                //expandSeries(pNext, effCondenserT);
 
             // Interpolate to get COP and input power at the current ambient temperature
-            linearInterp(inputPower,
-                         externalT,
+            inputPower = linearInterp(externalT,
                          perfMap[i_prev].T,
                          perfMap[i_next].T,
                          inputPower_T1,
                          inputPower_T2);
 
-            linearInterp(
-                cop, externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
+            cop = linearInterp(externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
         }
         else
         { // perfMap.size() == 1 or we've got an issue.
@@ -679,7 +680,7 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
             break;
         }
     }
-    linearInterp(derate_factor,
+    derate_factor = linearInterp(
                  airT,
                  defrostMap[i_prev].T,
                  defrostMap[i_prev + 1].T,
@@ -706,8 +707,7 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     }
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
-        calcThermalDist(
-            heatDistribution, shrinkage_dT, lowestNode, hpwh->tankTs, hpwh->setpointT);
+        heatDistribution = calcThermalDist(shrinkage_dT, lowestNode, hpwh->tankTs, hpwh->setpointT);
     }
 }
 

@@ -173,7 +173,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric(HPWH::Volume_t(800., Units::L), HPWH::RFactor_t(10., Units::), elementPower);
+    hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::ft2hF_per_Btu}, elementPower, elementPower);
 
     // Check only bottom setting works
     double factor = 3.;
