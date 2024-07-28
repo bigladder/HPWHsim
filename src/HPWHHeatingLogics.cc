@@ -193,8 +193,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<Temp_t> resampledTankTs(LOGIC_SIZE);
-    resample(resampledTankTs, hpwh->tankTs);
+    TempVect_t resampledTankTs = resample(LOGIC_SIZE, hpwh->tankTs);
     double comparisonT = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
     double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;

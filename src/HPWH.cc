@@ -132,9 +132,7 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
 ///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
 /// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-template <typename T>
-double
-getResampledValue(const std::vector<T>& sampleValues, double beginFraction, double endFraction)
+double getResampledValue(const std::vector<double> sampleValues, double beginFraction, double endFraction)
 {
     if (beginFraction > endFraction)
         std::swap(beginFraction, endFraction);
@@ -176,12 +174,12 @@ getResampledValue(const std::vector<T>& sampleValues, double beginFraction, doub
 ///	@param[in]		sampleValues	Contains values to replace with
 /// @return	Success: true; Failure: false
 //-----------------------------------------------------------------------------
-template <typename T>
-bool resample(std::vector<T>& values, const std::vector<T>& sampleValues)
+std::vector<double> resample(const std::size_t N, const std::vector<double> sampleValues)
 {
     if (sampleValues.empty())
-        return false;
-    double actualSize = static_cast<double>(values.size());
+        return {};
+    std::vector<double> values(N);
+    double actualSize = static_cast<double>(N);
     double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
     double beginFraction = 0., endFraction;
@@ -212,25 +210,20 @@ bool resample(std::vector<T>& values, const std::vector<T>& sampleValues)
         }
         beginFraction = endFraction;
     }
-    return true;
+    return values;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-template <typename V>
-Unity::ScaleVect<Unity::Power, 0> resampleExtensive(V& values, const V& sampleValues)
+std::vector<double> resampleExtensive(const std::size_t N, const std::vector<double> sampleValues)
 {
-    if (resample(values, sampleValues))
-    {
-        double scale =
-            static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
-        for (auto& value : values)
-            value *= scale;
-        return true;
-    }
-    return false;
+    std::vector<double> values = resample(N, sampleValues);
+    double scale =  static_cast<double>(sampleValues.size()) / static_cast<double>(N);
+    for (auto& value : values)
+        value *= scale;
+    return values;
 }
 
 double expitFunc(double x, double offset)
@@ -311,8 +304,7 @@ int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes)
 ///								is derived
 /// @returns	width parameter (in degC)
 //-----------------------------------------------------------------------------
-template <typename T>
-HPWH::Temp_d_t findShrinkage_dT(const std::vector<T>& nodeDist)
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist)
 {
     double condentropy = 0.;
     for (std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode)
@@ -340,11 +332,10 @@ HPWH::Temp_d_t findShrinkage_dT(const std::vector<T>& nodeDist)
 /// @param[in]	nodeTemp_C		node temperatures
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
-std::vector<double> calcThermalDist(
-                     HPWH::Temp_d_t shrinkage_dT,
-                     int lowestNode,
-                     const std::vector<double> nodeTs,
-                     HPWH::Temp_t setpointT)
+std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
+                  int lowestNode,
+                  const HPWH::TempVect_t& nodeTs,
+                  const HPWH::Temp_t setpointT)
 {
     std::vector<double> thermalDist(nodeTs.size());
 
@@ -402,8 +393,8 @@ double linearInterp(double xnew, double x0, double x1, double y0, double y1)
     return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-template <typename T>
-double expandSeries(const std::vector<T>& coeffs, const double x)
+template <typename V>
+double expandSeries(const V& coeffs, const double x)
 {
     double y = 0.;
     for (auto& pCoeff: coeffs)
@@ -413,9 +404,10 @@ double expandSeries(const std::vector<T>& coeffs, const double x)
     return y;
 }
 
-std::vector<double> changeSeriesUnits(const std::vector<double> coeffs, const Units::Temp fromUnits, const Units::Temp toUnits)
+template <typename V, typename T>
+V changeSeriesUnits(const V& coeffs, const T fromUnits, const T toUnits)
 {
-    std::vector<double> newCoeffs = coeffs;
+    V newCoeffs = coeffs;
     for (std::size_t j = 0; j < coeffs.size(); ++j)
     {
         for (std::size_t i = j + 1; i < coeffs.size(); ++i)
@@ -444,19 +436,19 @@ double choose(const int n, const int i)
     return f;
 }
 
-double regressedMethod(const std::vector<double> coefficents, double x1, double x2, double x3)
+double regressedMethod(const std::vector<double> coeffs, double x1, double x2, double x3)
 {
-    return coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
-           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
-           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
-           coefficents[10] * x1 * x2 * x3;
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x3 +
+           coeffs[4] * x1 * x1 + coeffs[5] * x2 * x2 + coeffs[6] * x3 * x3 +
+           coeffs[7] * x1 * x2 + coeffs[8] * x1 * x3 + coeffs[9] * x2 * x3 +
+           coeffs[10] * x1 * x2 * x3;
 }
 
-double regressedMethodMP(const std::vector<double> coefficents, double x1, double x2)
+double regressedMethodMP(const std::vector<double> coeffs, double x1, double x2)
 {
     // Const Tair Tin Tair2 Tin2 TairTin
-    return coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
-           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x1 * x1 +
+           coeffs[4] * x2 * x2 + coeffs[5] * x1 * x2;
 }
 
 const std::vector<int> HPWH::powers3 = {0, 1, 2};
@@ -1377,7 +1369,7 @@ void HPWH::resetTankToSetpoint() { setTankToT(setpointT); }
 /// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
 //-----------------------------------------------------------------------------
-void HPWH::setTankLayerTs(std::vector<Temp_t> setTankTs)
+void HPWH::setTankTs(const TempVect_t setTankTs)
 {
     std::size_t numSetNodes = setTankTs.size();
     if (numSetNodes == 0)
@@ -1386,13 +1378,11 @@ void HPWH::setTankLayerTs(std::vector<Temp_t> setTankTs)
     }
 
     // set node temps
-    if (!resampleIntensive(tankTs, setTankTs))
-    {
-        send_error("Unable to resample tank temperatures.");
-    }
+    tankTs = resampleIntensive(getNumNodes(), setTankTs);
+
 }
 
-void HPWH::getTankTs(std::vector<Temp_t>& tankTemps) { tankTemps = tankTs; }
+void HPWH::getTankTs(TempVect_t& tankTemps) { tankTemps = tankTs; }
 
 void HPWH::setAirFlowFreedom(double fanFraction)
 {
@@ -2163,8 +2153,7 @@ HPWH::Temp_t HPWH::getAverageTankT() const
 //-----------------------------------------------------------------------------
 HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
-    std::vector<Temp_t> resampledTankTs(dist.size());
-    resample(resampledTankTs, tankTs);
+    TempVect_t resampledTankTs = resample(dist.size(), tankTs);
 
     Temp_t tankT(0);
 
@@ -2192,8 +2181,7 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeig
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<Temp_t> resampledTankTs(LOGIC_SIZE);
-    resample(resampledTankTs, tankTs);
+    TempVect_t resampledTankTs = resample(LOGIC_SIZE, tankTs);
 
     for (auto& nodeWeight : nodeWeights)
     {
@@ -2217,7 +2205,7 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeig
     return Temp_t(sum / totWeight);
 }
 
-void HPWH::setTankToT(Temp_t T) { setTankLayerTs({T}); }
+void HPWH::setTankToT(Temp_t T) { setTankTs({{T, T}}); }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -2913,7 +2901,8 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 ///	@brief	Modifies a heat distribution using a thermal distribution.
 /// @param[in,out]	heatDistribution_W		The distribution to be modified
 //-----------------------------------------------------------------------------
-std::vector<double> HPWH::modifyHeatDistribution(std::vector<double> heatDistribution)
+template <typename V>
+V HPWH::modifyHeatDistribution(V heatDistribution)
 {
     double totalHeat = 0.;
     for (auto& heatDist : heatDistribution)
@@ -2943,12 +2932,9 @@ std::vector<double> HPWH::modifyHeatDistribution(std::vector<double> heatDistrib
 void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 {
 
-    auto modHeatDistribution = extraHeatDist;
-    modifyHeatDistribution(modHeatDistribution);
+    auto modHeatDistribution = modifyHeatDistribution(extraHeatDist);
 
-    PowerVect_t heatDistribution;
-    heatDistribution.resize(getNumNodes());
-    heatDistribution = resampleExtensive(heatDistribution, modHeatDistribution);
+    PowerVect_t heatDistribution  = resampleExtensive(getNumNodes(), modHeatDistribution);
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded = 0.;
