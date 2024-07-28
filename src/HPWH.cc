@@ -219,8 +219,8 @@ bool resample(std::vector<T>& values, const std::vector<T>& sampleValues)
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-template <typename D>
-bool resampleExtensive(std::vector<D>& values, const std::vector<D>& sampleValues)
+template <typename V>
+Unity::ScaleVect<Unity::Power, 0> resampleExtensive(V& values, const V& sampleValues)
 {
     if (resample(values, sampleValues))
     {
@@ -240,8 +240,7 @@ double expitFunc(double x, double offset)
     return val;
 }
 
-template <typename D>
-void normalize(std::vector<D>& distribution)
+std::vector<double> normalize(std::vector<double> distribution)
 {
     size_t N = distribution.size();
 
@@ -280,6 +279,7 @@ void normalize(std::vector<D>& distribution)
             }
         }
     }
+    return distribution;
 }
 
 //-----------------------------------------------------------------------------
@@ -288,7 +288,7 @@ void normalize(std::vector<D>& distribution)
 /// @param[in]	numTankNodes	number of nodes in tank
 /// @returns	index of lowest tank node
 //-----------------------------------------------------------------------------
-int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
+int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes)
 {
     int lowest = 0;
     const int distSize = static_cast<int>(nodeDist.size());
@@ -302,7 +302,6 @@ int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
             break;
         }
     }
-
     return lowest;
 }
 
@@ -341,15 +340,13 @@ HPWH::Temp_d_t findShrinkage_dT(const std::vector<T>& nodeDist)
 /// @param[in]	nodeTemp_C		node temperatures
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
-template <typename D>
-void calcThermalDist(std::vector<D>& thermalDist,
+std::vector<double> calcThermalDist(
                      HPWH::Temp_d_t shrinkage_dT,
                      int lowestNode,
-                     const std::vector<HPWH::Temp_t>& nodeTs,
+                     const std::vector<double> nodeTs,
                      HPWH::Temp_t setpointT)
 {
-
-    thermalDist.resize(nodeTs.size());
+    std::vector<double> thermalDist(nodeTs.size());
 
     // Populate the vector of heat distribution
     double totDist = 0.;
@@ -378,6 +375,7 @@ void calcThermalDist(std::vector<D>& thermalDist,
     {
         thermalDist.assign(thermalDist.size(), 1. / static_cast<double>(thermalDist.size()));
     }
+    return thermalDist;
 }
 
 //-----------------------------------------------------------------------------
@@ -385,40 +383,39 @@ void calcThermalDist(std::vector<D>& thermalDist,
 /// @param[in/out]	coeffs		values to be scaled
 /// @param[in]	scaleFactor 	scaling factor
 //-----------------------------------------------------------------------------
-template <typename T>
-void scaleVector(std::vector<T>& coeffs, const double scaleFactor)
+template <typename V>
+V scaleVector(const V& coeffs, const double scaleFactor)
 {
+    V dcoeffs = coeffs;
     if (scaleFactor != 1.)
     {
-        std::transform(coeffs.begin(),
-                       coeffs.end(),
-                       coeffs.begin(),
-                       std::bind(std::multiplies<T>(), std::placeholders::_1, scaleFactor));
+        std::transform(dcoeffs.begin(),
+                       dcoeffs.end(),
+                       dcoeffs.begin(),
+                       std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
     }
+    return dcoeffs;
 }
 
-template <typename D>
-void linearInterp(D& ynew, D xnew, D x0, D x1, D y0, D y1)
+double linearInterp(double xnew, double x0, double x1, double y0, double y1)
 {
-    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
+    return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-template <typename D>
-double expandSeries(const std::vector<D>& coeffs, const double x)
+template <typename T>
+double expandSeries(const std::vector<T>& coeffs, const double x)
 {
-
     double y = 0.;
-    for (auto pCoeff = coeffs.rbegin(); pCoeff != coeffs.rend(); ++pCoeff)
+    for (auto& pCoeff: coeffs)
     {
-        y = (*pCoeff) + y * x;
+        y = pCoeff + y * x;
     }
     return y;
 }
 
-template <typename T, typename D>
-std::vector<D> changeSeriesUnits(const std::vector<D>& coeffs, const T fromUnits, const T toUnits)
+std::vector<double> changeSeriesUnits(const std::vector<double> coeffs, const Units::Temp fromUnits, const Units::Temp toUnits)
 {
-    std::vector<D> newCoeffs = coeffs;
+    std::vector<double> newCoeffs = coeffs;
     for (std::size_t j = 0; j < coeffs.size(); ++j)
     {
         for (std::size_t i = j + 1; i < coeffs.size(); ++i)
@@ -447,20 +444,18 @@ double choose(const int n, const int i)
     return f;
 }
 
-template <typename D>
-void regressedMethod(D& ynew, std::vector<D>& coefficents, double x1, double x2, double x3)
+double regressedMethod(const std::vector<double> coefficents, double x1, double x2, double x3)
 {
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
+    return coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
            coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
            coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
            coefficents[10] * x1 * x2 * x3;
 }
 
-template <typename D>
-void regressedMethodMP(D& ynew, std::vector<D>& coefficents, double x1, double x2)
+double regressedMethodMP(const std::vector<double> coefficents, double x1, double x2)
 {
     // Const Tair Tin Tair2 Tin2 TairTin
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
+    return coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
            coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
 
@@ -481,7 +476,7 @@ const std::vector<std::tuple<int, int, int>> HPWH::powers11 = {{0, 0, 0},
                                                                {0, 1, 1},
                                                                {1, 1, 1}};
 
-HPWH::PowerVect_t changeSeriesUnitsTemp3(const HPWH::PowerVect_t& coeffs,
+std::vector<double> changeSeriesUnitsTemp3(const std::vector<double> coeffs,
                                          const Units::Temp fromUnits,
                                          const Units::Temp toUnits)
 {
@@ -511,7 +506,7 @@ HPWH::PowerVect_t changeSeriesUnitsTemp3(const HPWH::PowerVect_t& coeffs,
     return newCoeffs;
 }
 
-std::vector<double> changeSeriesUnitsTemp6(const HPWH::PowerVect_t& coeffs,
+std::vector<double> changeSeriesUnitsTemp6(const std::vector<double> coeffs,
                                            const Units::Temp fromUnits,
                                            const Units::Temp toUnits)
 {
@@ -547,7 +542,7 @@ std::vector<double> changeSeriesUnitsTemp6(const HPWH::PowerVect_t& coeffs,
     return newCoeffs;
 }
 
-std::vector<double> changeSeriesUnitsTemp11(const HPWH::PowerVect_t& coeffs,
+std::vector<double> changeSeriesUnitsTemp11(const std::vector<double> coeffs,
                                             const Units::Temp fromUnits,
                                             const Units::Temp toUnits)
 {
@@ -2374,8 +2369,8 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
 
     for (auto& perfP : heatSources[compressorIndex].perfMap)
     {
-        scaleVector(perfP.inputPower_coeffs, scaleCapacity);
-        scaleVector(perfP.COP_coeffs, scaleCOP);
+        perfP.inputPower_coeffs = scaleVector(perfP.inputPower_coeffs, scaleCapacity);
+        perfP.COP_coeffs = scaleVector(perfP.COP_coeffs, scaleCOP);
     }
 }
 
@@ -2918,14 +2913,14 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 ///	@brief	Modifies a heat distribution using a thermal distribution.
 /// @param[in,out]	heatDistribution_W		The distribution to be modified
 //-----------------------------------------------------------------------------
-void HPWH::modifyHeatDistribution(std::vector<Power_t>& heatDistribution)
+std::vector<double> HPWH::modifyHeatDistribution(std::vector<double> heatDistribution)
 {
     double totalHeat = 0.;
     for (auto& heatDist : heatDistribution)
         totalHeat += heatDist;
 
     if (totalHeat == 0.)
-        return;
+        return heatDistribution;
 
     for (auto& heatDist : heatDistribution)
         heatDist /= totalHeat;
@@ -2933,12 +2928,12 @@ void HPWH::modifyHeatDistribution(std::vector<Power_t>& heatDistribution)
     Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution);
     int lowestNode = findLowestNode(heatDistribution, getNumNodes());
 
-    std::vector<Power_t> modHeatDistribution;
-    calcThermalDist(modHeatDistribution, shrinkage_dT, lowestNode, tankTs, setpointT);
-
-    heatDistribution = modHeatDistribution;
+    heatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
+    ;
     for (auto& heatDist : heatDistribution)
         heatDist *= totalHeat;
+
+    return heatDistribution;
 }
 
 //-----------------------------------------------------------------------------
@@ -2951,8 +2946,9 @@ void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
     auto modHeatDistribution = extraHeatDist;
     modifyHeatDistribution(modHeatDistribution);
 
-    std::vector<Power_t> heatDistribution(getNumNodes());
-    resampleExtensive(heatDistribution, modHeatDistribution);
+    PowerVect_t heatDistribution;
+    heatDistribution.resize(getNumNodes());
+    heatDistribution = resampleExtensive(heatDistribution, modHeatDistribution);
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded = 0.;
@@ -4748,7 +4744,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
             maxOutletT = std::max(outletT, maxOutletT);
             if (outletT <
-                maxOutletT - Temp_t(Temp_d_t(15., Units::dF),Units::F) // outletT has dropped by 15 degF below max T
+                maxOutletT - Temp_t(Temp_d_t(15., Units::dF),Units::F)) // outletT has dropped by 15 degF below max T
             {
                 avgOutletT = sumOutletVolumeT / sumOutletVolume;
                 minOutletT = outletT;
@@ -5205,7 +5201,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         hasStandbyPeriodEnded = true;
         standbyEndTime = endTime;
         standbyEndTankEnergy = testSummary.usedEnergy; // Qsu,0
-        standbyEndT = tank;                            // Tsu,0
+        standbyEndT = tankT;                            // Tsu,0
     }
 
     if (testOptions.saveOutput)
@@ -5263,7 +5259,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         Temp_t standbyAverageTankT = standbySumTimeTankT / standbyPeriodTime;
         Temp_t standbyAverageAmbientT = standbySumTimeAmbientT / standbyPeriodTime;
 
-        Temp_d_t dT = standbyAverageTankT - standbyAverageAmbientT;
+        Temp_d_t dT(standbyAverageTankT(Units::C) - standbyAverageAmbientT(Units::C), Units::dC);
         if (dT > 0.)
         {
             testSummary.standbyLossCoefficient = testSummary.standbyHourlyLossEnergy / dT; // UA
@@ -5599,7 +5595,7 @@ void HPWH::makeGeneric(const double targetUEF)
     standardTestOptions.saveOutput = false;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.setpointT = {51.7, Units::C};
 
     findFirstHourRating(firstHourRating, standardTestOptions);
     if (customTestOptions.overrideFirstHourRating)

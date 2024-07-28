@@ -68,8 +68,8 @@ void run(const std::string& sSpecType,
 
     const int nTestTCouples = 6;
 
-    const double soCMinTUse_C = F_TO_C(110.);
-    const double soCMains_C = F_TO_C(65.);
+    const HPWH::Temp_t soCMinUseT = {110., Units::F};
+    const HPWH::Temp_t soCMainsT = {65., Units::F};
 
     // Schedule stuff
     std::vector<string> scheduleNames;
@@ -77,8 +77,10 @@ void run(const std::string& sSpecType,
 
     string fileToOpen, fileToOpen2, scheduleName, var1;
     string inputVariableName, firstCol;
-    double testVal, newSetpoint, airTemp2, tempDepressThresh, inletH, newTankSize, tot_limit,
-        initialTankT_C;
+    double inletH, tot_limit;
+    HPWH::Volume_t newTankSize;
+    HPWH::Temp_t newSetpointT, air2T, initialTankT;
+    HPWH::Temp_d_t tempDepressThresh_dT;
     bool useSoC;
     int i, outputCode;
     long minutesToRun;
@@ -113,7 +115,7 @@ void run(const std::string& sSpecType,
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
 
     // Parse the model
-    newSetpoint = 0;
+    newSetpointT = {0, Units::C};
     if (sPresetOrFile == "Preset")
     {
 
@@ -121,7 +123,7 @@ void run(const std::string& sSpecType,
         model = static_cast<HPWH::MODELS>(hpwh.getModel());
         if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
         {
-            newSetpoint = (149 - 32) / 1.8;
+            newSetpointT = {149, Units::F};
         }
     }
     else if (sPresetOrFile == "File")
@@ -138,8 +140,8 @@ void run(const std::string& sSpecType,
 
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
-    tempDepressThresh = 4;
-    hpwh.setMaxTempDepression(tempDepressThresh);
+    tempDepressThresh_dT = {4, Units::dC};
+    hpwh.setMaxDepression_dT(tempDepressThresh_dT);
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
@@ -152,8 +154,8 @@ void run(const std::string& sSpecType,
     }
     outputCode = 0;
     minutesToRun = 0;
-    newSetpoint = 0.;
-    initialTankT_C = 0.;
+    newSetpointT = {0., Units::C};
+    initialTankT = {0., Units::C};
     doCondu = 1;
     doInvMix = 1;
     inletH = 0.;
@@ -163,11 +165,12 @@ void run(const std::string& sSpecType,
     bool hasInitialTankTemp = false;
     cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << testDirectory << endl;
 
+    double testVal;
     while (controlFile >> var1 >> testVal)
     {
         if (var1 == "setpoint")
         { // If a setpoint was specified then override the default
-            newSetpoint = testVal;
+            newSetpointT = {testVal, Units::C};
         }
         else if (var1 == "length_of_test")
         {
@@ -187,7 +190,7 @@ void run(const std::string& sSpecType,
         }
         else if (var1 == "tanksize")
         {
-            newTankSize = testVal;
+            newTankSize = {testVal, Units::L};
         }
         else if (var1 == "tot_limit")
         {
@@ -199,7 +202,7 @@ void run(const std::string& sSpecType,
         }
         else if (var1 == "initialTankT_C")
         { // Initialize at this temperature instead of setpoint
-            initialTankT_C = testVal;
+            initialTankT = {testVal, Units::C};
             hasInitialTankTemp = true;
         }
         else
@@ -251,7 +254,7 @@ void run(const std::string& sSpecType,
     {
         hpwh.setDoConduction(false);
     }
-    if (newSetpoint > 0)
+    if (newSetpointT(Units::C) > 0)
     {
         HPWH::Temp_t maxAllowedSetpointT;
         string why;
@@ -262,15 +265,15 @@ void run(const std::string& sSpecType,
                 hpwh.setSetpointT(allSchedules[5][0]);
             }
         }
-        else if (newSetpoint > 0)
+        else if (newSetpointT(Units::C) > 0)
         {
-            if (hpwh.isNewSetpointPossible(newSetpoint, maxAllowedSetpointT, why))
+            if (hpwh.isNewSetpointPossible(newSetpointT, maxAllowedSetpointT, why))
             {
-                hpwh.setSetpointT({newSetpoint, Units::F});
+                hpwh.setSetpointT(newSetpointT);
             }
         }
         if (hasInitialTankTemp)
-            hpwh.setTankToTemperature(initialTankT_C);
+            hpwh.setTankToT(initialTankT);
         else
             hpwh.resetTankToSetpoint();
     }
@@ -292,7 +295,7 @@ void run(const std::string& sSpecType,
         {
             cout << "If useSoC is true need an SoCschedule.csv file \n";
         }
-        hpwh.switchToSoCControls(1., .05, soCMinTUse_C, true, soCMains_C);
+        hpwh.switchToSoCControls(1., .05, soCMinUseT, true, soCMainsT);
     }
 
     // ----------------------Open the Output Files and Print the Header----------------------------
@@ -335,22 +338,22 @@ void run(const std::string& sSpecType,
     // ------------------------------------- Simulate --------------------------------------- //
     cout << "Now Simulating " << minutesToRun << " Minutes of the Test\n";
 
-    std::vector<double> nodeExtraHeat_W;
-    std::vector<double>* vectptr = NULL;
+    HPWH::PowerVect_t nodeExtraHeat;
+    HPWH::PowerVect_t* powerVect_ptr = NULL;
     // Loop over the minutes in the test
     for (i = 0; i < minutesToRun; i++)
     {
 
         if (HPWH_doTempDepress)
         {
-            airTemp2 = F_TO_C(airTemp);
+            air2T = {airTemp, Units::F};
         }
         else
         {
-            airTemp2 = allSchedules[2][i];
+            air2T = {allSchedules[2][i], Units::F};
         }
 
-        double tankHCStart = hpwh.getTankHeatContent_kJ();
+        auto tankHCStart = hpwh.getTankHeatContent();
 
         // Process the dr status
         drStatus = static_cast<HPWH::DRMODES>(int(allSchedules[4][i]));
@@ -358,7 +361,7 @@ void run(const std::string& sSpecType,
         // Change setpoint if there is a setpoint schedule.
         if (!allSchedules[5].empty() && !hpwh.isSetpointFixed())
         {
-            hpwh.setSetpoint(allSchedules[5][i]); // expect this to fail sometimes
+            hpwh.setSetpointT({allSchedules[5][i], Units::F}); // expect this to fail sometimes
         }
 
         // Change SoC schedule
@@ -371,26 +374,26 @@ void run(const std::string& sSpecType,
         if (hpwh.getModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
-            if (hpwh.getSetpoint() <= 125.)
+            if (hpwh.getSetpointT()(Units::F) <= 125.)
             {
                 allSchedules[1][i] *= (125. - allSchedules[0][i]) /
-                                      (hpwh.getTankNodeTemp(hpwh.getNumNodes() - 1, HPWH::UNITS_F) -
+                                      (hpwh.getTankNodeT(hpwh.getNumNodes() - 1)(Units::F) -
                                        allSchedules[0][i]);
             }
         }
 
         // Run the step
-        hpwh.runOneStep(allSchedules[0][i],           // Inlet water temperature (C)
-                        GAL_TO_L(allSchedules[1][i]), // Flow in gallons
-                        airTemp2,                     // Ambient Temp (C)
-                        allSchedules[3][i],           // External Temp (C)
+        hpwh.runOneStep({allSchedules[0][i], Units::C},           // Inlet water temperature (C)
+                        {allSchedules[1][i], Units::gal}, // Flow in gallons
+                        air2T,                     // Ambient Temp (C)
+                        {allSchedules[3][i], Units::C},           // External Temp (C)
                         drStatus, // DDR Status (now an enum. Fixed for now as allow)
-                        1. * GAL_TO_L(allSchedules[1][i]),
-                        allSchedules[0][i],
-                        vectptr);
+                        {1. * allSchedules[1][i], Units::gal},
+                        {allSchedules[0][i], Units::C},
+                        powerVect_ptr);
 
         if (!hpwh.isEnergyBalanced(
-                GAL_TO_L(allSchedules[1][i]), allSchedules[0][i], tankHCStart, EBALTHRESHOLD))
+                {allSchedules[1][i], Units::gal}, {allSchedules[0][i], Units::F}, tankHCStart, EBALTHRESHOLD))
         {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
             exit(1);
@@ -427,9 +430,9 @@ void run(const std::string& sSpecType,
             // Copy current status into the output file
             if (HPWH_doTempDepress)
             {
-                airTemp2 = hpwh.getLocationT()(Units::C);
+                air2T = hpwh.getLocationT();
             }
-            strPreamble = std::to_string(i) + ", " + std::to_string(airTemp2) + ", " +
+            strPreamble = std::to_string(i) + ", " + std::to_string(air2T) + ", " +
                           std::to_string(hpwh.getSetpointT()(Units::C)) + ", " +
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";
@@ -457,7 +460,7 @@ void run(const std::string& sSpecType,
             for (int iHS = 0; iHS < hpwh.getNumHeatSources(); iHS++)
             {
                 cumHeatIn[iHS] += hpwh.getNthHeatSourceEnergyInput(iHS)(Units::kWh) * 1000.;
-                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS(Units::kWh) * 1000.;
+                cumHeatOut[iHS] += hpwh.getNthHeatSourceEnergyOutput(iHS)(Units::kWh) * 1000.;
             }
         }
     }

@@ -650,7 +650,7 @@ class HPWH : public Courier::Sender
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
 
     /// attempt to change the setpoint
-    void setSetpointT(Temp_t newSetpoint); /**<default units C*/
+    void setSetpointT(Temp_t newSetpointT); /**<default units C*/
 
     Temp_t getSetpointT() const;
     /**< a function to check the setpoint - returns setpoint in celcius  */
@@ -1178,7 +1178,7 @@ class HPWH : public Courier::Sender
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
-    void modifyHeatDistribution(std::vector<Power_t>& heatDistribution);
+    std::vector<double> modifyHeatDistribution(std::vector<double> heatDistribution);
     void addExtraHeat(PowerVect_t& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
@@ -1713,21 +1713,20 @@ bool resampleExtensive(std::vector<double>& values, const std::vector<double>& s
 
 ///  helper functions
 double expitFunc(double x, double offset);
-void normalize(std::vector<double>& distribution);
-int findLowestNode(const std::vector<HPWH::Power_t>& nodeDist, const int numTankNodes);
-HPWH::Temp_d_t findShrinkage_dT(const std::vector<double>& nodeDist);
-void calcThermalDist(std::vector<double>& thermalDist,
-                     HPWH::Temp_d_t shrinkageT,
+std::vector<double> normalize(std::vector<double> distribution);
+int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes);
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist);
+std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkageT,
                      int lowestNode,
-                     const std::vector<HPWH::Temp_t>& nodeTs,
+                     const std::vector<HPWH::Temp_t> nodeTs,
                      const HPWH::Temp_t setpointT);
-void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
+template <typename V>
+V scaleVector(const V& coeffs, const double scaleFactor);
 
-template <typename D>
-void linearInterp(D& ynew, double xnew, double x0, double x1, D y0, D y1);
+double linearInterp(double xnew, double x0, double x1, double y0, double y1);
 
-template <typename D>
-double expandSeries(const std::vector<D>& coeffs, const double x);
+template <typename T>
+double expandSeries(const std::vector<T>& coeffs, const double x);
 
 /// applies ten-term regression
 template <typename D>

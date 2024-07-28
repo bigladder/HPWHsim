@@ -131,8 +131,6 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     const std::string sModelName = "ColmacCxA_30_SP";
     hpwh.initPreset(sModelName);
 
-    double capacity_kW, capacity_BTUperHr;
-
     // test hot //////////////////////////
     HPWH::Temp_t airT = {100., Units::F};
     HPWH::Temp_t waterT = {125., Units::F};
@@ -159,7 +157,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_SP)
     setpointT = {125., Units::F};
     capacityData = {74.2437689948, Units::kW};
 
-    capacity_BTUperHr = hpwh.getCompressorCapacity(airT, waterT, setpointT);
+    capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
     EXPECT_NEAR_REL(capacityData, capacity);
 }
@@ -177,19 +175,19 @@ TEST_F(PerformanceMapTest, ColmacCxV_5_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {10.0, 60.0, {8.7756391, Units::kW}};
+    checkPoint = {{{10.0, 60.0}, Units::F}, {8.7756391, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {10.0, 102.0, 9.945545, Units::kW}};
+    checkPoint = {{{10.0, 102.0}, Units::F}, {9.945545, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {70.0, 74.0, 19.09682784, Units::kW}};
+    checkPoint = {{{70.0, 74.0}, Units::F}, {19.09682784, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {70.0, 116.0, 18.97090763, Units::kW}};
+    checkPoint = {{{70.0, 116.0}, Units::F}, {18.97090763, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 116.0, 24.48703111, Units::kW}};
+    checkPoint = {{{100.0, 116.0}, Units::F}, {24.48703111, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -206,22 +204,22 @@ TEST_F(PerformanceMapTest, ColmacCxA_10_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {60.0, 66.0, 29.36581754, Units::kW}};
+    checkPoint = {{{60.0, 66.0}, Units::F}, {29.36581754, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {60.0, 114.0, 27.7407144, Units::kW}};
+    checkPoint = {{{60.0, 114.0}, Units::F}, {27.7407144, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 37.4860496, Units::kW}};
+    checkPoint = {{{80.0, 66.0}, Units::F}, {37.4860496, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 35.03416199, Units::kW}};
+    checkPoint = {{{80.0, 114.0}, Units::F}, {35.03416199, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 46.63144, Units::kW}};
+    checkPoint = {{{100.0, 66.0}, Units::F}, {46.63144, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 43.4308219, Units::kW}};
+    checkPoint = {{{100.0, 114.0}, Units::F}, {43.4308219, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -238,22 +236,22 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {60.0, 66.0, 37.94515042, Units::kW}};
+    checkPoint = {{{60.0, 66.0}, Units::F}, {37.94515042, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {60.0, 114.0, 35.2295393, Units::kW}};
+    checkPoint = {{{60.0, 114.0}, Units::F}, {35.2295393, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {80.0, 66.0, 50.360549115, Units::kW}};
+    checkPoint = {{{80.0, 66.0}, Units::F}, {50.360549115, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {80.0, 114.0, 43.528417017, Units::kW}};
+    checkPoint = {{{80.0, 114.0}, Units::F}, {43.528417017, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 66.2675493, Units::kW}};
+    checkPoint = {{{100.0, 66.0}, Units::F}, {66.2675493, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 55.941855, Units::kW}};
+    checkPoint = {{{100.0, 114.0}, Units::F}, {55.941855, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -270,22 +268,22 @@ TEST_F(PerformanceMapTest, ColmacCxA_20_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{60.0, 66.0, 57.0994624, Units::kW}};
+    checkPoint = {{{60.0, 66.0}, Units::F}, {57.0994624, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{60.0, 114.0, 53.554293, Units::kW}};
+    checkPoint = {{{60.0, 114.0}, Units::F}, {53.554293, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 66.0, 73.11242842, Units::kW}};
+    checkPoint = {{{80.0, 66.0}, Units::F}, {73.11242842, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 114.0, 68.034677, Units::kW}};
+    checkPoint = {{{80.0, 114.0}, Units::F}, {68.034677, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{100.0, 66.0, 90.289474295, Units::kW}};
+    checkPoint = {{{100.0, 66.0}, Units::F}, {90.289474295, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{100.0, 114.0, 84.69323, Units::kW}};
+    checkPoint = {{{100.0, 114.0}, Units::F}, {84.69323, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -302,22 +300,22 @@ TEST_F(PerformanceMapTest, ColmacCxA_25_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{60.0, 66.0, 67.28116620, Units::kW}};
+    checkPoint = {{{60.0, 66.0}, Units::F}, {67.28116620, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{60.0, 114.0, 63.5665037, Units::kW}};
+    checkPoint = {{{60.0, 114.0}, Units::F}, {63.5665037, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 66.0, 84.9221285742, Units::kW}};
+    checkPoint = {{{80.0, 66.0}, Units::F}, {84.9221285742, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 114.0, 79.6237088, Units::kW}};
+    checkPoint = {{{80.0, 114.0}, Units::F}, {79.6237088, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 66.0, 103.43268186, Units::kW}};
+    checkPoint = {{{100.0, 66.0}, Units::F}, {103.43268186, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {100.0, 114.0, 97.71458413, Units::kW}};
+    checkPoint = {{{100.0, 114.0}, Units::F}, {97.71458413, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -334,22 +332,22 @@ TEST_F(PerformanceMapTest, ColmacCxA_30_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{60.0, 66.0, 76.741462845, Units::kW}};
+    checkPoint = {{{60.0, 66.0}, Units::F}, {76.741462845, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{60.0, 114.0, 73.66879620, Units::kW}};
+    checkPoint = {{{60.0, 114.0}, Units::F}, {73.66879620, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 66.0, 94.863116775, Units::kW}};
+    checkPoint = {{{80.0, 66.0}, Units::F}, {94.863116775, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{80.0, 114.0, 90.998904269, Units::kW}};
+    checkPoint = {{{80.0, 114.0}, Units::F}, {90.998904269, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{100.0, 66.0, 112.864628, Units::kW}};
+    checkPoint = {{{100.0, 66.0}, Units::F}, {112.864628, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 
-    checkPoint = {{{100.0, 114.0, 109.444451, Units::kW}};
+    checkPoint = {{{100.0, 114.0}, Units::F}, {109.444451, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -368,13 +366,13 @@ TEST_F(PerformanceMapTest, RheemHPHD60)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{66.6666666, 60.0, 16.785535996, Units::kW}};
+    checkPoint = {{{66.6666666, 60.0}, Units::F}, {16.785535996, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{66.6666666, 120.0, 16.76198953, Units::kW}};
+    checkPoint = {{{66.6666666, 120.0}, Units::F}, {16.76198953, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{88.3333333, 80.0, 20.8571194294, Units::kW}};
+    checkPoint = {{{88.3333333, 80.0}, Units::F}, {20.8571194294, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{110.0, 100.0, 24.287512, Units::kW}};
+    checkPoint = {{{110.0, 100.0}, Units::F}, {24.287512, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -392,13 +390,13 @@ TEST_F(PerformanceMapTest, RheemHPHD135)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{66.6666666, 80.0, 38.560161199, Units::kW}};
+    checkPoint = {{{66.6666666, 80.0}, Units::F}, {38.560161199, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{66.6666666, 140.0, 34.70681846, Units::kW}};
+    checkPoint = {{{66.6666666, 140.0}, Units::F}, {34.70681846, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{88.3333333, 140.0, 42.40407101, Units::kW}};
+    checkPoint = {{{88.3333333, 140.0}, Units::F}, {42.40407101, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{110.0, 120.0, 54.3580927, Units::kW}};
+    checkPoint = {{{110.0, 120.0}, Units::F}, {54.3580927, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -414,11 +412,11 @@ TEST_F(PerformanceMapTest, NyleC60A_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{60.0, 60.0, 16.11, Units::kW}};
+    checkPoint = {{{60.0, 60.0}, Units::F}, {16.11, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{80.0, 60.0, 21.33, Units::kW}};
+    checkPoint = {{{80.0, 60.0}, Units::F}, {21.33, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{90.0, 130.0, 19.52, Units::kW}};
+    checkPoint = {{{90.0, 130.0}, Units::F}, {19.52, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -434,11 +432,11 @@ TEST_F(PerformanceMapTest, NyleC90A_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {60.0, 60.0, 28.19, Units::kW}};
+    checkPoint = {{{60.0, 60.0}, Units::F}, {28.19, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {80.0, 60.0, 37.69, Units::kW}};
+    checkPoint = {{{80.0, 60.0}, Units::F}, {37.69, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {90.0, 130.0, 36.27, Units::kW}};
+    checkPoint = {{{90.0, 130.0}, Units::F}, {36.27, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -454,11 +452,11 @@ TEST_F(PerformanceMapTest, NyleC125A_MP)
     PerformancePointMP checkPoint;
 
     // test some points outside of defrost ////////////////
-    checkPoint = {{{60.0, 60.0, 36.04, Units::kW}};
+    checkPoint = {{{60.0, 60.0}, Units::F}, {36.04, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{80.0, 60.0, 47.86, Units::kW}};
+    checkPoint = {{{80.0, 60.0}, Units::F}, {47.86, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
-    checkPoint = {{{90.0, 130.0, 43.80, Units::kW}};
+    checkPoint = {{{90.0, 130.0}, Units::F}, {43.80, Units::kW}};
     EXPECT_NEAR_REL(checkPoint.outputPower, getCapacityMP(hpwh, checkPoint));
 }
 
@@ -532,54 +530,54 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP)
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {14.0, 176.0, 84.2}, Units::F}, {92933.01932, Units::W}};
+    checkPoint = {{{14.0, 176.0, 84.2}, Units::F}, {92933.01932, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {42.8, 140.0, 41.0}, Units::F}, {136425.98804, Units::W}};
+    checkPoint = {{{42.8, 140.0, 41.0}, Units::F}, {136425.98804, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {50.0, 140.0, 41.0}, Units::F}, {136425.98804, Units::W}};
+    checkPoint = {{{50.0, 140.0, 41.0}, Units::F}, {136425.98804, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {50.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
+    checkPoint = {{{50.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
     // test
-    checkPoint = {60.8, 158.0, 84.2}, Units::F}, {136461.998288, Units::W}};
+    checkPoint = {{{60.8, 158.0, 84.2}, Units::F}, {136461.998288, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {71.6, 158.0, 48.2}, Units::F}, {136498.001712, Units::W}};
+    checkPoint = {{{71.6, 158.0, 48.2}, Units::F}, {136498.001712, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test constant with setpoint between 140 and 158
-    checkPoint = {71.6, 149.0, 48.2}, Units::F}, {136498.001712, Units::W}};
+    checkPoint = {{{71.6, 149.0, 48.2}, Units::F}, {136498.001712, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {82.4, 176.0, 41.0}, Units::F}, {136557.496756, Units::W}};
+    checkPoint = {{{82.4, 176.0, 41.0}, Units::F}, {136557.496756, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test
-    checkPoint = {104.0, 140.0, 62.6}, Units::F}, {136480, Units::W}};
+    checkPoint = {{{104.0, 140.0, 62.6}, Units::F}, {136480, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
     // test
-    checkPoint = {104.0, 158.0, 62.6}, Units::F}, {136480, Units::W}};
+    checkPoint = {{{104.0, 158.0, 62.6}, Units::F}, {136480, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
     // test
-    checkPoint = {104.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
+    checkPoint = {{{104.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 }
@@ -599,28 +597,28 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
     PerformancePointSP checkPoint; // airT, outT, inT, outputW
 
     // test linear along inT
-    checkPoint = {-13.0, 140.0, 36.0}, Units::F}, {66529.49616};
+    checkPoint = {{{-13.0, 140.0, 36.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
         getCapacitySP(
             hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
-    checkPoint = {-13.0, 140.0, 100.0}, Units::F}, {66529.49616};
+    checkPoint = {{{-13.0, 140.0, 100.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower >
         getCapacitySP(
             hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has decreased
 
     // test linear along inT
-    checkPoint = {-13.0, 176.0, 36.0, 65872.597448};
+    checkPoint = {{{-13.0, 176.0, 36.0}, Units::F}, {65872.597448, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
         getCapacitySP(
             hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
-    checkPoint = {-13.0, 176.0, 100.0}, Units::F}, {55913.249232};
+    checkPoint = {{{-13.0, 176.0, 100.0}, Units::F}, {55913.249232, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                                       checkPoint,
@@ -628,7 +626,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {10.4, 140.0, 111.}, Units::F}, {89000.085396};
+    checkPoint = {{{10.4, 140.0, 111.}, Units::F}, {89000.085396, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                                       checkPoint,
@@ -636,7 +634,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {64.4, 158.0, 100}, Units::F}, {136461.998288};
+    checkPoint = {{{64.4, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                                       checkPoint,
@@ -644,7 +642,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {86.0, 158.0, 100}, Units::F}, {136461.998288};
+    checkPoint = {{{86.0, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                                       checkPoint,
@@ -652,7 +650,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {104.0, 176.0, 100.}, Units::F}, {136564.470884};
+    checkPoint = {{{104.0, 176.0, 100.}, Units::F}, {136564.470884, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                                       checkPoint,
@@ -660,16 +658,16 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                                       out_dT_QAHV)); // Check output has decreased at high inT
 
     // test const along Tair
-    checkPoint = {110.0, 140.0, 62.6}, Units::F}, {136480};
+    checkPoint = {{{110.0, 140.0, 62.6}, Units::F}, {136480, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test const along Tair
-    checkPoint = {114.0, 176.0, 84.2}, Units::F}, {136564.470884};
+    checkPoint = {{{114.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
-    checkPoint = {114.0, 200.0, 84.2}, Units::F}, {136564.470884};
+    checkPoint = {{{114.0, 200.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_ANY_THROW(getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 }
 
@@ -686,19 +684,19 @@ TEST_F(PerformanceMapTest, Sanden120)
     double outputPower;
 
     // nominal
-    checkPoint = {{{60, 149.0, 41.0}, Units::F}, 15059.59167};
+    checkPoint = {{{60, 149.0, 41.0}, Units::F}, {15059.59167, Units::W}};
     outputPower = hpwh.getCompressorCapacity(
         checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // Cold outlet temperature
-    checkPoint = {60, 125.0, 41.0}, Units::F}, {15059.59167};
+    checkPoint = {{{60, 125.0, 41.0}, Units::F}, {15059.59167, Units::W}};
     outputPower = hpwh.getCompressorCapacity(
         checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // tests fails when output high
-    checkPoint = {60, 200, 41.0}, Units::F}, {15059.59167};
+    checkPoint = {{{60, 200, 41.0}, Units::F}, {15059.59167, Units::W}};
     EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
         checkPoint.airT, checkPoint.inT, checkPoint.outT));
 }
