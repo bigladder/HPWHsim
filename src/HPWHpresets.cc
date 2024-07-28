@@ -248,9 +248,9 @@ void HPWH::initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_d_t resUs
     });
 
     compressor->perfMap.push_back({
-        {70, Units::F},             // Temperature (T_F)
-        {{148.0418, 2.553291, 0.0}, Units::W},  // inputPower_coeffs
-        {7.207307, -0.0335265, 0.0} // COP_coeffs
+        {70, Units::F},                        // Temperature (T_F)
+        {{148.0418, 2.553291, 0.0}, Units::W}, // inputPower_coeffs
+        {7.207307, -0.0335265, 0.0}            // COP_coeffs
     });
 
     compressor->minT = {45., Units::F};
@@ -780,1434 +780,1498 @@ void HPWH::initPreset(MODELS presetNum)
         // compressor->addShutOffLogic(largeDraw(Temp_t(66)));
         compressor->addShutOffLogic(largeDraw({65, Units::dF}));
 
-    resistiveElementBottom->addTurnOnLogic(bottomThird(compStart_dT));
-    // resistiveElementBottom->addShutOffLogic(lowTreheat(lowTcutoff));
-    // GE element never turns off?
+        resistiveElementBottom->addTurnOnLogic(bottomThird(compStart_dT));
+        // resistiveElementBottom->addShutOffLogic(lowTreheat(lowTcutoff));
+        // GE element never turns off?
 
-    // resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(31.0, Units::F)));
-    resistiveElementTop->addTurnOnLogic(topThird({28.0, Units::F}));
+        // resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(31.0, Units::F)));
+        resistiveElementTop->addTurnOnLogic(topThird({28.0, Units::F}));
 
-    // and you have to do this after putting them into heatSources, otherwise
-    // you don't get the right pointers
-    resistiveElementBottom->backupHeatSource = compressor;
-    compressor->backupHeatSource = resistiveElementBottom;
+        // and you have to do this after putting them into heatSources, otherwise
+        // you don't get the right pointers
+        resistiveElementBottom->backupHeatSource = compressor;
+        compressor->backupHeatSource = resistiveElementBottom;
 
-    resistiveElementTop->followedByHeatSource = compressor;
-    compressor->followedByHeatSource = resistiveElementBottom;
-}
-// If a Colmac single pass preset cold weather or not
-else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
-{
-    setNumNodes(96);
-    setpointT = {135.0, Units::F};
-    tankSizeFixed = false;
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    tankVolume = {315, Units::L}; // Gets adjust per model but ratio between vol and UA is important
-    tankUA = {7, Units::kJ_per_hC};
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->isMultipass = false;
-    compressor->perfMap.reserve(1);
-    compressor->hysteresis_dT = 0;
-
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = getNumNodes() - 1;
-
-    // logic conditions
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights, Temp_d_t {15, Units::dF}, this));
-
-    // lowT cutoff
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(1);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>("bottom node",
-                                                                        nodeWeights1,
-                                                                        Temp_d_t {15., Units::dF},
-                                                                        this,
-                                                                        std::greater<double>(),
-                                                                        true));
-    compressor->depressesTemperature = false; // no temp depression
-
-    // Defrost Derate
-    compressor->setupDefrostMap();
-
-    if (presetNum == MODELS_ColmacCxV_5_SP)
-    {
-        setTankSizeWithSameU({200., Units::gal});
-        // logic conditions
-        compressor->minT = {-4.0, Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R410A;
-
-        compressor->perfMap.push_back({
-            {100, Units::F},
-
-            {{4.9621645063,
-              -0.0096084144,
-              -0.0095647009,
-              -0.0115911960,
-              -0.0000788517,
-              0.0000886176,
-              0.0001114142,
-              0.0001832377,
-              -0.0000451308,
-              0.0000411975,
-              0.0000003535},
-             Units::W}, // inputPower_coeffs
-
-            {3.8189922420,
-             0.0569412237,
-             -0.0320101962,
-             -0.0012859036,
-             0.0000576439,
-             0.0001101241,
-             -0.0000352368,
-             -0.0002630301,
-             -0.0000509365,
-             0.0000369655,
-             -0.0000000606} // COP_coeffs
-        });
+        resistiveElementTop->followedByHeatSource = compressor;
+        compressor->followedByHeatSource = resistiveElementBottom;
     }
-    else
+    // If a Colmac single pass preset cold weather or not
+    else if (MODELS_ColmacCxV_5_SP <= presetNum && presetNum <= MODELS_ColmacCxA_30_SP)
     {
-        // logic conditions
-        compressor->minT = {40., Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        setNumNodes(96);
+        setpointT = {135.0, Units::F};
+        tankSizeFixed = false;
 
-        if (presetNum == MODELS_ColmacCxA_10_SP)
-        {
-            setTankSizeWithSameU({500., Units::gal});
+        doTempDepression = false;
+        tankMixesOnDraw = false;
 
-            compressor->perfMap.push_back({
-                {100, Units::F},
+        tankVolume = {315,
+                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankUA = {7, Units::kJ_per_hC};
 
-                {{5.9786974243,
-                  0.0194445115,
-                  -0.0077802278,
-                  0.0053809029,
-                  -0.0000334832,
-                  0.0001864310,
-                  0.0001190540,
-                  0.0000040405,
-                  -0.0002538279,
-                  -0.0000477652,
-                  0.0000014101},
-                 Units::W}, // inputPower_coeffs
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
 
-                {3.6128563086,
-                 0.0527064498,
-                 -0.0278198945,
-                 -0.0070529748,
-                 0.0000934705,
-                 0.0000781711,
-                 -0.0000359215,
-                 -0.0002223206,
-                 0.0000359239,
-                 0.0000727189,
-                 -0.0000005037} // COP_coeffs
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_15_SP)
-        {
-            setTankSizeWithSameU({600., Units::gal});
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->isMultipass = false;
+        compressor->perfMap.reserve(1);
+        compressor->hysteresis_dT = 0;
 
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{15.5869846555,
-                  -0.0044503761,
-                  -0.0577941202,
-                  -0.0286911185,
-                  -0.0000803325,
-                  0.0003399817,
-                  0.0002009576,
-                  0.0002494761,
-                  -0.0000595773,
-                  0.0001401800,
-                  0.0000004312},
-                 Units::W}, // inputPower_coeffs
-
-                {1.6643120405,
-                 0.0515623393,
-                 -0.0110239930,
-                 0.0041514430,
-                 0.0000481544,
-                 0.0000493424,
-                 -0.0000262721,
-                 -0.0002356218,
-                 -0.0000989625,
-                 -0.0000070572,
-                 0.0000004108} // COP_coeffs
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_20_SP)
-        {
-            setTankSizeWithSameU({800., Units::gal});
-
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{23.0746692231,
-                  0.0248584608,
-                  -0.1417927282,
-                  -0.0253733303,
-                  -0.0004882754,
-                  0.0006508079,
-                  0.0002139934,
-                  0.0005552752,
-                  -0.0002026772,
-                  0.0000607338,
-                  0.0000021571},
-                 Units::W}, // inputPower_coeffs
-
-                {1.7692660120,
-                 0.0525134783,
-                 -0.0081102040,
-                 -0.0008715405,
-                 0.0001274956,
-                 0.0000369489,
-                 -0.0000293775,
-                 -0.0002778086,
-                 -0.0000095067,
-                 0.0000381186,
-                 -0.0000003135} // COP_coeffs
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_25_SP)
-        {
-            setTankSizeWithSameU({1000., Units::gal});
-
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{20.4185336541,
-                  -0.0236920615,
-                  -0.0736219119,
-                  -0.0260385082,
-                  -0.0005048074,
-                  0.0004940510,
-                  0.0002632660,
-                  0.0009820050,
-                  -0.0000223587,
-                  0.0000885101,
-                  0.0000005649},
-                 Units::W}, // inputPower_coeffs
-
-                {0.8942843854,
-                 0.0677641611,
-                 -0.0001582927,
-                 0.0048083998,
-                 0.0001196407,
-                 0.0000334921,
-                 -0.0000378740,
-                 -0.0004146401,
-                 -0.0001213363,
-                 -0.0000031856,
-                 0.0000006306} // COP_coeffs
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_30_SP)
-        {
-            setTankSizeWithSameU({1200., Units::gal});
-
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{11.3687485772,
-                  -0.0207292362,
-                  0.0496254077,
-                  -0.0038394967,
-                  -0.0005991041,
-                  0.0001304318,
-                  0.0003099774,
-                  0.0012092717,
-                  -0.0001455509,
-                  -0.0000893889,
-                  0.0000018221},
-                 Units::W}, // inputPower_coeffs
-
-                {4.4170108542,
-                 0.0596384263,
-                 -0.0416104579,
-                 -0.0017199887,
-                 0.0000774664,
-                 0.0001521934,
-                 -0.0000251665,
-                 -0.0003289731,
-                 -0.0000801823,
-                 0.0000325972,
-                 0.0000002705} // COP_coeffs
-            });
-        }
-    } // End if MODELS_ColmacCxV_5_SP
-}
-
-// if colmac multipass
-else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
-{
-    setNumNodes(24);
-    setpointT = {135.0, Units::F};
-    tankSizeFixed = false;
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    tankVolume = {315, Units::L}; // Gets adjust per model but ratio between vol and UA is important
-    tankUA = {7, Units::kJ_per_hC};
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->perfMap.reserve(1);
-    compressor->hysteresis_dT = 0;
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
-
-    // logic conditions
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
-
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(4);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
-
-    compressor->depressesTemperature = false; // no temp depression
-
-    // Defrost Derate
-    compressor->setupDefrostMap();
-
-    if (presetNum == MODELS_ColmacCxV_5_MP)
-    {
-        setTankSizeWithSameU({200., Units::L});
-        compressor->mpFlowRate = {9., Units::gal_per_min};
-        // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = getNumNodes() - 1;
 
         // logic conditions
-        compressor->minT = {-4.0, Units::F};
-        compressor->maxT = {105., Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R410A;
-        compressor->perfMap.push_back({
-            {100, Units::F},
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights, Temp_d_t {15, Units::dF}, this));
 
-            {{5.8438525529, 0.0003288231, -0.0494255840, -0.0000386642, 0.0004385362, 0.0000647268},
-             Units::W}, // inputPower_coeffs
+        // lowT cutoff
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(1);
+        compressor->addShutOffLogic(
+            std::make_shared<TempBasedHeatingLogic>("bottom node",
+                                                    nodeWeights1,
+                                                    Temp_d_t {15., Units::dF},
+                                                    this,
+                                                    std::greater<double>(),
+                                                    true));
+        compressor->depressesTemperature = false; // no temp depression
 
-            {0.6679056901,
-             0.0499777846,
-             0.0251828292,
-             0.0000699764,
-             -0.0001552229,
-             -0.0002911167} // COP_coeffs
-        });
+        // Defrost Derate
+        compressor->setupDefrostMap();
+
+        if (presetNum == MODELS_ColmacCxV_5_SP)
+        {
+            setTankSizeWithSameU({200., Units::gal});
+            // logic conditions
+            compressor->minT = {-4.0, Units::F};
+            compressor->maxSetpointT = MAXOUTLET_R410A;
+
+            compressor->perfMap.push_back({
+                {100, Units::F},
+
+                {{4.9621645063,
+                  -0.0096084144,
+                  -0.0095647009,
+                  -0.0115911960,
+                  -0.0000788517,
+                  0.0000886176,
+                  0.0001114142,
+                  0.0001832377,
+                  -0.0000451308,
+                  0.0000411975,
+                  0.0000003535},
+                 Units::W}, // inputPower_coeffs
+
+                {3.8189922420,
+                 0.0569412237,
+                 -0.0320101962,
+                 -0.0012859036,
+                 0.0000576439,
+                 0.0001101241,
+                 -0.0000352368,
+                 -0.0002630301,
+                 -0.0000509365,
+                 0.0000369655,
+                 -0.0000000606} // COP_coeffs
+            });
+        }
+        else
+        {
+            // logic conditions
+            compressor->minT = {40., Units::F};
+            compressor->maxSetpointT = MAXOUTLET_R134A;
+
+            if (presetNum == MODELS_ColmacCxA_10_SP)
+            {
+                setTankSizeWithSameU({500., Units::gal});
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{5.9786974243,
+                      0.0194445115,
+                      -0.0077802278,
+                      0.0053809029,
+                      -0.0000334832,
+                      0.0001864310,
+                      0.0001190540,
+                      0.0000040405,
+                      -0.0002538279,
+                      -0.0000477652,
+                      0.0000014101},
+                     Units::W}, // inputPower_coeffs
+
+                    {3.6128563086,
+                     0.0527064498,
+                     -0.0278198945,
+                     -0.0070529748,
+                     0.0000934705,
+                     0.0000781711,
+                     -0.0000359215,
+                     -0.0002223206,
+                     0.0000359239,
+                     0.0000727189,
+                     -0.0000005037} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_15_SP)
+            {
+                setTankSizeWithSameU({600., Units::gal});
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{15.5869846555,
+                      -0.0044503761,
+                      -0.0577941202,
+                      -0.0286911185,
+                      -0.0000803325,
+                      0.0003399817,
+                      0.0002009576,
+                      0.0002494761,
+                      -0.0000595773,
+                      0.0001401800,
+                      0.0000004312},
+                     Units::W}, // inputPower_coeffs
+
+                    {1.6643120405,
+                     0.0515623393,
+                     -0.0110239930,
+                     0.0041514430,
+                     0.0000481544,
+                     0.0000493424,
+                     -0.0000262721,
+                     -0.0002356218,
+                     -0.0000989625,
+                     -0.0000070572,
+                     0.0000004108} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_20_SP)
+            {
+                setTankSizeWithSameU({800., Units::gal});
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{23.0746692231,
+                      0.0248584608,
+                      -0.1417927282,
+                      -0.0253733303,
+                      -0.0004882754,
+                      0.0006508079,
+                      0.0002139934,
+                      0.0005552752,
+                      -0.0002026772,
+                      0.0000607338,
+                      0.0000021571},
+                     Units::W}, // inputPower_coeffs
+
+                    {1.7692660120,
+                     0.0525134783,
+                     -0.0081102040,
+                     -0.0008715405,
+                     0.0001274956,
+                     0.0000369489,
+                     -0.0000293775,
+                     -0.0002778086,
+                     -0.0000095067,
+                     0.0000381186,
+                     -0.0000003135} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_25_SP)
+            {
+                setTankSizeWithSameU({1000., Units::gal});
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{20.4185336541,
+                      -0.0236920615,
+                      -0.0736219119,
+                      -0.0260385082,
+                      -0.0005048074,
+                      0.0004940510,
+                      0.0002632660,
+                      0.0009820050,
+                      -0.0000223587,
+                      0.0000885101,
+                      0.0000005649},
+                     Units::W}, // inputPower_coeffs
+
+                    {0.8942843854,
+                     0.0677641611,
+                     -0.0001582927,
+                     0.0048083998,
+                     0.0001196407,
+                     0.0000334921,
+                     -0.0000378740,
+                     -0.0004146401,
+                     -0.0001213363,
+                     -0.0000031856,
+                     0.0000006306} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_30_SP)
+            {
+                setTankSizeWithSameU({1200., Units::gal});
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{11.3687485772,
+                      -0.0207292362,
+                      0.0496254077,
+                      -0.0038394967,
+                      -0.0005991041,
+                      0.0001304318,
+                      0.0003099774,
+                      0.0012092717,
+                      -0.0001455509,
+                      -0.0000893889,
+                      0.0000018221},
+                     Units::W}, // inputPower_coeffs
+
+                    {4.4170108542,
+                     0.0596384263,
+                     -0.0416104579,
+                     -0.0017199887,
+                     0.0000774664,
+                     0.0001521934,
+                     -0.0000251665,
+                     -0.0003289731,
+                     -0.0000801823,
+                     0.0000325972,
+                     0.0000002705} // COP_coeffs
+                });
+            }
+        } // End if MODELS_ColmacCxV_5_SP
     }
-    else
+
+    // if colmac multipass
+    else if (MODELS_ColmacCxV_5_MP <= presetNum && presetNum <= MODELS_ColmacCxA_30_MP)
     {
+        setNumNodes(24);
+        setpointT = {135.0, Units::F};
+        tankSizeFixed = false;
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        tankVolume = {315,
+                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankUA = {7, Units::kJ_per_hC};
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->perfMap.reserve(1);
+        compressor->hysteresis_dT = 0;
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
+
         // logic conditions
-        compressor->minT = {40., Units::F};
-        compressor->maxT = {105., Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
 
-        if (presetNum == MODELS_ColmacCxA_10_MP)
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(4);
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
+
+        compressor->depressesTemperature = false; // no temp depression
+
+        // Defrost Derate
+        compressor->setupDefrostMap();
+
+        if (presetNum == MODELS_ColmacCxV_5_MP)
         {
-            setTankSizeWithSameU({500., Units::gal});
-            compressor->mpFlowRate = {18., Units::gal_per_min};
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{8.6918824405,
-                  0.0136666667,
-                  -0.0548348214,
-                  -0.0000208333,
-                  0.0005301339,
-                  -0.0000250000},
-                 Units::W}, // inputPower_coeffs
-
-                {0.6944181117,
-                 0.0445926666,
-                 0.0213188804,
-                 0.0001172913,
-                 -0.0001387694,
-                 -0.0002365885} // COP_coeffs
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_15_MP)
-        {
-            setTankSizeWithSameU({600., Units::gal});
-            compressor->mpFlowRate = {26., Units::gal_per_min};
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{12.4908723958,
-                  0.0073988095,
-                  -0.0411417411,
-                  0.0000000000,
-                  0.0005789621,
-                  0.0000696429},
-                 Units::W}, // inputPower_coeffs
-
-                {1.2846349520,
-                 0.0334658309,
-                 0.0019121906,
-                 0.0002840970,
-                 0.0000497136,
-                 -0.0004401737} // COP_coeffs
-
-            });
-        }
-        else if (presetNum == MODELS_ColmacCxA_20_MP)
-        {
-            setTankSizeWithSameU({800., Units::gal});
-            compressor->mpFlowRate = {36., Units::gal_per_min};
+            setTankSizeWithSameU({200., Units::L});
+            compressor->mpFlowRate = {9., Units::gal_per_min};
             // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
+            // logic conditions
+            compressor->minT = {-4.0, Units::F};
+            compressor->maxT = {105., Units::F};
+            compressor->maxSetpointT = MAXOUTLET_R410A;
             compressor->perfMap.push_back({
                 {100, Units::F},
 
-                {{14.4893345424,
-                  0.0355357143,
-                  -0.0476593192,
-                  -0.0002916667,
-                  0.0006120954,
-                  0.0003607143},
+                {{5.8438525529,
+                  0.0003288231,
+                  -0.0494255840,
+                  -0.0000386642,
+                  0.0004385362,
+                  0.0000647268},
                  Units::W}, // inputPower_coeffs
 
-                {1.2421582831,
-                 0.0450256569,
-                 0.0051234755,
-                 0.0001271296,
-                 -0.0000299981,
-                 -0.0002910606} // COP_coeffs
+                {0.6679056901,
+                 0.0499777846,
+                 0.0251828292,
+                 0.0000699764,
+                 -0.0001552229,
+                 -0.0002911167} // COP_coeffs
             });
         }
-        else if (presetNum == MODELS_ColmacCxA_25_MP)
+        else
         {
-            setTankSizeWithSameU({1000., Units::gal});
-            compressor->mpFlowRate = {32., Units::gal_per_min};
-            compressor->perfMap.push_back({
-                {100, Units::F},
+            // logic conditions
+            compressor->minT = {40., Units::F};
+            compressor->maxT = {105., Units::F};
+            compressor->maxSetpointT = MAXOUTLET_R134A;
 
-                {{14.5805808222,
-                  0.0081934524,
-                  -0.0216169085,
-                  -0.0001979167,
-                  0.0007376535,
-                  0.0004955357},
-                 Units::W}, // inputPower_coeffs
+            if (presetNum == MODELS_ColmacCxA_10_MP)
+            {
+                setTankSizeWithSameU({500., Units::gal});
+                compressor->mpFlowRate = {18., Units::gal_per_min};
+                compressor->perfMap.push_back({
+                    {100, Units::F},
 
-                {2.0013175767,
-                 0.0576617432,
-                 -0.0130480870,
-                 0.0000856818,
-                 0.0000610760,
-                 -0.0003684106} // COP_coeffs
-            });
+                    {{8.6918824405,
+                      0.0136666667,
+                      -0.0548348214,
+                      -0.0000208333,
+                      0.0005301339,
+                      -0.0000250000},
+                     Units::W}, // inputPower_coeffs
+
+                    {0.6944181117,
+                     0.0445926666,
+                     0.0213188804,
+                     0.0001172913,
+                     -0.0001387694,
+                     -0.0002365885} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_15_MP)
+            {
+                setTankSizeWithSameU({600., Units::gal});
+                compressor->mpFlowRate = {26., Units::gal_per_min};
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{12.4908723958,
+                      0.0073988095,
+                      -0.0411417411,
+                      0.0000000000,
+                      0.0005789621,
+                      0.0000696429},
+                     Units::W}, // inputPower_coeffs
+
+                    {1.2846349520,
+                     0.0334658309,
+                     0.0019121906,
+                     0.0002840970,
+                     0.0000497136,
+                     -0.0004401737} // COP_coeffs
+
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_20_MP)
+            {
+                setTankSizeWithSameU({800., Units::gal});
+                compressor->mpFlowRate = {36., Units::gal_per_min};
+                // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
+
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{14.4893345424,
+                      0.0355357143,
+                      -0.0476593192,
+                      -0.0002916667,
+                      0.0006120954,
+                      0.0003607143},
+                     Units::W}, // inputPower_coeffs
+
+                    {1.2421582831,
+                     0.0450256569,
+                     0.0051234755,
+                     0.0001271296,
+                     -0.0000299981,
+                     -0.0002910606} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_25_MP)
+            {
+                setTankSizeWithSameU({1000., Units::gal});
+                compressor->mpFlowRate = {32., Units::gal_per_min};
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{14.5805808222,
+                      0.0081934524,
+                      -0.0216169085,
+                      -0.0001979167,
+                      0.0007376535,
+                      0.0004955357},
+                     Units::W}, // inputPower_coeffs
+
+                    {2.0013175767,
+                     0.0576617432,
+                     -0.0130480870,
+                     0.0000856818,
+                     0.0000610760,
+                     -0.0003684106} // COP_coeffs
+                });
+            }
+            else if (presetNum == MODELS_ColmacCxA_30_MP)
+            {
+                setTankSizeWithSameU({1200., Units::gal});
+                compressor->mpFlowRate = {41., Units::gal_per_min};
+                compressor->perfMap.push_back({
+                    {100, Units::F},
+
+                    {{14.5824911644,
+                      0.0072083333,
+                      -0.0278055246,
+                      -0.0002916667,
+                      0.0008841378,
+                      0.0008125000},
+                     Units::W}, // inputPower_coeffs
+
+                    {2.6996807527,
+                     0.0617507969,
+                     -0.0220966420,
+                     0.0000336149,
+                     0.0000890989,
+                     -0.0003682431} // COP_coeffs
+                });
+            }
         }
-        else if (presetNum == MODELS_ColmacCxA_30_MP)
-        {
-            setTankSizeWithSameU({1200., Units::gal});
-            compressor->mpFlowRate = {41., Units::gal_per_min};
-            compressor->perfMap.push_back({
-                {100, Units::F},
-
-                {{14.5824911644,
-                  0.0072083333,
-                  -0.0278055246,
-                  -0.0002916667,
-                  0.0008841378,
-                  0.0008125000},
-                 Units::W}, // inputPower_coeffs
-
-                {2.6996807527,
-                 0.0617507969,
-                 -0.0220966420,
-                 0.0000336149,
-                 0.0000890989,
-                 -0.0003682431} // COP_coeffs
-            });
-        }
     }
-}
-// If Nyle single pass preset
-else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
-{
-    setNumNodes(96);
-    setpointT = {135.0, Units::F};
-    tankSizeFixed = false;
-
-    tankVolume = {315, Units::L}; // Gets adjust per model but ratio between vol and UA is important
-    tankUA = {7, Units::kJ_per_hC};
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->extrapolationMethod = EXTRAP_NEAREST;
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->isMultipass = false;
-    compressor->perfMap.reserve(1);
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = getNumNodes() - 1;
-
-    // logic conditions
-    if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
-    {                                             // If not cold weather package
-        compressor->minT = Temp_t(40., Units::F); // Min air temperature sans Cold Weather Package
-    }
-    else
+    // If Nyle single pass preset
+    else if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_C_SP)
     {
-        compressor->minT = Temp_t(35., Units::F); // Min air temperature WITH Cold Weather Package
-    }
-    compressor->maxT = Temp_t(120.0, Units::F); // Max air temperature
-    compressor->hysteresis_dT = 0;
-    compressor->maxSetpointT = MAXOUTLET_R134A;
+        setNumNodes(96);
+        setpointT = {135.0, Units::F};
+        tankSizeFixed = false;
 
-    // Defines the maximum outlet temperature at the a low air temperature
-    compressor->maxOut_at_LowT.outT = {140., Units::F};
-    compressor->maxOut_at_LowT.airT = {40., Units::F};
-
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights, Temp_d_t(15., Units::dF), this));
-
-    // lowT cutoff
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(1);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-        "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<double>(), true));
-    compressor->depressesTemperature = false; // no temp depression
-
-    // Defrost Derate
-    compressor->setupDefrostMap();
-
-    // Perfmaps for each compressor size
-    if (presetNum == MODELS_NyleC25A_SP)
-    {
-        setTankSizeWithSameU({200., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{4.060120364,
-              -0.020584279,
-              -0.024201054,
-              -0.007023945,
-              0.000017461,
-              0.000110366,
-              0.000060338,
-              0.000120015,
-              0.000111068,
-              0.000138907,
-              -0.000001569},
-             Units::W}, // inputPower_coeffs
-
-            {0.462979529,
-             0.065656840,
-             0.001077377,
-             0.003428059,
-             0.000243692,
-             0.000021522,
-             0.000005143,
-             -0.000384778,
-             -0.000404744,
-             -0.000036277,
-             0.000001900} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
-    {
-        setTankSizeWithSameU({300., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{-0.1180905709,
-              0.0045354306,
-              0.0314990479,
-              -0.0406839757,
-              0.0002355294,
-              0.0000818684,
-              0.0001943834,
-              -0.0002160871,
-              0.0003053633,
-              0.0003612413,
-              -0.0000035912},
-             Units::W}, // inputPower_coeffs
-
-            {6.8205043418,
-             0.0860385185,
-             -0.0748330699,
-             -0.0172447955,
-             0.0000510842,
-             0.0002187441,
-             -0.0000321036,
-             -0.0003311463,
-             -0.0002154270,
-             0.0001307922,
-             0.0000005568} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
-    {
-        setTankSizeWithSameU({400., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{13.27612215047,
-              -0.01014009337,
-              -0.13401028549,
-              -0.02325705976,
-              -0.00032515646,
-              0.00040270625,
-              0.00001988733,
-              0.00069451670,
-              0.00069067890,
-              0.00071091372,
-              -0.00000854352},
-             Units::W}, // inputPower_coeffs
-
-            {1.49112327987,
-             0.06616282153,
-             0.00715307252,
-             -0.01269458185,
-             0.00031448571,
-             0.00001765313,
-             0.00006002498,
-             -0.00045661397,
-             -0.00034003896,
-             -0.00004327766,
-             0.00000176015} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
-    {
-        setTankSizeWithSameU({500., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{-3.558277209,
-              -0.038590968,
-              0.136307181,
-              -0.016945699,
-              0.000983753,
-              -5.18201E-05,
-              0.000476904,
-              -0.000514211,
-              -0.000359172,
-              0.000266509,
-              -1.58646E-07},
-             Units::W}, // inputPower_coeffs
-
-            {4.889555031,
-             0.117102769,
-             -0.060005795,
-             -0.011871234,
-             -1.79926E-05,
-             0.000207293,
-             -1.4452E-05,
-             -0.000492486,
-             -0.000376814,
-             7.85911E-05,
-             1.47884E-06} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
-    {
-        setTankSizeWithSameU({800., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{18.58007733,
-              -0.215324777,
-              -0.089782421,
-              0.01503161,
-              0.000332503,
-              0.000274216,
-              2.70498E-05,
-              0.001387914,
-              0.000449199,
-              0.000829578,
-              -5.28641E-06},
-             Units::W}, // inputPower_coeffs
-
-            {-0.629432348,
-             0.181466663,
-             0.00044047,
-             0.012104957,
-             -6.61515E-05,
-             9.29975E-05,
-             9.78042E-05,
-             -0.000872708,
-             -0.001013945,
-             -0.00021852,
-             5.55444E-06} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
-    {
-        setTankSizeWithSameU({800., Units::gal});
-        compressor->perfMap.push_back({
-            {90, Units::F},
-
-            {{-13.89057656,
-              0.025902417,
-              0.304250541,
-              0.061695153,
-              -0.001474249,
-              -0.001126845,
-              -0.000220192,
-              0.001241026,
-              0.000571009,
-              -0.000479282,
-              9.04063E-06},
-             Units::W}, // inputPower_coeffs
-
-            {7.443904067,
-             0.185978755,
-             -0.098481635,
-             -0.002500073,
-             0.000127658,
-             0.000444321,
-             0.000139547,
-             -0.001000195,
-             -0.001140199,
-             -8.77557E-05,
-             4.87405E-06} // COP_coeffs
-        });
-    }
-}
-
-// If Nyle multipass presets
-else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
-{
-    setNumNodes(24);
-    setpointT = {135.0, Units::F};
-    tankSizeFixed = false;
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    tankVolume = {315, Units::L}; // Gets adjust per model but ratio between vol and UA is important
-    tankUA = {7, Units::kJ_per_hC};
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->extrapolationMethod = EXTRAP_NEAREST;
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->hysteresis_dT = 0;
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
-
-    // logic conditions//logic conditions
-    if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
-    {                                       // If not cold weather package
-        compressor->minT = {40., Units::F}; // Min air temperature sans Cold Weather Package
-    }
-    else
-    {
-        compressor->minT = {35., Units::F}; // Min air temperature WITH Cold Weather Package
-    }
-    compressor->maxT = {130.0, Units::F}; // Max air temperature
-    compressor->maxSetpointT = {160., Units::F};
-
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
-
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(4);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
-    compressor->depressesTemperature = false; // no temp depression
-
-    // Defrost Derate
-    compressor->setupDefrostMap();
-
-    // Performance grid
-    compressor->perfGrid.reserve(2);
-    compressor->perfGridValues.reserve(2);
-
-    // Nyle MP models are all on the same grid axes
-    TempVect_t t0 = {{40., 60., 80., 90.}, Units::F};
-    TempVect_t t1 = {{40., 60., 80., 100., 130., 150.}, Units::F};
-
-    compressor->perfGrid.push_back(t0);    // Grid Axis 1 Tair (F)
-    compressor->perfGrid.push_back(t1); // Grid Axis 2 Tin (F)
-
-    if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
-    {
-        setTankSizeWithSameU({360., Units::gal});
-        compressor->mpFlowRate = {13., Units::gal_per_min};
-        if (presetNum == MODELS_NyleC60A_C_MP)
-        {
-            compressor->resDefrost = {
-                {4.5, Units::kW}, // inputPwr_kW;
-                {5.0, Units::dF}, // constTempLift_dF;
-                {40.0, Units::F} // onBelowT_F
-            };
-        }
-        // Grid values in long format, table 1, input power (W)
-        compressor->perfGridValues.push_back({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
-                                              4.99, 6.03, 8.55, 10.02, 3.98, 4.53, 5.24, 6.24,
-                                              8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55});
-        // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
-            {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
-             4.438172043, 3.772833724, 3.132264529, 2.505804312, 1.678362573, 1.386227545,
-             5.467336683, 4.708609272, 3.921755725, 3.169871795, 2.165105386, 1.860732984,
-             5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691});
-    }
-    else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
-    {
-        setTankSizeWithSameU({480., Units::gal});
-        compressor->mpFlowRate = {20., Units::gal_per_min};
-        if (presetNum == MODELS_NyleC90A_C_MP)
-        {
-            compressor->resDefrost = {
-                5.4, // inputPwr_kW;
-                5.0, // constTempLift_dF;
-                40.0 // onBelowT_F
-            };
-        }
-        // Grid values in long format, table 1, input power (W)
-        compressor->perfGridValues.push_back(
-            {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
-             5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35});
-        // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
-            {4.79138322,  3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537,
-             6.071129707, 4.264750378, 3.536175711, 2.827659574, 2.036086608, 1.666440678,
-             7.150635209, 5.659159159, 4.305687204, 3.493467337, 2.487748851, 2.018241042,
-             6.750737463, 5.604621309, 4.734392736, 3.94005994,  3.04534005,  2.558801498});
-    }
-    else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
-    {
-        setTankSizeWithSameU({600., Units::gal});
-        compressor->mpFlowRate = {28., Units::gal_per_min};
-        if (presetNum == MODELS_NyleC125A_C_MP)
-        {
-            compressor->resDefrost = {
-                9.0, // inputPwr_kW;
-                5.0, // constTempLift_dF;
-                40.0 // onBelowT_F
-            };
-        }
-        // Grid values in long format, table 1, input power (W)
-        compressor->perfGridValues.push_back(
-            {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
-             7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4});
-        // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
-            {4.2390625,   3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913,
-             5.374455733, 4.352657005, 3.453109576, 2.645136187, 1.66278481,  1.307093071,
-             6.503250975, 5.276736494, 4.229070837, 3.27827381,  2.113821138, 1.770469799,
-             6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286});
-    }
-    else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
-    {
-        setTankSizeWithSameU({960., Units::gal});
-        compressor->mpFlowRate = {40., Units::gal_per_min};
-        if (presetNum == MODELS_NyleC185A_C_MP)
-        {
-            compressor->resDefrost = {
-                7.2, // inputPwr_kW;
-                5.0, // constTempLift_dF;
-                40.0 // onBelowTemp_F
-            };
-        }
-        // Grid values in long format, table 1, input power (W)
-        compressor->perfGridValues.push_back(
-            {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
-             7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62});
-        // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
-            {5.531043593, 3.556603774, 2.918149466, 2.214754098, 1.590255591, 1.291010499,
-             8.010014306, 5.258126195, 3.778711485, 2.916437603, 1.964176829, 1.56404703,
-             9.65819568,  6.200166113, 4.792276964, 3.705475811, 2.561369758, 2.05950096,
-             10.26993865, 6.350722311, 5.04218853,  3.841688654, 2.574151735, 2.025616698});
-    }
-    else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
-    {
-        setTankSizeWithSameU({960., Units::gal});
-        compressor->mpFlowRate = {60., Units::gal_per_min};
-        if (presetNum == MODELS_NyleC250A_C_MP)
-        {
-            compressor->resDefrost = {
-                18.0, // inputPwr_kW;
-                5.0,  // constTempLift_dF;
-                40.0  // onBelowT_F
-            };
-        }
-        // Grid values in long format, table 1, input power (W)
-        compressor->perfGridValues.push_back(
-            {10.89, 12.23, 13.55, 14.58, 15.74, 16.72, 11.46, 13.76, 15.97, 17.79, 20.56, 22.50,
-             10.36, 14.66, 18.07, 21.23, 25.81, 29.01, 8.67,  15.05, 18.76, 21.87, 26.63, 30.02});
-
-        // Grid values in long format, table 2, COP
-        compressor->perfGridValues.push_back(
-            {5.81818181, 4.50040883, 3.69667896, 3.12414266, 2.38500635, 1.93540669,
-             7.24520069, 5.50145348, 4.39323732, 3.67734682, 2.73249027, 2.23911111,
-             10.6196911, 7.05320600, 5.41228555, 4.28638718, 3.04804339, 2.46053085,
-             14.7831603, 7.77903268, 5.71801705, 4.40237768, 2.92489673, 2.21419054});
-    }
-
-    // Set up regular grid interpolator.
-    compressor->perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
-        Btwxt::RegularGridInterpolator(compressor->perfGrid,
-                                       compressor->perfGridValues,
-                                       "RegularGridInterpolator",
-                                       get_courier()));
-    compressor->useBtwxtGrid = true;
-}
-// if rheem multipass
-else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum && presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
-{
-    setNumNodes(24);
-    setpointT = Temp_t(135.0, Units::F);
-    tankSizeFixed = false;
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    tankVolume = {315, Units::L}; // Gets adjust per model but ratio between vol and UA is important
-    tankUA = {7, Units::kJ_per_hC};
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->perfMap.reserve(1);
-    compressor->hysteresis_dT = 0;
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
-
-    // logic conditions
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
-
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(4);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-        "fourth node", nodeWeights1, Temp_d_t(0), this, std::greater<double>()));
-    compressor->depressesTemperature = false; // no temp depression
-
-    // Defrost Derate
-    compressor->setupDefrostMap();
-
-    // logic conditions
-    compressor->minT = Temp_t(45., Units::F);
-    compressor->maxT = Temp_t(110., Units::F);
-    compressor->maxSetpointT = MAXOUTLET_R134A; // data says 150...
-
-    if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP || presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
-    {
-        setTankSizeWithSameU({250., Units::gal});
-        compressor->mpFlowRate = {17.4, Units::gal_per_min};
-        compressor->perfMap.push_back({
-            {110, Units::F},
-
-            {{1.8558438453, 0.0120796155, -0.0135443327, 0.0000059621, 0.0003010506, -0.0000463525},
-             Units::kW}, // inputPower_coeffs
-
-            {3.6840046360,
-             0.0995685071,
-             -0.0398107723,
-             -0.0001903160,
-             0.0000980361,
-             -0.0003469814} // COP_coeffs
-        });
-    }
-    else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
-             presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
-    {
-        setTankSizeWithSameU({500., Units::gal});
-        compressor->mpFlowRate = {34.87, Units::gal_per_min};
-        compressor->perfMap.push_back({
-            {110, Units::F},
-
-            {{5.1838201136, 0.0247312962, -0.0120766440, 0.0000493862, 0.0005422089, -0.0001385078},
-             Units::kW}, // inputPower_coeffs
-
-            {5.0207181209,
-             0.0442525790,
-             -0.0418284882,
-             0.0000793531,
-             0.0001132421,
-             -0.0002491563} // COP_coeffs
-        });
-    }
-}
-
-else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
-{
-    setNumNodes(96);
-    setpointT = 65;
-
-    tankVolume = {500, Units::gal};
-    tankUA = {12, Units::kJ_per_hC};
-    tankSizeFixed = false;
-
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->minT = {-13., Units::F};
-    compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = getNumNodes() - 1;
-
-    // What to do about these?!
-    compressor->hysteresis_dT = {4, Units::dC};
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->isMultipass = false;
-    compressor->maxSetpointT = {176.1, Units::F};
-
-    // Turn on
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(4);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "eighth node absolute", nodeWeights, Temp_t(110., Units::F), this));
-
-    // lowT cutoff
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(1);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-        "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<double>()));
-    compressor->depressesTemperature = false;
-
-    // Performance grid: externalT_F, Tout_F, condenserTemp_F
-    compressor->perfGrid.reserve(2);
-    compressor->perfGridValues.reserve(2);
-    compressor->perfGrid.push_back(
-        {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
-         28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
-         71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}); // Grid Axis 1 Tair (F)
-    compressor->perfGrid.push_back({140., 158., 176.});                 // Grid Axis 2 Tout (F)
-    compressor->perfGrid.push_back({41, 48.2, 62.6, 75.2, 84.2});       // Grid Axis 3 Tin (F)
-
-    // Grid values in long format, table 1, input power (Btu/hr)
-    compressor->perfGridValues.push_back(
-        {56518.565328,     57130.739544,     57094.73612,      57166.756616,     57238.777112,
-         56518.565328,     57130.739544,     57094.73612,      57166.756616,     57238.777112,
-         58061.348896,     58360.24692,      58591.39286,      58870.368216,     59093.547136,
-         56626.5960719999, 57202.763452,     57310.794196,     57310.794196,     57490.848848,
-         56626.5960719999, 57202.763452,     57310.794196,     57310.794196,     57490.848848,
-         58280.539188,     58519.65556,      58786.67868,      59093.547136,     59372.5190799999,
-         56950.695128,     57850.95474,      57814.947904,     57814.947904,     57922.978648,
-         56950.695128,     57850.95474,      57814.947904,     57814.947904,     57922.978648,
-         58679.067612,     58977.969048,     59372.5190799999, 59651.494436,     59930.46638,
-         57418.831764,     58175.053796,     58283.08454,      58247.07088,      58427.12212,
-         57418.831764,     58175.053796,     58283.08454,      58247.07088,      58427.12212,
-         59137.384512,     59376.504296,     59902.566456,     60265.23476,      60516.313604,
-         57778.930832,     58643.190432,     58823.23826,      58643.190432,     58967.282664,
-         57778.930832,     58643.190432,     58823.23826,      58643.190432,     58967.282664,
-         59515.99368,      59954.377676,     60321.031196,     60934.77152,      61213.743464,
-         58103.029888,     59075.313408,     59219.357812,     59291.374896,     59579.45688,
-         58103.029888,     59075.313408,     59219.357812,     59291.374896,     59579.45688,
-         60014.159328,     60273.205192,     60934.77152,      61436.922384,     61799.587276,
-         58535.152864,     59399.412464,     59795.525192,     59903.555936,     60299.672076,
-         58535.152864,     59399.412464,     59795.525192,     59903.555936,     60299.672076,
-         60512.321564,     60751.448172,     61409.02246,      62022.769608,     62329.641476,
-         58931.275828,     59651.4842,       60011.58668,      60263.66524,      60551.747224,
-         58931.275828,     59651.4842,       60011.58668,      60263.66524,      60551.747224,
-         60910.860224,     61369.1703,       62022.769608,     62580.713496,     62803.895828,
-         59219.357812,     60155.634496,     60443.71648,      60659.777968,     61163.92144,
-         59219.357812,     60155.634496,     60443.71648,      60659.777968,     61163.92144,
-         61329.321552,     61687.997816,     62441.224112,     63166.56072,      63585.015224,
-         59651.4842,       60479.726728,     61019.88386,      61163.92144,      61920.146884,
-         59651.4842,       60479.726728,     61019.88386,      61163.92144,      61920.146884,
-         61707.923896,     62186.166876,     63027.071336,     63724.504608,     64170.862448,
-         59723.504696,     60839.83262,      61379.993164,     61524.030744,     62352.273272,
-         59723.504696,     60839.83262,      61379.993164,     61524.030744,     62352.273272,
-         61966.96976,      62445.21274,      63361.839716,     64142.969348,     64505.63424,
-         59759.511532,     60695.788216,     61524.030744,     61884.136636,     62712.382576,
-         59759.511532,     60695.788216,     61524.030744,     61884.136636,     62712.382576,
-         62166.240796,     62744.114176,     63668.714996,     64282.451908,     64589.323776,
-         59759.511532,     61019.88386,      61848.1298,       62064.191288,     62964.4509,
-         59759.511532,     61019.88386,      61848.1298,       62064.191288,     62964.4509,
-         62425.28666,      63003.16004,      63975.58004,      64533.523928,     64617.2237,
-         59471.429548,     61055.894108,     61956.160544,     62460.304016,     63216.526048,
-         59471.429548,     61055.894108,     61956.160544,     62460.304016,     63216.526048,
-         62624.550872,     63202.424252,     64310.351832,     64756.70626,      64728.806336,
-         61632.061488,     63036.474808,     63828.7105,       64296.847136,     65053.069168,
-         61632.061488,     63036.474808,     63828.7105,       64296.847136,     65053.069168,
-         63561.10734,      64099.125148,     65258.8605359999, 65593.625504,     65621.525428,
-         51189.004268,     52917.506408,     54826.070024,     57094.73612,      59327.388556,
-         51189.004268,     52917.506408,     54826.070024,     57094.73612,      59327.388556,
-         55391.172288,     58240.683616,     62106.459144,     65733.114888,     65705.214964,
-         41286.100768,     42726.524336,     45931.460292,     49784.590948,     53457.6669519999,
-         41286.100768,     42726.524336,     45931.460292,     49784.590948,     53457.6669519999,
-         49433.093532,     51067.083272,     57921.8561,       61604.3082799999, 64477.734316,
-         35632.444064,     37108.87788,      41394.134924,     45139.228012,     49568.526048,
-         35632.444064,     37108.87788,      41394.134924,     45139.228012,     49568.526048,
-         47540.06134,      47221.233824,     56080.631716,     59539.904976,     61883.276812,
-         34192.023908,     35596.430404,     39809.6669519999, 43410.72246,      47659.969256,
-         34192.023908,     35596.430404,     39809.6669519999, 43410.72246,      47659.969256,
-         47559.98742,      47061.821772,     54490.482764,     57893.959588,     60153.648712,
-         32895.641332,     34192.023908,     38225.202392,     41646.20666,      45751.409052,
-         32895.641332,     34192.023908,     38225.202392,     41646.20666,      45751.409052,
-         47659.621232,     46842.624656,     52956.13366,      56220.1211,       58312.420916,
-         31563.25192,      32715.58668,      36532.707088,     39881.687448,     43914.869344,
-         31563.25192,      32715.58668,      36532.707088,     39881.687448,     43914.869344,
-         47719.402884,     46742.994256,     51393.877808,     54518.382688,     56554.886068,
-         30194.85226,      31347.18702,      35092.286932,     38117.171648,     42006.312552,
-         30194.85226,      31347.18702,      35092.286932,     38117.171648,     42006.312552,
-         47799.1072039999, 46324.532928,     49692.139396,     52732.951328,     54769.45812,
-         30446.923996,     31383.197268,     34300.054652,     37144.884716,     40781.953884,
-         30446.923996,     31383.197268,     34300.054652,     37144.884716,     40781.953884,
-         45547.391924,     44212.307032,     47320.867636,     50389.57608,      52202.90054,
-         30698.995732,     31311.176772,     33723.88386,      36316.6456,       39701.636208,
-         30698.995732,     31311.176772,     33723.88386,      36316.6456,       39701.636208,
-         43295.680056,     41980.517832,     45089.078436,     47795.121988,     49720.03932,
-         30987.081128,     31311.176772,     33183.726728,     35344.358668,     38477.27754,
-         30987.081128,     31311.176772,     33183.726728,     35344.358668,     38477.27754,
-         41562.059916,     40486.017476,     43415.236536,     46037.590552,     47795.121988,
-         31203.146028,     31311.176772,     32571.545688,     34552.126388,     37360.949616,
-         31203.146028,     31311.176772,     32571.545688,     34552.126388,     37360.949616,
-         40486.017476,     39310.3446359999, 42159.859376,     44782.20998,      46511.844904,
-         31167.132368,     31311.176772,     32355.4842,       34156.010248,     36712.758328,
-         31167.132368,     31311.176772,     32355.4842,       34156.010248,     36712.758328,
-         39449.830608,     38353.862088,     41127.657724,     43666.31538,      45284.360844,
-         31059.101624,     31131.12212,      32319.473952,     34156.010248,     36748.771988,
-         31059.101624,     31131.12212,      32319.473952,     34156.010248,     36748.771988,
-         38592.985284,     37457.161192,     40151.249096,     42801.496212,     44419.541676,
-         30879.050384,     31023.091376,     32319.473952,     34192.023908,     36820.789072,
-         30879.050384,     31023.091376,     32319.473952,     34192.023908,     36820.789072,
-         37756.062628,     36680.0236,       39258.536828,     41797.194484,     43387.343436,
-         30807.029888,     30951.07088,      32427.504696,     34156.010248,     36748.771988,
-         30807.029888,     30951.07088,      32427.504696,     34156.010248,     36748.771988,
-         37795.9182,       36779.657412,     39258.536828,     41769.29456,      43331.547,
-         30626.976942,     30735.007686,     32319.473952,     34156.010248,     36748.771988,
-         30626.976942,     30735.007686,     32319.473952,     34156.010248,     36748.771988,
-         37815.84428,      36779.657412,     39286.431634,     41825.090996,     43359.446924,
-         30446.923996,     30518.944492,     32355.4842,       34264.040992,     36820.789072,
-         30446.923996,     30518.944492,     32355.4842,       34264.040992,     36820.789072,
-         37775.988708,     36759.731332,     39286.431634,     41825.090996,     43359.446924,
-         30230.859096,     30410.913748,     32319.473952,     34192.023908,     36748.771988,
-         30230.859096,     30410.913748,     32319.473952,     34192.023908,     36748.771988,
-         37775.988708,     36759.731332,     39342.226364,     41825.090996,     43303.650488,
-         30194.85226,      30194.85226,      32391.491036,     34156.010248,     36748.771988,
-         30194.85226,      30194.85226,      32391.491036,     34156.010248,     36748.771988,
-         37756.062628,     36779.657412,     39342.226364,     41825.090996,     43359.446924});
-
-    // Grid values in long format, table 2, COP
-    compressor->perfGridValues.push_back(
-        {1.177126, 1.1393,   1.091664, 1.033858, 0.981755, 1.177126, 1.1393,   1.091664, 1.033858,
-         0.981755, 1.134534, 1.106615, 1.04928,  0.989101, 0.946182, 1.228935, 1.190326, 1.136507,
-         1.075244, 1.023802, 1.228935, 1.190326, 1.136507, 1.075244, 1.023802, 1.174944, 1.147101,
-         1.087318, 1.026909, 0.980265, 1.324165, 1.27451,  1.218468, 1.156182, 1.103823, 1.324165,
-         1.27451,  1.218468, 1.156182, 1.103823, 1.267595, 1.236929, 1.165864, 1.102888, 1.052601,
-         1.415804, 1.365212, 1.301359, 1.238022, 1.180586, 1.415804, 1.365212, 1.301359, 1.238022,
-         1.180586, 1.358408, 1.324943, 1.249272, 1.179609, 1.128155, 1.510855, 1.453792, 1.381237,
-         1.31747,  1.253435, 1.510855, 1.453792, 1.381237, 1.31747,  1.253435, 1.446639, 1.404653,
-         1.331368, 1.249056, 1.195511, 1.60469,  1.540079, 1.462451, 1.39417,  1.326987, 1.60469,
-         1.540079, 1.462451, 1.39417,  1.326987, 1.529924, 1.492107, 1.404944, 1.325122, 1.265433,
-         1.690249, 1.630494, 1.539446, 1.464082, 1.395939, 1.690249, 1.630494, 1.539446, 1.464082,
-         1.395939, 1.610302, 1.56761,  1.479273, 1.393118, 1.33076,  1.776046, 1.715967, 1.624662,
-         1.540783, 1.469819, 1.776046, 1.715967, 1.624662, 1.540783, 1.469819, 1.693465, 1.646725,
-         1.550545, 1.459601, 1.400666, 1.865309, 1.797965, 1.703902, 1.612645, 1.539888, 1.865309,
-         1.797965, 1.703902, 1.612645, 1.539888, 1.776866, 1.728095, 1.626829, 1.531743, 1.461555,
-         1.956837, 1.881215, 1.777073, 1.690021, 1.603082, 1.956837, 1.881215, 1.777073, 1.690021,
-         1.603082, 1.857512, 1.807899, 1.699347, 1.599321, 1.526899, 2.038891, 1.956496, 1.848049,
-         1.757975, 1.668207, 2.038891, 1.956496, 1.848049, 1.757975, 1.668207, 1.934721, 1.878022,
-         1.764777, 1.657606, 1.583414, 2.110576, 2.028182, 1.922739, 1.818155, 1.725237, 2.110576,
-         2.028182, 1.922739, 1.818155, 1.725237, 1.997516, 1.937435, 1.824625, 1.712596, 1.630169,
-         2.185899, 2.091178, 1.989083, 1.883087, 1.786388, 2.185899, 2.091178, 1.989083, 1.883087,
-         1.786388, 2.06464,  2.003084, 1.88041,  1.763428, 1.68041,  2.29337,  2.155411, 2.063354,
-         1.942635, 1.844204, 2.29337,  2.155411, 2.063354, 1.942635, 1.844204, 2.125448, 2.061323,
-         1.933955, 1.810339, 1.720612, 2.213555, 2.111682, 2.027503, 1.91515,  1.819817, 2.213555,
-         2.111682, 2.027503, 1.91515,  1.819817, 2.126499, 2.064584, 1.935343, 1.818713, 1.728239,
-         2.665142, 2.578088, 2.488506, 2.388206, 2.29651,  2.665142, 2.578088, 2.488506, 2.388206,
-         2.29651,  2.46407,  2.344111, 2.198428, 2.057188, 1.96338,  3.304405, 3.191319, 2.971384,
-         2.741049, 2.550691, 3.304405, 3.191319, 2.971384, 2.741049, 2.550691, 2.763177, 2.673398,
-         2.356773, 2.216348, 2.116712, 3.827691, 3.676371, 3.297085, 3.022338, 2.752997, 3.827691,
-         3.676371, 3.297085, 3.022338, 2.752997, 2.871739, 2.890389, 2.434648, 2.292726, 2.205906,
-         3.989995, 3.834598, 3.428313, 3.14185,  2.862486, 3.989995, 3.834598, 3.428313, 3.14185,
-         2.862486, 2.871269, 2.900921, 2.506208, 2.358391, 2.270261, 4.147236, 3.992101, 3.570419,
-         3.274967, 2.982684, 4.147236, 3.992101, 3.570419, 3.274967, 2.982684, 2.865266, 2.913751,
-         2.578296, 2.428607, 2.341945, 4.322305, 4.172262, 3.73583,  3.419865, 3.107421, 4.322305,
-         4.172262, 3.73583,  3.419865, 3.107421, 2.861677, 2.919962, 2.65667,  2.504413, 2.414725,
-         4.518187, 4.354394, 3.889174, 3.578177, 3.248607, 4.518187, 4.354394, 3.889174, 3.578177,
-         3.248607, 2.856905, 2.946338, 2.747649, 2.589208, 2.493442, 4.481963, 4.349398, 3.979002,
-         3.671837, 3.346137, 4.481963, 4.349398, 3.979002, 3.671837, 3.346137, 2.998141, 3.087098,
-         2.885335, 2.709619, 2.616032, 4.445162, 4.359402, 4.046983, 3.755577, 3.437188, 4.445162,
-         4.359402, 4.046983, 3.755577, 3.437188, 3.154067, 3.251216, 3.028152, 2.856705, 2.746669,
-         4.402673, 4.359402, 4.112859, 3.858889, 3.546561, 4.402673, 4.359402, 4.112859, 3.858889,
-         3.546561, 3.285629, 3.371232, 3.1449,   2.965763, 2.857289, 4.373341, 4.359402, 4.19016,
-         3.947368, 3.65253,  4.373341, 4.359402, 4.19016,  3.947368, 3.65253,  3.372955, 3.472057,
-         3.238544, 3.048902, 2.936122, 4.378394, 4.359402, 4.218141, 3.993147, 3.717018, 4.378394,
-         4.359402, 4.218141, 3.993147, 3.717018, 3.461548, 3.558644, 3.319824, 3.126817, 3.015709,
-         4.391304, 4.384616, 4.222841, 3.993147, 3.713376, 4.391304, 4.384616, 4.222841, 3.993147,
-         3.713376, 3.538402, 3.643836, 3.400556, 3.189995, 3.074423, 4.419242, 4.399884, 4.222841,
-         3.988941, 3.706113, 4.419242, 4.399884, 4.222841, 3.988941, 3.706113, 3.616836, 3.721038,
-         3.477882, 3.266644, 3.147565, 4.429573, 4.410122, 4.208773, 3.993147, 3.713376, 4.429573,
-         4.410122, 4.208773, 3.993147, 3.713376, 3.613022, 3.710957, 3.477882, 3.268826, 3.151618,
-         4.45679,  4.441125, 4.222841, 3.993147, 3.713376, 4.45679,  4.441125, 4.222841, 3.993147,
-         3.713376, 3.611119, 3.710957, 3.475413, 3.264466, 3.14959,  4.483146, 4.472566, 4.218141,
-         3.980557, 3.706113, 4.483146, 4.472566, 4.218141, 3.980557, 3.706113, 3.614928, 3.712969,
-         3.475413, 3.264466, 3.14959,  4.515188, 4.488454, 4.222841, 3.988941, 3.713376, 4.515188,
-         4.488454, 4.222841, 3.988941, 3.713376, 3.614928, 3.712969, 3.470484, 3.264466, 3.153648,
-         4.522957, 4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
-         3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
-
-    // Set up regular grid interpolator.
-    Btwxt::GridAxis g0(compressor->perfGrid[0],
-                       Btwxt::InterpolationMethod::linear,
-                       Btwxt::ExtrapolationMethod::constant,
-                       {-DBL_MAX, DBL_MAX},
-                       "TAir",
-                       get_courier());
-    Btwxt::GridAxis g1(compressor->perfGrid[1],
-                       Btwxt::InterpolationMethod::linear,
-                       Btwxt::ExtrapolationMethod::constant,
-                       {-DBL_MAX, DBL_MAX},
-                       "TOut",
-                       get_courier());
-    Btwxt::GridAxis g2(compressor->perfGrid[2],
-                       Btwxt::InterpolationMethod::linear,
-                       Btwxt::ExtrapolationMethod::linear,
-                       {-DBL_MAX, DBL_MAX},
-                       "Tin",
-                       get_courier());
-
-    std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
-
-    compressor->perfRGI =
-        std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
-            gx, compressor->perfGridValues, "RegularGridInterpolator", get_courier()));
-
-    compressor->useBtwxtGrid = true;
-
-    compressor->secondaryHeatExchanger = {{10., Units::dF}, {15., Units::dF}, 27.};
-}
-
-else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
-         presetNum == MODELS_SANCO2_119)
-{
-    setNumNodes(96);
-    setpointT = 65;
-    setpointFixed = true;
-
-    if (presetNum == MODELS_SANCO2_119)
-    {
-        tankVolume = {119, Units::L};
-        tankUA = {9, Units::kJ_per_hC};
-    }
-    else
-    {
-        tankVolume = {315, Units::L};
+        tankVolume = {315,
+                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
         tankUA = {7, Units::kJ_per_hC};
-        if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->extrapolationMethod = EXTRAP_NEAREST;
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->isMultipass = false;
+        compressor->perfMap.reserve(1);
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = getNumNodes() - 1;
+
+        // logic conditions
+        if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
+        { // If not cold weather package
+            compressor->minT =
+                Temp_t(40., Units::F); // Min air temperature sans Cold Weather Package
+        }
+        else
         {
-            tankSizeFixed = false;
+            compressor->minT =
+                Temp_t(35., Units::F); // Min air temperature WITH Cold Weather Package
+        }
+        compressor->maxT = Temp_t(120.0, Units::F); // Max air temperature
+        compressor->hysteresis_dT = 0;
+        compressor->maxSetpointT = MAXOUTLET_R134A;
+
+        // Defines the maximum outlet temperature at the a low air temperature
+        compressor->maxOut_at_LowT.outT = {140., Units::F};
+        compressor->maxOut_at_LowT.airT = {40., Units::F};
+
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights, Temp_d_t(15., Units::dF), this));
+
+        // lowT cutoff
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(1);
+        compressor->addShutOffLogic(
+            std::make_shared<TempBasedHeatingLogic>("bottom node",
+                                                    nodeWeights1,
+                                                    Temp_d_t(15., Units::dF),
+                                                    this,
+                                                    std::greater<double>(),
+                                                    true));
+        compressor->depressesTemperature = false; // no temp depression
+
+        // Defrost Derate
+        compressor->setupDefrostMap();
+
+        // Perfmaps for each compressor size
+        if (presetNum == MODELS_NyleC25A_SP)
+        {
+            setTankSizeWithSameU({200., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{4.060120364,
+                  -0.020584279,
+                  -0.024201054,
+                  -0.007023945,
+                  0.000017461,
+                  0.000110366,
+                  0.000060338,
+                  0.000120015,
+                  0.000111068,
+                  0.000138907,
+                  -0.000001569},
+                 Units::W}, // inputPower_coeffs
+
+                {0.462979529,
+                 0.065656840,
+                 0.001077377,
+                 0.003428059,
+                 0.000243692,
+                 0.000021522,
+                 0.000005143,
+                 -0.000384778,
+                 -0.000404744,
+                 -0.000036277,
+                 0.000001900} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
+        {
+            setTankSizeWithSameU({300., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{-0.1180905709,
+                  0.0045354306,
+                  0.0314990479,
+                  -0.0406839757,
+                  0.0002355294,
+                  0.0000818684,
+                  0.0001943834,
+                  -0.0002160871,
+                  0.0003053633,
+                  0.0003612413,
+                  -0.0000035912},
+                 Units::W}, // inputPower_coeffs
+
+                {6.8205043418,
+                 0.0860385185,
+                 -0.0748330699,
+                 -0.0172447955,
+                 0.0000510842,
+                 0.0002187441,
+                 -0.0000321036,
+                 -0.0003311463,
+                 -0.0002154270,
+                 0.0001307922,
+                 0.0000005568} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
+        {
+            setTankSizeWithSameU({400., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{13.27612215047,
+                  -0.01014009337,
+                  -0.13401028549,
+                  -0.02325705976,
+                  -0.00032515646,
+                  0.00040270625,
+                  0.00001988733,
+                  0.00069451670,
+                  0.00069067890,
+                  0.00071091372,
+                  -0.00000854352},
+                 Units::W}, // inputPower_coeffs
+
+                {1.49112327987,
+                 0.06616282153,
+                 0.00715307252,
+                 -0.01269458185,
+                 0.00031448571,
+                 0.00001765313,
+                 0.00006002498,
+                 -0.00045661397,
+                 -0.00034003896,
+                 -0.00004327766,
+                 0.00000176015} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
+        {
+            setTankSizeWithSameU({500., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{-3.558277209,
+                  -0.038590968,
+                  0.136307181,
+                  -0.016945699,
+                  0.000983753,
+                  -5.18201E-05,
+                  0.000476904,
+                  -0.000514211,
+                  -0.000359172,
+                  0.000266509,
+                  -1.58646E-07},
+                 Units::W}, // inputPower_coeffs
+
+                {4.889555031,
+                 0.117102769,
+                 -0.060005795,
+                 -0.011871234,
+                 -1.79926E-05,
+                 0.000207293,
+                 -1.4452E-05,
+                 -0.000492486,
+                 -0.000376814,
+                 7.85911E-05,
+                 1.47884E-06} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
+        {
+            setTankSizeWithSameU({800., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{18.58007733,
+                  -0.215324777,
+                  -0.089782421,
+                  0.01503161,
+                  0.000332503,
+                  0.000274216,
+                  2.70498E-05,
+                  0.001387914,
+                  0.000449199,
+                  0.000829578,
+                  -5.28641E-06},
+                 Units::W}, // inputPower_coeffs
+
+                {-0.629432348,
+                 0.181466663,
+                 0.00044047,
+                 0.012104957,
+                 -6.61515E-05,
+                 9.29975E-05,
+                 9.78042E-05,
+                 -0.000872708,
+                 -0.001013945,
+                 -0.00021852,
+                 5.55444E-06} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
+        {
+            setTankSizeWithSameU({800., Units::gal});
+            compressor->perfMap.push_back({
+                {90, Units::F},
+
+                {{-13.89057656,
+                  0.025902417,
+                  0.304250541,
+                  0.061695153,
+                  -0.001474249,
+                  -0.001126845,
+                  -0.000220192,
+                  0.001241026,
+                  0.000571009,
+                  -0.000479282,
+                  9.04063E-06},
+                 Units::W}, // inputPower_coeffs
+
+                {7.443904067,
+                 0.185978755,
+                 -0.098481635,
+                 -0.002500073,
+                 0.000127658,
+                 0.000444321,
+                 0.000139547,
+                 -0.001000195,
+                 -0.001140199,
+                 -8.77557E-05,
+                 4.87405E-06} // COP_coeffs
+            });
         }
     }
 
-    doTempDepression = false;
-    tankMixesOnDraw = false;
-
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
-
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->minT = {-25., Units::F};
-    compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = getNumNodes() - 1;
-
-    compressor->perfMap.reserve(5);
-
-    compressor->perfMap.push_back({
-        {17, Units::F},               // Temperature (T_F)
-        {{1650, 5.5, 0.0}, Units::W}, // inputPower_coeffs
-        {3.2, -0.015, 0.0}            // COP_coeffs
-    });
-
-    compressor->perfMap.push_back({
-        {35, Units::F},               // Temperature (T_F)
-        {{1100, 4.0, 0.0}, Units::W}, // inputPower_coeffs
-        {3.7, -0.015, 0.0}            // COP_coeffs
-    });
-
-    compressor->perfMap.push_back({
-        {50, Units::F},              // Temperature (T_F)
-        {{880, 3.1, 0.0}, Units::W}, // inputPower_coeffs
-        {5.25, -0.025, 0.0}          // COP_coeffs
-    });
-
-    compressor->perfMap.push_back({
-        {67, Units::F},              // Temperature (T_F)
-        {{740, 4.0, 0.0}, Units::W}, // inputPower_coeffs
-        {6.2, -0.03, 0.0}            // COP_coeffs
-    });
-
-    compressor->perfMap.push_back({
-        {95, Units::F},            // Temperature (T_F)
-        {{790, 2, 0.0}, Units::W}, // inputPower_coeffs
-        {7.15, -0.04, 0.0}         // COP_coeffs
-    });
-
-    compressor->hysteresis_dT = {4, Units::dC};
-    compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-    compressor->isMultipass = false;
-    compressor->maxSetpointT = MAXOUTLET_R744;
-
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(8);
-    compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-        "eighth node absolute", nodeWeights, Temp_t(113, Units::F), this));
-    if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
+    // If Nyle multipass presets
+    else if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_C_MP)
     {
-        compressor->addTurnOnLogic(standby({8.2639, Units::dF}));
-        // Adds a bonus standby logic so the external heater does not cycle, recommended for any
-        // external heater with standby
-        std::vector<NodeWeight> nodeWeightStandby;
-        nodeWeightStandby.emplace_back(0);
-        compressor->standbyLogic = std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
-                                                                           nodeWeightStandby,
-                                                                           Temp_t(113, Units::F),
-                                                                           this,
-                                                                           std::greater<double>());
+        setNumNodes(24);
+        setpointT = {135.0, Units::F};
+        tankSizeFixed = false;
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        tankVolume = {315,
+                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankUA = {7, Units::kJ_per_hC};
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->extrapolationMethod = EXTRAP_NEAREST;
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->hysteresis_dT = 0;
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
+
+        // logic conditions//logic conditions
+        if (MODELS_NyleC60A_MP <= presetNum && presetNum <= MODELS_NyleC250A_MP)
+        {                                       // If not cold weather package
+            compressor->minT = {40., Units::F}; // Min air temperature sans Cold Weather Package
+        }
+        else
+        {
+            compressor->minT = {35., Units::F}; // Min air temperature WITH Cold Weather Package
+        }
+        compressor->maxT = {130.0, Units::F}; // Max air temperature
+        compressor->maxSetpointT = {160., Units::F};
+
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
+
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(4);
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
+        compressor->depressesTemperature = false; // no temp depression
+
+        // Defrost Derate
+        compressor->setupDefrostMap();
+
+        // Performance grid
+        compressor->perfGrid.reserve(2);
+        compressor->perfGridValues.reserve(2);
+
+        // Nyle MP models are all on the same grid axes
+        TempVect_t t0 = {{40., 60., 80., 90.}, Units::F};
+        TempVect_t t1 = {{40., 60., 80., 100., 130., 150.}, Units::F};
+
+        compressor->perfGrid.push_back(t0); // Grid Axis 1 Tair (F)
+        compressor->perfGrid.push_back(t1); // Grid Axis 2 Tin (F)
+
+        if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
+        {
+            setTankSizeWithSameU({360., Units::gal});
+            compressor->mpFlowRate = {13., Units::gal_per_min};
+            if (presetNum == MODELS_NyleC60A_C_MP)
+            {
+                compressor->resDefrost = {
+                    {4.5, Units::kW}, // inputPwr_kW;
+                    {5.0, Units::dF}, // constTempLift_dF;
+                    {40.0, Units::F}  // onBelowT_F
+                };
+            }
+            // Grid values in long format, table 1, input power (W)
+            compressor->perfGridValues.push_back({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
+                                                  4.99, 6.03, 8.55, 10.02, 3.98, 4.53, 5.24, 6.24,
+                                                  8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55});
+            // Grid values in long format, table 2, COP
+            compressor->perfGridValues.push_back(
+                {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
+                 4.438172043, 3.772833724, 3.132264529, 2.505804312, 1.678362573, 1.386227545,
+                 5.467336683, 4.708609272, 3.921755725, 3.169871795, 2.165105386, 1.860732984,
+                 5.512359551, 5.153846154, 4.290502793, 3.417981073, 2.272409779, 1.927748691});
+        }
+        else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
+        {
+            setTankSizeWithSameU({480., Units::gal});
+            compressor->mpFlowRate = {20., Units::gal_per_min};
+            if (presetNum == MODELS_NyleC90A_C_MP)
+            {
+                compressor->resDefrost = {
+                    5.4, // inputPwr_kW;
+                    5.0, // constTempLift_dF;
+                    40.0 // onBelowT_F
+                };
+            }
+            // Grid values in long format, table 1, input power (W)
+            compressor->perfGridValues.push_back(
+                {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
+                 5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35});
+            // Grid values in long format, table 2, COP
+            compressor->perfGridValues.push_back(
+                {4.79138322,  3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537,
+                 6.071129707, 4.264750378, 3.536175711, 2.827659574, 2.036086608, 1.666440678,
+                 7.150635209, 5.659159159, 4.305687204, 3.493467337, 2.487748851, 2.018241042,
+                 6.750737463, 5.604621309, 4.734392736, 3.94005994,  3.04534005,  2.558801498});
+        }
+        else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
+        {
+            setTankSizeWithSameU({600., Units::gal});
+            compressor->mpFlowRate = {28., Units::gal_per_min};
+            if (presetNum == MODELS_NyleC125A_C_MP)
+            {
+                compressor->resDefrost = {
+                    9.0, // inputPwr_kW;
+                    5.0, // constTempLift_dF;
+                    40.0 // onBelowT_F
+                };
+            }
+            // Grid values in long format, table 1, input power (W)
+            compressor->perfGridValues.push_back(
+                {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
+                 7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4});
+            // Grid values in long format, table 2, COP
+            compressor->perfGridValues.push_back(
+                {4.2390625,   3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913,
+                 5.374455733, 4.352657005, 3.453109576, 2.645136187, 1.66278481,  1.307093071,
+                 6.503250975, 5.276736494, 4.229070837, 3.27827381,  2.113821138, 1.770469799,
+                 6.657342657, 5.749473684, 4.612244898, 3.542731921, 2.221095335, 1.816964286});
+        }
+        else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
+        {
+            setTankSizeWithSameU({960., Units::gal});
+            compressor->mpFlowRate = {40., Units::gal_per_min};
+            if (presetNum == MODELS_NyleC185A_C_MP)
+            {
+                compressor->resDefrost = {
+                    7.2, // inputPwr_kW;
+                    5.0, // constTempLift_dF;
+                    40.0 // onBelowTemp_F
+                };
+            }
+            // Grid values in long format, table 1, input power (W)
+            compressor->perfGridValues.push_back(
+                {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
+                 7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62});
+            // Grid values in long format, table 2, COP
+            compressor->perfGridValues.push_back(
+                {5.531043593, 3.556603774, 2.918149466, 2.214754098, 1.590255591, 1.291010499,
+                 8.010014306, 5.258126195, 3.778711485, 2.916437603, 1.964176829, 1.56404703,
+                 9.65819568,  6.200166113, 4.792276964, 3.705475811, 2.561369758, 2.05950096,
+                 10.26993865, 6.350722311, 5.04218853,  3.841688654, 2.574151735, 2.025616698});
+        }
+        else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
+        {
+            setTankSizeWithSameU({960., Units::gal});
+            compressor->mpFlowRate = {60., Units::gal_per_min};
+            if (presetNum == MODELS_NyleC250A_C_MP)
+            {
+                compressor->resDefrost = {
+                    18.0, // inputPwr_kW;
+                    5.0,  // constTempLift_dF;
+                    40.0  // onBelowT_F
+                };
+            }
+            // Grid values in long format, table 1, input power (W)
+            compressor->perfGridValues.push_back({10.89, 12.23, 13.55, 14.58, 15.74, 16.72,
+                                                  11.46, 13.76, 15.97, 17.79, 20.56, 22.50,
+                                                  10.36, 14.66, 18.07, 21.23, 25.81, 29.01,
+                                                  8.67,  15.05, 18.76, 21.87, 26.63, 30.02});
+
+            // Grid values in long format, table 2, COP
+            compressor->perfGridValues.push_back(
+                {5.81818181, 4.50040883, 3.69667896, 3.12414266, 2.38500635, 1.93540669,
+                 7.24520069, 5.50145348, 4.39323732, 3.67734682, 2.73249027, 2.23911111,
+                 10.6196911, 7.05320600, 5.41228555, 4.28638718, 3.04804339, 2.46053085,
+                 14.7831603, 7.77903268, 5.71801705, 4.40237768, 2.92489673, 2.21419054});
+        }
+
+        // Set up regular grid interpolator.
+        compressor->perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
+            Btwxt::RegularGridInterpolator(compressor->perfGrid,
+                                           compressor->perfGridValues,
+                                           "RegularGridInterpolator",
+                                           get_courier()));
+        compressor->useBtwxtGrid = true;
     }
-    // lowT cutoff
-    std::vector<NodeWeight> nodeWeights1;
-    nodeWeights1.emplace_back(1);
-    compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
-                                                                        nodeWeights1,
-                                                                        Temp_t(135, Units::F),
-                                                                        this,
-                                                                        std::greater<double>(),
-                                                                        true));
-    compressor->depressesTemperature = false; // no temp depression
-}
-else if (presetNum == MODELS_SANCO2_43)
-{
-    setNumNodes(96);
-    setpointT = 65;
-    setpointFixed = true;
+    // if rheem multipass
+    else if (MODELS_RHEEM_HPHD60HNU_201_MP <= presetNum &&
+             presetNum <= MODELS_RHEEM_HPHD135VNU_483_MP)
+    {
+        setNumNodes(24);
+        setpointT = Temp_t(135.0, Units::F);
+        tankSizeFixed = false;
 
-    tankVolume = {160, Units::L};
-    tankUA = {5, Units::kJ_per_hC};
+        doTempDepression = false;
+        tankMixesOnDraw = false;
 
-    doTempDepression = false;
-    tankMixesOnDraw = false;
+        tankVolume = {315,
+                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankUA = {7, Units::kJ_per_hC};
 
-    heatSources.reserve(1);
-    auto compressor = addHeatSource("compressor");
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
 
-    compressor->isOn = false;
-    compressor->isVIP = true;
-    compressor->typeOfHeatSource = TYPE_compressor;
-    compressor->minT = {-25., Units::F};
-    compressor->externalOutletHeight = 0;
-    compressor->externalInletHeight = getIndexTopNode();
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->perfMap.reserve(1);
+        compressor->hysteresis_dT = 0;
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
-    compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        // logic conditions
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights, Temp_d_t(5., Units::dF), this));
 
-    compressor->perfMap.reserve(5);
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(4);
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node", nodeWeights1, Temp_d_t(0), this, std::greater<double>()));
+        compressor->depressesTemperature = false; // no temp depression
 
-    compressor->perfMap.push_back({
-        17,                           // Temperature (T_F)
-        {{1650, 5.5, 0.0}, Units::W}, // inputPower_coeffs
-        {3.2, -0.015, 0.0}            // COP_coeffs
-    });
+        // Defrost Derate
+        compressor->setupDefrostMap();
 
-    compressor->perfMap.push_back({
-        35,                           // Temperature (T_F)
-        {{1100, 4.0, 0.0}, Units::W}, // inputPower_coeffs
-        {3.7, -0.015, 0.0}            // COP_coeffs
-    });
+        // logic conditions
+        compressor->minT = Temp_t(45., Units::F);
+        compressor->maxT = Temp_t(110., Units::F);
+        compressor->maxSetpointT = MAXOUTLET_R134A; // data says 150...
 
-    compressor->perfMap.push_back({
-        50,                          // Temperature (T_F)
-        {{880, 3.1, 0.0}, Units::W}, // inputPower_coeffs
-        {5.25, -0.025, 0.0}          // COP_coeffs
-    });
+        if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
+            presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
+        {
+            setTankSizeWithSameU({250., Units::gal});
+            compressor->mpFlowRate = {17.4, Units::gal_per_min};
+            compressor->perfMap.push_back({
+                {110, Units::F},
+
+                {{1.8558438453,
+                  0.0120796155,
+                  -0.0135443327,
+                  0.0000059621,
+                  0.0003010506,
+                  -0.0000463525},
+                 Units::kW}, // inputPower_coeffs
+
+                {3.6840046360,
+                 0.0995685071,
+                 -0.0398107723,
+                 -0.0001903160,
+                 0.0000980361,
+                 -0.0003469814} // COP_coeffs
+            });
+        }
+        else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
+                 presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
+        {
+            setTankSizeWithSameU({500., Units::gal});
+            compressor->mpFlowRate = {34.87, Units::gal_per_min};
+            compressor->perfMap.push_back({
+                {110, Units::F},
+
+                {{5.1838201136,
+                  0.0247312962,
+                  -0.0120766440,
+                  0.0000493862,
+                  0.0005422089,
+                  -0.0001385078},
+                 Units::kW}, // inputPower_coeffs
+
+                {5.0207181209,
+                 0.0442525790,
+                 -0.0418284882,
+                 0.0000793531,
+                 0.0001132421,
+                 -0.0002491563} // COP_coeffs
+            });
+        }
+    }
+
+    else if (presetNum == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    {
+        setNumNodes(96);
+        setpointT = 65;
+
+        tankVolume = {500, Units::gal};
+        tankUA = {12, Units::kJ_per_hC};
+        tankSizeFixed = false;
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->minT = {-13., Units::F};
+        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = getNumNodes() - 1;
+
+        // What to do about these?!
+        compressor->hysteresis_dT = {4, Units::dC};
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->isMultipass = false;
+        compressor->maxSetpointT = {176.1, Units::F};
+
+        // Turn on
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "eighth node absolute", nodeWeights, Temp_t(110., Units::F), this));
+
+        // lowT cutoff
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(1);
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<double>()));
+        compressor->depressesTemperature = false;
+
+        // Performance grid: externalT_F, Tout_F, condenserTemp_F
+        compressor->perfGrid.reserve(2);
+        compressor->perfGridValues.reserve(2);
+        compressor->perfGrid.push_back(
+            {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
+             28.4, 32,    35.6, 39.2, 42.8, 46.4, 50,   53.6, 57.2,  60.8, 64.4, 68,
+             71.6, 75.2,  78.8, 82.4, 86,   89.6, 93.2, 96.8, 100.4, 104}); // Grid Axis 1 Tair (F)
+        compressor->perfGrid.push_back({140., 158., 176.});                 // Grid Axis 2 Tout (F)
+        compressor->perfGrid.push_back({41, 48.2, 62.6, 75.2, 84.2});       // Grid Axis 3 Tin (F)
+
+        // Grid values in long format, table 1, input power (Btu/hr)
+        compressor->perfGridValues.push_back(
+            {56518.565328,     57130.739544,     57094.73612,      57166.756616,
+             57238.777112,     56518.565328,     57130.739544,     57094.73612,
+             57166.756616,     57238.777112,     58061.348896,     58360.24692,
+             58591.39286,      58870.368216,     59093.547136,     56626.5960719999,
+             57202.763452,     57310.794196,     57310.794196,     57490.848848,
+             56626.5960719999, 57202.763452,     57310.794196,     57310.794196,
+             57490.848848,     58280.539188,     58519.65556,      58786.67868,
+             59093.547136,     59372.5190799999, 56950.695128,     57850.95474,
+             57814.947904,     57814.947904,     57922.978648,     56950.695128,
+             57850.95474,      57814.947904,     57814.947904,     57922.978648,
+             58679.067612,     58977.969048,     59372.5190799999, 59651.494436,
+             59930.46638,      57418.831764,     58175.053796,     58283.08454,
+             58247.07088,      58427.12212,      57418.831764,     58175.053796,
+             58283.08454,      58247.07088,      58427.12212,      59137.384512,
+             59376.504296,     59902.566456,     60265.23476,      60516.313604,
+             57778.930832,     58643.190432,     58823.23826,      58643.190432,
+             58967.282664,     57778.930832,     58643.190432,     58823.23826,
+             58643.190432,     58967.282664,     59515.99368,      59954.377676,
+             60321.031196,     60934.77152,      61213.743464,     58103.029888,
+             59075.313408,     59219.357812,     59291.374896,     59579.45688,
+             58103.029888,     59075.313408,     59219.357812,     59291.374896,
+             59579.45688,      60014.159328,     60273.205192,     60934.77152,
+             61436.922384,     61799.587276,     58535.152864,     59399.412464,
+             59795.525192,     59903.555936,     60299.672076,     58535.152864,
+             59399.412464,     59795.525192,     59903.555936,     60299.672076,
+             60512.321564,     60751.448172,     61409.02246,      62022.769608,
+             62329.641476,     58931.275828,     59651.4842,       60011.58668,
+             60263.66524,      60551.747224,     58931.275828,     59651.4842,
+             60011.58668,      60263.66524,      60551.747224,     60910.860224,
+             61369.1703,       62022.769608,     62580.713496,     62803.895828,
+             59219.357812,     60155.634496,     60443.71648,      60659.777968,
+             61163.92144,      59219.357812,     60155.634496,     60443.71648,
+             60659.777968,     61163.92144,      61329.321552,     61687.997816,
+             62441.224112,     63166.56072,      63585.015224,     59651.4842,
+             60479.726728,     61019.88386,      61163.92144,      61920.146884,
+             59651.4842,       60479.726728,     61019.88386,      61163.92144,
+             61920.146884,     61707.923896,     62186.166876,     63027.071336,
+             63724.504608,     64170.862448,     59723.504696,     60839.83262,
+             61379.993164,     61524.030744,     62352.273272,     59723.504696,
+             60839.83262,      61379.993164,     61524.030744,     62352.273272,
+             61966.96976,      62445.21274,      63361.839716,     64142.969348,
+             64505.63424,      59759.511532,     60695.788216,     61524.030744,
+             61884.136636,     62712.382576,     59759.511532,     60695.788216,
+             61524.030744,     61884.136636,     62712.382576,     62166.240796,
+             62744.114176,     63668.714996,     64282.451908,     64589.323776,
+             59759.511532,     61019.88386,      61848.1298,       62064.191288,
+             62964.4509,       59759.511532,     61019.88386,      61848.1298,
+             62064.191288,     62964.4509,       62425.28666,      63003.16004,
+             63975.58004,      64533.523928,     64617.2237,       59471.429548,
+             61055.894108,     61956.160544,     62460.304016,     63216.526048,
+             59471.429548,     61055.894108,     61956.160544,     62460.304016,
+             63216.526048,     62624.550872,     63202.424252,     64310.351832,
+             64756.70626,      64728.806336,     61632.061488,     63036.474808,
+             63828.7105,       64296.847136,     65053.069168,     61632.061488,
+             63036.474808,     63828.7105,       64296.847136,     65053.069168,
+             63561.10734,      64099.125148,     65258.8605359999, 65593.625504,
+             65621.525428,     51189.004268,     52917.506408,     54826.070024,
+             57094.73612,      59327.388556,     51189.004268,     52917.506408,
+             54826.070024,     57094.73612,      59327.388556,     55391.172288,
+             58240.683616,     62106.459144,     65733.114888,     65705.214964,
+             41286.100768,     42726.524336,     45931.460292,     49784.590948,
+             53457.6669519999, 41286.100768,     42726.524336,     45931.460292,
+             49784.590948,     53457.6669519999, 49433.093532,     51067.083272,
+             57921.8561,       61604.3082799999, 64477.734316,     35632.444064,
+             37108.87788,      41394.134924,     45139.228012,     49568.526048,
+             35632.444064,     37108.87788,      41394.134924,     45139.228012,
+             49568.526048,     47540.06134,      47221.233824,     56080.631716,
+             59539.904976,     61883.276812,     34192.023908,     35596.430404,
+             39809.6669519999, 43410.72246,      47659.969256,     34192.023908,
+             35596.430404,     39809.6669519999, 43410.72246,      47659.969256,
+             47559.98742,      47061.821772,     54490.482764,     57893.959588,
+             60153.648712,     32895.641332,     34192.023908,     38225.202392,
+             41646.20666,      45751.409052,     32895.641332,     34192.023908,
+             38225.202392,     41646.20666,      45751.409052,     47659.621232,
+             46842.624656,     52956.13366,      56220.1211,       58312.420916,
+             31563.25192,      32715.58668,      36532.707088,     39881.687448,
+             43914.869344,     31563.25192,      32715.58668,      36532.707088,
+             39881.687448,     43914.869344,     47719.402884,     46742.994256,
+             51393.877808,     54518.382688,     56554.886068,     30194.85226,
+             31347.18702,      35092.286932,     38117.171648,     42006.312552,
+             30194.85226,      31347.18702,      35092.286932,     38117.171648,
+             42006.312552,     47799.1072039999, 46324.532928,     49692.139396,
+             52732.951328,     54769.45812,      30446.923996,     31383.197268,
+             34300.054652,     37144.884716,     40781.953884,     30446.923996,
+             31383.197268,     34300.054652,     37144.884716,     40781.953884,
+             45547.391924,     44212.307032,     47320.867636,     50389.57608,
+             52202.90054,      30698.995732,     31311.176772,     33723.88386,
+             36316.6456,       39701.636208,     30698.995732,     31311.176772,
+             33723.88386,      36316.6456,       39701.636208,     43295.680056,
+             41980.517832,     45089.078436,     47795.121988,     49720.03932,
+             30987.081128,     31311.176772,     33183.726728,     35344.358668,
+             38477.27754,      30987.081128,     31311.176772,     33183.726728,
+             35344.358668,     38477.27754,      41562.059916,     40486.017476,
+             43415.236536,     46037.590552,     47795.121988,     31203.146028,
+             31311.176772,     32571.545688,     34552.126388,     37360.949616,
+             31203.146028,     31311.176772,     32571.545688,     34552.126388,
+             37360.949616,     40486.017476,     39310.3446359999, 42159.859376,
+             44782.20998,      46511.844904,     31167.132368,     31311.176772,
+             32355.4842,       34156.010248,     36712.758328,     31167.132368,
+             31311.176772,     32355.4842,       34156.010248,     36712.758328,
+             39449.830608,     38353.862088,     41127.657724,     43666.31538,
+             45284.360844,     31059.101624,     31131.12212,      32319.473952,
+             34156.010248,     36748.771988,     31059.101624,     31131.12212,
+             32319.473952,     34156.010248,     36748.771988,     38592.985284,
+             37457.161192,     40151.249096,     42801.496212,     44419.541676,
+             30879.050384,     31023.091376,     32319.473952,     34192.023908,
+             36820.789072,     30879.050384,     31023.091376,     32319.473952,
+             34192.023908,     36820.789072,     37756.062628,     36680.0236,
+             39258.536828,     41797.194484,     43387.343436,     30807.029888,
+             30951.07088,      32427.504696,     34156.010248,     36748.771988,
+             30807.029888,     30951.07088,      32427.504696,     34156.010248,
+             36748.771988,     37795.9182,       36779.657412,     39258.536828,
+             41769.29456,      43331.547,        30626.976942,     30735.007686,
+             32319.473952,     34156.010248,     36748.771988,     30626.976942,
+             30735.007686,     32319.473952,     34156.010248,     36748.771988,
+             37815.84428,      36779.657412,     39286.431634,     41825.090996,
+             43359.446924,     30446.923996,     30518.944492,     32355.4842,
+             34264.040992,     36820.789072,     30446.923996,     30518.944492,
+             32355.4842,       34264.040992,     36820.789072,     37775.988708,
+             36759.731332,     39286.431634,     41825.090996,     43359.446924,
+             30230.859096,     30410.913748,     32319.473952,     34192.023908,
+             36748.771988,     30230.859096,     30410.913748,     32319.473952,
+             34192.023908,     36748.771988,     37775.988708,     36759.731332,
+             39342.226364,     41825.090996,     43303.650488,     30194.85226,
+             30194.85226,      32391.491036,     34156.010248,     36748.771988,
+             30194.85226,      30194.85226,      32391.491036,     34156.010248,
+             36748.771988,     37756.062628,     36779.657412,     39342.226364,
+             41825.090996,     43359.446924});
+
+        // Grid values in long format, table 2, COP
+        compressor->perfGridValues.push_back(
+            {1.177126, 1.1393,   1.091664, 1.033858, 0.981755, 1.177126, 1.1393,   1.091664,
+             1.033858, 0.981755, 1.134534, 1.106615, 1.04928,  0.989101, 0.946182, 1.228935,
+             1.190326, 1.136507, 1.075244, 1.023802, 1.228935, 1.190326, 1.136507, 1.075244,
+             1.023802, 1.174944, 1.147101, 1.087318, 1.026909, 0.980265, 1.324165, 1.27451,
+             1.218468, 1.156182, 1.103823, 1.324165, 1.27451,  1.218468, 1.156182, 1.103823,
+             1.267595, 1.236929, 1.165864, 1.102888, 1.052601, 1.415804, 1.365212, 1.301359,
+             1.238022, 1.180586, 1.415804, 1.365212, 1.301359, 1.238022, 1.180586, 1.358408,
+             1.324943, 1.249272, 1.179609, 1.128155, 1.510855, 1.453792, 1.381237, 1.31747,
+             1.253435, 1.510855, 1.453792, 1.381237, 1.31747,  1.253435, 1.446639, 1.404653,
+             1.331368, 1.249056, 1.195511, 1.60469,  1.540079, 1.462451, 1.39417,  1.326987,
+             1.60469,  1.540079, 1.462451, 1.39417,  1.326987, 1.529924, 1.492107, 1.404944,
+             1.325122, 1.265433, 1.690249, 1.630494, 1.539446, 1.464082, 1.395939, 1.690249,
+             1.630494, 1.539446, 1.464082, 1.395939, 1.610302, 1.56761,  1.479273, 1.393118,
+             1.33076,  1.776046, 1.715967, 1.624662, 1.540783, 1.469819, 1.776046, 1.715967,
+             1.624662, 1.540783, 1.469819, 1.693465, 1.646725, 1.550545, 1.459601, 1.400666,
+             1.865309, 1.797965, 1.703902, 1.612645, 1.539888, 1.865309, 1.797965, 1.703902,
+             1.612645, 1.539888, 1.776866, 1.728095, 1.626829, 1.531743, 1.461555, 1.956837,
+             1.881215, 1.777073, 1.690021, 1.603082, 1.956837, 1.881215, 1.777073, 1.690021,
+             1.603082, 1.857512, 1.807899, 1.699347, 1.599321, 1.526899, 2.038891, 1.956496,
+             1.848049, 1.757975, 1.668207, 2.038891, 1.956496, 1.848049, 1.757975, 1.668207,
+             1.934721, 1.878022, 1.764777, 1.657606, 1.583414, 2.110576, 2.028182, 1.922739,
+             1.818155, 1.725237, 2.110576, 2.028182, 1.922739, 1.818155, 1.725237, 1.997516,
+             1.937435, 1.824625, 1.712596, 1.630169, 2.185899, 2.091178, 1.989083, 1.883087,
+             1.786388, 2.185899, 2.091178, 1.989083, 1.883087, 1.786388, 2.06464,  2.003084,
+             1.88041,  1.763428, 1.68041,  2.29337,  2.155411, 2.063354, 1.942635, 1.844204,
+             2.29337,  2.155411, 2.063354, 1.942635, 1.844204, 2.125448, 2.061323, 1.933955,
+             1.810339, 1.720612, 2.213555, 2.111682, 2.027503, 1.91515,  1.819817, 2.213555,
+             2.111682, 2.027503, 1.91515,  1.819817, 2.126499, 2.064584, 1.935343, 1.818713,
+             1.728239, 2.665142, 2.578088, 2.488506, 2.388206, 2.29651,  2.665142, 2.578088,
+             2.488506, 2.388206, 2.29651,  2.46407,  2.344111, 2.198428, 2.057188, 1.96338,
+             3.304405, 3.191319, 2.971384, 2.741049, 2.550691, 3.304405, 3.191319, 2.971384,
+             2.741049, 2.550691, 2.763177, 2.673398, 2.356773, 2.216348, 2.116712, 3.827691,
+             3.676371, 3.297085, 3.022338, 2.752997, 3.827691, 3.676371, 3.297085, 3.022338,
+             2.752997, 2.871739, 2.890389, 2.434648, 2.292726, 2.205906, 3.989995, 3.834598,
+             3.428313, 3.14185,  2.862486, 3.989995, 3.834598, 3.428313, 3.14185,  2.862486,
+             2.871269, 2.900921, 2.506208, 2.358391, 2.270261, 4.147236, 3.992101, 3.570419,
+             3.274967, 2.982684, 4.147236, 3.992101, 3.570419, 3.274967, 2.982684, 2.865266,
+             2.913751, 2.578296, 2.428607, 2.341945, 4.322305, 4.172262, 3.73583,  3.419865,
+             3.107421, 4.322305, 4.172262, 3.73583,  3.419865, 3.107421, 2.861677, 2.919962,
+             2.65667,  2.504413, 2.414725, 4.518187, 4.354394, 3.889174, 3.578177, 3.248607,
+             4.518187, 4.354394, 3.889174, 3.578177, 3.248607, 2.856905, 2.946338, 2.747649,
+             2.589208, 2.493442, 4.481963, 4.349398, 3.979002, 3.671837, 3.346137, 4.481963,
+             4.349398, 3.979002, 3.671837, 3.346137, 2.998141, 3.087098, 2.885335, 2.709619,
+             2.616032, 4.445162, 4.359402, 4.046983, 3.755577, 3.437188, 4.445162, 4.359402,
+             4.046983, 3.755577, 3.437188, 3.154067, 3.251216, 3.028152, 2.856705, 2.746669,
+             4.402673, 4.359402, 4.112859, 3.858889, 3.546561, 4.402673, 4.359402, 4.112859,
+             3.858889, 3.546561, 3.285629, 3.371232, 3.1449,   2.965763, 2.857289, 4.373341,
+             4.359402, 4.19016,  3.947368, 3.65253,  4.373341, 4.359402, 4.19016,  3.947368,
+             3.65253,  3.372955, 3.472057, 3.238544, 3.048902, 2.936122, 4.378394, 4.359402,
+             4.218141, 3.993147, 3.717018, 4.378394, 4.359402, 4.218141, 3.993147, 3.717018,
+             3.461548, 3.558644, 3.319824, 3.126817, 3.015709, 4.391304, 4.384616, 4.222841,
+             3.993147, 3.713376, 4.391304, 4.384616, 4.222841, 3.993147, 3.713376, 3.538402,
+             3.643836, 3.400556, 3.189995, 3.074423, 4.419242, 4.399884, 4.222841, 3.988941,
+             3.706113, 4.419242, 4.399884, 4.222841, 3.988941, 3.706113, 3.616836, 3.721038,
+             3.477882, 3.266644, 3.147565, 4.429573, 4.410122, 4.208773, 3.993147, 3.713376,
+             4.429573, 4.410122, 4.208773, 3.993147, 3.713376, 3.613022, 3.710957, 3.477882,
+             3.268826, 3.151618, 4.45679,  4.441125, 4.222841, 3.993147, 3.713376, 4.45679,
+             4.441125, 4.222841, 3.993147, 3.713376, 3.611119, 3.710957, 3.475413, 3.264466,
+             3.14959,  4.483146, 4.472566, 4.218141, 3.980557, 3.706113, 4.483146, 4.472566,
+             4.218141, 3.980557, 3.706113, 3.614928, 3.712969, 3.475413, 3.264466, 3.14959,
+             4.515188, 4.488454, 4.222841, 3.988941, 3.713376, 4.515188, 4.488454, 4.222841,
+             3.988941, 3.713376, 3.614928, 3.712969, 3.470484, 3.264466, 3.153648, 4.522957,
+             4.520572, 4.213452, 3.993147, 3.713376, 4.522957, 4.520572, 4.213452, 3.993147,
+             3.713376, 3.616836, 3.710957, 3.470484, 3.264466, 3.14959});
+
+        // Set up regular grid interpolator.
+        Btwxt::GridAxis g0(compressor->perfGrid[0],
+                           Btwxt::InterpolationMethod::linear,
+                           Btwxt::ExtrapolationMethod::constant,
+                           {-DBL_MAX, DBL_MAX},
+                           "TAir",
+                           get_courier());
+        Btwxt::GridAxis g1(compressor->perfGrid[1],
+                           Btwxt::InterpolationMethod::linear,
+                           Btwxt::ExtrapolationMethod::constant,
+                           {-DBL_MAX, DBL_MAX},
+                           "TOut",
+                           get_courier());
+        Btwxt::GridAxis g2(compressor->perfGrid[2],
+                           Btwxt::InterpolationMethod::linear,
+                           Btwxt::ExtrapolationMethod::linear,
+                           {-DBL_MAX, DBL_MAX},
+                           "Tin",
+                           get_courier());
+
+        std::vector<Btwxt::GridAxis> gx {g0, g1, g2};
+
+        compressor->perfRGI =
+            std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
+                gx, compressor->perfGridValues, "RegularGridInterpolator", get_courier()));
+
+        compressor->useBtwxtGrid = true;
+
+        compressor->secondaryHeatExchanger = {{10., Units::dF}, {15., Units::dF}, 27.};
+    }
+
+    else if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_GS3_45HPA_US_SP ||
+             presetNum == MODELS_SANCO2_119)
+    {
+        setNumNodes(96);
+        setpointT = 65;
+        setpointFixed = true;
+
+        if (presetNum == MODELS_SANCO2_119)
+        {
+            tankVolume = {119, Units::L};
+            tankUA = {9, Units::kJ_per_hC};
+        }
+        else
+        {
+            tankVolume = {315, Units::L};
+            tankUA = {7, Units::kJ_per_hC};
+            if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
+            {
+                tankSizeFixed = false;
+            }
+        }
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->minT = {-25., Units::F};
+        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = getNumNodes() - 1;
+
+        compressor->perfMap.reserve(5);
 
         compressor->perfMap.push_back({
-            67,               // Temperature (T_F)
-            {{740, 4.0, 0.0}, Units::W},  // inputPower_coeffs
-            {6.2, -0.03, 0.0} // COP_coeffs
+            {17, Units::F},               // Temperature (T_F)
+            {{1650, 5.5, 0.0}, Units::W}, // inputPower_coeffs
+            {3.2, -0.015, 0.0}            // COP_coeffs
         });
 
-            compressor->perfMap.push_back({
-                95,                        // Temperature (T_F)
-                {{790, 2, 0.0}, Units::W}, // inputPower_coeffs
-                {7.15, -0.04, 0.0}         // COP_coeffs
-            });
+        compressor->perfMap.push_back({
+            {35, Units::F},               // Temperature (T_F)
+            {{1100, 4.0, 0.0}, Units::W}, // inputPower_coeffs
+            {3.7, -0.015, 0.0}            // COP_coeffs
+        });
 
-            compressor->hysteresis_dT = {4, Units::dC};
-            compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-            compressor->isMultipass = false;
-            compressor->maxSetpointT = MAXOUTLET_R744;
+        compressor->perfMap.push_back({
+            {50, Units::F},              // Temperature (T_F)
+            {{880, 3.1, 0.0}, Units::W}, // inputPower_coeffs
+            {5.25, -0.025, 0.0}          // COP_coeffs
+        });
 
-            std::vector<NodeWeight> nodeWeights;
-            nodeWeights.emplace_back(4);
+        compressor->perfMap.push_back({
+            {67, Units::F},              // Temperature (T_F)
+            {{740, 4.0, 0.0}, Units::W}, // inputPower_coeffs
+            {6.2, -0.03, 0.0}            // COP_coeffs
+        });
+
+        compressor->perfMap.push_back({
+            {95, Units::F},            // Temperature (T_F)
+            {{790, 2, 0.0}, Units::W}, // inputPower_coeffs
+            {7.15, -0.04, 0.0}         // COP_coeffs
+        });
+
+        compressor->hysteresis_dT = {4, Units::dC};
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->isMultipass = false;
+        compressor->maxSetpointT = MAXOUTLET_R744;
+
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(8);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "eighth node absolute", nodeWeights, Temp_t(113, Units::F), this));
+        if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
+        {
+            compressor->addTurnOnLogic(standby({8.2639, Units::dF}));
+            // Adds a bonus standby logic so the external heater does not cycle, recommended for any
+            // external heater with standby
             std::vector<NodeWeight> nodeWeightStandby;
             nodeWeightStandby.emplace_back(0);
-            compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
-                "fourth node absolute", nodeWeights, Temp_t(113, Units::F), this));
-            compressor->addTurnOnLogic(standby({8.2639, Units::F}));
             compressor->standbyLogic =
                 std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
                                                         nodeWeightStandby,
                                                         Temp_t(113, Units::F),
                                                         this,
                                                         std::greater<double>());
+        }
+        // lowT cutoff
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(1);
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
+                                                                            nodeWeights1,
+                                                                            Temp_t(135, Units::F),
+                                                                            this,
+                                                                            std::greater<double>(),
+                                                                            true));
+        compressor->depressesTemperature = false; // no temp depression
+    }
+    else if (presetNum == MODELS_SANCO2_43)
+    {
+        setNumNodes(96);
+        setpointT = 65;
+        setpointFixed = true;
 
-            // lowT cutoff
-            std::vector<NodeWeight> nodeWeights1;
-            nodeWeights1.emplace_back(1);
-            compressor->addShutOffLogic(
-                std::make_shared<TempBasedHeatingLogic>("bottom twelfth absolute",
-                                                        nodeWeights1,
-                                                        Temp_t(135, Units::F),
-                                                        this,
-                                                        std::greater<double>(),
-                                                        true));
-            compressor->depressesTemperature = false; // no temp depression
+        tankVolume = {160, Units::L};
+        tankUA = {5, Units::kJ_per_hC};
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        heatSources.reserve(1);
+        auto compressor = addHeatSource("compressor");
+
+        compressor->isOn = false;
+        compressor->isVIP = true;
+        compressor->typeOfHeatSource = TYPE_compressor;
+        compressor->minT = {-25., Units::F};
+        compressor->externalOutletHeight = 0;
+        compressor->externalInletHeight = getIndexTopNode();
+
+        compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+
+        compressor->perfMap.reserve(5);
+
+        compressor->perfMap.push_back({
+            17,                           // Temperature (T_F)
+            {{1650, 5.5, 0.0}, Units::W}, // inputPower_coeffs
+            {3.2, -0.015, 0.0}            // COP_coeffs
+        });
+
+        compressor->perfMap.push_back({
+            35,                           // Temperature (T_F)
+            {{1100, 4.0, 0.0}, Units::W}, // inputPower_coeffs
+            {3.7, -0.015, 0.0}            // COP_coeffs
+        });
+
+        compressor->perfMap.push_back({
+            50,                          // Temperature (T_F)
+            {{880, 3.1, 0.0}, Units::W}, // inputPower_coeffs
+            {5.25, -0.025, 0.0}          // COP_coeffs
+        });
+
+        compressor->perfMap.push_back({
+            67,                          // Temperature (T_F)
+            {{740, 4.0, 0.0}, Units::W}, // inputPower_coeffs
+            {6.2, -0.03, 0.0}            // COP_coeffs
+        });
+
+        compressor->perfMap.push_back({
+            95,                        // Temperature (T_F)
+            {{790, 2, 0.0}, Units::W}, // inputPower_coeffs
+            {7.15, -0.04, 0.0}         // COP_coeffs
+        });
+
+        compressor->hysteresis_dT = {4, Units::dC};
+        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->isMultipass = false;
+        compressor->maxSetpointT = MAXOUTLET_R744;
+
+        std::vector<NodeWeight> nodeWeights;
+        nodeWeights.emplace_back(4);
+        std::vector<NodeWeight> nodeWeightStandby;
+        nodeWeightStandby.emplace_back(0);
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "fourth node absolute", nodeWeights, Temp_t(113, Units::F), this));
+        compressor->addTurnOnLogic(standby({8.2639, Units::F}));
+        compressor->standbyLogic = std::make_shared<TempBasedHeatingLogic>("bottom node absolute",
+                                                                           nodeWeightStandby,
+                                                                           Temp_t(113, Units::F),
+                                                                           this,
+                                                                           std::greater<double>());
+
+        // lowT cutoff
+        std::vector<NodeWeight> nodeWeights1;
+        nodeWeights1.emplace_back(1);
+        compressor->addShutOffLogic(
+            std::make_shared<TempBasedHeatingLogic>("bottom twelfth absolute",
+                                                    nodeWeights1,
+                                                    Temp_t(135, Units::F),
+                                                    this,
+                                                    std::greater<double>(),
+                                                    true));
+        compressor->depressesTemperature = false; // no temp depression
     }
     else if (presetNum == MODELS_AOSmithHPTU50 || presetNum == MODELS_RheemHBDR2250 ||
              presetNum == MODELS_RheemHBDR4550)
@@ -2628,7 +2692,7 @@ else if (presetNum == MODELS_SANCO2_43)
         });
 
         compressor->minT = {47.0, Units::F};
-                           // Product documentation says 45F doesn't look like it in CMP-T test//
+        // Product documentation says 45F doesn't look like it in CMP-T test//
         compressor->maxT = {110.0, Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
@@ -3128,9 +3192,9 @@ else if (presetNum == MODELS_SANCO2_43)
         });
 
         compressor->perfMap.push_back({
-            {70, Units::F},                       // Temperature (T_F)
+            {70, Units::F},                        // Temperature (T_F)
             {{148.0418, 2.553291, 0.0}, Units::W}, // inputPower_coeffs
-            {7.207307, -0.0335265, 0.0}           // COP_coeffs
+            {7.207307, -0.0335265, 0.0}            // COP_coeffs
         });
 
         compressor->minT = {37.0, Units::F};

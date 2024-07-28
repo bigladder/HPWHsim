@@ -132,7 +132,8 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
 ///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
 /// @return	Resampled value; 0 if undefined.
 //-----------------------------------------------------------------------------
-double getResampledValue(const std::vector<double> sampleValues, double beginFraction, double endFraction)
+double
+getResampledValue(const std::vector<double> sampleValues, double beginFraction, double endFraction)
 {
     if (beginFraction > endFraction)
         std::swap(beginFraction, endFraction);
@@ -220,7 +221,7 @@ std::vector<double> resample(const std::size_t N, const std::vector<double> samp
 std::vector<double> resampleExtensive(const std::size_t N, const std::vector<double> sampleValues)
 {
     std::vector<double> values = resample(N, sampleValues);
-    double scale =  static_cast<double>(sampleValues.size()) / static_cast<double>(N);
+    double scale = static_cast<double>(sampleValues.size()) / static_cast<double>(N);
     for (auto& value : values)
         value *= scale;
     return values;
@@ -333,9 +334,9 @@ HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist)
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
 std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
-                  int lowestNode,
-                  const HPWH::TempVect_t& nodeTs,
-                  const HPWH::Temp_t setpointT)
+                                    int lowestNode,
+                                    const HPWH::TempVect_t& nodeTs,
+                                    const HPWH::Temp_t setpointT)
 {
     std::vector<double> thermalDist(nodeTs.size());
 
@@ -397,7 +398,7 @@ template <typename V>
 double expandSeries(const V& coeffs, const double x)
 {
     double y = 0.;
-    for (auto& pCoeff: coeffs)
+    for (auto& pCoeff : coeffs)
     {
         y = pCoeff + y * x;
     }
@@ -438,17 +439,16 @@ double choose(const int n, const int i)
 
 double regressedMethod(const std::vector<double> coeffs, double x1, double x2, double x3)
 {
-    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x3 +
-           coeffs[4] * x1 * x1 + coeffs[5] * x2 * x2 + coeffs[6] * x3 * x3 +
-           coeffs[7] * x1 * x2 + coeffs[8] * x1 * x3 + coeffs[9] * x2 * x3 +
-           coeffs[10] * x1 * x2 * x3;
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x3 + coeffs[4] * x1 * x1 +
+           coeffs[5] * x2 * x2 + coeffs[6] * x3 * x3 + coeffs[7] * x1 * x2 + coeffs[8] * x1 * x3 +
+           coeffs[9] * x2 * x3 + coeffs[10] * x1 * x2 * x3;
 }
 
 double regressedMethodMP(const std::vector<double> coeffs, double x1, double x2)
 {
     // Const Tair Tin Tair2 Tin2 TairTin
-    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x1 * x1 +
-           coeffs[4] * x2 * x2 + coeffs[5] * x1 * x2;
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x1 * x1 + coeffs[4] * x2 * x2 +
+           coeffs[5] * x1 * x2;
 }
 
 const std::vector<int> HPWH::powers3 = {0, 1, 2};
@@ -469,8 +469,8 @@ const std::vector<std::tuple<int, int, int>> HPWH::powers11 = {{0, 0, 0},
                                                                {1, 1, 1}};
 
 std::vector<double> changeSeriesUnitsTemp3(const std::vector<double> coeffs,
-                                         const Units::Temp fromUnits,
-                                         const Units::Temp toUnits)
+                                           const Units::Temp fromUnits,
+                                           const Units::Temp toUnits)
 {
     auto newCoeffs = coeffs;
     if (fromUnits == toUnits)
@@ -1379,7 +1379,6 @@ void HPWH::setTankTs(const TempVect_t setTankTs)
 
     // set node temps
     tankTs = resampleIntensive(getNumNodes(), setTankTs);
-
 }
 
 void HPWH::getTankTs(TempVect_t& tankTemps) { tankTemps = tankTs; }
@@ -2934,7 +2933,7 @@ void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 
     auto modHeatDistribution = modifyHeatDistribution(extraHeatDist);
 
-    PowerVect_t heatDistribution  = resampleExtensive(getNumNodes(), modHeatDistribution);
+    PowerVect_t heatDistribution = resampleExtensive(getNumNodes(), modHeatDistribution);
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded = 0.;
@@ -4630,8 +4629,9 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
         }
 
         // limit draw-volume increment to tank volume
-        Volume_t maxFlowVolume = {flowRate(Units::L_per_s) * Time_t(1., Units::min)(Units::s), Units::L};
-        Volume_t incrementalDrawVolume = isDrawing ? maxFlowVolume: Volume_t(0.);
+        Volume_t maxFlowVolume = {flowRate(Units::L_per_s) * Time_t(1., Units::min)(Units::s),
+                                  Units::L};
+        Volume_t incrementalDrawVolume = isDrawing ? maxFlowVolume : Volume_t(0.);
         if (incrementalDrawVolume > tankVolume)
         {
             incrementalDrawVolume = tankVolume;
@@ -4730,7 +4730,8 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
             maxOutletT = std::max(outletT, maxOutletT);
             if (outletT <
-                maxOutletT - Temp_t(Temp_d_t(15., Units::dF),Units::F)) // outletT has dropped by 15 degF below max T
+                maxOutletT - Temp_t(Temp_d_t(15., Units::dF),
+                                    Units::F)) // outletT has dropped by 15 degF below max T
             {
                 avgOutletT = sumOutletVolumeT / sumOutletVolume;
                 minOutletT = outletT;
@@ -5187,7 +5188,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         hasStandbyPeriodEnded = true;
         standbyEndTime = endTime;
         standbyEndTankEnergy = testSummary.usedEnergy; // Qsu,0
-        standbyEndT = tankT;                            // Tsu,0
+        standbyEndT = tankT;                           // Tsu,0
     }
 
     if (testOptions.saveOutput)
@@ -5396,16 +5397,13 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
               << "\n";
 
     std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-              << standardTestSummary.waterHeatingEnergy(Units::kWh)
-              << "\n";
+              << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
 
     std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-              << standardTestSummary.adjustedConsumedWaterHeatingEnergy(Units::kWh)
-              << "\n";
+              << standardTestSummary.adjustedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
     std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-              << standardTestSummary.modifiedConsumedWaterHeatingEnergy(Units::kWh)
-              << "\n";
+              << standardTestSummary.modifiedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
     std::cout << "\tAnnual Values:\n";
     std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "

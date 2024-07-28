@@ -13,7 +13,7 @@ struct Performance
 };
 
 void getCompressorPerformance(
-    HPWH& hpwh, Performance& point, HPWH::Temp_t waterT, HPWH::Temp_t  airT, HPWH::Temp_t setpointT)
+    HPWH& hpwh, Performance& point, HPWH::Temp_t waterT, HPWH::Temp_t airT, HPWH::Temp_t setpointT)
 {
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
@@ -29,7 +29,7 @@ void getCompressorPerformance(
 
     // Run the step
     hpwh.runOneStep(waterT, // Inlet water temperature
-                    0.,         // Flow
+                    0.,     // Flow
                     airT,   // Ambient Temp
                     airT,   // External Temp
                     // HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
@@ -321,7 +321,6 @@ TEST(ScaleTest, getCompressorSP_capacity)
     HPWH::Temp_t airT = {77, Units::F};
     HPWH::Temp_t setpointT = {135, Units::F};
 
-
     getCompressorPerformance(hpwh, point0, waterT, airT, setpointT); // gives kWH
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
@@ -456,8 +455,7 @@ TEST(ScaleTest, resistanceScales)
     hpwh.setResistanceCapacity(factor * elementPower, 0);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), factor * elementPower);
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
-                    factor * elementPower + elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), factor * elementPower + elementPower);
 
     // Check setting both works
     factor = 3.;

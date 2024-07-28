@@ -385,7 +385,8 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
         for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
         {
             // for(int i = 0; i < hpwh->numNodes; i++){
-            Energy_t nodeCap(outputPower(Units::W) * timeToRun(Units::s) * heatDistribution[i], Units::J);
+            Energy_t nodeCap(outputPower(Units::W) * timeToRun(Units::s) * heatDistribution[i],
+                             Units::J);
             if (nodeCap != 0.)
             {
                 Energy_t heatToAdd = nodeCap + leftoverCap;
@@ -416,13 +417,11 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
         //  n, and cap/input_BTUperHr, cop are outputs
         if (isMultipass)
         {
-            runtime =
-                addHeatExternalMP(externalT, timeToRun, outputPower, inputPower, cop);
+            runtime = addHeatExternalMP(externalT, timeToRun, outputPower, inputPower, cop);
         }
         else
         {
-            runtime =
-                addHeatExternal(externalT, timeToRun, outputPower, inputPower, cop);
+            runtime = addHeatExternal(externalT, timeToRun, outputPower, inputPower, cop);
         }
         break;
     }
@@ -437,8 +436,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 {
     std::sort(perfMap.begin(),
               perfMap.end(),
-              [](const HPWH::PerfPoint& a, const HPWH::PerfPoint& b) -> bool
-              { return a.T < b.T; });
+              [](const HPWH::PerfPoint& a, const HPWH::PerfPoint& b) -> bool { return a.T < b.T; });
 }
 
 HPWH::Temp_t HPWH::HeatSource::getTankT() const
@@ -459,7 +457,6 @@ HPWH::Temp_t HPWH::HeatSource::getTankT() const
     return tankT;
 }
 
-
 void HPWH::HeatSource::getCapacity(Temp_t externalT,
                                    Temp_t condenserT,
                                    Temp_t tempSetpointT,
@@ -468,11 +465,12 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                                    double& cop)
 {
 
-
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
-    Temp_t effCondenserT = {condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
-    Temp_t effOutletT = {tempSetpointT(Units::C) + secondaryHeatExchanger.hotSideOffset_dT(Units::dC), Units::C};
+    Temp_t effCondenserT = {
+        condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
+    Temp_t effOutletT = {
+        tempSetpointT(Units::C) + secondaryHeatExchanger.hotSideOffset_dT(Units::dC), Units::C};
 
     // Get bounding performance map points for interpolation/extrapolation
     // bool extrapolate = false;
@@ -527,23 +525,20 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
             pNext = perfMap[i_next].inputPower_coeffs;
             // Calculate COP and Input Power at each of the two reference temepratures
             double COP_T1 = 0; // cop at ambient temperature T1
-                //expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
+                               // expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
 
-            double COP_T2 = 0;// cop at ambient temperature T2
-                //expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
+            double COP_T2 = 0; // cop at ambient temperature T2
+                               // expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
 
-            Power_t inputPower_T1 = 0;// input power at ambient temperature T1
-                //expandSeries(pPrev, effCondenserT);
+            Power_t inputPower_T1 = 0; // input power at ambient temperature T1
+                                       // expandSeries(pPrev, effCondenserT);
 
-            Power_t inputPower_T2 = 0;// input power at ambient temperature T2
-                //expandSeries(pNext, effCondenserT);
+            Power_t inputPower_T2 = 0; // input power at ambient temperature T2
+                                       // expandSeries(pNext, effCondenserT);
 
             // Interpolate to get COP and input power at the current ambient temperature
-            inputPower = linearInterp(externalT,
-                         perfMap[i_prev].T,
-                         perfMap[i_next].T,
-                         inputPower_T1,
-                         inputPower_T2);
+            inputPower = linearInterp(
+                externalT, perfMap[i_prev].T, perfMap[i_next].T, inputPower_T1, inputPower_T2);
 
             cop = linearInterp(externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
         }
@@ -558,11 +553,8 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
-            inputPower = regressedMethod(
-                            perfMap[0].inputPower_coeffs,
-                            externalT,
-                            effOutletT,
-                            effCondenserT);
+            inputPower =
+                regressedMethod(perfMap[0].inputPower_coeffs, externalT, effOutletT, effCondenserT);
 
             cop = regressedMethod(perfMap[0].COP_coeffs, externalT, effOutletT, effCondenserT);
         }
@@ -597,15 +589,12 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
 }
 
 void HPWH::HeatSource::getCapacityMP(
-    Temp_t externalT,
-    Temp_t condenserT,
-    Power_t& inputPower,
-    Power_t& outputPower,
-    double& cop)
+    Temp_t externalT, Temp_t condenserT, Power_t& inputPower, Power_t& outputPower, double& cop)
 {
     bool resDefrostHeatingOn = false;
 
-    Temp_t effCondenserT = {condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
+    Temp_t effCondenserT = {
+        condenserT(Units::C) + secondaryHeatExchanger.coldSideOffset_dT(Units::dC), Units::C};
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
     if (resDefrost.inputPwr > 0)
@@ -634,7 +623,7 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        inputPower = regressedMethodMP( perfMap[0].inputPower_coeffs, externalT, effCondenserT);
+        inputPower = regressedMethodMP(perfMap[0].inputPower_coeffs, externalT, effCondenserT);
         cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT, effCondenserT);
     }
 
@@ -679,12 +668,11 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
             break;
         }
     }
-    derate_factor = linearInterp(
-                 airT,
-                 defrostMap[i_prev].T,
-                 defrostMap[i_prev + 1].T,
-                 defrostMap[i_prev].derate_fraction,
-                 defrostMap[i_prev + 1].derate_fraction);
+    derate_factor = linearInterp(airT,
+                                 defrostMap[i_prev].T,
+                                 defrostMap[i_prev + 1].T,
+                                 defrostMap[i_prev].derate_fraction,
+                                 defrostMap[i_prev + 1].derate_fraction);
     to_derate *= derate_factor;
 }
 
@@ -725,11 +713,8 @@ bool HPWH::HeatSource::isExternalMultipass() const
 /// @param[out]	cop		            average cop
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
-HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
-                                         Time_t duration,
-                                         Power_t& outputPower,
-                                         Power_t& inputPower,
-                                         double& cop)
+HPWH::Time_t HPWH::HeatSource::addHeatExternal(
+    Temp_t externalT, Time_t duration, Power_t& outputPower, Power_t& inputPower, double& cop)
 {
     inputPower = 0.;
     outputPower = 0.;
@@ -738,7 +723,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
     Temp_t tempSetpointT = std::min(maxSetpointT, hpwh->setpointT);
     Time_t remainingTime = duration;
 
-    Energy_t inputEnergy= 0.;
+    Energy_t inputEnergy = 0.;
     Energy_t outputEnergy = 0.;
     double condenserInletT_sum = 0.;
     double condenserOutletT_sum = 0.;
@@ -816,8 +801,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
             Temp_t& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT
                                  : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT_C;
+            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT_C;
         }
 
         hpwh->mixTankInversions();
@@ -825,8 +809,10 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        Energy_t input_dE((tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
-            heatingTime(Units::s), Units::kJ);
+        Energy_t input_dE(
+            (tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
+                heatingTime(Units::s),
+            Units::kJ);
         inputEnergy += input_dE;
 
         Energy_t output_dE(tempOutputPower(Units::kW) * heatingTime(Units::s));
@@ -866,16 +852,16 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(Temp_t externalT,
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
 HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
-                                           Time_t duration,
-                                           Power_t& outputPower,
-                                           Power_t& inputPower, //***
-                                           double& cop)
+                                                 Time_t duration,
+                                                 Power_t& outputPower,
+                                                 Power_t& inputPower, //***
+                                                 double& cop)
 {
     inputPower = 0.;
-    outputPower= 0.;
+    outputPower = 0.;
     cop = 0.;
 
-    Energy_t inputEnergy= 0.;
+    Energy_t inputEnergy = 0.;
     Energy_t outputEnergy = 0.;
     double condenserInletT_sum = 0.;
     double condenserOutletT_sum = 0.;
@@ -884,7 +870,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
     do
     {
         // find node fraction to heat in remaining time
-        double nodeFrac = mpFlowRate(Units::L_per_s) * duration(Units::s) / hpwh->nodeVolume(Units::L);
+        double nodeFrac =
+            mpFlowRate(Units::L_per_s) * duration(Units::s) / hpwh->nodeVolume(Units::L);
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
             nodeFrac = 1.;
@@ -899,14 +886,14 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         Temp_t& externalOutletT = hpwh->tankTs[externalOutletHeight];
 
         // find heating capacity
-        getCapacityMP(
-            externalT, externalOutletT, tempInputPower, tempOutputPower, temp_cop);
+        getCapacityMP(externalT, externalOutletT, tempInputPower, tempOutputPower, temp_cop);
 
         Power_t heatingPower = inputPower;
 
         // temperature increase at this power and flow rate
-        Temp_d_t delta_dT =
-        {heatingPower(Units::kW) / (mpFlowRate(Units::L_per_s) * CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L), Units::dC};
+        Temp_d_t delta_dT = {heatingPower(Units::kW) / (mpFlowRate(Units::L_per_s) *
+                                                        CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L),
+                             Units::dC};
 
         // find target temperature
         Temp_t targetT = externalOutletT + delta_dT;
@@ -943,10 +930,9 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
              ++nodeIndex)
         {
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
-                                 ? targetT
-                                 : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] =
-                (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT;
+                               ? targetT
+                               : hpwh->tankTs[nodeIndex + 1];
+            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT;
         }
 
         hpwh->mixTankInversions();
@@ -954,9 +940,10 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        inputEnergy +=
-        Energy_t((tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
-            heatingTime(Units::s), Units::kJ);
+        inputEnergy += Energy_t(
+            (tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
+                heatingTime(Units::s),
+            Units::kJ);
         outputEnergy += Energy_t(tempOutputPower(Units::kW) * heatingTime(Units::s), Units::kJ);
         cop += temp_cop * heatingTime(Units::s);
 
@@ -993,15 +980,15 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
     perfMap.reserve(2);
 
     perfMap.push_back({
-        {50, Units::F},                // Temperature (T_F)
+        {50, Units::F},                          // Temperature (T_F)
         {{power(Units::W), 0.0, 0.0}, Units::W}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
+        {1.0, 0.0, 0.0}                          // COP Coefficients (COP_coeffs)
     });
 
     perfMap.push_back({
-        {67, Units::F},                // Temperature (T_F)
+        {67, Units::F},                          // Temperature (T_F)
         {{power(Units::W), 0.0, 0.0}, Units::W}, // Input Power Coefficients (inputPower_coeffs)
-        {1.0, 0.0, 0.0}    // COP Coefficients (COP_coeffs)
+        {1.0, 0.0, 0.0}                          // COP Coefficients (COP_coeffs)
     });
 
     configuration = CONFIG_SUBMERGED; // immersed in tank
