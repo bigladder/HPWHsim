@@ -444,8 +444,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 HPWH::Temp_t HPWH::HeatSource::getTankT() const
 {
 
-    std::vector<Temp_t> resampledTankTs(getCondensitySize());
-    resample(resampledTankTs, hpwh->tankTs);
+    TempVect_t resampledTankTs = resample(getCondensitySize(), hpwh->tankTs);
 
     double tankT = 0.;
 
@@ -559,13 +558,13 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
-            regressedMethod(inputPower,
+            inputPower = regressedMethod(
                             perfMap[0].inputPower_coeffs,
                             externalT,
                             effOutletT,
                             effCondenserT);
 
-            regressedMethod(cop, perfMap[0].COP_coeffs, externalT, effOutletT, effCondenserT);
+            cop = regressedMethod(perfMap[0].COP_coeffs, externalT, effOutletT, effCondenserT);
         }
     }
 
@@ -635,8 +634,8 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        regressedMethodMP(inputPower, perfMap[0].inputPower_coeffs, externalT, effCondenserT);
-        regressedMethodMP(cop, perfMap[0].COP_coeffs, externalT, effCondenserT);
+        inputPower = regressedMethodMP( perfMap[0].inputPower_coeffs, externalT, effCondenserT);
+        cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT, effCondenserT);
     }
 
     if (doDefrost)
@@ -698,12 +697,10 @@ void HPWH::HeatSource::btwxtInterp(Power_t& inputPower, double& cop, TempVect_t&
 
 void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
 {
-
     // Populate the vector of heat distribution
     if (configuration == CONFIG_SUBMERGED)
     {
-        heatDistribution.resize(hpwh->getNumNodes());
-        resampleExtensive(heatDistribution, condensity);
+        heatDistribution = resampleExtensive(hpwh->getNumNodes(), condensity);
     }
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function

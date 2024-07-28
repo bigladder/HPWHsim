@@ -645,7 +645,7 @@ class HPWH : public Courier::Sender
 
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
-    void setTankLayerTs(std::vector<Temp_t> setTemps);
+    void setTankTs(const TempVect_t setTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
 
@@ -922,7 +922,7 @@ class HPWH : public Courier::Sender
 
     Temp_t getLocationT() const;
 
-    void getTankTs(std::vector<Temp_t>& tankTs_out);
+    void getTankTs(TempVect_t& tankTs_out);
 
     Temp_t getOutletT() const;
     /**< returns the outlet temperature in the specified units
@@ -1178,7 +1178,9 @@ class HPWH : public Courier::Sender
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
-    std::vector<double> modifyHeatDistribution(std::vector<double> heatDistribution);
+    template <typename V>
+    V modifyHeatDistribution(V heatDistribution);
+
     void addExtraHeat(PowerVect_t& extraHeatDist);
 
     ///  "extra" heat added during a simulation step
@@ -1279,11 +1281,11 @@ class HPWH : public Courier::Sender
     /**< the setpoint of the tank  */
 
     /**< holds the temperature of each node - 0 is the bottom node  */
-    std::vector<Temp_t> tankTs;
+    TempVect_t tankTs;
 
     /**< holds the future temperature of each node for the conduction calculation - 0 is the bottom
      * node  */
-    std::vector<Temp_t> nextTankTs;
+    TempVect_t nextTankTs;
 
     DRMODES prevDRstatus;
     /**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
@@ -1697,29 +1699,31 @@ inline bool aboutEqual(T a, T b)
 
 
 // resampling utility functions
-template <typename T>
-double
-getResampledValue(const std::vector<T>& values, double beginFraction, double endFraction);
+double getResampledValue(const std::vector<double> values, double beginFraction, double endFraction);
 
-template <typename T>
-bool resample(std::vector<T>& values, const std::vector<T>& sampleValues);
+std::vector<double> resample(const std::size_t N, const std::vector<double> sampleValues);
 
-template <typename T>
-inline bool resampleIntensive(std::vector<T>& values, const std::vector<T>& sampleValues)
+inline std::vector<double> resampleIntensive(const std::size_t N, const std::vector<double> sampleValues)
 {
-    return resample(values, sampleValues);
+    return resample(N, sampleValues);
 }
-bool resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues);
+
+std::vector<double> resampleExtensive(const std::size_t N, const std::vector<double> sampleValues);
 
 ///  helper functions
 double expitFunc(double x, double offset);
+
 std::vector<double> normalize(std::vector<double> distribution);
+
 int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes);
+
 HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist);
-std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkageT,
+
+std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
                      int lowestNode,
-                     const std::vector<HPWH::Temp_t> nodeTs,
+                     const HPWH::TempVect_t& nodeTs,
                      const HPWH::Temp_t setpointT);
+
 template <typename V>
 V scaleVector(const V& coeffs, const double scaleFactor);
 
@@ -1729,13 +1733,11 @@ template <typename T>
 double expandSeries(const std::vector<T>& coeffs, const double x);
 
 /// applies ten-term regression
-template <typename D>
-void regressedMethod(
-    D& ynew, std::vector<D>& coefficents, double x1, double x2, double x3);
+double regressedMethod(
+    const std::vector<double> coeffs, double x1, double x2, double x3);
 
 /// applies five-term regression for MP split systems
-template <typename D>
-void regressedMethodMP(D& ynew, std::vector<D>& coefficents, double x1, double x2);
+double regressedMethodMP(const std::vector<double> coeffs, double x1, double x2);
 
 typedef Units::TimePair<Units::Time::h, Units::Time::min> Time_h_min;
 

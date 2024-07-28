@@ -219,16 +219,15 @@ TEST(MaxSetpointTest, Sanden80)
 TEST(UtilityTest, resample)
 {
     // test extensive resampling
-    std::vector<double> values(10);
-    std::vector<double> sampleValues {20., 40., 60., 40., 20.};
-    EXPECT_TRUE(resampleExtensive(values, sampleValues));
+    std::vector<double> sampleValues = {20., 40., 60., 40., 20.};
+    std::vector<double> values = resampleExtensive(10, sampleValues);
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 10.); //
     EXPECT_NEAR_REL(values[5], 30.); //
 
     // test intensive resampling
-    EXPECT_TRUE(resampleIntensive(values, sampleValues));
+    values = resampleIntensive(10, sampleValues);
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 20.); //
@@ -248,7 +247,7 @@ TEST(UtilityTest, setTemperatures)
     // test 1
     {
         HPWH::TempVect_t setTs = {{10., 60.}, Units::C};
-        hpwh.setTankLayerTs(setTs);
+        hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newT;
         hpwh.getTankTs(newT);
@@ -261,7 +260,7 @@ TEST(UtilityTest, setTemperatures)
     // test 2
     {
         HPWH::TempVect_t setTs = {{10., 20., 30., 40., 50., 60.}, Units::C};
-        hpwh.setTankLayerTs(setTs);
+        hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
         hpwh.getTankTs(newTs);
@@ -277,7 +276,7 @@ TEST(UtilityTest, setTemperatures)
     {
         HPWH::TempVect_t setTs = {{
             10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90.}, Units::C};
-        hpwh.setTankLayerTs(setTs);
+        hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
         hpwh.getTankTs(newTs);
@@ -295,7 +294,7 @@ TEST(UtilityTest, setTemperatures)
         HPWH::Temp_t initialT = {20., Units::C}, finalT = {66., Units::C};
         for (std::size_t i = 0; i < nSet; ++i)
             setTs[i] = initialT + (finalT - initialT) * i / static_cast<double>(nSet - 1);
-        hpwh.setTankLayerTs(setTs);
+        hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
         hpwh.getTankTs(newTs);
@@ -313,7 +312,7 @@ TEST(UtilityTest, setTemperatures)
         HPWH::Temp_t initialT = {20., Units::C}, finalT = {64., Units::C};
         for (std::size_t i = 0; i < nSet; ++i)
             setTs[i] = initialT + (finalT - initialT) * i / static_cast<double>(nSet - 1);
-        hpwh.setTankLayerTs(setTs);
+        hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
         hpwh.getTankTs(newTs);
