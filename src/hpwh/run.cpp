@@ -376,24 +376,26 @@ void run(const std::string& sSpecType,
             // Do a simple mix down of the draw for the cold water temperature
             if (hpwh.getSetpointT()(Units::F) <= 125.)
             {
-                allSchedules[1][i] *= (125. - allSchedules[0][i]) /
-                                      (hpwh.getTankNodeT(hpwh.getNumNodes() - 1)(Units::F) -
-                                       allSchedules[0][i]);
+                allSchedules[1][i] *=
+                    (125. - allSchedules[0][i]) /
+                    (hpwh.getTankNodeT(hpwh.getNumNodes() - 1)(Units::F) - allSchedules[0][i]);
             }
         }
 
         // Run the step
-        hpwh.runOneStep({allSchedules[0][i], Units::C},           // Inlet water temperature (C)
+        hpwh.runOneStep({allSchedules[0][i], Units::C},   // Inlet water temperature (C)
                         {allSchedules[1][i], Units::gal}, // Flow in gallons
-                        air2T,                     // Ambient Temp (C)
-                        {allSchedules[3][i], Units::C},           // External Temp (C)
+                        air2T,                            // Ambient Temp (C)
+                        {allSchedules[3][i], Units::C},   // External Temp (C)
                         drStatus, // DDR Status (now an enum. Fixed for now as allow)
                         {1. * allSchedules[1][i], Units::gal},
                         {allSchedules[0][i], Units::C},
                         powerVect_ptr);
 
-        if (!hpwh.isEnergyBalanced(
-                {allSchedules[1][i], Units::gal}, {allSchedules[0][i], Units::F}, tankHCStart, EBALTHRESHOLD))
+        if (!hpwh.isEnergyBalanced({allSchedules[1][i], Units::gal},
+                                   {allSchedules[0][i], Units::F},
+                                   tankHCStart,
+                                   EBALTHRESHOLD))
         {
             cout << "WARNING: On minute " << i << " HPWH has an energy balance error.\n";
             exit(1);
@@ -414,8 +416,9 @@ void run(const std::string& sSpecType,
         if (hpwh.isCompressorExternalMultipass() == 1)
         {
             double volumeHeated_Gal = hpwh.getExternalVolumeHeated()(Units::gal);
-            double mpFlowVolume_Gal = hpwh.getExternalMPFlowRate()(Units::gal_per_min) *
-                                      hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex())(Units::min);
+            double mpFlowVolume_Gal =
+                hpwh.getExternalMPFlowRate()(Units::gal_per_min) *
+                hpwh.getNthHeatSourceRunTime(hpwh.getCompressorIndex())(Units::min);
             if (fabs(volumeHeated_Gal - mpFlowVolume_Gal) > 0.000001)
             {
                 cout << "ERROR: Externally heated volumes are inconsistent! Volume Heated [Gal]: "

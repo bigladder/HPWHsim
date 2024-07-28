@@ -67,16 +67,15 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
                 hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
             value = HPWH::MINSINGLEPASSLIFT;
-            EXPECT_NO_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = {hpwh.getSetpointT()(Units::C) - (HPWH::MINSINGLEPASSLIFT(Units::dC) - 1), Units::C};
+            value = {hpwh.getSetpointT()(Units::C) - (HPWH::MINSINGLEPASSLIFT(Units::dC) - 1),
+                     Units::C};
             EXPECT_ANY_THROW(
                 hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
             value = {hpwh.getSetpointT()(Units::C) - HPWH::MINSINGLEPASSLIFT(Units::dC), Units::C};
-            EXPECT_NO_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
         }
 
         { // testSetEnteringWaterHighTempShutOffAbsolute
@@ -116,7 +115,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
             const HPWH::Temp_t highT = {20., Units::C};
             const bool doAbsolute = false;
 
-            const HPWH::Temp_t relativeHighT = hpwh.getSetpointT() - highT;//?
+            const HPWH::Temp_t relativeHighT = hpwh.getSetpointT() - highT; //?
             // make tank cold to force on
             hpwh.setTankToT(highT);
 
@@ -337,14 +336,14 @@ TEST(ExtraHeatTest, extraHeat)
     hpwh.setTankToT({20., Units::C});
 
     HPWH::Energy_t Q_init = hpwh.getTankHeatContent();
-    hpwh.runOneStep(
-        0, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
+    hpwh.runOneStep(0, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
 
     HPWH::Energy_t Q_final = hpwh.getTankHeatContent();
 
     HPWH::Energy_t dQ_actual = Q_final - Q_init;
 
-    HPWH::Energy_t dQ_expected = {extraPower(Units::W) * HPWH::Time_t(1, Units::min)(Units::s), Units::J}; // 1 min
+    HPWH::Energy_t dQ_expected = {extraPower(Units::W) * HPWH::Time_t(1, Units::min)(Units::s),
+                                  Units::J}; // 1 min
 
     EXPECT_NEAR(dQ_actual, dQ_expected, tol);
 }

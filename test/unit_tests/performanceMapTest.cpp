@@ -32,8 +32,7 @@ struct PerformanceMapTest : public testing::Test
 
     HPWH::Power_t getCapacityMP(HPWH& hpwh, PerformancePointMP& point)
     {
-        return hpwh.getCompressorCapacity(
-            point.airT, point.inT, point.inT);
+        return hpwh.getCompressorCapacity(point.airT, point.inT, point.inT);
     }
 
     struct PerformancePointSP
@@ -62,12 +61,11 @@ struct PerformanceMapTest : public testing::Test
 
     HPWH::Power_t getCapacitySP(HPWH& hpwh, PerformancePointSP& point)
     {
-        return hpwh.getCompressorCapacity(
-            point.airT, point.inT, point.outT);
+        return hpwh.getCompressorCapacity(point.airT, point.inT, point.outT);
     }
 
     HPWH::Power_t getCapacitySP(HPWH& hpwh,
-                                 PerformancePointSP& point,
+                                PerformancePointSP& point,
                                 HPWH::Temp_d_t in_dT,
                                 HPWH::Temp_d_t out_dT)
     {
@@ -90,11 +88,10 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     // test hot //////////////////////////
     HPWH::Temp_t airT = {100., Units::F};
     HPWH::Temp_t waterT = {125., Units::F};
-    HPWH::Temp_t  setpointT = {150., Units::F};
+    HPWH::Temp_t setpointT = {150., Units::F};
     HPWH::Power_t capacityData = {52.779317, Units::kW};
 
-    auto capacity = hpwh.getCompressorCapacity(
-        airT, waterT, setpointT);
+    auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
     EXPECT_NEAR_REL(capacityData, capacity);
 
@@ -104,8 +101,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     setpointT = {150., Units::F};
     capacityData = {44.962957379, Units::kW};
 
-    capacity = hpwh.getCompressorCapacity(
-        airT, waterT, setpointT);
+    capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
     EXPECT_NEAR_REL(capacityData, capacity);
 
@@ -115,8 +111,7 @@ TEST_F(PerformanceMapTest, ColmacCxA_15_SP)
     setpointT = {125., Units::F};
     capacityData = {37.5978306881, Units::kW};
 
-    capacity = hpwh.getCompressorCapacity(
-        airT, waterT, setpointT);
+    capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
     EXPECT_NEAR_REL(capacityData, capacity);
 }
@@ -600,62 +595,59 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
     checkPoint = {{{-13.0, 140.0, 36.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
-        getCapacitySP(
-            hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
+        getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
     checkPoint = {{{-13.0, 140.0, 100.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower >
-        getCapacitySP(
-            hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has decreased
+        getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has decreased
 
     // test linear along inT
     checkPoint = {{{-13.0, 176.0, 36.0}, Units::F}, {65872.597448, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
-        getCapacitySP(
-            hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
+        getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
     checkPoint = {{{-13.0, 176.0, 100.0}, Units::F}, {55913.249232, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
-                                      checkPoint,
-                                      in_dT_QAHV,
-                                      out_dT_QAHV)); // Check output has decreased at high inT
+                              checkPoint,
+                              in_dT_QAHV,
+                              out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
     checkPoint = {{{10.4, 140.0, 111.}, Units::F}, {89000.085396, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
-                                      checkPoint,
-                                      in_dT_QAHV,
-                                      out_dT_QAHV)); // Check output has decreased at high inT
+                              checkPoint,
+                              in_dT_QAHV,
+                              out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
     checkPoint = {{{64.4, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
-                                      checkPoint,
-                                      in_dT_QAHV,
-                                      out_dT_QAHV)); // Check output has decreased at high inT
+                              checkPoint,
+                              in_dT_QAHV,
+                              out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
     checkPoint = {{{86.0, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
-                                      checkPoint,
-                                      in_dT_QAHV,
-                                      out_dT_QAHV)); // Check output has decreased at high inT
+                              checkPoint,
+                              in_dT_QAHV,
+                              out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
     checkPoint = {{{104.0, 176.0, 100.}, Units::F}, {136564.470884, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
-                                      checkPoint,
-                                      in_dT_QAHV,
-                                      out_dT_QAHV)); // Check output has decreased at high inT
+                              checkPoint,
+                              in_dT_QAHV,
+                              out_dT_QAHV)); // Check output has decreased at high inT
 
     // test const along Tair
     checkPoint = {{{110.0, 140.0, 62.6}, Units::F}, {136480, Units::W}};
@@ -685,18 +677,15 @@ TEST_F(PerformanceMapTest, Sanden120)
 
     // nominal
     checkPoint = {{{60, 149.0, 41.0}, Units::F}, {15059.59167, Units::W}};
-    outputPower = hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT);
+    outputPower = hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // Cold outlet temperature
     checkPoint = {{{60, 125.0, 41.0}, Units::F}, {15059.59167, Units::W}};
-    outputPower = hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT);
+    outputPower = hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // tests fails when output high
     checkPoint = {{{60, 200, 41.0}, Units::F}, {15059.59167, Units::W}};
-    EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
-        checkPoint.airT, checkPoint.inT, checkPoint.outT));
+    EXPECT_ANY_THROW(hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT));
 }

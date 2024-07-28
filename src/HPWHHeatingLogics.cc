@@ -80,11 +80,11 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 
     // Find the fraction to heat the calc node to meet the target SoC fraction without heating the
     // node below up to tempMinUseful.
-    double maxSoC = hpwh->getNumNodes() *
-                    hpwh->getChargePerNode(getMainsT(), minUsefulT, hpwh->setpointT);
+    double maxSoC =
+        hpwh->getNumNodes() * hpwh->getChargePerNode(getMainsT(), minUsefulT, hpwh->setpointT);
 
-    double fac = deltaSoCFraction * maxSoC + (hpwh->tankTs[calcNode] - getMainsT()) /
-                                                        (minUsefulT - getMainsT());
+    double fac = deltaSoCFraction * maxSoC +
+                 (hpwh->tankTs[calcNode] - getMainsT()) / (minUsefulT - getMainsT());
 
     Temp_t targetT = getMainsT() + fac * (minUsefulT - getMainsT());
 
@@ -96,8 +96,8 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
     }
     else
     {
-        fractCalcNode = (targetT - hpwh->tankTs[calcNode]) /
-                        (hpwh->setpointT - hpwh->tankTs[calcNode]);
+        fractCalcNode =
+            (targetT - hpwh->tankTs[calcNode]) / (hpwh->setpointT - hpwh->tankTs[calcNode]);
     }
 
     // If we're at the bottom node there's not another node to heat so case 2 doesn't apply.
@@ -152,10 +152,7 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
 }
 
-double HPWH::TempBasedHeatingLogic::getTankValue()
-{
-    return hpwh->getAverageTankT(nodeWeights);
-}
+double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->getAverageTankT(nodeWeights); }
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 {
@@ -228,8 +225,8 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     }
 
     double averageT = sum / totWeight;
-    double targetT = (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs[calcNode + 1]
-                                                            : hpwh->getSetpointT();
+    double targetT =
+        (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs[calcNode + 1] : hpwh->getSetpointT();
 
     double nodeDiffT = targetT - hpwh->tankTs[firstNode];
     double logicNodeDiffT = comparisonT - averageT;
@@ -242,10 +239,9 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     // If the difference in denominator is <= 0 then we aren't adding heat to the nodes we care
     // about, so shift a whole node.
     // factor of nodeDensity converts logic-node fraction to tank-node fraction
-    double nodeFrac =
-        compare(averageT, comparisonT)
-            ? 0.
-            : ((nodeDiffT > 0.) ? nodeDensity * logicNodeDiffT / nodeDiffT : 1.);
+    double nodeFrac = compare(averageT, comparisonT)
+                          ? 0.
+                          : ((nodeDiffT > 0.) ? nodeDensity * logicNodeDiffT / nodeDiffT : 1.);
 
     return nodeFrac;
 }
