@@ -60,7 +60,7 @@ class HPWH : public Courier::Sender
     static const std::string version_maint;
 
     //////
-    static constexpr auto UnitsTime = Units::Time::h;
+    static constexpr auto UnitsTime = Units::Time::min;
     static constexpr auto UnitsTemp = Units::Temp::C;
     static constexpr auto UnitsTemp_d = Units::Temp_d::C;
     static constexpr auto UnitsLength = Units::Length::m;
@@ -113,7 +113,7 @@ class HPWH : public Courier::Sender
     static constexpr double TOL_MINVALUE = 0.0001; /**< any amount of heat distribution less than
                                          this is reduced to 0 this saves on computations */
 
-    inline static const Temp_t UNINITIALIZED_LOCATIONTEMP = Temp_t(-100., Units::F); /**< this is
+    static const Temp_t UNINITIALIZED_LOCATIONTEMP; /**< this is
    used to tell the simulation when the location temperature has not been initialized */
     inline static const double ASPECTRATIO = 4.75;
     /**< A constant to define the aspect ratio between the tank height and
@@ -668,10 +668,10 @@ class HPWH : public Courier::Sender
        than the value returned in isNewSetpointPossible() if there are resistance elements. */
 
     /** Returns State of Charge where
-       tMains = current mains (cold) water temp,
-       tMinUseful = minimum useful temp,
-       tMax = nominal maximum temp.*/
-    double calcSoCFraction(Temp_t mainsT, Temp_t minUsefulT, Temp_t limitT) const;
+       mainsT = current mains (cold) water temp,
+       minUsefulT = minimum useful temp,
+       maxT = nominal maximum temp.*/
+    double calcSoCFraction(Temp_t mainsT, Temp_t minUsefulT, Temp_t maxT) const;
     double calcSoCFraction(Temp_t mainsT, Temp_t minUsefulT) const
     {
         return calcSoCFraction(mainsT, minUsefulT, getSetpointT());
@@ -785,18 +785,18 @@ class HPWH : public Courier::Sender
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor */
 
-    Power_t getCompressorCapacity(Temp_t airT = Temp_t(19.722, Units::C),
-                                  Temp_t inletT = Temp_t(14.444, Units::C),
-                                  Temp_t outT = Temp_t(57.222, Units::C));
+    Power_t getCompressorCapacity(Temp_t airT = {19.722, Units::C},
+                                  Temp_t inletT = {14.444, Units::C},
+                                  Temp_t outT = {57.222, Units::C});
     /**< Returns the heating output capacity of the compressor for the current HPWH model.
     Note only supports HPWHs with one compressor, if multiple will return the last index
     of a compressor. Outlet temperatures greater than the max allowable setpoints will return an
     error, but for compressors with a fixed setpoint the */
 
     void setCompressorOutputCapacity(Power_t newCapacity,
-                                     Temp_t airT = Temp_t(19.722, Units::C),
-                                     Temp_t inletT = Temp_t(14.444, Units::C),
-                                     Temp_t outT = Temp_t(57.222, Units::C));
+                                     Temp_t airT = {19.722, Units::C},
+                                     Temp_t inletT = {14.444, Units::C},
+                                     Temp_t outT = {57.222, Units::C});
     /**< Sets the heating output capacity of the compressor at the defined air, inlet water, and
     outlet temperatures. For multi-pass models the capacity is set as the average between the
     inletTemp and outTemp since multi-pass models will increase the water temperature only a few
@@ -996,7 +996,7 @@ class HPWH : public Courier::Sender
         PowerVect_t inputPower_coeffs; // with appropriate temperature factors
         std::vector<double> COP_coeffs;
 
-        PerfPoint(Temp_t T_in = {0, Units::C},
+        PerfPoint(std::pair<double, Units::Temp> T_in = {0, Units::C},
                   PowerVect_t inputPower_coeffs_in = {},
                   std::vector<double> COP_coeffs_in = {});
     };
@@ -1170,7 +1170,7 @@ class HPWH : public Courier::Sender
     void turnAllHeatSourcesOff();
     /**< disengage each heat source  */
 
-    void addHeatParent(HeatSource* heatSourcePtr, double heatSourceAmbientT_C, double minutesToRun);
+    void addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t timeToRun);
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
@@ -1714,13 +1714,20 @@ std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
                                     const HPWH::TempVect_t& nodeTs,
                                     const HPWH::Temp_t setpointT);
 
-template <typename V>
-V scaleVector(const V& coeffs, const double scaleFactor);
+std::vector<double> scaleVector(std::vector<double> coeffs, const double scaleFactor);
 
 double linearInterp(double xnew, double x0, double x1, double y0, double y1);
 
-template <typename T>
-double expandSeries(const std::vector<T>& coeffs, const double x);
+template <typename V>
+inline double expandSeries(const V& coeffs, const double x)
+{
+    double y = 0.;
+    for (auto pCoeff = coeffs.rbegin(); pCoeff != coeffs.rend(); ++pCoeff)
+    {
+        y = (*pCoeff) + y * x;
+    }
+    return y;
+}
 
 /// applies ten-term regression
 double regressedMethod(const std::vector<double> coeffs, double x1, double x2, double x3);

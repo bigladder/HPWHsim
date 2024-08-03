@@ -113,9 +113,9 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
             const HPWH::Temp_t externalT = {20., Units::C};
             const HPWH::Temp_d_t dT = {2., Units::dC};
             const HPWH::Temp_t highT = {20., Units::C};
-            const bool doAbsolute = false;
 
-            const HPWH::Temp_t relativeHighT = hpwh.getSetpointT() - highT; //?
+            const HPWH::Temp_d_t relativeHigh_dT = {hpwh.getSetpointT()(Units::C) - highT(Units::C),
+                                                    Units::dC}; //?
             // make tank cold to force on
             hpwh.setTankToT(highT);
 
@@ -125,7 +125,8 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // change entering water temp to below temp
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                {relativeHighT(Units::C) + dT(Units::dC), Units::C}, hpwh.getCompressorIndex()));
+                {relativeHigh_dT(Units::dC) + dT(Units::dC), Units::dC},
+                hpwh.getCompressorIndex()));
 
             // run a step and check we're not heating.
             hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
@@ -133,7 +134,8 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
 
             // and reverse it
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                {relativeHighT(Units::C) - dT(Units::dC), Units::C}, hpwh.getCompressorIndex()));
+                {relativeHigh_dT(Units::dC) - dT(Units::dC), Units::dC},
+                hpwh.getCompressorIndex()));
 
             hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
@@ -174,8 +176,8 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
                                sNoHighShutOffMP_externalModelNames.begin(),
                                sNoHighShutOffMP_externalModelNames.end());
 
-    const HPWH::Temp_t externalT = {149., Units::C};
-    const HPWH::Temp_t setpointT = {149., Units::F};
+    HPWH::Temp_t externalT = {20., Units::C};
+    HPWH::Temp_t setpointT = {149., Units::F};
 
     for (auto& sModelName : sCombinedModelNames)
     {
@@ -196,8 +198,8 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 
         { // testChangeToStateofChargeControlled
             double value = HPWH::MINSINGLEPASSLIFT - 1.;
-            const HPWH::Temp_t externalT = {20., Units::C};
-            const HPWH::Temp_t setpointT = {149., Units::C};
+            externalT = {20., Units::C};
+            setpointT = {149., Units::F};
 
             const bool originalHasHighTempShutOff =
                 hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex());
@@ -216,7 +218,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             EXPECT_FALSE(hpwh.isSoCControlled());
 
             // change to SOC control;
-            hpwh.switchToSoCControls(.76, .05, {99, Units::C}, false, {49, Units::C});
+            hpwh.switchToSoCControls(.76, .05, {99, Units::F}, true, {49, Units::F});
             EXPECT_TRUE(hpwh.isSoCControlled());
 
             // check entering water high temp shut off controll unchanged
@@ -256,12 +258,12 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 
             for (auto i = 0; i < 5; ++i)
             {
-                HPWH::Temp_t coldWaterT = tempsForSetSoC[i][0];
-                HPWH::Temp_t minUseT = tempsForSetSoC[i][1];
-                HPWH::Temp_t tankAt76SoC_T = tempsForSetSoC[i][2];
+                HPWH::Temp_t coldWaterT = {tempsForSetSoC[i][0], Units::F};
+                HPWH::Temp_t minUseT = {tempsForSetSoC[i][1], Units::F};
+                HPWH::Temp_t tankAt76SoC_T = {tempsForSetSoC[i][2], Units::F};
 
                 // change to SOC control;
-                hpwh.switchToSoCControls(.85, .05, minUseT, coldWaterT);
+                hpwh.switchToSoCControls(.85, .05, minUseT, true, coldWaterT);
                 EXPECT_TRUE(hpwh.isSoCControlled());
 
                 // Test if we're on and in band stay on
@@ -328,8 +330,8 @@ TEST(ExtraHeatTest, extraHeat)
     const HPWH::Volume_t inletVol2 = 0;
     const HPWH::Temp_t inletT2 = {0., Units::C};
 
-    HPWH::Power_t extraPower = {1000., Units::W};
-    HPWH::PowerVect_t nodePowerExtra = {{extraPower}, Units::W};
+    HPWH::Power_t extraPower = {1., Units::kW};
+    HPWH::PowerVect_t nodePowerExtra = {{extraPower(Units::kW)}, Units::kW};
 
     // Test adding extra heat to a tank for one minute
     hpwh.setUA(0.);
