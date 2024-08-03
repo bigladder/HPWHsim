@@ -676,16 +676,16 @@ TEST_F(PerformanceMapTest, Sanden120)
     double outputPower;
 
     // nominal
-    checkPoint = {{{60, 149.0, 41.0}, Units::F}, {15059.59167, Units::W}};
+    checkPoint = {{{60, 149.0, 41.0}, Units::F}, {15059.59167, Units::Btu_per_h}};
     outputPower = hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // Cold outlet temperature
-    checkPoint = {{{60, 125.0, 41.0}, Units::F}, {15059.59167, Units::W}};
+    checkPoint = {{{60, 125.0, 41.0}, Units::F}, {15059.59167, Units::Btu_per_h}};
     outputPower = hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT);
     EXPECT_NEAR_REL(checkPoint.outputPower, outputPower);
 
     // tests fails when output high
-    checkPoint = {{{60, 200, 41.0}, Units::F}, {15059.59167, Units::W}};
+    checkPoint = {{{60, 200, 41.0}, Units::F}, {15059.59167, Units::Btu_per_h}};
     EXPECT_ANY_THROW(hpwh.getCompressorCapacity(checkPoint.airT, checkPoint.inT, checkPoint.outT));
 }

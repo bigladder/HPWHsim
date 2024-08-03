@@ -25,7 +25,7 @@ HPWH::HeatSource::HeatSource(
     , followedByHeatSource(NULL)
     , useBtwxtGrid(false)
     , standbyLogic(NULL)
-    , maxOut_at_LowT {Temp_t(100, Units::C), Temp_t(-273.15, Units::C)}
+    , maxOut_at_LowT({{100, Units::C}, {-273.15, Units::C}})
     , secondaryHeatExchanger {0., 0., 0.}
     , minT(-273.15, Units::C)
     , maxT(100, Units::C)
@@ -340,12 +340,11 @@ bool HPWH::HeatSource::maxedOut() const
 
 double HPWH::HeatSource::fractToMeetComparisonExternal() const
 {
-    double fracTemp;
     double frac = 1.;
 
     for (int i = 0; i < (int)shutOffLogicSet.size(); i++)
     {
-        fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
+        double fracTemp = shutOffLogicSet[i]->getFractToMeetComparisonExternal();
         frac = fracTemp < frac ? fracTemp : frac;
     }
     return frac;
@@ -427,8 +426,8 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
     }
 
     // Write the input & output energy
-    energyInput += Energy_t(runtime(Units::s) * inputPower(Units::W), Units::J);
-    energyOutput += Energy_t(runtime(Units::s) * outputPower(Units::W), Units::J);
+    energyInput += Energy_t(inputPower(Units::W) * runtime(Units::s), Units::J);
+    energyOutput += Energy_t(outputPower(Units::W) * runtime(Units::s), Units::J);
 }
 
 // private HPWH::HeatSource functions
@@ -491,7 +490,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
         {
             size_t i_prev = 0;
             size_t i_next = 1;
-            std::vector<double> pNext = perfMap[i_prev].inputPower_coeffs;
+            // auto& pPrev = perfMap[i_prev].inputPower_coeffs;
             for (size_t i = 0; i < perfMap.size(); ++i)
             {
                 if (externalT < perfMap[i].T)
@@ -521,20 +520,26 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
-            auto pPrev = pNext;
-            pNext = perfMap[i_next].inputPower_coeffs;
-            // Calculate COP and Input Power at each of the two reference temepratures
-            double COP_T1 = 0; // cop at ambient temperature T1
-                               // expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
+            /// auto testV = scaleVector(perfMap[0].inputPower_coeffs, 3.);
+            // auto test_x = expandSeries(pNext, 3.);
 
-            double COP_T2 = 0; // cop at ambient temperature T2
-                               // expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
+            // std::cout<< test_x;
+            // auto pNext = pNext;
+            // pNext = perfMap[i_next].inputPower_coeffs;
+            //  Calculate COP and Input Power at each of the two reference temepratures
+            double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs,
+                                         effCondenserT); // cop at ambient temperature T1
 
-            Power_t inputPower_T1 = 0; // input power at ambient temperature T1
-                                       // expandSeries(pPrev, effCondenserT);
+            double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs,
+                                         effCondenserT); // cop at ambient temperature T2//
 
-            Power_t inputPower_T2 = 0; // input power at ambient temperature T2
-                                       // expandSeries(pNext, effCondenserT);
+            Power_t inputPower_T1 =
+                expandSeries(perfMap[i_prev].inputPower_coeffs,
+                             effCondenserT); // input power at ambient temperature T1
+
+            Power_t inputPower_T2 =
+                expandSeries(perfMap[i_next].inputPower_coeffs,
+                             effCondenserT); // input power at ambient temperature T2
 
             // Interpolate to get COP and input power at the current ambient temperature
             inputPower = linearInterp(

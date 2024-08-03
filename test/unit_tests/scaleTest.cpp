@@ -9,11 +9,12 @@ constexpr double tol = 1.e-4;
 
 struct Performance
 {
-    double input, output, cop;
+    HPWH::Power_t input, output;
+    double cop;
 };
 
 void getCompressorPerformance(
-    HPWH& hpwh, Performance& point, HPWH::Temp_t waterT, HPWH::Temp_t airT, HPWH::Temp_t setpointT)
+    HPWH& hpwh, Performance& point, HPWH::Temp_t airT, HPWH::Temp_t waterT, HPWH::Temp_t setpointT)
 {
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
@@ -37,8 +38,11 @@ void getCompressorPerformance(
     );
 
     // Check the heat in and out of the compressor
-    point.input = hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex());
-    point.output = hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex());
+    double dt = HPWH::Time_t(1., Units::min)(Units::s);
+    point.input = {hpwh.getNthHeatSourceEnergyInput(hpwh.getCompressorIndex())(Units::J) / dt,
+                   Units::W};
+    point.output = {hpwh.getNthHeatSourceEnergyOutput(hpwh.getCompressorIndex())(Units::J) / dt,
+                    Units::W};
     point.cop = point.output / point.input;
 }
 
@@ -47,18 +51,18 @@ bool scaleCapacityCOP(HPWH& hpwh,
                       double scaleCOP,
                       Performance& point0,
                       Performance& point1,
-                      HPWH::Temp_t waterT = {63, Units::F},
                       HPWH::Temp_t airT = {77, Units::F},
+                      HPWH::Temp_t waterT = {63, Units::F},
                       HPWH::Temp_t setpointT = {135, Units::F})
 {
     // Get peformance unscaled
-    getCompressorPerformance(hpwh, point0, waterT, airT, setpointT);
+    getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
 
     // Scale the compressor
     hpwh.setScaleCapacityCOP(scaleInput, scaleCOP);
 
     // Get the scaled performance
-    getCompressorPerformance(hpwh, point1, waterT, airT, setpointT);
+    getCompressorPerformance(hpwh, point1, airT, waterT, setpointT);
     return true;
 }
 
@@ -314,14 +318,12 @@ TEST(ScaleTest, getCompressorSP_capacity)
     const std::string sModelName = "ColmacCxA_20_SP";
     hpwh.initPreset(sModelName);
 
-    Performance point0;
-
-    double capacity_kWH, capacity_BTU;
     HPWH::Temp_t waterT = {63, Units::F};
     HPWH::Temp_t airT = {77, Units::F};
     HPWH::Temp_t setpointT = {135, Units::F};
 
-    getCompressorPerformance(hpwh, point0, waterT, airT, setpointT); // gives kWH
+    Performance point0;
+    getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
     EXPECT_NEAR(point0.output, capacity, tol);
@@ -344,7 +346,7 @@ TEST(ScaleTest, getCompressorMP_capacity)
     const HPWH::Temp_t setpointT = {126, Units::F};
 
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    getCompressorPerformance(hpwh, point0, waterT, airT, setpointT);
+    getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
     EXPECT_NEAR(point0.output, capacity, tol);
 }
 

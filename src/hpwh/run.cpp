@@ -350,7 +350,7 @@ void run(const std::string& sSpecType,
         }
         else
         {
-            air2T = {allSchedules[2][i], Units::F};
+            air2T = {allSchedules[2][i], Units::C};
         }
 
         auto tankHCStart = hpwh.getTankHeatContent();
@@ -393,7 +393,7 @@ void run(const std::string& sSpecType,
                         powerVect_ptr);
 
         if (!hpwh.isEnergyBalanced({allSchedules[1][i], Units::gal},
-                                   {allSchedules[0][i], Units::F},
+                                   {allSchedules[0][i], Units::C},
                                    tankHCStart,
                                    EBALTHRESHOLD))
         {

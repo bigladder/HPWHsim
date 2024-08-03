@@ -188,8 +188,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric(
-        {800., Units::L}, {10., Units::ft2hF_per_Btu}, elementPower, elementPower);
+    hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::ft2hF_per_Btu}, elementPower, 0.);
 
     // Check only bottom setting works
     double factor = 3.;
@@ -232,19 +231,19 @@ struct InsulationPoint
 TEST(ResistanceFunctionsTest, commercialTankInit)
 {
     const InsulationPoint testPoint800 = {
-        {800., Units::L}, {10., Units::ft2hF_per_Btu}, {10.500366, Units::Btu_per_hF}};
+        {800., Units::L}, {10., Units::ft2hF_per_Btu}, {10.500366, Units::kJ_per_hC}};
     const InsulationPoint testPoint2 = {
-        {2., Units::L}, {6., Units::ft2hF_per_Btu}, {0.322364, Units::Btu_per_hF}};
+        {2., Units::L}, {6., Units::ft2hF_per_Btu}, {0.322364, Units::kJ_per_hC}};
     const InsulationPoint testPoint50 = {
-        {50., Units::L}, {12., Units::ft2hF_per_Btu}, {1.37808, Units::Btu_per_hF}};
+        {50., Units::L}, {12., Units::ft2hF_per_Btu}, {1.37808, Units::kJ_per_hC}};
     const InsulationPoint testPoint200 = {
-        {200., Units::L}, {16., Units::ft2hF_per_Btu}, {2.604420, Units::Btu_per_hF}};
+        {200., Units::L}, {16., Units::ft2hF_per_Btu}, {2.604420, Units::kJ_per_hC}};
     const InsulationPoint testPoint200B = {
-        {200., Units::L}, {6., Units::ft2hF_per_Btu}, {6.94512163, Units::Btu_per_hF}};
+        {200., Units::L}, {6., Units::ft2hF_per_Btu}, {6.94512163, Units::kJ_per_hC}};
     const InsulationPoint testPoint2000 = {
-        {2000., Units::L}, {16., Units::ft2hF_per_Btu}, {12.0886496, Units::Btu_per_hF}};
+        {2000., Units::L}, {16., Units::ft2hF_per_Btu}, {12.0886496, Units::kJ_per_hC}};
     const InsulationPoint testPoint20000 = {
-        {20000., Units::L}, {6., Units::ft2hF_per_Btu}, {149.628109, Units::Btu_per_hF}};
+        {20000., Units::L}, {6., Units::ft2hF_per_Btu}, {149.628109, Units::kJ_per_hC}};
 
     const HPWH::Power_t elementPower(1.e4, Units::W);
     HPWH::UA_t UA;
