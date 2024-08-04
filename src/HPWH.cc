@@ -497,7 +497,7 @@ std::vector<double> changeSeriesUnitsTemp6(const std::vector<double> coeffs,
         return newCoeffs;
     }
 
-    auto t = Units::scaleOffset(fromUnits, toUnits);
+    auto t = Units::scaleOffset(toUnits, fromUnits);
     double alpha = t.offset(), beta = t.scale();
 
     auto& powers = HPWH::powers6;
@@ -533,7 +533,7 @@ std::vector<double> changeSeriesUnitsTemp11(const std::vector<double> coeffs,
         return newCoeffs;
     }
 
-    auto t = Units::scaleOffset(fromUnits, toUnits);
+    auto t = Units::scaleOffset(toUnits, fromUnits);
     double alpha = t.offset(), beta = t.scale();
 
     auto& powers = HPWH::powers11;

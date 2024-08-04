@@ -1993,7 +1993,7 @@ void HPWH::initPreset(MODELS presetNum)
                          30194.85226,      30194.85226,      32391.491036,     34156.010248,
                          36748.771988,     37756.062628,     36779.657412,     39342.226364,
                          41825.090996,     43359.446924},
-                        Units::Btu_per_h));
+                        Units::W));
 
         // Grid values in long format, table 2, COP
         compressor->perfGridValues.push_back(
