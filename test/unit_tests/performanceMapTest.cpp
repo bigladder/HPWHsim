@@ -592,25 +592,25 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
     PerformancePointSP checkPoint; // airT, outT, inT, outputW
 
     // test linear along inT
-    checkPoint = {{{-13.0, 140.0, 36.0}, Units::F}, {66529.49616, Units::Btu_per_h}};
+    checkPoint = {{{-13.0, 140.0, 36.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
         getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
-    checkPoint = {{{-13.0, 140.0, 100.0}, Units::F}, {66529.49616, Units::Btu_per_h}};
+    checkPoint = {{{-13.0, 140.0, 100.0}, Units::F}, {66529.49616, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower >
         getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has decreased
 
     // test linear along inT
-    checkPoint = {{{-13.0, 176.0, 36.0}, Units::F}, {65872.597448, Units::Btu_per_h}};
+    checkPoint = {{{-13.0, 176.0, 36.0}, Units::F}, {65872.597448, Units::W}};
     EXPECT_TRUE(
         checkPoint.outputPower <
         getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV)); // Check output has increased
 
     // test linear along inT
-    checkPoint = {{{-13.0, 176.0, 100.0}, Units::F}, {55913.249232, Units::Btu_per_h}};
+    checkPoint = {{{-13.0, 176.0, 100.0}, Units::F}, {55913.249232, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                               checkPoint,
@@ -618,7 +618,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                               out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {{{10.4, 140.0, 111.}, Units::F}, {89000.085396, Units::Btu_per_h}};
+    checkPoint = {{{10.4, 140.0, 111.}, Units::F}, {89000.085396, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                               checkPoint,
@@ -626,7 +626,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                               out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {{{64.4, 158.0, 100}, Units::F}, {136461.998288, Units::Btu_per_h}};
+    checkPoint = {{{64.4, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                               checkPoint,
@@ -634,7 +634,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                               out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {{{86.0, 158.0, 100}, Units::F}, {136461.998288, Units::Btu_per_h}};
+    checkPoint = {{{86.0, 158.0, 100}, Units::F}, {136461.998288, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                               checkPoint,
@@ -642,7 +642,7 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                               out_dT_QAHV)); // Check output has decreased at high inT
 
     // test linear along inT
-    checkPoint = {{{104.0, 176.0, 100.}, Units::F}, {136564.470884, Units::Btu_per_h}};
+    checkPoint = {{{104.0, 176.0, 100.}, Units::F}, {136564.470884, Units::W}};
     EXPECT_TRUE(checkPoint.outputPower >
                 getCapacitySP(hpwh,
                               checkPoint,
@@ -650,16 +650,16 @@ TEST_F(PerformanceMapTest, QAHV_N136TAU_HPB_SP_extrapolation)
                               out_dT_QAHV)); // Check output has decreased at high inT
 
     // test const along Tair
-    checkPoint = {{{110.0, 140.0, 62.6}, Units::F}, {136480, Units::Btu_per_h}};
+    checkPoint = {{{110.0, 140.0, 62.6}, Units::F}, {136480, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
     // test const along Tair
-    checkPoint = {{{114.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::Btu_per_h}};
+    checkPoint = {{{114.0, 176.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_NEAR_REL(checkPoint.outputPower,
                     getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 
-    checkPoint = {{{114.0, 200.0, 84.2}, Units::F}, {136564.470884, Units::Btu_per_h}};
+    checkPoint = {{{114.0, 200.0, 84.2}, Units::F}, {136564.470884, Units::W}};
     EXPECT_ANY_THROW(getCapacitySP(hpwh, checkPoint, in_dT_QAHV, out_dT_QAHV));
 }
 
