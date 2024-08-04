@@ -2527,10 +2527,8 @@ void HPWH::updateTankTemps(
                     drawCp(Units::kJ_per_C) * (nodeT(Units::C) - outletT(Units::C)), Units::kJ);
                 Energy_t heatExchange = nodeHeatExchangerEffectiveness * maxHeatExchange;
 
-                Temp_d_t dT = {heatExchange(Units::kJ) / drawCp(Units::kJ_per_C), Units::dC};
-                Temp_t dT0 = {dT(Units::dC), Units::C};
-                nodeT -= dT0;
-                outletT += dT0;
+                nodeT -= Temp_t(heatExchange(Units::kJ) / nodeCp(Units::kJ_per_C), Units::C);
+                outletT += Temp_t(heatExchange(Units::kJ) / drawCp(Units::kJ_per_C), Units::C);
             }
         }
         else
