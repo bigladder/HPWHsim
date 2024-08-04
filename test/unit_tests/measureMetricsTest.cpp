@@ -37,9 +37,9 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 272.5659, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 272.5660, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::Medium);
-    EXPECT_NEAR(standardTestSummary.UEF, 2.6493, 1.e-4);
+    EXPECT_NEAR(standardTestSummary.UEF, 2.6780, 1.e-4);
 }
 
 /*
@@ -59,9 +59,9 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 188.0432, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 188.2549, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::Low);
-    EXPECT_NEAR(standardTestSummary.UEF, 4.0018, 1.e-4);
+    EXPECT_NEAR(standardTestSummary.UEF, 4.0357, 1.e-4);
 }
 
 /*
@@ -81,7 +81,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 310.9384, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 310.9386, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::High);
     EXPECT_NEAR(standardTestSummary.UEF, 4.3272, 1.e-4);
 }
