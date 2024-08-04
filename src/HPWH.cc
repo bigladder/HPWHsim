@@ -2649,10 +2649,12 @@ void HPWH::updateTankTemps(
     // Heat transfer between nodes
     if (doConduction)
     {
-
         // Get the "constant" tau for the stability condition and the conduction calculation
-        const double tau = 2. * KWATER_W_per_mC / (CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L) *
-                           std::pow(nodeHeight(Units::m), 2.) * stepTime(Units::s);
+        const double tau = 2. * KWATER_W_per_mC
+                           / (Units::scale(Units::kJ, Units::J) * CPWATER_kJ_per_kgC)
+                           / (DENSITYWATER_kg_per_L / Units::scale(Units::L, Units::m3))
+                           / std::pow(nodeHeight(Units::m), 2.)
+                           * stepTime(Units::s);
         if (tau > 1.)
         {
             send_error(fmt::format("The stability condition for conduction has failed!"));
