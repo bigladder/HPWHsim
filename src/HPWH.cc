@@ -3813,6 +3813,8 @@ void HPWH::initFromFile(string modelName)
 
     string tempString, units;
     double tempDouble;
+    bool convertPerfMap = false;
+    std::vector<Units::Temp> perfT_unit;
 
     // being file processing, line by line
     string line_s;
@@ -3967,6 +3969,7 @@ void HPWH::initFromFile(string modelName)
             {
                 addHeatSource(fmt::format("heat source {:d}", i));
             }
+            perfT_unit.resize(numHeatSources);
         }
         else if (token == "heatsource")
         {
@@ -4006,9 +4009,9 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    heatSources[heatsource].minT = Temp_t(tempDouble, Units::C);
+                    heatSources[heatsource].minT = {tempDouble, Units::C};
                 else if (units == "F")
-                    heatSources[heatsource].minT = Temp_t(tempDouble, Units::F);
+                    heatSources[heatsource].minT = {tempDouble, Units::F};
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
             }
@@ -4016,9 +4019,9 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    heatSources[heatsource].maxT = Temp_t(tempDouble, Units::C);
+                    heatSources[heatsource].maxT = {tempDouble, Units::C};
                 else if (units == "F")
-                    heatSources[heatsource].maxT = Temp_t(tempDouble, Units::F);
+                    heatSources[heatsource].maxT = {tempDouble, Units::F};
                 else
                     send_warning("Invalid units.");
             }
@@ -4110,11 +4113,11 @@ void HPWH::initFromFile(string modelName)
                     {
                         if (units == "C")
                         {
-                            logicT = Temp_t(tempDouble, Units::C);
+                            logicT = {tempDouble, Units::C};
                         }
                         else if (units == "F")
                         {
-                            logicT = Temp_t(tempDouble, Units::F);
+                            logicT = {tempDouble, Units::F};
                         }
                         else
                             send_warning(fmt::format("Invalid units: {}", token));
@@ -4384,17 +4387,18 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> nTemps;
                 heatSources[heatsource].perfMap.resize(nTemps);
+                convertPerfMap = true;
+
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
-                nTemps = std::stoi(match[1].str());
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t nTemp = std::stoi(match[1].str());
 
-                if (maxTemps < nTemps)
+                if (nTemp > nTemps)
                 {
-                    if (maxTemps == 0)
+                    if (nTemps == 0)
                     {
                         send_error(fmt::format(
                             "{} specified for heat source {:d} before definition of nTemps.",
@@ -4408,18 +4412,20 @@ void HPWH::initFromFile(string modelName)
                             "less than {}.  \n",
                             token.c_str(),
                             heatsource,
-                            maxTemps,
-                            nTemps));
+                            nTemps,
+                            nTemp));
                     }
                 }
                 line_ss >> tempDouble >> units;
-                auto& T = heatSources[heatsource].perfMap[nTemps - 1].T;
+                auto& T = heatSources[heatsource].perfMap[nTemp - 1].T;
                 if (units == "C")
                 {
+                    perfT_unit[heatsource] = Units::C;
                     T = {tempDouble, Units::C};
                 }
                 else if (units == "F")
                 {
+                    perfT_unit[heatsource] = Units::F;
                     T = {tempDouble, Units::F};
                 }
                 else
@@ -4432,23 +4438,6 @@ void HPWH::initFromFile(string modelName)
                 string var = match[1].str();
                 nTemps = std::stoi(match[2].str());
                 string coeff = match[3].str();
-
-                /*
-                // TODO: Currently relies on the coefficients being defined in the correct order
-                int coeff_num;
-                if (coeff == "const")
-                {
-                    coeff_num = 0;
-                }
-                else if (coeff == "lin")
-                {
-                    coeff_num = 1;
-                }
-                else if (coeff == "quad")
-                {
-                    coeff_num = 2;
-                }
-                */
 
                 std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
@@ -4477,7 +4466,7 @@ void HPWH::initFromFile(string modelName)
                 if (var == "inPow")
                 {
                     heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(
-                        tempDouble);
+                        {tempDouble, Units::W});
                 }
                 else if (var == "cop")
                 {
@@ -4524,6 +4513,25 @@ void HPWH::initFromFile(string modelName)
         }
 
     } // end while over lines
+
+
+    if(convertPerfMap)
+    {
+        std::size_t j = 0;
+        for(auto& heatSource: heatSources)
+        {
+            auto uT = perfT_unit[j];
+            auto& perfMap = heatSource.perfMap;
+            std::size_t nPoints = perfMap.size();
+            for (std::size_t i = 0; i < nPoints; ++i)
+            {
+                auto& p = perfMap[i];
+                PerfPoint newPoint({p.T(uT), uT}, p.inputPower_coeffs, p.COP_coeffs);
+                p  = newPoint;
+            }
+            j++;
+        }
+    }
 
     // take care of the non-input processing
     model = MODELS_CustomFile;
