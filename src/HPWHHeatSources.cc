@@ -901,7 +901,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
                              Units::dC};
 
         // find target temperature
-        Temp_t targetT = externalOutletT + delta_dT;
+        Temp_t targetT = {externalOutletT(Units::C) + delta_dT(Units::dC), Units::C};
 
         // maximum heat that can be added in remaining time
         Energy_t heatingCapacity = {heatingPower(Units::kW) * remainingTime(Units::s), Units::kJ};
@@ -945,12 +945,14 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        inputEnergy += Energy_t(
-            (tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
-                heatingTime(Units::s),
-            Units::kJ);
-        outputEnergy += Energy_t(tempOutputPower(Units::kW) * heatingTime(Units::s), Units::kJ);
-        cop += temp_cop * heatingTime(Units::s);
+        Energy_t dE_in = {tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW) *
+            heatingTime(Units::s), Units::kJ};
+        inputEnergy += dE_in;
+
+        Energy_t dE_out = {tempOutputPower(Units::kW) * heatingTime(Units::s), Units::kJ};
+        outputEnergy += dE_out;
+
+        cop += temp_cop * heatingTime;
 
         hpwh->externalVolumeHeated += nodeFrac * hpwh->nodeVolume;
 
@@ -963,7 +965,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
     {
         inputPower = {inputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
         outputPower = {outputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
-        cop /= elapsedTime(Units::s);
+        cop /= elapsedTime;
         hpwh->condenserInletT = condenserInletT_sum / elapsedTime;
         hpwh->condenserOutletT = condenserOutletT_sum / elapsedTime;
     }
