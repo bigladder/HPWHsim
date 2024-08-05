@@ -945,7 +945,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
 
         // track outputs weighted by the time run
         // pump power added to approximate a secondary heat exchange in line with the compressor
-        Energy_t dE_in = {tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW) *
+        Energy_t dE_in = {(tempInputPower(Units::kW) + secondaryHeatExchanger.extraPumpPower(Units::kW)) *
             heatingTime(Units::s), Units::kJ};
         inputEnergy += dE_in;
 

@@ -81,7 +81,7 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 310.9386, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume(Units::L), 311.0505, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::High);
-    EXPECT_NEAR(standardTestSummary.UEF, 4.3272, 1.e-4);
+    EXPECT_NEAR(standardTestSummary.UEF, 4.4136, 1.e-4);
 }

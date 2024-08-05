@@ -1064,8 +1064,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        tankVolume = {315,
-                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankVolume = {315, Units::L};
         tankUA = {7, Units::kJ_per_hC};
 
         heatSources.reserve(1);
@@ -1260,8 +1259,7 @@ void HPWH::initPreset(MODELS presetNum)
         setpointT = {135.0, Units::F};
         tankSizeFixed = false;
 
-        tankVolume = {315,
-                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankVolume = {315, Units::L};
         tankUA = {7, Units::kJ_per_hC};
 
         doTempDepression = false;
@@ -1284,15 +1282,13 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         if (MODELS_NyleC25A_SP <= presetNum && presetNum <= MODELS_NyleC250A_SP)
         { // If not cold weather package
-            compressor->minT =
-                Temp_t(40., Units::F); // Min air temperature sans Cold Weather Package
+            compressor->minT = {40., Units::F};
         }
         else
         {
-            compressor->minT =
-                Temp_t(35., Units::F); // Min air temperature WITH Cold Weather Package
+            compressor->minT = {35., Units::F};
         }
-        compressor->maxT = Temp_t(120.0, Units::F); // Max air temperature
+        compressor->maxT = {120.0, Units::F}; // Max air temperature
         compressor->hysteresis_dT = 0;
         compressor->maxSetpointT = MAXOUTLET_R134A;
 
@@ -1717,7 +1713,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankMixesOnDraw = false;
 
         tankVolume = {315,
-                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+                      Units::L};
         tankUA = {7, Units::kJ_per_hC};
 
         heatSources.reserve(1);
@@ -1749,7 +1745,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setupDefrostMap();
 
         // logic conditions
-        compressor->minT = Temp_t(45., Units::F);
+        compressor->minT = {45., Units::F};
         compressor->maxT = Temp_t(110., Units::F);
         compressor->maxSetpointT = MAXOUTLET_R134A; // data says 150...
 
