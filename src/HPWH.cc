@@ -2701,6 +2701,7 @@ void HPWH::mixTankInversions()
         {
             hasInversion = false;
             // Start from the top and check downwards
+            double nodeMass_kg = (nodeVolume(Units::L) * DENSITYWATER_kg_per_L);
             for (int i = getNumNodes() - 1; i > 0; i--)
             {
                 if (tankTs[i] < tankTs[i - 1])
@@ -2710,23 +2711,23 @@ void HPWH::mixTankInversions()
 
                     // Mix this inversion mixing temperature by averaging all inverted nodes
                     // together.
-                    double Tmixed = 0.0;
+                    double Tmixed_sum = 0.0;
                     double massMixed = 0.0;
                     int m;
                     for (m = i; m >= 0; m--)
                     {
-                        Tmixed += tankTs[m] * (nodeVolume(Units::L) * DENSITYWATER_kg_per_L);
-                        massMixed += (nodeVolume(Units::L) * DENSITYWATER_kg_per_L);
-                        if ((m == 0) || (Tmixed / massMixed > tankTs[m - 1]))
+                        Tmixed_sum += nodeMass_kg * tankTs[m];
+                        massMixed += nodeMass_kg;
+                        if ((m == 0) || (Tmixed_sum / massMixed > tankTs[m - 1]))
                         {
                             break;
                         }
                     }
-                    Tmixed /= massMixed;
+                    Temp_t mixT = Tmixed_sum / massMixed;
 
                     // Assign the tank temps from i to k
                     for (int k = i; k >= m; k--)
-                        tankTs[k] = Tmixed;
+                        tankTs[k] = mixT;
                 }
             }
 

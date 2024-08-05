@@ -893,7 +893,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         // find heating capacity
         getCapacityMP(externalT, externalOutletT, tempInputPower, tempOutputPower, temp_cop);
 
-        Power_t heatingPower = inputPower;
+        Power_t heatingPower = tempOutputPower;
 
         // temperature increase at this power and flow rate
         Temp_d_t delta_dT = {heatingPower(Units::kW) / (mpFlowRate(Units::L_per_s) *
