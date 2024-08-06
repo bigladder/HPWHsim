@@ -876,7 +876,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
     {
         // find node fraction to heat in remaining time
         double nodeFrac =
-            mpFlowRate(Units::L_per_s) * duration(Units::s) / hpwh->nodeVolume(Units::L);
+            mpFlowRate(Units::L_per_s) * remainingTime(Units::s) / hpwh->nodeVolume(Units::L);
         if (nodeFrac > 1.)
         { // heat no more than one node each pass
             nodeFrac = 1.;
