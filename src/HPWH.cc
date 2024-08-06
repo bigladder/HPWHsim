@@ -2711,14 +2711,14 @@ void HPWH::mixTankInversions()
 
                     // Mix this inversion mixing temperature by averaging all inverted nodes
                     // together.
-                    double Tmixed_sum = 0.0;
-                    double massMixed = 0.0;
-                    int m;
-                    for (m = i; m >= 0; m--)
+                    double Tmixed_sum = 0.;
+                    double massMixed = 0.;
+                    int j = i;
+                    for (; j >= 0; --j)
                     {
-                        Tmixed_sum += nodeMass_kg * tankTs[m];
+                        Tmixed_sum += nodeMass_kg * tankTs[j];
                         massMixed += nodeMass_kg;
-                        if ((m == 0) || (Tmixed_sum / massMixed > tankTs[m - 1]))
+                        if ((j == 0) || (Tmixed_sum > massMixed * tankTs[j - 1]))
                         {
                             break;
                         }
@@ -2726,7 +2726,7 @@ void HPWH::mixTankInversions()
                     Temp_t mixT = Tmixed_sum / massMixed;
 
                     // Assign the tank temps from i to k
-                    for (int k = i; k >= m; k--)
+                    for (int k = i; k >= j; k--)
                         tankTs[k] = mixT;
                 }
             }
