@@ -2963,7 +2963,7 @@ void HPWH::initPreset(MODELS presetNum)
         setpointT = {127.0, Units::F};
 
         tankVolume = {45, Units::gal};
-        tankUA = {6.5, Units::Btu_per_hF};
+        tankUA = {6.5, Units::kJ_per_hC};
 
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -3012,9 +3012,9 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
-        resistiveElementTop->addShutOffLogic(topNodeMaxTemp({116.6358, Units::dF}));
+        resistiveElementTop->addShutOffLogic(topNodeMaxTemp({116.6358, Units::F}));
 
-        compressor->addTurnOnLogic(bottomThird({3.6883, Units::dF}));
+        compressor->addTurnOnLogic(bottomThird({33.6883, Units::dF}));
         compressor->addTurnOnLogic(standby({11.0648, Units::dF}));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth({60, Units::dF}));
