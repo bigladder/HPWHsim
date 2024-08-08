@@ -6,7 +6,7 @@ from pathlib import Path
 
 #
 def simulate(repo_path, model_spec, model_name, test_name, dest_path):
-    orig_path = str(Path.cwd())
+    orig_dir = str(Path.cwd())
     os.chdir(os.path.join(repo_path, "test"))
 
     app_path = os.path.join(repo_path, "build", "src", "hpwh", "hpwh")
@@ -17,8 +17,7 @@ def simulate(repo_path, model_spec, model_name, test_name, dest_path):
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
     print("result: " + result.stdout)
 
-    os.chdir(orig_path)
-
+    os.chdir(orig_dir)
 
 # main
 if __name__ == "__main__":
@@ -31,7 +30,7 @@ if __name__ == "__main__":
         test_name = sys.argv[4]
         dest_path = sys.argv[5]
 
-        run(repo_path, model_spec, model_name, test_name, dest_path)
+        simulate(repo_path, model_spec, model_name, test_name, dest_path)
 
 
     else:

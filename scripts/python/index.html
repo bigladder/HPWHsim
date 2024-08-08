@@ -1,6 +1,6 @@
 <!doctype html>
 
-<htm>
+<html>
 
     <head>
         <meta charset="utf-8">
@@ -12,7 +12,6 @@
 
 
     <body>
-    <iframe src="../../build/test/output/aplot.html" title="Plots" width=1200 height=800></iframe>
 
     <form id="functionForm">
         <label for="arg1">model spec:</label>
@@ -30,12 +29,24 @@
         <label for="arg5">measurements name:</label>
         <input type="text" id="arg5" name="arg5" required><br><br>
 
-        <button type="button" onclick="simulate_and_plot();">simulate and plot</button>
+        <button type="button" id="Btn" onclick="simulate_and_plot();">simulate and plot</button>
     </form>
+
+    <iframe title="Plots" src="../../build/test/output/" id="plots" width=1200 height=800 style="display:none;"></iframe>
 
     <div id="output"></div>
 
     <script>
+        const form = document.getElementById('functionForm');
+        form.arg1.value = "File";
+        form.arg2.value = "AeroTherm2023";
+        form.arg3.value = "RE2H50_UEF67";
+        form.arg4.value = "aplot_67.html"
+        form.arg5.value = "measurements_test.csv";
+    </script>
+
+    <script>
+
         async function simulate_and_plot() {
             const form = document.getElementById('functionForm');
             const farg1 = form.arg1.value;
@@ -49,13 +60,27 @@
             fst += '&arg4=' + farg4;
             fst += '&arg5=' + farg5;
 
-            const response = await fetch('http://localhost:8000/run_python_function?' + fst)
-            const result = await response.text();
-            window.location.reload();
-            document.getElementById('output').innerText = result;
-        }
-    </script>
+            document.getElementById("Btn").disabled = true;
 
+            const response = await fetch('http://localhost:8000/run_python_function?' + fst)
+
+            form.arg1.value = farg1;
+            form.arg2.value = farg2;
+            form.arg3.value = farg3;
+            form.arg4.value = farg4;
+            form.arg5.value = farg5;
+
+            document.getElementById("plots").src="../../build/test/output/" + farg4
+            document.getElementById("plots").style="display:block;"
+
+            //document.getElementById("plots").contentWindow.location.reload();
+
+            document.getElementById("Btn").disabled = false;
+
+            //window.location.reload();
+        }
+
+    </script>
 
     </body>
 
