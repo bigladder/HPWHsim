@@ -72,10 +72,10 @@ heatsource 2 inPowT2const 148.0418
 heatsource 2 inPowT2lin 2.553291
 heatsource 2 inPowT2quad 0
 heatsource 2 copT1const 5.4977772
-heatsource 2 copT1lin -0.0243008
+heatsource 2 copT1lin -0.0240
 heatsource 2 copT1quad 0.0
-heatsource 2 copT2const 7.207307
-heatsource 2 copT2lin -0.0324076
+heatsource 2 copT2const 7.107307
+heatsource 2 copT2lin -0.0323
 heatsource 2 copT2quad 0.0
 heatsource 2 minT 37 F
 heatsource 2 maxT 120 F

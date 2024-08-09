@@ -2,86 +2,182 @@
 
 <html>
 
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>HPWH measured vs. simulation</title>
+    <title>HPWH analysis</title>
 
-    </head>
+<style>
+body {font-family: Arial;}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+</style>
+
+</head>
+
+<body>
+
+<script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+
+    plot_arg1 = document.getElementById('plot_arg1')
+    if (tabName == 'plot')
+    { 
+      plot_arg1.display = true
+    }
+    else
+    {
+      plot_arg1.display = false
+    }
+}
+</script>
+
+<form id="modelForm">
+    <label for="model_arg1">model spec:</label>
+    <input type="text" id="model_arg1" name="model_arg1" required><br><br>
+
+    <label for="model_arg2">model name:</label>
+    <input type="text" id="model_arg2" name="model_arg2" required><br><br>
+</form>
+
+<script>
+  const model_form = document.getElementById('modelForm');
+  model_form.model_arg1.value = "File";
+  model_form.model_arg2.value = "AeroTherm2023";
+</script>
+
+<!-- Tab links -->
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'plot')">Plot</button>
+  <button class="tablinks" onclick="openTab(event, 'measure')">Measure</button>
+  <button class="tablinks" onclick="openTab(event, 'performance')">Performance</button>
+</div>
+
+<script>
+  async function plot() {
+    const model_form = document.getElementById('modelForm');
+    const farg1 = model_form.model_arg1.value;
+    const farg2 = model_form.model_arg2.value;
+
+    const plot_form = document.getElementById('plotForm');
+    const farg3 = plot_form.plot_arg1.value;
+    const farg4 = plot_form.plot_arg2.value;
+    const farg5 = plot_form.plot_arg3.value;
+
+    fst = 'arg1=' + farg1;
+    fst += '&arg2=' + farg2;
+    fst += '&arg3=' + farg3;
+    fst += '&arg4=' + farg4;
+    fst += '&arg5=' + farg5;
+
+    document.getElementById("plot_btn").disabled = true;
+
+    const response = await fetch('http://localhost:8000/test_and_plot?' + fst)
+
+    model_form.model_arg1.value = farg1;
+    model_form.model_arg2.value = farg2;
+
+    plot_form.plot_arg1.value = farg3;
+    plot_form.plot_arg2.value = farg4;
+    plot_form.plot_arg3.value = farg5;
+
+    document.getElementById("plots").src="../../build/test/output/" + farg4
+    document.getElementById("plots").style="display:block;"
+
+    //document.getElementById("plots").contentWindow.location.reload();
+    document.getElementById("plot_btn").disabled = false;
+    //window.location.reload();
+ }
+</script>
 
 
-    <body>
+<!-- Tab content -->
+<div id="plot" class="tabcontent">
+  <form id="plotForm">
+      <label for="plot_arg1">test name:</label>
+      <input type="text" id="plot_arg1" name="plot_arg1" required><br><br>
 
-    <form id="functionForm">
-        <label for="arg1">model spec:</label>
-        <input type="text" id="arg1" name="arg1" required><br><br>
+      <label for="plot_arg2">plot name:</label>
+      <input type="text" id="plot_arg2" name="plot_arg2" required><br><br>
 
-        <label for="arg2">model name:</label>
-        <input type="text" id="arg2" name="arg2" required><br><br>
+      <label for="plot_arg3">measurements name:</label>
+      <input type="text" id="plot_arg3" name="plot_arg3" required><br><br>
 
-        <label for="arg3">test name:</label>
-        <input type="text" id="arg3" name="arg3" required><br><br>
+      <button type="button" id="plot_btn" onclick="plot();">plot</button>
+  </form>
 
-        <label for="arg4">plot name:</label>
-        <input type="text" id="arg4" name="arg4" required><br><br>
+  <iframe title="Plots" src="../../build/test/output/" id="plots" width=1200 height=800 style="display:none;"></iframe>
 
-        <label for="arg5">measurements name:</label>
-        <input type="text" id="arg5" name="arg5" required><br><br>
+  <div id="output"></div>
 
-        <button type="button" id="Btn" onclick="simulate_and_plot();">simulate and plot</button>
-    </form>
+</div>
 
-    <iframe title="Plots" src="../../build/test/output/" id="plots" width=1200 height=800 style="display:none;"></iframe>
+<!-- Tab content -->
+<div id="measure" class="tabcontent">
+</div>
 
-    <div id="output"></div>
+<!-- Tab content -->
+<div id="performance" class="tabcontent">
+</div>
 
-    <script>
-        const form = document.getElementById('functionForm');
-        form.arg1.value = "File";
-        form.arg2.value = "AeroTherm2023";
-        form.arg3.value = "RE2H50_UEF67";
-        form.arg4.value = "aplot_67.html"
-        form.arg5.value = "measurements_test.csv";
-    </script>
 
-    <script>
+</body>
 
-        async function simulate_and_plot() {
-            const form = document.getElementById('functionForm');
-            const farg1 = form.arg1.value;
-            const farg2 = form.arg2.value;
-            const farg3 = form.arg3.value;
-            const farg4 = form.arg4.value;
-            const farg5 = form.arg5.value;
-            fst = 'arg1=' + farg1;
-            fst += '&arg2=' + farg2;
-            fst += '&arg3=' + farg3;
-            fst += '&arg4=' + farg4;
-            fst += '&arg5=' + farg5;
 
-            document.getElementById("Btn").disabled = true;
+<script>
+  const plot_form = document.getElementById('plotForm');
+  plot_form.plot_arg1.value = "RE2H50_UEF67";
+  plot_form.plot_arg2.value = "aplot_67.html"
+  plot_form.plot_arg3.value = "measurements_test.csv";
+</script>
 
-            const response = await fetch('http://localhost:8000/run_python_function?' + fst)
-
-            form.arg1.value = farg1;
-            form.arg2.value = farg2;
-            form.arg3.value = farg3;
-            form.arg4.value = farg4;
-            form.arg5.value = farg5;
-
-            document.getElementById("plots").src="../../build/test/output/" + farg4
-            document.getElementById("plots").style="display:block;"
-
-            //document.getElementById("plots").contentWindow.location.reload();
-
-            document.getElementById("Btn").disabled = false;
-
-            //window.location.reload();
-        }
-
-    </script>
-
-    </body>
-
-    </html>
+</html>
