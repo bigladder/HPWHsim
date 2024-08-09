@@ -4,9 +4,10 @@ import subprocess
 from pathlib import Path
 from simulate import simulate
 from plot import plot
+from measure import measure
 
 
-def main(model_spec, model_name, test_name, plot_name, measurements_name):
+def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurements_name):
     #
     print(Path.cwd())
     print("model spec is " + model_spec)
@@ -36,6 +37,24 @@ def main(model_spec, model_name, test_name, plot_name, measurements_name):
     print(plot_path)
 
     plot(measured_path, simulated_path, plot_path)
+
+    os.chdir(orig_dir)
+
+    return 'success'
+
+
+def call_measure(model_spec, model_name):
+    #
+    print(Path.cwd())
+    print("model spec is " + model_spec)
+    orig_dir = str(Path.cwd())
+    os.chdir('../..')
+    repo_path = str(Path.cwd())
+    print("path is " + repo_path)
+
+    test_dir = os.path.join(repo_path, "test")
+    output_dir = os.path.join(repo_path, "build", "test", "output")
+    measure(repo_path, model_spec, model_name)
 
     os.chdir(orig_dir)
 

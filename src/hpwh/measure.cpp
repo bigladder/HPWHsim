@@ -77,7 +77,7 @@ void measure(const std::string& sSpecType,
     }
     else
     {
-        std::string inputFile = sModelName + ".txt";
+        std::string inputFile = sModelName;
         hpwh.initFromFile(inputFile);
     }
 
