@@ -136,7 +136,29 @@ function openTab(evt, tabName) {
     //document.getElementById("plots").contentWindow.location.reload();
     document.getElementById("plot_btn").disabled = false;
     //window.location.reload();
- }
+  }
+
+  async function measure() {
+    const model_form = document.getElementById('modelForm');
+    const farg1 = model_form.model_arg1.value;
+    const farg2 = model_form.model_arg2.value;
+
+    fst = 'arg1=' + farg1;
+    fst += '&arg2=' + farg2;
+
+    document.getElementById("measure_btn").disabled = true;
+
+    const response = await fetch('http://localhost:8000/measure?' + fst)
+
+    model_form.model_arg1.value = farg1;
+    model_form.model_arg2.value = farg2;
+
+    //document.getElementById("UEF").value="../../build/test/output/" + farg4
+ 
+    //document.getElementById("plots").contentWindow.location.reload();
+    document.getElementById("measure_btn").disabled = false;
+    //window.location.reload();
+  }
 </script>
 
 
@@ -163,6 +185,7 @@ function openTab(evt, tabName) {
 
 <!-- Tab content -->
 <div id="measure" class="tabcontent">
+  <button type="button" id="measure_btn" onclick="measure();">measure</button> 
 </div>
 
 <!-- Tab content -->
