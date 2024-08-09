@@ -4102,9 +4102,17 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_GenericUEF217;
     }
-    else if (modelName == "AeroTherm2023")
+    else if (modelName == "AeroTherm2023_50")
     {
-        model = HPWH::MODELS_AeroTherm2023;
+        model = HPWH::MODELS_AeroTherm2023_50;
+    }
+    else if (modelName == "AeroTherm2023_65")
+    {
+        model = HPWH::MODELS_AeroTherm2023_65;
+    }
+    else if (modelName == "AeroTherm2023_80")
+    {
+        model = HPWH::MODELS_AeroTherm2023_80;
     }
     else
     {
