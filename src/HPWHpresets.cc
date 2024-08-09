@@ -4404,13 +4404,24 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->companionHeatSource = compressor;
     }
-    else if (presetNum == MODELS_AeroTherm2023)
+    else if ((MODELS_AeroTherm2023_50 <= presetNum) && (presetNum <= MODELS_AeroTherm2023_80))
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
-
-        tankVolume_L = GAL_TO_L(45);
         tankUA_kJperHrC = 6.85;
+
+        if (presetNum == MODELS_AeroTherm2023_50)
+        {
+            tankVolume_L = GAL_TO_L(45.0);
+        }
+        else if (presetNum == MODELS_AeroTherm2023_65)
+        {
+            tankVolume_L = GAL_TO_L(64.0);
+        }
+        else if (presetNum == MODELS_AeroTherm2023_80)
+        {
+            tankVolume_L = GAL_TO_L(75.4);
+        }
 
         doTempDepression = false;
         tankMixesOnDraw = true;
