@@ -4187,11 +4187,17 @@ void HPWH::initFromFile(string modelName)
                     GenTemp_t logicT;
                     if (units == "C")
                     {
-                        logicT = {tempDouble, Units::C};
+                        if (absolute)
+                            logicT = {tempDouble, Units::C};
+                        else
+                            logicT = {tempDouble, Units::dC};
                     }
                     else if (units == "F")
                     {
-                        logicT = Temp_t(tempDouble, Units::F);
+                        if (absolute)
+                            logicT = {tempDouble, Units::F};
+                        else
+                            logicT = {tempDouble, Units::dF};
                     }
                     else
                     {
