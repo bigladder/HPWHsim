@@ -2509,7 +2509,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
         compressor->maxSetpointT = MAXOUTLET_R134A;
 
-        // double split = 1.0 / 3.0;
         compressor->setCondensity({1., 0., 0., 0.});
 
         compressor->perfMap.reserve(3);
@@ -2521,7 +2520,7 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->perfMap.push_back({
-            {0, Units::F},                  // Temperature
+            {70, Units::F},                  // Temperature
             {{144.5, 2.42, 0.0}, Units::W}, // inputPower_coeffs
             {7.67, -0.037, 0.0}             // COP_coeffs
         });
