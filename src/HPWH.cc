@@ -2960,17 +2960,17 @@ bool HPWH::areAllHeatSourcesOff() const
 
 void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {
-    double avgT_C = 0.;
+    Temp_t avgT = 0.;
     double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
     for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        avgT_C += tankTs[i];
+        avgT += tankTs[i];
     }
-    avgT_C /= numAvgNodes;
+    avgT = avgT / numAvgNodes;
 
     for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        tankTs[i] += mixFactor * (avgT_C - tankTs[i]);
+        tankTs[i] += mixFactor * (avgT - tankTs[i]);
     }
 }
 
