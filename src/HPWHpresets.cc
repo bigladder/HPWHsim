@@ -1712,8 +1712,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        tankVolume = {315,
-                      Units::L};
+        tankVolume = {315, Units::L};
         tankUA = {7, Units::kJ_per_hC};
 
         heatSources.reserve(1);
@@ -2520,7 +2519,7 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->perfMap.push_back({
-            {70, Units::F},                  // Temperature
+            {70, Units::F},                 // Temperature
             {{144.5, 2.42, 0.0}, Units::W}, // inputPower_coeffs
             {7.67, -0.037, 0.0}             // COP_coeffs
         });
@@ -4189,8 +4188,8 @@ void HPWH::initPreset(MODELS presetNum)
             {100, Units::F},
 
             {{12.4, 0.00739, -0.0410, 0.0, 0.000578, 0.0000696},
-             Units::W}, // Input Power Coefficients
-                        // (inputPower_coeffs)
+             Units::kW}, // Input Power Coefficients
+                         // (inputPower_coeffs)
 
             {1.20, 0.0333, 0.00191, 0.000283, 0.0000496, -0.000440} // COP Coefficients
                                                                     // (COP_coeffs)
