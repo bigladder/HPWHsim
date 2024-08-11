@@ -349,7 +349,7 @@ std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
         double dist = 0.;
         if (i >= lowestNode)
         {
-            HPWH::Temp_d_t standardOffset_dT(1.0, Units::dF);
+            HPWH::Temp_d_t standardOffset_dT(1.0, Units::dC);
             HPWH::Temp_d_t offset_dT(5.0, Units::dF);
             double offset = offset_dT / standardOffset_dT; // dimensionless
             dist = expitFunc((nodeTs[i] - nodeTs[lowestNode]) / shrinkage_dT, offset);
@@ -2648,11 +2648,10 @@ void HPWH::updateTankTemps(
     if (doConduction)
     {
         // Get the "constant" tau for the stability condition and the conduction calculation
-        const double tau = 2. * KWATER_W_per_mC
-                           / (Units::scale(Units::kJ, Units::J) * CPWATER_kJ_per_kgC)
-                           / (DENSITYWATER_kg_per_L / Units::scale(Units::L, Units::m3))
-                           / std::pow(nodeHeight(Units::m), 2.)
-                           * stepTime(Units::s);
+        const double tau = 2. * KWATER_W_per_mC /
+                           (Units::scale(Units::kJ, Units::J) * CPWATER_kJ_per_kgC) /
+                           (DENSITYWATER_kg_per_L / Units::scale(Units::L, Units::m3)) /
+                           std::pow(nodeHeight(Units::m), 2.) * stepTime(Units::s);
         if (tau > 1.)
         {
             send_error(fmt::format("The stability condition for conduction has failed!"));
@@ -4395,7 +4394,6 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> nTemps;
                 heatSources[heatsource].perfMap.resize(nTemps);
                 convertPerfMap = true;
-
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
@@ -4521,11 +4519,10 @@ void HPWH::initFromFile(string modelName)
 
     } // end while over lines
 
-
-    if(convertPerfMap)
+    if (convertPerfMap)
     {
         std::size_t j = 0;
-        for(auto& heatSource: heatSources)
+        for (auto& heatSource : heatSources)
         {
             auto uT = perfT_unit[j];
             auto& perfMap = heatSource.perfMap;
@@ -4534,7 +4531,7 @@ void HPWH::initFromFile(string modelName)
             {
                 auto& p = perfMap[i];
                 PerfPoint newPoint({p.T(uT), uT}, p.inputPower_coeffs, p.COP_coeffs);
-                p  = newPoint;
+                p = newPoint;
             }
             j++;
         }
