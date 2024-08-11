@@ -28,6 +28,9 @@ void getCompressorPerformance(
     hpwh.resetTankToSetpoint(); // Force tank cold
     hpwh.setSetpointT(setpointT);
 
+    hpwh.setUA(0.);
+    hpwh.setFittingsUA(0.);
+
     // Run the step
     hpwh.runOneStep(waterT, // Inlet water temperature
                     0.,     // Flow
@@ -347,7 +350,7 @@ TEST(ScaleTest, getCompressorMP_capacity)
 
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
     getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
-    EXPECT_NEAR(point0.output, capacity, tol);
+    EXPECT_NEAR_REL_TOL(point0.output, capacity, tol);
 }
 
 /*
