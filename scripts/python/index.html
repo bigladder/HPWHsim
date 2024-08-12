@@ -99,8 +99,7 @@ function openTab(evt, tabName) {
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'plot')">Plot</button>
   <button class="tablinks" onclick="openTab(event, 'measure')">Measure</button>
-  <button class="tablinks" onclick="openTab(event, 'performance')">Performance</button>
-</div>
+ </div>
 
 <script>
   async function plot() {
@@ -133,9 +132,7 @@ function openTab(evt, tabName) {
     document.getElementById("plots").src="../../build/test/output/" + farg4
     document.getElementById("plots").style="display:block;"
 
-    //document.getElementById("plots").contentWindow.location.reload();
     document.getElementById("plot_btn").disabled = false;
-    //window.location.reload();
   }
 
   async function measure() {
@@ -186,10 +183,6 @@ function openTab(evt, tabName) {
 <div id="measure" class="tabcontent">
   <button type="button" id="measure_btn" onclick="measure();">measure</button>
   <object id="results" data="../../build/test/output/results.txt" width=800 height=800 style="display:none;"></object>
-</div>
-
-<!-- Tab content -->
-<div id="performance" class="tabcontent">
 </div>
 
 

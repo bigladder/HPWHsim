@@ -5683,7 +5683,8 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        *standardTestOptions.outputStream << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+        *standardTestOptions.outputStream
+            << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
@@ -5694,36 +5695,43 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         *standardTestOptions.outputStream << "\t\tDoes not qualify as consumer water heater.\n";
     }
 
-    *standardTestOptions.outputStream << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
 
     *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
-              << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+                                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
 
     *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
-    *standardTestOptions.outputStream << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
-              << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
 
-    *standardTestOptions.outputStream << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
-              << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
 
-    *standardTestOptions.outputStream << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
 
     *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+                                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
+                                      << "\n";
 
-    *standardTestOptions.outputStream << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-    *standardTestOptions.outputStream << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
 
     *standardTestOptions.outputStream << "\tAnnual Values:\n";
-    *standardTestOptions.outputStream << "\t\tAnnual Electrical Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAnnual Electrical Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
     *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+                                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
+                                      << "\n";
 
     if (standardTestOptions.saveOutput)
     {

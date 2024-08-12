@@ -34,7 +34,9 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sCustomDrawProfile = "";
     subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
-    subcommand->callback([&]() { measure(sSpecType, sModelName, sOutputDir, sResultsFilename, sCustomDrawProfile); });
+    subcommand->callback(
+        [&]()
+        { measure(sSpecType, sModelName, sOutputDir, sResultsFilename, sCustomDrawProfile); });
 
     return subcommand;
 }
@@ -64,12 +66,12 @@ void measure(const std::string& sSpecType,
         standardTestOptions.saveOutput = true;
         standardTestOptions.sOutputDirectory = sOutputDir;
 
-        if(sResultsPath != "")
+        if (sResultsPath != "")
         {
             std::ostream* tempStream = new std::ofstream;
             std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
             resultsFile->open(sResultsPath.c_str(), std::ofstream::out | std::ofstream::trunc);
-            if(resultsFile->is_open())
+            if (resultsFile->is_open())
             {
                 standardTestOptions.outputStream = resultsFile;
                 useResultsFile = true;
