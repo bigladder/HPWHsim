@@ -71,7 +71,7 @@ heatsource 2 inPowT1quad 0
 heatsource 2 inPowT2const 140
 heatsource 2 inPowT2lin 2.5
 heatsource 2 inPowT2quad 0
-heatsource 2 copT1const 5.76
+heatsource 2 copT1const 5.75
 heatsource 2 copT1lin -0.0240
 heatsource 2 copT1quad 0.0
 heatsource 2 copT2const 8.152
