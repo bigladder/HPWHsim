@@ -5666,7 +5666,7 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         {
             send_error(fmt::format("Could not open output file {}", sFullOutputFilename));
         }
-        std::cout << "Output file: " << sFullOutputFilename << "\n";
+        *standardTestOptions.outputStream << "Output file: " << sFullOutputFilename << "\n";
 
         std::string strPreamble;
         std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
@@ -5684,46 +5684,46 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+        *standardTestOptions.outputStream << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
 
-    std::cout << "\t24-Hour Test Results:\n";
+    *standardTestOptions.outputStream << "\t24-Hour Test Results:\n";
     if (!standardTestSummary.qualifies)
     {
-        std::cout << "\t\tDoes not qualify as consumer water heater.\n";
+        *standardTestOptions.outputStream << "\t\tDoes not qualify as consumer water heater.\n";
     }
 
-    std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+    *standardTestOptions.outputStream << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
 
-    std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+    *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
               << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
 
-    std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+    *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
-    std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
+    *standardTestOptions.outputStream << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
               << "\n";
 
-    std::cout << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
+    *standardTestOptions.outputStream << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
               << "\n";
 
-    std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+    *standardTestOptions.outputStream << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
 
-    std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+    *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
               << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
 
-    std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+    *standardTestOptions.outputStream << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
               << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-    std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+    *standardTestOptions.outputStream << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
               << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-    std::cout << "\tAnnual Values:\n";
-    std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+    *standardTestOptions.outputStream << "\tAnnual Values:\n";
+    *standardTestOptions.outputStream << "\t\tAnnual Electrical Energy Consumption (kWh): "
               << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
-    std::cout << "\t\tAnnual Energy Consumption (kWh): "
+    *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
               << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
 
     if (standardTestOptions.saveOutput)

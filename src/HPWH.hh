@@ -1061,6 +1061,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
+        std::ostream* outputStream = &std::cout;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
