@@ -159,7 +159,9 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 set(BradfordWhiteModelNames
-        AeroTherm2023
+        AeroTherm2023_50
+        AeroTherm2023_65
+        AeroTherm2023_80
         )
 set(BradfordWhiteTests
         RE2H50_UEF50
@@ -363,6 +365,13 @@ endforeach (test)
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${BradfordWhiteTests})
+    foreach (model ${BradfordWhiteModelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
