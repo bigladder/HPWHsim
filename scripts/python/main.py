@@ -54,7 +54,9 @@ def call_measure(model_spec, model_name):
 
     test_dir = os.path.join(repo_path, "test")
     output_dir = os.path.join(repo_path, "build", "test", "output")
-    measure(repo_path, model_spec, model_name)
+    
+    results_file = os.path.join(output_dir, "results.txt")
+    measure(repo_path, model_spec, model_name, results_file)
 
     os.chdir(orig_dir)
 
