@@ -5,13 +5,13 @@ from pathlib import Path
 
 
 #
-def measure(repo_path, model_spec, model_name):
+def measure(repo_path, model_spec, model_name, results_file):
     orig_dir = str(Path.cwd())
     os.chdir(os.path.join(repo_path, "test"))
 
     app_path = os.path.join(repo_path, "build", "src", "hpwh", "hpwh")
 
-    run_list = [app_path, 'measure', '-s', model_spec, '-m', model_name]
+    run_list = [app_path, 'measure', '-s', model_spec, '-m', model_name, '-r', results_file]
     print(run_list)
 
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
@@ -27,8 +27,9 @@ if __name__ == "__main__":
         repo_path = sys.argv[1]
         model_spec = sys.argv[2]
         model_name = sys.argv[3]
+        results_file = sys.argv[4]
 
-        measure(repo_path, model_spec, model_name)
+        measure(repo_path, model_spec, model_name, results_file )
 
     else:
         print('measure arguments:')

@@ -92,7 +92,7 @@ function openTab(evt, tabName) {
 <script>
   const model_form = document.getElementById('modelForm');
   model_form.model_arg1.value = "File";
-  model_form.model_arg2.value = "AeroTherm2023";
+  model_form.model_arg2.value = "AeroTherm2023_50";
 </script>
 
 <!-- Tab links -->
@@ -152,12 +152,11 @@ function openTab(evt, tabName) {
 
     model_form.model_arg1.value = farg1;
     model_form.model_arg2.value = farg2;
+    document.getElementById("results").style="display:block;"
+    document.getElementById("results").data = "";
+    document.getElementById("results").data = "../../build/test/output/results.txt";
 
-    //document.getElementById("UEF").value="../../build/test/output/" + farg4
- 
-    //document.getElementById("plots").contentWindow.location.reload();
     document.getElementById("measure_btn").disabled = false;
-    //window.location.reload();
   }
 </script>
 
@@ -177,7 +176,7 @@ function openTab(evt, tabName) {
       <button type="button" id="plot_btn" onclick="plot();">plot</button>
   </form>
 
-  <iframe title="Plots" src="../../build/test/output/" id="plots" width=1200 height=800 style="display:none;"></iframe>
+  <iframe title="Plots" src="" id="plots" width=1200 height=800 style="display:none;"></iframe>
 
   <div id="output"></div>
 
@@ -185,7 +184,8 @@ function openTab(evt, tabName) {
 
 <!-- Tab content -->
 <div id="measure" class="tabcontent">
-  <button type="button" id="measure_btn" onclick="measure();">measure</button> 
+  <button type="button" id="measure_btn" onclick="measure();">measure</button>
+  <object id="results" data="../../build/test/output/results.txt" width=800 height=800 style="display:none;"></object>
 </div>
 
 <!-- Tab content -->

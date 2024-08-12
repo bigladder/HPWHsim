@@ -5142,9 +5142,9 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     const std::string sFirstHourRatingDesig =
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
 
-    std::cout << "\tFirst-Hour Rating:\n";
-    std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
-    std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
+    *testOptions.outputStream << "\tFirst-Hour Rating:\n";
+    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -5666,7 +5666,6 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         {
             send_error(fmt::format("Could not open output file {}", sFullOutputFilename));
         }
-        *standardTestOptions.outputStream << "Output file: " << sFullOutputFilename << "\n";
 
         std::string strPreamble;
         std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";

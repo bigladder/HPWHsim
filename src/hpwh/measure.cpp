@@ -42,7 +42,7 @@ CLI::App* add_measure(CLI::App& app)
 void measure(const std::string& sSpecType,
              const std::string& sModelName,
              std::string sOutputDir,
-             std::string sResultsFilename,
+             std::string sResultsPath,
              std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
@@ -64,10 +64,8 @@ void measure(const std::string& sSpecType,
         standardTestOptions.saveOutput = true;
         standardTestOptions.sOutputDirectory = sOutputDir;
 
-        if(sResultsFilename != "")
+        if(sResultsPath != "")
         {
-            std::string sResultsPath = sOutputDir + "/" + sResultsFilename;
-
             std::ostream* tempStream = new std::ofstream;
             std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
             resultsFile->open(sResultsPath.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -131,8 +129,8 @@ void measure(const std::string& sSpecType,
         }
     }
 
-    std::cout << "Spec type: " << sPresetOrFile << "\n";
-    std::cout << "Model name: " << sModelName << "\n";
+    *standardTestOptions.outputStream << "Spec type: " << sPresetOrFile << "\n";
+    *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
 
     standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
