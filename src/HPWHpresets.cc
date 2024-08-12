@@ -4408,7 +4408,7 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
-        tankUA_kJperHrC = 6.85;
+        tankUA_kJperHrC = 8.45;
 
         if (presetNum == MODELS_AeroTherm2023_50)
         {
@@ -4424,7 +4424,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tankMixesOnDraw = false;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4443,13 +4443,13 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.push_back({
             50,                       // Temperature (T_F)
             {165, 1.939747, 0.0},     // Input Power Coefficients (inputPower_coeffs)
-            {5.5977772, -0.0240, 0.0} // COP Coefficients (COP_coeffs)
+            {5.75, -0.0240, 0.0} // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
             70,                        // Temperature (T_F)
-            {148.0418, 2.553291, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {7.807307, -0.0323, 0.0}   // COP Coefficients (COP_coeffs)
+            {140, 2.5, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+            {8.152, -0.0323, 0.0}   // COP Coefficients (COP_coeffs)
         });
 
         compressor->minT = F_TO_C(37.0);
