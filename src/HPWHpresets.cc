@@ -4408,19 +4408,21 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
-        tankUA_kJperHrC = 8.45;
 
         if (presetNum == MODELS_AeroTherm2023_50)
         {
             tankVolume_L = GAL_TO_L(45.0);
+            tankUA_kJperHrC = 8.45;
         }
         else if (presetNum == MODELS_AeroTherm2023_65)
         {
             tankVolume_L = GAL_TO_L(64.0);
+            tankUA_kJperHrC = 10.69;
         }
         else if (presetNum == MODELS_AeroTherm2023_80)
         {
             tankVolume_L = GAL_TO_L(75.4);
+            tankUA_kJperHrC = 11.92;
         }
 
         doTempDepression = false;
