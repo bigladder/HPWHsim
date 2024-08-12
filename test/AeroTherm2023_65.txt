@@ -3,7 +3,7 @@ verbosity silent
 numNodes 12 #number of nodes
 setpoint 50 C
 volume 64.0 gal
-UA 8.45 kJperHrC
+UA 10.69 kJperHrC
 depressTemp false
 mixOnDraw false
 initialTankTemp 50 C
