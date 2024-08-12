@@ -78,6 +78,17 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
 
     return df
 
+def calculate_energy_consumption(df_measured, df_simulated, variables):
+    column_energy_name_measured = variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"]
+    column_energy_name_simulated = variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"]
+
+    # set parasitic load to 0
+    df_measured_no_parasitic_load = df_measured[column_energy_name_measured].where(df_measured[column_energy_name_measured] > 10, 0)
+
+    print(f"Measured Energy Consumption:  {df_measured[column_energy_name_measured].sum().values[0]/60:.0f} Wh")
+    # print(f"Measured Energy (no parasitic load) {df_measured_no_parasitic_load[column_energy_name_measured].sum().values[0]/60:.0f} Wh")
+    print(f"Simulated Energy Consumption: {df_simulated[column_energy_name_simulated].sum().values[0]/60:.0f} Wh")
+
 
 def add_temperature_details(variables):
     TEMPERATURE_DETAILS = {
@@ -236,6 +247,10 @@ def plot(measured_path, simulated_path, output_path):
 
     # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
     add_temperature_details(variables)
+    
+    # print measured and simulated energy consumption
+    calculate_energy_consumption(df_measured, df_simulated, variables)
+
     plot = dimes.TimeSeriesPlot(
         df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
     )
