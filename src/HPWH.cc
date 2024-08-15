@@ -826,7 +826,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
         } // end loop over heat sources
 
         // do heating logic
-        Time_t timeToRun = stepTime;
+        Time_t availableTime = stepTime;
         for (int i = 0; i < getNumHeatSources(); i++)
         {
             // check/apply lock-outs
@@ -878,14 +878,16 @@ void HPWH::runOneStep(Volume_t drawVolume,
                     heatSourcePtr = &heatSources[i];
                 }
 
-                addHeatParent(heatSourcePtr, heatSourceAmbientT, timeToRun);
+                addHeatParent(heatSourcePtr, heatSourceAmbientT, availableTime);
 
                 // if it finished early. i.e. shuts off early like if the heatsource met setpoint or
                 // maxed out
-                if (heatSourcePtr->runtime < timeToRun)
+                static const Time_t minRuntime = 0.;
+                auto remainingTime = availableTime - heatSourcePtr->runtime;
+                if (remainingTime > minRuntime) //heatSourcePtr->runtime < availableTime)
                 {
                     // subtract time it ran and turn it off
-                    timeToRun -= heatSourcePtr->runtime;
+                    availableTime -= heatSourcePtr->runtime;
                     heatSources[i].disengageHeatSource();
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
@@ -919,7 +921,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
                             {
                                 addHeatParent(backupHeatSourcePtr,
                                               heatSourceAmbientT,
-                                              timeToRun - backupHeatSourcePtr->runtime);
+                                              availableTime - backupHeatSourcePtr->runtime);
                             }
                         }
                     }
@@ -1049,9 +1051,10 @@ void HPWH::runNSteps(int N,
     }
 }
 
-void HPWH::addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t timeToRun)
+void HPWH::addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t availableTime)
 {
 
+    //if(availableTime <= 0.) return;
     Temp_t tempSetpointT(-273.15, Units::C);
 
     // Check the air temprature and setpoint against maxOut_at_LowT
@@ -1066,7 +1069,7 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, T
         }
     }
     // and add heat if it is
-    heatSourcePtr->addHeat(heatSourceAmbientT, timeToRun);
+    heatSourcePtr->addHeat(heatSourceAmbientT, availableTime);
 
     // Change the setpoint back to what it was pre-compressor depression
     if (tempSetpointT(Units::C) > -273.15)

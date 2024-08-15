@@ -260,9 +260,9 @@ void run(const std::string& sSpecType,
         string why;
         if (!allSchedules[5].empty())
         {
-            if (hpwh.isNewSetpointPossible(allSchedules[5][0], maxAllowedSetpointT, why))
+            if (hpwh.isNewSetpointPossible({allSchedules[5][0], Units::C}, maxAllowedSetpointT, why))
             {
-                hpwh.setSetpointT(allSchedules[5][0]);
+                hpwh.setSetpointT({allSchedules[5][0], Units::C});
             }
         }
         else if (newSetpointT(Units::C) > 0)
@@ -361,7 +361,7 @@ void run(const std::string& sSpecType,
         // Change setpoint if there is a setpoint schedule.
         if (!allSchedules[5].empty() && !hpwh.isSetpointFixed())
         {
-            hpwh.setSetpointT({allSchedules[5][i], Units::F}); // expect this to fail sometimes
+            hpwh.setSetpointT({allSchedules[5][i], Units::C}); // expect this to fail sometimes
         }
 
         // Change SoC schedule
