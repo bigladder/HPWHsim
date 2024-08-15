@@ -350,7 +350,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
     return frac;
 }
 
-void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
+void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t availableTime)
 {
     Power_t inputPower = 0., outputPower = 0.;
     double cop = 0.;
@@ -384,7 +384,7 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
         for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
         {
             // for(int i = 0; i < hpwh->numNodes; i++){
-            Energy_t nodeCap(outputPower(Units::W) * timeToRun(Units::s) * heatDistribution[i],
+            Energy_t nodeCap(outputPower(Units::W) * availableTime(Units::s) * heatDistribution[i],
                              Units::J);
             if (nodeCap != 0.)
             {
@@ -400,12 +400,13 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
         }
 
         // after you've done everything, any leftover capacity is time that didn't run
-        Energy_t cap(outputPower(Units::W) * timeToRun(Units::s), Units::J);
-        runtime = (1. - (leftoverCap / cap)) * timeToRun;
+        Energy_t cap(outputPower(Units::W) * availableTime(Units::s), Units::J);
+        double fac = (cap > 0.) ? (1. - (leftoverCap / cap)) : 0.;
+        runtime = fac * availableTime;
 
-        if (timeToRun(Units::min) < -TOL_MINVALUE)
+        if (runtime(Units::min) < -TOL_MINVALUE)
         {
-            send_error(fmt::format("Negative runtime: {:g} min", timeToRun(Units::min)));
+            send_error(fmt::format("Negative runtime: {:g} min", availableTime(Units::min)));
         }
         break;
     }
@@ -416,11 +417,11 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t timeToRun)
         //  n, and cap/input_BTUperHr, cop are outputs
         if (isMultipass)
         {
-            runtime = addHeatExternalMP(externalT, timeToRun, outputPower, inputPower, cop);
+            runtime = addHeatExternalMP(externalT, availableTime, outputPower, inputPower, cop);
         }
         else
         {
-            runtime = addHeatExternal(externalT, timeToRun, outputPower, inputPower, cop);
+            runtime = addHeatExternal(externalT, availableTime, outputPower, inputPower, cop);
         }
         break;
     }

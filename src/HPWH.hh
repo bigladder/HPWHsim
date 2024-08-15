@@ -1170,7 +1170,7 @@ class HPWH : public Courier::Sender
     void turnAllHeatSourcesOff();
     /**< disengage each heat source  */
 
-    void addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t timeToRun);
+    void addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t availableTime);
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
@@ -1430,7 +1430,7 @@ class HPWH::HeatSource : public Courier::Sender
     /**< calculates the distance the current state is from the shutOff logic for external
      * configurations*/
 
-    void addHeat(Temp_t externalT, Time_t timeToRun);
+    void addHeat(Temp_t externalT, Time_t availableTime);
     /**< adds heat to the hpwh - this is the function that interprets the
         various configurations (internal/external, resistance/heat pump) to add heat */
 

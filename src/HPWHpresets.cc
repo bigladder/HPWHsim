@@ -2831,7 +2831,7 @@ void HPWH::initPreset(MODELS presetNum)
         setpointT = {127.0, Units::F};
 
         tankVolume = {45, Units::gal};
-        tankUA = UA_t(6.5, Units::kJ_per_hC);
+        tankUA = {6.5, Units::kJ_per_hC};
 
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -2895,7 +2895,7 @@ void HPWH::initPreset(MODELS presetNum)
     else if (presetNum == MODELS_GE2014STDMode_80)
     {
         setNumNodes(12);
-        setpointT = Temp_t(127.0, Units::F);
+        setpointT = {127.0, Units::F};
 
         tankVolume = {75.4, Units::gal};
         tankUA = {10, Units::kJ_per_hC};
