@@ -374,7 +374,7 @@ void run(const std::string& sSpecType,
         if (hpwh.getModel() >= 210 && minutesToRun > 500000.)
         {
             // Do a simple mix down of the draw for the cold water temperature
-            if (hpwh.getSetpointT()(Units::F) <= 125.)
+            if (hpwh.getSetpointT()(Units::C) <= 125.) // replicate original code
             {
                 allSchedules[1][i] *=
                     (125. - allSchedules[0][i]) /

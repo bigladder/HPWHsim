@@ -1521,8 +1521,7 @@ void HPWH::initPreset(MODELS presetNum)
         doTempDepression = false;
         tankMixesOnDraw = false;
 
-        tankVolume = {315,
-                      Units::L}; // Gets adjust per model but ratio between vol and UA is important
+        tankVolume = {315, Units::L};
         tankUA = {7, Units::kJ_per_hC};
 
         heatSources.reserve(1);
@@ -1670,7 +1669,7 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
         {
             setTankSizeWithSameU({960., Units::gal});
-            compressor->mpFlowRate = {60., Units::gal_per_min};
+            compressor->mpFlowRate = {50., Units::gal_per_min};
             if (presetNum == MODELS_NyleC250A_C_MP)
             {
                 compressor->resDefrost = {
