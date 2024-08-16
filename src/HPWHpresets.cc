@@ -1098,7 +1098,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_MP)
         {
-            setTankSizeWithSameU({200., Units::L});
+            setTankSizeWithSameU({200., Units::gal});
             compressor->mpFlowRate = {9., Units::gal_per_min};
             // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
@@ -1587,10 +1587,10 @@ void HPWH::initPreset(MODELS presetNum)
                     {40.0, Units::F}  // onBelowT_F
                 };
             }
-            // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
+            // Grid values in long format, table 1, input power
+            compressor->perfGridValues.push_back(PowerVect_t({3.64, 4.11, 4.86, 5.97,  8.68, 9.95, 3.72, 4.27,
                                                   4.99, 6.03, 8.55, 10.02, 3.98, 4.53, 5.24, 6.24,
-                                                  8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55});
+                                                  8.54, 9.55, 4.45, 4.68,  5.37, 6.34, 8.59, 9.55}, Units::kW));
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
@@ -1605,15 +1605,15 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC90A_C_MP)
             {
                 compressor->resDefrost = {
-                    5.4, // inputPwr_kW;
-                    5.0, // constTempLift_dF;
-                    40.0 // onBelowT_F
+                    {5.4, Units::kW}, // inputPwr_kW;
+                    {5.0, Units::dF}, // constTempLift_dF;
+                    {40.0, Units::F} // onBelowT_F
                 };
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power
             compressor->perfGridValues.push_back(
-                {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
-                 5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35});
+                PowerVect_t({4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
+                 5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35}, Units::kW));
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {4.79138322,  3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537,
@@ -1628,15 +1628,15 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC125A_C_MP)
             {
                 compressor->resDefrost = {
-                    9.0, // inputPwr_kW;
-                    5.0, // constTempLift_dF;
-                    40.0 // onBelowT_F
+                    {9.0, Units::kW}, // inputPwr_kW;
+                    {5.0, Units::dF}, // constTempLift_dF;
+                    {40.0, Units::F} // onBelowT_F
                 };
             }
-            // Grid values in long format, table 1, input power (W)
+            // Grid values in long format, table 1, input power
             compressor->perfGridValues.push_back(
-                {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
-                 7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4});
+                PowerVect_t({6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
+                 7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4}, Units::kW));
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {4.2390625,   3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913,
@@ -1651,15 +1651,15 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC185A_C_MP)
             {
                 compressor->resDefrost = {
-                    7.2, // inputPwr_kW;
-                    5.0, // constTempLift_dF;
-                    40.0 // onBelowTemp_F
+                    {7.2, Units::kW}, // inputPwr_kW;
+                    {5.0, Units::dF}, // constTempLift_dF;
+                    {40.0, Units::F} // onBelowTemp_F
                 };
             }
             // Grid values in long format, table 1, input power (W)
             compressor->perfGridValues.push_back(
-                {7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
-                 7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62});
+                PowerVect_t({7.57, 11.66, 14.05, 18.3,  25.04, 30.48, 6.99, 10.46, 14.28, 18.19, 26.24, 32.32,
+                 7.87, 12.04, 15.02, 18.81, 25.99, 31.26, 8.15, 12.46, 15.17, 18.95, 26.23, 31.62}, Units::kW));
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {5.531043593, 3.556603774, 2.918149466, 2.214754098, 1.590255591, 1.291010499,
@@ -1674,16 +1674,16 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC250A_C_MP)
             {
                 compressor->resDefrost = {
-                    18.0, // inputPwr_kW;
-                    5.0,  // constTempLift_dF;
-                    40.0  // onBelowT_F
+                    {18.0, Units::kW},  // inputPwr_kW;
+                    {5.0, Units::dF},  // constTempLift_dF;
+                    {40.0, Units::F}   // onBelowT_F
                 };
             }
             // Grid values in long format, table 1, input power (W)
-            compressor->perfGridValues.push_back({10.89, 12.23, 13.55, 14.58, 15.74, 16.72,
+            compressor->perfGridValues.push_back(PowerVect_t({10.89, 12.23, 13.55, 14.58, 15.74, 16.72,
                                                   11.46, 13.76, 15.97, 17.79, 20.56, 22.50,
                                                   10.36, 14.66, 18.07, 21.23, 25.81, 29.01,
-                                                  8.67,  15.05, 18.76, 21.87, 26.63, 30.02});
+                                                  8.67,  15.05, 18.76, 21.87, 26.63, 30.02}, Units::kW));
 
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
@@ -1988,7 +1988,7 @@ void HPWH::initPreset(MODELS presetNum)
                          30194.85226,      30194.85226,      32391.491036,     34156.010248,
                          36748.771988,     37756.062628,     36779.657412,     39342.226364,
                          41825.090996,     43359.446924},
-                        Units::W));
+                        Units::Btu_per_h));
 
         // Grid values in long format, table 2, COP
         compressor->perfGridValues.push_back(
@@ -4060,7 +4060,7 @@ void HPWH::initPreset(MODELS presetNum)
                                           -0.00034,
                                           5.30E-06,
                                           2.3600E-06},
-                                         Units::W};
+                                         Units::kW};
         std::vector<double> COP_coeffs = {1.945,
                                           0.0412,
                                           -0.0112,
