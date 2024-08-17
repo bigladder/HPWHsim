@@ -882,9 +882,8 @@ void HPWH::runOneStep(Volume_t drawVolume,
 
                 // if it finished early. i.e. shuts off early like if the heatsource met setpoint or
                 // maxed out
-                static const Time_t minRuntime = 0.;
-                auto remainingTime = availableTime - heatSourcePtr->runtime;
-                if (remainingTime > minRuntime) //heatSourcePtr->runtime < availableTime)
+                //static const Time_t minRuntime = 0.;
+                if (availableTime > heatSourcePtr->runtime)
                 {
                     // subtract time it ran and turn it off
                     availableTime -= heatSourcePtr->runtime;
@@ -1053,8 +1052,6 @@ void HPWH::runNSteps(int N,
 
 void HPWH::addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t availableTime)
 {
-
-    //if(availableTime <= 0.) return;
     Temp_t tempSetpointT(-273.15, Units::C);
 
     // Check the air temprature and setpoint against maxOut_at_LowT
