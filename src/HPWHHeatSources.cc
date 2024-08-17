@@ -386,7 +386,7 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t availableTime)
             // for(int i = 0; i < hpwh->numNodes; i++){
             Energy_t nodeCap(outputPower(Units::W) * availableTime(Units::s) * heatDistribution[i],
                              Units::J);
-            if (nodeCap != 0.)
+            if (nodeCap > 0.)
             {
                 Energy_t heatToAdd = nodeCap + leftoverCap;
                 // add leftoverCap to the next run, and keep passing it on
