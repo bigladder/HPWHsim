@@ -3997,7 +3997,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird({20, Units::dF}));
-        resistiveElementTop->addShutOffLogic(topNodeMaxTemp({116.6358, Units::dF}));
+        resistiveElementTop->addShutOffLogic(topNodeMaxTemp({116.6358, Units::F}));
         compressor->addTurnOnLogic(bottomThird({33.6883, Units::dF}));
         compressor->addTurnOnLogic(standby({11.0648, Units::dF}));
         resistiveElementBottom->addTurnOnLogic(thirdSixth({60, Units::dF}));
