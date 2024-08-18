@@ -14,8 +14,8 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(headers
         HPWHversion.in.hh
         HPWH.hh
-        Unity/Unity.hpp
-        Unity/Units.hpp
+        Unity.hpp
+        Units.hpp
         )
 
 set(sources
