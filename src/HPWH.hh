@@ -17,7 +17,7 @@
 
 #include <courier/courier.h>
 
-#include "../vendor/Unity/src/Units.hpp"
+#include "Unity/Units.hpp"
 
 namespace Btwxt
 {

@@ -6,6 +6,3 @@
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
 
-[submodule "vendor/Unity"]
-	path = vendor/Unity
-	url = https://github.com/bigladder/Unity.git

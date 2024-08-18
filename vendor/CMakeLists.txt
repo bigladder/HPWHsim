@@ -4,7 +4,7 @@ include(initialize-submodules)
 add_submodule(btwxt)
 
 # Unity library
-add_submodule(Unity)
+#add_submodule(Unity)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
 
