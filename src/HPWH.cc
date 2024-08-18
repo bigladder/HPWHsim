@@ -882,7 +882,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
 
                 // if it finished early. i.e. shuts off early like if the heatsource met setpoint or
                 // maxed out
-                //static const Time_t minRuntime = 0.;
+                // static const Time_t minRuntime = 0.;
                 if (availableTime > heatSourcePtr->runtime)
                 {
                     // subtract time it ran and turn it off
