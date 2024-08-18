@@ -3,7 +3,7 @@ include(initialize-submodules)
 # btwxt library
 add_submodule(btwxt)
 
-# message(STATUS "Adding subdirectory \"Unity\"")
+# Unity library
 add_submodule(Unity)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
