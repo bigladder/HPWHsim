@@ -260,7 +260,8 @@ void run(const std::string& sSpecType,
         string why;
         if (!allSchedules[5].empty())
         {
-            if (hpwh.isNewSetpointPossible({allSchedules[5][0], Units::C}, maxAllowedSetpointT, why))
+            if (hpwh.isNewSetpointPossible(
+                    {allSchedules[5][0], Units::C}, maxAllowedSetpointT, why))
             {
                 hpwh.setSetpointT({allSchedules[5][0], Units::C});
             }
@@ -300,7 +301,6 @@ void run(const std::string& sSpecType,
 
     // ----------------------Open the Output Files and Print the Header----------------------------
     // //
-
     if (minutesToRun > 500000.)
     {
         fileToOpen = sOutputDir + "/DHW_YRLY.csv";
