@@ -908,7 +908,10 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         Energy_t heatingCapacity = {heatingPower(Units::kW) * remainingTime(Units::s), Units::kJ};
 
         // heat needed to raise temperature of one node by deltaT_C
-        Energy_t nodeHeat = {hpwh->nodeCp(Units::kJ_per_C) * delta_dT(Units::dC), Units::kJ};
+        // Energy_t nodeHeat = {hpwh->nodeCp(Units::kJ_per_C) * delta_dT(Units::dC), Units::kJ};
+        Energy_t nodeHeat = {heatingPower(Units::kW) * hpwh->nodeVolume(Units::L) /
+                                 mpFlowRate(Units::L_per_s),
+                             Units::kJ};
 
         // heat no more than one node this step
         Time_t heatingTime = remainingTime;
