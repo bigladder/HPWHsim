@@ -721,6 +721,7 @@ class HPWH : public Courier::Sender
 
     /// returns the UA with specified units
     void getUA(UA_t& UA) const;
+    UA_t getUA() const { return tankUA; }
 
     void getFittingsUA(UA_t& UA) const;
     /**< Returns the UAof just the fittings*/
