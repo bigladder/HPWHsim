@@ -3806,7 +3806,7 @@ void HPWH::initFromFile(string modelName)
     name = modelName;
 
     // some variables that will be handy
-    std::size_t heatsource, sourceNum, nTemps, tempInt;
+    std::size_t heatsource, sourceNum, nTemps = 0, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
     double initialTankT = Temp_t(120., Units::F);
