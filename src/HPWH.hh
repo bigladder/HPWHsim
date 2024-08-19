@@ -14,7 +14,7 @@
 #include <cstdlib> //for exit
 #include <vector>
 #include <unordered_map>
-
+#include <variant>
 #include <courier/courier.h>
 
 #include "Units.hpp"
@@ -87,8 +87,6 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
     typedef Units::TempVect<UnitsTemp> TempVect_t;
     typedef Units::PowerVect<UnitsPower> PowerVect_t;
-
-    typedef std::pair<PowerVect_t, Units::Temp> PowerCoeffs_t;
 
     struct GenTemp_t : public std::variant<Temp_t, Temp_d_t>
     {
@@ -481,7 +479,6 @@ class HPWH : public Courier::Sender
         bool areNodeWeightsValid();
         std::vector<NodeWeight> nodeWeights;
         GenTemp_t decisionT;
-        ;
     };
 
     std::shared_ptr<HPWH::SoCBasedHeatingLogic> shutOffSoC(std::string desc,
