@@ -40,7 +40,7 @@ namespace Unity
 
         double operator*(const double x) const override { return data * x; }
 
-        Scale operator*(const Scale& s) const { return data * s; }
+        Scale operator*(const Scale& s_) const { return data * s_; }
 
         double scale() const { return data; }
     };
@@ -229,17 +229,6 @@ namespace Unity
 
         double operator=(double x_in) { return x = x_in; }
 
-        template <U toUnits>
-        bool operator==(const TransformVal<U, T, toUnits> transformVal) const
-        {
-            return (transformVal(units) == x);
-        }
-
-        template <U toUnits>
-        bool operator!=(const TransformVal<U, T, toUnits> transformVal) const
-        {
-            return !(operator==(transformVal));
-        }
 
         U in() { return units; }
 
@@ -296,7 +285,18 @@ namespace Unity
         ScaleVal operator-=(const double y) { return *this = *this - y; }
 
         ScaleVal operator*(const double y) const { return y * x; }
-        // ScaleVal operator/(const double y) const { return x / y; }
+
+        template <U toUnits>
+        bool operator==(const ScaleVal<U, toUnits> scaleVal) const
+        {
+            return (scaleVal(units) == x);
+        }
+
+        template <U toUnits>
+        bool operator!=(const ScaleVal<U,toUnits> scaleVal) const
+        {
+            return !(operator==(scaleVal));
+        }
 
         ScaleVal operator*=(const double y)
         {
@@ -354,6 +354,18 @@ namespace Unity
 
         ScaleOffsetVal operator+(const double y) const { return x + y; }
         ScaleOffsetVal operator-(const double y) const { return x - y; }
+
+        template <U toUnits>
+        bool operator==(const ScaleOffsetVal<U,toUnits> scaleOffsetVal) const
+        {
+            return (scaleOffsetVal(units) == x);
+        }
+
+        template <U toUnits>
+        bool operator!=(const ScaleOffsetVal<U,toUnits> scaleOffsetVal) const
+        {
+            return !(operator==(scaleOffsetVal));
+        }
 
         ScaleOffsetVal operator+=(const double y) { return *this = *this + y; }
         ScaleOffsetVal operator-=(const double y) { return *this = *this - y; }
@@ -419,8 +431,8 @@ namespace Unity
         template <U fromUnits>
         ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect({}, fromUnits)
         {
-            for (auto s : sV)
-                push_back(scale(fromUnits, units) * s);
+            for (auto s_ : sV)
+                push_back(scale(fromUnits, units) * s_);
         }
 
         ScaleVect(const std::size_t n) : ScaleVect() { resize(n); }
@@ -428,16 +440,16 @@ namespace Unity
         template <typename... val>
         ScaleVect(const std::tuple<val...>& sV) : ScaleVect()
         {
-            for (auto s : sV)
-                push_back(s);
+            for (auto s_ : sV)
+                push_back(s_);
         }
 
         operator std::vector<double>() const
         {
             std::vector<double> xV = {};
             xV.reserve(size());
-            for (auto& s : *this)
-                xV.push_back(s);
+            for (auto& s_ : *this)
+                xV.push_back(s_);
             return xV;
         }
 
@@ -482,8 +494,8 @@ namespace Unity
         ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, fromUnits>>& sV)
                 : ScaleOffsetVect(sV, fromUnits)
         {
-            for (auto s : sV)
-                push_back(scaleOffset(fromUnits, units) * s);
+            for (auto s_ : sV)
+                push_back(scaleOffset(fromUnits, units) * s_);
         }
 
         ScaleOffsetVect(const std::size_t n) : ScaleOffsetVect() { resize(n); }
@@ -492,16 +504,16 @@ namespace Unity
         {
             std::vector<double> xV = {};
             xV.reserve(size());
-            for (auto& s : *this)
-                xV.push_back(s);
+            for (auto& s_ : *this)
+                xV.push_back(s_);
             return xV;
         }
 
         template <typename... val>
         ScaleOffsetVect(const std::tuple<val...>& sV) : ScaleOffsetVect()
         {
-            for (auto s : sV)
-                push_back(s);
+            for (auto s_ : sV)
+                push_back(s_);
         }
 
         std::vector<double> operator()(const U toUnits) const
