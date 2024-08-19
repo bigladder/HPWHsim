@@ -246,6 +246,7 @@ endforeach (test)
 #Test(s) specifically for Bradford White models
 foreach (test ${BradfordWhiteTests})
     foreach (model ${BradfordWhiteModelNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
