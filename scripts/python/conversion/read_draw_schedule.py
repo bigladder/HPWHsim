@@ -1,8 +1,8 @@
 
-in_data_folder = '../../test/RE2H50_UEF67/'
-out_data_folder = '../../test/RE2H50_UEF67/'
+in_data_folder = '../../test/RE2H65_UEF50/'
+out_data_folder = '../../test/RE2H65_UEF50/'
 
-in_file_name = in_data_folder + 'RE2H50_UEF67.csv'
+in_file_name = in_data_folder + 'RE2H65_UEF50.csv'
 out_file_name = out_data_folder + 'drawschedule.csv'
 
 # load data

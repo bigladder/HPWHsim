@@ -83,7 +83,7 @@ heatsource 2 hysteresis 2 F
 heatsource 2 coilConfig wrapped
 
 #logic
-heatsource 0 onlogic fourthSixth 30 F
+heatsource 0 onlogic fourthSixth 35 F
 
 heatsource 1 offlogic bottomTwelfthMaxTemp 86.1 F
 
