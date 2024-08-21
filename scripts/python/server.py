@@ -7,8 +7,9 @@ import main
 # poetry run python server.py
 # open "index.html" in browser
 
-PORT = 8000
+# quit the server with ctrl-c
 
+PORT = 8000
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -37,7 +38,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()   
+            self.end_headers()
+ 
         else:
             super().do_GET()
 
