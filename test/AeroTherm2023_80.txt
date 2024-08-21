@@ -1,9 +1,9 @@
 #AeroTherm2023_80
 verbosity silent
-numNodes 12 #number of nodes
+numNodes 12
 setpoint 50 C
-volume 75.4 gal
-UA 11.92 kJperHrC
+volume 75 gal
+UA 7.2217 kJperHrC
 depressTemp false
 mixOnDraw false
 initialTankTemp 50 C

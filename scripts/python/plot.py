@@ -50,10 +50,10 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
 
     TEMPERATURE_DETAILS = {
         "Measured": [
-            "Storage Tank Average Temperature",
-            "Outlet Temperature(℃)",
-            "Inlet Temperature(℃)",
-            "DB(℃)",
+            "AverageTankT(C)",
+            "OutletT(C)",
+            "InletT(C)",
+            "AmbientT(C)",
         ],
         "Simulated": [
             "Storage Tank Average Temperature",
@@ -79,15 +79,15 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
     return df
 
 def calculate_energy_consumption(df_measured, df_simulated, variables):
-    column_energy_name_measured = variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"]
-    column_energy_name_simulated = variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"]
+    name_column_energy_measured = variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"]
+    name_column_energy_simulated = variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"]
 
     # set parasitic load to 0
-    df_measured_no_parasitic_load = df_measured[column_energy_name_measured].where(df_measured[column_energy_name_measured] > 10, 0)
+    df_measured_no_parasitic_load = df_measured[name_column_energy_measured].where(df_measured[name_column_energy_measured] > 10, 0)
 
-    print(f"Measured Energy Consumption:  {df_measured[column_energy_name_measured].sum().values[0]/60:.0f} Wh")
+    print(f"Measured Energy Consumption:  {df_measured[name_column_energy_measured].sum().values[0]/60:.0f} Wh")
     # print(f"Measured Energy (no parasitic load) {df_measured_no_parasitic_load[column_energy_name_measured].sum().values[0]/60:.0f} Wh")
-    print(f"Simulated Energy Consumption: {df_simulated[column_energy_name_simulated].sum().values[0]/60:.0f} Wh")
+    print(f"Simulated Energy Consumption: {df_simulated[name_column_energy_simulated].sum().values[0]/60:.0f} Wh")
 
 
 def add_temperature_details(variables):
@@ -108,7 +108,6 @@ def add_temperature_details(variables):
             variables["Y-Variables"]["Temperature"][key].insert(
                 index, TEMPERATURE_DETAILS[key][index]
             )
-
 
 def retrieve_dataframe(df_measured, df_simulated, variable_type):
     if variable_type == "Measured":
@@ -164,11 +163,10 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
         axis_name=variable,
     )
 
-
 #
 def plot(measured_path, simulated_path, output_path):
-    power_col_label_meas = "Power(W)"
-    power_col_label = "Power_W"
+    power_col_label_meas = "PowerIn(W)"
+    power_col_label_sim = "Power_W"
 
     df_measured = call_csv(measured_path, 0)
     df_simulated = call_csv(simulated_path, 0)
@@ -176,7 +174,7 @@ def plot(measured_path, simulated_path, output_path):
     variables = {
         "Y-Variables": {
             "Power Input": {
-                "Column Names": {"Measured": [power_col_label], "Simulated": [power_col_label]},
+                "Column Names": {"Measured": [power_col_label_meas], "Simulated": [power_col_label_sim]},
                 "Labels": ["Power Input"],
                 "Units": "W",
                 "Colors": ["red"],
@@ -184,7 +182,7 @@ def plot(measured_path, simulated_path, output_path):
                 "Line Visibility": [True],
             },
             "Flow Rate": {
-                "Column Names": {"Measured": ["Flow Rate (GPM)"], "Simulated": ["draw"]},
+                "Column Names": {"Measured": ["FlowRate(gal/min)"], "Simulated": ["draw"]},
                 "Labels": ["Flow Rate"],
                 "Units": "gal/min",
                 "Colors": ["green"],
@@ -194,7 +192,7 @@ def plot(measured_path, simulated_path, output_path):
             "Temperature": {
                 "Column Names": {
                     "Measured": [
-                        f"Tank Temp #{number}(℃)"
+                        f"TankT{number}(C)"
                         for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
                     ],
                     "Simulated": [
@@ -214,7 +212,7 @@ def plot(measured_path, simulated_path, output_path):
         },
         "X-Variables": {
             "Time": {
-                "Column Names": {"Measured": "minutes", "Simulated": "minutes"},
+                "Column Names": {"Measured": "Time(min)", "Simulated": "minutes"},
                 "Units": "Min",
             }
         },
