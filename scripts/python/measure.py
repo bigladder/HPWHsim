@@ -29,7 +29,7 @@ if __name__ == "__main__":
         model_name = sys.argv[3]
         results_file = sys.argv[4]
 
-        measure(repo_path, model_spec, model_name, results_file )
+        measure(repo_path, model_spec, model_name, results_file)
 
     else:
         print('measure arguments:')
