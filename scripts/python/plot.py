@@ -50,7 +50,7 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
 
     TEMPERATURE_DETAILS = {
         "Measured": [
-            "AverageTankT(C)",
+            "Storage Tank Average Temperature",
             "OutletT(C)",
             "InletT(C)",
             "AmbientT(C)",
@@ -165,7 +165,7 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
 
 #
 def plot(measured_path, simulated_path, output_path):
-    power_col_label_meas = "PowerIn(W)"
+    power_col_label_meas = "Power_W"
     power_col_label_sim = "Power_W"
 
     df_measured = call_csv(measured_path, 0)
@@ -218,16 +218,16 @@ def plot(measured_path, simulated_path, output_path):
         },
     }
 
-    df_measured = calculate_average_tank_temperature(df_measured, df_simulated, "Measured", variables)
-    df_simulated = calculate_average_tank_temperature(df_measured, df_simulated, "Simulated", variables)
-
     # remove rows from dataframes outside of inclusive range [1,1440]
     df_measured = filter_dataframe_range(df_measured, "Measured", variables)
     df_simulated = filter_dataframe_range(df_simulated, "Simulated", variables)
 
-    df_measured[power_col_label] = df_measured[power_col_label_meas]
+    df_measured = calculate_average_tank_temperature(df_measured, df_simulated, "Measured", variables)
+    df_simulated = calculate_average_tank_temperature(df_measured, df_simulated, "Simulated", variables)
 
-    # sum sim power it multiple heat sources
+    df_measured[power_col_label_meas] = df_measured["PowerIn(W)"]
+
+    # sum sim power if multiple heat sources
     i = 1
     src_exists = True
     while src_exists:
@@ -235,13 +235,13 @@ def plot(measured_path, simulated_path, output_path):
         src_exists = df_simulated.columns.isin([col_label]).any()
         if src_exists:
             if i == 1:
-                df_simulated[power_col_label] = df_simulated[col_label]
+                df_simulated[power_col_label_sim] = df_simulated[col_label]
             else:
-                df_simulated[power_col_label] = df_simulated[power_col_label] + df_simulated[col_label]
+                df_simulated[power_col_label_sim] = df_simulated[power_col_label_sim] + df_simulated[col_label]
         i = i + 1
 
     # convert simulated energy consumption (Wh) for every minute to power (W)
-    df_simulated[power_col_label] = convert_values(df_simulated[power_col_label], "Wh/min", "W")
+    df_simulated[power_col_label_sim] = convert_values(df_simulated[power_col_label_sim], "Wh/min", "W")
 
     # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
     add_temperature_details(variables)
