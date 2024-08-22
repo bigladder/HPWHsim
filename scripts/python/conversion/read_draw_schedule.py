@@ -1,16 +1,22 @@
+import os
 
-in_data_folder = '../../test/RE2H65_UEF50/'
-out_data_folder = '../../test/RE2H65_UEF50/'
+test_name = 'RE2H80_UEF50'
 
-in_file_name = in_data_folder + 'RE2H65_UEF50.csv'
-out_file_name = out_data_folder + 'drawschedule.csv'
+in_data_folder = os.path.join('test/', test_name)
+out_data_folder = os.path.join('test/', test_name)
+
+in_file_name = test_name + '.csv'
+out_file_name = 'drawschedule.csv'
+
+in_file_path = os.path.join(in_data_folder, in_file_name)
+out_file_path = os.path.join(out_data_folder, out_file_name)
 
 # load data
-in_file = open(in_file_name, 'r')
+in_file = open(in_file_path, 'r')
 Lines = in_file.readlines()
 in_file.close()
 
-out_file = open(out_file_name,"w+")
+out_file = open(out_file_path,"w+")
 
 out_file.writelines("default 0\n")
 out_file.writelines("minutes,flow\n")

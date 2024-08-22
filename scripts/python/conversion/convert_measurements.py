@@ -1,9 +1,17 @@
 import pandas as pd  # type: ignore
-in_data_folder = 'test/RE2H65_UEF50/'
-out_data_folder = 'test/RE2H65_UEF50/'
 
-in_file_name = in_data_folder + 'RE2H65_UEF50.csv'
-out_file_name = out_data_folder + 'measurements_test.csv'
+import os
+
+test_name = 'RE2H50_UEF67'
+
+in_data_folder = os.path.join('test/', test_name)
+out_data_folder = os.path.join('test/', test_name)
+
+in_file_name = test_name + '.csv'
+out_file_name = 'measurements_test.csv'
+
+in_file_path = os.path.join(in_data_folder, in_file_name)
+out_file_path = os.path.join(out_data_folder, out_file_name)
 
 iColTime = 0
 iColAmbientT = 1
@@ -19,7 +27,7 @@ numRowsPerMin = 6
 numTankTs = 6
 
 # load data
-in_file = open(in_file_name, 'r')
+in_file = open(in_file_path, 'r')
 Lines = in_file.readlines()
 in_file.close()
 
@@ -27,7 +35,7 @@ powerSum = 0
 drawSum = 0
 iSum = 0
 
-out_file = open(out_file_name,"w+")
+out_file = open(out_file_path,"w+")
 iMin = 0
 jRow = numRowsPerMin
 iLine = 0
@@ -63,9 +71,13 @@ for line in Lines:
 			new_columns.append(columns[iColAmbientT])
 			new_columns.append(str(powerSum / iSum))
 			
+			tankT_sum = 0
 			for iCol in range(numTankTs):
-				new_columns.append(columns[iColTankT1 + iCol])	
+				new_columns.append(columns[iColTankT1 + iCol])
+				tankT_sum = tankT_sum + float(columns[iColTankT1 + iCol].strip('\n'))
 
+			#new_columns.append(str(tankT_sum / numTankTs))
+						
 			if drawSum > 0:
 				new_columns.append(columns[iColInletT])
 				new_columns.append(columns[iColOutletT])
