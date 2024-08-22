@@ -39,8 +39,10 @@ CLI::App* add_measure(CLI::App& app)
     subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
     subcommand->callback(
-        [&]()
-        { measure(sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile); });
+        [&]() {
+            measure(
+                sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile);
+        });
 
     return subcommand;
 }
