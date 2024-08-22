@@ -10,8 +10,9 @@ def measure(repo_path, model_spec, model_name, results_file):
     os.chdir(os.path.join(repo_path, "test"))
 
     app_path = os.path.join(repo_path, "build", "src", "hpwh", "hpwh")
+    output_path = os.path.join(repo_path, "build", "test", "output")
 
-    run_list = [app_path, 'measure', '-s', model_spec, '-m', model_name, '-r', results_file]
+    run_list = [app_path, 'measure', '-s', model_spec, '-m', model_name, '-d', output_path, '-r', results_file, '-n']
     print(run_list)
 
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
