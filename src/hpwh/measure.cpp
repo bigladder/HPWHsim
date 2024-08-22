@@ -12,6 +12,7 @@ namespace hpwh_cli
 static void measure(const std::string& sSpecType,
                     const std::string& sModelName,
                     std::string sOutputDir,
+                    bool sSupressOutput,
                     std::string sResultsFilename,
                     std::string sCustomDrawProfile);
 
@@ -28,6 +29,9 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
+    static bool noData = true;
+    subcommand->add_flag("-n,--no_data", noData, "Supress data output");
+
     static std::string sResultsFilename = "";
     subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
 
@@ -36,7 +40,7 @@ CLI::App* add_measure(CLI::App& app)
 
     subcommand->callback(
         [&]()
-        { measure(sSpecType, sModelName, sOutputDir, sResultsFilename, sCustomDrawProfile); });
+        { measure(sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile); });
 
     return subcommand;
 }
@@ -44,7 +48,8 @@ CLI::App* add_measure(CLI::App& app)
 void measure(const std::string& sSpecType,
              const std::string& sModelName,
              std::string sOutputDir,
-             std::string sResultsPath,
+             bool sSupressOutput,
+             std::string sResultsFilename,
              std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
@@ -59,18 +64,18 @@ void measure(const std::string& sSpecType,
     standardTestOptions.setpointT_C = 51.7;
 
     bool useResultsFile = false;
-    // process command line arguments
+
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     if (sOutputDir != "")
     {
         standardTestOptions.saveOutput = true;
         standardTestOptions.sOutputDirectory = sOutputDir;
 
-        if (sResultsPath != "")
+        if (sResultsFilename != "")
         {
             std::ostream* tempStream = new std::ofstream;
             std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
-            resultsFile->open(sResultsPath.c_str(), std::ofstream::out | std::ofstream::trunc);
+            resultsFile->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
             if (resultsFile->is_open())
             {
                 standardTestOptions.outputStream = resultsFile;
@@ -78,7 +83,7 @@ void measure(const std::string& sSpecType,
             }
         }
     }
-    standardTestOptions.saveOutput = true;
+    standardTestOptions.saveOutput = !sSupressOutput;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
 
     for (auto& c : sPresetOrFile)
