@@ -11,6 +11,7 @@ set(library_files
         compressorFncsTest.cpp
         performanceMapTest.cpp
         measureMetricsTest.cpp
+        unitsConversionTest.cpp
         unit-test-main.cpp
         )
 
