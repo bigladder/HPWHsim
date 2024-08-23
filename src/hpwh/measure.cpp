@@ -30,7 +30,7 @@ CLI::App* add_measure(CLI::App& app)
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
     static bool noData = true;
-    subcommand->add_flag("-n,--no_data", noData, "Supress data output");
+    subcommand->add_flag("-n,--no_data", noData, "Suppress data output");
 
     static std::string sResultsFilename = "";
     subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
