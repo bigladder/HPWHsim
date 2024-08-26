@@ -11,75 +11,34 @@
 <style>
 body {font-family: Arial;}
 
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
-
-/* Style the buttons inside the tab */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
+.collapsible {
+  background-color: #777;
+  color: white;
   cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
 }
 
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
+.active, .collapsible:hover {
+  background-color: #555;
 }
 
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
+.content {
+  padding: 0 18px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  background-color: #f1f1f1;
 }
 </style>
 
 </head>
 
 <body>
-
-<script>
-function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-
-    plot_arg1 = document.getElementById('plot_arg1')
-    if (tabName == 'plot')
-    { 
-      plot_arg1.display = true
-    }
-    else
-    {
-      plot_arg1.display = false
-    }
-}
-</script>
 
 <form id="modelForm">
     <label for="model_arg1">model spec:</label>
@@ -94,12 +53,6 @@ function openTab(evt, tabName) {
   model_form.model_arg1.value = "File";
   model_form.model_arg2.value = "AeroTherm2023_50";
 </script>
-
-<!-- Tab links -->
-<div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'plot')">Plot</button>
-  <button class="tablinks" onclick="openTab(event, 'measure')">Measure</button>
- </div>
 
 <script>
   async function plot() {
@@ -137,7 +90,6 @@ function openTab(evt, tabName) {
     document.getElementById("energy").data = "../../build/test/output/energy.txt";
 
     document.getElementById("plot_btn").disabled = false;
-
   }
 
   async function measure() {
@@ -159,14 +111,13 @@ function openTab(evt, tabName) {
     document.getElementById("results").data = "../../build/test/output/results.txt";
 
     document.getElementById("measure_btn").disabled = false;
-    
-
   }
 </script>
 
 
-<!-- Tab content -->
-<div id="plot" class="tabcontent">
+<!-- content -->
+<button id="plot_tab" class="collapsible">Plot</button>
+<div class="content">
   <form id="plotForm">
       <label for="plot_arg1">test name:</label>
       <input type="text" id="plot_arg1" name="plot_arg1" required><br><br>
@@ -182,21 +133,38 @@ function openTab(evt, tabName) {
 
   <iframe title="Plots" src="" id="plots" width=1200 height=800 style="display:none;"></iframe>
 
-  <div id="output"></div>
-
   <object id="energy" data="../../build/test/output/energy.txt" width=800 height=200 style="display:none;"></object>
 
-  </div>
+ </div>
 
-<!-- Tab content -->
-<div id="measure" class="tabcontent">
+<!-- content -->
+<button id="measure_tab" class="collapsible">Measure</button>
+<div class="content">
   <button type="button" id="measure_btn" onclick="measure();">measure</button>
   <object id="results" data="../../build/test/output/results.txt" width=800 height=800 style="display:none;"></object>
 </div>
 
+<script>
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      if(this.id == "plot_tab")
+        content.style.maxHeight = "1020px";
+      else if(this.id == "measure_tab")
+        content.style.maxHeight = "320px";
+    } 
+  });
+}
+</script>
 
 </body>
-
 
 <script>
   const plot_form = document.getElementById('plotForm');

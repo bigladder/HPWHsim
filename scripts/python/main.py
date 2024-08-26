@@ -30,7 +30,6 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     energy_path = os.path.join(output_dir, "energy.txt")
 
     plot(measured_path, simulated_path, plot_path, energy_path)
-
     
     os.chdir(orig_dir)
 
