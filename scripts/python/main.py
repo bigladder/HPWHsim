@@ -16,10 +16,6 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     repo_path = str(Path.cwd())
     print("path is " + repo_path)
 
-    # model_spec = 'File'
-    # model_name = 'AeroTherm2023'
-    # test_name = 'RE2H50_UEF67'
-    # plot_name = 'aplot.html'
     # measurements_name = 'measurements_test.csv'
     output_name = test_name + '_' + model_spec + '_' + model_name + ".csv"
 
@@ -31,13 +27,11 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     measured_path = os.path.join(test_dir, test_name, measurements_name)
     simulated_path = os.path.join(output_dir, output_name)
     plot_path = os.path.join(output_dir, plot_name)
+    energy_path = os.path.join(output_dir, "energy.txt")
 
-    print(measured_path)
-    print(simulated_path)
-    print(plot_path)
+    plot(measured_path, simulated_path, plot_path, energy_path)
 
-    plot(measured_path, simulated_path, plot_path)
-
+    
     os.chdir(orig_dir)
 
     return 'success'
