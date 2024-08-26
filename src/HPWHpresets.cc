@@ -4412,17 +4412,17 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_AeroTherm2023_50)
         {
             tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 8.45;
+            tankUA_kJperHrC = 6.8373;
         }
         else if (presetNum == MODELS_AeroTherm2023_65)
         {
             tankVolume_L = GAL_TO_L(64.0);
-            tankUA_kJperHrC = 10.69;
+            tankUA_kJperHrC = 6.7292;
         }
         else if (presetNum == MODELS_AeroTherm2023_80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
-            tankUA_kJperHrC = 11.92;
+            tankVolume_L = GAL_TO_L(75.0);
+            tankUA_kJperHrC = 7.2217;
         }
 
         doTempDepression = false;
@@ -4444,14 +4444,14 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->perfMap.push_back({
             50,                   // Temperature (T_F)
-            {165, 1.939747, 0.0}, // Input Power Coefficients (inputPower_coeffs)
-            {5.75, -0.0240, 0.0}  // COP Coefficients (COP_coeffs)
+            {148, 2.0, 0.0}, // Input Power Coefficients (inputPower_coeffs)
+            {5.88, -0.024, 0.0}  // COP Coefficients (COP_coeffs)
         });
 
         compressor->perfMap.push_back({
             70,                   // Temperature (T_F)
-            {140, 2.5, 0.0},      // Input Power Coefficients (inputPower_coeffs)
-            {8.152, -0.0323, 0.0} // COP Coefficients (COP_coeffs)
+            {110, 2.5, 0.0},      // Input Power Coefficients (inputPower_coeffs)
+            {6.8, -0.0323, 0.0} // COP Coefficients (COP_coeffs)
         });
 
         compressor->minT = F_TO_C(37.0);

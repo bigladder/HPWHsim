@@ -132,7 +132,12 @@ function openTab(evt, tabName) {
     document.getElementById("plots").src="../../build/test/output/" + farg4
     document.getElementById("plots").style="display:block;"
 
+    document.getElementById("energy").style="display:block;"
+    document.getElementById("energy").data = "";
+    document.getElementById("energy").data = "../../build/test/output/energy.txt";
+
     document.getElementById("plot_btn").disabled = false;
+
   }
 
   async function measure() {
@@ -154,6 +159,8 @@ function openTab(evt, tabName) {
     document.getElementById("results").data = "../../build/test/output/results.txt";
 
     document.getElementById("measure_btn").disabled = false;
+    
+
   }
 </script>
 
@@ -177,7 +184,9 @@ function openTab(evt, tabName) {
 
   <div id="output"></div>
 
-</div>
+  <object id="energy" data="../../build/test/output/energy.txt" width=800 height=200 style="display:none;"></object>
+
+  </div>
 
 <!-- Tab content -->
 <div id="measure" class="tabcontent">
@@ -192,7 +201,7 @@ function openTab(evt, tabName) {
 <script>
   const plot_form = document.getElementById('plotForm');
   plot_form.plot_arg1.value = "RE2H50_UEF67";
-  plot_form.plot_arg2.value = "aplot_67.html"
+  plot_form.plot_arg2.value = "plot.html"
   plot_form.plot_arg3.value = "measurements_test.csv";
 </script>
 
