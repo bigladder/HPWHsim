@@ -78,9 +78,23 @@ body {font-family: Arial;}
     model_form.model_arg1.value = farg1;
     model_form.model_arg2.value = farg2;
 
-    plot_form.plot_arg1.value = farg3;
-    plot_form.plot_arg2.value = farg4;
-    plot_form.plot_arg3.value = farg5;
+    document.getElementById("model_arg1").value = farg1; 
+    document.getElementById("model_arg2").value = farg2; 
+ 
+    document.getElementById("model_arg1").defaultValue = farg1; 
+    document.getElementById("model_arg2").defaultValue = farg2; 
+
+    document.getElementById("plot_arg1").value = farg3; 
+    document.getElementById("plot_arg2").value = farg4; 
+    document.getElementById("plot_arg3").value = farg5; 
+
+    document.getElementById("plot_arg1").defaultValue = farg3; 
+    document.getElementById("plot_arg2").defaultValue = farg4; 
+    document.getElementById("plot_arg3").defaultValue = farg5; 
+
+    localStorage.setItem("plot_arg1", farg3);
+    localStorage.setItem("plot_arg2", farg4);
+    localStorage.setItem("plot_arg3", farg5);
 
     document.getElementById("plots").src="../../build/test/output/" + farg4
     document.getElementById("plots").style="display:block;"
@@ -106,6 +120,13 @@ body {font-family: Arial;}
 
     model_form.model_arg1.value = farg1;
     model_form.model_arg2.value = farg2;
+
+    document.getElementById("model_arg1").value = farg1; 
+    document.getElementById("model_arg2").value = farg2; 
+ 
+    document.getElementById("model_arg1").defaultValue = farg1; 
+    document.getElementById("model_arg2").defaultValue = farg2; 
+
     document.getElementById("results").style="display:block;"
     document.getElementById("results").data = "";
     document.getElementById("results").data = "../../build/test/output/results.txt";
@@ -167,12 +188,12 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
-  const plot_form = document.getElementById('plotForm');
-  plot_form.plot_arg1.value = "test";
-  plot_form.plot_arg2.value = "plot.html"
-  plot_form.plot_arg3.value = "measured.csv";
+  //const plot_form = document.getElementById('plotForm');
+  //plot_form.plot_arg1.value = "test";
+ // plot_form.plot_arg2.value = "plot.html"
+  //plot_form.plot_arg3.value = "measured.csv";
 
-  var plot_btn = document.getElementById("plot_btn");
+  //var plot_btn = document.getElementById("plot_btn");
 
 </script>
 
