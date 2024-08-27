@@ -102,7 +102,7 @@ body {font-family: Arial;}
 
     document.getElementById("measure_btn").disabled = true;
 
-    const response = await fetch('http://localhost:8000/measure?' + fst)
+    const response = await fetch('http://localhost:8000/measure?' + fst, { signal: AbortSignal.timeout(5000) })
 
     model_form.model_arg1.value = farg1;
     model_form.model_arg2.value = farg2;
@@ -168,9 +168,12 @@ for (i = 0; i < coll.length; i++) {
 
 <script>
   const plot_form = document.getElementById('plotForm');
-  plot_form.plot_arg1.value = "RE2H50_UEF67";
+  plot_form.plot_arg1.value = "test";
   plot_form.plot_arg2.value = "plot.html"
-  plot_form.plot_arg3.value = "measurements_test.csv";
+  plot_form.plot_arg3.value = "measured.csv";
+
+  var plot_btn = document.getElementById("plot_btn");
+
 </script>
 
 </html>

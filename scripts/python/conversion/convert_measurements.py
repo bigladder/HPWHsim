@@ -8,7 +8,7 @@ in_data_folder = os.path.join('test/', test_name)
 out_data_folder = os.path.join('test/', test_name)
 
 in_file_name = test_name + '.csv'
-out_file_name = 'measurements_test.csv'
+out_file_name = 'measured.csv'
 
 in_file_path = os.path.join(in_data_folder, in_file_name)
 out_file_path = os.path.join(out_data_folder, out_file_name)
