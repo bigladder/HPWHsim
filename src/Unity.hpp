@@ -227,28 +227,11 @@ struct TransformVal
 
     operator double() const { return x; }
 
+    double* ptr() { return &x; }
+
     double operator=(double x_in) { return x = x_in; }
 
     U in() { return units; }
-
-    /*
-    template <U fromUnits>
-    bool operator>(const TransformVal<U, T, fromUnits> transformVal) const { return x >
-    transformVal(units); }
-
-    template <U fromUnits>
-    bool operator<(const TransformVal<U, T, fromUnits> transformVal) const { return x <
-    transformVal(units); }
-
-
-    template <U fromUnits>
-    bool operator>=(const TransformVal<U, T, fromUnits> transformVal) const { return x >=
-    transformVal(units); }
-
-    template <U fromUnits>
-    bool operator<=(const TransformVal<U, T, fromUnits> transformVal) const { return x <=
-    transformVal(units); }
-*/
 };
 
 template <class U, U units>
@@ -396,45 +379,37 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     double operator()(const U toUnits) const override { return scaleOffset(units, toUnits) * x; }
 };
 
-/// scale pairs
-template <class U, U units0, U units1>
-struct ScalePair : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>
-{
-    ScalePair(const double x0_in = 0., const double x1_in = 0.)
-        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>({x0_in, x1_in})
-    {
-    }
-
-    double operator()(const U toUnits) const { return first(toUnits) + second(toUnits); }
-
-    using std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>::first;
-    using std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>::second;
-};
-
 /// transform vectors
 template <class U, U units>
-struct ScaleVect : std::vector<ScaleVal<U, units>>
+struct TransformVect
+{
+    U in() { return units; }
+};
+
+template <class U, U units>
+struct ScaleVect : TransformVect<U, units>, std::vector<ScaleVal<U, units>>
 {
     using std::vector<ScaleVal<U, units>>::size;
-    using std::vector<ScaleVal<U, units>>::clear;
+    using std::vector<ScaleVal<U, units>>::begin;
+    using std::vector<ScaleVal<U, units>>::end;
     using std::vector<ScaleVal<U, units>>::push_back;
-    using std::vector<ScaleVal<U, units>>::resize;
 
     ScaleVect(const std::vector<double>& xV = {}, const U fromUnits = units)
-        : std::vector<ScaleVal<U, units>>({})
+        : std::vector<ScaleVal<U, units>>()
     {
+        auto t = scale(fromUnits, units);
         for (auto x : xV)
-            push_back(scale(fromUnits, units) * x);
+            push_back(t * x);
     }
 
     template <U fromUnits>
     ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect({}, fromUnits)
     {
+        reserve(sV.size());
+        auto t = scale(fromUnits, units);
         for (auto s_ : sV)
-            push_back(scale(fromUnits, units) * s_);
+            push_back(t * s_);
     }
-
-    ScaleVect(const std::size_t n) : ScaleVect() { resize(n); }
 
     template <typename... val>
     ScaleVect(const std::tuple<val...>& sV) : ScaleVect()
@@ -443,22 +418,18 @@ struct ScaleVect : std::vector<ScaleVal<U, units>>
             push_back(s_);
     }
 
-    operator std::vector<double>() const
-    {
-        std::vector<double> xV = {};
-        xV.reserve(size());
-        for (auto& s_ : *this)
-            xV.push_back(s_);
-        return xV;
-    }
+    operator std::vector<double>() const { return std::vector<double>( begin(), end() ); }
+
+    operator std::vector<double>*() {return this;}
 
     std::vector<double> operator()(const U toUnits) const
     {
-        std::vector<double> xV = {};
-        xV.reserve(size());
-        for (auto& x : *this)
-            xV.push_back(scale(units, toUnits) * x);
-        return xV;
+        std::vector<double> xV_out = {};
+        xV_out.reserve(size());
+        auto t = scale(units, toUnits);
+        for (auto p = begin(); p != end(); ++p)
+            xV_out.push_back(t * (*p));
+        return xV_out;
     }
 
     template <U toUnits>
@@ -472,40 +443,44 @@ struct ScaleVect : std::vector<ScaleVal<U, units>>
     {
         return !(operator==(scaleVect));
     }
+
+    void rescale(const double scaleFactor)
+    {
+        if (scaleFactor != 1.)
+        {
+            std::transform(begin(),
+                           end(),
+                           begin(),
+                           std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
+        }
+    }
+
 };
 
 template <class U, U units>
-struct ScaleOffsetVect : std::vector<ScaleOffsetVal<U, units>>
+struct ScaleOffsetVect : TransformVect<U, units>, std::vector<ScaleOffsetVal<U, units>>
 {
+    using std::vector<ScaleOffsetVal<U, units>>::begin;
+    using std::vector<ScaleOffsetVal<U, units>>::end;
     using std::vector<ScaleOffsetVal<U, units>>::size;
-    using std::vector<ScaleOffsetVal<U, units>>::clear;
     using std::vector<ScaleOffsetVal<U, units>>::push_back;
     using std::vector<ScaleOffsetVal<U, units>>::resize;
 
     ScaleOffsetVect(const std::vector<double>& xV = {}, const U fromUnits = units)
-        : std::vector<ScaleOffsetVal<U, units>>({})
+        : std::vector<ScaleOffsetVal<U, units>>()
     {
+        auto t = scaleOffset(fromUnits, units);
         for (auto x : xV)
-            push_back(scaleOffset(fromUnits, units) * x);
+            push_back(t * x);
     }
 
     template <U fromUnits>
     ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, fromUnits>>& sV)
         : ScaleOffsetVect(sV, fromUnits)
     {
+        auto t = scaleOffset(fromUnits, units);
         for (auto s : sV)
-            push_back(scaleOffset(fromUnits, units) * s);
-    }
-
-    ScaleOffsetVect(const std::size_t n) : ScaleOffsetVect() { resize(n); }
-
-    operator std::vector<double>() const
-    {
-        std::vector<double> xV = {};
-        xV.reserve(size());
-        for (auto& s : *this)
-            xV.push_back(s);
-        return xV;
+            push_back(t * s);
     }
 
     template <typename... val>
@@ -515,12 +490,17 @@ struct ScaleOffsetVect : std::vector<ScaleOffsetVal<U, units>>
             push_back(s);
     }
 
+    operator std::vector<double>() const { return std::vector<double>( begin(), end() ); }
+
+    operator std::vector<double>*() {return this;}
+
     std::vector<double> operator()(const U toUnits) const
     {
         std::vector<double> xV = {};
         xV.reserve(size());
-        for (auto& x : *this)
-            xV.push_back(scaleOffset(units, toUnits) * x);
+        auto t = scaleOffset(units, toUnits);
+        for (auto p = begin(); p != end(); ++p)
+            xV.push_back(t * (*p));
         return xV;
     }
 
@@ -535,6 +515,21 @@ struct ScaleOffsetVect : std::vector<ScaleOffsetVal<U, units>>
     {
         return !(operator==(scaleOffsetVect));
     }
+};
+
+/// scale pairs
+template <class U, U units0, U units1>
+struct ScalePair : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>
+{
+    ScalePair(const double x0_in = 0., const double x1_in = 0.)
+        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>({x0_in, x1_in})
+    {
+    }
+
+    double operator()(const U toUnits) const { return first(toUnits) + second(toUnits); }
+
+    using std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>::first;
+    using std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>::second;
 };
 
 } // namespace Unity

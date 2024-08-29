@@ -377,7 +377,7 @@ std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
 /// @param[in/out]	coeffs		values to be scaled
 /// @param[in]	scaleFactor 	scaling factor
 //-----------------------------------------------------------------------------
-std::vector<double> scaleVector(std::vector<double> coeffs, const double scaleFactor)
+void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
 {
     if (scaleFactor != 1.)
     {
@@ -386,7 +386,6 @@ std::vector<double> scaleVector(std::vector<double> coeffs, const double scaleFa
                        coeffs.begin(),
                        std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
     }
-    return coeffs;
 }
 
 double linearInterp(double xnew, double x0, double x1, double y0, double y1)
@@ -2338,8 +2337,8 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
 
     for (auto& perfP : heatSources[compressorIndex].perfMap)
     {
-        perfP.inputPower_coeffs = scaleVector(perfP.inputPower_coeffs, scaleCapacity);
-        perfP.COP_coeffs = scaleVector(perfP.COP_coeffs, scaleCOP);
+        perfP.inputPower_coeffs.rescale(scaleCapacity);
+        scaleVector(perfP.COP_coeffs, scaleCOP);
     }
 }
 

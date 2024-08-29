@@ -1712,7 +1712,7 @@ std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
                                     const HPWH::TempVect_t& nodeTs,
                                     const HPWH::Temp_t setpointT);
 
-std::vector<double> scaleVector(std::vector<double> coeffs, const double scaleFactor);
+void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 double linearInterp(double xnew, double x0, double x1, double y0, double y1);
 
