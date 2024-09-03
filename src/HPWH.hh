@@ -1715,8 +1715,7 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
 
 double linearInterp(double xnew, double x0, double x1, double y0, double y1);
 
-template <typename V>
-inline double expandSeries(const V& coeffs, const double x)
+inline double expandSeries(const std::vector<double>& coeffs, const double x)
 {
     double y = 0.;
     for (auto pCoeff = coeffs.rbegin(); pCoeff != coeffs.rend(); ++pCoeff)
