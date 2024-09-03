@@ -442,7 +442,8 @@ void HPWH::HeatSource::sortPerformanceMap()
 HPWH::Temp_t HPWH::HeatSource::getTankT() const
 {
 
-    TempVect_t resampledTankTs = resample(getCondensitySize(), hpwh->tankTs);
+    TempVect_t resampledTankTs(getCondensitySize());
+    resample(resampledTankTs, hpwh->tankTs);
 
     double tankT = 0.;
 
@@ -694,7 +695,8 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     // Populate the vector of heat distribution
     if (configuration == CONFIG_SUBMERGED)
     {
-        heatDistribution = resampleExtensive(hpwh->getNumNodes(), condensity);
+        heatDistribution.resize(hpwh->getNumNodes());
+        resampleExtensive(heatDistribution, condensity);
     }
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
@@ -737,7 +739,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
     {
         Power_t tempInputPower = 0., tempOutputPower = 0.;
         double temp_cop = 0.;
-        auto& externalOutletT = hpwh->tankTs[externalOutletHeight];
+        Temp_t& externalOutletT = hpwh->tankTs[externalOutletHeight];
 
         // how much heat is available in remaining time
         getCapacity(externalT, externalOutletT, tempInputPower, tempOutputPower, temp_cop);

@@ -221,9 +221,7 @@ struct TransformVal
     {
     }
 
-    virtual ~TransformVal() {}
-
-    virtual double operator()(const U toUnits) const = 0;
+    ~TransformVal() {}
 
     operator double() const { return x; }
 
@@ -258,7 +256,10 @@ struct ScaleVal : TransformVal<U, Scale, units>
         return ScaleVal<U, toUnits>(x, units);
     }
 
-    double operator()(const U toUnits) const override { return scale(units, toUnits) * x; }
+    double operator()() const { return x; }
+    double& operator()() { return x; }
+
+    double operator()(const U toUnits) const { return scale(units, toUnits) * x; }
 
     ScaleVal operator+(const double y) const { return x + y; }
     ScaleVal operator-(const double y) const { return x - y; }
@@ -376,59 +377,108 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
         return *this = *this - scaleVal;
     }
 
-    double operator()(const U toUnits) const override { return scaleOffset(units, toUnits) * x; }
+    double operator()(const U toUnits) const { return scaleOffset(units, toUnits) * x; }
+
+    //operator const double() const {return x;}
+    //operator double&() {return *x;}
 };
 
 /// transform vectors
-template <class U, U units>
+template <class U, typename T, U units>
 struct TransformVect
 {
+  protected:
+    std::vector<double> xV;
+
+  public:
+    TransformVect(const std::vector<double>& xV_in = {}):xV(xV_in)
+    {
+    }
+
+    TransformVect(const std::size_t n):xV(n)
+    {
+    }
+
+    operator std::vector<double>() const{return xV;}
+    operator std::vector<double>&(){return xV;}
+
+    auto size() const{return xV.size();}
+    auto resize(const std::size_t n){return xV.resize(n);}
+    auto clear(){return xV.clear();}
+    auto empty() const{return xV.empty();}
+
     U in() { return units; }
+
 };
 
 template <class U, U units>
-struct ScaleVect : TransformVect<U, units>, std::vector<ScaleVal<U, units>>
+struct ScaleVect : public TransformVect<U, Scale, units>
 {
-    using std::vector<ScaleVal<U, units>>::size;
-    using std::vector<ScaleVal<U, units>>::begin;
-    using std::vector<ScaleVal<U, units>>::end;
-    using std::vector<ScaleVal<U, units>>::push_back;
+  public:
+    using TransformVect<U, Scale, units>::xV;
+    using TransformVect<U, Scale, units>::size;
+    using TransformVect<U, Scale, units>::resize;
+    using TransformVect<U, Scale, units>::clear;
 
-    ScaleVect(const std::vector<double>& xV = {}, const U fromUnits = units)
-        : std::vector<ScaleVal<U, units>>()
+    ScaleVect(const std::vector<double>& xV_in = {})
+        : TransformVect<U, Scale, units>(xV_in)
+    {
+    }
+
+    ScaleVect(const std::size_t n)
+        : TransformVect<U, ScaleOffset, units>(n)
+    {
+    }
+
+    ScaleVect(const std::vector<double>& xV_in, const U fromUnits)
+        : ScaleVect<U, units>()
     {
         auto t = scale(fromUnits, units);
-        for (auto x : xV)
-            push_back(t * x);
+        for (auto x : xV_in)
+            xV.push_back(t * x);
+    }
+
+    template <U fromUnits>
+    ScaleVect(const ScaleVect<U, fromUnits>& sV) : ScaleVect({}, fromUnits)
+    {
+        xV.reserve(sV.size());
+        auto t = scale(fromUnits, units);
+        for (auto s_ : sV)
+            xV.push_back(t * s_);
     }
 
     template <U fromUnits>
     ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect({}, fromUnits)
     {
-        reserve(sV.size());
+        xV.reserve(sV.size());
         auto t = scale(fromUnits, units);
         for (auto s_ : sV)
-            push_back(t * s_);
+            xV.push_back(t * s_);
     }
 
     template <typename... val>
     ScaleVect(const std::tuple<val...>& sV) : ScaleVect()
     {
+        xV.reserve(sV.size());
         for (auto s_ : sV)
-            push_back(s_);
+            xV.push_back(s_);
     }
 
-    operator std::vector<double>() const { return std::vector<double>( begin(), end() ); }
+    ScaleVal<U, units>& operator[](const std::size_t i) const{return xV[i];}
 
-    operator std::vector<double>*() {return this;}
+    ScaleVal<U, units>& operator[](const std::size_t i){return reinterpret_cast<ScaleVal<U, units>&>(xV[i]);}
+
+    operator std::vector<ScaleVal<U, units>>() const {return static_cast<std::vector<ScaleVal<U, units>>>(xV);}
+
+    operator std::vector<ScaleVal<U, units>>&() {return reinterpret_cast<std::vector<ScaleVal<U, units>>&>(xV);}
 
     std::vector<double> operator()(const U toUnits) const
     {
         std::vector<double> xV_out = {};
-        xV_out.reserve(size());
+        xV_out.reserve(xV.size());
         auto t = scale(units, toUnits);
-        for (auto p = begin(); p != end(); ++p)
-            xV_out.push_back(t * (*p));
+        for (auto &x: xV)
+            xV_out.push_back(t * x);
         return xV_out;
     }
 
@@ -444,63 +494,97 @@ struct ScaleVect : TransformVect<U, units>, std::vector<ScaleVal<U, units>>
         return !(operator==(scaleVect));
     }
 
-    void rescale(const double scaleFactor)
+    void rescale(const double factor)
     {
-        if (scaleFactor != 1.)
+        if (factor != 1.)
         {
-            std::transform(begin(),
-                           end(),
-                           begin(),
-                           std::bind(std::multiplies<double>(), std::placeholders::_1, scaleFactor));
+            std::transform(xV.begin(),
+                           xV.end(),
+                           xV.begin(),
+                           std::bind(std::multiplies<double>(), std::placeholders::_1, factor));
         }
     }
 
+    auto begin() { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.begin()));}
+    auto end() { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.end()));}
+
+    auto begin() const { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.begin()));}
+    auto end() const { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.end()));}
+
+    auto rbegin() { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.rbegin()));}
+    auto rend() { return reinterpret_cast<ScaleVal<U, units>*>(&(*xV.rend()));}
+
+    auto rbegin() const { return reinterpret_cast<const ScaleVal<U, units>*>(&(*xV.rbegin()));}
+    auto rend() const { return reinterpret_cast<const ScaleVal<U, units>*>(&(*xV.rend()));}
+
+    auto front(){return reinterpret_cast<ScaleVal<U, units>&>(xV.front());}
+    auto back(){return reinterpret_cast<ScaleVal<U, units>&>(xV.back());}
+
+    auto front() const {return reinterpret_cast<const ScaleVal<U, units>&>(xV.front());}
+    auto back() const{return reinterpret_cast<const ScaleVal<U, units>&>(xV.back());}
 };
 
 template <class U, U units>
-struct ScaleOffsetVect : TransformVect<U, units>, std::vector<ScaleOffsetVal<U, units>>
+struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
 {
-    using std::vector<ScaleOffsetVal<U, units>>::begin;
-    using std::vector<ScaleOffsetVal<U, units>>::end;
-    using std::vector<ScaleOffsetVal<U, units>>::size;
-    using std::vector<ScaleOffsetVal<U, units>>::push_back;
-    using std::vector<ScaleOffsetVal<U, units>>::resize;
+  public:
+    using TransformVect<U, ScaleOffset, units>::xV;
+    using TransformVect<U, ScaleOffset, units>::size;
+    using TransformVect<U, ScaleOffset, units>::resize;
+    using TransformVect<U, ScaleOffset, units>::clear;
 
-    ScaleOffsetVect(const std::vector<double>& xV = {}, const U fromUnits = units)
-        : std::vector<ScaleOffsetVal<U, units>>()
+    ScaleOffsetVect(const std::vector<double>& xV_in = {})
+        : TransformVect<U, ScaleOffset, units>(xV_in)
     {
-        auto t = scaleOffset(fromUnits, units);
-        for (auto x : xV)
-            push_back(t * x);
+    }
+
+
+    ScaleOffsetVect(const std::size_t n)
+        : TransformVect<U, ScaleOffset, units>(n)
+    {
+    }
+
+    ScaleOffsetVect(const std::vector<double>& xV_in, const U fromUnits)
+        : ScaleOffsetVect()
+    {
+        xV.reserve(xV_in.size());
+        const auto t = scaleOffset(fromUnits, units);
+        for (auto x : xV_in)
+            xV.push_back(t * x);
     }
 
     template <U fromUnits>
     ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, fromUnits>>& sV)
-        : ScaleOffsetVect(sV, fromUnits)
+        : ScaleOffsetVect()
     {
-        auto t = scaleOffset(fromUnits, units);
+        xV.reserve(sV.size());
+        //const auto t = scaleOffset(fromUnits, units);
         for (auto s : sV)
-            push_back(t * s);
+            xV.push_back(s(units));
     }
 
     template <typename... val>
     ScaleOffsetVect(const std::tuple<val...>& sV) : ScaleOffsetVect()
     {
-        for (auto s : sV)
-            push_back(s);
+        for (auto s_ : sV)
+            push_back(s_);
     }
 
-    operator std::vector<double>() const { return std::vector<double>( begin(), end() ); }
+    ScaleOffsetVal<U, units> operator[](const std::size_t i) const{return xV[i];}
 
-    operator std::vector<double>*() {return this;}
+    ScaleOffsetVal<U, units>& operator[](const std::size_t i){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV[i]);}
+
+    operator std::vector<ScaleOffsetVal<U, units>>() const {return static_cast<std::vector<ScaleOffsetVal<U, units>>>(xV);}
+
+    operator std::vector<ScaleOffsetVal<U, units>>&() {return reinterpret_cast<std::vector<ScaleOffsetVal<U, units>>&>(xV);}
 
     std::vector<double> operator()(const U toUnits) const
     {
-        std::vector<double> xV = {};
-        xV.reserve(size());
+        std::vector<double> xV_out = {};
+        xV_out.reserve(xV.size());
         auto t = scaleOffset(units, toUnits);
-        for (auto p = begin(); p != end(); ++p)
-            xV.push_back(t * (*p));
+        for (auto& x: xV)
+            xV_out.push_back(t * x);
         return xV;
     }
 
@@ -515,6 +599,30 @@ struct ScaleOffsetVect : TransformVect<U, units>, std::vector<ScaleOffsetVal<U, 
     {
         return !(operator==(scaleOffsetVect));
     }
+
+    auto begin() {
+        return reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.begin()));
+    }
+    auto end() {
+        return reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.end()));}
+
+    auto begin() const {
+        return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.begin()));
+    }
+    auto end() const {
+        return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.end()));}
+
+    auto rbegin() { return reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.rbegin()));}
+    auto rend() { return reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.rend()));}
+
+    auto rbegin() const { return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.rbegin()));}
+    auto rend() const { return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.rend()));}
+
+    auto front(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.front());}
+    auto back(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.back());}
+
+    auto front() const {return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.front());}
+    auto back() const{return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.back());}
 };
 
 /// scale pairs

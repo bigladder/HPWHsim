@@ -60,11 +60,10 @@ enum class Volume
 enum class Energy
 {
     kJ,  // kilojoules
-    kWh, // kilowatt-hours
+    kWh, // kilowatt hours
     Btu, // british thermal units
-    J,   // joules
-    Wh   // watt-hours
-} inline kJ = Energy::kJ, kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J, Wh = Energy::Wh;
+    J    // joules
+} inline kJ = Energy::kJ, kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J;
 
 /* power units */
 enum class Power
@@ -136,8 +135,8 @@ inline ScaleOffseter<Temp>::ScaleOffsetMap
     ScaleOffseter<Temp>::scaleOffsetMap(C, {{F, {F_per_C, offsetC_F}}, {K, {1., offsetC_K}}});
 
 template <>
-inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
-    kJ, {{kWh, scale(s, h)}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}, {Wh, 1000. * scale(s, h)}});
+inline Scaler<Energy>::ScaleMap
+    Scaler<Energy>::scaleMap(kJ, {{kWh, scale(s, h)}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}});
 
 template <>
 inline Scaler<Power>::ScaleMap Scaler<Power>::scaleMap(
@@ -198,6 +197,8 @@ using TimePair = ScalePair<Time, units0, units1>;
 /// units-vectors partial specialization
 template <Time units>
 using TimeVect = ScaleVect<Time, units>;
+template <Temp_d units>
+using TempVect_d = ScaleVect<Temp_d, units>;
 template <Temp units>
 using TempVect = ScaleOffsetVect<Temp, units>;
 template <Energy units>
