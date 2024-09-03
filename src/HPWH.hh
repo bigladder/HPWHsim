@@ -89,7 +89,6 @@ class HPWH : public Courier::Sender
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
-
     void from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
     void to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
