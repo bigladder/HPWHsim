@@ -35,6 +35,8 @@ void HPWH::Tank::from(data_model::rstank_ns::RSTANK& rstank)
               perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
               perf.bottom_fraction_of_tank_mixing_on_draw,
               0.);
+    if (mixBelowFractionOnDraw > 0.)
+        mixesOnDraw = true;
     checkFrom(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
 
     hasHeatExchanger = perf.heat_exchanger_effectiveness_is_set;
@@ -469,7 +471,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
         }
 
         // account for mixing at the bottom of the tank
-        if (mixesOnDraw && drawVolume_L > 0.)
+        if ((mixBelowFractionOnDraw > 0.) && (drawVolume_L > 0.))
         {
             int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
             mixNodes(0, mixedBelowNode, 1. / 3.);
