@@ -122,9 +122,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::from(
-    data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-        rscondenserwaterheatsource)
+void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+                                rscondenserwaterheatsource)
 {
     auto& perf = rscondenserwaterheatsource.performance;
     switch (perf.coil_configuration)
@@ -191,9 +190,8 @@ void HPWH::HeatSource::from(
     }
 }
 
-void HPWH::HeatSource::from(
-    data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-        rsresistancewaterheatsource)
+void HPWH::HeatSource::from(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+                                rsresistancewaterheatsource)
 {
     auto& perf = rsresistancewaterheatsource.performance;
     configuration = CONFIG_SUBMERGED;
@@ -254,18 +252,18 @@ void HPWH::HeatSource::from(
     {
 
         typeOfHeatSource = TYPE_compressor;
-        auto rsconendserwaterheatsource_ptr = dynamic_cast<
-            data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-            config.heat_source.get());
+        auto rsconendserwaterheatsource_ptr =
+            dynamic_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                config.heat_source.get());
         from(*rsconendserwaterheatsource_ptr);
         break;
     }
     case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
     {
         typeOfHeatSource = TYPE_resistance;
-        auto rsresistancewaterheatsource_ptr = dynamic_cast<
-            data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-            config.heat_source.get());
+        auto rsresistancewaterheatsource_ptr =
+            dynamic_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+                config.heat_source.get());
         from(*rsresistancewaterheatsource_ptr);
         break;
     }
@@ -275,8 +273,8 @@ void HPWH::HeatSource::from(
     }
 }
 
-void HPWH::HeatSource::to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
-                              heatsourceconfiguration) const
+void HPWH::HeatSource::to(
+    data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration) const
 {
     heatsourceconfiguration.heat_distribution = condensity;
 
@@ -292,9 +290,8 @@ void HPWH::HeatSource::to(data_model::rsintegratedwaterheater_ns::HeatSourceConf
     }
 }
 
-void HPWH::HeatSource::to(
-    data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-        rscondenserwaterheatsource) const
+void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+                              rscondenserwaterheatsource) const
 {
     auto& perf = rscondenserwaterheatsource.performance;
     switch (configuration)
@@ -324,9 +321,8 @@ void HPWH::HeatSource::to(
     }
 }
 
-void HPWH::HeatSource::to(
-    data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-        rsresistancewaterheatsource) const
+void HPWH::HeatSource::to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+                              rsresistancewaterheatsource) const
 {
     auto& perf = rsresistancewaterheatsource.performance;
     checkTo(perfMap[0].inputPower_coeffs[0], perf.input_power_is_set, perf.input_power);

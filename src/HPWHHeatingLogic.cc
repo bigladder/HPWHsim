@@ -262,8 +262,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
-                         HPWH* hpwh)
+HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
 
@@ -344,15 +343,13 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
     return heatingLogic;
 }
 
-void HPWH::SoCBasedHeatingLogic::make(
-    std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
+void HPWH::SoCBasedHeatingLogic::make(std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
 {
     heating_logic =
         std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
 }
 
-void HPWH::TempBasedHeatingLogic::make(
-    std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
+void HPWH::TempBasedHeatingLogic::make(std::unique_ptr<data_model::HeatingLogicBase>& heating_logic)
 {
     heating_logic =
         std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
