@@ -65,7 +65,8 @@ TEST(EnergyBalanceTest, energyBalance)
         //
         HPWH::PowerVect_t nodePowerExtra = {{1000.}, Units::W};
         hpwh.setTankToT({20., Units::C});
-        hpwh.setInletT(5.);
+        hpwh.setInletT({5., Units::C});
+        hpwh.setUA(0.);
 
         constexpr double testDuration_min = 60.;
         bool result = true;
