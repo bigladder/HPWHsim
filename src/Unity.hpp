@@ -561,9 +561,9 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
         : ScaleOffsetVect()
     {
         xV.reserve(sV.size());
-        //const auto t = scaleOffset(fromUnits, units);
+        const auto t = scaleOffset(fromUnits, units);
         for (auto s : sV)
-            xV.push_back(s(units));
+            xV.push_back(t * s);
     }
 
     template <typename... val>
