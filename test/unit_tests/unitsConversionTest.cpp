@@ -35,6 +35,7 @@ typedef TimePair<Time::h, Time::min> Time_h_min;
 typedef TimeVect<Time::s> TimeVect_s, TimeV_s;
 typedef TimeVect<Time::min> TimeVect_min, TimeV_min;
 typedef TempVect<Temp::C> TempVect_C, TempV_C;
+typedef TempVect_d<Temp_d::C> TempVect_dC, TempV_dC;
 typedef EnergyVect<Energy::kJ> EnergyVect_kJ;
 typedef PowerVect<Power::kW> PowerVect_kW, PowerV_kW;
 
@@ -60,10 +61,17 @@ TEST(UnitsConversionTest, conversions) {
        Time_h t_h = t_min;
        EXPECT_EQ(t_h, 0.75);
 
-       // test vector min<->s conversion
+       // test TimeVect_min -> std::vector<double>
        TimeVect_min tV_min({10., 20., 30., 60., 120., 360., 12.});
-       //TimeVect_s tV_s = tV_min;
-       //EXPECT_EQ(tV_s[3], 3600.);
+       TimeVect_s tV_s = tV_min(s);
+       EXPECT_EQ(tV_s(min), tV_min(min));
+
+       std::vector<double> &v = tV_min;
+       v[2] = 15.;
+       EXPECT_EQ(tV_min[2](min), 15.);
+
+       std::vector<double> t_hV = tV_min(h);
+       EXPECT_EQ(t_hV[2], 0.25);
    }
 
    /* temperature conversions */
@@ -98,6 +106,8 @@ TEST(UnitsConversionTest, conversions) {
 
        EnergyVect_kJ EV_kJ({100., 200., 300.}, Btu);
        EXPECT_EQ(EV_kJ[1](Btu), 200.);
+
+       auto x = EV_kJ[1];
    }
 
    /* power conversion */
@@ -171,4 +181,20 @@ TEST(UnitsConversionTest, conversions) {
        EXPECT_NEAR_REL(length_ft, 4.);
    }
 
+   {
+       EnergyVect_kJ E_V_kJ({10., 20., 30.});
+       std::vector<EnergyVal<Energy::kJ>> E_kJ_V = E_V_kJ;
+       EXPECT_NEAR_REL(E_kJ_V[1](kJ), E_V_kJ[1](kJ));
+
+       TempVect_C T_V_C({0., 32., 98.6, 212.}, F);
+       std::vector<TempVal<Temp::C>> T_C_V = T_V_C;
+       EXPECT_NEAR_REL(T_C_V[1](C), 0.);
+
+
+       for(auto& T_C: T_V_C)
+       {
+           T_C += Temp_dC(2.);
+       }
+       EXPECT_NEAR_REL(T_V_C[1](C), 2.);
+   }
 }

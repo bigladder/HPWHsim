@@ -1568,8 +1568,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfGridValues.reserve(2);
 
         // Nyle MP models are all on the same grid axes
-        TempVect_t t0 = {{40., 60., 80., 90.}, Units::F};
-        TempVect_t t1 = {{40., 60., 80., 100., 130., 150.}, Units::F};
+        const TempVect_t t0 = {{40., 60., 80., 90.}, Units::F};
+        const TempVect_t t1 = {{40., 60., 80., 100., 130., 150.}, Units::F};
 
         compressor->perfGrid.push_back(t0); // Grid Axis 1 Tair (F)
         compressor->perfGrid.push_back(t1); // Grid Axis 2 Tin (F)
@@ -1586,11 +1586,13 @@ void HPWH::initPreset(MODELS presetNum)
                     {40.0, Units::F}  // onBelowT_F
                 };
             }
+            const PowerVect_t powerV(
+                         {3.64, 4.11, 4.86, 5.97, 8.68, 9.95, 3.72, 4.27, 4.99, 6.03, 8.55, 10.02,
+                          3.98, 4.53, 5.24, 6.24, 8.54, 9.55, 4.45, 4.68, 5.37, 6.34, 8.59, 9.55},
+                         Units::kW);
+
             // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(PowerVect_t(
-                {3.64, 4.11, 4.86, 5.97, 8.68, 9.95, 3.72, 4.27, 4.99, 6.03, 8.55, 10.02,
-                 3.98, 4.53, 5.24, 6.24, 8.54, 9.55, 4.45, 4.68, 5.37, 6.34, 8.59, 9.55},
-                Units::kW));
+            compressor->perfGridValues.push_back(powerV);
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
@@ -1610,11 +1612,14 @@ void HPWH::initPreset(MODELS presetNum)
                     {40.0, Units::F}  // onBelowT_F
                 };
             }
+
+            const PowerVect_t powerV({4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
+                                      5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35},
+                                     Units::kW);
+
             // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(PowerVect_t(
-                {4.41, 6.04, 7.24, 9.14, 12.23, 14.73, 4.78, 6.61, 7.74, 9.40,  12.47, 14.75,
-                 5.51, 6.66, 8.44, 9.95, 13.06, 15.35, 6.78, 7.79, 8.81, 10.01, 11.91, 13.35},
-                Units::kW));
+            compressor->perfGridValues.push_back(powerV);
+
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {4.79138322,  3.473509934, 2.801104972, 2.177242888, 1.569910057, 1.272233537,
@@ -1634,11 +1639,14 @@ void HPWH::initPreset(MODELS presetNum)
                     {40.0, Units::F}  // onBelowT_F
                 };
             }
-            // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(PowerVect_t(
+            const PowerVect_t powerV(
                 {6.4,  7.72, 9.65,  12.54, 20.54, 24.69, 6.89, 8.28, 10.13, 12.85, 19.75, 24.39,
                  7.69, 9.07, 10.87, 13.44, 19.68, 22.35, 8.58, 9.5,  11.27, 13.69, 19.72, 22.4},
-                Units::kW));
+                Units::kW);
+
+            // Grid values in long format, table 1, input power
+            compressor->perfGridValues.push_back(powerV);
+
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {4.2390625,   3.465025907, 2.718134715, 2.060606061, 1.247809153, 1.016605913,

@@ -125,17 +125,8 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
 
-//-----------------------------------------------------------------------------
-///	@brief	Samples a std::vector to extract a single value spanning the fractional
-///			coordinate range from frac_begin to frac_end.
-/// @note	Bounding fractions are clipped or swapped, if needed.
-/// @param[in]	sampleValues	Contains values to be sampled
-///	@param[in]	beginFraction		Lower (left) bounding fraction (0 to 1)
-///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
-/// @return	Resampled value; 0 if undefined.
-//-----------------------------------------------------------------------------
 double
-getResampledValue(const std::vector<double> sampleValues, double beginFraction, double endFraction)
+getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
 {
     if (beginFraction > endFraction)
         std::swap(beginFraction, endFraction);
@@ -170,19 +161,11 @@ getResampledValue(const std::vector<double> sampleValues, double beginFraction, 
     return resampled_value;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Replaces the values in a std::vector by resampling another std::vector of
-///			arbitrary size.
-/// @param[in,out]	values			Contains values to be replaced
-///	@param[in]		sampleValues	Contains values to replace with
-/// @return	Success: true; Failure: false
-//-----------------------------------------------------------------------------
-std::vector<double> resample(const std::size_t N, const std::vector<double> sampleValues)
+void resample(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (sampleValues.empty())
-        return {};
-    std::vector<double> values(N);
-    double actualSize = static_cast<double>(N);
+        return;
+    double actualSize = static_cast<double>(values.size());
     double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
     double beginFraction = 0., endFraction;
@@ -213,20 +196,22 @@ std::vector<double> resample(const std::size_t N, const std::vector<double> samp
         }
         beginFraction = endFraction;
     }
-    return values;
 }
+
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-std::vector<double> resampleExtensive(const std::size_t N, const std::vector<double> sampleValues)
+void resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
-    std::vector<double> values = resample(N, sampleValues);
-    double scale = static_cast<double>(sampleValues.size()) / static_cast<double>(N);
-    for (auto& value : values)
-        value *= scale;
-    return values;
+    resample(values, sampleValues);
+    if (!values.empty()){
+        double scale =
+            static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
+        for (auto& value : values)
+            value *= scale;
+    }
 }
 
 double expitFunc(double x, double offset)
@@ -1359,7 +1344,7 @@ void HPWH::setTankTs(const TempVect_t setTankTs)
     }
 
     // set node temps
-    tankTs = resampleIntensive(getNumNodes(), setTankTs);
+    resampleIntensive(tankTs, setTankTs);
 }
 
 void HPWH::getTankTs(TempVect_t& tankTemps) { tankTemps = tankTs; }
@@ -2133,7 +2118,11 @@ HPWH::Temp_t HPWH::getAverageTankT() const
 //-----------------------------------------------------------------------------
 HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
-    TempVect_t resampledTankTs = resample(dist.size(), tankTs);
+    TempVect_t resampledTankTs(dist.size());
+
+    std::vector<double> &values = resampledTankTs;
+    resample(values, tankTs);
+
 
     Temp_t tankT(0);
 
@@ -2161,7 +2150,8 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeig
     double sum = 0;
     double totWeight = 0;
 
-    TempVect_t resampledTankTs = resample(LOGIC_SIZE, tankTs);
+    TempVect_t resampledTankTs(LOGIC_SIZE);
+    resample(resampledTankTs, tankTs);
 
     for (auto& nodeWeight : nodeWeights)
     {
@@ -2255,7 +2245,7 @@ HPWH::Time_t HPWH::getCompressorMinRuntime() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return Time_t(10., Units::min);
+    return {10., Units::min};
 }
 
 int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const

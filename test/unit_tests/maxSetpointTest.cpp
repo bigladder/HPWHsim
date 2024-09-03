@@ -223,14 +223,15 @@ TEST(UtilityTest, resample)
 {
     // test extensive resampling
     std::vector<double> sampleValues = {20., 40., 60., 40., 20.};
-    std::vector<double> values = resampleExtensive(10, sampleValues);
+    std::vector<double> values(10);
+    resampleExtensive(values, sampleValues);
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 10.); //
     EXPECT_NEAR_REL(values[5], 30.); //
 
     // test intensive resampling
-    values = resampleIntensive(10, sampleValues);
+    resampleIntensive(values, sampleValues);
 
     // Check some expected values.
     EXPECT_NEAR_REL(values[1], 20.); //

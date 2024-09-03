@@ -1686,17 +1686,16 @@ inline bool aboutEqual(T a, T b)
 
 // resampling utility functions
 double
-getResampledValue(const std::vector<double> values, double beginFraction, double endFraction);
+getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction);
 
-std::vector<double> resample(const std::size_t N, const std::vector<double> sampleValues);
+void resample(std::vector<double>& values, const std::vector<double>& sampleValues);
 
-inline std::vector<double> resampleIntensive(const std::size_t N,
-                                             const std::vector<double> sampleValues)
+inline void resampleIntensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
-    return resample(N, sampleValues);
+    resample(values, sampleValues);
 }
 
-std::vector<double> resampleExtensive(const std::size_t N, const std::vector<double> sampleValues);
+void resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues);
 
 ///  helper functions
 double expitFunc(double x, double offset);
