@@ -2905,7 +2905,9 @@ void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 
     auto modHeatDistribution = modifyHeatDistribution(extraHeatDist);
 
-    PowerVect_t heatDistribution = resampleExtensive(getNumNodes(), modHeatDistribution);
+    PowerVect_t heatDistribution;
+    heatDistribution.resize(getNumNodes());
+    resampleExtensive(heatDistribution, modHeatDistribution);
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded = 0.;

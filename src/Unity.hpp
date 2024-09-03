@@ -522,6 +522,9 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 
     auto front() const {return reinterpret_cast<const ScaleVal<U, units>&>(xV.front());}
     auto back() const{return reinterpret_cast<const ScaleVal<U, units>&>(xV.back());}
+
+    auto push_back(const ScaleVal<U, units>& scaleVal){xV.push_back(scaleVal);}
+
 };
 
 template <class U, U units>
@@ -623,6 +626,9 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
 
     auto front() const {return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.front());}
     auto back() const{return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.back());}
+
+    auto push_back(const ScaleOffsetVal<U, units>& scaleOffsetVal){xV.push_back(scaleOffsetVal);}
+
 };
 
 /// scale pairs
