@@ -2392,8 +2392,7 @@ void HPWH::initPreset(MODELS presetNum)
             "top sixth absolute", nodeWeights, Temp_t(105, Units::F), this));
         //		resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(28, Units::F)));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
@@ -2497,8 +2496,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
             "top sixth absolute", nodeWeights, Temp_t(105, Units::F), this));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
@@ -2595,8 +2593,7 @@ void HPWH::initPreset(MODELS presetNum)
             "top sixth absolute", nodeWeights, Temp_t(105, Units::F), this));
         //		resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(35, Units::F)));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
@@ -2668,8 +2665,7 @@ void HPWH::initPreset(MODELS presetNum)
         // resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(39.9691, Units::F)));
         resistiveElementTop->addTurnOnLogic(topThird({87, Units::F}));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
@@ -2752,8 +2748,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(fifthSixthMaxTemp(Temp_t(117., Units::F)));
         resistiveElementBottom->addShutOffLogic(secondSixthMaxTemp(Temp_t(109., Units::F)));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
@@ -2837,8 +2832,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->addTurnOnLogic(topThird({11.87, Units::dF}));
 
-        // and you have to do this after putting them into heatSources, otherwise
-        // you don't get the right pointers
+        //
         compressor->backupHeatSource = resistiveElementBottom;
         resistiveElementBottom->backupHeatSource = compressor;
 
