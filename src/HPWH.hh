@@ -642,7 +642,7 @@ class HPWH : public Courier::Sender
 
     /**< Sets the tank node temps based on the provided vector of temps, which are mapped onto the
         existing nodes, regardless of numNodes. */
-    void setTankTs(const TempVect_t setTemps);
+    void setTankTs(const TempVect_t& setTemps);
 
     bool isSetpointFixed() const; /**< is the setpoint allowed to be changed */
 

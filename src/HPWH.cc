@@ -1335,7 +1335,7 @@ void HPWH::resetTankToSetpoint() { setTankToT(setpointT); }
 /// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
 //-----------------------------------------------------------------------------
-void HPWH::setTankTs(const TempVect_t setTankTs)
+void HPWH::setTankTs(const TempVect_t& setTankTs)
 {
     std::size_t numSetNodes = setTankTs.size();
     if (numSetNodes == 0)
