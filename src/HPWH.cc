@@ -198,7 +198,6 @@ void resample(std::vector<double>& values, const std::vector<double>& sampleValu
     }
 }
 
-
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
@@ -206,7 +205,8 @@ void resample(std::vector<double>& values, const std::vector<double>& sampleValu
 void resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     resample(values, sampleValues);
-    if (!values.empty()){
+    if (!values.empty())
+    {
         double scale =
             static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
         for (auto& value : values)
@@ -2120,9 +2120,8 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
     TempVect_t resampledTankTs(dist.size());
 
-    std::vector<double> &values = resampledTankTs;
+    std::vector<double>& values = resampledTankTs;
     resample(values, tankTs);
-
 
     Temp_t tankT(0);
 
@@ -2834,8 +2833,9 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
         if (targetTempNodeNum > (getNumNodes() - 1))
         {
             // no nodes above the equal-temp nodes; target temperature limited by the heat available
-            heatToT = tankTs[nodeNum] +
-                      Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
+            heatToT =
+                tankTs[nodeNum] +
+                Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
         }
         else
         {
@@ -2844,14 +2844,15 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
         Energy_t qIncrement = {nodeCp(Units::kJ_per_C) * numNodesToHeat *
-                                           (heatToT(Units::C) - tankTs[nodeNum](Units::C)),
-                                       Units::kJ};
+                                   (heatToT(Units::C) - tankTs[nodeNum](Units::C)),
+                               Units::kJ};
 
         if (qIncrement > qAdd)
         {
             // insufficient heat to reach heatToT_C; use all available heat
-            heatToT = tankTs[nodeNum](Units::C) +
-                      Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
+            heatToT =
+                tankTs[nodeNum](Units::C) +
+                Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
             for (int j = 0; j < numNodesToHeat; ++j)
             {
                 tankTs[nodeNum + j] = heatToT;

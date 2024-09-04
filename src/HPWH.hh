@@ -1685,8 +1685,9 @@ inline bool aboutEqual(T a, T b)
 }
 
 // resampling utility functions
-double
-getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction);
+double getResampledValue(const std::vector<double>& sampleValues,
+                         double beginFraction,
+                         double endFraction);
 
 void resample(std::vector<double>& values, const std::vector<double>& sampleValues);
 
