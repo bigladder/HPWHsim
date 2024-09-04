@@ -168,6 +168,8 @@ set(BradfordWhiteTests
         RE2H50_UEF67
         )
 
+set(plotTest File AquaThermAire villara_24hr67)
+
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
@@ -213,17 +215,24 @@ function(add_model_test)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
 
-    if (${PROJECT_NAME}_PYTHON_PLOTS AND ${ARG_SPEC_TYPE} STREQUAL "File")
-        set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measurements.csv")
-        if (EXISTS ${measurementsPath})
-            set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
-            set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
-            set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
+endfunction()
 
-            set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-            add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/create_test_plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath})
-            set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
-        endif ()
+#Plot test
+function(add_plot_test)
+    set(options)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measured.csv")
+    if (EXISTS ${measurementsPath})
+        set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
+        set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
+        set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
+
+        set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/plot.py" ${measurementsPath} ${simulationPlotPath} ${simulationOutputPath} )
+        set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
 endfunction()
@@ -378,6 +387,8 @@ endforeach (test)
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
+
+add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 # Add unit tests
 add_subdirectory(unit_tests)
