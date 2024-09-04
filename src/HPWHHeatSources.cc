@@ -521,33 +521,26 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                     }
                 }
             }
+            {
+                // Calculate COP at each reference temeprature
+                // Interpolate to get COP  at the current temperature
+                double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
+                double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
+                cop = linearInterp(externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
+            }
 
-            /// auto testV = scaleVector(perfMap[0].inputPower_coeffs, 3.);
-            // auto test_x = expandSeries(pNext, 3.);
+            {
+                // Calculate input power at each reference temeprature
+                // Interpolate to get input power at the current temperature
+                Power_t inputPower_T1 =
+                    expandSeries(perfMap[i_prev].inputPower_coeffs, effCondenserT);
 
-            // std::cout<< test_x;
-            // auto pNext = pNext;
-            // pNext = perfMap[i_next].inputPower_coeffs;
-            //  Calculate COP and Input Power at each of the two reference temepratures
-            double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs,
-                                         effCondenserT); // cop at ambient temperature T1
+                Power_t inputPower_T2 =
+                    expandSeries(perfMap[i_next].inputPower_coeffs, effCondenserT);
 
-            double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs,
-                                         effCondenserT); // cop at ambient temperature T2//
-
-            Power_t inputPower_T1 =
-                expandSeries(perfMap[i_prev].inputPower_coeffs,
-                             effCondenserT); // input power at ambient temperature T1
-
-            Power_t inputPower_T2 =
-                expandSeries(perfMap[i_next].inputPower_coeffs,
-                             effCondenserT); // input power at ambient temperature T2
-
-            // Interpolate to get COP and input power at the current ambient temperature
-            inputPower = linearInterp(
-                externalT, perfMap[i_prev].T, perfMap[i_next].T, inputPower_T1, inputPower_T2);
-
-            cop = linearInterp(externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
+                inputPower = linearInterp(
+                    externalT, perfMap[i_prev].T, perfMap[i_next].T, inputPower_T1, inputPower_T2);
+            }
         }
         else
         { // perfMap.size() == 1 or we've got an issue.
