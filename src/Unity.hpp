@@ -378,9 +378,6 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     }
 
     double operator()(const U toUnits) const { return scaleOffset(units, toUnits) * x; }
-
-    //operator const double() const {return x;}
-    //operator double&() {return *x;}
 };
 
 /// transform vectors
@@ -517,8 +514,8 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     auto rbegin() const { return reinterpret_cast<const ScaleVal<U, units>*>(&(*xV.rbegin()));}
     auto rend() const { return reinterpret_cast<const ScaleVal<U, units>*>(&(*xV.rend()));}
 
-    auto front(){return reinterpret_cast<ScaleVal<U, units>&>(xV.front());}
-    auto back(){return reinterpret_cast<ScaleVal<U, units>&>(xV.back());}
+    auto& front(){return reinterpret_cast<ScaleVal<U, units>&>(xV.front());}
+    auto& back(){return reinterpret_cast<ScaleVal<U, units>&>(xV.back());}
 
     auto front() const {return reinterpret_cast<const ScaleVal<U, units>&>(xV.front());}
     auto back() const{return reinterpret_cast<const ScaleVal<U, units>&>(xV.back());}
@@ -538,12 +535,6 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
 
     ScaleOffsetVect(const std::vector<double>& xV_in = {})
         : TransformVect<U, ScaleOffset, units>(xV_in)
-    {
-    }
-
-
-    ScaleOffsetVect(const std::size_t n)
-        : TransformVect<U, ScaleOffset, units>(n)
     {
     }
 
@@ -571,6 +562,11 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     {
         for (auto s_ : sV)
             push_back(s_);
+    }
+
+    ScaleOffsetVect(const std::size_t n)
+        : TransformVect<U, ScaleOffset, units>(n)
+    {
     }
 
     ScaleOffsetVal<U, units> operator[](const std::size_t i) const{return xV[i];}
@@ -621,8 +617,8 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     auto rbegin() const { return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.rbegin()));}
     auto rend() const { return reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.rend()));}
 
-    auto front(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.front());}
-    auto back(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.back());}
+    auto& front(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.front());}
+    auto& back(){return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.back());}
 
     auto front() const {return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.front());}
     auto back() const{return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.back());}
