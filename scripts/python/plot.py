@@ -23,6 +23,8 @@ NUMBER_OF_THERMOCOUPLES = 6
 
 
 def call_csv(path, skip_rows):
+    print(path)
+
     data = pd.read_csv(path, skiprows=skip_rows)
     df = pd.DataFrame(data)
     return df
@@ -265,10 +267,11 @@ def plot(measured_path, simulated_path, output_path, energy_path):
     measE = df_measured[power_col_label_meas].sum()/60
     simE = df_simulated[power_col_label_sim].sum()/60
     
-    f = open(energy_path, "w")
-    f.write(f"Measured Energy Consumption: {measE:.2f} Wh\n" )
-    f.write(f"Simulated Energy Consumption: {simE:.2f} Wh\n")
-    f.close() 
+    if energy_path != '':
+        f = open(energy_path, "w")
+        f.write(f"Measured Energy Consumption: {measE:.2f} Wh\n" )
+        f.write(f"Simulated Energy Consumption: {simE:.2f} Wh\n")
+        f.close() 
 
 
 #  main
@@ -278,9 +281,15 @@ if __name__ == "__main__":
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
         output_path = Path(sys.argv[3])
+        energy_path = ''
+        plot(measured_path, simulated_path, output_path, energy_path)
+    elif n_args == 4:
+        measured_path = Path(sys.argv[1])
+        simulated_path = Path(sys.argv[2])
+        output_path = Path(sys.argv[3])
         energy_path = Path(sys.argv[4])
         plot(measured_path, simulated_path, output_path, energy_path)
     else:
         sys.exit(
-            "Incorrect number of arguments. Must be three: Measured Path, Simulated Path, Output Path"
+            "Incorrect number of arguments. Must be four: Measured Path, Simulated Path, Output Path, (Energy Path)"
         )

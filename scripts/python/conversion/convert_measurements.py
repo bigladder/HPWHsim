@@ -2,7 +2,8 @@ import pandas as pd  # type: ignore
 
 import os
 
-test_name = 'RE2H50_UEF67'
+test_name = 'villara_24hr67'
+format = "Villara"
 
 in_data_folder = os.path.join('test/', test_name)
 out_data_folder = os.path.join('test/', test_name)
@@ -13,17 +14,14 @@ out_file_name = 'measured.csv'
 in_file_path = os.path.join(in_data_folder, in_file_name)
 out_file_path = os.path.join(out_data_folder, out_file_name)
 
-iColTime = 0
-iColAmbientT = 1
-iColPower = 4
-
-iColTankT1 = 5
-
-iColInletT = 11
-iColOutletT = 12
-iColDraw = 13
-
-numRowsPerMin = 6
+if format == "Villara":
+	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 3), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
+	power_factor = 1000.
+if format == "BradfordWhite":
+	orig_columns = dict([ ("Time", 0), ("AmbientT", 1), ("Power", 4), ("TankT1", 5), ("InletT", 11), ("OutletT", 12), ("Draw", 13) ])
+	power_factor = 1.		
+					 
+numRowsPerMin = 1
 numTankTs = 6
 
 # load data
@@ -36,7 +34,7 @@ drawSum = 0
 iSum = 0
 
 out_file = open(out_file_path,"w+")
-iMin = 0
+iMin = -63
 jRow = numRowsPerMin
 iLine = 0
 for line in Lines:
@@ -59,8 +57,8 @@ for line in Lines:
 		out_file.writelines(line_out + "\n")
 		
 	else:			
-		powerSum = powerSum + float(columns[iColPower].strip('\n'))
-		drawSum = drawSum + float(columns[iColDraw].strip('\n'))
+		powerSum = powerSum + power_factor* float(columns[orig_columns["Power"]].strip('\n'))
+		drawSum = drawSum + float(columns[orig_columns["Draw"]].strip('\n'))
 		iSum = iSum + 1
 		
 		jRow = jRow + 1
@@ -68,19 +66,19 @@ for line in Lines:
 			new_columns = []		
 			
 			new_columns.append(str(iMin))
-			new_columns.append(columns[iColAmbientT])
+			new_columns.append(columns[orig_columns["AmbientT"]])
 			new_columns.append(str(powerSum / iSum))
 			
 			tankT_sum = 0
 			for iCol in range(numTankTs):
-				new_columns.append(columns[iColTankT1 + iCol])
-				tankT_sum = tankT_sum + float(columns[iColTankT1 + iCol].strip('\n'))
+				new_columns.append(columns[orig_columns["TankT1"] + iCol])
+				tankT_sum = tankT_sum + float(columns[orig_columns["TankT1"] + iCol].strip('\n'))
 
 			#new_columns.append(str(tankT_sum / numTankTs))
 						
 			if drawSum > 0:
-				new_columns.append(columns[iColInletT])
-				new_columns.append(columns[iColOutletT])
+				new_columns.append(columns[orig_columns["InletT"]])
+				new_columns.append(columns[orig_columns["OutletT"]])
 				new_columns.append(str(drawSum / iSum))
 			else:
 				new_columns.append("")		
