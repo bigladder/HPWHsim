@@ -4,6 +4,9 @@
 #include <iterator>
 #include <unordered_map>
 #include <vector>
+#include <cmath>
+#include <functional>
+#include <algorithm>
 
 /// units data structures
 namespace Unity
