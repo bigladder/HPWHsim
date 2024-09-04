@@ -2834,8 +2834,8 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
         if (targetTempNodeNum > (getNumNodes() - 1))
         {
             // no nodes above the equal-temp nodes; target temperature limited by the heat available
-            heatToT = tankTs[nodeNum](Units::C) +
-                      Temp_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::C);
+            heatToT = tankTs[nodeNum] +
+                      Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
         }
         else
         {
@@ -2843,15 +2843,15 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
         }
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
-        Energy_t qIncrement = Energy_t(nodeCp(Units::kJ_per_C) * numNodesToHeat *
+        Energy_t qIncrement = {nodeCp(Units::kJ_per_C) * numNodesToHeat *
                                            (heatToT(Units::C) - tankTs[nodeNum](Units::C)),
-                                       Units::kJ);
+                                       Units::kJ};
 
         if (qIncrement > qAdd)
         {
             // insufficient heat to reach heatToT_C; use all available heat
             heatToT = tankTs[nodeNum](Units::C) +
-                      Temp_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::C);
+                      Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
             for (int j = 0; j < numNodesToHeat; ++j)
             {
                 tankTs[nodeNum + j] = heatToT;
@@ -3138,9 +3138,6 @@ bool HPWH::isEnergyBalanced(const Volume_t drawVol,
                             const Energy_t prevHeatContent,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
-    Cp_t drawCp = {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVol(Units::L),
-                   Units::kJ_per_C}; // heat capacity of draw
-
     // Check energy balancing.
     Energy_t qInElectrical = 0.;
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
@@ -3148,16 +3145,20 @@ bool HPWH::isEnergyBalanced(const Volume_t drawVol,
         qInElectrical += getNthHeatSourceEnergyInput(iHS);
     }
 
-    Energy_t qInExtra = extraEnergyInput;
     Energy_t qInHeatSourceEnviron = getEnergyRemovedFromEnvironment();
+    Energy_t qInExtra = extraEnergyInput;
     Energy_t qOutTankEnviron = standbyLosses;
+
+    Cp_t drawCp = {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVol(Units::L),
+                   Units::kJ_per_C}; // heat capacity of draw
     Energy_t qOutWater = {drawCp(Units::kJ_per_C) * (outletT(Units::C) - member_inletT(Units::C)),
                           Units::kJ}; // assumes only one inlet
+
     Energy_t expectedTankHeatContent =
         prevHeatContent        // previous heat content
         + qInElectrical        // electrical energy delivered to heat sources
-        + qInExtra             // extra energy delivered to heat sources
         + qInHeatSourceEnviron // heat extracted from environment by condenser
+        + qInExtra             // extra energy delivered to heat sources
         - qOutTankEnviron      // heat released from tank to environment
         - qOutWater;           // heat expelled to outlet by water flow
 
