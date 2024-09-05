@@ -51,7 +51,7 @@ body {font-family: Arial;}
 <script>
   const model_form = document.getElementById('modelForm');
   model_form.model_arg1.value = "File";
-  model_form.model_arg2.value = "AeroTherm2023_50";
+  model_form.model_arg2.value = "AquaThermAire";
 </script>
 
 <script>
@@ -73,7 +73,19 @@ body {font-family: Arial;}
 
     document.getElementById("plot_btn").disabled = true;
 
-    const response = await fetch('http://localhost:8000/test_and_plot?' + fst)
+	  const response = await fetch('http://localhost:8000/test_and_plot?' + fst,
+		{
+			method: 'GET'
+		}
+	  );
+
+    const data = await response.json();
+    const energy_data = data["energy_data"];
+
+    measE = energy_data["measuredE_Wh"].toFixed(2);
+    simE = energy_data["simulatedE_Wh"].toFixed(2);
+    document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
+    document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
     model_form.model_arg1.value = farg1;
     model_form.model_arg2.value = farg2;
@@ -96,13 +108,9 @@ body {font-family: Arial;}
     localStorage.setItem("plot_arg2", farg4);
     localStorage.setItem("plot_arg3", farg5);
 
-    document.getElementById("plots").src="../../build/test/output/" + farg4
-    document.getElementById("plots").style="display:block;"
-
-    document.getElementById("energy").style="display:block;"
-    document.getElementById("energy").data = "";
-    document.getElementById("energy").data = "../../build/test/output/energy.txt";
-
+    document.getElementById("plots").src = "../../build/test/output/" + farg4
+    document.getElementById("plots").style = "display:block;"
+  
     document.getElementById("plot_btn").disabled = false;
   }
 
@@ -154,7 +162,8 @@ body {font-family: Arial;}
 
   <iframe title="Plots" src="" id="plots" width=1200 height=800 style="display:none;"></iframe>
 
-  <object id="energy" data="../../build/test/output/energy.txt" width=800 height=200 style="display:none;"></object>
+  <p id="energy_measured"></p>
+  <p id="energy_simulated"></p> 
 
  </div>
 
@@ -188,10 +197,10 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
-  //const plot_form = document.getElementById('plotForm');
-  //plot_form.plot_arg1.value = "test";
- // plot_form.plot_arg2.value = "plot.html"
-  //plot_form.plot_arg3.value = "measured.csv";
+  const plot_form = document.getElementById('plotForm');
+  plot_form.plot_arg1.value = "villara_24hr67";
+  plot_form.plot_arg2.value = "plot.html"
+  plot_form.plot_arg3.value = "measured.csv";
 
   //var plot_btn = document.getElementById("plot_btn");
 

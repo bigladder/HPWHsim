@@ -16,7 +16,6 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     repo_path = str(Path.cwd())
     print("path is " + repo_path)
 
-    # measurements_name = 'measurements_test.csv'
     output_name = test_name + '_' + model_spec + '_' + model_name + ".csv"
 
     test_dir = os.path.join(repo_path, "test")
@@ -27,13 +26,11 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     measured_path = os.path.join(test_dir, test_name, measurements_name)
     simulated_path = os.path.join(output_dir, output_name)
     plot_path = os.path.join(output_dir, plot_name)
-    energy_path = os.path.join(output_dir, "energy.txt")
-
-    plot(measured_path, simulated_path, plot_path, energy_path)
-    
+ 
     os.chdir(orig_dir)
-
-    return 'success'
+    
+    energy_data = plot(measured_path, simulated_path, plot_path)
+    return energy_data
 
 
 def call_measure(model_spec, model_name):

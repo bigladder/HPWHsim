@@ -5,6 +5,7 @@ import dimes  # type: ignore
 from dimes import LineProperties
 import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
+import json
 
 DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
@@ -80,18 +81,6 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
 
     return df
 
-def calculate_energy_consumption(df_measured, df_simulated, variables):
-    name_column_energy_measured = variables["Y-Variables"]["Power Input"]["Column Names"]["Measured"]
-    name_column_energy_simulated = variables["Y-Variables"]["Power Input"]["Column Names"]["Simulated"]
-
-    # set parasitic load to 0
-    df_measured_no_parasitic_load = df_measured[name_column_energy_measured].where(df_measured[name_column_energy_measured] > 10, 0)
-
-    print(f"Measured Energy Consumption:  {df_measured[name_column_energy_measured].sum().values[0]/60:.0f} Wh")
-    # print(f"Measured Energy (no parasitic load) {df_measured_no_parasitic_load[column_energy_name_measured].sum().values[0]/60:.0f} Wh")
-    print(f"Simulated Energy Consumption: {df_simulated[name_column_energy_simulated].sum().values[0]/60:.0f} Wh")
-
-
 def add_temperature_details(variables):
     TEMPERATURE_DETAILS = {
         "Labels": [
@@ -166,7 +155,7 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
     )
 
 #
-def plot(measured_path, simulated_path, output_path, energy_path):
+def plot(measured_path, simulated_path, output_path):
     power_col_label_meas = "Power_W"
     power_col_label_sim = "Power_W"
 
@@ -248,9 +237,6 @@ def plot(measured_path, simulated_path, output_path, energy_path):
     # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
     add_temperature_details(variables)
     
-    # print measured and simulated energy consumption
-    calculate_energy_consumption(df_measured, df_simulated, variables)
-
     plot = dimes.TimeSeriesPlot(
         df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
     )
@@ -264,15 +250,11 @@ def plot(measured_path, simulated_path, output_path, energy_path):
 
     plot.write_html_plot(output_path)
    
-    measE = df_measured[power_col_label_meas].sum()/60
-    simE = df_simulated[power_col_label_sim].sum()/60
-    
-    if energy_path != '':
-        f = open(energy_path, "w")
-        f.write(f"Measured Energy Consumption: {measE:.2f} Wh\n" )
-        f.write(f"Simulated Energy Consumption: {simE:.2f} Wh\n")
-        f.close() 
-
+    # return energy string
+    energy_data = {}
+    energy_data['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
+    energy_data['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
+    return energy_data
 
 #  main
 if __name__ == "__main__":
@@ -281,15 +263,9 @@ if __name__ == "__main__":
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
         output_path = Path(sys.argv[3])
-        energy_path = ''
-        plot(measured_path, simulated_path, output_path, energy_path)
-    elif n_args == 4:
-        measured_path = Path(sys.argv[1])
-        simulated_path = Path(sys.argv[2])
-        output_path = Path(sys.argv[3])
-        energy_path = Path(sys.argv[4])
-        plot(measured_path, simulated_path, output_path, energy_path)
+        print(plot(measured_path, simulated_path, output_path))    
     else:
         sys.exit(
             "Incorrect number of arguments. Must be four: Measured Path, Simulated Path, Output Path, (Energy Path)"
         )
+    
