@@ -442,17 +442,16 @@ void HPWH::HeatSource::sortPerformanceMap()
 
 HPWH::Temp_t HPWH::HeatSource::getTankT() const
 {
-
-    TempVect_t resampledTankTs(getCondensitySize());
+    std::vector<double> resampledTankTs(getCondensitySize());
     resample(resampledTankTs, hpwh->tankTs);
 
     double tankT = 0.;
 
+    // Note that condensity is normalized.
     std::size_t j = 0;
     for (auto& resampledNodeT : resampledTankTs)
     {
         tankT += condensity[j] * resampledNodeT;
-        // Note that condensity is normalized.
         ++j;
     }
 
