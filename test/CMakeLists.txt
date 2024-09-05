@@ -158,16 +158,20 @@ set(stateOfChargeCompressorNames
         Sanden120
         NyleC25A_SP
         )
-set(BradfordWhiteModelNames
-        AeroTherm2023_50
-        AeroTherm2023_65
-        AeroTherm2023_80
-        )
-set(BradfordWhiteTests
+
+set(AeroThermSizes 50 65 80)
+set(AeroTherm2023_50_Tests
         RE2H50_UEF50
         RE2H50_UEF67
         )
-
+set(AeroTherm2023_65_Tests
+        RE2H65_UEF50
+        RE2H65_UEF67
+        )
+set(AeroTherm2023_80_Tests
+        RE2H80_UEF50
+        RE2H80_UEF67
+        )
 set(plotTest File AquaThermAire villara_24hr67)
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
@@ -247,14 +251,6 @@ endforeach (test)
 #Test(s) specifically for heat-exchange models
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for Bradford White models
-foreach (test ${BradfordWhiteTests})
-    foreach (model ${BradfordWhiteModelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
@@ -378,17 +374,20 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-foreach (test ${BradfordWhiteTests})
-    foreach (model ${BradfordWhiteModelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
+#Test(s) specifically for Bradford White AeroTherm2023 model
+foreach (size ${AeroThermSizes})
+    set(model AeroTherm2023_${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (test)
+endforeach (size)
+
+add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
-
-add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 # Add unit tests
 add_subdirectory(unit_tests)
