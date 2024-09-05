@@ -263,7 +263,7 @@ if __name__ == "__main__":
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
         output_path = Path(sys.argv[3])
-        print(plot(measured_path, simulated_path, output_path))    
+        #print(plot(measured_path, simulated_path, output_path))
     else:
         sys.exit(
             "Incorrect number of arguments. Must be four: Measured Path, Simulated Path, Output Path, (Energy Path)"
