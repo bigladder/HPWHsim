@@ -159,7 +159,8 @@ bool HPWH::HeatSource::shouldLockOut(Temp_t heatSourceAmbientT) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() && (heatSourceAmbientT < minT - hysteresis_dT))
+        if (isEngaged() &&
+            (heatSourceAmbientT < Temp_t(minT(Units::C) - hysteresis_dT(Units::dC), Units::C)))
         {
             lock = true;
         }

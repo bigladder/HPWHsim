@@ -91,8 +91,8 @@ class HPWH : public Courier::Sender
     struct GenTemp_t : public std::variant<Temp_t, Temp_d_t>
     {
         GenTemp_t() : GenTemp_t(0, Units::dC) {}
-        GenTemp_t(Temp_d_t temp_d_t) : std::variant<Temp_t, Temp_d_t>(temp_d_t) {}
-        GenTemp_t(Temp_t temp_t) : std::variant<Temp_t, Temp_d_t>(temp_t) {}
+        GenTemp_t(Temp_d_t temp_d) : std::variant<Temp_t, Temp_d_t>(temp_d) {}
+        GenTemp_t(Temp_t temp) : std::variant<Temp_t, Temp_d_t>(temp) {}
         GenTemp_t(double val, Units::Temp temp) { emplace<0>(val, temp); }
         GenTemp_t(double val, Units::Temp_d temp_d) { emplace<1>(val, temp_d); }
     };
@@ -102,8 +102,6 @@ class HPWH : public Courier::Sender
         12; /**<number of condensity nodes associated with each heat source */
     static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
-    static const int MAXOUTSTRING =
-        200; /**< this is the maximum length for a debuging output string */
 
     static const double DENSITYWATER_kg_per_L;     /// mass density of water
     static const double KWATER_W_per_mC;           /// thermal conductivity of water
@@ -717,7 +715,7 @@ class HPWH : public Courier::Sender
     void setDoConduction(bool doConduction_in);
 
     /// set the UA with specified units
-    void setUA(const UA_t UA);
+    void setUA(UA_t UA);
 
     /// returns the UA with specified units
     void getUA(UA_t& UA) const;
@@ -726,7 +724,7 @@ class HPWH : public Courier::Sender
     void getFittingsUA(UA_t& UA) const;
     /**< Returns the UAof just the fittings*/
 
-    void setFittingsUA(const UA_t UA);
+    void setFittingsUA(UA_t UA);
     /**< This is a setter for the UA of just the fittings*/
 
     void setInletByFraction(double fractionalHeight);
@@ -764,7 +762,7 @@ class HPWH : public Courier::Sender
     /**< returns the water inlet height node number */
 
     /**< resizes the tankTemp_C and nextTankTemp_C node vectors  */
-    void setNumNodes(const std::size_t num_nodes);
+    void setNumNodes(std::size_t num_nodes);
 
     /**< returns the number of nodes  */
     int getNumNodes() const;
@@ -956,7 +954,7 @@ class HPWH : public Courier::Sender
 
     void setTargetSoCFraction(double target);
 
-    bool canUseSoCControls();
+    bool canUseSoCControls() const;
 
     void switchToSoCControls(double targetSoC,
                              double hysteresisFraction = 0.05,
@@ -967,9 +965,9 @@ class HPWH : public Courier::Sender
     bool isSoCControlled() const;
 
     /// Checks whether energy is balanced during a simulation step.
-    bool isEnergyBalanced(const Volume_t drawVol,
-                          const Energy_t prevHeatContent,
-                          const double fracEnergyTolerance = 0.001);
+    bool isEnergyBalanced(Volume_t drawVol,
+                          Energy_t prevHeatContent,
+                          double fracEnergyTolerance = 0.001);
 
     /// Overloaded version of above that allows specification of inlet temperature.
     bool isEnergyBalanced(Volume_t drawVol,
@@ -983,10 +981,10 @@ class HPWH : public Courier::Sender
 
     /// Addition of heat from a normal heat sources; return excess heat, if needed, to prevent
     /// exceeding maximum or setpoint
-    Energy_t addHeatAboveNode(Energy_t qAdd_kJ, const int nodeNum, Temp_t maxT);
+    Energy_t addHeatAboveNode(Energy_t qAdd_kJ, int nodeNum, Temp_t maxT);
 
     /// Addition of extra heat handled separately from normal heat sources
-    void addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum);
+    void addExtraHeatAboveNode(Energy_t qAdd, int nodeNum);
 
     struct PerfPoint
     {
@@ -998,9 +996,6 @@ class HPWH : public Courier::Sender
                   PowerVect_t inputPower_coeffs_in = {},
                   std::vector<double> COP_coeffs_in = {});
     };
-
-    /// A map with input/COP quadratic curve coefficients at a given external temperature
-    typedef std::vector<PerfPoint> PerfMap;
 
     static const std::vector<int> powers3;
     static const std::vector<std::pair<int, int>> powers6;
@@ -1105,9 +1100,7 @@ class HPWH : public Courier::Sender
         FlowRate_t flowRate;
 
         Draw(const Time_t startTime_in, const Volume_t volume_in, const FlowRate_t flowRate_in)
-            : startTime(startTime_in, Units::min)
-            , volume(volume_in, Units::L)
-            , flowRate(flowRate_in, Units::L_per_s)
+            : startTime(startTime_in), volume(volume_in), flowRate(flowRate_in)
         {
         }
     };
@@ -1575,7 +1568,7 @@ class HPWH::HeatSource : public Courier::Sender
     void clearAllLogic();
     /**< these are two small functions to remove some of the cruft in initiation functions */
 
-    void changeResistancePower(const Power_t power);
+    void changeResistancePower(Power_t power);
     /**< function to change the resistance wattage */
 
     bool isACompressor() const;
@@ -1703,16 +1696,16 @@ double expitFunc(double x, double offset);
 
 std::vector<double> normalize(std::vector<double> distribution);
 
-int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes);
+int findLowestNode(const std::vector<double>& nodeDist, int numTankNodes);
 
-HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist);
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double>& nodeDist);
 
 std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
                                     int lowestNode,
                                     const HPWH::TempVect_t& nodeTs,
-                                    const HPWH::Temp_t setpointT);
+                                    HPWH::Temp_t setpointT);
 
-void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
+void scaleVector(std::vector<double>& coeffs, double scaleFactor);
 
 double linearInterp(double xnew, double x0, double x1, double y0, double y1);
 
@@ -1727,10 +1720,10 @@ inline double expandSeries(const std::vector<double>& coeffs, const double x)
 }
 
 /// applies ten-term regression
-double regressedMethod(const std::vector<double> coeffs, double x1, double x2, double x3);
+double regressedMethod(const std::vector<double>& coeffs, double x1, double x2, double x3);
 
 /// applies five-term regression for MP split systems
-double regressedMethodMP(const std::vector<double> coeffs, double x1, double x2);
+double regressedMethodMP(const std::vector<double>& coeffs, double x1, double x2);
 
 typedef Units::TimePair<Units::Time::h, Units::Time::min> Time_h_min;
 

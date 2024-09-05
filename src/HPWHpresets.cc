@@ -268,7 +268,6 @@ void HPWH::initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_d_t resUs
     resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     resistiveElementBottom->hysteresis_dT = {2, Units::dF};
 
-    GenTemp_t t = resUse_dT;
     // logic conditions
     // this is set customly, from input
     // resistiveElementTop->addTurnOnLogic(topThird(Temp_d_t(19.6605, Units::F)));

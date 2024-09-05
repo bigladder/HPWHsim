@@ -23,7 +23,7 @@ struct Transform
 
     static auto ident() { T::ident(); }
 
-    virtual Ti inverse() const = 0;
+    [[nodiscard]] virtual Ti inverse() const = 0;
 
     virtual double operator*(const double x) const = 0;
 
@@ -35,38 +35,36 @@ struct ScaleOffset;
 
 struct Scale : Transform<double, Scale>
 {
-    Scale(const double scale) : Transform(scale) {}
+    explicit Scale(const double scale) : Transform(scale) {}
 
-    static Scale ident() { return 1.; }
+    static Scale ident() { return Scale(1.); }
 
-    Scale inverse() const override { return 1. / data; }
+    [[nodiscard]] Scale inverse() const override { return Scale(1. / data); }
 
     double operator*(const double x) const override { return data * x; }
 
-    Scale operator*(const Scale& s_) const { return data * s_; }
+    Scale operator*(const Scale& s_) const { return Scale(data * s_); }
 
-    double scale() const { return data; }
+    [[nodiscard]] double scale() const { return data; }
 };
 
 struct Offset : Transform<double, Offset>
 {
     using Transform<double, Offset>::data;
 
-    Offset(const double offset) : Transform(offset) {}
+    explicit Offset(const double offset) : Transform(offset) {}
 
-    operator double() { return data; }
+    static Offset ident() { return Offset(0.); }
 
-    static Offset ident() { return 0.; }
-
-    Offset inverse() const override { return -data; }
+    [[nodiscard]] Offset inverse() const override { return Offset(-data); }
 
     double operator*(const double x) const override { return x + data; }
 
-    Offset operator*(const Offset& o) const { return data + o.data; }
+    Offset operator*(const Offset& o) const { return Offset(data + o.data); }
 
-    Offset operator/(const Offset& o) const { return data - o.data; }
+    Offset operator/(const Offset& o) const { return Offset(data - o.data); }
 
-    double offset() const { return data; }
+    [[nodiscard]] double offset() const { return data; }
 };
 
 using ScaleOffsetSeq = std::pair<Scale, Offset>;
@@ -77,14 +75,14 @@ struct ScaleOffset : Transform<ScaleOffsetSeq, ScaleOffset>
 
     ScaleOffset(const Scale& scale, const Offset& offset) : Transform({scale, offset}) {}
 
-    static ScaleOffset ident() { return {1., 0.}; }
+    static ScaleOffset ident() { return {Scale(1.), Offset(0.)}; }
 
-    ScaleOffset inverse() const
+    [[nodiscard]] ScaleOffset inverse() const override
     {
-        return {data.first.inverse(), data.first.inverse() * data.second.inverse()};
+        return {Scale(data.first.inverse()), Offset(data.first.inverse() * data.second.inverse())};
     }
 
-    double operator*(const double x) const { return data.second * (data.first * x); }
+    double operator*(const double x) const override { return data.second * (data.first * x); }
 
     ScaleOffset operator*(const ScaleOffset& a) const
     {
@@ -217,20 +215,27 @@ struct TransformVal
     double x;
 
   public:
-    TransformVal(const double x_in = 0.) : x(x_in) {}
+    explicit TransformVal(const double x_in = 0.) : x(x_in) {}
 
     template <U fromUnits>
-    TransformVal(const TransformVal<U, T, fromUnits> transformVal) : x(transformVal(units))
+    explicit TransformVal(const TransformVal<U, T, fromUnits> transformVal) : x(transformVal(units))
     {
     }
 
-    ~TransformVal() {}
+    ~TransformVal() = default;
 
     operator double() const { return x; }
 
     double* ptr() { return &x; }
 
-    double operator=(double x_in) { return x = x_in; }
+    TransformVal& operator=(double x_in)
+    {
+        x = x_in;
+        return *this;
+    }
+
+    bool operator+=(const double y) { return *this = *this + y; }
+    bool operator-=(const double y) { return *this = *this - y; }
 
     U in() { return units; }
 };
@@ -393,7 +398,7 @@ struct TransformVect
   public:
     TransformVect(const std::vector<double>& xV_in = {}) : xV(xV_in) {}
 
-    TransformVect(const std::size_t n) : xV(n) {}
+    explicit TransformVect(const std::size_t n) : xV(n) {}
 
     operator std::vector<double>&() { return xV; }
     operator const std::vector<double>&() const { return xV; }
