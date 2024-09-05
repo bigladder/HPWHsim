@@ -269,7 +269,7 @@ std::vector<double> normalize(std::vector<double> distribution)
 /// @param[in]	numTankNodes	number of nodes in tank
 /// @returns	index of lowest tank node
 //-----------------------------------------------------------------------------
-int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes)
+int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 {
     int lowest = 0;
     const int distSize = static_cast<int>(nodeDist.size());
@@ -292,7 +292,7 @@ int findLowestNode(const std::vector<double> nodeDist, const int numTankNodes)
 ///								is derived
 /// @returns	width parameter (in degC)
 //-----------------------------------------------------------------------------
-HPWH::Temp_d_t findShrinkage_dT(const std::vector<double> nodeDist)
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double>& nodeDist)
 {
     double condentropy = 0.;
     for (std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode)
@@ -410,14 +410,14 @@ double choose(const int n, const int i)
     return f;
 }
 
-double regressedMethod(const std::vector<double> coeffs, double x1, double x2, double x3)
+double regressedMethod(const std::vector<double>& coeffs, double x1, double x2, double x3)
 {
     return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x3 + coeffs[4] * x1 * x1 +
            coeffs[5] * x2 * x2 + coeffs[6] * x3 * x3 + coeffs[7] * x1 * x2 + coeffs[8] * x1 * x3 +
            coeffs[9] * x2 * x3 + coeffs[10] * x1 * x2 * x3;
 }
 
-double regressedMethodMP(const std::vector<double> coeffs, double x1, double x2)
+double regressedMethodMP(const std::vector<double>& coeffs, double x1, double x2)
 {
     // Const Tair Tin Tair2 Tin2 TairTin
     return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x1 * x1 + coeffs[4] * x2 * x2 +
@@ -1594,7 +1594,6 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
     if (highT.index() == 0)
     {
         // check difference with setpoint
-        auto T = std::get<Temp_t>(highT);
         if (Temp_t(setpointT(Units::C) - std::get<Temp_t>(highT)(Units::C), Units::C) <
             MINSINGLEPASSLIFT)
         {
@@ -1617,7 +1616,8 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
                                MINSINGLEPASSLIFT));
     }
 
-    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex].shutOffLogicSet)
+    for (const std::shared_ptr<HeatingLogic>& shutOffLogic :
+         heatSources[heatSourceIndex].shutOffLogicSet)
     {
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
@@ -1657,7 +1657,7 @@ void HPWH::setTargetSoCFraction(double target)
 
 bool HPWH::isSoCControlled() const { return usesSoCLogic; }
 
-bool HPWH::canUseSoCControls()
+bool HPWH::canUseSoCControls() const
 {
     bool retVal = true;
     if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL)

@@ -122,33 +122,38 @@ constexpr double ft3_per_L = ft_per_m * ft_per_m * ft_per_m / 1000.;            
 
 /// transform maps
 template <>
-inline Scaler<Time>::ScaleMap Scaler<Time>::scaleMap(s, {{min, 1. / s_per_min}, {h, 1. / s_per_h}});
+inline Scaler<Time>::ScaleMap
+    Scaler<Time>::scaleMap(s, {{min, Scale(1. / s_per_min)}, {h, Scale(1. / s_per_h)}});
 
 template <>
-inline Scaler<Length>::ScaleMap Scaler<Length>::scaleMap(m, {{ft, ft_per_m}});
+inline Scaler<Length>::ScaleMap Scaler<Length>::scaleMap(m, {{ft, Scale(ft_per_m)}});
 
 template <>
-inline Scaler<Temp_d>::ScaleMap Scaler<Temp_d>::scaleMap(dC, {{dF, F_per_C}, {dK, 1.}});
+inline Scaler<Temp_d>::ScaleMap Scaler<Temp_d>::scaleMap(dC,
+                                                         {{dF, Scale(F_per_C)}, {dK, Scale(1.)}});
 
 template <>
-inline ScaleOffseter<Temp>::ScaleOffsetMap
-    ScaleOffseter<Temp>::scaleOffsetMap(C, {{F, {F_per_C, offsetC_F}}, {K, {1., offsetC_K}}});
+inline ScaleOffseter<Temp>::ScaleOffsetMap ScaleOffseter<Temp>::scaleOffsetMap(
+    C, {{F, {Scale(F_per_C), Offset(offsetC_F)}}, {K, {Scale(1.), Offset(offsetC_K)}}});
 
 template <>
-inline Scaler<Energy>::ScaleMap
-    Scaler<Energy>::scaleMap(kJ, {{kWh, scale(s, h)}, {Btu, 1. / kJ_per_Btu}, {J, 1000.}});
+inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
+    kJ, {{kWh, scale(s, h)}, {Btu, Scale(1. / kJ_per_Btu)}, {J, Scale(1000.)}});
 
 template <>
-inline Scaler<Power>::ScaleMap Scaler<Power>::scaleMap(
-    kW, {{Btu_per_h, scale(kJ, Btu) / scale(s, h)}, {W, 1000.}, {kJ_per_h, 1. / scale(s, h)}});
+inline Scaler<Power>::ScaleMap
+    Scaler<Power>::scaleMap(kW,
+                            {{Btu_per_h, Scale(scale(kJ, Btu) / scale(s, h))},
+                             {W, Scale(1000.)},
+                             {kJ_per_h, Scale(1. / scale(s, h))}});
 
 template <>
 inline Scaler<Area>::ScaleMap Scaler<Area>::scaleMap(m2,
                                                      {{ft2, Scale(std::pow(scale(m, ft), 2.))}});
 
 template <>
-inline Scaler<Volume>::ScaleMap
-    Scaler<Volume>::scaleMap(L, {{gal, gal_per_L}, {m3, 1. / L_per_m3}, {ft3, ft3_per_L}});
+inline Scaler<Volume>::ScaleMap Scaler<Volume>::scaleMap(
+    L, {{gal, Scale(gal_per_L)}, {m3, Scale(1. / L_per_m3)}, {ft3, Scale(ft3_per_L)}});
 
 template <>
 inline Scaler<UA>::ScaleMap Scaler<UA>::scaleMap(kJ_per_hC,
@@ -157,11 +162,11 @@ inline Scaler<UA>::ScaleMap Scaler<UA>::scaleMap(kJ_per_hC,
 
 template <>
 inline Scaler<RFactor>::ScaleMap Scaler<RFactor>::scaleMap(
-    m2C_per_W, {{ft2hF_per_Btu, scale(m2, ft2) * scale(dC, dF) / scale(W, Btu_per_h)}});
+    m2C_per_W, {{ft2hF_per_Btu, Scale(scale(m2, ft2) * scale(dC, dF) / scale(W, Btu_per_h))}});
 
 template <>
 inline Scaler<FlowRate>::ScaleMap
-    Scaler<FlowRate>::scaleMap(L_per_s, {{gal_per_min, scale(L, gal) / scale(s, min)}});
+    Scaler<FlowRate>::scaleMap(L_per_s, {{gal_per_min, Scale(scale(L, gal) / scale(s, min))}});
 
 template <>
 inline Scaler<Cp>::ScaleMap Scaler<Cp>::scaleMap(kJ_per_C, {});
