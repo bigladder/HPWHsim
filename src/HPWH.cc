@@ -2103,12 +2103,13 @@ HPWH::Temp_t HPWH::getLocationT() const { return locationT; }
 //-----------------------------------------------------------------------------
 HPWH::Temp_t HPWH::getAverageTankT() const
 {
-    Temp_t totalT;
-    for (auto& T : tankTs)
+    double totalT(0.);
+    const std::vector<double>& T_V = tankTs;
+    for (auto& T : T_V)
     {
-        totalT += Temp_d_t(T);
+        totalT += T;
     }
-    return totalT / static_cast<double>(getNumNodes());
+    return Temp_t(totalT / static_cast<double>(getNumNodes()));
 }
 
 //-----------------------------------------------------------------------------
@@ -2118,20 +2119,20 @@ HPWH::Temp_t HPWH::getAverageTankT() const
 //-----------------------------------------------------------------------------
 HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
-    TempVect_t resampledTankTs(dist.size());
+    //TempVect_t resampledTankTs(dist.size());
 
-    std::vector<double>& values = resampledTankTs;
-    resample(values, tankTs);
+    std::vector<double> resampledTankTs(dist.size());
+    resample(resampledTankTs, tankTs);
 
-    Temp_t tankT(0);
+    double tankT(0);
 
     std::size_t j = 0;
     for (auto& nodeT : resampledTankTs)
     {
-        tankT += Temp_d_t(dist[j] * nodeT);
+        tankT += dist[j] * nodeT;
         ++j;
     }
-    return tankT;
+    return Temp_t(tankT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2149,7 +2150,7 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeig
     double sum = 0;
     double totWeight = 0;
 
-    TempVect_t resampledTankTs(LOGIC_SIZE);
+    std::vector<double> resampledTankTs(LOGIC_SIZE);
     resample(resampledTankTs, tankTs);
 
     for (auto& nodeWeight : nodeWeights)
@@ -2181,9 +2182,14 @@ void HPWH::setTankToT(Temp_t T) { setTankTs({{T, T}}); }
 HPWH::Energy_t HPWH::getTankHeatContent() const
 {
     // returns tank heat content relative to 0 C using kJ
-    return {DENSITYWATER_kg_per_L * tankVolume(Units::L) * CPWATER_kJ_per_kgC *
-                getAverageTankT()(Units::C),
-            Units::kJ};
+    const double nodeHeatCapacity = DENSITYWATER_kg_per_L * nodeVolume(Units::L) * CPWATER_kJ_per_kgC;
+
+    Temp_t totalT(0.);
+    for (auto& T : tankTs)
+    {
+        totalT += T;
+    }
+    return {nodeHeatCapacity * totalT(Units::C), Units::kJ};
 }
 
 int HPWH::getModel() const { return model; }
