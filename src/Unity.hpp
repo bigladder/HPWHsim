@@ -3,6 +3,7 @@
 
 #include <iterator>
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <cmath>
 #include <functional>
@@ -95,27 +96,15 @@ struct ScaleOffset : Transform<ScaleOffsetSeq, ScaleOffset>
     Offset offset() const { return data.second; }
 };
 
-template <typename U>
-struct PairHash
-{
-    std::size_t operator()(const std::pair<U, U>& p) const
-    {
-        auto h1 = static_cast<std::size_t>(p.first);
-        auto h2 = static_cast<std::size_t>(p.second);
-        return h1 ^ h2;
-    }
-};
-
 /// Transformer classes
 template <typename U, typename T>
 struct Transformer
 {
-
-    struct TransformMap : std::unordered_map<std::pair<U, U>, T, PairHash<U>>
+    struct TransformMap : std::map<std::pair<U, U>, T>
     {
 
-        using std::unordered_map<std::pair<U, U>, T, PairHash<U>>::insert;
-        using std::unordered_map<std::pair<U, U>, T, PairHash<U>>::at;
+        using std::map<std::pair<U, U>, T>::insert;
+        using std::map<std::pair<U, U>, T>::at;
 
         TransformMap(const U uRef, const std::vector<std::pair<U, T>>& transforms)
         {
@@ -145,7 +134,6 @@ struct Transformer
 template <typename U>
 struct Scaler : Transformer<U, Scale>
 {
-
     static struct ScaleMap : Transformer<U, Scale>::TransformMap
     {
 
@@ -165,7 +153,6 @@ struct Scaler : Transformer<U, Scale>
 template <typename U>
 struct ScaleOffseter : Transformer<U, ScaleOffset>
 {
-
     static struct ScaleOffsetMap : Transformer<U, ScaleOffset>::TransformMap
     {
 
