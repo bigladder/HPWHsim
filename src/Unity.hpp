@@ -220,9 +220,6 @@ struct TransformVal
         return *this;
     }
 
-    bool operator+=(const double y) { return *this = *this + y; }
-    bool operator-=(const double y) { return *this = *this - y; }
-
     U in() { return units; }
 };
 
@@ -270,17 +267,17 @@ struct ScaleVal : TransformVal<U, Scale, units>
     }
 
     template <U toUnits>
-    bool operator!=(const ScaleVal<U, toUnits> scaleVal) const
+    bool operator!=(const ScaleVal<U, toUnits>& scaleVal) const
     {
         return !(operator==(scaleVal));
     }
 
-    ScaleVal operator*=(const double y)
+    ScaleVal& operator*=(const double y)
     {
         x = y * x;
         return *this;
     }
-    ScaleVal operator/=(const double y)
+    ScaleVal& operator/=(const double y)
     {
         x = x / y;
         return *this;
@@ -299,13 +296,13 @@ struct ScaleVal : TransformVal<U, Scale, units>
     }
 
     template <U fromUnits>
-    ScaleVal operator+=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         return *this = *this + scaleVal;
     }
 
     template <U fromUnits>
-    ScaleVal operator-=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         return *this = *this - scaleVal;
     }
@@ -344,29 +341,29 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
         return !(operator==(scaleOffsetVal));
     }
 
-    ScaleOffsetVal operator+=(const double y) { return *this = *this + y; }
-    ScaleOffsetVal operator-=(const double y) { return *this = *this - y; }
+    ScaleOffsetVal& operator+=(const double y) { return *this = *this + y; }
+    ScaleOffsetVal& operator-=(const double y) { return *this = *this - y; }
 
     template <U fromUnits>
-    ScaleOffsetVal operator+(const ScaleVal<U, fromUnits>& scaleVal) const
+    ScaleOffsetVal& operator+(const ScaleVal<U, fromUnits>& scaleVal) const
     {
         return x + scaleVal(units);
     }
 
     template <U fromUnits>
-    ScaleOffsetVal operator-(const ScaleVal<U, fromUnits>& scaleVal) const
+    ScaleOffsetVal& operator-(const ScaleVal<U, fromUnits>& scaleVal) const
     {
         return x - scaleVal(units);
     }
 
     template <U fromUnits>
-    ScaleOffsetVal operator+=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleOffsetVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         return *this = *this + scaleVal;
     }
 
     template <U fromUnits>
-    ScaleOffsetVal operator-=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleOffsetVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         return *this = *this - scaleVal;
     }
@@ -443,9 +440,9 @@ struct ScaleVect : public TransformVect<U, Scale, units>
             xV.push_back(s_);
     }
 
-    ScaleVal<U, units> operator[](const std::size_t i) const { return xV[i]; }
+    ScaleVal<U, units> const &operator[](const std::size_t i) const { return xV[i]; }
 
-    ScaleVal<U, units>& operator[](const std::size_t i)
+    ScaleVal<U, units> &operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleVal<U, units>&>(xV[i]);
     }
