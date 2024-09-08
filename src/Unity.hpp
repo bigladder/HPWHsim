@@ -228,7 +228,7 @@ struct TransformVal
 
 template <class U, U units>
 struct ScaleVal : TransformVal<U, Scale, units>
-{å
+{
     using TransformVal<U, Scale, units>::x;
 
     ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
