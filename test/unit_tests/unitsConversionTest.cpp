@@ -177,8 +177,8 @@ TEST(UnitsConversionTest, conversions)
     }
     {
         Length_ft length_ft = 3.;
-        double* x = length_ft.ptr();
-        (*x) += 1.; // ft
+        double& x = length_ft;
+        x += 1.; // ft
         EXPECT_NEAR_REL(length_ft, 4.);
     }
 

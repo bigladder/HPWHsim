@@ -127,7 +127,7 @@ struct Transformer
             }
         }
 
-        T transform(const U fromUnits, const U toUnits) { return at({fromUnits, toUnits}); }
+        inline T& transform(const U fromUnits, const U toUnits) { return at({fromUnits, toUnits}); }
     };
 };
 
@@ -144,7 +144,7 @@ struct Scaler : Transformer<U, Scale>
 
     } scaleMap;
 
-    static Scale transform(const U fromUnits, const U toUnits)
+    inline static Scale& transform(const U fromUnits, const U toUnits)
     {
         return scaleMap.transform(fromUnits, toUnits);
     }
@@ -163,7 +163,7 @@ struct ScaleOffseter : Transformer<U, ScaleOffset>
 
     } scaleOffsetMap;
 
-    inline static ScaleOffset transform(const U fromUnits, const U toUnits)
+    inline static ScaleOffset& transform(const U fromUnits, const U toUnits)
     {
         return scaleOffsetMap.transform(fromUnits, toUnits);
     }
@@ -171,13 +171,13 @@ struct ScaleOffseter : Transformer<U, ScaleOffset>
 
 /// front-facing fncs
 template <class U>
-Scale scale(const U fromUnits, const U toUnits)
+Scale& scale(const U fromUnits, const U toUnits)
 {
     return Scaler<U>::transform(fromUnits, toUnits);
 }
 
 template <class U>
-ScaleOffset scaleOffset(const U fromUnits, const U toUnits)
+ScaleOffset& scaleOffset(const U fromUnits, const U toUnits)
 {
     return ScaleOffseter<U>::transform(fromUnits, toUnits);
 }
@@ -211,9 +211,8 @@ struct TransformVal
 
     ~TransformVal() = default;
 
-    operator double() const { return x; }
-
-    double* ptr() { return &x; }
+    operator const double&() const { return x; }
+    operator double&() { return x; }
 
     TransformVal& operator=(double x_in)
     {
@@ -229,7 +228,7 @@ struct TransformVal
 
 template <class U, U units>
 struct ScaleVal : TransformVal<U, Scale, units>
-{
+{å
     using TransformVal<U, Scale, units>::x;
 
     ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
