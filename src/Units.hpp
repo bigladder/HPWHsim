@@ -63,7 +63,7 @@ enum class Energy
     kWh, // kilowatt hours
     Btu, // british thermal units
     J,   // joules
-    Wh   //watt hours
+    Wh   // watt hours
 } inline kJ = Energy::kJ, kWh = Energy::kWh, Btu = Energy::Btu, J = Energy::J, Wh = Energy::Wh;
 
 /* power units */
@@ -138,8 +138,11 @@ inline ScaleOffseter<Temp>::ScaleOffsetMap ScaleOffseter<Temp>::scaleOffsetMap(
     C, {{F, {Scale(F_per_C), Offset(offsetC_F)}}, {K, {Scale(1.), Offset(offsetC_K)}}});
 
 template <>
-inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(
-    kJ, {{kWh, scale(s, h)}, {Btu, Scale(1. / kJ_per_Btu)}, {J, Scale(1000.)}, {Wh, Scale(1000.) * scale(s, h)}});
+inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(kJ,
+                                                         {{kWh, scale(s, h)},
+                                                          {Btu, Scale(1. / kJ_per_Btu)},
+                                                          {J, Scale(1000.)},
+                                                          {Wh, Scale(1000.) * scale(s, h)}});
 
 template <>
 inline Scaler<Power>::ScaleMap
