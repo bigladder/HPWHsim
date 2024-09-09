@@ -111,9 +111,9 @@ struct Transformer
             insert({{uRef, uRef}, T::ident()});
             for (auto transform0 = transforms.begin(); transform0 != transforms.end(); ++transform0)
             {
-                auto t0 = transform0->first;    // e.g., Time::min
-                auto f0 = transform0->second;   // e.g., 1. / s_per_min
-                insert({{t0, t0}, T::ident()}); // e.g., 1.
+                auto t0 = transform0->first;  // e.g., Time::min
+                auto f0 = transform0->second; // e.g., 1. / s_per_min
+                // insert({{t0, t0}, T::ident()}); // e.g., 1.
                 insert({{t0, uRef}, f0.inverse()});
                 insert({{uRef, t0}, f0});
 
@@ -127,7 +127,10 @@ struct Transformer
             }
         }
 
-        inline T& transform(const U fromUnits, const U toUnits) { return at({fromUnits, toUnits}); }
+        inline T transform(const U fromUnits, const U toUnits)
+        {
+            return (fromUnits != toUnits) ? at({fromUnits, toUnits}) : T::ident();
+        }
     };
 };
 
@@ -144,7 +147,7 @@ struct Scaler : Transformer<U, Scale>
 
     } scaleMap;
 
-    inline static Scale& transform(const U fromUnits, const U toUnits)
+    inline static Scale transform(const U fromUnits, const U toUnits)
     {
         return scaleMap.transform(fromUnits, toUnits);
     }
@@ -163,7 +166,7 @@ struct ScaleOffseter : Transformer<U, ScaleOffset>
 
     } scaleOffsetMap;
 
-    inline static ScaleOffset& transform(const U fromUnits, const U toUnits)
+    inline static ScaleOffset transform(const U fromUnits, const U toUnits)
     {
         return scaleOffsetMap.transform(fromUnits, toUnits);
     }
@@ -171,13 +174,13 @@ struct ScaleOffseter : Transformer<U, ScaleOffset>
 
 /// front-facing fncs
 template <class U>
-Scale& scale(const U fromUnits, const U toUnits)
+Scale scale(const U fromUnits, const U toUnits)
 {
     return Scaler<U>::transform(fromUnits, toUnits);
 }
 
 template <class U>
-ScaleOffset& scaleOffset(const U fromUnits, const U toUnits)
+ScaleOffset scaleOffset(const U fromUnits, const U toUnits)
 {
     return ScaleOffseter<U>::transform(fromUnits, toUnits);
 }
@@ -440,9 +443,9 @@ struct ScaleVect : public TransformVect<U, Scale, units>
             xV.push_back(s_);
     }
 
-    ScaleVal<U, units> const &operator[](const std::size_t i) const { return xV[i]; }
+    ScaleVal<U, units> const& operator[](const std::size_t i) const { return xV[i]; }
 
-    ScaleVal<U, units> &operator[](const std::size_t i)
+    ScaleVal<U, units>& operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleVal<U, units>&>(xV[i]);
     }

@@ -2534,9 +2534,9 @@ void HPWH::updateTankTemps(
                     tankTs_t[i] =
                         (inletT * (drawVolume - inlet2Vol) + inlet2T * inlet2Vol) / drawVolume;
                 }
-                outletT =
-                    (outletT / getNumNodes() * tankVolume + tankTs_t[0] * (drawVolume - tankVolume)) /
-                    drawVolume * remainingDrawVolume_N;
+                outletT = (outletT / getNumNodes() * tankVolume +
+                           tankTs_t[0] * (drawVolume - tankVolume)) /
+                          drawVolume * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
             }
@@ -2549,8 +2549,7 @@ void HPWH::updateTankTemps(
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                double outputHeat_kJ =
-                    incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs_t.back();
+                double outputHeat_kJ = incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs_t.back();
                 totalExpelledHeat_kJ += outputHeat_kJ;
                 tankTs_t.back() -= outputHeat_kJ / nodeCp_kJ_per_C;
 
@@ -2610,10 +2609,9 @@ void HPWH::updateTankTemps(
         standbyLossesBottom = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
                                            (tankTs_t[0] - tankAmbientT(Units::C)),
                                        Units::kJ);
-        standbyLossesTop =
-            Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                         (tankTs_t[getNumNodes() - 1] - tankAmbientT(Units::C)),
-                     Units::kJ);
+        standbyLossesTop = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
+                                        (tankTs_t[getNumNodes() - 1] - tankAmbientT(Units::C)),
+                                    Units::kJ);
 
         nextTankTs_t.front() -= standbyLossesBottom(Units::kJ) / nodeCp_kJ_per_C;
         nextTankTs_t.back() -= standbyLossesTop(Units::kJ) / nodeCp_kJ_per_C;
