@@ -1270,9 +1270,13 @@ class HPWH : public Courier::Sender
     /**< holds the temperature of each node - 0 is the bottom node  */
     TempVect_t tankTs;
 
+    std::vector<double> &tankTs_t = tankTs;
+
     /**< holds the future temperature of each node for the conduction calculation - 0 is the bottom
      * node  */
     TempVect_t nextTankTs;
+
+    std::vector<double> &nextTankTs_t = nextTankTs;
 
     DRMODES prevDRstatus;
     /**< the DRstatus of the tank in the previous time step and at the end of runOneStep */

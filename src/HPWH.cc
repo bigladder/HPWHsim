@@ -2104,12 +2104,12 @@ HPWH::Temp_t HPWH::getLocationT() const { return locationT; }
 HPWH::Temp_t HPWH::getAverageTankT() const
 {
     double totalT(0.);
-    const std::vector<double>& T_V = tankTs;
-    for (auto& T : T_V)
+
+    for (auto& T : tankTs_t)
     {
         totalT += T;
     }
-    return Temp_t(totalT / static_cast<double>(getNumNodes()));
+    return totalT / static_cast<double>(getNumNodes());
 }
 
 //-----------------------------------------------------------------------------
@@ -2119,20 +2119,18 @@ HPWH::Temp_t HPWH::getAverageTankT() const
 //-----------------------------------------------------------------------------
 HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
-    // TempVect_t resampledTankTs(dist.size());
-
-    std::vector<double> resampledTankTs(dist.size());
-    resample(resampledTankTs, tankTs);
+    std::vector<double> resampledTankTs_t(dist.size());
+    resample(resampledTankTs_t, tankTs_t);
 
     double tankT(0);
 
     std::size_t j = 0;
-    for (auto& nodeT : resampledTankTs)
+    for (auto& nodeT : resampledTankTs_t)
     {
         tankT += dist[j] * nodeT;
         ++j;
     }
-    return Temp_t(tankT);
+    return tankT;
 }
 
 //-----------------------------------------------------------------------------
@@ -2150,32 +2148,32 @@ HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeig
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTs(LOGIC_SIZE);
-    resample(resampledTankTs, tankTs);
+    std::vector<double> resampledTankTs_t(LOGIC_SIZE);
+    resample(resampledTankTs_t, tankTs_t);
 
     for (auto& nodeWeight : nodeWeights)
     {
         if (nodeWeight.nodeNum == 0)
         { // bottom node only
-            sum += tankTs.front() * nodeWeight.weight;
+            sum += tankTs_t.front() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
         else if (nodeWeight.nodeNum > LOGIC_SIZE)
         { // top node only
-            sum += tankTs.back() * nodeWeight.weight;
+            sum += tankTs_t.back() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
         else
         { // general case; sum over all weighted nodes
-            sum += resampledTankTs[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
+            sum += resampledTankTs_t[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
                    nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
     }
-    return Temp_t(sum / totWeight);
+    return sum / totWeight;
 }
 
-void HPWH::setTankToT(Temp_t T) { setTankTs({{T, T}}); }
+void HPWH::setTankToT(Temp_t T) { setTankTs({{T(Units::C)}, Units::C}); }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -2515,13 +2513,13 @@ void HPWH::updateTankTemps(
         if (hasHeatExchanger)
         {
             outletT = inletT;
-            for (auto& nodeT : tankTs)
+            for (auto& nodeT_C : tankTs_t)
             {
-                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT(Units::C) - outletT(Units::C)),
+                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT_C - outletT(Units::C)),
                                          Units::kJ);
                 Energy_t heatExchange = nodeHeatExchangerEffectiveness * maxHeatExchange;
 
-                nodeT -= Temp_t(heatExchange(Units::kJ) / nodeCp_kJ_per_C, Units::C);
+                nodeT_C -= heatExchange(Units::kJ) / nodeCp_kJ_per_C;
                 outletT += Temp_t(heatExchange(Units::kJ) / drawCp_kJ_per_C, Units::C);
             }
         }
@@ -2532,12 +2530,12 @@ void HPWH::updateTankTemps(
             {
                 for (int i = 0; i < getNumNodes(); i++)
                 {
-                    outletT += Temp_d_t(tankTs[i](Units::C));
-                    tankTs[i] =
+                    outletT += Temp_d_t(tankTs_t[i]);
+                    tankTs_t[i] =
                         (inletT * (drawVolume - inlet2Vol) + inlet2T * inlet2Vol) / drawVolume;
                 }
                 outletT =
-                    (outletT / getNumNodes() * tankVolume + tankTs[0] * (drawVolume - tankVolume)) /
+                    (outletT / getNumNodes() * tankVolume + tankTs_t[0] * (drawVolume - tankVolume)) /
                     drawVolume * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
@@ -2552,9 +2550,9 @@ void HPWH::updateTankTemps(
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
                 double outputHeat_kJ =
-                    incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs.back()(Units::C);
+                    incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs_t.back();
                 totalExpelledHeat_kJ += outputHeat_kJ;
-                tankTs.back() -= Temp_d_t(outputHeat_kJ / nodeCp_kJ_per_C, Units::dC);
+                tankTs_t.back() -= outputHeat_kJ / nodeCp_kJ_per_C;
 
                 for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
@@ -2563,22 +2561,22 @@ void HPWH::updateTankTemps(
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        tankTs[i] +=
+                        tankTs_t[i] +=
                             Temp_t(incrementalDrawVolume_N * highInletFraction * highInletT);
                     }
                     if (i == lowInletNodeIndex)
                     {
                         inletFraction += lowInletFraction;
-                        tankTs[i] +=
+                        tankTs_t[i] +=
                             Temp_d_t(incrementalDrawVolume_N * lowInletFraction * lowInletT);
                     }
 
                     if (i > 0)
                     {
                         Temp_d_t transfer_dT(incrementalDrawVolume_N * (1. - inletFraction) *
-                                             tankTs[i - 1]);
-                        tankTs[i] += transfer_dT;
-                        tankTs[i - 1] -= transfer_dT;
+                                             tankTs_t[i - 1]);
+                        tankTs_t[i] += transfer_dT;
+                        tankTs_t[i - 1] -= transfer_dT;
                     }
                 }
 
@@ -2599,7 +2597,7 @@ void HPWH::updateTankTemps(
     } // end if(draw_volume > 0)
 
     // Initialize newTankTemps_C
-    nextTankTs = tankTs;
+    nextTankTs_t = tankTs_t;
 
     Energy_t standbyLossesBottom = 0.;
     Energy_t standbyLossesTop = 0.;
@@ -2610,15 +2608,15 @@ void HPWH::updateTankTemps(
         UA_t standbyLossRate = tankUA * fracAreaTop;
 
         standbyLossesBottom = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                                           (tankTs[0](Units::C) - tankAmbientT(Units::C)),
+                                           (tankTs_t[0] - tankAmbientT(Units::C)),
                                        Units::kJ);
         standbyLossesTop =
             Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                         (tankTs[getNumNodes() - 1](Units::C) - tankAmbientT(Units::C)),
+                         (tankTs_t[getNumNodes() - 1] - tankAmbientT(Units::C)),
                      Units::kJ);
 
-        nextTankTs.front() -= Temp_t(standbyLossesBottom(Units::kJ) / nodeCp_kJ_per_C, Units::C);
-        nextTankTs.back() -= Temp_t(standbyLossesTop(Units::kJ) / nodeCp_kJ_per_C, Units::C);
+        nextTankTs_t.front() -= standbyLossesBottom(Units::kJ) / nodeCp_kJ_per_C;
+        nextTankTs_t.back() -= standbyLossesTop(Units::kJ) / nodeCp_kJ_per_C;
     }
 
     // Standby losses from the sides of the tank
@@ -2628,11 +2626,11 @@ void HPWH::updateTankTemps(
         {
             Energy_t standbyLossesNode =
                 Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                             (tankTs[i](Units::C) - tankAmbientT(Units::C)),
+                             (tankTs_t[i] - tankAmbientT(Units::C)),
                          Units::kJ);
             standbyLossesSides += standbyLossesNode;
 
-            nextTankTs[i] -= Temp_t(standbyLossesNode(Units::kJ) / nodeCp_kJ_per_C, Units::C);
+            nextTankTs_t[i] -= standbyLossesNode(Units::kJ) / nodeCp_kJ_per_C;
         }
     }
 
@@ -2652,19 +2650,19 @@ void HPWH::updateTankTemps(
         // End nodes
         if (getNumNodes() > 1)
         { // inner edges of top and bottom nodes
-            nextTankTs.front() += tau * (tankTs[1] - tankTs.front());
-            nextTankTs.back() += tau * (tankTs[getNumNodes() - 2] - tankTs.back());
+            nextTankTs_t.front() += tau * (tankTs_t[1] - tankTs_t.front());
+            nextTankTs_t.back() += tau * (tankTs_t[getNumNodes() - 2] - tankTs_t.back());
         }
 
         // Internal nodes
         for (int i = 1; i < getNumNodes() - 1; i++)
         {
-            nextTankTs[i] += tau * (tankTs[i + 1] - 2. * tankTs[i] + tankTs[i - 1]);
+            nextTankTs_t[i] += tau * (tankTs_t[i + 1] - 2. * tankTs_t[i] + tankTs_t[i - 1]);
         }
     }
 
     // Update tankTs
-    tankTs = nextTankTs;
+    tankTs_t = nextTankTs_t;
 
     standbyLosses += standbyLossesBottom + standbyLossesTop + standbyLossesSides;
 
