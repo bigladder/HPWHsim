@@ -57,73 +57,12 @@ const double HPWH::DENSITYWATER_kg_per_L = 0.995; /// mass density of water
 const double HPWH::KWATER_W_per_mC = 0.62;        /// thermal conductivity of water
 const double HPWH::CPWATER_kJ_per_kgC = 4.180;    /// specific heat capcity of water
 
-const HPWH::Temp_t HPWH::UNINITIALIZED_LOCATIONTEMP(-100., Units::F);
+const HPWH::Temp_t HPWH::UNINITIALIZED_LOCATIONTEMP = {-100., Units::F};
 
-const HPWH::Temp_t HPWH::MAXOUTLET_R134A(160., Units::F);
-const HPWH::Temp_t HPWH::MAXOUTLET_R410A(140., Units::F);
-const HPWH::Temp_t HPWH::MAXOUTLET_R744(190., Units::F);
-const HPWH::Temp_d_t HPWH::MINSINGLEPASSLIFT(15., Units::dF);
-
-std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
-    {HPWH::FirstHourRating::Desig::VerySmall, 5},
-    {HPWH::FirstHourRating::Desig::Low, 3},
-    {HPWH::FirstHourRating::Desig::Medium, 3},
-    {HPWH::FirstHourRating::Desig::High, 4}};
-
-std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPatterns = {
-    {HPWH::FirstHourRating::Desig::VerySmall,
-     {{HM_TO_MIN(0, 00), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(1, 05), 1.9, 3.8},
-      {HM_TO_MIN(1, 10), 1.9, 3.8},
-      {HM_TO_MIN(1, 15), 1.9, 3.8},
-      {HM_TO_MIN(8, 00), 3.8, 3.8},
-      {HM_TO_MIN(8, 15), 7.6, 3.8},
-      {HM_TO_MIN(9, 00), 5.7, 3.8},
-      {HM_TO_MIN(9, 15), 3.8, 3.8}}},
-
-    {HPWH::FirstHourRating::Desig::Low,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(10, 30), 22.7, 6.4},
-      {HM_TO_MIN(11, 30), 15.1, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 11.4, 6.4}}},
-
-    {HPWH::FirstHourRating::Desig::Medium,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 34.1, 6.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 26.5, 6.4}}},
-
-    {HPWH::FirstHourRating::Desig::High,
-     {{HM_TO_MIN(0, 00), 102, 11.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(0, 40), 3.8, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 56.8, 11.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 7.6, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 30), 7.6, 6.4},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
+const HPWH::Temp_t HPWH::MAXOUTLET_R134A = {160., Units::F};
+const HPWH::Temp_t HPWH::MAXOUTLET_R410A = {140., Units::F};
+const HPWH::Temp_t HPWH::MAXOUTLET_R744 = {190., Units::F};
+const HPWH::Temp_d_t HPWH::MINSINGLEPASSLIFT = {15., Units::dF};
 
 double
 getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
@@ -4818,7 +4757,67 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& testSummary,
                        StandardTestOptions& testOptions)
 {
-    // select the first draw cluster size and pattern
+    /// collection of standard draw patterns
+    static std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> firstDrawClusterSizes = {
+        {HPWH::FirstHourRating::Desig::VerySmall, 5},
+        {HPWH::FirstHourRating::Desig::Low, 3},
+        {HPWH::FirstHourRating::Desig::Medium, 3},
+        {HPWH::FirstHourRating::Desig::High, 4}};
+
+    static std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> drawPatterns = {
+        {HPWH::FirstHourRating::Desig::VerySmall,
+         {{HM_TO_MIN(0, 00), 7.6, 3.8},
+          {HM_TO_MIN(1, 00), 3.8, 3.8},
+          {HM_TO_MIN(1, 05), 1.9, 3.8},
+          {HM_TO_MIN(1, 10), 1.9, 3.8},
+          {HM_TO_MIN(1, 15), 1.9, 3.8},
+          {HM_TO_MIN(8, 00), 3.8, 3.8},
+          {HM_TO_MIN(8, 15), 7.6, 3.8},
+          {HM_TO_MIN(9, 00), 5.7, 3.8},
+          {HM_TO_MIN(9, 15), 3.8, 3.8}}},
+
+        {HPWH::FirstHourRating::Desig::Low,
+         {{HM_TO_MIN(0, 00), 56.8, 6.4},
+          {HM_TO_MIN(0, 30), 7.6, 3.8},
+          {HM_TO_MIN(1, 00), 3.8, 3.8},
+          {HM_TO_MIN(10, 30), 22.7, 6.4},
+          {HM_TO_MIN(11, 30), 15.1, 6.4},
+          {HM_TO_MIN(12, 00), 3.8, 3.8},
+          {HM_TO_MIN(12, 45), 3.8, 3.8},
+          {HM_TO_MIN(12, 50), 3.8, 3.8},
+          {HM_TO_MIN(16, 15), 7.6, 3.8},
+          {HM_TO_MIN(16, 45), 7.6, 6.4},
+          {HM_TO_MIN(17, 00), 11.4, 6.4}}},
+
+        {HPWH::FirstHourRating::Desig::Medium,
+         {{HM_TO_MIN(0, 00), 56.8, 6.4},
+          {HM_TO_MIN(0, 30), 7.6, 3.8},
+          {HM_TO_MIN(1, 40), 34.1, 6.4},
+          {HM_TO_MIN(10, 30), 34.1, 6.4},
+          {HM_TO_MIN(11, 30), 18.9, 6.4},
+          {HM_TO_MIN(12, 00), 3.8, 3.8},
+          {HM_TO_MIN(12, 45), 3.8, 3.8},
+          {HM_TO_MIN(12, 50), 3.8, 3.8},
+          {HM_TO_MIN(16, 00), 3.8, 3.8},
+          {HM_TO_MIN(16, 15), 7.6, 3.8},
+          {HM_TO_MIN(16, 45), 7.6, 6.4},
+          {HM_TO_MIN(17, 00), 26.5, 6.4}}},
+
+        {HPWH::FirstHourRating::Desig::High,
+         {{HM_TO_MIN(0, 00), 102, 11.4},
+          {HM_TO_MIN(0, 30), 7.6, 3.8},
+          {HM_TO_MIN(0, 40), 3.8, 3.8},
+          {HM_TO_MIN(1, 40), 34.1, 6.4},
+          {HM_TO_MIN(10, 30), 56.8, 11.4},
+          {HM_TO_MIN(11, 30), 18.9, 6.4},
+          {HM_TO_MIN(12, 00), 3.8, 3.8},
+          {HM_TO_MIN(12, 45), 3.8, 3.8},
+          {HM_TO_MIN(12, 50), 3.8, 3.8},
+          {HM_TO_MIN(16, 00), 7.6, 3.8},
+          {HM_TO_MIN(16, 15), 7.6, 3.8},
+          {HM_TO_MIN(16, 30), 7.6, 6.4},
+          {HM_TO_MIN(16, 45), 7.6, 6.4},
+          {HM_TO_MIN(17, 00), 53.0, 11.4}}}}; // select the first draw cluster size and pattern
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 

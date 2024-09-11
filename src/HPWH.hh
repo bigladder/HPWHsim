@@ -109,22 +109,27 @@ class HPWH : public Courier::Sender
     static constexpr double TOL_MINVALUE = 0.0001; /**< any amount of heat distribution less than
                                          this is reduced to 0 this saves on computations */
 
-    static const Temp_t UNINITIALIZED_LOCATIONTEMP; /**< this is
-   used to tell the simulation when the location temperature has not been initialized */
     inline static const double ASPECTRATIO = 4.75;
     /**< A constant to define the aspect ratio between the tank height and
                      radius (H/R). Used to find the radius and tank height from the volume and then
                      find the surface area. It is derived from the median value of 88
                      insulated storage tanks currently available on the market from
                      Sanden, AOSmith, HTP, Rheem, and Niles,  */
-    static const Temp_t
-        MAXOUTLET_R134A; /**< The max oulet temperature for compressors with the refrigerant R134a*/
-    static const Temp_t
-        MAXOUTLET_R410A; /**< The max oulet temperature for compressors with the refrigerant R410a*/
-    static const Temp_t
-        MAXOUTLET_R744; /**< The max oulet temperature for compressors with the refrigerant R744*/
-    static const Temp_d_t
-        MINSINGLEPASSLIFT; /**< The minimum temperature lift for single pass compressors */
+
+    static const Temp_t UNINITIALIZED_LOCATIONTEMP; /**< this is
+    used to tell the simulation when the location temperature has not been initialized */
+
+    static const Temp_t MAXOUTLET_R134A;
+    /**< The max oulet temperature for compressors with the refrigerant R134a*/
+
+    static const Temp_t MAXOUTLET_R410A;
+    /**< The max oulet temperature for compressors with the refrigerant R410a*/
+
+    static const Temp_t MAXOUTLET_R744;
+    /**< The max oulet temperature for compressors with the refrigerant R744*/
+
+    static const Temp_d_t MINSINGLEPASSLIFT;
+    /**< The minimum temperature lift for single pass compressors */
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
          const std::string& name_in = "hpwh"); /**< default constructor */
@@ -1107,11 +1112,6 @@ class HPWH : public Courier::Sender
 
     /// sequence of draws in pattern
     typedef std::vector<Draw> DrawPattern;
-
-    static std::unordered_map<FirstHourRating::Desig, std::size_t> firstDrawClusterSizes;
-
-    /// collection of standard draw patterns
-    static std::unordered_map<FirstHourRating::Desig, DrawPattern> drawPatterns;
 
     /// fields for test output to csv
     struct OutputData
