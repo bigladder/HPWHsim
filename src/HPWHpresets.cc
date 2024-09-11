@@ -257,7 +257,7 @@ void HPWH::initGeneric(const Volume_t tankVol, RFactor_t rFactor, Temp_d_t resUs
     compressor->maxT = {120., Units::F};
     compressor->hysteresis_dT = {2, Units::dF};
     compressor->configuration = HeatSource::CONFIG_WRAPPED;
-    compressor->maxSetpointT = MAXOUTLET_R134A;
+    compressor->maxSetpointT = MAXOUTLET_R134A();
 
     // top resistor values
     resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -515,7 +515,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {4, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->addTurnOnLogic(bottomThird({20, Units::dF}));
         compressor->addTurnOnLogic(standby({20, Units::dC}));
@@ -569,7 +569,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = 0; // no hysteresis
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->addTurnOnLogic(bottomThird({20, Units::dC}));
         compressor->addTurnOnLogic(standby({15, Units::C}));
@@ -619,7 +619,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {4, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4250, Units::W});
@@ -689,7 +689,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {4, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4250, Units::W});
@@ -760,7 +760,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {4, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4200, Units::W});
@@ -848,7 +848,7 @@ void HPWH::initPreset(MODELS presetNum)
             setTankSizeWithSameU({200., Units::gal});
             // logic conditions
             compressor->minT = {-4.0, Units::F};
-            compressor->maxSetpointT = MAXOUTLET_R410A;
+            compressor->maxSetpointT = MAXOUTLET_R410A();
 
             compressor->perfMap.push_back({
                 {100, Units::F},
@@ -883,7 +883,7 @@ void HPWH::initPreset(MODELS presetNum)
         {
             // logic conditions
             compressor->minT = {40., Units::F};
-            compressor->maxSetpointT = MAXOUTLET_R134A;
+            compressor->maxSetpointT = MAXOUTLET_R134A();
 
             if (presetNum == MODELS_ColmacCxA_10_SP)
             {
@@ -1104,7 +1104,7 @@ void HPWH::initPreset(MODELS presetNum)
             // logic conditions
             compressor->minT = {-4.0, Units::F};
             compressor->maxT = {105., Units::F};
-            compressor->maxSetpointT = MAXOUTLET_R410A;
+            compressor->maxSetpointT = MAXOUTLET_R410A();
             compressor->perfMap.push_back({
                 {100, Units::F},
 
@@ -1129,7 +1129,7 @@ void HPWH::initPreset(MODELS presetNum)
             // logic conditions
             compressor->minT = {40., Units::F};
             compressor->maxT = {105., Units::F};
-            compressor->maxSetpointT = MAXOUTLET_R134A;
+            compressor->maxSetpointT = MAXOUTLET_R134A();
 
             if (presetNum == MODELS_ColmacCxA_10_MP)
             {
@@ -1289,7 +1289,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         compressor->maxT = {120.0, Units::F}; // Max air temperature
         compressor->hysteresis_dT = 0;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // Defines the maximum outlet temperature at the a low air temperature
         compressor->maxOut_at_LowT.outT = {140., Units::F};
@@ -1760,7 +1760,7 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         compressor->minT = {45., Units::F};
         compressor->maxT = Temp_t(110., Units::F);
-        compressor->maxSetpointT = MAXOUTLET_R134A; // data says 150...
+        compressor->maxSetpointT = MAXOUTLET_R134A(); // data says 150...
 
         if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
             presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
@@ -2181,7 +2181,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = {4, Units::dC};
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->maxSetpointT = MAXOUTLET_R744;
+        compressor->maxSetpointT = MAXOUTLET_R744();
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(8);
@@ -2275,7 +2275,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = {4, Units::dC};
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
-        compressor->maxSetpointT = MAXOUTLET_R744;
+        compressor->maxSetpointT = MAXOUTLET_R744();
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
@@ -2352,7 +2352,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2250)
@@ -2457,7 +2457,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2265)
@@ -2526,7 +2526,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = false;
         compressor->typeOfHeatSource = TYPE_compressor;
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->setCondensity({1., 0., 0., 0.});
 
@@ -2621,7 +2621,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
         compressor->typeOfHeatSource = TYPE_compressor;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -2720,7 +2720,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {110.0, Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         Power_t wattRE(6000, Units::W); // 5650.;
@@ -2815,7 +2815,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {1., Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         resistiveElementTop->setupAsResistiveElement(8, Power_t(4500, Units::W));
         resistiveElementTop->isVIP = true;
@@ -2882,7 +2882,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -2962,7 +2962,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->addTurnOnLogic(bottomThird({33.6883, Units::dF}));
         compressor->addTurnOnLogic(standby({12.392, Units::dF}));
         compressor->minT = {37, Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -3013,7 +3013,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -3083,7 +3083,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -3154,7 +3154,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -3223,7 +3223,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -3308,7 +3308,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120.0, Units::F};
         compressor->hysteresis_dT = {1, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4500, Units::W});
@@ -3395,7 +3395,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = {1, Units::dF};
         compressor->minT = {37.0, Units::F};
         compressor->maxT = {120.0, Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3484,7 +3484,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120.0, Units::F};
         compressor->hysteresis_dT = {1, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // logic conditions
         Temp_d_t compStart_dT = {32, Units::dF};
@@ -3535,7 +3535,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = {1, Units::dF};
         compressor->minT = {37.0, Units::F};
         compressor->maxT = {120.0, Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3586,7 +3586,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = {1, Units::dF};
         compressor->minT = {40.0, Units::F};
         compressor->maxT = {120.0, Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
@@ -3657,7 +3657,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = 0;
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->addTurnOnLogic(thirdSixth({6.5509, Units::dF}));
         compressor->addShutOffLogic(bottomTwelfthMaxTemp({100, Units::F}));
@@ -3706,7 +3706,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4500, Units::W});
@@ -3774,7 +3774,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -3821,7 +3821,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
         compressor->typeOfHeatSource = TYPE_compressor;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3911,7 +3911,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -4001,7 +4001,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, {4500, Units::W});
@@ -4111,7 +4111,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->minT = {40., Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
@@ -4196,7 +4196,7 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         compressor->minT = {40., Units::F};
         compressor->maxT = {105., Units::F};
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         setTankSizeWithSameU({600., Units::gal});
         compressor->mpFlowRate = {25., Units::gal_per_min};
@@ -4418,7 +4418,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {120., Units::F};
         compressor->hysteresis_dT = {1., Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpointT = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(8, {4500, Units::W});

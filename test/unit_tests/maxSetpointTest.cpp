@@ -67,10 +67,10 @@ TEST(MaxSetpointTest, NyleC90A_SP)
 
     EXPECT_FALSE(hpwh.isNewSetpointPossible({101., Units::C}, num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.isNewSetpointPossible({99., Units::C}, num, why)); // Can't go to near boiling
-    EXPECT_EQ(HPWH::MAXOUTLET_R134A, num); // Assert we're getting the right number
+    EXPECT_EQ(HPWH::MAXOUTLET_R134A(), num); // Assert we're getting the right number
     EXPECT_TRUE(hpwh.isNewSetpointPossible({60., Units::C}, num, why)); // Can go to normal
     EXPECT_TRUE(
-        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A, num, why)); // Can go to programed max
+        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R134A(), num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
     EXPECT_ANY_THROW(hpwh.setSetpointT({101., Units::C})); // Can't go above boiling
@@ -92,10 +92,10 @@ TEST(MaxSetpointTest, ColmacCxV_5_SP)
 
     EXPECT_FALSE(hpwh.isNewSetpointPossible({101., Units::C}, num, why)); // Can't go above boiling
     EXPECT_FALSE(hpwh.isNewSetpointPossible({99., Units::C}, num, why)); // Can't go to near boiling
-    EXPECT_TRUE(HPWH::MAXOUTLET_R410A == num); // Assert we're getting the right number
+    EXPECT_TRUE(HPWH::MAXOUTLET_R410A() == num); // Assert we're getting the right number
     EXPECT_TRUE(hpwh.isNewSetpointPossible({50., Units::C}, num, why)); // Can go to normal
     EXPECT_TRUE(
-        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A, num, why)); // Can go to programed max
+        hpwh.isNewSetpointPossible(HPWH::MAXOUTLET_R410A(), num, why)); // Can go to programed max
 
     // Check this carries over into setting the setpoint
     EXPECT_ANY_THROW(hpwh.setSetpointT({101., Units::C})); // Can't go above boiling

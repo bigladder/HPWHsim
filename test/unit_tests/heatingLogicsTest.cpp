@@ -62,19 +62,20 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         }
 
         { // testSetEnteringWaterShuffOffDeadbandToSmall
-            HPWH::GenTemp_t value = {HPWH::MINSINGLEPASSLIFT(Units::dC) - 1., Units::dC};
+            HPWH::GenTemp_t value = {HPWH::MINSINGLEPASSLIFT()(Units::dC) - 1., Units::dC};
             EXPECT_ANY_THROW(
                 hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = HPWH::MINSINGLEPASSLIFT;
+            value = HPWH::MINSINGLEPASSLIFT();
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = {hpwh.getSetpointT()(Units::C) - (HPWH::MINSINGLEPASSLIFT(Units::dC) - 1),
+            value = {hpwh.getSetpointT()(Units::C) - (HPWH::MINSINGLEPASSLIFT()(Units::dC) - 1),
                      Units::C};
             EXPECT_ANY_THROW(
                 hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = {hpwh.getSetpointT()(Units::C) - HPWH::MINSINGLEPASSLIFT(Units::dC), Units::C};
+            value = {hpwh.getSetpointT()(Units::C) - HPWH::MINSINGLEPASSLIFT()(Units::dC),
+                     Units::C};
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
         }
 
@@ -197,7 +198,6 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
         }
 
         { // testChangeToStateofChargeControlled
-            double value = HPWH::MINSINGLEPASSLIFT - 1.;
             externalT = {20., Units::C};
             setpointT = {149., Units::F};
 
@@ -229,7 +229,7 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()))
             {
                 EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                    {setpointT(Units::C) - HPWH::MINSINGLEPASSLIFT(Units::dC), Units::C},
+                    {setpointT(Units::C) - HPWH::MINSINGLEPASSLIFT()(Units::dC), Units::C},
                     hpwh.getCompressorIndex())); // Force to ignore this part.
             }
             EXPECT_NO_THROW(hpwh.setTankToT({100., Units::F})); // .51
