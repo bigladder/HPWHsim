@@ -116,20 +116,11 @@ class HPWH : public Courier::Sender
                      insulated storage tanks currently available on the market from
                      Sanden, AOSmith, HTP, Rheem, and Niles,  */
 
-    static const Temp_t UNINITIALIZED_LOCATIONTEMP; /**< this is
-    used to tell the simulation when the location temperature has not been initialized */
-
-    static const Temp_t MAXOUTLET_R134A;
-    /**< The max oulet temperature for compressors with the refrigerant R134a*/
-
-    static const Temp_t MAXOUTLET_R410A;
-    /**< The max oulet temperature for compressors with the refrigerant R410a*/
-
-    static const Temp_t MAXOUTLET_R744;
-    /**< The max oulet temperature for compressors with the refrigerant R744*/
-
-    static const Temp_d_t MINSINGLEPASSLIFT;
-    /**< The minimum temperature lift for single pass compressors */
+    inline static const Temp_t UNINITIALIZED_LOCATIONTEMP() { return {-500., Units::F}; }
+    inline static const Temp_t MAXOUTLET_R134A() { return {160., Units::F}; }
+    inline static const Temp_t MAXOUTLET_R410A() { return {140., Units::F}; }
+    inline static const Temp_t MAXOUTLET_R744() { return {190., Units::F}; }
+    inline static const Temp_d_t MINSINGLEPASSLIFT() { return {15., Units::dF}; }
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
          const std::string& name_in = "hpwh"); /**< default constructor */

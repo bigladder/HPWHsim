@@ -57,13 +57,6 @@ const double HPWH::DENSITYWATER_kg_per_L = 0.995; /// mass density of water
 const double HPWH::KWATER_W_per_mC = 0.62;        /// thermal conductivity of water
 const double HPWH::CPWATER_kJ_per_kgC = 4.180;    /// specific heat capcity of water
 
-const HPWH::Temp_t HPWH::UNINITIALIZED_LOCATIONTEMP = {-100., Units::F};
-
-const HPWH::Temp_t HPWH::MAXOUTLET_R134A = {160., Units::F};
-const HPWH::Temp_t HPWH::MAXOUTLET_R410A = {140., Units::F};
-const HPWH::Temp_t HPWH::MAXOUTLET_R744 = {190., Units::F};
-const HPWH::Temp_d_t HPWH::MINSINGLEPASSLIFT = {15., Units::dF};
-
 double
 getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
 {
@@ -538,7 +531,7 @@ void HPWH::setAllDefaults()
     haveInletT = false;
     currentSoCFraction = 1.;
     doTempDepression = false;
-    locationT = UNINITIALIZED_LOCATIONTEMP;
+    locationT = UNINITIALIZED_LOCATIONTEMP();
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
@@ -657,7 +650,7 @@ void HPWH::runOneStep(Volume_t drawVolume,
     Temp_t temperatureGoal = tankAmbientT;
     if (doTempDepression)
     {
-        if (locationT == UNINITIALIZED_LOCATIONTEMP)
+        if (locationT == UNINITIALIZED_LOCATIONTEMP())
         {
             locationT = tankAmbientT;
         }
@@ -1533,8 +1526,8 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
     if (highT.index() == 0)
     {
         // check difference with setpoint
-        if (Temp_t(setpointT(Units::C) - std::get<Temp_t>(highT)(Units::C), Units::C) <
-            MINSINGLEPASSLIFT)
+        if (setpointT(Units::C) - std::get<Temp_t>(highT)(Units::C) <
+            MINSINGLEPASSLIFT()(Units::dC))
         {
             highTempIsNotValid = true;
         }
@@ -1542,7 +1535,7 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
     else
     {
         auto dT = std::get<Temp_d_t>(highT);
-        if (dT < MINSINGLEPASSLIFT)
+        if (dT < MINSINGLEPASSLIFT())
         {
             highTempIsNotValid = true;
         }
@@ -1552,7 +1545,7 @@ void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
     {
         send_error(fmt::format("High temperature shut off is too close to the setpoint, expected "
                                "a minimum difference of {:g}",
-                               MINSINGLEPASSLIFT));
+                               MINSINGLEPASSLIFT()(Units::dC)));
     }
 
     for (const std::shared_ptr<HeatingLogic>& shutOffLogic :
