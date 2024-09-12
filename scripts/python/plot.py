@@ -250,7 +250,7 @@ def plot(measured_path, simulated_path):
 
     plot.finalize_plot()
     fig = plot.figure
-    plot_html = fig.to_html(full_html=False)
+    plot_html = fig.to_html(full_html=True)
     #print(plot_html)
     
     #plot.write_html_plot(output_path)
