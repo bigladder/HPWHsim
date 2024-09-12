@@ -34,18 +34,58 @@ body {font-family: Arial;}
   transition: max-height 0.2s ease-out;
   background-color: #f1f1f1;
 }
+
+.dropbtn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #ddd;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
+
 </style>
 
 </head>
 
 <body>
 
+    
 <form id="modelForm">
-    <label for="model_arg1">model spec:</label>
-    <input type="text" id="model_arg1" name="model_arg1" required><br><br>
+  <label for="model_spec">model spec:</label>
+  <select name="model_spec" id="model_spec">
+    <option selected="selected" value="Preset">Preset</option>
+    <option value="File">File</option>
+  </select><br><br>
 
-    <label for="model_arg2">model name:</label>
-    <input type="text" id="model_arg2" name="model_arg2" required><br><br>
+  <label for="model_name">model name:</label>
+  <input type="text" id="model_arg2" name="model name" required><br><br>
 </form>
 
 <script>
@@ -57,7 +97,7 @@ body {font-family: Arial;}
 <script>
   async function plot() {
     const model_form = document.getElementById('modelForm');
-    const farg1 = model_form.model_arg1.value;
+    const farg1 = model_form.model_spec.value;
     const farg2 = model_form.model_arg2.value;
 
     const plot_form = document.getElementById('plotForm');
@@ -87,13 +127,13 @@ body {font-family: Arial;}
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
-    model_form.model_arg1.value = farg1;
+    model_form.model_spec.value = farg1;
     model_form.model_arg2.value = farg2;
 
-    document.getElementById("model_arg1").value = farg1; 
+    document.getElementById("model_spec").value = farg1; 
     document.getElementById("model_arg2").value = farg2; 
  
-    document.getElementById("model_arg1").defaultValue = farg1; 
+    document.getElementById("model_spec").defaultValue = farg1; 
     document.getElementById("model_arg2").defaultValue = farg2; 
 
     document.getElementById("plot_arg1").value = farg3; 
@@ -116,7 +156,7 @@ body {font-family: Arial;}
 
   async function measure() {
     const model_form = document.getElementById('modelForm');
-    const farg1 = model_form.model_arg1.value;
+    const farg1 = model_form.model_spec.value;
     const farg2 = model_form.model_arg2.value;
 
     fst = 'arg1=' + farg1;
@@ -126,13 +166,13 @@ body {font-family: Arial;}
 
     const response = await fetch('http://localhost:8000/measure?' + fst, { signal: AbortSignal.timeout(5000) })
 
-    model_form.model_arg1.value = farg1;
+    model_form.model_spec.value = farg1;
     model_form.model_arg2.value = farg2;
 
-    document.getElementById("model_arg1").value = farg1; 
+    document.getElementById("model_spec").value = farg1; 
     document.getElementById("model_arg2").value = farg2; 
  
-    document.getElementById("model_arg1").defaultValue = farg1; 
+    document.getElementById("model_spec").defaultValue = farg1; 
     document.getElementById("model_arg2").defaultValue = farg2; 
 
     document.getElementById("results").style="display:block;"
