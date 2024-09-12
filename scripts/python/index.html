@@ -35,40 +35,20 @@ body {font-family: Arial;}
   background-color: #f1f1f1;
 }
 
-.dropbtn {
-  background-color: #04AA6D;
-  color: white;
-  padding: 16px;
-  font-size: 16px;
-  border: none;
+.wrap {
+  width: 1280px;
+  height: 480px;
+  overflow: hidden;
 }
 
-.dropdown {
-  position: relative;
-  display: inline-block;
+iframe {
+  width: 100% !important;
+  height: 150% !important;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+  -webkit-transform-origin: 0 0;
+  transform-origin: 0 0;
 }
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f1f1f1;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-
-.dropdown-content a {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-}
-
-.dropdown-content a:hover {background-color: #ddd;}
-
-.dropdown:hover .dropdown-content {display: block;}
-
-.dropdown:hover .dropbtn {background-color: #3e8e41;}
 
 </style>
 
@@ -79,37 +59,35 @@ body {font-family: Arial;}
     
 <form id="modelForm">
   <label for="model_spec">model spec:</label>
-  <select name="model_spec" id="model_spec">
+  <select name="model spec" id="model_spec">
     <option selected="selected" value="Preset">Preset</option>
     <option value="File">File</option>
   </select><br><br>
 
   <label for="model_name">model name:</label>
-  <input type="text" id="model_arg2" name="model name" required><br><br>
+  <input type="text" id="model_name" name="model name" required><br><br>
 </form>
 
 <script>
   const model_form = document.getElementById('modelForm');
-  model_form.model_arg1.value = "File";
-  model_form.model_arg2.value = "AquaThermAire";
+  model_form.model_spec.value = "File";
+  model_form.model_name.value = "AquaThermAire";
 </script>
 
 <script>
   async function plot() {
     const model_form = document.getElementById('modelForm');
     const farg1 = model_form.model_spec.value;
-    const farg2 = model_form.model_arg2.value;
+    const farg2 = model_form.model_name.value;
 
     const plot_form = document.getElementById('plotForm');
-    const farg3 = plot_form.plot_arg1.value;
-    const farg4 = plot_form.plot_arg2.value;
-    const farg5 = plot_form.plot_arg3.value;
+    const farg3 = plot_form.test_name.value;
+    const farg4 = plot_form.measured_name.value;
 
     fst = 'arg1=' + farg1;
     fst += '&arg2=' + farg2;
     fst += '&arg3=' + farg3;
     fst += '&arg4=' + farg4;
-    fst += '&arg5=' + farg5;
 
     document.getElementById("plot_btn").disabled = true;
 
@@ -120,36 +98,36 @@ body {font-family: Arial;}
 	  );
 
     const data = await response.json();
-    const energy_data = data["energy_data"];
+    const result = data["result"];
 
-    measE = energy_data["measuredE_Wh"].toFixed(2);
-    simE = energy_data["simulatedE_Wh"].toFixed(2);
+    plot_html = result["plot_html"];
+    measE = result["measuredE_Wh"].toFixed(2);
+    simE = result["simulatedE_Wh"].toFixed(2);
+
+    document.getElementById("plot_fig").srcdoc = plot_html;
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
     model_form.model_spec.value = farg1;
-    model_form.model_arg2.value = farg2;
+    model_form.model_name.value = farg2;
 
     document.getElementById("model_spec").value = farg1; 
-    document.getElementById("model_arg2").value = farg2; 
+    document.getElementById("model_name").value = farg2; 
  
     document.getElementById("model_spec").defaultValue = farg1; 
-    document.getElementById("model_arg2").defaultValue = farg2; 
+    document.getElementById("model_name").defaultValue = farg2; 
 
-    document.getElementById("plot_arg1").value = farg3; 
-    document.getElementById("plot_arg2").value = farg4; 
-    document.getElementById("plot_arg3").value = farg5; 
+    document.getElementById("test_name").value = farg3; 
+    document.getElementById("measured_name").value = farg4; 
 
-    document.getElementById("plot_arg1").defaultValue = farg3; 
-    document.getElementById("plot_arg2").defaultValue = farg4; 
-    document.getElementById("plot_arg3").defaultValue = farg5; 
+    document.getElementById("test_name").defaultValue = farg3; 
+    document.getElementById("measured_name").defaultValue = farg4; 
 
-    localStorage.setItem("plot_arg1", farg3);
-    localStorage.setItem("plot_arg2", farg4);
-    localStorage.setItem("plot_arg3", farg5);
+    localStorage.setItem("test_name", farg3);
+    localStorage.setItem("measured_name", farg4);
 
-    document.getElementById("plots").src = "../../build/test/output/" + farg4
-    document.getElementById("plots").style = "display:block;"
+    //document.getElementById("plot").document.write(plot)
+    document.getElementById("plot_fig").style = "display:block;"
   
     document.getElementById("plot_btn").disabled = false;
   }
@@ -157,7 +135,7 @@ body {font-family: Arial;}
   async function measure() {
     const model_form = document.getElementById('modelForm');
     const farg1 = model_form.model_spec.value;
-    const farg2 = model_form.model_arg2.value;
+    const farg2 = model_form.model_name.value;
 
     fst = 'arg1=' + farg1;
     fst += '&arg2=' + farg2;
@@ -167,13 +145,13 @@ body {font-family: Arial;}
     const response = await fetch('http://localhost:8000/measure?' + fst, { signal: AbortSignal.timeout(5000) })
 
     model_form.model_spec.value = farg1;
-    model_form.model_arg2.value = farg2;
+    model_form.model_name.value = farg2;
 
     document.getElementById("model_spec").value = farg1; 
-    document.getElementById("model_arg2").value = farg2; 
+    document.getElementById("model_name").value = farg2; 
  
     document.getElementById("model_spec").defaultValue = farg1; 
-    document.getElementById("model_arg2").defaultValue = farg2; 
+    document.getElementById("model_name").defaultValue = farg2; 
 
     document.getElementById("results").style="display:block;"
     document.getElementById("results").data = "";
@@ -184,30 +162,27 @@ body {font-family: Arial;}
 </script>
 
 
-<!-- content -->
+<!-- plot tab -->
 <button id="plot_tab" class="collapsible">Plot</button>
 <div class="content">
   <form id="plotForm">
-      <label for="plot_arg1">test name:</label>
-      <input type="text" id="plot_arg1" name="plot_arg1" required><br><br>
+      <label for="test_name">test name:</label>
+      <input type="text" id="test_name" name="test_name" required><br><br>
 
-      <label for="plot_arg2">plot name:</label>
-      <input type="text" id="plot_arg2" name="plot_arg2" required><br><br>
-
-      <label for="plot_arg3">measurements name:</label>
-      <input type="text" id="plot_arg3" name="plot_arg3" required><br><br>
+      <label for="measured_name">measured name:</label>
+      <input type="text" id="measured_name" name="measured_name" required><br><br>
 
       <button type="button" id="plot_btn" onclick="plot();">plot</button>
   </form>
 
-  <iframe title="Plots" src="" id="plots" width=1200 height=800 style="display:none;"></iframe>
+  <div class='wrap'>
+    <iframe id="plot_fig" srcdoc="" width=1200 height=1000 style="display:none;"></iframe>
+  </div>  <p id="energy_measured"></p>
 
-  <p id="energy_measured"></p>
   <p id="energy_simulated"></p> 
-
  </div>
 
-<!-- content -->
+<!-- measure tab -->
 <button id="measure_tab" class="collapsible">Measure</button>
 <div class="content">
   <button type="button" id="measure_btn" onclick="measure();">measure</button>
@@ -238,11 +213,8 @@ for (i = 0; i < coll.length; i++) {
 
 <script>
   const plot_form = document.getElementById('plotForm');
-  plot_form.plot_arg1.value = "villara_24hr67";
-  plot_form.plot_arg2.value = "plot.html"
-  plot_form.plot_arg3.value = "measured.csv";
-
-  //var plot_btn = document.getElementById("plot_btn");
+  plot_form.test_name.value = "villara_24hr67";
+  plot_form.measured_name.value = "measured.csv";
 
 </script>
 
