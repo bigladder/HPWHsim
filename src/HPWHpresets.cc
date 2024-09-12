@@ -845,7 +845,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_SP)
         {
-            setTankSizeWithSameU({200., Units::gal});
+            setTankSizeAdjustUA({200., Units::gal});
             // logic conditions
             compressor->minT = {-4.0, Units::F};
             compressor->maxSetpointT = MAXOUTLET_R410A();
@@ -887,7 +887,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_SP)
             {
-                setTankSizeWithSameU({500., Units::gal});
+                setTankSizeAdjustUA({500., Units::gal});
 
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -920,7 +920,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_SP)
             {
-                setTankSizeWithSameU({600., Units::gal});
+                setTankSizeAdjustUA({600., Units::gal});
 
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -953,7 +953,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_SP)
             {
-                setTankSizeWithSameU({800., Units::gal});
+                setTankSizeAdjustUA({800., Units::gal});
 
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -986,7 +986,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_SP)
             {
-                setTankSizeWithSameU({1000., Units::gal});
+                setTankSizeAdjustUA({1000., Units::gal});
 
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1019,7 +1019,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_SP)
             {
-                setTankSizeWithSameU({1200., Units::gal});
+                setTankSizeAdjustUA({1200., Units::gal});
 
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1097,7 +1097,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_ColmacCxV_5_MP)
         {
-            setTankSizeWithSameU({200., Units::gal});
+            setTankSizeAdjustUA({200., Units::gal});
             compressor->mpFlowRate = {9., Units::gal_per_min};
             // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
@@ -1133,7 +1133,7 @@ void HPWH::initPreset(MODELS presetNum)
 
             if (presetNum == MODELS_ColmacCxA_10_MP)
             {
-                setTankSizeWithSameU({500., Units::gal});
+                setTankSizeAdjustUA({500., Units::gal});
                 compressor->mpFlowRate = {18., Units::gal_per_min};
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1156,7 +1156,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_15_MP)
             {
-                setTankSizeWithSameU({600., Units::gal});
+                setTankSizeAdjustUA({600., Units::gal});
                 compressor->mpFlowRate = {26., Units::gal_per_min};
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1180,7 +1180,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_20_MP)
             {
-                setTankSizeWithSameU({800., Units::gal});
+                setTankSizeAdjustUA({800., Units::gal});
                 compressor->mpFlowRate = {36., Units::gal_per_min};
                 // https://colmacwaterheat.com/wp-content/uploads/2020/10/Technical-Datasheet-Air-Source.pdf
 
@@ -1205,7 +1205,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_25_MP)
             {
-                setTankSizeWithSameU({1000., Units::gal});
+                setTankSizeAdjustUA({1000., Units::gal});
                 compressor->mpFlowRate = {32., Units::gal_per_min};
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1228,7 +1228,7 @@ void HPWH::initPreset(MODELS presetNum)
             }
             else if (presetNum == MODELS_ColmacCxA_30_MP)
             {
-                setTankSizeWithSameU({1200., Units::gal});
+                setTankSizeAdjustUA({1200., Units::gal});
                 compressor->mpFlowRate = {41., Units::gal_per_min};
                 compressor->perfMap.push_back({
                     {100, Units::F},
@@ -1291,7 +1291,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dT = 0;
         compressor->maxSetpointT = MAXOUTLET_R134A();
 
-        // Defines the maximum outlet temperature at the a low air temperature
+        // Defines the maximum outlet temperature at low air temperature
         compressor->maxOut_at_LowT.outT = {140., Units::F};
         compressor->maxOut_at_LowT.airT = {40., Units::F};
 
@@ -1308,7 +1308,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                     nodeWeights1,
                                                     Temp_d_t(15., Units::dF),
                                                     this,
-                                                    std::greater<double>(),
+                                                    std::greater<>(),
                                                     true));
         compressor->depressesTemperature = false; // no temp depression
 
@@ -1318,7 +1318,7 @@ void HPWH::initPreset(MODELS presetNum)
         // Perfmaps for each compressor size
         if (presetNum == MODELS_NyleC25A_SP)
         {
-            setTankSizeWithSameU({200., Units::gal});
+            setTankSizeAdjustUA({200., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1350,7 +1350,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC60A_SP || presetNum == MODELS_NyleC60A_C_SP)
         {
-            setTankSizeWithSameU({300., Units::gal});
+            setTankSizeAdjustUA({300., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1382,7 +1382,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC90A_SP || presetNum == MODELS_NyleC90A_C_SP)
         {
-            setTankSizeWithSameU({400., Units::gal});
+            setTankSizeAdjustUA({400., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1414,7 +1414,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC125A_SP || presetNum == MODELS_NyleC125A_C_SP)
         {
-            setTankSizeWithSameU({500., Units::gal});
+            setTankSizeAdjustUA({500., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1446,7 +1446,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC185A_SP || presetNum == MODELS_NyleC185A_C_SP)
         {
-            setTankSizeWithSameU({800., Units::gal});
+            setTankSizeAdjustUA({800., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1478,7 +1478,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC250A_SP || presetNum == MODELS_NyleC250A_C_SP)
         {
-            setTankSizeWithSameU({800., Units::gal});
+            setTankSizeAdjustUA({800., Units::gal});
             compressor->perfMap.push_back({
                 {90, Units::F},
 
@@ -1556,7 +1556,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
+            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<>()));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1575,7 +1575,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
-            setTankSizeWithSameU({360., Units::gal});
+            setTankSizeAdjustUA({360., Units::gal});
             compressor->mpFlowRate = {13., Units::gal_per_min};
             if (presetNum == MODELS_NyleC60A_C_MP)
             {
@@ -1601,7 +1601,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC90A_MP || presetNum == MODELS_NyleC90A_C_MP)
         {
-            setTankSizeWithSameU({480., Units::gal});
+            setTankSizeAdjustUA({480., Units::gal});
             compressor->mpFlowRate = {20., Units::gal_per_min};
             if (presetNum == MODELS_NyleC90A_C_MP)
             {
@@ -1629,7 +1629,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC125A_MP || presetNum == MODELS_NyleC125A_C_MP)
         {
-            setTankSizeWithSameU({600., Units::gal});
+            setTankSizeAdjustUA({600., Units::gal});
             compressor->mpFlowRate = {28., Units::gal_per_min};
             if (presetNum == MODELS_NyleC125A_C_MP)
             {
@@ -1656,7 +1656,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC185A_MP || presetNum == MODELS_NyleC185A_C_MP)
         {
-            setTankSizeWithSameU({960., Units::gal});
+            setTankSizeAdjustUA({960., Units::gal});
             compressor->mpFlowRate = {40., Units::gal_per_min};
             if (presetNum == MODELS_NyleC185A_C_MP)
             {
@@ -1682,7 +1682,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
         else if (presetNum == MODELS_NyleC250A_MP || presetNum == MODELS_NyleC250A_C_MP)
         {
-            setTankSizeWithSameU({960., Units::gal});
+            setTankSizeAdjustUA({960., Units::gal});
             compressor->mpFlowRate = {50., Units::gal_per_min};
             if (presetNum == MODELS_NyleC250A_C_MP)
             {
@@ -1765,7 +1765,7 @@ void HPWH::initPreset(MODELS presetNum)
         if (presetNum == MODELS_RHEEM_HPHD60HNU_201_MP ||
             presetNum == MODELS_RHEEM_HPHD60VNU_201_MP)
         {
-            setTankSizeWithSameU({250., Units::gal});
+            setTankSizeAdjustUA({250., Units::gal});
             compressor->mpFlowRate = {17.4, Units::gal_per_min};
             compressor->perfMap.push_back({
                 {110, Units::F},
@@ -1789,7 +1789,7 @@ void HPWH::initPreset(MODELS presetNum)
         else if (presetNum == MODELS_RHEEM_HPHD135HNU_483_MP ||
                  presetNum == MODELS_RHEEM_HPHD135VNU_483_MP)
         {
-            setTankSizeWithSameU({500., Units::gal});
+            setTankSizeAdjustUA({500., Units::gal});
             compressor->mpFlowRate = {34.87, Units::gal_per_min};
             compressor->perfMap.push_back({
                 {110, Units::F},
@@ -1855,7 +1855,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                     nodeWeights1,
                                                     Temp_d_t(15., Units::dF),
                                                     this,
-                                                    std::greater<double>(),
+                                                    std::greater<>(),
                                                     true));
         compressor->depressesTemperature = false;
 
@@ -2189,7 +2189,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                                            nodeWeights,
                                                                            Temp_t(113, Units::F),
                                                                            this,
-                                                                           std::less<double>(),
+                                                                           std::less<>(),
                                                                            true));
         if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
         {
@@ -2203,7 +2203,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                         nodeWeightStandby,
                                                         Temp_t(113, Units::F),
                                                         this,
-                                                        std::greater<double>());
+                                                        std::greater<>());
         }
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
@@ -2212,7 +2212,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                                             nodeWeights1,
                                                                             Temp_t(135, Units::F),
                                                                             this,
-                                                                            std::greater<double>(),
+                                                                            std::greater<>(),
                                                                             true));
         compressor->depressesTemperature = false; // no temp depression
     }
@@ -4041,7 +4041,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         tankVolume = {315, Units::L};
         tankUA = {7, Units::kJ_per_hC};
-        setTankSizeWithSameU({600., Units::gal});
+        setTankSizeAdjustUA({600., Units::gal});
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4198,7 +4198,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = {105., Units::F};
         compressor->maxSetpointT = MAXOUTLET_R134A();
 
-        setTankSizeWithSameU({600., Units::gal});
+        setTankSizeAdjustUA({600., Units::gal});
         compressor->mpFlowRate = {25., Units::gal_per_min};
         compressor->perfMap.push_back({
             {100, Units::F},

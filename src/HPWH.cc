@@ -1303,7 +1303,7 @@ void HPWH::setDoTempDepression(bool doTempDepress) { doTempDepression = doTempDe
 
 // Uses the UA before the function is called and adjusts the A part of the UA to match
 // the input volume given getTankSurfaceArea().
-int HPWH::setTankSizeWithSameU(Volume_t vol, bool forceChange /*=false*/)
+int HPWH::setTankSizeAdjustUA(Volume_t vol, bool forceChange /*=false*/)
 {
     double oldTankU_kJperhCm2 = tankUA(Units::kJ_per_hC) / getTankSurfaceArea()(Units::m2);
 
@@ -2492,14 +2492,12 @@ void HPWH::updateTankTemps(
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        tankTs_t[i] +=
-                            Temp_t(incrementalDrawVolume_N * highInletFraction * highInletT);
+                        tankTs_t[i] += incrementalDrawVolume_N * highInletFraction * highInletT;
                     }
                     if (i == lowInletNodeIndex)
                     {
                         inletFraction += lowInletFraction;
-                        tankTs_t[i] +=
-                            Temp_d_t(incrementalDrawVolume_N * lowInletFraction * lowInletT);
+                        tankTs_t[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT;
                     }
 
                     if (i > 0)
