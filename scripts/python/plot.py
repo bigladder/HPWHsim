@@ -155,7 +155,7 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
     )
 
 #
-def plot(measured_path, simulated_path, output_path):
+def plot(measured_path, simulated_path):
     power_col_label_meas = "Power_W"
     power_col_label_sim = "Power_W"
 
@@ -240,7 +240,7 @@ def plot(measured_path, simulated_path, output_path):
     plot = dimes.TimeSeriesPlot(
         df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
     )
-
+    
     for row, variable in enumerate(variables["Y-Variables"].keys()):
         for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
             for value in range(
@@ -248,13 +248,19 @@ def plot(measured_path, simulated_path, output_path):
             ):
                 plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
 
-    plot.write_html_plot(output_path)
+    plot.finalize_plot()
+    fig = plot.figure
+    plot_html = fig.to_html(full_html=False)
+    #print(plot_html)
+    
+    #plot.write_html_plot(output_path)
    
     # return energy string
-    energy_data = {}
-    energy_data['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
-    energy_data['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
-    return energy_data
+    result = {}
+    result['plot_html'] = plot_html
+    result['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
+    result['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
+    return result
 
 #  main
 if __name__ == "__main__":
@@ -262,10 +268,9 @@ if __name__ == "__main__":
     if n_args == 3:
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
-        output_path = Path(sys.argv[3])
-        #print(plot(measured_path, simulated_path, output_path))
+        plot(measured_path, simulated_path)
     else:
         sys.exit(
-            "Incorrect number of arguments. Must be four: Measured Path, Simulated Path, Output Path, (Energy Path)"
+            "Incorrect number of arguments. Must be two: Measured Path, Simulated Path"
         )
     

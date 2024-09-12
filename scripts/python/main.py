@@ -7,7 +7,7 @@ from plot import plot
 from measure import measure
 
 
-def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurements_name):
+def call_test_and_plot(model_spec, model_name, test_name, measurements_name):
     #
     print(Path.cwd())
     print("model spec is " + model_spec)
@@ -25,12 +25,11 @@ def call_test_and_plot(model_spec, model_name, test_name, plot_name, measurement
     #
     measured_path = os.path.join(test_dir, test_name, measurements_name)
     simulated_path = os.path.join(output_dir, output_name)
-    plot_path = os.path.join(output_dir, plot_name)
  
     os.chdir(orig_dir)
     
-    energy_data = plot(measured_path, simulated_path, plot_path)
-    return energy_data
+    result = plot(measured_path, simulated_path)
+    return result
 
 
 def call_measure(model_spec, model_name):
