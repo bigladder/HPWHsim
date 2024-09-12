@@ -686,20 +686,20 @@ class HPWH : public Courier::Sender
     /**< This is a simple setter for the temperature depression option */
 
     /// set the tank size, adjusting the UA to maintain the same U
-    int setTankSizeWithSameU(const Volume_t volume, bool forceChange = false);
+    int setTankSizeAdjustUA(Volume_t volume, bool forceChange = false);
 
     Area_t getTankSurfaceArea() const;
 
-    static Area_t getTankSurfaceArea(const Volume_t vol);
+    static Area_t getTankSurfaceArea(Volume_t vol);
 
     Length_t getTankRadius() const;
-    static Length_t getTankRadius(const Volume_t vol);
+    static Length_t getTankRadius(Volume_t vol);
     /**< Returns the tank surface radius based off of real storage tanks*/
 
     bool isTankSizeFixed() const; /**< is the tank size allowed to be changed */
 
     /// set the tank volume
-    void setTankSize(const Volume_t volume, bool forceChange = false);
+    void setTankSize(Volume_t volume, bool forceChange = false);
 
     /// returns the tank volume
     Volume_t getTankSize() const;
