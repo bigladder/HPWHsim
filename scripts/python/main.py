@@ -32,7 +32,7 @@ def call_test_and_plot(model_spec, model_name, test_name, measured_filename, plo
     return result
 
 
-def call_measure(model_spec, model_name):
+def call_measure(model_spec, model_name, draw_profile):
     #
     print(Path.cwd())
     print("model spec is " + model_spec)
@@ -45,7 +45,7 @@ def call_measure(model_spec, model_name):
     output_dir = os.path.join(repo_path, "build", "test", "output")
     
     results_file = os.path.join(output_dir, "results.txt")
-    measure(repo_path, model_spec, model_name, results_file)
+    measure(repo_path, model_spec, model_name, results_file, draw_profile)
 
     os.chdir(orig_dir)
 

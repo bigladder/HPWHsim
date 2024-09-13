@@ -11,13 +11,6 @@ from json import dumps
 
 PORT = 8000
 
-def do_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path):
-    return main.call_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path)
-
-def do_measure(model_spec, model_name):
-    main.call_measure(model_spec, model_name)
-    return 'do_measure done'
-
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/test_and_plot'):
@@ -28,7 +21,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             measured_filename = query_components.get('arg4', [None])[0]
             plot_path = query_components.get('arg5', [None])[0]
 
-            response = {"result": do_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path)}
+            response = {"result": main.call_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path)}
             
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -44,8 +37,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
             model_spec = query_components.get('arg1', [None])[0]
             model_name = query_components.get('arg2', [None])[0]
+            draw_profile = query_components.get('arg3', [None])[0]
 
-            do_measure(model_spec, model_name)
+            main.call_measure(model_spec, model_name, draw_profile)
             
             self.send_response(200)
             self.send_header("Content-type", "text/html")
