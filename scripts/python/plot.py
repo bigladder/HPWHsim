@@ -155,7 +155,7 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
     )
 
 #
-def plot(measured_path, simulated_path):
+def plot(measured_path, simulated_path, plot_filename):
     power_col_label_meas = "Power_W"
     power_col_label_sim = "Power_W"
 
@@ -248,16 +248,12 @@ def plot(measured_path, simulated_path):
             ):
                 plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
 
-    plot.finalize_plot()
-    fig = plot.figure
-    plot_html = fig.to_html(full_html=True)
-    #print(plot_html)
-    
-    #plot.write_html_plot(output_path)
+    #plot.finalize_plot()   
+    plot.write_html_plot(plot_filename)
    
-    # return energy string
+    # return json
     result = {}
-    result['plot_html'] = plot_html
+    #result['plot_html'] = plot.figure.to_html(full_html=True)
     result['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
     result['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
     return result
@@ -268,9 +264,10 @@ if __name__ == "__main__":
     if n_args == 3:
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
-        plot(measured_path, simulated_path)
+        plot_filename = Path(sys.argv[3])
+        plot(measured_path, simulated_path, plot_filename)
     else:
         sys.exit(
-            "Incorrect number of arguments. Must be two: Measured Path, Simulated Path"
+            "Incorrect number of arguments. Must be two: Measured Path, Simulated Path, Plot Filename"
         )
     

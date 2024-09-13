@@ -36,18 +36,9 @@ body {font-family: Arial;}
 }
 
 .wrap {
-  width: 1280px;
-  height: 480px;
+  min-width: 320px;
+  min-height: 192px;
   overflow: hidden;
-}
-
-iframe {
-  width: 100% !important;
-  height: 150% !important;
-  -webkit-transform: scale(1);
-  transform: scale(1);
-  -webkit-transform-origin: 0 0;
-  transform-origin: 0 0;
 }
 
 </style>
@@ -56,7 +47,7 @@ iframe {
 
 <body>
 
-    
+  
 <form id="modelForm">
   <label for="model_spec">model spec:</label>
   <select name="model spec" id="model_spec">
@@ -77,17 +68,23 @@ iframe {
 <script>
   async function plot() {
     const model_form = document.getElementById('modelForm');
-    const farg1 = model_form.model_spec.value;
-    const farg2 = model_form.model_name.value;
-
     const plot_form = document.getElementById('plotForm');
-    const farg3 = plot_form.test_name.value;
-    const farg4 = plot_form.measured_name.value;
+ 
+    const model_spec = model_form.model_spec.value;
+    const model_name = model_form.model_name.value;
+    const test_name = plot_form.test_name.value;
 
-    fst = 'arg1=' + farg1;
-    fst += '&arg2=' + farg2;
-    fst += '&arg3=' + farg3;
-    fst += '&arg4=' + farg4;
+    const test_dir = "test/" + test_name + "/";
+    const output_dir = "../../build/test/output/"
+ 
+    const measured_filename = "measured.csv"
+    const plot_path = output_dir + "plot.html"
+
+    fst = 'arg1=' + model_spec;
+    fst += '&arg2=' + model_name;
+    fst += '&arg3=' + test_name;
+    fst += '&arg4=' + measured_filename;
+    fst += '&arg5=' + plot_path;
 
     document.getElementById("plot_btn").disabled = true;
 
@@ -104,31 +101,12 @@ iframe {
     measE = result["measuredE_Wh"].toFixed(2);
     simE = result["simulatedE_Wh"].toFixed(2);
 
-    document.getElementById("plot_fig").srcdoc = plot_html;
+    document.getElementById("plot_fig").src = plot_path;
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
-    model_form.model_spec.value = farg1;
-    model_form.model_name.value = farg2;
 
-    document.getElementById("model_spec").value = farg1; 
-    document.getElementById("model_name").value = farg2; 
- 
-    document.getElementById("model_spec").defaultValue = farg1; 
-    document.getElementById("model_name").defaultValue = farg2; 
-
-    document.getElementById("test_name").value = farg3; 
-    document.getElementById("measured_name").value = farg4; 
-
-    document.getElementById("test_name").defaultValue = farg3; 
-    document.getElementById("measured_name").defaultValue = farg4; 
-
-    localStorage.setItem("test_name", farg3);
-    localStorage.setItem("measured_name", farg4);
-
-    //document.getElementById("plot").document.write(plot)
     document.getElementById("plot_fig").style = "display:block;"
-  
     document.getElementById("plot_btn").disabled = false;
   }
 
@@ -169,14 +147,11 @@ iframe {
       <label for="test_name">test name:</label>
       <input type="text" id="test_name" name="test_name" required><br><br>
 
-      <label for="measured_name">measured name:</label>
-      <input type="text" id="measured_name" name="measured_name" required><br><br>
-
       <button type="button" id="plot_btn" onclick="plot();">plot</button>
   </form>
 
   <div class='wrap'>
-    <iframe id="plot_fig" srcdoc="" width=1200 height=1000 style="display:none;"></iframe>
+    <iframe id="plot_fig" src="" width=1200 height=1000 style="display:none;"></iframe>
   </div>  <p id="energy_measured"></p>
 
   <p id="energy_simulated"></p> 
@@ -214,7 +189,6 @@ for (i = 0; i < coll.length; i++) {
 <script>
   const plot_form = document.getElementById('plotForm');
   plot_form.test_name.value = "villara_24hr67";
-  plot_form.measured_name.value = "measured.csv";
 
 </script>
 
