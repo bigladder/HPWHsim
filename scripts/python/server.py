@@ -11,9 +11,8 @@ from json import dumps
 
 PORT = 8000
 
-
-def do_test_and_plot(model_spec, model_name, test_name, measurements_name):
-    return main.call_test_and_plot(model_spec, model_name, test_name, measurements_name)
+def do_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path):
+    return main.call_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path)
 
 def do_measure(model_spec, model_name):
     main.call_measure(model_spec, model_name)
@@ -26,9 +25,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             model_spec = query_components.get('arg1', [None])[0]
             model_name = query_components.get('arg2', [None])[0]
             test_name = query_components.get('arg3', [None])[0]
-            measurements_name = query_components.get('arg4', [None])[0]
+            measured_filename = query_components.get('arg4', [None])[0]
+            plot_path = query_components.get('arg5', [None])[0]
 
-            response = {"result": do_test_and_plot(model_spec, model_name, test_name, measurements_name)}
+            response = {"result": do_test_and_plot(model_spec, model_name, test_name, measured_filename, plot_path)}
             
             self.send_response(200)
             self.send_header("Content-type", "application/json")
