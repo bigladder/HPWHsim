@@ -112,19 +112,25 @@ void measure(const std::string& sSpecType,
     if (useCustomDrawProfile)
     {
         bool foundProfile = false;
+        sCustomDrawProfile.erase(
+            std::remove(sCustomDrawProfile.begin(), sCustomDrawProfile.end(), ' '),
+            sCustomDrawProfile.end());
         for (auto& c : sCustomDrawProfile)
         {
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
         }
-        if (sCustomDrawProfile.length() > 0)
-        {
-            sCustomDrawProfile[0] =
-                static_cast<char>(std::toupper(static_cast<unsigned char>(sCustomDrawProfile[0])));
-        }
         for (const auto& [key, value] : HPWH::FirstHourRating::sDesigMap)
         {
-            if (value == sCustomDrawProfile)
+            auto standard_value = value;
+            standard_value.erase(std::remove(standard_value.begin(), standard_value.end(), ' '),
+                                 standard_value.end());
+            for (auto& c : standard_value)
             {
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+            if (standard_value == sCustomDrawProfile)
+            {
+                sCustomDrawProfile = value;
                 hpwh.customTestOptions.overrideFirstHourRating = true;
                 hpwh.customTestOptions.desig = key;
                 foundProfile = true;

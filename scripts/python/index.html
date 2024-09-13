@@ -48,9 +48,9 @@ body {font-family: Arial;}
 <body>
 
   
-<form id="modelForm">
+<form id="model_form">
   <label for="model_spec">model spec:</label>
-  <select name="model spec" id="model_spec">
+  <select name="model_spec" id="model_spec">
     <option selected="selected" value="Preset">Preset</option>
     <option value="File">File</option>
   </select><br><br>
@@ -60,15 +60,15 @@ body {font-family: Arial;}
 </form>
 
 <script>
-  const model_form = document.getElementById('modelForm');
+  const model_form = document.getElementById('model_form');
   model_form.model_spec.value = "File";
   model_form.model_name.value = "AquaThermAire";
 </script>
 
 <script>
   async function plot() {
-    const model_form = document.getElementById('modelForm');
-    const plot_form = document.getElementById('plotForm');
+    const model_form = document.getElementById('model_form');
+    const plot_form = document.getElementById('plot_form');
  
     const model_spec = model_form.model_spec.value;
     const model_name = model_form.model_name.value;
@@ -97,7 +97,7 @@ body {font-family: Arial;}
     const data = await response.json();
     const result = data["result"];
 
-    plot_html = result["plot_html"];
+    //plot_html = result["plot_html"];
     measE = result["measuredE_Wh"].toFixed(2);
     simE = result["simulatedE_Wh"].toFixed(2);
 
@@ -105,35 +105,32 @@ body {font-family: Arial;}
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
-
     document.getElementById("plot_fig").style = "display:block;"
     document.getElementById("plot_btn").disabled = false;
   }
 
   async function measure() {
-    const model_form = document.getElementById('modelForm');
-    const farg1 = model_form.model_spec.value;
-    const farg2 = model_form.model_name.value;
+    const model_form = document.getElementById('model_form');
+    const measure_form = document.getElementById('measure_form');
 
-    fst = 'arg1=' + farg1;
-    fst += '&arg2=' + farg2;
+    const model_spec = model_form.model_spec.value;
+    const model_name = model_form.model_name.value;
+    const draw_profile = measure_form.draw_profile.value;
+
+    const output_dir = "../../build/test/output/"
+    const results_path = output_dir + "results.txt"
+
+    fst = 'arg1=' + model_spec;
+    fst += '&arg2=' + model_name;
+    fst += '&arg3=' + draw_profile;
 
     document.getElementById("measure_btn").disabled = true;
 
     const response = await fetch('http://localhost:8000/measure?' + fst, { signal: AbortSignal.timeout(5000) })
 
-    model_form.model_spec.value = farg1;
-    model_form.model_name.value = farg2;
-
-    document.getElementById("model_spec").value = farg1; 
-    document.getElementById("model_name").value = farg2; 
- 
-    document.getElementById("model_spec").defaultValue = farg1; 
-    document.getElementById("model_name").defaultValue = farg2; 
-
     document.getElementById("results").style="display:block;"
     document.getElementById("results").data = "";
-    document.getElementById("results").data = "../../build/test/output/results.txt";
+    document.getElementById("results").data = results_path;
 
     document.getElementById("measure_btn").disabled = false;
   }
@@ -143,7 +140,7 @@ body {font-family: Arial;}
 <!-- plot tab -->
 <button id="plot_tab" class="collapsible">Plot</button>
 <div class="content">
-  <form id="plotForm">
+  <form id="plot_form">
       <label for="test_name">test name:</label>
       <input type="text" id="test_name" name="test_name" required><br><br>
 
@@ -151,16 +148,30 @@ body {font-family: Arial;}
   </form>
 
   <div class='wrap'>
-    <iframe id="plot_fig" src="" width=1200 height=1000 style="display:none;"></iframe>
-  </div>  <p id="energy_measured"></p>
+    <iframe id="plot_fig" src="" width=1800 height=1000 style="display:none;"></iframe>
+  </div>
 
+  <p id="energy_measured"></p>
   <p id="energy_simulated"></p> 
  </div>
 
 <!-- measure tab -->
 <button id="measure_tab" class="collapsible">Measure</button>
 <div class="content">
-  <button type="button" id="measure_btn" onclick="measure();">measure</button>
+
+  <form id="measure_form">
+    <label for="draw_profile">draw profile:</label>
+    <select name="draw_profile" id="draw_profile">
+      <option selected="auto" value="auto">auto</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+      <option value="Very Small">Very Small</option>
+    </select><br><br>
+
+    <button type="button" id="measure_btn" onclick="measure();">measure</button>
+  </form>
+
   <object id="results" data="../../build/test/output/results.txt" width=800 height=800 style="display:none;"></object>
 </div>
 
@@ -178,7 +189,7 @@ for (i = 0; i < coll.length; i++) {
       if(this.id == "plot_tab")
         content.style.maxHeight = "1020px";
       else if(this.id == "measure_tab")
-        content.style.maxHeight = "320px";
+        content.style.maxHeight = "400px";
     } 
   });
 }
@@ -187,7 +198,7 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
-  const plot_form = document.getElementById('plotForm');
+  const plot_form = document.getElementById('plot_form');
   plot_form.test_name.value = "villara_24hr67";
 
 </script>
