@@ -176,7 +176,8 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
                     factor * elementPower());          // Check gets bottom with bottom
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)()); // only have one element
 
-    EXPECT_ANY_THROW(hpwh.setResistanceCapacity(factor * elementPower(), 1)); // set top returns error
+    EXPECT_ANY_THROW(
+        hpwh.setResistanceCapacity(factor * elementPower(), 1)); // set top returns error
 }
 
 /*
@@ -198,7 +199,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(),
                     factor * elementPower()); // Check gets just bottom which is now top with both
     EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(),
-                    factor * elementPower());          // Check the lower and only element
+                    factor * elementPower());        // Check the lower and only element
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); //  error on non existent element
 
     // set top

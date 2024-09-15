@@ -1723,11 +1723,11 @@ inline auto HM_TO_MIN(const double h, const double min) { return Time_h_min(h, m
 inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
 inline auto from(const Units::UA unitsUA) { return Units::scale(unitsUA, HPWH::UnitsUA); }
 
-inline auto operator+(HPWH::Temp_t T, HPWH::Temp_d_t dT){return HPWH::Temp_t(T() + dT());}
-inline auto operator-(HPWH::Temp_t T, HPWH::Temp_d_t dT){return HPWH::Temp_t(T() - dT());}
+inline auto operator+(HPWH::Temp_t T, HPWH::Temp_d_t dT) { return HPWH::Temp_t(T() + dT()); }
+inline auto operator-(HPWH::Temp_t T, HPWH::Temp_d_t dT) { return HPWH::Temp_t(T() - dT()); }
 
-inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1){return HPWH::Temp_d_t(T0() - T1());}
+inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1) { return HPWH::Temp_d_t(T0() - T1()); }
 
-inline auto operator+=(HPWH::Temp_t T, HPWH::Temp_d_t dT){return T += dT();}
-inline auto operator-=(HPWH::Temp_t T, HPWH::Temp_d_t dT){return T -= dT();}
+inline auto operator+=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T += dT(); }
+inline auto operator-=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T -= dT(); }
 #endif

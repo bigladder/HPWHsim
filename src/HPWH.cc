@@ -4563,7 +4563,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    0.,                    // inlet-2 volume (L)
                    inletT,                // inlet-2 Temp (C)
                    NULL);                 // no extra heat
-
     }
 }
 
@@ -4646,8 +4645,8 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
             sumOutletVolumeT += incrementalDrawVolume() * outletT();
 
             maxOutletT = std::max(outletT, maxOutletT);
-            if (outletT <
-                (maxOutletT - Temp_d_t(15., Units::dF))) // outletT has dropped by 15 degF below max T
+            if (outletT < (maxOutletT -
+                           Temp_d_t(15., Units::dF))) // outletT has dropped by 15 degF below max T
             {
                 avgOutletT = sumOutletVolumeT / sumOutletVolume;
                 minOutletT = outletT;
@@ -4932,7 +4931,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     bool inLastHour = false;
     Volume_t stepDrawVolume = 0.;
     int endStep = endTime(Units::min);
-    for (int runStep= 0; runStep <= endStep; ++runStep)
+    for (int runStep = 0; runStep <= endStep; ++runStep)
     {
         Time_t runTime = {static_cast<double>(runStep), Units::min};
         if (inLastHour)
@@ -5233,7 +5232,8 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     testSummary.noDrawTotalTime = noDrawTotalTime; // tau_stby,2
     if (noDrawTotalTime > 0)
     {
-        testSummary.noDrawAverageAmbientT = noDrawSumTimeAmbientT / noDrawTotalTime(); // <Ta,stby,2>
+        testSummary.noDrawAverageAmbientT =
+            noDrawSumTimeAmbientT / noDrawTotalTime(); // <Ta,stby,2>
     }
 
     // find the standard delivered daily energy
