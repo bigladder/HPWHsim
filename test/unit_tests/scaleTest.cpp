@@ -19,7 +19,7 @@ void getCompressorPerformance(
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
       // temperature of the lift
-        hpwh.setSetpointT((waterT + setpointT) / 2.);
+        hpwh.setSetpointT((waterT() + setpointT()) / 2.);
     }
     else
     {
@@ -120,90 +120,90 @@ TEST(ScaleTest, scalableScales)
 
     num = 0.001; // Very low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 0.2; // normal but bad low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 3.; // normal but pretty high
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 1000; // really high
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 10;
     anotherNum = 0.1; // weird high and low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, anotherNum, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / anotherNum, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, anotherNum, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / anotherNum, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / anotherNum, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 1.5;
     anotherNum = 0.9; // real high and low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, anotherNum, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / anotherNum, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, anotherNum, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / anotherNum, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / anotherNum, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 }
 
@@ -223,91 +223,91 @@ TEST(ScaleTest, scalableMP_scales)
 
     num = 0.001; // Very low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 0.2; // normal but bad low
     scaleCapacityCOP(hpwh, num, 1., point0, point1);
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     scaleCapacityCOP(hpwh, 1., num, point0, point1);
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 3.; // normal but pretty high
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 1000; // really high
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, 1., point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, 1., num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input, tol);
-    EXPECT_NEAR(point0.output, point1.output / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input(), tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / num, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 10;
     anotherNum = 0.1; // weird high and low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, anotherNum, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / anotherNum, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, anotherNum, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / anotherNum, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / anotherNum, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 
     num = 1.5;
     anotherNum = 0.9; // real high and low
     EXPECT_TRUE(scaleCapacityCOP(hpwh, num, anotherNum, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.input, point1.input / num, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / num, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / anotherNum, tol);
 
     EXPECT_TRUE(scaleCapacityCOP(hpwh, anotherNum, num, point0, point1));
-    EXPECT_NEAR(point0.input, point1.input / anotherNum, tol);
-    EXPECT_NEAR(point0.output, point1.output / num / anotherNum, tol);
+    EXPECT_NEAR(point0.input(), point1.input() / anotherNum, tol);
+    EXPECT_NEAR(point0.output(), point1.output() / num / anotherNum, tol);
     EXPECT_NEAR(point0.cop, point1.cop / num, tol);
 }
 
@@ -329,7 +329,7 @@ TEST(ScaleTest, getCompressorSP_capacity)
     getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
 
-    EXPECT_NEAR(point0.output, capacity, tol);
+    EXPECT_NEAR(point0.output(), capacity(), tol);
 }
 
 /*
@@ -350,7 +350,7 @@ TEST(ScaleTest, getCompressorMP_capacity)
 
     auto capacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
     getCompressorPerformance(hpwh, point0, airT, waterT, setpointT);
-    EXPECT_NEAR_REL_TOL(point0.output, capacity, tol);
+    EXPECT_NEAR_REL_TOL(point0.output(), capacity(), tol);
 }
 
 /*
@@ -371,25 +371,25 @@ TEST(ScaleTest, getCompressorMP_outputCapacity)
     double num = 1.;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     auto newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 
     // Scale output to .01 kW
     num = .01;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 
     // Scale output to 1000 kW
     num = 1000.;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 
     // Check again with changed setpoint. For MP it should affect output capacity since it looks at
     // the mean temperature for the cycle.
     setpointT = {100, Units::F};
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_FAR(num, newCapacity, tol);
+    EXPECT_FAR(num, newCapacity(), tol);
 }
 
 /*
@@ -410,19 +410,19 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
     double num = 1.;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     auto newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 
     // Scale output to .01 kW
     num = .01;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 
     // Scale output to 1000 kW
     num = 1000.;
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity, tol);
+    EXPECT_NEAR(num, newCapacity(), tol);
 }
 
 /*
@@ -451,23 +451,23 @@ TEST(ScaleTest, resistanceScales)
 
     HPWH::Power_t elementPower = {30., Units::kW};
 
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), 2. * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(), elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1)(), elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(), 2. * elementPower());
 
     // Check setting bottom works
     double factor = 2.;
     hpwh.setResistanceCapacity(factor * elementPower, 0);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), factor * elementPower + elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(), factor * elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1)(), elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(), factor * elementPower() + elementPower());
 
     // Check setting both works
     factor = 3.;
     hpwh.setResistanceCapacity(factor * elementPower, -1);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1), factor * elementPower);
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1), 2. * factor * elementPower);
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(), factor * elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(1)(), factor * elementPower());
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(), 2. * factor * elementPower());
 }
 
 /*

@@ -51,7 +51,7 @@ TEST(UnitsConversionTest, conversions)
         Time_min t_min(0.25);
 
         EXPECT_EQ(t_s, t_min(Units::s));
-        EXPECT_EQ(t_s(Units::min), t_min);
+        EXPECT_EQ(t_s(Units::min), t_min());
         EXPECT_EQ(t_s, t_min(Units::s));
         EXPECT_NE(t_s, 0.25);
         EXPECT_NE(t_min, 15.);
@@ -67,7 +67,7 @@ TEST(UnitsConversionTest, conversions)
         TimeVect_s tV_s = tV_min(s);
         EXPECT_EQ(tV_s(min), tV_min(min));
 
-        std::vector<double>& v = tV_min;
+        std::vector<double>& v = tV_min();
         v[2] = 15.;
         EXPECT_EQ(tV_min[2](min), 15.);
 
@@ -102,7 +102,7 @@ TEST(UnitsConversionTest, conversions)
     {
         Energy_kJ E_kJ = 100.;
         EnergyVal<Energy::Btu> E_Btu = E_kJ;
-        EXPECT_EQ(E_Btu(kJ), E_kJ);
+        EXPECT_EQ(E_Btu(kJ), E_kJ());
         EXPECT_EQ(E_Btu, E_kJ(Btu));
 
         EnergyVect_kJ EV_kJ({100., 200., 300.}, Btu);
@@ -116,52 +116,52 @@ TEST(UnitsConversionTest, conversions)
         Power_kW P_kW = 60.;
         PowerVal<Power::Btu_per_h> P_Btu_per_h = P_kW;
         EXPECT_EQ(P_Btu_per_h, P_kW(Btu_per_h));
-        EXPECT_NEAR_REL(P_Btu_per_h(kW), P_kW);
+        EXPECT_NEAR_REL(P_Btu_per_h(kW), P_kW());
     }
 
     /* length conversion */
     {
         Length_m x_m = 60.;
         LengthVal<Length::ft> x_ft = x_m;
-        EXPECT_NEAR_REL(x_ft, x_m(ft));
+        EXPECT_NEAR_REL(x_ft(), x_m(ft));
     }
 
     /* area conversion */
     {
         Area_m2 a_m2 = 60.;
         AreaVal<Area::ft2> a_ft2 = a_m2;
-        EXPECT_NEAR_REL(a_ft2, a_m2(ft2));
+        EXPECT_NEAR_REL(a_ft2(), a_m2(ft2));
     }
 
     /* volume conversion */
     {
         Volume_L volume_L = 60.;
         VolumeVal<Volume::gal> volume_gal = volume_L;
-        EXPECT_NEAR_REL(volume_gal, volume_L(gal));
+        EXPECT_NEAR_REL(volume_gal(), volume_L(gal));
 
         VolumeVal<Volume::m3> volume_m3 = volume_L;
-        EXPECT_NEAR_REL(volume_m3, volume_L(m3));
+        EXPECT_NEAR_REL(volume_m3(), volume_L(m3));
 
         VolumeVal<Volume::ft3> volume_ft3 = volume_L;
-        EXPECT_NEAR_REL(volume_ft3, volume_L(ft3));
+        EXPECT_NEAR_REL(volume_ft3(), volume_L(ft3));
     }
 
     /* UA conversion */
     {
         UA_kJ_per_hC ua_kJ_per_hC = 60.;
         UAVal<UA::Btu_per_hF> ua_Btu_per_hF = ua_kJ_per_hC;
-        EXPECT_NEAR_REL(ua_Btu_per_hF, ua_kJ_per_hC(Btu_per_hF));
+        EXPECT_NEAR_REL(ua_Btu_per_hF(), ua_kJ_per_hC(Btu_per_hF));
     }
 
     {
         Length_ft len_ft = {5, m};
-        Power_kW power_kW = {Energy_kJ(60, Btu) / Time_s(1, h), Btu_per_h};
-        Area_m2 area_m2 = {Length_m(15, ft) * Length_m(15, ft), ft2};
+        Power_kW power_kW = {Energy_kJ(60, Btu)() / Time_s(1, h)(), Btu_per_h};
+        Area_m2 area_m2 = {Length_m(15, ft)() * Length_m(15, ft)(), ft2};
     }
     {
-        Temp_F temp_F = scaleOffset(C, F) * Temp_C(0);
-        temp_F = temp_F + Temp_dC(100)(dF);
-        EXPECT_NEAR_REL(temp_F(C), 100);
+        Temp_F temp_F = {0., C};
+        temp_F += Temp_dC(100)(dF);
+        EXPECT_NEAR_REL(temp_F(), 212.);
     }
     {
         double sigma_W_per_m2K4 = 5.670374419e-8;
@@ -173,13 +173,13 @@ TEST(UnitsConversionTest, conversions)
         Temp_F T2_F(600., K);
         Power_W power2_W = sigma_W_per_m2K4 * area_ft2(m2) * std::pow(T2_F(K), 4.);
 
-        EXPECT_NEAR_REL(power2_W, 16. * power1_W);
+        EXPECT_NEAR_REL(power2_W(), 16. * power1_W());
     }
     {
         Length_ft length_ft = 3.;
-        double& x = length_ft;
+        double& x = length_ft();
         x += 1.; // ft
-        EXPECT_NEAR_REL(length_ft, 4.);
+        EXPECT_NEAR_REL(length_ft(), 4.);
     }
 
     {
@@ -193,7 +193,7 @@ TEST(UnitsConversionTest, conversions)
 
         for (auto& T_C : T_V_C)
         {
-            T_C += Temp_dC(2.);
+            T_C += 2.;
         }
         EXPECT_NEAR_REL(T_V_C[1](C), 2.);
     }

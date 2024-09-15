@@ -46,10 +46,10 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
     HPWH::Power_t returnVal;
 
     returnVal = hpwh.getResistanceCapacity(0); // lower
-    EXPECT_NEAR_REL(returnVal, lowerElementPower);
+    EXPECT_NEAR_REL(returnVal(), lowerElementPower());
 
     returnVal = hpwh.getResistanceCapacity(-1); // both,
-    EXPECT_NEAR_REL(returnVal, lowerElementPower);
+    EXPECT_NEAR_REL(returnVal(), lowerElementPower());
 
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); // higher doesn't exist
 }
@@ -161,22 +161,22 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // set both, but really only one
     EXPECT_NO_THROW(hpwh.setResistanceCapacity(factor * elementPower, -1)); // Check sets
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
-                    factor * elementPower); // Check gets just bottom with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0),
-                    factor * elementPower);          // Check gets bottom with bottom
-    EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); // only have one element
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(),
+                    factor * elementPower()); // Check gets just bottom with both
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(),
+                    factor * elementPower());          // Check gets bottom with bottom
+    EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)()); // only have one element
 
     // set lowest
     factor = 4.;
     EXPECT_NO_THROW(hpwh.setResistanceCapacity(factor * elementPower, 0)); // Set just bottom
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
-                    factor * elementPower); // Check gets just bottom with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0),
-                    factor * elementPower);          // Check gets bottom with bottom
-    EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); // only have one element
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(),
+                    factor * elementPower()); // Check gets just bottom with both
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(),
+                    factor * elementPower());          // Check gets bottom with bottom
+    EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)()); // only have one element
 
-    EXPECT_ANY_THROW(hpwh.setResistanceCapacity(factor * elementPower, 1)); // set top returns error
+    EXPECT_ANY_THROW(hpwh.setResistanceCapacity(factor * elementPower(), 1)); // set top returns error
 }
 
 /*
@@ -195,18 +195,18 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // set both, but only bottom really.
     EXPECT_NO_THROW(hpwh.setResistanceCapacity(factor * elementPower, -1)); // Check sets
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1),
-                    factor * elementPower); // Check gets just bottom which is now top with both
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0),
-                    factor * elementPower);          // Check the lower and only element
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(-1)(),
+                    factor * elementPower()); // Check gets just bottom which is now top with both
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(),
+                    factor * elementPower());          // Check the lower and only element
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); //  error on non existent element
 
     // set top
     factor = 4.;
     EXPECT_NO_THROW(
         hpwh.setResistanceCapacity(factor * elementPower, 0)); // only one element to set
-    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0),
-                    factor * elementPower); // Check gets just bottom which is now top with both
+    EXPECT_NEAR_REL(hpwh.getResistanceCapacity(0)(),
+                    factor * elementPower()); // Check gets just bottom which is now top with both
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)); // error on non existant bottom
 
     // set bottom returns error
@@ -258,36 +258,36 @@ TEST(ResistanceFunctionsTest, commercialTankInit)
     // Check UA independent of elements
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint800, elementPower / 1000.);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint800.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint800.expectedUA());
 
     // Check UA is as expected at 2 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint2, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint2.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint2.expectedUA());
 
     // Check UA is as expected at 50 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint50, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint50.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint50.expectedUA());
 
     // Check UA is as expected at 200 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint200, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint200.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint200.expectedUA());
 
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint200B, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint200B.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint200B.expectedUA());
 
     // Check UA is as expected at 2000 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint2000, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint2000.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint2000.expectedUA());
 
     // Check UA is as expected at 20000 gal
     TEST_INIT_RESISTANCE_TANK_GENERIC(testPoint20000, elementPower);
     hpwh.getUA(UA);
-    EXPECT_NEAR_REL(UA, testPoint20000.expectedUA);
+    EXPECT_NEAR_REL(UA(), testPoint20000.expectedUA());
 }
 
 #undef TEST_INIT_RESISTANCE_TANK_GENERIC

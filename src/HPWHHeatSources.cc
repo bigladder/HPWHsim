@@ -443,7 +443,7 @@ void HPWH::HeatSource::sortPerformanceMap()
 HPWH::Temp_t HPWH::HeatSource::getTankT() const
 {
     std::vector<double> resampledTankTs(getCondensitySize());
-    resample(resampledTankTs, hpwh->tankTs);
+    resample(resampledTankTs, hpwh->tankTs());
 
     double tankT = 0.;
 
@@ -478,7 +478,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
 
     if (useBtwxtGrid)
     {
-        TempVect_t target({externalT, effOutletT, effCondenserT});
+        TempVect_t target = {{externalT(), effOutletT(), effCondenserT()}, UnitsTemp};
         btwxtInterp(inputPower, cop, target);
     }
     else
@@ -524,22 +524,22 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
             {
                 // Calculate COP at each reference temeprature
                 // Interpolate to get COP  at the current temperature
-                double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT);
-                double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs, effCondenserT);
-                cop = linearInterp(externalT, perfMap[i_prev].T, perfMap[i_next].T, COP_T1, COP_T2);
+                double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT());
+                double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs, effCondenserT());
+                cop = linearInterp(externalT(), perfMap[i_prev].T(), perfMap[i_next].T(), COP_T1, COP_T2);
             }
 
             {
                 // Calculate input power at each reference temeprature
                 // Interpolate to get input power at the current temperature
                 Power_t inputPower_T1 =
-                    expandSeries(perfMap[i_prev].inputPower_coeffs, effCondenserT);
+                    expandSeries(perfMap[i_prev].inputPower_coeffs(), effCondenserT());
 
                 Power_t inputPower_T2 =
-                    expandSeries(perfMap[i_next].inputPower_coeffs, effCondenserT);
+                    expandSeries(perfMap[i_next].inputPower_coeffs(), effCondenserT());
 
                 inputPower = linearInterp(
-                    externalT, perfMap[i_prev].T, perfMap[i_next].T, inputPower_T1, inputPower_T2);
+                    externalT(), perfMap[i_prev].T(), perfMap[i_next].T(), inputPower_T1(), inputPower_T2());
             }
         }
         else
@@ -554,9 +554,9 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
             }
 
             inputPower =
-                regressedMethod(perfMap[0].inputPower_coeffs, externalT, effOutletT, effCondenserT);
+                regressedMethod(perfMap[0].inputPower_coeffs(), externalT(), effOutletT(), effCondenserT());
 
-            cop = regressedMethod(perfMap[0].COP_coeffs, externalT, effOutletT, effCondenserT);
+            cop = regressedMethod(perfMap[0].COP_coeffs, externalT(), effOutletT(), effCondenserT());
         }
     }
 
@@ -623,8 +623,8 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        inputPower = regressedMethodMP(perfMap[0].inputPower_coeffs, externalT, effCondenserT);
-        cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT, effCondenserT);
+        inputPower = regressedMethodMP(perfMap[0].inputPower_coeffs(), externalT(), effCondenserT());
+        cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT(), effCondenserT());
     }
 
     if (doDefrost)
@@ -668,9 +668,9 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
             break;
         }
     }
-    derate_factor = linearInterp(airT,
-                                 defrostMap[i_prev].T,
-                                 defrostMap[i_prev + 1].T,
+    derate_factor = linearInterp(airT(),
+                                 defrostMap[i_prev].T(),
+                                 defrostMap[i_prev + 1].T(),
                                  defrostMap[i_prev].derate_fraction,
                                  defrostMap[i_prev + 1].derate_fraction);
     to_derate *= derate_factor;
@@ -678,7 +678,7 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
 
 void HPWH::HeatSource::btwxtInterp(Power_t& inputPower, double& cop, TempVect_t& target)
 {
-    std::vector<double> result = perfRGI->get_values_at_target(target);
+    std::vector<double> result = perfRGI->get_values_at_target(target());
     inputPower = result[0];
     cop = result[1];
 }
@@ -789,8 +789,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            condenserInletT_sum += externalOutletT * heatingTime;
-            condenserOutletT_sum += targetT * heatingTime;
+            condenserInletT_sum += externalOutletT() * heatingTime();
+            condenserOutletT_sum += targetT() * heatingTime();
         }
 
         // mix with node above from outlet to inlet
@@ -799,10 +799,10 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
              static_cast<int>(nodeIndex) <= externalInletHeight;
              ++nodeIndex)
         {
-            Temp_t& mixT_C = (static_cast<int>(nodeIndex) == externalInletHeight)
+            Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
                                  ? targetT
                                  : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT_C;
+            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
         hpwh->mixTankInversions();
@@ -818,7 +818,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
 
         Energy_t output_dE(tempOutputPower(Units::kW) * heatingTime(Units::s));
         outputEnergy += output_dE;
-        cop += temp_cop * heatingTime;
+        cop += temp_cop * heatingTime();
 
         hpwh->externalVolumeHeated = hpwh->externalVolumeHeated + nodeFrac * hpwh->nodeVolume;
 
@@ -834,9 +834,9 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
     {
         inputPower = {inputEnergy(Units::kJ) / runTime(Units::s), Units::kW};
         outputPower = {outputEnergy(Units::kJ) / runTime(Units::s), Units::kW};
-        cop /= runTime;
-        hpwh->condenserInletT = condenserInletT_sum / runTime;
-        hpwh->condenserOutletT = condenserOutletT_sum / runTime;
+        cop /= runTime();
+        hpwh->condenserInletT = condenserInletT_sum / runTime();
+        hpwh->condenserOutletT = condenserOutletT_sum / runTime();
     }
 
     // return the time left
@@ -923,8 +923,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         // track the condenser temperatures before mixing nodes
         if (isACompressor())
         {
-            condenserInletT_sum += externalOutletT * heatingTime;
-            condenserOutletT_sum += targetT * heatingTime;
+            condenserInletT_sum += externalOutletT() * heatingTime();
+            condenserOutletT_sum += targetT() * heatingTime();
         }
 
         // mix with node above from outlet to inlet
@@ -936,7 +936,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
                                ? targetT
                                : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex] + nodeFrac * mixT;
+            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
         hpwh->mixTankInversions();
@@ -953,7 +953,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         Energy_t dE_out = {tempOutputPower(Units::kW) * heatingTime(Units::s), Units::kJ};
         outputEnergy += dE_out;
 
-        cop += temp_cop * heatingTime;
+        cop += temp_cop * heatingTime();
 
         hpwh->externalVolumeHeated += nodeFrac * hpwh->nodeVolume;
 
@@ -966,9 +966,9 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
     {
         inputPower = {inputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
         outputPower = {outputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
-        cop /= elapsedTime;
-        hpwh->condenserInletT = condenserInletT_sum / elapsedTime;
-        hpwh->condenserOutletT = condenserOutletT_sum / elapsedTime;
+        cop /= elapsedTime();
+        hpwh->condenserInletT = condenserInletT_sum / elapsedTime();
+        hpwh->condenserOutletT = condenserOutletT_sum / elapsedTime();
     }
 
     // return the elapsed time

@@ -85,7 +85,7 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
     // below.
     double recoveryEfficiency = 0.98;
     double numerator = (1.0 / rFactor(Units::ft2hF_per_Btu)) - (1.0 / recoveryEfficiency);
-    double temp = 1.0 / (recoveryEfficiency * lowerPower * 3.41443);
+    double temp = 1.0 / (recoveryEfficiency * lowerPower() * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
     tankUA = UA_t(numerator / denominator, Units::Btu_per_hF);
 
@@ -836,7 +836,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                     nodeWeights1,
                                                     Temp_d_t {15., Units::dF},
                                                     this,
-                                                    std::greater<double>(),
+                                                    std::greater<>(),
                                                     true));
         compressor->depressesTemperature = false; // no temp depression
 
@@ -1088,7 +1088,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
+            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<>()));
 
         compressor->depressesTemperature = false; // no temp depression
 
@@ -1570,8 +1570,8 @@ void HPWH::initPreset(MODELS presetNum)
         const TempVect_t t0 = {{40., 60., 80., 90.}, Units::F};
         const TempVect_t t1 = {{40., 60., 80., 100., 130., 150.}, Units::F};
 
-        compressor->perfGrid.push_back(t0); // Grid Axis 1 Tair (F)
-        compressor->perfGrid.push_back(t1); // Grid Axis 2 Tin (F)
+        compressor->perfGrid.push_back(t0()); // Grid Axis 1 Tair (F)
+        compressor->perfGrid.push_back(t1()); // Grid Axis 2 Tin (F)
 
         if (presetNum == MODELS_NyleC60A_MP || presetNum == MODELS_NyleC60A_C_MP)
         {
@@ -1591,7 +1591,7 @@ void HPWH::initPreset(MODELS presetNum)
                                      Units::kW);
 
             // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(powerV);
+            compressor->perfGridValues.push_back(powerV());
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
                 {3.362637363, 2.917274939, 2.407407407, 1.907872697, 1.296082949, 1.095477387,
@@ -1618,7 +1618,7 @@ void HPWH::initPreset(MODELS presetNum)
                                      Units::kW);
 
             // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(powerV);
+            compressor->perfGridValues.push_back(powerV());
 
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
@@ -1645,7 +1645,7 @@ void HPWH::initPreset(MODELS presetNum)
                                      Units::kW);
 
             // Grid values in long format, table 1, input power
-            compressor->perfGridValues.push_back(powerV);
+            compressor->perfGridValues.push_back(powerV());
 
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
@@ -1671,7 +1671,7 @@ void HPWH::initPreset(MODELS presetNum)
                                       14.28, 18.19, 26.24, 32.32, 7.87,  12.04, 15.02, 18.81,
                                       25.99, 31.26, 8.15,  12.46, 15.17, 18.95, 26.23, 31.62},
                                      Units::kW);
-            compressor->perfGridValues.push_back(powerV);
+            compressor->perfGridValues.push_back(powerV());
 
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
@@ -1697,7 +1697,7 @@ void HPWH::initPreset(MODELS presetNum)
                                       15.97, 17.79, 20.56, 22.50, 10.36, 14.66, 18.07, 21.23,
                                       25.81, 29.01, 8.67,  15.05, 18.76, 21.87, 26.63, 30.02},
                                      Units::kW);
-            compressor->perfGridValues.push_back(powerV);
+            compressor->perfGridValues.push_back(powerV());
 
             // Grid values in long format, table 2, COP
             compressor->perfGridValues.push_back(
@@ -1751,7 +1751,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, Temp_d_t(0), this, std::greater<double>()));
+            "fourth node", nodeWeights1, Temp_d_t(0), this, std::greater<>()));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1869,14 +1869,14 @@ void HPWH::initPreset(MODELS presetNum)
                                  82.4, 86,    89.6, 93.2, 96.8, 100.4, 104},
                                 Units::F);
 
-        compressor->perfGrid.push_back(tempV1); // Grid Axis 1 Tair
+        compressor->perfGrid.push_back(tempV1()); // Grid Axis 1 Tair
 
         const TempVect_t tempV2({140., 158., 176.}, Units::F);
 
-        compressor->perfGrid.push_back(tempV2); // Grid Axis 2 Tout
+        compressor->perfGrid.push_back(tempV2()); // Grid Axis 2 Tout
 
         const TempVect_t tempV3({41, 48.2, 62.6, 75.2, 84.2}, Units::F);
-        compressor->perfGrid.push_back(tempV3); // Grid Axis 3 Tin
+        compressor->perfGrid.push_back(tempV3()); // Grid Axis 3 Tin
 
         // Grid values in long format, table 1, input power (Btu/hr)
 
@@ -2010,7 +2010,7 @@ void HPWH::initPreset(MODELS presetNum)
              36748.771988,     37756.062628,     36779.657412,     39342.226364,
              41825.090996,     43359.446924},
             Units::Btu_per_h);
-        compressor->perfGridValues.push_back(powerV);
+        compressor->perfGridValues.push_back(powerV());
 
         // Grid values in long format, table 2, COP
         compressor->perfGridValues.push_back(
@@ -2288,7 +2288,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                                            nodeWeightStandby,
                                                                            Temp_t(113, Units::F),
                                                                            this,
-                                                                           std::greater<double>());
+                                                                           std::greater<>());
 
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
@@ -2298,7 +2298,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                     nodeWeights1,
                                                     Temp_t(135, Units::F),
                                                     this,
-                                                    std::greater<double>(),
+                                                    std::greater<>(),
                                                     true));
         compressor->depressesTemperature = false; // no temp depression
     }
@@ -4126,7 +4126,7 @@ void HPWH::initPreset(MODELS presetNum)
                                                     nodeWeights1,
                                                     Temp_d_t(15., Units::dF),
                                                     this,
-                                                    std::greater<double>(),
+                                                    std::greater<>(),
                                                     true));
         compressor->depressesTemperature = false; // no temp depression
 
@@ -4187,7 +4187,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(4);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<double>()));
+            "fourth node", nodeWeights1, Temp_d_t(0., Units::dF), this, std::greater<>()));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate

@@ -347,5 +347,5 @@ TEST(ExtraHeatTest, extraHeat)
     HPWH::Energy_t dQ_expected = {extraPower(Units::W) * HPWH::Time_t(1, Units::min)(Units::s),
                                   Units::J}; // 1 min
 
-    EXPECT_NEAR(dQ_actual, dQ_expected, tol);
+    EXPECT_NEAR(dQ_actual(), dQ_expected(), tol);
 }
