@@ -2549,7 +2549,7 @@ void HPWH::updateTankTemps(
 
     // Standby losses from the sides of the tank
     {
-        UA_t standbyLossRate = UA_t(tankUA * fracAreaSide + fittingsUA) / getNumNodes();
+        UA_t standbyLossRate = (tankUA * fracAreaSide + fittingsUA) / getNumNodes();
         for (int i = 0; i < getNumNodes(); i++)
         {
             Energy_t standbyLossesNode =
@@ -3082,7 +3082,7 @@ bool HPWH::isEnergyBalanced(const Volume_t drawVol,
 
     Cp_t drawCp = {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVol(Units::L),
                    Units::kJ_per_C}; // heat capacity of draw
-    Energy_t qOutWater = {drawCp(Units::kJ_per_C) * (outletT(Units::C) - member_inletT(Units::C)),
+    Energy_t qOutWater = {drawCp(Units::kJ_per_C) * (outletT - member_inletT)(Units::dC),
                           Units::kJ}; // assumes only one inlet
 
     Energy_t expectedTankHeatContent =
