@@ -116,11 +116,11 @@ class HPWH : public Courier::Sender
                      insulated storage tanks currently available on the market from
                      Sanden, AOSmith, HTP, Rheem, and Niles,  */
 
-    inline static const Temp_t UNINITIALIZED_LOCATIONTEMP() { return {-500., Units::F}; }
-    inline static const Temp_t MAXOUTLET_R134A() { return {160., Units::F}; }
-    inline static const Temp_t MAXOUTLET_R410A() { return {140., Units::F}; }
-    inline static const Temp_t MAXOUTLET_R744() { return {190., Units::F}; }
-    inline static const Temp_d_t MINSINGLEPASSLIFT() { return {15., Units::dF}; }
+    inline static Temp_t UNINITIALIZED_LOCATIONTEMP() { return {-500., Units::F}; }
+    inline static Temp_t MAXOUTLET_R134A() { return {160., Units::F}; }
+    inline static Temp_t MAXOUTLET_R410A() { return {140., Units::F}; }
+    inline static Temp_t MAXOUTLET_R744() { return {190., Units::F}; }
+    inline static Temp_d_t MINSINGLEPASSLIFT() { return {15., Units::dF}; }
 
     HPWH(const std::shared_ptr<Courier::Courier>& courier = std::make_shared<DefaultCourier>(),
          const std::string& name_in = "hpwh"); /**< default constructor */
@@ -1261,13 +1261,9 @@ class HPWH : public Courier::Sender
     /**< holds the temperature of each node - 0 is the bottom node  */
     TempVect_t tankTs;
 
-    std::vector<double>& tankTs_t = tankTs;
-
     /**< holds the future temperature of each node for the conduction calculation - 0 is the bottom
      * node  */
     TempVect_t nextTankTs;
-
-    std::vector<double>& nextTankTs_t = nextTankTs;
 
     DRMODES prevDRstatus;
     /**< the DRstatus of the tank in the previous time step and at the end of runOneStep */
@@ -1727,4 +1723,11 @@ inline auto HM_TO_MIN(const double h, const double min) { return Time_h_min(h, m
 inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
 inline auto from(const Units::UA unitsUA) { return Units::scale(unitsUA, HPWH::UnitsUA); }
 
+inline auto operator+(HPWH::Temp_t T, HPWH::Temp_d_t dT){return HPWH::Temp_t(T() + dT());}
+inline auto operator-(HPWH::Temp_t T, HPWH::Temp_d_t dT){return HPWH::Temp_t(T() - dT());}
+
+inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1){return HPWH::Temp_d_t(T0() - T1());}
+
+inline auto operator+=(HPWH::Temp_t T, HPWH::Temp_d_t dT){return T += dT();}
+inline auto operator-=(HPWH::Temp_t T, HPWH::Temp_d_t dT){return T -= dT();}
 #endif

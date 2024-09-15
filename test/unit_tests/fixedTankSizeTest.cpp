@@ -49,13 +49,13 @@ TEST_F(FixedSizeTest, tankSizeFixed)
         if (hpwh.isTankSizeFixed())
         { // tank size should not have changed
             EXPECT_ANY_THROW(hpwh.setTankSize(targetTankSize));
-            EXPECT_NEAR(intitialTankSize, hpwh.getTankSize(), tol)
+            EXPECT_NEAR(intitialTankSize(), hpwh.getTankSize()(), tol)
                 << "The tank size has changed when it should not.";
         }
         else
         { // tank size should have changed to target value
             EXPECT_NO_THROW(hpwh.setTankSize(targetTankSize));
-            EXPECT_NEAR(targetTankSize, hpwh.getTankSize(), tol)
+            EXPECT_NEAR(targetTankSize(), hpwh.getTankSize()(), tol)
                 << "The tank size did not change to the target value.";
         }
 
@@ -63,7 +63,7 @@ TEST_F(FixedSizeTest, tankSizeFixed)
         hpwh.setTankSize(targetTankSize, true);
 
         // tank size should have changed to target value
-        EXPECT_NEAR(targetTankSize, hpwh.getTankSize(), tol)
+        EXPECT_NEAR(targetTankSize(), hpwh.getTankSize()(), tol)
             << "The tank size has not changed when forced.";
     }
 }
