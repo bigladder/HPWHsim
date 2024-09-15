@@ -69,9 +69,7 @@ struct PerformanceMapTest : public testing::Test
                                 HPWH::Temp_d_t in_dT,
                                 HPWH::Temp_d_t out_dT)
     {
-        return hpwh.getCompressorCapacity(point.airT,
-                                          point.inT - in_dT,
-                                          point.outT - out_dT);
+        return hpwh.getCompressorCapacity(point.airT, point.inT - in_dT, point.outT - out_dT);
     }
 };
 

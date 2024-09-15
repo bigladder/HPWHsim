@@ -526,7 +526,8 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 // Interpolate to get COP  at the current temperature
                 double COP_T1 = expandSeries(perfMap[i_prev].COP_coeffs, effCondenserT());
                 double COP_T2 = expandSeries(perfMap[i_next].COP_coeffs, effCondenserT());
-                cop = linearInterp(externalT(), perfMap[i_prev].T(), perfMap[i_next].T(), COP_T1, COP_T2);
+                cop = linearInterp(
+                    externalT(), perfMap[i_prev].T(), perfMap[i_next].T(), COP_T1, COP_T2);
             }
 
             {
@@ -538,8 +539,11 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 Power_t inputPower_T2 =
                     expandSeries(perfMap[i_next].inputPower_coeffs(), effCondenserT());
 
-                inputPower = linearInterp(
-                    externalT(), perfMap[i_prev].T(), perfMap[i_next].T(), inputPower_T1(), inputPower_T2());
+                inputPower = linearInterp(externalT(),
+                                          perfMap[i_prev].T(),
+                                          perfMap[i_next].T(),
+                                          inputPower_T1(),
+                                          inputPower_T2());
             }
         }
         else
@@ -553,10 +557,11 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
-            inputPower =
-                regressedMethod(perfMap[0].inputPower_coeffs(), externalT(), effOutletT(), effCondenserT());
+            inputPower = regressedMethod(
+                perfMap[0].inputPower_coeffs(), externalT(), effOutletT(), effCondenserT());
 
-            cop = regressedMethod(perfMap[0].COP_coeffs, externalT(), effOutletT(), effCondenserT());
+            cop =
+                regressedMethod(perfMap[0].COP_coeffs, externalT(), effOutletT(), effCondenserT());
         }
     }
 
@@ -623,7 +628,8 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        inputPower = regressedMethodMP(perfMap[0].inputPower_coeffs(), externalT(), effCondenserT());
+        inputPower =
+            regressedMethodMP(perfMap[0].inputPower_coeffs(), externalT(), effCondenserT());
         cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT(), effCondenserT());
     }
 
@@ -800,9 +806,10 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
              ++nodeIndex)
         {
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
-                                 ? targetT
-                                 : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
+                               ? targetT
+                               : hpwh->tankTs[nodeIndex + 1];
+            hpwh->tankTs[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
         hpwh->mixTankInversions();
@@ -936,7 +943,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
                                ? targetT
                                : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] = (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
+            hpwh->tankTs[nodeIndex] =
+                (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
         hpwh->mixTankInversions();

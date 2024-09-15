@@ -220,20 +220,14 @@ struct TransformVal
     double operator+(const double y) const { return x + y; }
     double operator-(const double y) const { return x - y; }
 
-    bool operator==(const double y) const
-    {
-        return (x == y);
-    }
+    bool operator==(const double y) const { return (x == y); }
 
-    bool operator!=(const double y) const
-    {
-        return !(operator==(y));
-    }
+    bool operator!=(const double y) const { return !(operator==(y)); }
 
-    bool operator<(const double y) const {return x < y;}
-    bool operator>(const double y) const {return x > y;}
-    bool operator<=(const double y) const {return x <= y;}
-    bool operator>=(const double y) const {return x >= y;}
+    bool operator<(const double y) const { return x < y; }
+    bool operator>(const double y) const { return x > y; }
+    bool operator<=(const double y) const { return x <= y; }
+    bool operator>=(const double y) const { return x >= y; }
 
     TransformVal& operator=(double x_in)
     {
@@ -279,20 +273,36 @@ struct ScaleVal : TransformVal<U, Scale, units>
 
     double operator()(const U toUnits) const { return scale(units, toUnits) * x; }
 
-    ScaleVal& operator+=(const double y) { return *this = x + y; }
-    ScaleVal& operator-=(const double y) { return *this = x - y; }
+    ScaleVal& operator+=(const double y)
+    {
+        x += y;
+        return *this;
+    }
+    ScaleVal& operator-=(const double y)
+    {
+        x -= y;
+        return *this;
+    }
 
     ScaleVal operator*(const double y) const { return y * x; }
 
     friend ScaleVal operator*(const double y, const ScaleVal& s) { return y * s(); }
 
-    double operator/(const ScaleVal& s) const {return x / s();}
+    double operator/(const ScaleVal& s) const { return x / s(); }
 
     ScaleVal operator+(const ScaleVal& s) const { return x + s(); }
     ScaleVal operator-(const ScaleVal& s) const { return x - s(); }
 
-    ScaleVal operator+=(const ScaleVal& s) { return *this = x + s(); }
-    ScaleVal operator-=(const ScaleVal& s) { return *this = x - s(); }
+    ScaleVal operator+=(const ScaleVal& scaleVal)
+    {
+        x += scaleVal();
+        return *this;
+    }
+    ScaleVal operator-=(const ScaleVal& scaleVal)
+    {
+        x -= scaleVal();
+        return *this;
+    }
 
     template <U toUnits>
     bool operator==(const ScaleVal<U, toUnits> scaleVal) const
@@ -392,8 +402,16 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     {
     }
 
-    ScaleOffsetVal& operator+=(const double y) { return *this = x + y; }
-    ScaleOffsetVal& operator-=(const double y) { return *this = x - y; }
+    ScaleOffsetVal& operator+=(const double y)
+    {
+        x += y;
+        return *this;
+    }
+    ScaleOffsetVal& operator-=(const double y)
+    {
+        x -= y;
+        return *this;
+    }
 
     template <U fromUnits>
     ScaleOffsetVal& operator+(const ScaleVal<U, fromUnits>& scaleVal) const
@@ -410,13 +428,15 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     template <U fromUnits>
     ScaleOffsetVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
     {
-        return *this = *this + scaleVal;
+        x += scaleVal();
+        return *this;
     }
 
     template <U fromUnits>
     ScaleOffsetVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
     {
-        return *this = *this - scaleVal;
+        x -= scaleVal();
+        return *this;
     }
 
     template <U toUnits>
@@ -440,7 +460,7 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     template <U toUnits>
     bool operator>(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
     {
-        return ( x > scaleOffsetVal(units));
+        return (x > scaleOffsetVal(units));
     }
 
     template <U toUnits>
@@ -580,7 +600,9 @@ struct ScaleVect : public TransformVect<U, Scale, units>
             std::transform(xV.begin(),
                            xV.end(),
                            xV.begin(),
-                           [factor](auto && PH1) { return std::multiplies<>()(std::forward<decltype(PH1)>(PH1), factor); });
+                           [factor](auto&& PH1) {
+                               return std::multiplies<>()(std::forward<decltype(PH1)>(PH1), factor);
+                           });
         }
     }
 
@@ -718,7 +740,10 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     auto front() const { return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.front()); }
     auto back() const { return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.back()); }
 
-    auto push_back(const ScaleOffsetVal<U, units>& scaleOffsetVal) { xV.push_back(scaleOffsetVal()); }
+    auto push_back(const ScaleOffsetVal<U, units>& scaleOffsetVal)
+    {
+        xV.push_back(scaleOffsetVal());
+    }
 };
 
 /// scale pairs

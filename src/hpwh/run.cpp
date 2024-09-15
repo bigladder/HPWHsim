@@ -284,7 +284,7 @@ void run(const std::string& sSpecType,
     }
     if (newTankSize > 0)
     {
-        hpwh.setTankSize({newTankSize, Units::gal});
+        hpwh.setTankSize(newTankSize);
     }
     if (tot_limit > 0)
     {
@@ -407,7 +407,7 @@ void run(const std::string& sSpecType,
             if (hpwh.getNthHeatSourceRunTime(iHS) > 1)
             {
                 cout << "ERROR: On minute " << i << " heat source " << iHS << " ran for "
-                     << hpwh.getNthHeatSourceRunTime(iHS) << "minutes"
+                     << hpwh.getNthHeatSourceRunTime(iHS)() << "minutes"
                      << "\n";
                 exit(1);
             }
@@ -435,7 +435,7 @@ void run(const std::string& sSpecType,
             {
                 air2T = hpwh.getLocationT();
             }
-            strPreamble = std::to_string(i) + ", " + std::to_string(air2T) + ", " +
+            strPreamble = std::to_string(i) + ", " + std::to_string(air2T()) + ", " +
                           std::to_string(hpwh.getSetpointT()(Units::C)) + ", " +
                           std::to_string(allSchedules[0][i]) + ", " +
                           std::to_string(allSchedules[1][i]) + ", ";

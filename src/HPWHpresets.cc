@@ -831,13 +831,8 @@ void HPWH::initPreset(MODELS presetNum)
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor->addShutOffLogic(
-            std::make_shared<TempBasedHeatingLogic>("bottom node",
-                                                    nodeWeights1,
-                                                    Temp_d_t {15., Units::dF},
-                                                    this,
-                                                    std::greater<>(),
-                                                    true));
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "bottom node", nodeWeights1, Temp_d_t {15., Units::dF}, this, std::greater<>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1303,13 +1298,8 @@ void HPWH::initPreset(MODELS presetNum)
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor->addShutOffLogic(
-            std::make_shared<TempBasedHeatingLogic>("bottom node",
-                                                    nodeWeights1,
-                                                    Temp_d_t(15., Units::dF),
-                                                    this,
-                                                    std::greater<>(),
-                                                    true));
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
@@ -1850,13 +1840,8 @@ void HPWH::initPreset(MODELS presetNum)
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor->addShutOffLogic(
-            std::make_shared<TempBasedHeatingLogic>("bottom node",
-                                                    nodeWeights1,
-                                                    Temp_d_t(15., Units::dF),
-                                                    this,
-                                                    std::greater<>(),
-                                                    true));
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<>(), true));
         compressor->depressesTemperature = false;
 
         // Performance grid: externalT_F, Tout_F, condenserTemp_F
@@ -2185,12 +2170,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(8);
-        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>("eighth node absolute",
-                                                                           nodeWeights,
-                                                                           Temp_t(113, Units::F),
-                                                                           this,
-                                                                           std::less<>(),
-                                                                           true));
+        compressor->addTurnOnLogic(std::make_shared<TempBasedHeatingLogic>(
+            "eighth node absolute", nodeWeights, Temp_t(113, Units::F), this, std::less<>(), true));
         if (presetNum == MODELS_SANCO2_83 || presetNum == MODELS_SANCO2_119)
         {
             compressor->addTurnOnLogic(standby({8.2639, Units::dF}));
@@ -4121,13 +4102,8 @@ void HPWH::initPreset(MODELS presetNum)
         // lowT cutoff
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
-        compressor->addShutOffLogic(
-            std::make_shared<TempBasedHeatingLogic>("bottom node",
-                                                    nodeWeights1,
-                                                    Temp_d_t(15., Units::dF),
-                                                    this,
-                                                    std::greater<>(),
-                                                    true));
+        compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
+            "bottom node", nodeWeights1, Temp_d_t(15., Units::dF), this, std::greater<>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Scale the resistance-element power
