@@ -286,12 +286,12 @@ struct ScaleVal : TransformVal<U, Scale, units>
 
     ScaleVal operator*(const double y) const { return y * x; }
 
-    friend ScaleVal operator*(const double y, const ScaleVal& s) { return y * s(); }
+    friend ScaleVal operator*(const double y, const ScaleVal& scaleVal) { return y * scaleVal(); }
 
-    double operator/(const ScaleVal& s) const { return x / s(); }
+    double operator/(const ScaleVal& scaleVal) const { return x / scaleVal(); }
 
-    ScaleVal operator+(const ScaleVal& s) const { return x + s(); }
-    ScaleVal operator-(const ScaleVal& s) const { return x - s(); }
+    ScaleVal operator+(const ScaleVal& scaleVal) const { return x + scaleVal(); }
+    ScaleVal operator-(const ScaleVal& scaleVal) const { return x - scaleVal(); }
 
     ScaleVal operator+=(const ScaleVal& scaleVal)
     {
