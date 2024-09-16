@@ -4930,7 +4930,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
     bool inLastHour = false;
     Volume_t stepDrawVolume = 0.;
-    int endStep = endTime(Units::min);
+    auto endStep = static_cast<int>(endTime(Units::min));
     for (int runStep = 0; runStep <= endStep; ++runStep)
     {
         Time_t runTime = {static_cast<double>(runStep), Units::min};
