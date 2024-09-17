@@ -51,7 +51,7 @@ add_subdirectory(vendor)
 add_subdirectory(src)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
-    add_subdirectory(test)
+	add_subdirectory(test)
     if (${PROJECT_NAME}_COVERAGE)
         coverage_evaluate()
     endif ()
