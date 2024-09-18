@@ -5,7 +5,7 @@ namespace data_model  {
 
 	namespace rsresistancewaterheatsource_ns  {
 	
-		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = std::move(value); }
+		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = value; }
 
 		void from_json(const nlohmann::json& j, Schema& x) {
 		}

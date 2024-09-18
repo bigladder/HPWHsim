@@ -9,7 +9,9 @@
 #include <nlohmann/json.hpp>
 #include <enum-info.h>
 #include <courier/courier.h>
-#include <template.h>
+#include <core.h>
+#include <rsintegratedwaterheater.h>
+#include <heat-source-base.h>
 #include <heating-logic-base.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
@@ -59,6 +61,7 @@ namespace data_model {
 			{ComparisonType::UNKNOWN, {"UNKNOWN", "None", "None"}}
 		};
 		inline std::shared_ptr<Courier::Courier> logger;
+		void set_logger(std::shared_ptr<Courier::Courier> value);
 		struct Schema {
 			const static std::string_view schema_title;
 			const static std::string_view schema_version;
@@ -102,7 +105,7 @@ namespace data_model {
 		};
 		struct HeatSourceConfiguration {
 			rsintegratedwaterheater_ns::HeatSourceType heat_source_type;
-			std::unique_ptr<Template> heat_source;
+			std::unique_ptr<HeatSourceBase> heat_source;
 			std::string label;
 			std::vector<double> heat_distribution;
 			std::vector<rsintegratedwaterheater_ns::HeatingLogic> turn_on_logic;
