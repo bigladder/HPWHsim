@@ -1068,8 +1068,8 @@ class HPWH : public Courier::Sender
     struct StandardTestOptions
     {
         bool saveOutput = false;
-        std::string sOutputDirectory = "";
-        std::string sOutputFilename = "";
+        std::string sOutputDirectory;
+        std::string sOutputFilename;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
@@ -1084,7 +1084,7 @@ class HPWH : public Courier::Sender
                              StandardTestOptions& standardTestOptions);
 
     /// run 24-hr draw pattern and compute metrics
-    void run24hrTest(const FirstHourRating firstHourRating,
+    void run24hrTest(FirstHourRating firstHourRating,
                      StandardTestSummary& standardTestSummary,
                      StandardTestOptions& standardTestOptions);
 
@@ -1730,4 +1730,6 @@ inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1) { return HPWH::Temp_d_t(
 
 inline auto operator+=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T += dT(); }
 inline auto operator-=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T -= dT(); }
+
+inline auto hmin(const double h, const double min){return HPWH::Time_t(HM_TO_MIN(h, min), Units::min);}
 #endif
