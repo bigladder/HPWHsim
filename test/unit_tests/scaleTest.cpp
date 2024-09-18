@@ -28,8 +28,8 @@ void getCompressorPerformance(
     hpwh.resetTankToSetpoint(); // Force tank cold
     hpwh.setSetpointT(setpointT);
 
-    hpwh.setUA(Units::UA0);
-    hpwh.setFittingsUA(Units::UA0);
+    hpwh.setUA(HPWH::UA_t(0.));
+    hpwh.setFittingsUA(HPWH::UA_t(0.));
 
     // Run the step
     hpwh.runOneStep(waterT, // Inlet water temperature

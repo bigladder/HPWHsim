@@ -923,10 +923,10 @@ void HPWH::runNSteps(int N,
                      DRMODES* DRstatus)
 {
     // these are all the accumulating variables we'll need
-    Energy_t energyRemovedFromEnvironment_SUM = Units::E0;
-    Energy_t standbyLosses_SUM = Units::E0;
+    Energy_t energyRemovedFromEnvironment_SUM(0.);
+    Energy_t standbyLosses_SUM(0.);
     double outletT_AVG = 0;
-    Volume_t totalDrawVolume = Units::V0;
+    Volume_t totalDrawVolume(0.);
     std::vector<Time_t> heatSources_runTimes_SUM(getNumHeatSources());
     std::vector<Energy_t> heatSources_energyInputs_SUM(getNumHeatSources());
     std::vector<Energy_t> heatSources_energyOutputs_SUM(getNumHeatSources());
@@ -2336,7 +2336,7 @@ HPWH::Power_t HPWH::getResistanceCapacity(int which /*=-1*/)
         send_error("Out of bounds value for \"which\" in getResistanceCapacity().");
     }
 
-    Power_t returnPower = Units::P0;
+    Power_t returnPower(0.);
     if (which == -1)
     {
         // Just get all the elements
@@ -2445,13 +2445,13 @@ void HPWH::updateTankTemps(
         if (hasHeatExchanger)
         {
             outletT = inletT;
-            for (auto& nodeT_C : tankTs)
+            for (auto& nodeT : tankTs)
             {
-                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT_C - outletT(Units::C)),
+                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT - outletT)(Units::dC),
                                          Units::kJ);
                 Energy_t heatExchange = nodeHeatExchangerEffectiveness * maxHeatExchange;
 
-                nodeT_C -= heatExchange(Units::kJ) / nodeCp_kJ_per_C;
+                nodeT -= {heatExchange(Units::kJ) / nodeCp_kJ_per_C, Units::dC};
                 outletT += Temp_d_t(heatExchange(Units::kJ) / drawCp_kJ_per_C, Units::dC);
             }
         }
@@ -2473,7 +2473,7 @@ void HPWH::updateTankTemps(
                 remainingDrawVolume_N = 0.;
             }
 
-            Energy_t totalExpelledHeat = Units::E0;
+            Energy_t totalExpelledHeat(0.);
             while (remainingDrawVolume_N > 0.)
             {
 
@@ -2528,19 +2528,19 @@ void HPWH::updateTankTemps(
     // Initialize newTankTemps_C
     nextTankTs = tankTs;
 
-    Energy_t standbyLossesBottom = Units::E0;
-    Energy_t standbyLossesTop = Units::E0;
-    Energy_t standbyLossesSides = Units::E0;
+    Energy_t standbyLossesBottom(0.);
+    Energy_t standbyLossesTop(0.);
+    Energy_t standbyLossesSides(0.);
 
     // Standby losses from the top and bottom of the tank
     {
         UA_t standbyLossRate = fracAreaTop * tankUA;
 
         standbyLossesBottom = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                                           (tankTs[0] - tankAmbientT(Units::C)),
+                                           (tankTs[0] - tankAmbientT)(Units::dC),
                                        Units::kJ);
         standbyLossesTop = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                                        (tankTs[getNumNodes() - 1] - tankAmbientT(Units::C)),
+                                        (tankTs[getNumNodes() - 1] - tankAmbientT)(Units::dC),
                                     Units::kJ);
 
         nextTankTs.front() -= standbyLossesBottom(Units::kJ) / nodeCp_kJ_per_C;
@@ -2554,7 +2554,7 @@ void HPWH::updateTankTemps(
         {
             Energy_t standbyLossesNode =
                 Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
-                             (tankTs[i] - tankAmbientT(Units::C)),
+                             (tankTs[i] - tankAmbientT)(Units::dC),
                          Units::kJ);
             standbyLossesSides += standbyLossesNode;
 
@@ -2841,7 +2841,7 @@ void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
     resampleExtensive(heatDistribution(), modHeatDistribution());
 
     // Unnecessary unit conversions used here to match former method
-    Energy_t tot_qAdded = Units::E0;
+    Energy_t tot_qAdded(0.);
     for (int i = getNumNodes() - 1; i >= 0; i--)
     {
         if (heatDistribution[i] != 0)
@@ -3070,7 +3070,7 @@ bool HPWH::isEnergyBalanced(const Volume_t drawVol,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
     // Check energy balancing.
-    Energy_t qInElectrical = Units::E0;
+    Energy_t qInElectrical(0.);
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         qInElectrical += getNthHeatSourceEnergyInput(iHS);
@@ -4560,7 +4560,7 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    ambientT,              // ambient Temp (C)
                    externalT,             // external Temp (C)
                    drMode,                // DDR Status
-                   Units::V0,                    // inlet-2 volume (L)
+                   V0(),                    // inlet-2 volume (L)
                    inletT,                // inlet-2 Temp (C)
                    NULL);                 // no extra heat
     }
@@ -4631,7 +4631,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
                    ambientT,              // ambient Temp
                    externalT,             // external Temp
                    drMode,                // DDR Status
-                   Units::V0,                    // inlet-2 volume
+                   V0(),                    // inlet-2 volume
                    inletT,                // inlet-2 Temp
                    NULL);                 // no extra heat
 
@@ -4830,11 +4830,11 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     while ((preTime(Units::min) < 60.) || heatersAreOn)
     {
         runOneStep(inletT,    // inlet water temperature
-                   Units::V0,         // draw volume
+                   V0(),         // draw volume
                    ambientT,  // ambient Temp
                    externalT, // external Temp
                    drMode,    // DDR Status
-                   Units::V0,        // inlet-2 volume
+                   V0(),        // inlet-2 volume
                    inletT,    // inlet-2 Temp
                    NULL);     // no extra heat
 
@@ -5001,7 +5001,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                    ambientT,       // ambient Temp
                    externalT,      // external Temp
                    drMode,         // DDR Status
-                   Units::V0,             // inlet-2 volume
+                   V0(),             // inlet-2 volume
                    inletT,         // inlet-2 Temp
                    NULL);          // no extra heat
 
