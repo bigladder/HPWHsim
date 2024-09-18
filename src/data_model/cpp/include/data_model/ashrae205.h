@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <enum-info.h>
 #include <courier/courier.h>
+#include <ashrae205.h>
 
 /// @note  This class has been auto-generated. Local changes will not be saved!
 
@@ -107,6 +108,7 @@ namespace data_model {
 			{ConcentrationType::UNKNOWN, {"UNKNOWN", "None", "None"}}
 		};
 		inline std::shared_ptr<Courier::Courier> logger;
+		void set_logger(std::shared_ptr<Courier::Courier> value);
 		struct Schema {
 			const static std::string_view schema_title;
 			const static std::string_view schema_version;
