@@ -153,7 +153,7 @@ inline Scaler<Power>::ScaleMap
 
 template <>
 inline Scaler<Area>::ScaleMap Scaler<Area>::scaleMap(m2,
-                                                     {{ft2, Scale(std::pow(scale(m, ft), 2.))}});
+                                                     {{ft2, Scale(std::pow(scale(m, ft)(), 2.))}});
 
 template <>
 inline Scaler<Volume>::ScaleMap Scaler<Volume>::scaleMap(

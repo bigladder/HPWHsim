@@ -384,7 +384,7 @@ std::vector<double> changeSeriesUnitsTemp3(const std::vector<double> coeffs,
     }
 
     auto t = Units::scaleOffset(toUnits, fromUnits);
-    double alpha = t.offset(), beta = t.scale();
+    double alpha = t.offset()(), beta = t.scale()();
 
     auto& powers = HPWH::powers3;
     for (std::size_t i = 0; i < coeffs.size(); ++i)
@@ -414,7 +414,7 @@ std::vector<double> changeSeriesUnitsTemp6(const std::vector<double> coeffs,
     }
 
     auto t = Units::scaleOffset(toUnits, fromUnits);
-    double alpha = t.offset(), beta = t.scale();
+    double alpha = t.offset()(), beta = t.scale()();
 
     auto& powers = HPWH::powers6;
     for (std::size_t i = 0; i < coeffs.size(); ++i)
@@ -450,7 +450,7 @@ std::vector<double> changeSeriesUnitsTemp11(const std::vector<double> coeffs,
     }
 
     auto t = Units::scaleOffset(toUnits, fromUnits);
-    double alpha = t.offset(), beta = t.scale();
+    double alpha = t.offset()(), beta = t.scale()();
 
     auto& powers = HPWH::powers11;
     for (std::size_t i = 0; i < coeffs.size(); ++i)
