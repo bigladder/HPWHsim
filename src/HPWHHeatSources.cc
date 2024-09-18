@@ -541,10 +541,10 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                     Power_t(expandSeries(perfMap[i_next].inputPower_coeffs(), effCondenserT()));
 
                 inputPower() = linearInterp(externalT(),
-                                          perfMap[i_prev].T(),
-                                          perfMap[i_next].T(),
-                                          inputPower_T1(),
-                                          inputPower_T2());
+                                            perfMap[i_prev].T(),
+                                            perfMap[i_next].T(),
+                                            inputPower_T1(),
+                                            inputPower_T2());
             }
         }
         else

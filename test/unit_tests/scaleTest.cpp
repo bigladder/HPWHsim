@@ -32,10 +32,10 @@ void getCompressorPerformance(
     hpwh.setFittingsUA(HPWH::UA_t(0.));
 
     // Run the step
-    hpwh.runOneStep(waterT, // Inlet water temperature
-                    {0., Units::L},     // Flow
-                    airT,   // Ambient Temp
-                    airT,   // External Temp
+    hpwh.runOneStep(waterT,         // Inlet water temperature
+                    {0., Units::L}, // Flow
+                    airT,           // Ambient Temp
+                    airT,           // External Temp
                     // HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
                     (HPWH::DR_TOO | HPWH::DR_LOR) // DR Status (now an enum. Fixed for now as allow)
     );

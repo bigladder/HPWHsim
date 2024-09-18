@@ -97,11 +97,10 @@ class HPWH : public Courier::Sender
         GenTemp_t(double val, Units::Temp_d temp_d) { emplace<1>(val, temp_d); }
     };
 
-
     inline static const Temp_d_t dT0() { return {0., UnitsTemp_d}; }
     inline static const Volume_t V0() { return {0., UnitsVolume}; }
     inline static const Energy_t E0() { return {0., UnitsEnergy}; }
-    inline static const Power_t P0() { return {0.,UnitsPower}; }
+    inline static const Power_t P0() { return {0., UnitsPower}; }
     inline static const UA_t UA0() { return {0., UnitsUA}; }
 
     //////
@@ -1047,7 +1046,7 @@ class HPWH : public Courier::Sender
         Power_t standbyHourlyLossEnergy; // Q_hr
         UA_t standbyLossCoefficient;     // UA
 
-        Time_t noDrawTotalTime;        // tau_stby,2
+        Time_t noDrawTotalTime;       // tau_stby,2
         Temp_t noDrawAverageAmbientT; // <T_a,stby,2>
 
         // 24-hr values
@@ -1738,5 +1737,8 @@ inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1) { return HPWH::Temp_d_t(
 inline auto operator+=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T += dT(); }
 inline auto operator-=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T -= dT(); }
 
-inline auto hmin(const double h, const double min){return HPWH::Time_t(HM_TO_MIN(h, min), Units::min);}
+inline auto hmin(const double h, const double min)
+{
+    return HPWH::Time_t(HM_TO_MIN(h, min), Units::min);
+}
 #endif

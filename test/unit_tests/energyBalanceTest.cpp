@@ -79,8 +79,13 @@ TEST(EnergyBalanceTest, energyBalance)
             HPWH::Volume_t drawVol = flowFac * maxDrawVol;
 
             HPWH::Energy_t prevHeatContent = hpwh.getTankHeatContent();
-            EXPECT_NO_THROW(hpwh.runOneStep(
-                drawVol, ambientT, externalT, HPWH::DR_ALLOW, HPWH::V0(), {0., Units::C}, &nodePowerExtra))
+            EXPECT_NO_THROW(hpwh.runOneStep(drawVol,
+                                            ambientT,
+                                            externalT,
+                                            HPWH::DR_ALLOW,
+                                            HPWH::V0(),
+                                            {0., Units::C},
+                                            &nodePowerExtra))
                 << "Failure in hpwh.runOneStep.";
             result &= hpwh.isEnergyBalanced(drawVol, prevHeatContent, 1.e-6);
 

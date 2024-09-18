@@ -219,9 +219,9 @@ struct TransformVal
     explicit operator const double&() const { return x; }
     explicit operator double&() { return x; }
 
-    //double operator+(const double y) const { return x + y; }
-    //double operator-(const double y) const { return x - y; }
-    //double operator/(const double y) const { return x / y; }
+    // double operator+(const double y) const { return x + y; }
+    // double operator-(const double y) const { return x - y; }
+    // double operator/(const double y) const { return x / y; }
 
     bool operator==(const double y) const { return (x == y); }
     bool operator!=(const double y) const { return !(operator==(y)); }
@@ -250,9 +250,9 @@ struct ScaleVal : TransformVal<U, Scale, units>
     using TransformVal<U, Scale, units>::operator>=;
     using TransformVal<U, Scale, units>::operator==;
     using TransformVal<U, Scale, units>::operator!=;
-    //using TransformVal<U, Scale, units>::operator+;
-    //using TransformVal<U, Scale, units>::operator-;
-    //using TransformVal<U, Scale, units>::operator/;
+    // using TransformVal<U, Scale, units>::operator+;
+    // using TransformVal<U, Scale, units>::operator-;
+    // using TransformVal<U, Scale, units>::operator/;
 
     explicit ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
 
@@ -299,7 +299,10 @@ struct ScaleVal : TransformVal<U, Scale, units>
     auto operator+(const double y) const { return ScaleVal(x + y); }
     auto operator-(const double y) const { return ScaleVal(x - y); }
     auto operator/(const double y) const { return ScaleVal(x / y); }
-    friend auto operator*(const double y, const ScaleVal& scaleVal) { return ScaleVal(y * scaleVal()); }
+    friend auto operator*(const double y, const ScaleVal& scaleVal)
+    {
+        return ScaleVal(y * scaleVal());
+    }
 
     double operator/(const ScaleVal& scaleVal) const { return x / scaleVal(); }
 
@@ -393,8 +396,8 @@ template <class U, U units>
 struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
 {
     using TransformVal<U, ScaleOffset, units>::x;
-    //using TransformVal<U, ScaleOffset, units>::operator+;
-    //using TransformVal<U, ScaleOffset, units>::operator-;
+    // using TransformVal<U, ScaleOffset, units>::operator+;
+    // using TransformVal<U, ScaleOffset, units>::operator-;
     using TransformVal<U, ScaleOffset, units>::operator<;
     using TransformVal<U, ScaleOffset, units>::operator>;
     using TransformVal<U, ScaleOffset, units>::operator<=;
@@ -444,7 +447,6 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     {
         return x - scaleVal(units);
     }
-
 
     template <U fromUnits>
     ScaleOffsetVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
@@ -690,7 +692,10 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
 
     ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
 
-    ScaleOffsetVal<U, units> operator[](const std::size_t i) const { return ScaleOffsetVal<U, units>(xV[i]); }
+    ScaleOffsetVal<U, units> operator[](const std::size_t i) const
+    {
+        return ScaleOffsetVal<U, units>(xV[i]);
+    }
 
     ScaleOffsetVal<U, units>& operator[](const std::size_t i)
     {
@@ -772,7 +777,8 @@ template <class U, U units0, U units1>
 struct ScalePair : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>
 {
     ScalePair(const double x0_in = 0., const double x1_in = 0.)
-        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>({ScaleVal<U, units0>(x0_in), ScaleVal<U, units1>(x1_in)})
+        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>(
+              {ScaleVal<U, units0>(x0_in), ScaleVal<U, units1>(x1_in)})
     {
     }
 

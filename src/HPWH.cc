@@ -2447,8 +2447,7 @@ void HPWH::updateTankTemps(
             outletT = inletT;
             for (auto& nodeT : tankTs)
             {
-                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT - outletT)(Units::dC),
-                                         Units::kJ);
+                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT - outletT)(Units::dC), Units::kJ);
                 Energy_t heatExchange = nodeHeatExchangerEffectiveness * maxHeatExchange;
 
                 nodeT -= {heatExchange(Units::kJ) / nodeCp_kJ_per_C, Units::dC};
@@ -2467,8 +2466,8 @@ void HPWH::updateTankTemps(
                         (inletT() * (drawVolume - inlet2Vol) + inlet2T() * inlet2Vol) / drawVolume;
                 }
                 outletT() = (outletT() / getNumNodes() * tankVolume +
-                           tankTs[0]() * (drawVolume - tankVolume)) /
-                          drawVolume * remainingDrawVolume_N;
+                             tankTs[0]() * (drawVolume - tankVolume)) /
+                            drawVolume * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
             }
@@ -2481,7 +2480,8 @@ void HPWH::updateTankTemps(
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                Energy_t outputHeat = {incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs.back()(Units::C), Units::kJ};
+                Energy_t outputHeat = {
+                    incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs.back()(Units::C), Units::kJ};
                 totalExpelledHeat += outputHeat;
                 tankTs.back() -= Temp_d_t(outputHeat(Units::kJ) / nodeCp_kJ_per_C, Units::dC);
 
@@ -4560,7 +4560,7 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    ambientT,              // ambient Temp (C)
                    externalT,             // external Temp (C)
                    drMode,                // DDR Status
-                   V0(),                    // inlet-2 volume (L)
+                   V0(),                  // inlet-2 volume (L)
                    inletT,                // inlet-2 Temp (C)
                    NULL);                 // no extra heat
     }
@@ -4631,7 +4631,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
                    ambientT,              // ambient Temp
                    externalT,             // external Temp
                    drMode,                // DDR Status
-                   V0(),                    // inlet-2 volume
+                   V0(),                  // inlet-2 volume
                    inletT,                // inlet-2 Temp
                    NULL);                 // no extra heat
 
@@ -4830,11 +4830,11 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     while ((preTime(Units::min) < 60.) || heatersAreOn)
     {
         runOneStep(inletT,    // inlet water temperature
-                   V0(),         // draw volume
+                   V0(),      // draw volume
                    ambientT,  // ambient Temp
                    externalT, // external Temp
                    drMode,    // DDR Status
-                   V0(),        // inlet-2 volume
+                   V0(),      // inlet-2 volume
                    inletT,    // inlet-2 Temp
                    NULL);     // no extra heat
 
@@ -5001,7 +5001,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                    ambientT,       // ambient Temp
                    externalT,      // external Temp
                    drMode,         // DDR Status
-                   V0(),             // inlet-2 volume
+                   V0(),           // inlet-2 volume
                    inletT,         // inlet-2 Temp
                    NULL);          // no extra heat
 
@@ -5226,7 +5226,8 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         Temp_d_t dT(standbyAverageTankT(Units::C) - standbyAverageAmbientT(Units::C), Units::dC);
         if (dT > 0.)
         {
-            testSummary.standbyLossCoefficient() = testSummary.standbyHourlyLossEnergy() / dT(); // UA
+            testSummary.standbyLossCoefficient() =
+                testSummary.standbyHourlyLossEnergy() / dT(); // UA
         }
     }
 
