@@ -35,7 +35,7 @@ TEST(StateOfChargeFunctionsTest, getSoC)
     chargeFraction = hpwh.calcSoCFraction({mainsT(Units::C) + 5., Units::C}, minUsefulT);
     EXPECT_NEAR(chargeFraction, 1., tol);
 
-    chargeFraction = hpwh.calcSoCFraction(mainsT(Units::C), {minUsefulT(Units::C) + 5, Units::C});
+    chargeFraction = hpwh.calcSoCFraction(mainsT, {minUsefulT(Units::C) + 5, Units::C});
     EXPECT_NEAR(chargeFraction, 1., tol);
 
     // Varying max temp

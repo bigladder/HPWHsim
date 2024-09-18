@@ -32,7 +32,7 @@ TEST(EnergyBalanceTest, energyBalance)
 
         const HPWH::Time_t testDuration = {60., Units::min};
         const HPWH::Time_t stepTime = {1., Units::min};
-        HPWH::Time_t time = 0;
+        HPWH::Time_t time = {0., Units::min};
         bool result = true;
         do
         {
@@ -71,7 +71,7 @@ TEST(EnergyBalanceTest, energyBalance)
         bool result = true;
         const HPWH::Time_t testDuration = {60., Units::min};
         const HPWH::Time_t stepTime = {1., Units::min};
-        HPWH::Time_t time = 0;
+        HPWH::Time_t time = {0., Units::min};
         do
         {
             double flowFac = sin(Pi * time / testDuration) - 0.5;
@@ -80,7 +80,7 @@ TEST(EnergyBalanceTest, energyBalance)
 
             HPWH::Energy_t prevHeatContent = hpwh.getTankHeatContent();
             EXPECT_NO_THROW(hpwh.runOneStep(
-                drawVol, ambientT, externalT, HPWH::DR_ALLOW, 0., 0., &nodePowerExtra))
+                drawVol, ambientT, externalT, HPWH::DR_ALLOW, Units::V0, {0., Units::C}, &nodePowerExtra))
                 << "Failure in hpwh.runOneStep.";
             result &= hpwh.isEnergyBalanced(drawVol, prevHeatContent, 1.e-6);
 

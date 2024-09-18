@@ -16,7 +16,7 @@ TEST(ResistanceFunctionsTest, setResistanceCapacityErrorChecks)
         const std::string sModelName = "ColmacCxA_30_SP";
         hpwh.initPreset(sModelName);
 
-        EXPECT_ANY_THROW(hpwh.setResistanceCapacity(100.)); // Needs to be scalable
+        EXPECT_ANY_THROW(hpwh.setResistanceCapacity({100., Units::W})); // Needs to be scalable
     }
 
     {
@@ -40,7 +40,7 @@ TEST(ResistanceFunctionsTest, getSetResistanceErrors)
 {
     HPWH hpwh;
     HPWH::Power_t lowerElementPower = {1000, Units::W};
-    EXPECT_NO_THROW(hpwh.initResistanceTank(100., 0.95, 0., lowerElementPower))
+    EXPECT_NO_THROW(hpwh.initResistanceTank({100., Units::L}, {0.95, Units::m2C_per_W}, Units::P0, lowerElementPower))
         << "Could not initialize resistance tank.";
 
     HPWH::Power_t returnVal;
@@ -78,9 +78,9 @@ TEST(ResistanceFunctionsTest, commercialTankInitErrors)
                                                     {100., Units::W},
                                                     {100., Units::W})); // negative r value
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(
-        {800., Units::L}, 0., {100., Units::W}, {100., Units::W})); // 0 r value
+        {800., Units::L}, {0., Units::m2C_per_W}, {100., Units::W}, {100., Units::W})); // 0 r value
     EXPECT_ANY_THROW(hpwh.initResistanceTankGeneric(
-        {800., Units::L}, {10., Units::m2C_per_W}, 0., 0.)); // Check needs one element
+        {800., Units::L}, {10., Units::m2C_per_W}, Units::P0, Units::P0)); // Check needs one element
 }
 
 /*
@@ -91,11 +91,11 @@ TEST(ResistanceFunctionsTest, getNumResistanceElements)
     HPWH hpwh;
 
     EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(
-        {800., Units::L}, {10., Units::m2C_per_W}, 0., {1000., Units::W}));
+        {800., Units::L}, {10., Units::m2C_per_W}, Units::P0, {1000., Units::W}));
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
     EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(
-        {800., Units::L}, {10., Units::m2C_per_W}, {1000., Units::W}, 0.));
+        {800., Units::L}, {10., Units::m2C_per_W}, {1000., Units::W}, Units::P0));
     EXPECT_EQ(hpwh.getNumResistanceElements(), 1); // Check 1 elements
 
     EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(
@@ -110,18 +110,18 @@ TEST(ResistanceFunctionsTest, getResistancePositionInRE_tank)
 {
     HPWH hpwh;
 
-    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric({800., Units::L}, 10., 0., {1000., Units::W}));
+    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::m2C_per_W}, Units::P0, {1000., Units::W}));
     EXPECT_EQ(hpwh.getResistancePosition(0), 0);     // Check lower element is there
     EXPECT_ANY_THROW(hpwh.getResistancePosition(1)); // Check no element
     EXPECT_ANY_THROW(hpwh.getResistancePosition(2)); // Check no element
 
-    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric({800., Units::L}, 10., {1000., Units::W}, 0.));
+    EXPECT_NO_THROW(hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::m2C_per_W}, {1000., Units::W}, Units::P0));
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);     // Check upper element there
     EXPECT_ANY_THROW(hpwh.getResistancePosition(1)); // Check no elements
     EXPECT_ANY_THROW(hpwh.getResistancePosition(2)); // Check no elements
 
     EXPECT_NO_THROW(hpwh.initResistanceTankGeneric(
-        {800., Units::L}, 10., {1000., Units::W}, {1000., Units::W}));
+        {800., Units::L}, {10., Units::m2C_per_W}, {1000., Units::W}, {1000., Units::W}));
     EXPECT_EQ(hpwh.getResistancePosition(0), 8);     // Check upper element there
     EXPECT_EQ(hpwh.getResistancePosition(1), 0);     // Check lower element is there
     EXPECT_ANY_THROW(hpwh.getResistancePosition(2)); // Check 0 elements}
@@ -154,7 +154,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric({800., Units::L}, 10., 0., elementPower * 1000.);
+    hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::m2C_per_W}, Units::P0, 1000. * elementPower);
 
     // Check only lowest setting works
     double factor = 3.;
@@ -177,7 +177,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithBottomElement)
     EXPECT_ANY_THROW(hpwh.getResistanceCapacity(1)()); // only have one element
 
     EXPECT_ANY_THROW(
-        hpwh.setResistanceCapacity(factor * elementPower(), 1)); // set top returns error
+        hpwh.setResistanceCapacity(factor * elementPower, 1)); // set top returns error
 }
 
 /*
@@ -189,7 +189,7 @@ TEST(ResistanceFunctionsTest, commercialTankErrorsWithTopElement)
 
     // init model
     HPWH hpwh;
-    hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::ft2hF_per_Btu}, elementPower, 0.);
+    hpwh.initResistanceTankGeneric({800., Units::L}, {10., Units::ft2hF_per_Btu}, elementPower, Units::P0);
 
     // Check only bottom setting works
     double factor = 3.;

@@ -80,11 +80,10 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         }
 
         { // testSetEnteringWaterHighTempShutOffAbsolute
-            const HPWH::Volume_t drawVolume = 0.;
+            const HPWH::Volume_t drawVolume = Units::V0;
             const HPWH::Temp_t externalT = {20., Units::C};
             const HPWH::Temp_d_t dT = {2., Units::dC};
             const HPWH::Temp_t highT = {20., Units::C};
-            const bool doAbsolute = true;
 
             // make tank cold to force on
             hpwh.setTankToT(highT);
@@ -110,7 +109,7 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         }
 
         { // testSetEnteringWaterHighTempShutOffRelative
-            const HPWH::Volume_t drawVolume = 0.;
+            const HPWH::Volume_t drawVolume = Units::V0;
             const HPWH::Temp_t externalT = {20., Units::C};
             const HPWH::Temp_d_t dT = {2., Units::dC};
             const HPWH::Temp_t highT = {20., Units::C};
@@ -233,22 +232,22 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
                     hpwh.getCompressorIndex())); // Force to ignore this part.
             }
             EXPECT_NO_THROW(hpwh.setTankToT({100., Units::F})); // .51
-            hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+            hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // Test if we're on and in band stay on
             hpwh.setTankToT({125, Units::F}); // .76 (current target)
-            hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+            hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // Test we can change the SoC and turn off
             hpwh.setTankToT({133, Units::F}); // .84
-            hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+            hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // Test if off and in band stay off
             hpwh.setTankToT({125, Units::F}); // .76  (current target)
-            hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+            hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
         }
 
@@ -268,22 +267,22 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 
                 // Test if we're on and in band stay on
                 hpwh.setTankToT(tankAt76SoC_T); // .76
-                hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+                hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
                 // Test we can change the target SoC and turn off
                 hpwh.setTargetSoCFraction(0.5);
-                hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+                hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
                 // Change back in the band and stay turned off
                 hpwh.setTargetSoCFraction(0.72);
-                hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+                hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
                 // Drop below the band and turn on
                 hpwh.setTargetSoCFraction(0.70);
-                hpwh.runOneStep(0, externalT, externalT, HPWH::DR_ALLOW);
+                hpwh.runOneStep(Units::V0, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
             }
         }
@@ -327,18 +326,18 @@ TEST(ExtraHeatTest, extraHeat)
 
     const HPWH::Temp_t ambientT = {20., Units::C};
     const HPWH::Temp_t externalT = {20., Units::C};
-    const HPWH::Volume_t inletVol2 = 0;
+    const HPWH::Volume_t inletVol2 = Units::V0;
     const HPWH::Temp_t inletT2 = {0., Units::C};
 
     HPWH::Power_t extraPower = {1., Units::kW};
     HPWH::PowerVect_t nodePowerExtra = {{extraPower(Units::kW)}, Units::kW};
 
     // Test adding extra heat to a tank for one minute
-    hpwh.setUA(0.);
+    hpwh.setUA(Units::UA0);
     hpwh.setTankToT({20., Units::C});
 
     HPWH::Energy_t Q_init = hpwh.getTankHeatContent();
-    hpwh.runOneStep(0, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
+    hpwh.runOneStep(Units::V0, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
 
     HPWH::Energy_t Q_final = hpwh.getTankHeatContent();
 

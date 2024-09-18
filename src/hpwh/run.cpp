@@ -159,7 +159,7 @@ void run(const std::string& sSpecType,
     doCondu = 1;
     doInvMix = 1;
     inletH = 0.;
-    newTankSize = 0.;
+    newTankSize() = 0.;
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;

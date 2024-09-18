@@ -581,8 +581,8 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inlet2Vol = 0.,
-                    Temp_t inlet2T = 0.,
+                    Volume_t inlet2Vol = Units::V0,
+                    Temp_t inlet2T = {0., Units::C},
                     PowerVect_t* extraHeatDist = NULL);
     /**< This function will progress the simulation forward in time by one step
      * all calculated outputs are stored in private variables and accessed through functions
@@ -594,8 +594,8 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inlet2Vol = 0.,
-                    Temp_t inlet2T = 0.,
+                    Volume_t inlet2Vol = Units::V0,
+                    Temp_t inlet2T = {0., Units::C},
                     PowerVect_t* extraHeatDist = NULL)
     {
         setInletT(inletT);
@@ -1022,45 +1022,45 @@ class HPWH : public Courier::Sender
     struct StandardTestSummary
     {
         // first recovery values
-        double recoveryEfficiency = 0.; // eta_r
-        Energy_t recoveryDeliveredEnergy = 0.;
-        Energy_t recoveryStoredEnergy = 0.;
-        Energy_t recoveryUsedEnergy = 0.; // Q_r
+        double recoveryEfficiency; // eta_r
+        Energy_t recoveryDeliveredEnergy;
+        Energy_t recoveryStoredEnergy;
+        Energy_t recoveryUsedEnergy; // Q_r
 
         //
-        Time_t standbyPeriodTime = 0; // tau_stby,1
+        Time_t standbyPeriodTime; // tau_stby,1
 
-        Temp_t standbyStartTankT = 0.; // T_su,0
-        Temp_t standbyEndTankT = 0.;   // T_su,f
+        Temp_t standbyStartTankT; // T_su,0
+        Temp_t standbyEndTankT;   // T_su,f
 
-        Energy_t standbyStartEnergy = 0.; // Q_su,0
-        Energy_t standbyEndEnergy = 0.;   // Q_su,f
-        Energy_t standbyUsedEnergy = 0.;  // Q_stby
+        Energy_t standbyStartEnergy; // Q_su,0
+        Energy_t standbyEndEnergy;   // Q_su,f
+        Energy_t standbyUsedEnergy;  // Q_stby
 
-        Power_t standbyHourlyLossEnergy = 0.; // Q_hr
-        UA_t standbyLossCoefficient = 0.;     // UA
+        Power_t standbyHourlyLossEnergy; // Q_hr
+        UA_t standbyLossCoefficient;     // UA
 
-        Time_t noDrawTotalTime = 0;        // tau_stby,2
-        Temp_t noDrawAverageAmbientT = 0.; // <T_a,stby,2>
+        Time_t noDrawTotalTime;        // tau_stby,2
+        Temp_t noDrawAverageAmbientT; // <T_a,stby,2>
 
         // 24-hr values
-        Volume_t removedVolume = 0.;
-        Energy_t waterHeatingEnergy = 0.; // Q_HW
-        Temp_t avgOutletT = 0.;           // <Tdel,i>
-        Temp_t avgInletT = 0.;            // <Tin,i>
+        Volume_t removedVolume;
+        Energy_t waterHeatingEnergy; // Q_HW
+        Temp_t avgOutletT;           // <Tdel,i>
+        Temp_t avgInletT;            // <Tin,i>
 
-        Energy_t usedFossilFuelEnergy = 0.;               // Q_f
-        Energy_t usedElectricalEnergy = 0.;               // Q_e
-        Energy_t usedEnergy = 0.;                         // Q
-        Energy_t consumedHeatingEnergy = 0.;              // Q_d
-        Energy_t standardWaterHeatingEnergy = 0.;         // Q_HW,T
-        Energy_t adjustedConsumedWaterHeatingEnergy = 0.; // Q_da
-        Energy_t modifiedConsumedWaterHeatingEnergy = 0.; // Q_dm
-        double UEF = 0.;
+        Energy_t usedFossilFuelEnergy;               // Q_f
+        Energy_t usedElectricalEnergy;               // Q_e
+        Energy_t usedEnergy;                         // Q
+        Energy_t consumedHeatingEnergy;              // Q_d
+        Energy_t standardWaterHeatingEnergy;         // Q_HW,T
+        Energy_t adjustedConsumedWaterHeatingEnergy; // Q_da
+        Energy_t modifiedConsumedWaterHeatingEnergy; // Q_dm
+        double UEF;
 
         // (calculated) annual totals
-        Energy_t annualConsumedElectricalEnergy = 0.; // E_annual,e
-        Energy_t annualConsumedEnergy = 0.;           // E_annual
+        Energy_t annualConsumedElectricalEnergy; // E_annual,e
+        Energy_t annualConsumedEnergy;           // E_annual
 
         bool qualifies = false;
     };
@@ -1316,7 +1316,7 @@ class HPWH : public Courier::Sender
     Temp_t member_inletT;
     bool haveInletT; /// needed for SoC-based heating logic
 
-    Time_t stepTime = 1.;
+    Time_t stepTime = {1., Units::min};
 
     bool doInversionMixing;
     /**<  If and only if true will model temperature inversion mixing in the tank  */

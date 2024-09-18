@@ -174,9 +174,9 @@ TEST(MaxSetpointTest, StorageTank)
     std::string why;
 
     // Storage tanks have free reign!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(101., num, why)); // Can go above boiling!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(99., num, why));  // Can go to near boiling!
-    EXPECT_TRUE(hpwh.isNewSetpointPossible(10., num, why));  // Can go low, albiet dumb
+    EXPECT_TRUE(hpwh.isNewSetpointPossible({101., Units::C}, num, why)); // Can go above boiling!
+    EXPECT_TRUE(hpwh.isNewSetpointPossible({99., Units::C}, num, why));  // Can go to near boiling!
+    EXPECT_TRUE(hpwh.isNewSetpointPossible({10., Units::C}, num, why));  // Can go low, albiet dumb
 
     // Check this carries over into setting the setpoint
     EXPECT_NO_THROW(hpwh.setSetpointT({101., Units::C})); // Can go above boiling
@@ -298,7 +298,7 @@ TEST(UtilityTest, setTemperatures)
         setTs.resize(nSet);
         HPWH::Temp_t initialT = {20., Units::C}, finalT = {66., Units::C};
         for (std::size_t i = 0; i < nSet; ++i)
-            setTs[i] = initialT + (finalT - initialT) * i / static_cast<double>(nSet - 1);
+            setTs[i] = initialT + i / static_cast<double>(nSet - 1) * (finalT - initialT);
         hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
@@ -316,7 +316,7 @@ TEST(UtilityTest, setTemperatures)
         setTs.resize(nSet);
         HPWH::Temp_t initialT = {20., Units::C}, finalT = {64., Units::C};
         for (std::size_t i = 0; i < nSet; ++i)
-            setTs[i] = initialT + (finalT - initialT) * i / static_cast<double>(nSet - 1);
+            setTs[i] = initialT + i / static_cast<double>(nSet - 1) * (finalT - initialT);
         hpwh.setTankTs(setTs);
 
         HPWH::TempVect_t newTs;
