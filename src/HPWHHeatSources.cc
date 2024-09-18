@@ -26,7 +26,7 @@ HPWH::HeatSource::HeatSource(
     , useBtwxtGrid(false)
     , standbyLogic(NULL)
     , maxOut_at_LowT({{100, Units::C}, {-273.15, Units::C}})
-    , secondaryHeatExchanger {0., 0., 0.}
+    , secondaryHeatExchanger {Units::dT0, Units::dT0, Units::P0}
     , minT(-273.15, Units::C)
     , maxT(100, Units::C)
     , maxSetpointT(100., Units::C)
@@ -353,7 +353,8 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
 
 void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t availableTime)
 {
-    Power_t inputPower = 0., outputPower = 0.;
+    auto inputPower = Power_t(0.);
+    auto outputPower = Power_t(0.);
     double cop = 0.;
 
     switch (configuration)
@@ -381,7 +382,7 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t availableTime)
         // maybe start from the top and go down?  test this with graphs
 
         // set the leftover capacity to 0
-        Energy_t leftoverCap = 0.;
+        auto leftoverCap = Energy_t(0.);
         for (int i = hpwh->getNumNodes() - 1; i >= 0; i--)
         {
             // for(int i = 0; i < hpwh->numNodes; i++){
@@ -389,7 +390,7 @@ void HPWH::HeatSource::addHeat(Temp_t externalT, Time_t availableTime)
                              Units::J);
             if (nodeCap > 0.)
             {
-                Energy_t heatToAdd = nodeCap + leftoverCap;
+                auto heatToAdd = nodeCap + leftoverCap;
                 // add leftoverCap to the next run, and keep passing it on
                 leftoverCap = hpwh->addHeatAboveNode(heatToAdd, i, maxSetpointT);
             }
@@ -455,7 +456,7 @@ HPWH::Temp_t HPWH::HeatSource::getTankT() const
         ++j;
     }
 
-    return tankT;
+    return Temp_t(tankT);
 }
 
 void HPWH::HeatSource::getCapacity(Temp_t externalT,
@@ -485,7 +486,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
     {
         if (perfMap.empty())
         { // Avoid using empty perfMap
-            inputPower = 0.;
+            inputPower() = 0.;
             cop = 0.;
         }
         else if (perfMap.size() > 1)
@@ -533,13 +534,13 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
             {
                 // Calculate input power at each reference temeprature
                 // Interpolate to get input power at the current temperature
-                Power_t inputPower_T1 =
-                    expandSeries(perfMap[i_prev].inputPower_coeffs(), effCondenserT());
+                auto inputPower_T1 =
+                    Power_t(expandSeries(perfMap[i_prev].inputPower_coeffs(), effCondenserT()));
 
-                Power_t inputPower_T2 =
-                    expandSeries(perfMap[i_next].inputPower_coeffs(), effCondenserT());
+                auto inputPower_T2 =
+                    Power_t(expandSeries(perfMap[i_next].inputPower_coeffs(), effCondenserT()));
 
-                inputPower = linearInterp(externalT(),
+                inputPower() = linearInterp(externalT(),
                                           perfMap[i_prev].T(),
                                           perfMap[i_next].T(),
                                           inputPower_T1(),
@@ -557,7 +558,7 @@ void HPWH::HeatSource::getCapacity(Temp_t externalT,
                 }
             }
 
-            inputPower = regressedMethod(
+            inputPower() = regressedMethod(
                 perfMap[0].inputPower_coeffs(), externalT(), effOutletT(), effCondenserT());
 
             cop =
@@ -628,7 +629,7 @@ void HPWH::HeatSource::getCapacityMP(
         }
 
         // Const Tair Tin Tair2 Tin2 TairTin
-        inputPower =
+        inputPower() =
             regressedMethodMP(perfMap[0].inputPower_coeffs(), externalT(), effCondenserT());
         cop = regressedMethodMP(perfMap[0].COP_coeffs, externalT(), effCondenserT());
     }
@@ -685,7 +686,7 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, Temp_t airT)
 void HPWH::HeatSource::btwxtInterp(Power_t& inputPower, double& cop, TempVect_t& target)
 {
     std::vector<double> result = perfRGI->get_values_at_target(target());
-    inputPower = result[0];
+    inputPower() = result[0];
     cop = result[1];
 }
 
@@ -723,20 +724,21 @@ bool HPWH::HeatSource::isExternalMultipass() const
 HPWH::Time_t HPWH::HeatSource::addHeatExternal(
     Temp_t externalT, Time_t duration, Power_t& outputPower, Power_t& inputPower, double& cop)
 {
-    inputPower = 0.;
-    outputPower = 0.;
+    inputPower() = 0.;
+    outputPower() = 0.;
     cop = 0.;
 
     Temp_t tempSetpointT = std::min(maxSetpointT, hpwh->setpointT);
     Time_t remainingTime = duration;
 
-    Energy_t inputEnergy = 0.;
-    Energy_t outputEnergy = 0.;
+    Energy_t inputEnergy(0.);
+    Energy_t outputEnergy(0.);
     double condenserInletT_sum = 0.;
     double condenserOutletT_sum = 0.;
     do
     {
-        Power_t tempInputPower = 0., tempOutputPower = 0.;
+        Power_t tempInputPower(0.);
+        Power_t tempOutputPower(0.);
         double temp_cop = 0.;
         Temp_t& externalOutletT = hpwh->tankTs[externalOutletHeight];
 
@@ -789,7 +791,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
         }
         else
         {
-            remainingTime = 0.;
+            remainingTime = {0., Units::min};
         }
 
         // track the condenser temperatures before mixing nodes
@@ -808,7 +810,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
                                ? targetT
                                : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] =
+            hpwh->tankTs[nodeIndex]() =
                 (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
@@ -842,8 +844,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternal(
         inputPower = {inputEnergy(Units::kJ) / runTime(Units::s), Units::kW};
         outputPower = {outputEnergy(Units::kJ) / runTime(Units::s), Units::kW};
         cop /= runTime();
-        hpwh->condenserInletT = condenserInletT_sum / runTime();
-        hpwh->condenserOutletT = condenserOutletT_sum / runTime();
+        hpwh->condenserInletT() = condenserInletT_sum / runTime();
+        hpwh->condenserOutletT() = condenserOutletT_sum / runTime();
     }
 
     // return the time left
@@ -865,12 +867,12 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
                                                  Power_t& inputPower, //***
                                                  double& cop)
 {
-    inputPower = 0.;
-    outputPower = 0.;
+    inputPower() = 0.;
+    outputPower() = 0.;
     cop = 0.;
 
-    Energy_t inputEnergy = 0.;
-    Energy_t outputEnergy = 0.;
+    auto inputEnergy = Energy_t(0.);
+    auto outputEnergy = Energy_t(0.);
     double condenserInletT_sum = 0.;
     double condenserOutletT_sum = 0.;
 
@@ -889,7 +891,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         // apply nodeFrac as the degree of mixing (formerly 1.0)
         hpwh->mixTankNodes(0, hpwh->getNumNodes(), nodeFrac);
 
-        Power_t tempInputPower = 0., tempOutputPower = 0.;
+        auto tempInputPower = Power_t(0.);
+        auto tempOutputPower = Power_t(0.);
         double temp_cop = 0.;
         Temp_t& externalOutletT = hpwh->tankTs[externalOutletHeight];
 
@@ -924,7 +927,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         }
         else
         {
-            remainingTime = 0.;
+            remainingTime() = 0.;
         }
 
         // track the condenser temperatures before mixing nodes
@@ -943,7 +946,7 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
             Temp_t& mixT = (static_cast<int>(nodeIndex) == externalInletHeight)
                                ? targetT
                                : hpwh->tankTs[nodeIndex + 1];
-            hpwh->tankTs[nodeIndex] =
+            hpwh->tankTs[nodeIndex]() =
                 (1. - nodeFrac) * hpwh->tankTs[nodeIndex]() + nodeFrac * mixT();
         }
 
@@ -975,8 +978,8 @@ HPWH::Time_t HPWH::HeatSource::addHeatExternalMP(Temp_t externalT,
         inputPower = {inputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
         outputPower = {outputEnergy(Units::kJ) / elapsedTime(Units::s), Units::kW};
         cop /= elapsedTime();
-        hpwh->condenserInletT = condenserInletT_sum / elapsedTime();
-        hpwh->condenserOutletT = condenserOutletT_sum / elapsedTime();
+        hpwh->condenserInletT() = condenserInletT_sum / elapsedTime();
+        hpwh->condenserOutletT() = condenserOutletT_sum / elapsedTime();
     }
 
     // return the elapsed time

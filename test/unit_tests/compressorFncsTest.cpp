@@ -8,8 +8,7 @@
 struct CompressorFncsTest : public testing::Test
 {
     const int intAbort = -1;
-    const double dblAbort = -1;
-
+    const HPWH::Temp_t invalidT = {-1., Units::C};
     struct ModelSpecs
     {
         std::string sModelName;
@@ -21,8 +20,10 @@ struct CompressorFncsTest : public testing::Test
         HPWH::Temp_t minT;
     };
 
-    const std::vector<ModelSpecs> modelSpecs = {
-        {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}},
+    //ModelSpecs t = {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}};
+
+    const std::vector<ModelSpecs> modelSpecs =
+        {{"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}},
         {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {32., Units::F}},
         {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {47., Units::F}},
         {"Sanden80", true, 2, false, false, HPWH::MAXOUTLET_R744(), {-25., Units::F}},
@@ -34,8 +35,8 @@ struct CompressorFncsTest : public testing::Test
         {"NyleC90A_MP", true, 2, true, true, {160., Units::F}, {40., Units::F}},
         {"NyleC90A_C_MP", true, 2, true, true, {160., Units::F}, {35., Units::F}},
         {"QAHV_N136TAU_HPB_SP", true, 2, false, false, {176.1, Units::F}, {-13., Units::F}},
-        {"restankRealistic", false, intAbort, intAbort, intAbort, dblAbort, dblAbort},
-        {"StorageTank", false, intAbort, intAbort, intAbort, dblAbort, dblAbort}};
+        {"restankRealistic", false, intAbort, intAbort, intAbort, invalidT, invalidT},
+        {"StorageTank", false, intAbort, intAbort, intAbort, invalidT, invalidT}};
 };
 
 /*

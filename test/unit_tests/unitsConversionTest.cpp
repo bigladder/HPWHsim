@@ -57,7 +57,7 @@ TEST(UnitsConversionTest, conversions)
         EXPECT_NE(t_min, 15.);
 
         // test min<->h conversion
-        t_min = 45.;
+        t_min() = 45.;
         typedef Units::TimeVal<Units::Time::h> Time_h;
         Time_h t_h = t_min;
         EXPECT_EQ(t_h, 0.75);
@@ -82,7 +82,7 @@ TEST(UnitsConversionTest, conversions)
         EXPECT_EQ(T_F, 32.);
 
         // test F<->C conversion
-        T_F = 212.;
+        T_F() = 212.;
         T_C = T_F;
         EXPECT_EQ(T_F, T_C(F));
     }
@@ -94,13 +94,13 @@ TEST(UnitsConversionTest, conversions)
         EXPECT_EQ(T_dF, 18.);
 
         Temp_C T_C(20);
-        T_C = T_C + T_dF(dC);
+        T_C += T_dF(dC);
         EXPECT_EQ(T_C, 30);
     }
 
     /* energy conversions */
     {
-        Energy_kJ E_kJ = 100.;
+        auto E_kJ = Energy_kJ(100.);
         EnergyVal<Energy::Btu> E_Btu = E_kJ;
         EXPECT_EQ(E_Btu(kJ), E_kJ());
         EXPECT_EQ(E_Btu, E_kJ(Btu));
@@ -113,7 +113,7 @@ TEST(UnitsConversionTest, conversions)
 
     /* power conversion */
     {
-        Power_kW P_kW = 60.;
+        auto P_kW = Power_kW(60.);
         PowerVal<Power::Btu_per_h> P_Btu_per_h = P_kW;
         EXPECT_EQ(P_Btu_per_h, P_kW(Btu_per_h));
         EXPECT_NEAR_REL(P_Btu_per_h(kW), P_kW());
@@ -121,21 +121,21 @@ TEST(UnitsConversionTest, conversions)
 
     /* length conversion */
     {
-        Length_m x_m = 60.;
+        auto x_m = Length_m(60.);
         LengthVal<Length::ft> x_ft = x_m;
         EXPECT_NEAR_REL(x_ft(), x_m(ft));
     }
 
     /* area conversion */
     {
-        Area_m2 a_m2 = 60.;
+        auto a_m2 = Area_m2(60.);
         AreaVal<Area::ft2> a_ft2 = a_m2;
         EXPECT_NEAR_REL(a_ft2(), a_m2(ft2));
     }
 
     /* volume conversion */
     {
-        Volume_L volume_L = 60.;
+        auto volume_L = Volume_L(60.);
         VolumeVal<Volume::gal> volume_gal = volume_L;
         EXPECT_NEAR_REL(volume_gal(), volume_L(gal));
 
@@ -148,7 +148,7 @@ TEST(UnitsConversionTest, conversions)
 
     /* UA conversion */
     {
-        UA_kJ_per_hC ua_kJ_per_hC = 60.;
+        auto ua_kJ_per_hC = UA_kJ_per_hC(60.);
         UAVal<UA::Btu_per_hF> ua_Btu_per_hF = ua_kJ_per_hC;
         EXPECT_NEAR_REL(ua_Btu_per_hF(), ua_kJ_per_hC(Btu_per_hF));
     }
@@ -168,15 +168,15 @@ TEST(UnitsConversionTest, conversions)
         Area_ft2 area_ft2(100.);
 
         Temp_F T1_F(300., K);
-        Power_W power1_W = sigma_W_per_m2K4 * area_ft2(m2) * std::pow(T1_F(K), 4.);
+        auto power1_W = Power_W(sigma_W_per_m2K4 * area_ft2(m2) * std::pow(T1_F(K), 4.));
 
         Temp_F T2_F(600., K);
-        Power_W power2_W = sigma_W_per_m2K4 * area_ft2(m2) * std::pow(T2_F(K), 4.);
+        auto power2_W = Power_W(sigma_W_per_m2K4 * area_ft2(m2) * std::pow(T2_F(K), 4.));
 
         EXPECT_NEAR_REL(power2_W(), 16. * power1_W());
     }
     {
-        Length_ft length_ft = 3.;
+        auto length_ft = Length_ft(3.);
         double& x = length_ft();
         x += 1.; // ft
         EXPECT_NEAR_REL(length_ft(), 4.);

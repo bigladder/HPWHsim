@@ -19,7 +19,7 @@ void getCompressorPerformance(
     if (hpwh.isCompressorMultipass() == 1)
     { // Multipass capacity looks at the average of the
       // temperature of the lift
-        hpwh.setSetpointT((waterT() + setpointT()) / 2.);
+        hpwh.setSetpointT(HPWH::Temp_t((waterT() + setpointT()) / 2.));
     }
     else
     {
@@ -28,12 +28,12 @@ void getCompressorPerformance(
     hpwh.resetTankToSetpoint(); // Force tank cold
     hpwh.setSetpointT(setpointT);
 
-    hpwh.setUA(0.);
-    hpwh.setFittingsUA(0.);
+    hpwh.setUA(Units::UA0);
+    hpwh.setFittingsUA(Units::UA0);
 
     // Run the step
     hpwh.runOneStep(waterT, // Inlet water temperature
-                    0.,     // Flow
+                    {0., Units::L},     // Flow
                     airT,   // Ambient Temp
                     airT,   // External Temp
                     // HPWH::DR_TOO // DR Status (now an enum. Fixed for now as allow)
@@ -368,28 +368,28 @@ TEST(ScaleTest, getCompressorMP_outputCapacity)
     HPWH::Temp_t setpointT = {150, Units::F};
 
     // Scale output to 1 kW
-    double num = 1.;
+    HPWH::Power_t num = {1., Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     auto newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 
     // Scale output to .01 kW
-    num = .01;
+    num = {.01, Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 
     // Scale output to 1000 kW
-    num = 1000.;
+    num = {1000., Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 
     // Check again with changed setpoint. For MP it should affect output capacity since it looks at
     // the mean temperature for the cycle.
     setpointT = {100, Units::F};
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_FAR(num, newCapacity(), tol);
+    EXPECT_FAR(num(), newCapacity(), tol);
 }
 
 /*
@@ -407,22 +407,22 @@ TEST(ScaleTest, setCompressorSP_outputCapacity)
     HPWH::Temp_t setpointT = {145, Units::F};
 
     // Scale output to 1 kW
-    double num = 1.;
+    HPWH::Power_t num = {1., Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     auto newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 
     // Scale output to .01 kW
-    num = .01;
+    num = {.01, Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 
     // Scale output to 1000 kW
-    num = 1000.;
+    num = {1000., Units::kW};
     hpwh.setCompressorOutputCapacity(num, airT, waterT, setpointT);
     newCapacity = hpwh.getCompressorCapacity(airT, waterT, setpointT);
-    EXPECT_NEAR(num, newCapacity(), tol);
+    EXPECT_NEAR(num(), newCapacity(), tol);
 }
 
 /*

@@ -1,5 +1,5 @@
-#ifndef UNITY_
-#define UNITY_
+#ifndef _UNITY_
+#define _UNITY_
 
 #include <iterator>
 #include <unordered_map>
@@ -76,7 +76,7 @@ using ScaleOffsetSeq = std::pair<Scale, Offset>;
 
 struct ScaleOffset : Transform<ScaleOffsetSeq, ScaleOffset>
 {
-    ScaleOffset(const ScaleOffsetSeq& scaleOffsetSeq) : Transform(scaleOffsetSeq) {}
+    explicit ScaleOffset(const ScaleOffsetSeq& scaleOffsetSeq) : Transform(scaleOffsetSeq) {}
 
     ScaleOffset(const Scale& scale, const Offset& offset) : Transform({scale, offset}) {}
 
@@ -107,7 +107,6 @@ struct Transformer
 {
     struct TransformMap : std::map<std::pair<U, U>, T>
     {
-
         using std::map<std::pair<U, U>, T>::insert;
         using std::map<std::pair<U, U>, T>::at;
 
@@ -144,7 +143,6 @@ struct Scaler : Transformer<U, Scale>
 {
     static struct ScaleMap : Transformer<U, Scale>::TransformMap
     {
-
         ScaleMap(const U tRef, const std::vector<std::pair<U, Scale>>& transforms)
             : Transformer<U, Scale>::TransformMap(tRef, transforms)
         {
@@ -163,7 +161,6 @@ struct ScaleOffseter : Transformer<U, ScaleOffset>
 {
     static struct ScaleOffsetMap : Transformer<U, ScaleOffset>::TransformMap
     {
-
         ScaleOffsetMap(const U tRef, const std::vector<std::pair<U, ScaleOffset>>& transforms)
             : Transformer<U, ScaleOffset>::TransformMap(tRef, transforms)
         {
@@ -224,6 +221,7 @@ struct TransformVal
 
     double operator+(const double y) const { return x + y; }
     double operator-(const double y) const { return x - y; }
+    double operator/(const double y) const { return x / y; }
 
     bool operator==(const double y) const { return (x == y); }
 
@@ -253,6 +251,9 @@ struct ScaleVal : TransformVal<U, Scale, units>
     using TransformVal<U, Scale, units>::operator>=;
     using TransformVal<U, Scale, units>::operator==;
     using TransformVal<U, Scale, units>::operator!=;
+    //using TransformVal<U, Scale, units>::operator+;
+    //using TransformVal<U, Scale, units>::operator-;
+    //using TransformVal<U, Scale, units>::operator/;
 
     ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
 
@@ -278,6 +279,7 @@ struct ScaleVal : TransformVal<U, Scale, units>
 
     double operator()(const U toUnits) const { return scale(units, toUnits) * x; }
 
+
     ScaleVal& operator+=(const double y)
     {
         x += y;
@@ -289,14 +291,18 @@ struct ScaleVal : TransformVal<U, Scale, units>
         return *this;
     }
 
-    ScaleVal operator*(const double y) const { return y * x; }
+    ScaleVal operator+(const double y) const { return ScaleVal(x + y); }
+    ScaleVal operator-(const double y) const { return ScaleVal(x - y); }
+    ScaleVal operator/(const double y) const { return ScaleVal(x / y); }
 
-    friend ScaleVal operator*(const double y, const ScaleVal& scaleVal) { return y * scaleVal(); }
+    //ScaleVal operator*(const double y) const { return y * x; }
+
+    friend ScaleVal operator*(const double y, const ScaleVal& scaleVal) { return ScaleVal(y * scaleVal()); }
 
     double operator/(const ScaleVal& scaleVal) const { return x / scaleVal(); }
 
-    ScaleVal operator+(const ScaleVal& scaleVal) const { return x + scaleVal(); }
-    ScaleVal operator-(const ScaleVal& scaleVal) const { return x - scaleVal(); }
+    ScaleVal operator+(const ScaleVal& scaleVal) const { return ScaleVal(x + scaleVal()); }
+    ScaleVal operator-(const ScaleVal& scaleVal) const { return ScaleVal(x - scaleVal()); }
 
     ScaleVal operator+=(const ScaleVal& scaleVal)
     {
@@ -674,7 +680,7 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
 
     ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
 
-    ScaleOffsetVal<U, units> operator[](const std::size_t i) const { return xV[i]; }
+    ScaleOffsetVal<U, units> operator[](const std::size_t i) const { return ScaleOffsetVal<U, units>(xV[i]); }
 
     ScaleOffsetVal<U, units>& operator[](const std::size_t i)
     {
@@ -756,7 +762,7 @@ template <class U, U units0, U units1>
 struct ScalePair : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>
 {
     ScalePair(const double x0_in = 0., const double x1_in = 0.)
-        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>({x0_in, x1_in})
+        : std::pair<ScaleVal<U, units0>, ScaleVal<U, units1>>({ScaleVal<U, units0>(x0_in), ScaleVal<U, units1>(x1_in)})
     {
     }
 

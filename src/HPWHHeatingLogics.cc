@@ -228,7 +228,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
         }
     }
 
-    Temp_t averageT = sum / totWeight;
+    Temp_t averageT(sum / totWeight);
     Temp_t targetT =
         (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tankTs[calcNode + 1] : hpwh->getSetpointT();
 
