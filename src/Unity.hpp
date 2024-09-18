@@ -255,7 +255,7 @@ struct ScaleVal : TransformVal<U, Scale, units>
     //using TransformVal<U, Scale, units>::operator-;
     //using TransformVal<U, Scale, units>::operator/;
 
-    ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
+    explicit ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
 
     ScaleVal(const double x_in, const U fromUnits)
         : TransformVal<U, Scale, units>(scale(fromUnits, units) * x_in)
@@ -400,7 +400,7 @@ struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
     using TransformVal<U, ScaleOffset, units>::operator==;
     using TransformVal<U, ScaleOffset, units>::operator!=;
 
-    ScaleOffsetVal(const double x_in = 0.) : TransformVal<U, ScaleOffset, units>(x_in) {}
+    explicit ScaleOffsetVal(const double x_in = 0.) : TransformVal<U, ScaleOffset, units>(x_in) {}
 
     ScaleOffsetVal(const double x_in, const U fromUnits)
         : TransformVal<U, ScaleOffset, units>(scaleOffset(fromUnits, units, x_in))
