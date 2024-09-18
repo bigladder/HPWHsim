@@ -16,7 +16,7 @@ struct PerformanceMapTest : public testing::Test
         HPWH::Temp_t inT;
         HPWH::Power_t outputPower;
 
-        PerformancePointMP(const HPWH::TempVect_t& tempVect = {}, HPWH::Power_t outputPower_in = Units::P0)
+        PerformancePointMP(const HPWH::TempVect_t& tempVect = {}, HPWH::Power_t outputPower_in = {0., Units::W})
         {
             if (tempVect.size() > 0)
             {
@@ -40,8 +40,8 @@ struct PerformanceMapTest : public testing::Test
         HPWH::Temp_t airT = {0, Units::C};
         HPWH::Temp_t outT = {0, Units::C};
         HPWH::Temp_t inT = {0, Units::C};
-        HPWH::Power_t outputPower = Units::P0;
-        PerformancePointSP(const HPWH::TempVect_t& tempVect = {}, HPWH::Power_t outputPower_in = Units::P0)
+        HPWH::Power_t outputPower = {0., Units::W};
+        PerformancePointSP(const HPWH::TempVect_t& tempVect = {}, HPWH::Power_t outputPower_in = {0., Units::W})
         {
             if (tempVect.size() > 0)
             {

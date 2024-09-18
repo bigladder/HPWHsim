@@ -26,7 +26,7 @@ HPWH::HeatSource::HeatSource(
     , useBtwxtGrid(false)
     , standbyLogic(NULL)
     , maxOut_at_LowT({{100, Units::C}, {-273.15, Units::C}})
-    , secondaryHeatExchanger {Units::dT0, Units::dT0, Units::P0}
+    , secondaryHeatExchanger {dT0(), dT0(), {0., Units::W}}
     , minT(-273.15, Units::C)
     , maxT(100, Units::C)
     , maxSetpointT(100., Units::C)

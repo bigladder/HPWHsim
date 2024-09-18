@@ -189,7 +189,7 @@ void HPWH::initResistanceTankGeneric(Volume_t tankVol,
         {
             send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA = Units::UA0;
+        tankUA = UA_t(0.);
     }
 
     model = MODELS_CustomResTankGeneric;
@@ -358,7 +358,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         tankSizeFixed = false;
         tankVolume = {50, Units::gal};
-        tankUA = Units::UA0; // 0 to turn off
+        tankUA = {0, Units::kJ_per_hC};
 
         doTempDepression = false;
         tankMixesOnDraw = true;
@@ -565,7 +565,7 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->maxT = {120., Units::F};
-        compressor->hysteresis_dT = Units::dT0; // no hysteresis
+        compressor->hysteresis_dT = {0., Units::dC}; // no hysteresis
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpointT = MAXOUTLET_R134A();
@@ -816,7 +816,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
 
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = getNumNodes() - 1;
@@ -1069,7 +1069,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3) - 1;
 
@@ -1282,7 +1282,7 @@ void HPWH::initPreset(MODELS presetNum)
             compressor->minT = {35., Units::F};
         }
         compressor->maxT = {120.0, Units::F}; // Max air temperature
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // Defines the maximum outlet temperature at low air temperature
@@ -1521,7 +1521,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->extrapolationMethod = EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
@@ -1727,7 +1727,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 
@@ -3615,7 +3615,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->typeOfHeatSource = TYPE_compressor;
 
         resistiveElement->setupAsResistiveElement(0, {1500, Units::W});
-        resistiveElement->hysteresis_dT = Units::dT0;
+        resistiveElement->hysteresis_dT = {0., Units::dC};
 
         compressor->setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
@@ -3635,7 +3635,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->minT = {32.0, Units::F};
         compressor->maxT = {120., Units::F};
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
         compressor->maxSetpointT = MAXOUTLET_R134A();
 
@@ -4035,7 +4035,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
 
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = getIndexTopNode();
@@ -4149,7 +4149,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
-        compressor->hysteresis_dT = Units::dT0;
+        compressor->hysteresis_dT = {0., Units::dC};
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
 

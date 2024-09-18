@@ -97,6 +97,13 @@ class HPWH : public Courier::Sender
         GenTemp_t(double val, Units::Temp_d temp_d) { emplace<1>(val, temp_d); }
     };
 
+
+    inline static const Temp_d_t dT0() { return {0., UnitsTemp_d}; }
+    inline static const Volume_t V0() { return {0., UnitsVolume}; }
+    inline static const Energy_t E0() { return {0., UnitsEnergy}; }
+    inline static const Power_t P0() { return {0.,UnitsPower}; }
+    inline static const UA_t UA0() { return {0., UnitsUA}; }
+
     //////
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
@@ -581,7 +588,7 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inlet2Vol = Units::V0,
+                    Volume_t inlet2Vol = V0(),
                     Temp_t inlet2T = {0., Units::C},
                     PowerVect_t* extraHeatDist = NULL);
     /**< This function will progress the simulation forward in time by one step
@@ -594,7 +601,7 @@ class HPWH : public Courier::Sender
                     Temp_t ambientT,
                     Temp_t externalT,
                     DRMODES DRstatus,
-                    Volume_t inlet2Vol = Units::V0,
+                    Volume_t inlet2Vol = V0(),
                     Temp_t inlet2T = {0., Units::C},
                     PowerVect_t* extraHeatDist = NULL)
     {

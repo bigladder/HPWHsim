@@ -215,11 +215,6 @@ using EnergyVect = ScaleVect<Energy, units>;
 template <Power units>
 using PowerVect = ScaleVect<Power, units>;
 
-inline const Temp_dVal<Temp_d::C> dT0 = {0., dC};
-inline const VolumeVal<Volume::L> V0 = {0., L};
-inline const EnergyVal<Energy::J> E0 = {0., J};
-inline const PowerVal<Power::W> P0 = {0., W};
-inline const UAVal<UA::W_per_C> UA0 = {0., W_per_C};
 } // namespace Unity
 
 namespace Units = Unity;
