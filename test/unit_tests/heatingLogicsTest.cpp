@@ -337,7 +337,8 @@ TEST(ExtraHeatTest, extraHeat)
     hpwh.setTankToT({20., Units::C});
 
     HPWH::Energy_t Q_init = hpwh.getTankHeatContent();
-    hpwh.runOneStep({0., Units::L}, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
+    hpwh.runOneStep(
+        {0., Units::L}, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
 
     HPWH::Energy_t Q_final = hpwh.getTankHeatContent();
 

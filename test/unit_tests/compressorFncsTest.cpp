@@ -20,10 +20,11 @@ struct CompressorFncsTest : public testing::Test
         HPWH::Temp_t minT;
     };
 
-    //ModelSpecs t = {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}};
+    // ModelSpecs t = {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42.,
+    // Units::F}};
 
-    const std::vector<ModelSpecs> modelSpecs =
-        {{"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}},
+    const std::vector<ModelSpecs> modelSpecs = {
+        {"AOSmithHPTU50", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {42., Units::F}},
         {"Stiebel220e", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {32., Units::F}},
         {"AOSmithCAHP120", true, 1, true, false, HPWH::MAXOUTLET_R134A(), {47., Units::F}},
         {"Sanden80", true, 2, false, false, HPWH::MAXOUTLET_R744(), {-25., Units::F}},

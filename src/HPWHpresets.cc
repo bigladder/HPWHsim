@@ -10,7 +10,8 @@ Initialize all presets available in HPWHsim
 void HPWH::initResistanceTank()
 {
     // a default resistance tank, nominal 50 gallons, 0.95 EF, standard double 4.5 kW elements
-    initResistanceTank({47.5, Units::gal}, {0.95, Units::m2C_per_W}, {4500, Units::W}, {4500, Units::W});
+    initResistanceTank(
+        {47.5, Units::gal}, {0.95, Units::m2C_per_W}, {4500, Units::W}, {4500, Units::W});
 }
 
 void HPWH::initResistanceTank(const Volume_t tankVol,
