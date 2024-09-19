@@ -253,7 +253,7 @@ void HPWH::HeatSource::from(
 
         typeOfHeatSource = TYPE_compressor;
         auto rsconendserwaterheatsource_ptr =
-            dynamic_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            reinterpret_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
                 config.heat_source.get());
         from(*rsconendserwaterheatsource_ptr);
         break;
@@ -262,7 +262,7 @@ void HPWH::HeatSource::from(
     {
         typeOfHeatSource = TYPE_resistance;
         auto rsresistancewaterheatsource_ptr =
-            dynamic_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            reinterpret_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
                 config.heat_source.get());
         from(*rsresistancewaterheatsource_ptr);
         break;
