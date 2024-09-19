@@ -2264,7 +2264,7 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
 
     for (auto& perfP : heatSources[compressorIndex].perfMap)
     {
-        perfP.inputPower_coeffs.rescale(scaleCapacity);
+        scaleVector(perfP.inputPower_coeffs(), scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
     }
 }
