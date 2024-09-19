@@ -43,7 +43,7 @@ struct HPWH::HeatingLogic
     static std::shared_ptr<HeatingLogic>
     make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
 
-    virtual void make(std::unique_ptr<data_model::HeatingLogicBase>& heating_logic) = 0;
+    virtual void make(std::unique_ptr<HeatingLogicBase>& heating_logic) = 0;
 
   protected:
     double decisionPoint;
@@ -78,7 +78,7 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setConstantMainsTemperature(double mains_C);
 
-    void make(std::unique_ptr<data_model::HeatingLogicBase>& heating_logic) override;
+    void make(std::unique_ptr<HeatingLogicBase>& heating_logic) override;
 
   private:
     double tempMinUseful_C;
@@ -109,7 +109,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setDecisionPoint(double value, bool absolute);
 
-    void make(std::unique_ptr<data_model::HeatingLogicBase>& heating_logic) override;
+    void make(std::unique_ptr<HeatingLogicBase>& heating_logic) override;
 
   private:
     bool areNodeWeightsValid();
