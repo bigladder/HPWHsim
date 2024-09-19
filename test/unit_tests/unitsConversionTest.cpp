@@ -50,15 +50,15 @@ TEST(UnitsConversionTest, conversions)
         Time_s t_s(15.);
         Time_min t_min(0.25);
 
-        EXPECT_EQ(t_s(), t_min(Units::s));
-        EXPECT_EQ(t_s(Units::min), t_min());
-        EXPECT_EQ(t_s(), t_min(Units::s));
+        EXPECT_EQ(t_s(), t_min(s));
+        EXPECT_EQ(t_s(min), t_min());
+        EXPECT_EQ(t_s(), t_min(s));
         EXPECT_NE(t_s(), 0.25);
         EXPECT_NE(t_min(), 15.);
 
         // test min<->h conversion
         t_min() = 45.;
-        typedef Units::TimeVal<Units::Time::h> Time_h;
+        typedef TimeVal<Time::h> Time_h;
         Time_h t_h(t_min);
         EXPECT_EQ(t_h(), 0.75);
 
@@ -175,7 +175,6 @@ TEST(UnitsConversionTest, conversions)
         x += 1.; // ft
         EXPECT_NEAR_REL(length_ft(), 4.);
     }
-
     {
         std::vector<EnergyVal<Energy::Btu>> E_Btu_V(3);
         E_Btu_V[0] = 10.;
@@ -184,6 +183,23 @@ TEST(UnitsConversionTest, conversions)
 
         EnergyVect_kJ E_V_kJ(E_Btu_V);
         EXPECT_NEAR_REL(E_V_kJ[1](Btu), 20.);
+    }
+    { // vector construction
+        TempVect_dC vT_dC({1.8, 3.6, 5.4}, dF);
+        EXPECT_NEAR_REL(vT_dC[1](dF), 3.6);
 
+        TempVect_C vT_C({32., 98.6, 212.}, F);
+        EXPECT_NEAR_REL(vT_C[1](F), 98.6);
+    }
+    { // vector sizing
+        EnergyVect_kJ EV_kJ(2);
+        EV_kJ[0] = {0.2, kJ};
+        EV_kJ[1] = 80.;
+        EXPECT_NEAR_REL(EV_kJ[1](), 80.);
+
+        TempVect_C TV_C(2);
+        TV_C[0] = {32., Units::F};
+        TV_C[1] = 20.;
+        EXPECT_NEAR_REL(TV_C[1](), 20.);
     }
 }

@@ -557,8 +557,6 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     {
     }
 
-    explicit ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
-
     template <U fromUnits>
     explicit ScaleVect(const ScaleVect<U, fromUnits>& sV) : ScaleVect({})
     {
@@ -569,7 +567,7 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     }
 
     template <U fromUnits>
-    explicit ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect({})
+    explicit ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect()
     {
         xV.reserve(sV.size());
         auto t = scale(fromUnits, units);
@@ -583,6 +581,8 @@ struct ScaleVect : public TransformVect<U, Scale, units>
         for (auto x : xV_in)
             xV.push_back(t * x);
     }
+
+    explicit ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
 
     std::vector<double> operator()(const U toUnits) const
     {
@@ -666,9 +666,7 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
         xV = sV();
     }
 
-    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
-
-    template <U fromUnits>
+     template <U fromUnits>
     explicit ScaleOffsetVect(const ScaleVect<U, fromUnits>& sV) : ScaleOffsetVect({})
     {
         xV.reserve(sV.size());
@@ -678,13 +676,15 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     }
 
     template <U fromUnits>
-    explicit ScaleOffsetVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleOffsetVect({})
+    explicit ScaleOffsetVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleOffsetVect()
     {
         xV.reserve(sV.size());
         auto t = scaleOffset(fromUnits, units);
         for (auto s_ : sV)
             xV.push_back(t * s_());
     }
+
+    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
 
     ScaleOffsetVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleOffsetVect()
     {
