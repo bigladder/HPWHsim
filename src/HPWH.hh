@@ -995,7 +995,7 @@ class HPWH : public Courier::Sender
         std::vector<double> COP_coeffs;
 
         PerfPoint(std::pair<double, Units::Temp> T_in = {0, Units::C},
-                  PowerVect_t inputPower_coeffs_in = {},
+                  PowerVect_t inputPower_coeffs_in = PowerVect_t({}),
                   std::vector<double> COP_coeffs_in = {});
     };
 

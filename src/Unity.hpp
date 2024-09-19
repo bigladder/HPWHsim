@@ -512,7 +512,7 @@ struct TransformVect
     std::vector<double> xV;
 
   public:
-    TransformVect(const std::vector<double>& xV_in = {}) : xV(xV_in) {}
+    explicit TransformVect(const std::vector<double>& xV_in = {}) : xV(xV_in) {}
 
     explicit TransformVect(const std::size_t n) : xV(n) {}
 
@@ -540,9 +540,12 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     using TransformVect<U, Scale, units>::clear;
     using TransformVect<U, Scale, units>::operator();
 
-    ScaleVect(const std::vector<double>& xV_in = {}) : TransformVect<U, Scale, units>(xV_in) {}
+    explicit ScaleVect(const std::vector<double>& xV_in = {})
+        : TransformVect<U, Scale, units>(xV_in)
+    {
+    }
 
-    ScaleVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
+    ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
 
     ScaleVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleVect<U, units>()
     {
@@ -557,7 +560,7 @@ struct ScaleVect : public TransformVect<U, Scale, units>
         xV.reserve(sV.size());
         auto t = scale(fromUnits, units);
         for (auto s_ : sV)
-            xV.push_back(t * s_);
+            xV.push_back(t * s_());
     }
 
     template <U fromUnits>
@@ -566,7 +569,7 @@ struct ScaleVect : public TransformVect<U, Scale, units>
         xV.reserve(sV.size());
         auto t = scale(fromUnits, units);
         for (auto s_ : sV)
-            xV.push_back(t * s_);
+            xV.push_back(t * s_());
     }
 
     template <typename... val>
@@ -637,7 +640,7 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 
     auto begin() const
     {
-        return xV.empty() ? nullptr : reinterpret_cast<ScaleVal<U, units>*>(&(*xV.begin()));
+        return xV.empty() ? nullptr : reinterpret_cast<const ScaleVal<U, units>*>(&(*xV.begin()));
     }
     auto end() const { return begin() + xV.size(); }
 
@@ -672,7 +675,7 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     using TransformVect<U, ScaleOffset, units>::clear;
     using TransformVect<U, ScaleOffset, units>::operator();
 
-    ScaleOffsetVect(const std::vector<double>& xV_in = {})
+    explicit ScaleOffsetVect(const std::vector<double>& xV_in = {})
         : TransformVect<U, ScaleOffset, units>(xV_in)
     {
     }
