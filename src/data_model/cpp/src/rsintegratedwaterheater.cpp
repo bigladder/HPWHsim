@@ -7,8 +7,6 @@ namespace data_model  {
 	
 		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = value; }
 
-		void from_json(const nlohmann::json& j, Schema& x) {
-		}
 		const std::string_view Schema::schema_title = "Integrated Heat-Pump Water Heater";
 
 		const std::string_view Schema::schema_version = "0.1.0";
@@ -311,6 +309,10 @@ namespace data_model  {
 		const std::string_view SoCBasedHeatingLogic::uses_constant_mains_name = "uses_constant_mains";
 
 		const std::string_view SoCBasedHeatingLogic::constant_mains_temperature_name = "constant_mains_temperature";
+
+        void TempBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
+
+        void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this); }
 
 	}
 }

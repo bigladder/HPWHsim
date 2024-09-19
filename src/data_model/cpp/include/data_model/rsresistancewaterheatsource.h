@@ -48,6 +48,7 @@ namespace data_model {
 			const static std::string_view input_power_name;
 		};
 		struct RSRESISTANCEWATERHEATSOURCE : HeatSourceBase {
+            void initialize(const nlohmann::json& j) override;
 			core_ns::Metadata metadata;
 			rsresistancewaterheatsource_ns::Description description;
 			rsresistancewaterheatsource_ns::Performance performance;

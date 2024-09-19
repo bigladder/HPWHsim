@@ -225,6 +225,7 @@ namespace data_model {
 			const static std::string_view standby_power_name;
 		};
 		struct TempBasedHeatingLogic : HeatingLogicBase {
+            void initialize(const nlohmann::json& j) override;
 			double absolute_temperature;
 			double differential_temperature;
 			std::vector<double> logic_distribution;
@@ -242,6 +243,7 @@ namespace data_model {
 			const static std::string_view logic_distribution_name;
 		};
 		struct SoCBasedHeatingLogic : HeatingLogicBase {
+            void initialize(const nlohmann::json& j) override;
 			double decision_point;
 			double minimum_useful_temperature;
 			double hysteresis_fraction;
