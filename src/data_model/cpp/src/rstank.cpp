@@ -7,8 +7,6 @@ namespace data_model  {
 	
 		void set_logger (std::shared_ptr<Courier::Courier> value) { logger = value; }
 
-		void from_json(const nlohmann::json& j, Schema& x) {
-		}
 		const std::string_view Schema::schema_title = "Water Tank";
 
 		const std::string_view Schema::schema_version = "0.1.0";

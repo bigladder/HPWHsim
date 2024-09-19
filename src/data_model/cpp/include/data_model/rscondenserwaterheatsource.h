@@ -133,6 +133,7 @@ namespace data_model {
 			const static std::string_view use_defrost_map_name;
 		};
 		struct RSCONDENSERWATERHEATSOURCE : HeatSourceBase {
+            void initialize(const nlohmann::json& j) override;
 			core_ns::Metadata metadata;
 			rscondenserwaterheatsource_ns::Description description;
 			rscondenserwaterheatsource_ns::Performance performance;

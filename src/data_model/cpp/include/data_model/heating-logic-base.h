@@ -1,6 +1,7 @@
 #ifndef HEATINGLOGICBASE_H_
 #define HEATINGLOGICBASE_H_
 struct HeatingLogicBase {
-	void initialize (const nlohmann::json& j);
+    virtual void initialize(const nlohmann::json& j) = 0;
+    virtual ~HeatingLogicBase() = default;
 };
 #endif
