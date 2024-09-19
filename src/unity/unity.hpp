@@ -666,7 +666,7 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
         xV = sV();
     }
 
-     template <U fromUnits>
+    template <U fromUnits>
     explicit ScaleOffsetVect(const ScaleVect<U, fromUnits>& sV) : ScaleOffsetVect({})
     {
         xV.reserve(sV.size());
