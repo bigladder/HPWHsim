@@ -547,37 +547,27 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 
     explicit ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
 
+    template <U fromUnits>
+    explicit ScaleVect(const ScaleVect<U, fromUnits>& sV) : ScaleVect({}, fromUnits)
+    {
+        xV.reserve(sV.size());
+        auto t = scale(fromUnits, units);
+        for (auto s_ : sV)
+            xV.push_back(t * s_());
+    }
+
+    explicit ScaleVect(const std::vector<ScaleVal<U, units>>& sV) : ScaleVect({}, units)
+    {
+        xV.reserve(sV.size());
+        for (auto s_ : sV)
+            xV.push_back(s_());
+    }
+
     ScaleVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleVect<U, units>()
     {
         auto t = scale(fromUnits, units);
         for (auto x : xV_in)
             xV.push_back(t * x);
-    }
-
-    template <U fromUnits>
-    ScaleVect(const ScaleVect<U, fromUnits>& sV) : ScaleVect({}, fromUnits)
-    {
-        xV.reserve(sV.size());
-        auto t = scale(fromUnits, units);
-        for (auto s_ : sV)
-            xV.push_back(t * s_());
-    }
-
-    template <U fromUnits>
-    ScaleVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleVect({}, fromUnits)
-    {
-        xV.reserve(sV.size());
-        auto t = scale(fromUnits, units);
-        for (auto s_ : sV)
-            xV.push_back(t * s_());
-    }
-
-    template <typename... val>
-    ScaleVect(const std::tuple<val...>& sV) : ScaleVect()
-    {
-        xV.reserve(sV.size());
-        for (auto s_ : sV)
-            xV.push_back(s_);
     }
 
     std::vector<double> operator()(const U toUnits) const
@@ -607,19 +597,6 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     bool operator!=(const ScaleVect<U, toUnits> scaleVect) const
     {
         return !(operator==(scaleVect));
-    }
-
-    void rescale(const double factor)
-    {
-        if (factor != 1.)
-        {
-            std::transform(xV.begin(),
-                           xV.end(),
-                           xV.begin(),
-                           [factor](auto&& PH1) {
-                               return std::multiplies<>()(std::forward<decltype(PH1)>(PH1), factor);
-                           });
-        }
     }
 
     auto begin()
@@ -670,6 +647,13 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     {
     }
 
+    explicit ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, units>>& sV) : ScaleOffsetVect()
+    {
+        xV = sV();
+    }
+
+    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
+
     ScaleOffsetVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleOffsetVect()
     {
         xV.reserve(xV_in.size());
@@ -677,13 +661,6 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
         for (auto x : xV_in)
             xV.push_back(t * x);
     }
-
-    ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, units>>& sV) : ScaleOffsetVect()
-    {
-        xV = sV();
-    }
-
-    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
 
     ScaleOffsetVal<U, units> operator[](const std::size_t i) const
     {

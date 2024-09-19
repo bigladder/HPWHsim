@@ -4082,7 +4082,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
 
         // Scale the compressor capacity
-        inputPower_coeffs.rescale(scaleFactor);
+        scaleVector(inputPower_coeffs(), scaleFactor);
 
         compressor->perfMap.push_back({
             {105, Units::F},   // Temperature
