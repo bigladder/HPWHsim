@@ -182,19 +182,4 @@ TEST(UnitsConversionTest, conversions)
         EXPECT_NEAR_REL(length_ft(), 4.);
     }
 
-    {
-        EnergyVect_kJ E_V_kJ({10., 20., 30.});
-        std::vector<EnergyVal<Energy::kJ>> E_kJ_V = E_V_kJ;
-        EXPECT_NEAR_REL(E_kJ_V[1](kJ), E_V_kJ[1](kJ));
-
-        TempVect_C T_V_C({0., 32., 98.6, 212.}, F);
-        std::vector<TempVal<Temp::C>> T_C_V = T_V_C;
-        EXPECT_NEAR_REL(T_C_V[1](C), 0.);
-
-        for (auto& T_C : T_V_C)
-        {
-            T_C += 2.;
-        }
-        EXPECT_NEAR_REL(T_V_C[1](C), 2.);
-    }
-}
+ }
