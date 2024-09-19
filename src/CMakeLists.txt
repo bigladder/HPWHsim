@@ -68,6 +68,4 @@ if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()
 
-if (${PROJECT_NAME}_BUILD_TESTING)
-    add_subdirectory(unity)
-endif ()
+add_subdirectory(unity)
