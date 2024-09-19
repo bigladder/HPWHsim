@@ -488,21 +488,22 @@ HPWH::PerfPoint::PerfPoint(std::pair<double, Units::Temp> T_in,
     auto unitsTemp_in = T_in.second;
     if (inputPower_coeffs.size() == 3) // use expandSeries
     {
-        inputPower_coeffs = changeSeriesUnitsTemp3(inputPower_coeffs_in(), unitsTemp_in, UnitsTemp);
+        inputPower_coeffs() =
+            changeSeriesUnitsTemp3(inputPower_coeffs_in(), unitsTemp_in, UnitsTemp);
         COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs_in, unitsTemp_in, UnitsTemp);
         return;
     }
 
     if (inputPower_coeffs.size() == 11) // use regressMethod
     {
-        inputPower_coeffs = changeSeriesUnitsTemp11(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
+        inputPower_coeffs() = changeSeriesUnitsTemp11(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
         COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp_in, UnitsTemp);
         return;
     }
 
     if (inputPower_coeffs.size() == 6) // use regressMethodMP
     {
-        inputPower_coeffs = changeSeriesUnitsTemp6(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
+        inputPower_coeffs() = changeSeriesUnitsTemp6(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
         COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, UnitsTemp);
         return;
     }
@@ -2819,7 +2820,7 @@ V HPWH::modifyHeatDistribution(V heatDistribution)
     Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution());
     int lowestNode = findLowestNode(heatDistribution(), getNumNodes());
 
-    heatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
+    heatDistribution() = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
     ;
     for (auto& heatDist : heatDistribution)
         heatDist *= totalHeat;

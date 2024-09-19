@@ -64,7 +64,7 @@ TEST(UnitsConversionTest, conversions)
 
         // test TimeVect_min -> std::vector<double>
         TimeVect_min tV_min({10., 20., 30., 60., 120., 360., 12.});
-        TimeVect_s tV_s = tV_min(s);
+        TimeVect_s tV_s(tV_min);
         EXPECT_EQ(tV_s(min), tV_min(min));
 
         std::vector<double>& v = tV_min();
