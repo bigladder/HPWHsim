@@ -152,12 +152,6 @@ TEST(UnitsConversionTest, conversions)
         UAVal<UA::Btu_per_hF> ua_Btu_per_hF(ua_kJ_per_hC);
         EXPECT_NEAR_REL(ua_Btu_per_hF(), ua_kJ_per_hC(Btu_per_hF));
     }
-
-    {
-        Length_ft len_ft = {5, m};
-        Power_kW power_kW = {Energy_kJ(60, Btu)() / Time_s(1, h)(), Btu_per_h};
-        Area_m2 area_m2 = {Length_m(15, ft)() * Length_m(15, ft)(), ft2};
-    }
     {
         Temp_F temp_F = {0., C};
         temp_F += Temp_dC(100)(dF);
@@ -182,4 +176,14 @@ TEST(UnitsConversionTest, conversions)
         EXPECT_NEAR_REL(length_ft(), 4.);
     }
 
- }
+    {
+        std::vector<EnergyVal<Energy::Btu>> E_Btu_V(3);
+        E_Btu_V[0] = 10.;
+        E_Btu_V[1] = 20.;
+        E_Btu_V[2] = 30.;
+
+        EnergyVect_kJ E_V_kJ(E_Btu_V);
+        EXPECT_NEAR_REL(E_V_kJ[1](Btu), 20.);
+
+    }
+}
