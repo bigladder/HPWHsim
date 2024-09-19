@@ -545,7 +545,7 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     {
     }
 
-    ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
+    explicit ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
 
     ScaleVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleVect<U, units>()
     {
@@ -595,16 +595,6 @@ struct ScaleVect : public TransformVect<U, Scale, units>
     ScaleVal<U, units>& operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleVal<U, units>&>(xV[i]);
-    }
-
-    operator const std::vector<ScaleVal<U, units>>&() const
-    {
-        return static_cast<std::vector<ScaleVal<U, units>>>(xV);
-    }
-
-    operator std::vector<ScaleVal<U, units>>&()
-    {
-        return reinterpret_cast<std::vector<ScaleVal<U, units>>&>(xV);
     }
 
     template <U toUnits>
@@ -693,7 +683,7 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
         xV = sV();
     }
 
-    ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
+    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
 
     ScaleOffsetVal<U, units> operator[](const std::size_t i) const
     {
@@ -703,16 +693,6 @@ struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
     ScaleOffsetVal<U, units>& operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV[i]);
-    }
-
-    operator const std::vector<ScaleOffsetVal<U, units>>&() const
-    {
-        return static_cast<std::vector<ScaleOffsetVal<U, units>>>(xV);
-    }
-
-    operator std::vector<ScaleOffsetVal<U, units>>&()
-    {
-        return reinterpret_cast<std::vector<ScaleOffsetVal<U, units>>&>(xV);
     }
 
     std::vector<double> operator()(const U toUnits) const
