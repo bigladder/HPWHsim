@@ -4,6 +4,8 @@
 #include <ashrae205.h>
 #include <load-object.h>
 #include <rstank.h>
+#include <heat-source-base.h>
+#include <heating-logic-base.h>
 #include <rsresistancewaterheatsource.h>
 #include <rscondenserwaterheatsource.h>
 #include <rsintegratedwaterheater.h>
