@@ -5,4 +5,4 @@
 [submodule "vendor/CLI11"]
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
-
+	ignore = untracked
