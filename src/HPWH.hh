@@ -109,9 +109,10 @@ class HPWH : public Courier::Sender
     static const int LOGIC_SIZE =
         12; /**< number of logic nodes associated with temperature-based heating logic */
 
-    static const double DENSITYWATER_kg_per_L;     /// mass density of water
-    static const double KWATER_W_per_mC;           /// thermal conductivity of water
-    static const double CPWATER_kJ_per_kgC;        /// specific heat capcity of water
+    static constexpr double DENSITYWATER_kg_per_L = 0.995; /// mass density of water
+    static constexpr double KWATER_W_per_mC = 0.62;        /// thermal conductivity of water
+    static constexpr double CPWATER_kJ_per_kgC = 4.180;    /// specific heat capcity of water
+
     static constexpr double TOL_MINVALUE = 0.0001; /**< any amount of heat distribution less than
                                          this is reduced to 0 this saves on computations */
 

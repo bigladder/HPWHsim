@@ -53,10 +53,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-const double HPWH::DENSITYWATER_kg_per_L = 0.995; /// mass density of water
-const double HPWH::KWATER_W_per_mC = 0.62;        /// thermal conductivity of water
-const double HPWH::CPWATER_kJ_per_kgC = 4.180;    /// specific heat capcity of water
-
 double
 getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
 {
