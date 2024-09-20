@@ -2784,8 +2784,10 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Modifies a heat distribution using a thermal distribution.
+/// @param[in,out]	heatDistribution_W		The distribution to be modified
 //-----------------------------------------------------------------------------
-std::vector<double> HPWH::modifyHeatDistribution(const std::vector<double>& heatDistribution)
+template <typename V>
+V HPWH::modifyHeatDistribution(V heatDistribution)
 {
     double totalHeat = 0.;
     for (auto& heatDist : heatDistribution)
@@ -2794,19 +2796,18 @@ std::vector<double> HPWH::modifyHeatDistribution(const std::vector<double>& heat
     if (totalHeat == 0.)
         return heatDistribution;
 
-    auto modHeatDistribution = heatDistribution;
-    for (auto& modHeatDist : modHeatDistribution)
-        modHeatDist /= totalHeat;
+    for (auto& heatDist : heatDistribution)
+        heatDist /= totalHeat;
 
     Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution);
-    int lowestNode = findLowestNode(modHeatDistribution, getNumNodes());
+    int lowestNode = findLowestNode(heatDistribution, getNumNodes());
 
-    modHeatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
+    heatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
     ;
-    for (auto& modHeatDist : modHeatDistribution)
-        modHeatDist *= totalHeat;
+    for (auto& heatDist : heatDistribution)
+        heatDist *= totalHeat;
 
-    return modHeatDistribution;
+    return heatDistribution;
 }
 
 //-----------------------------------------------------------------------------
