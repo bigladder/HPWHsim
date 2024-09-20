@@ -9,6 +9,39 @@ mixOnDraw true
 #a test comment
 numHeatSources 3
 
+
+heatsource 2 isVIP false
+heatsource 2 isOn false
+heatsource 2 type compressor
+heatsource 2 condensity 0.333333333333 0.333333333333 0.333333333333 0 0 0 0 0 0 0 0 0
+heatsource 2 nTemps 3
+heatsource 2 T1 50 F
+heatsource 2 T2 70 F
+heatsource 2 T3 95 F
+heatsource 2 inPowT1const 170
+heatsource 2 inPowT1lin 2.02
+heatsource 2 inPowT1quad 0
+heatsource 2 inPowT2const 144.5
+heatsource 2 inPowT2lin 2.42
+heatsource 2 inPowT2quad 0
+heatsource 2 inPowT3const 94.1
+heatsource 2 inPowT3lin 3.15
+heatsource 2 inPowT3quad 0
+heatsource 2 copT1const 5.93
+heatsource 2 copT1lin -0.027
+heatsource 2 copT1quad 0.0
+heatsource 2 copT2const 7.67
+heatsource 2 copT2lin -0.037
+heatsource 2 copT2quad 0.0
+heatsource 2 copT3const 11.1
+heatsource 2 copT3lin -0.056
+heatsource 2 copT3quad 0.0
+heatsource 2 minT 42 F
+heatsource 2 maxT 120 F
+heatsource 2 hysteresis 1 F
+heatsource 2 coilConfig wrapped
+
+
 heatsource 0 isVIP true
 heatsource 0 isOn false
 heatsource 0 type resistor
@@ -56,36 +89,6 @@ heatsource 1 copT2quad 0.0
 heatsource 1 hysteresis 2 F
 heatsource 1 coilConfig submerged
 
-heatsource 2 isVIP false
-heatsource 2 isOn false
-heatsource 2 type compressor
-heatsource 2 condensity 0.333333333333 0.333333333333 0.333333333333 0 0 0 0 0 0 0 0 0
-heatsource 2 nTemps 3
-heatsource 2 T1 50 F
-heatsource 2 T2 70 F
-heatsource 2 T3 95 F
-heatsource 2 inPowT1const 170
-heatsource 2 inPowT1lin 2.02
-heatsource 2 inPowT1quad 0
-heatsource 2 inPowT2const 144.5
-heatsource 2 inPowT2lin 2.42
-heatsource 2 inPowT2quad 0
-heatsource 2 inPowT3const 94.1
-heatsource 2 inPowT3lin 3.15
-heatsource 2 inPowT3quad 0
-heatsource 2 copT1const 5.93
-heatsource 2 copT1lin -0.027
-heatsource 2 copT1quad 0.0
-heatsource 2 copT2const 7.67
-heatsource 2 copT2lin -0.037
-heatsource 2 copT2quad 0.0
-heatsource 2 copT3const 11.1
-heatsource 2 copT3lin -0.056
-heatsource 2 copT3quad 0.0
-heatsource 2 minT 42 F
-heatsource 2 maxT 120 F
-heatsource 2 hysteresis 1 F
-heatsource 2 coilConfig wrapped
 
 heatsource 0 onlogic nodes 11 12 absolute < 105 F
 heatsource 2 onlogic bottomThird 35 F
