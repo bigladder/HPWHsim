@@ -33,8 +33,8 @@ struct Transform
     friend double operator/(const double x, const Transform& t) { return t.inverse() * x; }
 };
 
-struct Offset;
-struct ScaleOffset;
+struct Shift;
+struct ScaleShift;
 
 struct Scale : Transform<double, Scale>
 {
@@ -53,52 +53,52 @@ struct Scale : Transform<double, Scale>
     [[nodiscard]] double scale() const { return data; }
 };
 
-struct Offset : Transform<double, Offset>
+struct Shift : Transform<double, Shift>
 {
-    using Transform<double, Offset>::data;
+    using Transform<double, Shift>::data;
 
-    explicit Offset(const double offset) : Transform(offset) {}
+    explicit Shift(const double offset) : Transform(offset) {}
 
-    static Offset ident() { return Offset(0.); }
+    static Shift ident() { return Shift(0.); }
 
-    [[nodiscard]] Offset inverse() const override { return Offset(-data); }
+    [[nodiscard]] Shift inverse() const override { return Shift(-data); }
 
     double operator*(const double x) const override { return x + data; }
 
-    Offset operator*(const Offset& o) const { return Offset(data + o.data); }
+    Shift operator*(const Shift& o) const { return Shift(data + o.data); }
 
-    Offset operator/(const Offset& o) const { return Offset(data - o.data); }
+    Shift operator/(const Shift& o) const { return Shift(data - o.data); }
 
-    [[nodiscard]] double offset() const { return data; }
+    [[nodiscard]] double shift() const { return data; }
 };
 
-using ScaleOffsetSeq = std::pair<Scale, Offset>;
+using ScaleShiftSeq = std::pair<Scale, Shift>;
 
-struct ScaleOffset : Transform<ScaleOffsetSeq, ScaleOffset>
+struct ScaleShift : Transform<ScaleShiftSeq, ScaleShift>
 {
-    explicit ScaleOffset(const ScaleOffsetSeq& scaleOffsetSeq) : Transform(scaleOffsetSeq) {}
+    explicit ScaleShift(const ScaleShiftSeq& scaleShiftSeq) : Transform(scaleShiftSeq) {}
 
-    ScaleOffset(const Scale& scale, const Offset& offset) : Transform({scale, offset}) {}
+    ScaleShift(const Scale& scale, const Shift& offset) : Transform({scale, offset}) {}
 
-    static ScaleOffset ident() { return {Scale(1.), Offset(0.)}; }
+    static ScaleShift ident() { return {Scale(1.), Shift(0.)}; }
 
-    [[nodiscard]] ScaleOffset inverse() const override
+    [[nodiscard]] ScaleShift inverse() const override
     {
         return {Scale(data.first.inverse()),
-                Offset(data.first.inverse()() * data.second.inverse()())};
+                Shift(data.first.inverse()() * data.second.inverse()())};
     }
 
     double operator*(const double x) const override { return data.second * (data.first * x); }
 
-    ScaleOffset operator*(const ScaleOffset& a) const
+    ScaleShift operator*(const ScaleShift& a) const
     {
         return {data.first * a.data.first,
-                Offset(data.first.scale() * a.data.second.offset() + data.second.offset())};
+                Shift(data.first.scale() * a.data.second.shift() + data.second.shift())};
     }
 
     Scale scale() const { return data.first; }
 
-    Offset offset() const { return data.second; }
+    Shift shift() const { return data.second; }
 };
 
 /// Transformer classes
@@ -157,20 +157,20 @@ struct Scaler : Transformer<U, Scale>
 };
 
 template <typename U>
-struct ScaleOffseter : Transformer<U, ScaleOffset>
+struct ScaleShifter : Transformer<U, ScaleShift>
 {
-    static struct ScaleOffsetMap : Transformer<U, ScaleOffset>::TransformMap
+    static struct ScaleShiftMap : Transformer<U, ScaleShift>::TransformMap
     {
-        ScaleOffsetMap(const U tRef, const std::vector<std::pair<U, ScaleOffset>>& transforms)
-            : Transformer<U, ScaleOffset>::TransformMap(tRef, transforms)
+        ScaleShiftMap(const U tRef, const std::vector<std::pair<U, ScaleShift>>& transforms)
+            : Transformer<U, ScaleShift>::TransformMap(tRef, transforms)
         {
         }
 
-    } scaleOffsetMap;
+    } scaleShiftMap;
 
-    inline static ScaleOffset transform(const U fromUnits, const U toUnits)
+    inline static ScaleShift transform(const U fromUnits, const U toUnits)
     {
-        return scaleOffsetMap.transform(fromUnits, toUnits);
+        return scaleShiftMap.transform(fromUnits, toUnits);
     }
 };
 
@@ -182,9 +182,9 @@ Scale scale(const U fromUnits, const U toUnits)
 }
 
 template <class U>
-ScaleOffset scaleOffset(const U fromUnits, const U toUnits)
+ScaleShift scaleShift(const U fromUnits, const U toUnits)
 {
-    return ScaleOffseter<U>::transform(fromUnits, toUnits);
+    return ScaleShifter<U>::transform(fromUnits, toUnits);
 }
 
 template <class U>
@@ -194,9 +194,9 @@ double scale(const U fromUnits, const U toUnits, const double x)
 }
 
 template <class U>
-double scaleOffset(const U fromUnits, const U toUnits, const double x)
+double scaleShift(const U fromUnits, const U toUnits, const double x)
 {
-    return scaleOffset(fromUnits, toUnits) * x;
+    return scaleShift(fromUnits, toUnits) * x;
 }
 
 /// transform values
@@ -399,121 +399,121 @@ struct ScaleVal : TransformVal<U, Scale, units>
 };
 
 template <class U, U units>
-struct ScaleOffsetVal : TransformVal<U, ScaleOffset, units>
+struct ScaleShiftVal : TransformVal<U, ScaleShift, units>
 {
-    using TransformVal<U, ScaleOffset, units>::x;
-    // using TransformVal<U, ScaleOffset, units>::operator+;
-    // using TransformVal<U, ScaleOffset, units>::operator-;
-    using TransformVal<U, ScaleOffset, units>::operator<;
-    using TransformVal<U, ScaleOffset, units>::operator>;
-    using TransformVal<U, ScaleOffset, units>::operator<=;
-    using TransformVal<U, ScaleOffset, units>::operator>=;
-    using TransformVal<U, ScaleOffset, units>::operator==;
-    using TransformVal<U, ScaleOffset, units>::operator!=;
+    using TransformVal<U, ScaleShift, units>::x;
+    // using TransformVal<U, ScaleShift, units>::operator+;
+    // using TransformVal<U, ScaleShift, units>::operator-;
+    using TransformVal<U, ScaleShift, units>::operator<;
+    using TransformVal<U, ScaleShift, units>::operator>;
+    using TransformVal<U, ScaleShift, units>::operator<=;
+    using TransformVal<U, ScaleShift, units>::operator>=;
+    using TransformVal<U, ScaleShift, units>::operator==;
+    using TransformVal<U, ScaleShift, units>::operator!=;
 
-    explicit ScaleOffsetVal(const double x_in = 0.) : TransformVal<U, ScaleOffset, units>(x_in) {}
+    explicit ScaleShiftVal(const double x_in = 0.) : TransformVal<U, ScaleShift, units>(x_in) {}
 
-    ScaleOffsetVal(const double x_in, const U fromUnits)
-        : TransformVal<U, ScaleOffset, units>(scaleOffset(fromUnits, units, x_in))
+    ScaleShiftVal(const double x_in, const U fromUnits)
+        : TransformVal<U, ScaleShift, units>(scaleShift(fromUnits, units, x_in))
     {
     }
 
     template <U fromUnits>
-    explicit ScaleOffsetVal(const ScaleOffsetVal<U, fromUnits>& scaleOffsetVal)
-        : TransformVal<U, ScaleOffset, units>(scaleOffset(fromUnits, units) * scaleOffsetVal())
+    explicit ScaleShiftVal(const ScaleShiftVal<U, fromUnits>& scaleShiftVal)
+        : TransformVal<U, ScaleShift, units>(scaleShift(fromUnits, units) * scaleShiftVal())
     {
     }
 
-    ScaleOffsetVal& operator=(const double y)
+    ScaleShiftVal& operator=(const double y)
     {
         x = y;
         return *this;
     }
 
-    ScaleOffsetVal& operator+=(const double y)
+    ScaleShiftVal& operator+=(const double y)
     {
         x += y;
         return *this;
     }
-    ScaleOffsetVal& operator-=(const double y)
+    ScaleShiftVal& operator-=(const double y)
     {
         x -= y;
         return *this;
     }
 
     template <U fromUnits>
-    ScaleOffsetVal& operator=(const ScaleOffsetVal<U, fromUnits>& scaleOffsetVal)
+    ScaleShiftVal& operator=(const ScaleShiftVal<U, fromUnits>& scaleShiftVal)
     {
-        x = scaleOffsetVal(units);
+        x = scaleShiftVal(units);
         return *this;
     }
 
     template <U fromUnits>
-    ScaleOffsetVal& operator+(const ScaleVal<U, fromUnits>& scaleVal) const
+    ScaleShiftVal& operator+(const ScaleVal<U, fromUnits>& scaleVal) const
     {
         return x + scaleVal(units);
     }
 
     template <U fromUnits>
-    ScaleOffsetVal& operator-(const ScaleVal<U, fromUnits>& scaleVal) const
+    ScaleShiftVal& operator-(const ScaleVal<U, fromUnits>& scaleVal) const
     {
         return x - scaleVal(units);
     }
 
     template <U fromUnits>
-    ScaleOffsetVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleShiftVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         x += scaleVal();
         return *this;
     }
 
     template <U fromUnits>
-    ScaleOffsetVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
+    ScaleShiftVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
     {
         x -= scaleVal();
         return *this;
     }
 
     template <U toUnits>
-    bool operator==(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator==(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return (scaleOffsetVal(units) == x);
+        return (scaleShiftVal(units) == x);
     }
 
     template <U toUnits>
-    bool operator!=(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator!=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return !(operator==(scaleOffsetVal));
+        return !(operator==(scaleShiftVal));
     }
 
     template <U toUnits>
-    bool operator<(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator<(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return (x < scaleOffsetVal(units));
+        return (x < scaleShiftVal(units));
     }
 
     template <U toUnits>
-    bool operator>(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator>(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return (x > scaleOffsetVal(units));
+        return (x > scaleShiftVal(units));
     }
 
     template <U toUnits>
-    bool operator<=(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator<=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return (x <= scaleOffsetVal(units));
+        return (x <= scaleShiftVal(units));
     }
 
     template <U toUnits>
-    bool operator>=(const ScaleOffsetVal<U, toUnits> scaleOffsetVal) const
+    bool operator>=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
     {
-        return (x >= scaleOffsetVal(units));
+        return (x >= scaleShiftVal(units));
     }
 
     double operator()() const { return x; }
     double& operator()() { return x; }
 
-    double operator()(const U toUnits) const { return scaleOffset(units, toUnits) * x; }
+    double operator()(const U toUnits) const { return scaleShift(units, toUnits) * x; }
 };
 
 /// transform vectors
@@ -647,121 +647,118 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 };
 
 template <class U, U units>
-struct ScaleOffsetVect : TransformVect<U, ScaleOffset, units>
+struct ScaleShiftVect : TransformVect<U, ScaleShift, units>
 {
   public:
-    using TransformVect<U, ScaleOffset, units>::xV;
-    using TransformVect<U, ScaleOffset, units>::size;
-    using TransformVect<U, ScaleOffset, units>::resize;
-    using TransformVect<U, ScaleOffset, units>::clear;
-    using TransformVect<U, ScaleOffset, units>::operator();
+    using TransformVect<U, ScaleShift, units>::xV;
+    using TransformVect<U, ScaleShift, units>::size;
+    using TransformVect<U, ScaleShift, units>::resize;
+    using TransformVect<U, ScaleShift, units>::clear;
+    using TransformVect<U, ScaleShift, units>::operator();
 
-    explicit ScaleOffsetVect(const std::vector<double>& xV_in = {})
-        : TransformVect<U, ScaleOffset, units>(xV_in)
+    explicit ScaleShiftVect(const std::vector<double>& xV_in = {})
+        : TransformVect<U, ScaleShift, units>(xV_in)
     {
     }
 
-    explicit ScaleOffsetVect(const std::vector<ScaleOffsetVal<U, units>>& sV) : ScaleOffsetVect()
+    explicit ScaleShiftVect(const std::vector<ScaleShiftVal<U, units>>& sV) : ScaleShiftVect()
     {
         xV = sV();
     }
 
     template <U fromUnits>
-    explicit ScaleOffsetVect(const ScaleVect<U, fromUnits>& sV) : ScaleOffsetVect({})
+    explicit ScaleShiftVect(const ScaleVect<U, fromUnits>& sV) : ScaleShiftVect({})
     {
         xV.reserve(sV.size());
-        auto t = scaleOffset(fromUnits, units);
+        auto t = scaleShift(fromUnits, units);
         for (auto s_ : sV)
             xV.push_back(t * s_());
     }
 
     template <U fromUnits>
-    explicit ScaleOffsetVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleOffsetVect()
+    explicit ScaleShiftVect(const std::vector<ScaleVal<U, fromUnits>>& sV) : ScaleShiftVect()
     {
         xV.reserve(sV.size());
-        auto t = scaleOffset(fromUnits, units);
+        auto t = scaleShift(fromUnits, units);
         for (auto s_ : sV)
             xV.push_back(t * s_());
     }
 
-    explicit ScaleOffsetVect(const std::size_t n) : TransformVect<U, ScaleOffset, units>(n) {}
+    explicit ScaleShiftVect(const std::size_t n) : TransformVect<U, ScaleShift, units>(n) {}
 
-    ScaleOffsetVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleOffsetVect()
+    ScaleShiftVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleShiftVect()
     {
         xV.reserve(xV_in.size());
-        const auto t = scaleOffset(fromUnits, units);
+        const auto t = scaleShift(fromUnits, units);
         for (auto x : xV_in)
             xV.push_back(t * x);
     }
 
-    ScaleOffsetVal<U, units> operator[](const std::size_t i) const
+    ScaleShiftVal<U, units> operator[](const std::size_t i) const
     {
-        return ScaleOffsetVal<U, units>(xV[i]);
+        return ScaleShiftVal<U, units>(xV[i]);
     }
 
-    ScaleOffsetVal<U, units>& operator[](const std::size_t i)
+    ScaleShiftVal<U, units>& operator[](const std::size_t i)
     {
-        return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV[i]);
+        return reinterpret_cast<ScaleShiftVal<U, units>&>(xV[i]);
     }
 
     std::vector<double> operator()(const U toUnits) const
     {
         std::vector<double> xV_out = {};
         xV_out.reserve(xV.size());
-        auto t = scaleOffset(units, toUnits);
+        auto t = scaleShift(units, toUnits);
         for (auto& x : xV)
             xV_out.push_back(t * x);
         return xV;
     }
 
     template <U toUnits>
-    bool operator==(const ScaleOffsetVect<U, toUnits> scaleOffsetVect) const
+    bool operator==(const ScaleShiftVect<U, toUnits> scaleShiftVect) const
     {
-        return (scaleOffsetVect(units) == fV(units));
+        return (scaleShiftVect(units) == fV(units));
     }
 
     template <U toUnits>
-    bool operator!=(const ScaleOffsetVect<U, toUnits> scaleOffsetVect) const
+    bool operator!=(const ScaleShiftVect<U, toUnits> scaleShiftVect) const
     {
-        return !(operator==(scaleOffsetVect));
+        return !(operator==(scaleShiftVect));
     }
 
     auto begin()
     {
-        return xV.empty() ? nullptr : reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.begin()));
+        return xV.empty() ? nullptr : reinterpret_cast<ScaleShiftVal<U, units>*>(&(*xV.begin()));
     }
     auto end() { return begin() + xV.size(); }
 
     auto begin() const
     {
         return xV.empty() ? nullptr
-                          : reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.begin()));
+                          : reinterpret_cast<const ScaleShiftVal<U, units>*>(&(*xV.begin()));
     }
     auto end() const { return begin() + xV.size(); }
 
     auto rbegin()
     {
-        return xV.empty() ? nullptr : reinterpret_cast<ScaleOffsetVal<U, units>*>(&(*xV.rbegin()));
+        return xV.empty() ? nullptr : reinterpret_cast<ScaleShiftVal<U, units>*>(&(*xV.rbegin()));
     }
     auto rend() { return rbegin() + xV.size(); }
 
     auto rbegin() const
     {
         return xV.empty() ? nullptr
-                          : reinterpret_cast<const ScaleOffsetVal<U, units>*>(&(*xV.rbegin()));
+                          : reinterpret_cast<const ScaleShiftVal<U, units>*>(&(*xV.rbegin()));
     }
     auto rend() const { return rbegin() + xV.size(); }
 
-    auto& front() { return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.front()); }
-    auto& back() { return reinterpret_cast<ScaleOffsetVal<U, units>&>(xV.back()); }
+    auto& front() { return reinterpret_cast<ScaleShiftVal<U, units>&>(xV.front()); }
+    auto& back() { return reinterpret_cast<ScaleShiftVal<U, units>&>(xV.back()); }
 
-    auto front() const { return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.front()); }
-    auto back() const { return reinterpret_cast<const ScaleOffsetVal<U, units>&>(xV.back()); }
+    auto front() const { return reinterpret_cast<const ScaleShiftVal<U, units>&>(xV.front()); }
+    auto back() const { return reinterpret_cast<const ScaleShiftVal<U, units>&>(xV.back()); }
 
-    auto push_back(const ScaleOffsetVal<U, units>& scaleOffsetVal)
-    {
-        xV.push_back(scaleOffsetVal());
-    }
+    auto push_back(const ScaleShiftVal<U, units>& scaleShiftVal) { xV.push_back(scaleShiftVal()); }
 };
 
 /// scale pairs

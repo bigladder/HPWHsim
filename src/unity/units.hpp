@@ -134,8 +134,8 @@ inline Scaler<Temp_d>::ScaleMap Scaler<Temp_d>::scaleMap(dC,
                                                          {{dF, Scale(F_per_C)}, {dK, Scale(1.)}});
 
 template <>
-inline ScaleOffseter<Temp>::ScaleOffsetMap ScaleOffseter<Temp>::scaleOffsetMap(
-    C, {{F, {Scale(F_per_C), Offset(offsetC_F)}}, {K, {Scale(1.), Offset(offsetC_K)}}});
+inline ScaleShifter<Temp>::ScaleShiftMap ScaleShifter<Temp>::scaleShiftMap(
+    C, {{F, {Scale(F_per_C), Shift(offsetC_F)}}, {K, {Scale(1.), Shift(offsetC_K)}}});
 
 template <>
 inline Scaler<Energy>::ScaleMap Scaler<Energy>::scaleMap(kJ,
@@ -179,7 +179,7 @@ inline Scaler<Cp>::ScaleMap Scaler<Cp>::scaleMap(kJ_per_C, {});
 template <Time units>
 using TimeVal = ScaleVal<Time, units>;
 template <Temp units>
-using TempVal = ScaleOffsetVal<Temp, units>;
+using TempVal = ScaleShiftVal<Temp, units>;
 template <Temp_d units>
 using Temp_dVal = ScaleVal<Temp_d, units>;
 template <Energy units>
@@ -209,7 +209,7 @@ using TimeVect = ScaleVect<Time, units>;
 template <Temp_d units>
 using TempVect_d = ScaleVect<Temp_d, units>;
 template <Temp units>
-using TempVect = ScaleOffsetVect<Temp, units>;
+using TempVect = ScaleShiftVect<Temp, units>;
 template <Energy units>
 using EnergyVect = ScaleVect<Energy, units>;
 template <Power units>
