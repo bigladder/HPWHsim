@@ -28,7 +28,7 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
     {
         send_error("Resistance tank lower element wattage below 550 W.");
     }
-    if (upperPower(Units::W) < 0.)
+    if (upperPower < 0.)
     {
         send_error("Upper resistance tank wattage below 0 W.");
     }
@@ -96,7 +96,7 @@ void HPWH::initResistanceTank(const Volume_t tankVol,
         {
             send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA = UA_t(0.0);
+        tankUA = UA_t(0.);
     }
 
     model = MODELS_CustomResTank;
@@ -127,7 +127,7 @@ void HPWH::initResistanceTankGeneric(Volume_t tankVol,
     // return 0 on success, HPWH_ABORT for failure
     heatSources.clear();
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
-    if (lowerPower < 0)
+    if (lowerPower < 0.)
     {
         send_error("Lower resistance tank wattage below 0 W.");
     }
@@ -1624,9 +1624,9 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC125A_C_MP)
             {
                 compressor->resDefrost = {
-                    {9.0, Units::kW}, // inputPwr_kW;
-                    {5.0, Units::dF}, // constTempLift_dF;
-                    {40.0, Units::F}  // onBelowT_F
+                    {9.0, Units::kW}, // inputPwr;
+                    {5.0, Units::dF}, // constTempLift;
+                    {40.0, Units::F}  // onBelowT
                 };
             }
             const PowerVect_t powerV({6.4,   7.72,  9.65,  12.54, 20.54, 24.69, 6.89,  8.28,
@@ -1651,9 +1651,9 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC185A_C_MP)
             {
                 compressor->resDefrost = {
-                    {7.2, Units::kW}, // inputPwr_kW;
-                    {5.0, Units::dF}, // constTempLift_dF;
-                    {40.0, Units::F}  // onBelowTemp_F
+                    {7.2, Units::kW}, // inputPwr;
+                    {5.0, Units::dF}, // constTempLift;
+                    {40.0, Units::F}  // onBelowTemp
                 };
             }
             // Grid values in long format, table 1, input power
@@ -1677,9 +1677,9 @@ void HPWH::initPreset(MODELS presetNum)
             if (presetNum == MODELS_NyleC250A_C_MP)
             {
                 compressor->resDefrost = {
-                    {18.0, Units::kW}, // inputPwr_kW;
-                    {5.0, Units::dF},  // constTempLift_dF;
-                    {40.0, Units::F}   // onBelowT_F
+                    {18.0, Units::kW}, // inputPwr;
+                    {5.0, Units::dF},  // constTempLift;
+                    {40.0, Units::F}   // onBelowT
                 };
             }
             // Grid values in long format, table 1, input power
