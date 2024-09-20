@@ -306,20 +306,6 @@ double linearInterp(double xnew, double x0, double x1, double y0, double y1)
     return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
 
-template <typename V, typename T>
-V changeSeriesUnits(const V& coeffs, const T fromUnits, const T toUnits)
-{
-    V newCoeffs = coeffs;
-    for (std::size_t j = 0; j < coeffs.size(); ++j)
-    {
-        for (std::size_t i = j + 1; i < coeffs.size(); ++i)
-        {
-            newCoeffs[i] = Units::scale(fromUnits, toUnits, coeffs[i]);
-        }
-    }
-    return newCoeffs;
-}
-
 double factorial(const int n)
 {
     double f = 1.;
@@ -2798,30 +2784,29 @@ void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 
 //-----------------------------------------------------------------------------
 ///	@brief	Modifies a heat distribution using a thermal distribution.
-/// @param[in,out]	heatDistribution_W		The distribution to be modified
 //-----------------------------------------------------------------------------
-template <typename V>
-V HPWH::modifyHeatDistribution(V heatDistribution)
+std::vector<double> HPWH::modifyHeatDistribution(const std::vector<double>& heatDistribution)
 {
     double totalHeat = 0.;
     for (auto& heatDist : heatDistribution)
-        totalHeat += heatDist();
+        totalHeat += heatDist;
 
     if (totalHeat == 0.)
         return heatDistribution;
 
-    for (auto& heatDist : heatDistribution)
-        heatDist /= totalHeat;
+    auto modHeatDistribution = heatDistribution;
+    for (auto& modHeatDist : modHeatDistribution)
+        modHeatDist /= totalHeat;
 
-    Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution());
-    int lowestNode = findLowestNode(heatDistribution(), getNumNodes());
+    Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution);
+    int lowestNode = findLowestNode(modHeatDistribution, getNumNodes());
 
-    heatDistribution() = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
+    modHeatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
     ;
-    for (auto& heatDist : heatDistribution)
-        heatDist *= totalHeat;
+    for (auto& modHeatDist : modHeatDistribution)
+        modHeatDist *= totalHeat;
 
-    return heatDistribution;
+    return modHeatDistribution;
 }
 
 //-----------------------------------------------------------------------------
@@ -2831,11 +2816,11 @@ V HPWH::modifyHeatDistribution(V heatDistribution)
 void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 {
 
-    auto modHeatDistribution = modifyHeatDistribution(extraHeatDist);
+    auto modHeatDistribution = modifyHeatDistribution(extraHeatDist());
 
     PowerVect_t heatDistribution;
     heatDistribution.resize(getNumNodes());
-    resampleExtensive(heatDistribution(), modHeatDistribution());
+    resampleExtensive(heatDistribution(), modHeatDistribution);
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded(0.);
