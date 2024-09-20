@@ -215,6 +215,19 @@ using EnergyVect = ScaleVect<Energy, units>;
 template <Power units>
 using PowerVect = ScaleVect<Power, units>;
 
+inline constexpr Temp_d Temp_to_Temp_d(const Temp T)
+{
+    switch (T)
+    {
+    case Temp::C:
+        return Temp_d::C;
+    case Temp::F:
+        return Temp_d::F;
+    default:
+        return Temp_d::K;
+    }
+}
+
 } // namespace Unity
 
 namespace Units = Unity;
