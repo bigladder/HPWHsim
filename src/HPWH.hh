@@ -1163,7 +1163,8 @@ class HPWH : public Courier::Sender
 
     /// adds extra heat to the set of nodes that are at the same temperature, above the
     ///	specified node number
-    std::vector<double> modifyHeatDistribution(const std::vector<double>& heatDistribution);
+    template <typename V>
+    V modifyHeatDistribution(V heatDistribution);
 
     void addExtraHeat(PowerVect_t& extraHeatDist);
 
