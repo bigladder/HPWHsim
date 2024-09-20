@@ -3,9 +3,6 @@ include(initialize-submodules)
 # btwxt library
 add_submodule(btwxt)
 
-# Unity library
-#add_submodule(Unity)
-
 if (${PROJECT_NAME}_BUILD_TESTING)
 
     # googletest library
