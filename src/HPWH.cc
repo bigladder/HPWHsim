@@ -2816,11 +2816,8 @@ std::vector<double> HPWH::modifyHeatDistribution(const std::vector<double>& heat
 void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 {
 
-    auto modHeatDistribution = modifyHeatDistribution(extraHeatDist());
-
-    PowerVect_t heatDistribution;
-    heatDistribution.resize(getNumNodes());
-    resampleExtensive(heatDistribution(), modHeatDistribution);
+    PowerVect_t heatDistribution(getNumNodes());
+    resampleExtensive(heatDistribution(), modifyHeatDistribution(extraHeatDist()));
 
     // Unnecessary unit conversions used here to match former method
     Energy_t tot_qAdded(0.);
