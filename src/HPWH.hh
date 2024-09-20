@@ -62,7 +62,7 @@ class HPWH : public Courier::Sender
     //////
     static constexpr auto UnitsTime = Units::Time::min;
     static constexpr auto UnitsTemp = Units::Temp::C;
-    static constexpr auto UnitsTemp_d = Units::Temp_d::C;
+    static constexpr auto UnitsTemp_d = Units::Temp_to_Temp_d(UnitsTemp);
     static constexpr auto UnitsLength = Units::Length::m;
     static constexpr auto UnitsArea = Units::Area::m2;
     static constexpr auto UnitsVolume = Units::Volume::L;
