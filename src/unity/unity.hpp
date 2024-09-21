@@ -78,7 +78,7 @@ struct ScaleShift : Transform<ScaleShiftSeq, ScaleShift>
 {
     explicit ScaleShift(const ScaleShiftSeq& scaleShiftSeq) : Transform(scaleShiftSeq) {}
 
-    ScaleShift(const Scale& scale, const Shift& offset) : Transform({scale, offset}) {}
+    ScaleShift(const Scale& scale, const Shift& shift) : Transform({scale, shift}) {}
 
     static ScaleShift ident() { return {Scale(1.), Shift(0.)}; }
 
@@ -96,9 +96,9 @@ struct ScaleShift : Transform<ScaleShiftSeq, ScaleShift>
                 Shift(data.first.scale() * a.data.second.shift() + data.second.shift())};
     }
 
-    Scale scale() const { return data.first; }
+    [[nodiscard]] Scale scale() const { return data.first; }
 
-    Shift shift() const { return data.second; }
+    [[nodiscard]] Shift shift() const { return data.second; }
 };
 
 /// Transformer classes
@@ -200,7 +200,7 @@ double scaleShift(const U fromUnits, const U toUnits, const double x)
 }
 
 /// transform values
-template <class U, typename T, U units>
+template <class U, U units, typename T, template<class, U> class V>
 struct TransformVal
 {
   protected:
@@ -209,19 +209,13 @@ struct TransformVal
   public:
     explicit TransformVal(const double x_in = 0.) : x(x_in) {}
 
-    template <U fromUnits>
-    explicit TransformVal(const TransformVal<U, T, fromUnits> transformVal) : x(transformVal(units))
-    {
-    }
-
     ~TransformVal() = default;
 
     explicit operator const double&() const { return x; }
     explicit operator double&() { return x; }
 
-    // double operator+(const double y) const { return x + y; }
-    // double operator-(const double y) const { return x - y; }
-    // double operator/(const double y) const { return x / y; }
+    double operator()() const { return x; }
+    double& operator()() { return x; }
 
     bool operator==(const double y) const { return (x == y); }
     bool operator!=(const double y) const { return !(operator==(y)); }
@@ -231,69 +225,110 @@ struct TransformVal
     bool operator<=(const double y) const { return x <= y; }
     bool operator>=(const double y) const { return x >= y; }
 
-    TransformVal& operator=(double x_in)
-    {
-        x = x_in;
-        return *this;
-    }
-
-    U in() { return units; }
-};
-
-template <class U, U units>
-struct ScaleVal : TransformVal<U, Scale, units>
-{
-    using TransformVal<U, Scale, units>::x;
-    using TransformVal<U, Scale, units>::operator<;
-    using TransformVal<U, Scale, units>::operator>;
-    using TransformVal<U, Scale, units>::operator<=;
-    using TransformVal<U, Scale, units>::operator>=;
-    using TransformVal<U, Scale, units>::operator==;
-    using TransformVal<U, Scale, units>::operator!=;
-    // using TransformVal<U, Scale, units>::operator+;
-    // using TransformVal<U, Scale, units>::operator-;
-    // using TransformVal<U, Scale, units>::operator/;
-
-    explicit ScaleVal(const double x_in = 0.) : TransformVal<U, Scale, units>(x_in) {}
-
-    ScaleVal(const double x_in, const U fromUnits)
-        : TransformVal<U, Scale, units>(scale(fromUnits, units) * x_in)
-    {
-    }
-
-    template <U fromUnits>
-    explicit ScaleVal(const ScaleVal<U, fromUnits>& scaleVal)
-        : TransformVal<U, Scale, units>(scale(fromUnits, units) * scaleVal())
-    {
-    }
-
-    template <U toUnits>
-    auto operator()()
-    {
-        return ScaleVal<U, toUnits>(x, units);
-    }
-
-    double operator()() const { return x; }
-    double& operator()() { return x; }
-
-    double operator()(const U toUnits) const { return scale(units, toUnits) * x; }
-
-    ScaleVal& operator=(const double y)
+    auto& operator=(const double y)
     {
         x = y;
         return *this;
     }
 
-    ScaleVal& operator+=(const double y)
+    auto operator+=(const double y)
     {
         x += y;
         return *this;
     }
-    ScaleVal& operator-=(const double y)
+
+    auto operator-=(const double y)
     {
         x -= y;
         return *this;
+    }        static auto transform(){return T();}
+
+
+    auto& operator+=(const V<U, units>& val)
+    {
+        x += val();
+        return *this;
     }
+
+    auto& operator-=(const V<U, units>& scaleVal)
+    {
+        x -= scaleVal();
+        return *this;
+    }
+
+    template <U toUnits>
+    bool operator==(const V<U, toUnits> val) const
+    {
+        return (val(units) == x);
+    }
+
+    template <U toUnits>
+    bool operator!=(const V<U, toUnits>& val) const
+    {
+        return !(operator==(val));
+    }
+
+    template <U toUnits>
+    bool operator<(const V<U, toUnits> val) const
+    {
+        return (x < val(units));
+    }
+
+    template <U toUnits>
+    bool operator>(const V<U, toUnits> val) const
+    {
+        return (x > val(units));
+    }
+
+    template <U toUnits>
+    bool operator<=(const V<U, toUnits> val) const
+    {
+        return (x <= val(units));
+    }
+
+    template <U toUnits>
+    bool operator>=(const V<U, toUnits> val) const
+    {
+        return (x >= val(units));
+    }
+    U in() { return units; }
+};
+
+template <class U, U units>
+struct ScaleVal : TransformVal<U, units, Scale, ScaleVal>
+{
+    using TVal = TransformVal<U, units, Scale, ScaleVal>;
+    using TVal::x;
+    using TVal::operator<;
+    using TVal::operator>;
+    using TVal::operator<=;
+    using TVal::operator>=;
+    using TVal::operator==;
+    using TVal::operator!=;
+    using TVal::operator=;
+    using TVal::operator+=;
+    using TVal::operator-=;
+    using TVal::operator();
+
+    explicit ScaleVal(const double x_in = 0.) : TVal(x_in) {}
+
+    template <U fromUnits>
+    explicit ScaleVal(const ScaleVal<U, fromUnits>& scaleVal)
+        : TVal(scale(fromUnits, units) * scaleVal())
+    {
+    }
+
+    explicit ScaleVal(const TVal& transformVal)
+        : TVal(transformVal)
+    {
+    }
+
+    ScaleVal<U, units>(const double x_in, const U fromUnits)
+        : ScaleVal<U, units>(scale(fromUnits, units) * x_in)
+    {
+    }
+
+    double operator()(const U toUnits) const { return scale(units, toUnits) * x; }
 
     template <U fromUnits>
     ScaleVal& operator=(const ScaleVal<U, fromUnits>& scaleVal)
@@ -305,6 +340,7 @@ struct ScaleVal : TransformVal<U, Scale, units>
     auto operator+(const double y) const { return ScaleVal(x + y); }
     auto operator-(const double y) const { return ScaleVal(x - y); }
     auto operator/(const double y) const { return ScaleVal(x / y); }
+
     friend auto operator*(const double y, const ScaleVal& scaleVal)
     {
         return ScaleVal(y * scaleVal());
@@ -315,52 +351,6 @@ struct ScaleVal : TransformVal<U, Scale, units>
     ScaleVal operator+(const ScaleVal& scaleVal) const { return ScaleVal(x + scaleVal()); }
     ScaleVal operator-(const ScaleVal& scaleVal) const { return ScaleVal(x - scaleVal()); }
 
-    ScaleVal operator+=(const ScaleVal& scaleVal)
-    {
-        x += scaleVal();
-        return *this;
-    }
-    ScaleVal operator-=(const ScaleVal& scaleVal)
-    {
-        x -= scaleVal();
-        return *this;
-    }
-
-    template <U toUnits>
-    bool operator==(const ScaleVal<U, toUnits> scaleVal) const
-    {
-        return (scaleVal(units) == x);
-    }
-
-    template <U toUnits>
-    bool operator!=(const ScaleVal<U, toUnits>& scaleVal) const
-    {
-        return !(operator==(scaleVal));
-    }
-
-    template <U toUnits>
-    bool operator<(const ScaleVal<U, toUnits> scaleVal) const
-    {
-        return (x < scaleVal(units));
-    }
-
-    template <U toUnits>
-    bool operator>(const ScaleVal<U, toUnits> scaleVal) const
-    {
-        return (x > scaleVal(units));
-    }
-
-    template <U toUnits>
-    bool operator<=(const ScaleVal<U, toUnits> scaleVal) const
-    {
-        return (x <= scaleVal(units));
-    }
-
-    template <U toUnits>
-    bool operator>=(const ScaleVal<U, toUnits> scaleVal) const
-    {
-        return (x >= scaleVal(units));
-    }
 
     ScaleVal& operator*=(const double y)
     {
@@ -384,61 +374,40 @@ struct ScaleVal : TransformVal<U, Scale, units>
     {
         return x - scaleVal(units);
     }
-
-    template <U fromUnits>
-    ScaleVal& operator+=(const ScaleVal<U, fromUnits>& scaleVal)
-    {
-        return *this = *this + scaleVal;
-    }
-
-    template <U fromUnits>
-    ScaleVal& operator-=(const ScaleVal<U, fromUnits>& scaleVal)
-    {
-        return *this = *this - scaleVal;
-    }
 };
 
 template <class U, U units>
-struct ScaleShiftVal : TransformVal<U, ScaleShift, units>
+struct ScaleShiftVal : TransformVal<U, units, ScaleShift, ScaleShiftVal>
 {
-    using TransformVal<U, ScaleShift, units>::x;
-    // using TransformVal<U, ScaleShift, units>::operator+;
-    // using TransformVal<U, ScaleShift, units>::operator-;
-    using TransformVal<U, ScaleShift, units>::operator<;
-    using TransformVal<U, ScaleShift, units>::operator>;
-    using TransformVal<U, ScaleShift, units>::operator<=;
-    using TransformVal<U, ScaleShift, units>::operator>=;
-    using TransformVal<U, ScaleShift, units>::operator==;
-    using TransformVal<U, ScaleShift, units>::operator!=;
+    using TVal = TransformVal<U, units, ScaleShift, ScaleShiftVal>;
+    using TVal::x;
+    using TVal::operator<;
+    using TVal::operator>;
+    using TVal::operator<=;
+    using TVal::operator>=;
+    using TVal::operator==;
+    using TVal::operator!=;
+    using TVal::operator=;
+    using TVal::operator+=;
+    using TVal::operator-=;
+    using TVal::operator();
 
-    explicit ScaleShiftVal(const double x_in = 0.) : TransformVal<U, ScaleShift, units>(x_in) {}
-
-    ScaleShiftVal(const double x_in, const U fromUnits)
-        : TransformVal<U, ScaleShift, units>(scaleShift(fromUnits, units, x_in))
-    {
-    }
+    explicit ScaleShiftVal<U, units>(const double x_in = 0.) : TVal(x_in) {}
 
     template <U fromUnits>
     explicit ScaleShiftVal(const ScaleShiftVal<U, fromUnits>& scaleShiftVal)
-        : TransformVal<U, ScaleShift, units>(scaleShift(fromUnits, units) * scaleShiftVal())
+        : TVal(scaleShift(fromUnits, units) * scaleShiftVal())
     {
     }
 
-    ScaleShiftVal& operator=(const double y)
+    ScaleShiftVal(const double x_in, const U fromUnits)
+        : ScaleShiftVal<U, units>(scaleShift(fromUnits, units) * x_in)
     {
-        x = y;
-        return *this;
     }
 
-    ScaleShiftVal& operator+=(const double y)
+    explicit ScaleShiftVal(const TVal& transformVal)
+        : TVal(transformVal)
     {
-        x += y;
-        return *this;
-    }
-    ScaleShiftVal& operator-=(const double y)
-    {
-        x -= y;
-        return *this;
     }
 
     template <U fromUnits>
@@ -474,50 +443,11 @@ struct ScaleShiftVal : TransformVal<U, ScaleShift, units>
         return *this;
     }
 
-    template <U toUnits>
-    bool operator==(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return (scaleShiftVal(units) == x);
-    }
-
-    template <U toUnits>
-    bool operator!=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return !(operator==(scaleShiftVal));
-    }
-
-    template <U toUnits>
-    bool operator<(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return (x < scaleShiftVal(units));
-    }
-
-    template <U toUnits>
-    bool operator>(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return (x > scaleShiftVal(units));
-    }
-
-    template <U toUnits>
-    bool operator<=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return (x <= scaleShiftVal(units));
-    }
-
-    template <U toUnits>
-    bool operator>=(const ScaleShiftVal<U, toUnits> scaleShiftVal) const
-    {
-        return (x >= scaleShiftVal(units));
-    }
-
-    double operator()() const { return x; }
-    double& operator()() { return x; }
-
     double operator()(const U toUnits) const { return scaleShift(units, toUnits) * x; }
 };
 
 /// transform vectors
-template <class U, typename T, U units>
+template <class U, U units, typename T, template<class, U> class V>
 struct TransformVect
 {
   protected:
@@ -539,21 +469,35 @@ struct TransformVect
     inline auto clear() { return xV.clear(); }
     inline auto empty() const { return xV.empty(); }
 
+    template <U toUnits>
+    bool operator==(const V<U, toUnits> vect) const
+    {
+        return (vect(units) == fV(units));
+    }
+
+    template <U toUnits>
+    bool operator!=(const V<U, toUnits> vect) const
+    {
+        return !(operator==(vect));
+    }
+
+
     U in() { return units; }
 };
 
 template <class U, U units>
-struct ScaleVect : public TransformVect<U, Scale, units>
+struct ScaleVect : public TransformVect<U, units, Scale, ScaleVect>
 {
   public:
-    using TransformVect<U, Scale, units>::xV;
-    using TransformVect<U, Scale, units>::size;
-    using TransformVect<U, Scale, units>::resize;
-    using TransformVect<U, Scale, units>::clear;
-    using TransformVect<U, Scale, units>::operator();
+    using TVect = TransformVect<U, units, Scale, ScaleVect>;
+    using TVect::xV;
+    using TVect::size;
+    using TVect::resize;
+    using TVect::clear;
+    using TVect::operator();
 
     explicit ScaleVect(const std::vector<double>& xV_in = {})
-        : TransformVect<U, Scale, units>(xV_in)
+        : TVect(xV_in)
     {
     }
 
@@ -575,14 +519,14 @@ struct ScaleVect : public TransformVect<U, Scale, units>
             xV.push_back(t * s_());
     }
 
+    explicit ScaleVect(const std::size_t n) : TVect(n) {}
+
     ScaleVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleVect<U, units>()
     {
         auto t = scale(fromUnits, units);
         for (auto x : xV_in)
             xV.push_back(t * x);
     }
-
-    explicit ScaleVect(const std::size_t n) : TransformVect<U, Scale, units>(n) {}
 
     std::vector<double> operator()(const U toUnits) const
     {
@@ -596,21 +540,9 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 
     ScaleVal<U, units> const& operator[](const std::size_t i) const { return xV[i]; }
 
-    ScaleVal<U, units>& operator[](const std::size_t i)
+    auto& operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleVal<U, units>&>(xV[i]);
-    }
-
-    template <U toUnits>
-    bool operator==(const ScaleVect<U, toUnits> scaleVect) const
-    {
-        return (scaleVect(units) == fV(units));
-    }
-
-    template <U toUnits>
-    bool operator!=(const ScaleVect<U, toUnits> scaleVect) const
-    {
-        return !(operator==(scaleVect));
     }
 
     auto begin()
@@ -647,17 +579,18 @@ struct ScaleVect : public TransformVect<U, Scale, units>
 };
 
 template <class U, U units>
-struct ScaleShiftVect : TransformVect<U, ScaleShift, units>
+struct ScaleShiftVect : TransformVect<U, units, ScaleShift, ScaleShiftVect>
 {
   public:
-    using TransformVect<U, ScaleShift, units>::xV;
-    using TransformVect<U, ScaleShift, units>::size;
-    using TransformVect<U, ScaleShift, units>::resize;
-    using TransformVect<U, ScaleShift, units>::clear;
-    using TransformVect<U, ScaleShift, units>::operator();
+    using TVect = TransformVect<U, units, ScaleShift, ScaleShiftVect>;
+    using TVect::xV;
+    using TVect::size;
+    using TVect::resize;
+    using TVect::clear;
+    using TVect::operator();
 
     explicit ScaleShiftVect(const std::vector<double>& xV_in = {})
-        : TransformVect<U, ScaleShift, units>(xV_in)
+        : TVect(xV_in)
     {
     }
 
@@ -684,7 +617,7 @@ struct ScaleShiftVect : TransformVect<U, ScaleShift, units>
             xV.push_back(t * s_());
     }
 
-    explicit ScaleShiftVect(const std::size_t n) : TransformVect<U, ScaleShift, units>(n) {}
+    explicit ScaleShiftVect(const std::size_t n) : TVect(n) {}
 
     ScaleShiftVect(const std::vector<double>& xV_in, const U fromUnits) : ScaleShiftVect()
     {
@@ -699,7 +632,7 @@ struct ScaleShiftVect : TransformVect<U, ScaleShift, units>
         return ScaleShiftVal<U, units>(xV[i]);
     }
 
-    ScaleShiftVal<U, units>& operator[](const std::size_t i)
+    auto& operator[](const std::size_t i)
     {
         return reinterpret_cast<ScaleShiftVal<U, units>&>(xV[i]);
     }
