@@ -57,86 +57,87 @@ TEST_F(HeatingLogicsTest, highShutOffSP)
         }
 
         { // testSetEnteringWaterShuffOffOutOfBoundsIndex
-            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, -1));
-            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, 15));
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff({10., Units::dC}, -1));
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff({10., Units::dC}, 15));
         }
 
         { // testSetEnteringWaterShuffOffDeadbandToSmall
-            double value = HPWH::MINSINGLEPASSLIFT - 1.;
+            HPWH::GenTemp_t value = {HPWH::MINSINGLEPASSLIFT()(Units::dC) - 1., Units::dC};
             EXPECT_ANY_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()));
+                hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = HPWH::MINSINGLEPASSLIFT;
-            EXPECT_NO_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, false, hpwh.getCompressorIndex()));
+            value = HPWH::MINSINGLEPASSLIFT();
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = hpwh.getSetpoint() - (HPWH::MINSINGLEPASSLIFT - 1);
+            value = {hpwh.getSetpointT()(Units::C) - (HPWH::MINSINGLEPASSLIFT()(Units::dC) - 1),
+                     Units::C};
             EXPECT_ANY_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()));
+                hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
 
-            value = hpwh.getSetpoint() - HPWH::MINSINGLEPASSLIFT;
-            EXPECT_NO_THROW(
-                hpwh.setEnteringWaterHighTempShutOff(value, true, hpwh.getCompressorIndex()));
+            value = {hpwh.getSetpointT()(Units::C) - HPWH::MINSINGLEPASSLIFT()(Units::dC),
+                     Units::C};
+            EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(value, hpwh.getCompressorIndex()));
         }
 
         { // testSetEnteringWaterHighTempShutOffAbsolute
-            const double drawVolume_L = 0.;
-            const double externalT_C = 20.;
-            const double delta = 2.;
-            const double highT_C = 20.;
-            const bool doAbsolute = true;
+            const HPWH::Volume_t drawVolume(0.);
+            const HPWH::Temp_t externalT = {20., Units::C};
+            const HPWH::Temp_d_t dT = {2., Units::dC};
+            const HPWH::Temp_t highT = {20., Units::C};
 
             // make tank cold to force on
-            hpwh.setTankToTemperature(highT_C);
+            hpwh.setTankToT(highT);
 
             // run a step and check we're heating
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // change entering water temp to below temp
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                highT_C - delta, doAbsolute, hpwh.getCompressorIndex()));
+                {highT(Units::C) - dT(Units::dC), Units::C}, hpwh.getCompressorIndex()));
 
             // run a step and check we're not heating.
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // and reverse it
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                highT_C + delta, doAbsolute, hpwh.getCompressorIndex()));
+                {highT(Units::C) + dT(Units::dC), Units::C}, hpwh.getCompressorIndex()));
 
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
         }
 
         { // testSetEnteringWaterHighTempShutOffRelative
-            const double drawVolume_L = 0.;
-            const double externalT_C = 20.;
-            const double delta = 2.;
-            const double highT_C = 20.;
-            const bool doAbsolute = false;
+            const HPWH::Volume_t drawVolume(0.);
+            const HPWH::Temp_t externalT = {20., Units::C};
+            const HPWH::Temp_d_t dT = {2., Units::dC};
+            const HPWH::Temp_t highT = {20., Units::C};
 
-            const double relativeHighT_C = hpwh.getSetpoint() - highT_C;
+            const HPWH::Temp_d_t relativeHigh_dT = {hpwh.getSetpointT()(Units::C) - highT(Units::C),
+                                                    Units::dC}; //?
             // make tank cold to force on
-            hpwh.setTankToTemperature(highT_C);
+            hpwh.setTankToT(highT);
 
             // run a step and check we're heating
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // change entering water temp to below temp
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                relativeHighT_C + delta, doAbsolute, hpwh.getCompressorIndex()));
+                {relativeHigh_dT(Units::dC) + dT(Units::dC), Units::dC},
+                hpwh.getCompressorIndex()));
 
             // run a step and check we're not heating.
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // and reverse it
             EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                relativeHighT_C - delta, doAbsolute, hpwh.getCompressorIndex()));
+                {relativeHigh_dT(Units::dC) - dT(Units::dC), Units::dC},
+                hpwh.getCompressorIndex()));
 
-            hpwh.runOneStep(highT_C, drawVolume_L, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.runOneStep(highT, drawVolume, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
         }
     }
@@ -160,7 +161,7 @@ TEST_F(HeatingLogicsTest, noShutOffMP_external)
 
         { // testCanNotSetEnteringWaterShutOff
             int index = hpwh.getCompressorIndex() == -1 ? 0 : hpwh.getCompressorIndex();
-            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, index));
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff({10., Units::dC}, index));
         }
     }
 }
@@ -175,8 +176,8 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
                                sNoHighShutOffMP_externalModelNames.begin(),
                                sNoHighShutOffMP_externalModelNames.end());
 
-    const double externalT_C = 20.;
-    const double setpointT_C = F_TO_C(149.);
+    HPWH::Temp_t externalT = {20., Units::C};
+    HPWH::Temp_t setpointT = {149., Units::F};
 
     for (auto& sModelName : sCombinedModelNames)
     {
@@ -186,38 +187,37 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 
         if (!hpwh.isSetpointFixed())
         {
-            double temp;
+            HPWH::Temp_t temp;
             std::string tempStr;
-            if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+            if (!hpwh.isNewSetpointPossible(setpointT, temp, tempStr))
             {
                 continue; // Numbers don't align for this type
             }
-            hpwh.setSetpoint(setpointT_C);
+            hpwh.setSetpointT(setpointT);
         }
 
         { // testChangeToStateofChargeControlled
-            double value = HPWH::MINSINGLEPASSLIFT - 1.;
-            const double externalT_C = 20.;
-            const double setpointT_C = F_TO_C(149.);
+            externalT = {20., Units::C};
+            setpointT = {149., Units::F};
 
             const bool originalHasHighTempShutOff =
                 hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex());
             if (!hpwh.isSetpointFixed())
             {
-                double temp;
+                HPWH::Temp_t temp;
                 std::string tempStr;
-                if (!hpwh.isNewSetpointPossible(setpointT_C, temp, tempStr))
+                if (!hpwh.isNewSetpointPossible(setpointT, temp, tempStr))
                 {
                     continue; // Numbers don't align for this type
                 }
-                hpwh.setSetpoint(setpointT_C);
+                hpwh.setSetpointT(setpointT);
             }
 
             // Just created so should be fasle
             EXPECT_FALSE(hpwh.isSoCControlled());
 
             // change to SOC control;
-            hpwh.switchToSoCControls(.76, .05, 99, true, 49, HPWH::UNITS_F);
+            hpwh.switchToSoCControls(.76, .05, {99, Units::F}, true, {49, Units::F});
             EXPECT_TRUE(hpwh.isSoCControlled());
 
             // check entering water high temp shut off controll unchanged
@@ -228,27 +228,26 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
             if (hpwh.hasEnteringWaterHighTempShutOff(hpwh.getCompressorIndex()))
             {
                 EXPECT_NO_THROW(hpwh.setEnteringWaterHighTempShutOff(
-                    setpointT_C - HPWH::MINSINGLEPASSLIFT,
-                    true,
+                    {setpointT(Units::C) - HPWH::MINSINGLEPASSLIFT()(Units::dC), Units::C},
                     hpwh.getCompressorIndex())); // Force to ignore this part.
             }
-            EXPECT_NO_THROW(hpwh.setTankToTemperature(F_TO_C(100.))); // .51
-            hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            EXPECT_NO_THROW(hpwh.setTankToT({100., Units::F})); // .51
+            hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // Test if we're on and in band stay on
-            hpwh.setTankToTemperature(F_TO_C(125)); // .76 (current target)
-            hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.setTankToT({125, Units::F}); // .76 (current target)
+            hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
             // Test we can change the SoC and turn off
-            hpwh.setTankToTemperature(F_TO_C(133)); // .84
-            hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.setTankToT({133, Units::F}); // .84
+            hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
             // Test if off and in band stay off
-            hpwh.setTankToTemperature(F_TO_C(125)); // .76  (current target)
-            hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+            hpwh.setTankToT({125, Units::F}); // .76  (current target)
+            hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
             EXPECT_EQ(hpwh.isCompressorRunning(), 0);
         }
 
@@ -258,32 +257,32 @@ TEST_F(HeatingLogicsTest, stateOfChargeLogics)
 
             for (auto i = 0; i < 5; ++i)
             {
-                double coldWaterT_F = tempsForSetSoC[i][0];
-                double minUseT_F = tempsForSetSoC[i][1];
-                double tankAt76SoC_T_F = tempsForSetSoC[i][2];
+                HPWH::Temp_t coldWaterT = {tempsForSetSoC[i][0], Units::F};
+                HPWH::Temp_t minUseT = {tempsForSetSoC[i][1], Units::F};
+                HPWH::Temp_t tankAt76SoC_T = {tempsForSetSoC[i][2], Units::F};
 
                 // change to SOC control;
-                hpwh.switchToSoCControls(.85, .05, minUseT_F, true, coldWaterT_F, HPWH::UNITS_F);
+                hpwh.switchToSoCControls(.85, .05, minUseT, true, coldWaterT);
                 EXPECT_TRUE(hpwh.isSoCControlled());
 
                 // Test if we're on and in band stay on
-                hpwh.setTankToTemperature(F_TO_C(tankAt76SoC_T_F)); // .76
-                hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+                hpwh.setTankToT(tankAt76SoC_T); // .76
+                hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 1);
 
                 // Test we can change the target SoC and turn off
                 hpwh.setTargetSoCFraction(0.5);
-                hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+                hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
                 // Change back in the band and stay turned off
                 hpwh.setTargetSoCFraction(0.72);
-                hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+                hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
 
                 // Drop below the band and turn on
                 hpwh.setTargetSoCFraction(0.70);
-                hpwh.runOneStep(0, externalT_C, externalT_C, HPWH::DR_ALLOW);
+                hpwh.runOneStep({0., Units::L}, externalT, externalT, HPWH::DR_ALLOW);
                 EXPECT_EQ(hpwh.isCompressorRunning(), 0);
             }
         }
@@ -307,7 +306,7 @@ TEST_F(HeatingLogicsTest, noHighShutOffIntegrated)
         }
 
         { // testCannotSetEnteringWaterShutOff
-            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff(10., false, index));
+            EXPECT_ANY_THROW(hpwh.setEnteringWaterHighTempShutOff({10., Units::dC}, index));
         }
     }
 }
@@ -325,26 +324,28 @@ TEST(ExtraHeatTest, extraHeat)
     HPWH hpwh;
     hpwh.initPreset(sModelName);
 
-    const double ambientT_C = 20.;
-    const double externalT_C = 20.;
-    const double inletVol2_L = 0.;
-    const double inletT2_C = 0.;
+    const HPWH::Temp_t ambientT = {20., Units::C};
+    const HPWH::Temp_t externalT = {20., Units::C};
+    const HPWH::Volume_t inletVol2 = {0., Units::L};
+    const HPWH::Temp_t inletT2 = {0., Units::C};
 
-    double extraPower_W = 1000.;
-    std::vector<double> nodePowerExtra_W = {extraPower_W};
+    HPWH::Power_t extraPower = {1., Units::kW};
+    HPWH::PowerVect_t nodePowerExtra = {{extraPower(Units::kW)}, Units::kW};
 
     // Test adding extra heat to a tank for one minute
-    hpwh.setUA(0.);
-    hpwh.setTankToTemperature(20.);
+    hpwh.setUA({0., Units::kJ_per_hC});
+    hpwh.setTankToT({20., Units::C});
 
-    double Q_init = hpwh.getTankHeatContent_kJ();
+    HPWH::Energy_t Q_init = hpwh.getTankHeatContent();
     hpwh.runOneStep(
-        0, ambientT_C, externalT_C, HPWH::DR_LOC, inletVol2_L, inletT2_C, &nodePowerExtra_W);
-    double Q_final = hpwh.getTankHeatContent_kJ();
+        {0., Units::L}, ambientT, externalT, HPWH::DR_LOC, inletVol2, inletT2, &nodePowerExtra);
 
-    double dQ_actual_kJ = (Q_final - Q_init);
+    HPWH::Energy_t Q_final = hpwh.getTankHeatContent();
 
-    double dQ_expected_kJ = extraPower_W * 60. / 1.e3; // 1 min
+    HPWH::Energy_t dQ_actual = Q_final - Q_init;
 
-    EXPECT_NEAR(dQ_actual_kJ, dQ_expected_kJ, tol);
+    HPWH::Energy_t dQ_expected = {extraPower(Units::W) * HPWH::Time_t(1, Units::min)(Units::s),
+                                  Units::J}; // 1 min
+
+    EXPECT_NEAR(dQ_actual(), dQ_expected(), tol);
 }
