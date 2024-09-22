@@ -19,7 +19,7 @@ enum class Time
 } inline h = Time::h, min = Time::min, s = Time::s;
 
 /* temperature units */
-enum class Temp:int
+enum class Temp : int
 {
     C, // celsius
     F, // fahrenheit
@@ -27,7 +27,7 @@ enum class Temp:int
 } inline C = Temp::C, F = Temp::F, K = Temp::K;
 
 /* temperature-difference units */
-enum class Temp_d:int
+enum class Temp_d : int
 {
     C, // celsius
     F, // fahrenheit
