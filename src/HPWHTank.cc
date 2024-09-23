@@ -35,8 +35,7 @@ void HPWH::Tank::from(data_model::rstank_ns::RSTANK& rstank)
               perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
               perf.bottom_fraction_of_tank_mixing_on_draw,
               0.);
-    if (mixBelowFractionOnDraw > 0.)
-        mixesOnDraw = true;
+    mixesOnDraw = (mixBelowFractionOnDraw > 0.);
     checkFrom(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume, false);
 
     hasHeatExchanger = perf.heat_exchanger_effectiveness_is_set;
