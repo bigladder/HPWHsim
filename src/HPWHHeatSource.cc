@@ -252,18 +252,18 @@ void HPWH::HeatSource::from(
     {
 
         typeOfHeatSource = TYPE_compressor;
-        auto rsconendserwaterheatsource_ptr =
-            reinterpret_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-                config.heat_source.get());
+        auto rsconendserwaterheatsource_ptr = reinterpret_cast<
+            data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            config.heat_source.get());
         from(*rsconendserwaterheatsource_ptr);
         break;
     }
     case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
     {
         typeOfHeatSource = TYPE_resistance;
-        auto rsresistancewaterheatsource_ptr =
-            reinterpret_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-                config.heat_source.get());
+        auto rsresistancewaterheatsource_ptr = reinterpret_cast<
+            data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            config.heat_source.get());
         from(*rsresistancewaterheatsource_ptr);
         break;
     }
