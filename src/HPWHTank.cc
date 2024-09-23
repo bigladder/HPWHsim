@@ -83,6 +83,7 @@ void HPWH::Tank::setAllDefaults()
     doConduction = true;
     hasHeatExchanger = false;
     heatExchangerEffectiveness = 0.9;
+    fittingsUA_kJperHrC = 0.;
 }
 
 void HPWH::Tank::calcSizeConstants()
