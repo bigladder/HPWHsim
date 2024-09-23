@@ -472,7 +472,7 @@ void HPWH::Tank::updateNodes(double drawVolume_L,
         }
 
         // account for mixing at the bottom of the tank
-        if ((mixBelowFractionOnDraw > 0.) && (drawVolume_L > 0.))
+        if (mixesOnDraw && (drawVolume_L > 0.))
         {
             int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
             mixNodes(0, mixedBelowNode, 1. / 3.);
