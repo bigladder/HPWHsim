@@ -273,12 +273,12 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         {
         case data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
         {
-            comparison_type = std::greater<double>();
+            comparison_type = std::greater<>();
         }
 
         case data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
         {
-            comparison_type = std::less<double>();
+            comparison_type = std::less<>();
         }
 
         default:
@@ -317,7 +317,7 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         {
             if (nodes[inode] > 0.)
             {
-                nodeWeights.emplace_back(inode, nodes[inode]);
+                nodeWeights.emplace_back(inode + 1, nodes[inode]);
             }
         }
 

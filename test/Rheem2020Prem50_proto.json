@@ -48,7 +48,7 @@
           "value": 8.55,
           "units": "kJ_per_hC"
         },
-        "bottom_fraction_of_tank_mixing_on_draw": 0.333,
+        "bottom_fraction_of_tank_mixing_on_draw": 0.33333333333333331,
         "number_of_nodes": 12
       }
     },
@@ -116,8 +116,7 @@
             "comparison_type": "LESS_THAN"
           }
         ],
-        "followed_by_heat_source_label": "compressor",
-        "companion_heat_source_label": "compressor"
+        "followed_by_heat_source_label": "condenser"
       },
       {
         "heat_source_type": "RESISTANCE",
