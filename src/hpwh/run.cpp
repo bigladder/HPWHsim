@@ -357,9 +357,9 @@ void run(const std::string& sSpecType,
     for (i = 0; i < minutesToRun; i++)
     {
 
-        if (i== 220)
+        if (i == 220)
         {
-            std::cout<<"here\n";
+            std::cout << "here\n";
         }
         if (HPWH_doTempDepress)
         {

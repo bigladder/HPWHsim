@@ -1252,16 +1252,6 @@ void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)
         t = t_default;
 }
 
-/*
-void checkFrom(std::string& t, const bool is_set, const std::string t_new, const std::string
-t_default)
-{
-    if (is_set)
-        t = t_new;
-    else
-        t = t_default;
-}
-*/
 template <typename T>
 void checkTo(const T t, bool& is_set, T& t_new)
 {

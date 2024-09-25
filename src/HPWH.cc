@@ -4079,6 +4079,15 @@ void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& r
 
     auto& rstank = performance.tank;
     tank->to(rstank);
+
+    // heat-source priority is retained from the entry order
+    auto& configurations = performance.heat_source_configurations;
+    configurations.resize(getNumHeatSources());
+    for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
+    {
+        auto& configuration = configurations[iHeatSource];
+        heatSources[iHeatSource].to(configuration);
+    }
 }
 
 //-----------------------------------------------------------------------------
