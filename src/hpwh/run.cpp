@@ -356,11 +356,6 @@ void run(const std::string& sSpecType,
     // Loop over the minutes in the test
     for (i = 0; i < minutesToRun; i++)
     {
-
-        if (i == 220)
-        {
-            std::cout << "here\n";
-        }
         if (HPWH_doTempDepress)
         {
             airTemp2 = F_TO_C(airTemp);
