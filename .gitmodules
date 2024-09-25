@@ -10,6 +10,6 @@
 	path = vendor/json
 	url = https://github.com/nlohmann/json.git
 
-[submodule "vendor/hpwh_DataModel"]
-	path = vendor/hpwh_DataModel
-	url = https://github.com/bigladder/hpwh_DataModel.git
+[submodule "vendor/hpwh-data-model"]
+	path = vendor/hpwh-data-model
+	url = https://github.com/bigladder/hpwh-data-model.git
