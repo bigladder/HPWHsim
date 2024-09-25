@@ -26,6 +26,7 @@ class HPWH::HeatSource : public Sender
 
     void to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
                 heatsourceconfiguration) const;
+
     void to(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                 rscondenserwaterheatsource) const;
     void to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&

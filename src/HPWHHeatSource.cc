@@ -283,10 +283,38 @@ void HPWH::HeatSource::to(
     for (auto& turnOnLogic : turnOnLogicSet)
     {
         heatsourceconfiguration.turn_on_logic_is_set = true;
-
         data_model::rsintegratedwaterheater_ns::HeatingLogic logic;
 
         turnOnLogic->make(heatsourceconfiguration.turn_on_logic[i].heating_logic);
+    }
+
+    switch (typeOfHeatSource)
+    {
+    case TYPE_compressor:
+    {
+        heatsourceconfiguration.heat_source = std::make_unique<
+            data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
+        auto hs = reinterpret_cast<
+            data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            heatsourceconfiguration.heat_source.get());
+        to(*hs);
+        break;
+    }
+
+    case TYPE_resistance:
+    {
+        heatsourceconfiguration.heat_source = std::make_unique<
+            data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
+        auto hs = reinterpret_cast<
+            data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            heatsourceconfiguration.heat_source.get());
+        to(*hs);
+        break;
+    }
+
+    default:
+        return;
+        break;
     }
 }
 
