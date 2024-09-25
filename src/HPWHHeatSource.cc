@@ -125,7 +125,7 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 std::vector<double> F_TO_K(const std::vector<double>& vect)
 {
     std::vector<double> vect_out(vect.size());
-    for(auto& T: vect_out)
+    for (auto& T : vect_out)
     {
         T = F_TO_C(C_TO_K(T));
     }
@@ -302,16 +302,17 @@ void HPWH::HeatSource::to(
     i = 0;
     for (auto& turnOnLogic : turnOnLogicSet)
     {
-         turnOnLogic->make(heatsourceconfiguration.turn_on_logic[i].heating_logic);
-         heatsourceconfiguration.turn_on_logic_is_set = true;
-         ++i;
+        turnOnLogic->make(heatsourceconfiguration.turn_on_logic[i].heating_logic);
+        heatsourceconfiguration.turn_on_logic_is_set = true;
+        ++i;
     }
 
     switch (typeOfHeatSource)
     {
     case TYPE_compressor:
     {
-        heatsourceconfiguration.heat_source_type = data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER;
+        heatsourceconfiguration.heat_source_type =
+            data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER;
         heatsourceconfiguration.heat_source = std::make_unique<
             data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
         auto hs = reinterpret_cast<
@@ -323,7 +324,8 @@ void HPWH::HeatSource::to(
 
     case TYPE_resistance:
     {
-        heatsourceconfiguration.heat_source_type = data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE;
+        heatsourceconfiguration.heat_source_type =
+            data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE;
         heatsourceconfiguration.heat_source = std::make_unique<
             data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
         auto hs = reinterpret_cast<

@@ -137,7 +137,7 @@ void run(const std::string& sSpecType,
         nlohmann::json j = nlohmann::json::parse(inputFILE);
 
         HPWH::fromProto(j);
-        std::cout << j.dump(2) << std::endl;
+        // std::cout << j.dump(2) << std::endl;
 
         data_model::init(hpwh.get_courier());
         data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;

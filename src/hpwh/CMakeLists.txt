@@ -4,6 +4,7 @@ set(source_files
         run.cpp
         make.cpp
         measure.cpp
+        convert.cpp
         )
 
 add_executable(hpwh ${source_files})

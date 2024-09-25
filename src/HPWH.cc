@@ -4028,10 +4028,11 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
-        HeatSource heatSource(this);
+        HeatSource heatSource(this, get_courier(), configuration.label);
         heatSource.from(configuration);
         heatSources[iHeatSource] = heatSource;
         heat_source_lookup[configuration.label] = iHeatSource;
+        heatSources[iHeatSource].name = configuration.label;
     }
 
     // set associations between heat sources
