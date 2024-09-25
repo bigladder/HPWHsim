@@ -377,7 +377,7 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
         auto& perf_points = perf.performance_points;
         perf_points.reserve(perfMap.size());
 
-        for (auto& perfPoint: perfMap)
+        for (auto& perfPoint : perfMap)
         {
             data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
             perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
@@ -386,7 +386,6 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
             perf_points.push_back(perf_point);
         }
     }
-
 }
 
 void HPWH::HeatSource::to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
