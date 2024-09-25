@@ -27,6 +27,7 @@ int main(int argc, char** argv)
     add_run(app);
     add_measure(app);
     add_make(app);
+    add_convert(app);
 
     CLI11_PARSE(app, argc, argv);
 

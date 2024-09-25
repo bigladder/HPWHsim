@@ -570,8 +570,8 @@ void HPWH::fromProto(nlohmann::json& j)
 void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
-    // auto& metadata = rswh.metadata;
-    // auto& description = rswh.description;
+    j["metadata"] = "metadata";
+    j["description"] = "description";
     auto& performance = rswh.performance;
 
     auto& tank = performance.tank;
@@ -624,7 +624,7 @@ void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& 
     j["bottom_fraction_of_tank_mixing_on_draw"] = perf.bottom_fraction_of_tank_mixing_on_draw;
     j["volume_fixed"] = perf.fixed_volume;
 
-    if (perf.heat_exchanger_effectiveness > 0.)
+    if (perf.heat_exchanger_effectiveness_is_set)
     {
         j["heat_exchanger_effectiveness"] = perf.heat_exchanger_effectiveness;
     }

@@ -288,6 +288,7 @@ void HPWH::HeatSource::to(
 {
     heatsourceconfiguration.heat_distribution = condensity;
     heatsourceconfiguration.is_vip = isVIP;
+    heatsourceconfiguration.label = name;
 
     heatsourceconfiguration.shut_off_logic.resize(shutOffLogicSet.size());
     std::size_t i = 0;
@@ -370,6 +371,22 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
         break;
     }
     }
+
+    if (perfMap.size() > 0)
+    {
+        auto& perf_points = perf.performance_points;
+        perf_points.reserve(perfMap.size());
+
+        for (auto& perfPoint: perfMap)
+        {
+            data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
+            perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
+            perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
+            perf_point.cop_coefficients = perfPoint.COP_coeffs;
+            perf_points.push_back(perf_point);
+        }
+    }
+
 }
 
 void HPWH::HeatSource::to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
