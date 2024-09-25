@@ -15,7 +15,7 @@ convert(const std::string& sSpecType, const std::string& sModelName, std::string
 
 CLI::App* add_convert(CLI::App& app)
 {
-    const auto subcommand = app.add_subcommand("measure", "Measure the metrics for a model");
+    const auto subcommand = app.add_subcommand("convert", "Convert from legacy format to JSON");
 
     static std::string sSpecType = "Preset";
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File)");
@@ -66,5 +66,7 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
 
     nlohmann::json j;
     HPWH::to_json(rswh, j);
+
+    std::cout << j.dump(2) << std::endl;
 }
 } // namespace hpwh_cli
