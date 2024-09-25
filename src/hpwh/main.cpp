@@ -14,6 +14,7 @@ namespace hpwh_cli
 CLI::App* add_run(CLI::App& app);
 CLI::App* add_measure(CLI::App& app);
 CLI::App* add_make(CLI::App& app);
+CLI::App* add_convert(CLI::App& app);
 } // namespace hpwh_cli
 
 using namespace hpwh_cli;

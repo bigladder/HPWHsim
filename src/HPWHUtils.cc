@@ -565,3 +565,124 @@ void HPWH::fromProto(nlohmann::json& j)
         }
     }
 }
+
+/*static*/
+void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+                   nlohmann::json& j)
+{
+    // auto& metadata = rswh.metadata;
+    // auto& description = rswh.description;
+    auto& performance = rswh.performance;
+
+    auto& tank = performance.tank;
+
+    nlohmann::json j_tank;
+    to_json(tank, j_tank);
+    j["tank"] = j_tank;
+
+    nlohmann::json j_heat_source_configs;
+    auto& heat_source_configs = performance.heat_source_configurations;
+    for (auto& heat_source_config : heat_source_configs)
+    {
+        nlohmann::json j_heat_source_config;
+        j_heat_source_config["label"] = heat_source_config.label;
+        j_heat_source_config["heat_distribution"] = heat_source_config.heat_distribution;
+
+        auto& heat_source = heat_source_config.heat_source;
+        nlohmann::json j_heat_source;
+
+        if (heat_source_config.heat_source_type ==
+            data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE)
+        {
+            auto hs = reinterpret_cast<
+                data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+                heat_source.get());
+            to_json(*hs, j_heat_source);
+        }
+        if (heat_source_config.heat_source_type ==
+            data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER)
+        {
+            auto hs = reinterpret_cast<
+                data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                heat_source.get());
+            to_json(*hs, j_heat_source);
+        }
+        j_heat_source_config["heat_source"] = j_heat_source;
+
+        j_heat_source_configs.push_back(j_heat_source_config);
+    }
+    j["heat_source_configurations"] = j_heat_source_configs;
+}
+
+/*static*/
+void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& j)
+{
+    auto& perf = rstank.performance;
+    j["number_of_nodes"] = perf.number_of_nodes;
+    j["volume"] = perf.volume;
+    j["ua"] = perf.ua;
+    j["bottom_fraction_of_tank_mixing_on_draw"] = perf.bottom_fraction_of_tank_mixing_on_draw;
+    j["volume_fixed"] = perf.fixed_volume;
+
+    if (perf.heat_exchanger_effectiveness > 0.)
+    {
+        j["heat_exchanger_effectiveness"] = perf.heat_exchanger_effectiveness;
+    }
+}
+
+/*static*/
+void HPWH::to_json(
+    const data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
+    nlohmann::json& j)
+{
+    auto& perf = rshs.performance;
+    nlohmann::json j_perf;
+    if (perf.performance_points.size() > 0)
+    {
+        nlohmann::json j_perf_points;
+        for (auto& perf_point : perf.performance_points)
+        {
+            nlohmann::json j_perf_point;
+            j_perf_point["heat_source_temperature"] = perf_point.heat_source_temperature;
+            j_perf_point["input_power_coefficients"] = perf_point.input_power_coefficients;
+            j_perf_point["cop_coefficients"] = perf_point.cop_coefficients;
+
+            j_perf_points.push_back(j_perf_point);
+        }
+        j_perf["performance_points"] = j_perf_points;
+    }
+    else
+    {
+        nlohmann::json j_perf_map;
+
+        auto& grid_vars = perf.performance_map.grid_variables;
+        nlohmann::json j_grid_vars;
+        j_grid_vars.push_back(grid_vars.evaporator_environment_temperature);
+        j_grid_vars.push_back(grid_vars.heat_source_temperature);
+
+        auto& lookup_vars = perf.performance_map.lookup_variables;
+        nlohmann::json j_lookup_vars;
+        j_lookup_vars.push_back(lookup_vars.input_power);
+        j_lookup_vars.push_back(lookup_vars.cop);
+
+        j_perf_map["grid_variables"] = j_grid_vars;
+        j_perf_map["lookup_variables"] = j_lookup_vars;
+
+        j_perf["performance_map"] = j_perf_map;
+    }
+
+    j["performance"] = j_perf;
+}
+
+/*static*/
+void HPWH::to_json(
+    const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+    nlohmann::json& j)
+{
+    auto& perf = rshs.performance;
+
+    nlohmann::json j_perf;
+    j_perf["input_power"] = perf.input_power;
+
+    j["performance"] = j_perf;
+}

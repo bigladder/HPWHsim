@@ -92,6 +92,16 @@ class HPWH : public Courier::Sender
     void from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
     void to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
+    static void to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+                        nlohmann::json& j);
+    static void to_json(const data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
+    static void
+    to_json(const data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+    static void
+    to_json(const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+            nlohmann::json& j);
+
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
     enum DRMODES
