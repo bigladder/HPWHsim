@@ -68,5 +68,16 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     HPWH::to_json(rswh, j);
 
     std::cout << j.dump(2) << std::endl;
+
+    std::ofstream outputFile;
+    std::string outputFilename = sOutputDir + "/" + sModelName + "_" + sSpecType + ".json";
+    outputFile.open(outputFilename.c_str(), std::ifstream::out);
+    if (!outputFile.is_open())
+    {
+        std::cout << "Could not open output file " << outputFilename << "\n";
+        exit(1);
+    }
+    outputFile << j.dump(2);
+    outputFile.close();
 }
 } // namespace hpwh_cli
