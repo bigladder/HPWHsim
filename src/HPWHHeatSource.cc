@@ -294,18 +294,25 @@ void HPWH::HeatSource::to(
     std::size_t i = 0;
     for (auto& shutOffLogic : shutOffLogicSet)
     {
-        shutOffLogic->make(heatsourceconfiguration.shut_off_logic[i].heating_logic);
+        shutOffLogic->to(heatsourceconfiguration.shut_off_logic[i]);
         heatsourceconfiguration.shut_off_logic_is_set = true;
         ++i;
     }
 
-    heatsourceconfiguration.turn_on_logic.resize(turnOnLogicSet.size());
+    heatsourceconfiguration.turn_on_logic.reserve(turnOnLogicSet.size());
     i = 0;
     for (auto& turnOnLogic : turnOnLogicSet)
     {
-        turnOnLogic->make(heatsourceconfiguration.turn_on_logic[i].heating_logic);
+        heatsourceconfiguration.turn_on_logic[i].heating_logic = std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
+        turnOnLogic->to(*heatsourceconfiguration.turn_on_logic[i].heating_logic.get());
         heatsourceconfiguration.turn_on_logic_is_set = true;
         ++i;
+    }
+
+    if (standbyLogic != NULL)
+    {
+        standbyLogic->to(heatsourceconfiguration.standby_logic);
+        heatsourceconfiguration.standby_logic_is_set = true;
     }
 
     switch (typeOfHeatSource)

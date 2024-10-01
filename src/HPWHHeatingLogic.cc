@@ -350,14 +350,48 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
     return heatingLogic;
 }
 
-void HPWH::SoCBasedHeatingLogic::make(std::unique_ptr<HeatingLogicBase>& heating_logic)
+void HPWH::SoCBasedHeatingLogic::to(data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& heating_logic)
 {
-    heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
+    heating_logic.decision_point = decisionPoint;
+    heating_logic.minimum_useful_temperature = C_TO_K(tempMinUseful_C);
+    heating_logic.hysteresis_fraction = hysteresisFraction;
+    heating_logic.uses_constant_mains = useCostantMains;
+    heating_logic.constant_mains_temperature = constantMains_C;
 }
 
-void HPWH::TempBasedHeatingLogic::make(std::unique_ptr<HeatingLogicBase>& heating_logic)
+void HPWH::TempBasedHeatingLogic::to(data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& heating_logic)
 {
-    heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
+    if (isAbsolute)
+    {
+        heating_logic.absolute_temperature = C_TO_K(decisionPoint);
+    }
+    else
+    {
+        heating_logic.differential_temperature = decisionPoint;
+    }
+
+    std::vector<double> logicDist(LOGIC_SIZE);
+    std::size_t i = 0;
+    for (auto& nodeWeight : nodeWeights)
+    {
+        logicDist[i] = nodeWeight.weight;
+        ++i;
+    }
+
+    // downsample, if possible
+    std::vector<double> reconstructedTempDist(LOGIC_SIZE);
+    for (std::size_t iSize = 1; 2 * iSize <= LOGIC_SIZE; ++iSize)
+    {
+        std::vector<double> resampledTempDist(iSize);
+        resample(resampledTempDist, logicDist);
+        resample(reconstructedTempDist, resampledTempDist);
+        if (reconstructedTempDist == logicDist)
+        {
+            logicDist = resampledTempDist;
+            break;
+        }
+    }
+    heating_logic.logic_distribution = logicDist;
+
+
 }
