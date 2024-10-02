@@ -386,12 +386,10 @@ void HPWH::TempBasedHeatingLogic::to(
     checkTo(C_TO_K(decisionPoint), logic.absolute_temperature_is_set, logic.absolute_temperature, isAbsolute);
     checkTo(decisionPoint, logic.differential_temperature_is_set, logic.differential_temperature, !isAbsolute);
 
-    std::vector<double> logicDist(LOGIC_SIZE);
-    std::size_t i = 0;
+    std::vector<double> logicDist(LOGIC_SIZE, 0);
     for (auto& nodeWeight : nodeWeights)
     {
-        logicDist[i] = nodeWeight.weight;
-        ++i;
+        logicDist[nodeWeight.nodeNum - 1] = nodeWeight.weight;
     }
 
     // downsample, if possible
