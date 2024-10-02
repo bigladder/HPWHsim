@@ -350,24 +350,48 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
     return heatingLogic;
 }
 
-void HPWH::SoCBasedHeatingLogic::to(data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& heating_logic)
+void HPWH::SoCBasedHeatingLogic::to(
+    data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
-    heating_logic.decision_point = decisionPoint;
-    heating_logic.minimum_useful_temperature = C_TO_K(tempMinUseful_C);
-    heating_logic.hysteresis_fraction = hysteresisFraction;
-    heating_logic.uses_constant_mains = useCostantMains;
-    heating_logic.constant_mains_temperature = constantMains_C;
+    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED,
+            heating_logic.heating_logic_type_is_set,
+            heating_logic.heating_logic_type);
+
+    data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic logic;
+    checkTo(decisionPoint, logic.decision_point_is_set, logic.decision_point);
+    checkTo(C_TO_K(tempMinUseful_C),
+            logic.minimum_useful_temperature_is_set,
+            logic.minimum_useful_temperature);
+    checkTo(hysteresisFraction, logic.hysteresis_fraction_is_set, logic.hysteresis_fraction);
+    checkTo(useCostantMains, logic.uses_constant_mains_is_set, logic.uses_constant_mains);
+    checkTo(C_TO_K(constantMains_C),
+            logic.constant_mains_temperature_is_set,
+            logic.constant_mains_temperature);
+
+    heating_logic.heating_logic =
+        std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
+    *heating_logic.heating_logic = logic;
+    heating_logic.heating_logic_is_set = true;
 }
 
-void HPWH::TempBasedHeatingLogic::to(data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& heating_logic)
+void HPWH::TempBasedHeatingLogic::to(
+    data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
+    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED,
+            heating_logic.heating_logic_type_is_set,
+            heating_logic.heating_logic_type);
+
+    data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic logic;
+
     if (isAbsolute)
     {
-        heating_logic.absolute_temperature = C_TO_K(decisionPoint);
+        checkTo(
+            C_TO_K(decisionPoint), logic.absolute_temperature_is_set, logic.absolute_temperature);
     }
     else
     {
-        heating_logic.differential_temperature = decisionPoint;
+        checkTo(
+            decisionPoint, logic.differential_temperature_is_set, logic.differential_temperature);
     }
 
     std::vector<double> logicDist(LOGIC_SIZE);
@@ -391,7 +415,10 @@ void HPWH::TempBasedHeatingLogic::to(data_model::rsintegratedwaterheater_ns::Tem
             break;
         }
     }
-    heating_logic.logic_distribution = logicDist;
+    logic.logic_distribution = logicDist;
 
-
+    heating_logic.heating_logic =
+        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
+    *heating_logic.heating_logic = logic;
+    heating_logic.heating_logic_is_set = true;
 }
