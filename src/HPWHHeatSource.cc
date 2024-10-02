@@ -381,18 +381,50 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
     }
     }
 
-    if (perfMap.size() > 0)
+    if(useBtwxtGrid)
     {
-        auto& perf_points = perf.performance_points;
-        perf_points.reserve(perfMap.size());
+        auto& map = perf.performance_map;
 
-        for (auto& perfPoint : perfMap)
+        auto& grid_vars = map.grid_variables;
+
+        std::vector<double> envTemp_K = {};
+        envTemp_K.reserve(perfGrid[0].size());
+        for (auto T: perfGrid[0])
         {
-            data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
-            perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
-            perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
-            perf_point.cop_coefficients = perfPoint.COP_coeffs;
-            perf_points.push_back(perf_point);
+            envTemp_K.push_back(C_TO_K(F_TO_C(T)));
+        }
+        checkTo(envTemp_K, grid_vars.evaporator_environment_temperature_is_set, grid_vars.evaporator_environment_temperature);
+
+        std::vector<double> heatSourceTemp_K = {};
+        heatSourceTemp_K.reserve(perfGrid[1].size());
+        for (auto T: perfGrid[1])
+        {
+            heatSourceTemp_K.push_back(C_TO_K(F_TO_C(T)));
+        }
+        checkTo(heatSourceTemp_K, grid_vars.heat_source_temperature_is_set, grid_vars.heat_source_temperature) ;
+
+        auto& lookup_vars = map.lookup_variables;
+        checkTo(perfGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
+        checkTo(perfGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
+
+        perf.performance_map_is_set = true;
+    }
+    else
+    {
+        if (perfMap.size() > 0)
+        {
+            auto& perf_points = perf.performance_points;
+            perf_points.reserve(perfMap.size());
+
+            for (auto& perfPoint : perfMap)
+            {
+                data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
+                perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
+                perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
+                perf_point.cop_coefficients = perfPoint.COP_coeffs;
+                perf_points.push_back(perf_point);
+            }
+            perf.performance_points_is_set = true;
         }
     }
 }
