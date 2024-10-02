@@ -383,16 +383,8 @@ void HPWH::TempBasedHeatingLogic::to(
 
     data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic logic;
 
-    if (isAbsolute)
-    {
-        checkTo(
-            C_TO_K(decisionPoint), logic.absolute_temperature_is_set, logic.absolute_temperature);
-    }
-    else
-    {
-        checkTo(
-            decisionPoint, logic.differential_temperature_is_set, logic.differential_temperature);
-    }
+    checkTo(C_TO_K(decisionPoint), logic.absolute_temperature_is_set, logic.absolute_temperature, isAbsolute);
+    checkTo(decisionPoint, logic.differential_temperature_is_set, logic.differential_temperature, !isAbsolute);
 
     std::vector<double> logicDist(LOGIC_SIZE);
     std::size_t i = 0;
@@ -415,10 +407,10 @@ void HPWH::TempBasedHeatingLogic::to(
             break;
         }
     }
-    logic.logic_distribution = logicDist;
+    checkTo(logicDist, logic.logic_distribution_is_set, logic.logic_distribution);
 
     heating_logic.heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>();
-    *heating_logic.heating_logic = logic;
+        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>(logic);
+
     heating_logic.heating_logic_is_set = true;
 }

@@ -637,9 +637,12 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
             j_heat_source_config["shut_off_logic"] = j_shut_off_logic;
         }
 
-        nlohmann::json j_standby_logic;
-        to_json(heat_source_config.standby_logic, j_standby_logic);
-        j_heat_source_config["standby_logic"] = j_standby_logic;
+        if(heat_source_config.standby_logic_is_set)
+        {
+            nlohmann::json j_standby_logic;
+            to_json(heat_source_config.standby_logic, j_standby_logic);
+            j_heat_source_config["standby_logic"] = j_standby_logic;
+        }
 
         j_heat_source_configs.push_back(j_heat_source_config);
     }

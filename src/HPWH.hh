@@ -1266,9 +1266,12 @@ void checkFrom(T& t, const bool is_set, const T t_new, const T t_default)
 }
 
 template <typename T>
-void checkTo(const T t, bool& is_set, T& t_new)
+void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 {
-    is_set = true;
-    t_new = t;
+    is_set = has_value;
+    if(has_value)
+    {
+        t_new = t;
+    }
 }
 #endif
