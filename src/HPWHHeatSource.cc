@@ -351,6 +351,9 @@ void HPWH::HeatSource::to(
 void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                               rscondenserwaterheatsource) const
 {
+    auto& metadata = rscondenserwaterheatsource.metadata;
+    checkTo(data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE, metadata.schema_is_set, metadata.schema);
+
     auto& perf = rscondenserwaterheatsource.performance;
     switch (configuration)
     {
@@ -397,6 +400,9 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
 void HPWH::HeatSource::to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
                               rsresistancewaterheatsource) const
 {
+    auto& metadata = rsresistancewaterheatsource.metadata;
+    checkTo(data_model::ashrae205_ns::SchemaType::RSRESISTANCEWATERHEATSOURCE, metadata.schema_is_set, metadata.schema);
+
     auto& perf = rsresistancewaterheatsource.performance;
     checkTo(perfMap[0].inputPower_coeffs[0], perf.input_power_is_set, perf.input_power);
 }

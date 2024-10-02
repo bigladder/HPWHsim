@@ -570,8 +570,9 @@ void HPWH::fromProto(nlohmann::json& j)
 void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
-    j["metadata"] = "metadata";
-    j["description"] = "description";
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "RSINTEGRATEDWATERHEATER";
+    j["metadata"] = j_metadata;
 
     auto& perf = rswh.performance;
     nlohmann::json j_perf;
@@ -655,8 +656,9 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
 /*static*/
 void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& j)
 {
-    j["metadata"] = "metadata";
-    j["description"] = "description";
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "RSTANK";
+    j["metadata"] = j_metadata;
 
     auto& perf = rstank.performance;
     j["number_of_nodes"] = perf.number_of_nodes;
@@ -676,8 +678,9 @@ void HPWH::to_json(
     const data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
-    j["metadata"] = "metadata";
-    j["description"] = "description";
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "RSCONDENSERWATERHEATSOURCE";
+    j["metadata"] = j_metadata;
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
@@ -723,8 +726,9 @@ void HPWH::to_json(
     const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
-    j["metadata"] = "metadata";
-    j["description"] = "description";
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "RSRESISTANCEWATERHEATSOURCE";
+    j["metadata"] = j_metadata;
 
     auto& perf = rshs.performance;
 
