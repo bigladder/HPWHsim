@@ -51,7 +51,7 @@ void measure(const std::string& sSpecType,
     standardTestOptions.setpointT_C = 51.7;
 
     // process command line arguments
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
+    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
     if (sOutputDir != "")
     {
         standardTestOptions.saveOutput = true;
@@ -60,25 +60,54 @@ void measure(const std::string& sSpecType,
     standardTestOptions.saveOutput = true;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
 
-    for (auto& c : sPresetOrFile)
+    for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (sPresetOrFile.length() > 0)
+    if (sSpecType_mod == "preset")
     {
-        sPresetOrFile[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
+        sSpecType_mod = "Preset";
+    }
+    else if (sSpecType_mod == "file")
+    {
+        sSpecType_mod = "File";
+    }
+    else if (sSpecType_mod == "json")
+    {
+        sSpecType_mod = "JSON";
     }
 
+
     HPWH hpwh;
-    if (sPresetOrFile == "Preset")
+    if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(sModelName);
     }
+    else if (sSpecType_mod == "File")
+    {
+        hpwh.initFromFile(sModelName);
+    }
+    else if (sSpecType_mod == "JSON")
+    {
+        auto inputFile = sModelName + ".json";
+
+        std::ifstream inputFILE(inputFile);
+        nlohmann::json j = nlohmann::json::parse(inputFILE);
+
+        HPWH::fromProto(j);
+        // std::cout << j.dump(2) << std::endl;
+
+        data_model::init(hpwh.get_courier());
+        data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+        data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
+
+        hpwh.from(rswh);
+    }
     else
     {
-        std::string inputFile = sModelName + ".txt";
-        hpwh.initFromFile(inputFile);
+        std::cout << "Invalid argument, received '" << sSpecType_mod
+             << "', expected 'Preset', 'File', or 'JSON'.\n";
+        exit(1);
     }
 
     if (useCustomDrawProfile)
@@ -110,10 +139,10 @@ void measure(const std::string& sSpecType,
         }
     }
 
-    std::cout << "Spec type: " << sPresetOrFile << "\n";
+    std::cout << "Spec type: " << sSpecType_mod << "\n";
     std::cout << "Model name: " << sModelName << "\n";
 
-    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+    standardTestOptions.sOutputFilename = "test24hr_" + sSpecType_mod + "_" + sModelName + ".csv";
 
     HPWH::FirstHourRating firstHourRating;
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
