@@ -87,7 +87,7 @@ class HPWH::HeatSource : public Sender
 
     int getCondensitySize() const;
 
-    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1);
+    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1) const;
     /**< Does a simple linear interpolation between two points to the xnew point */
 
     void regressedMethod(
@@ -128,6 +128,14 @@ class HPWH::HeatSource : public Sender
     /// Linear interpolation is applied to the collection of points.
     /// Only the first entry is used for cases 2. and 3.
     std::vector<PerfPoint> perfMap;
+
+    void getCapacityFromMap(double environmentT_C,
+                            double heatSourceT_C,
+                            double& input_BTUperHr,
+                            double& cop) const;
+
+    void convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
+                          std::vector<std::vector<double>>& tempGridValues) const;
 
   private:
     // start with a few type definitions
@@ -365,6 +373,11 @@ class HPWH::HeatSource : public Sender
     void sortPerformanceMap();
     /**< sorts the Performance Map by increasing external temperatures */
 
+    void getCapacityFromMap(double environmentT_C,
+                            double heatSourceT_C,
+                            double& input_BTUperHr,
+                            double& cap_BTUperHr,
+                            double& cop);
 }; // end of HeatSource class
 
 class Condenser : public HPWH::HeatSource

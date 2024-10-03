@@ -383,13 +383,24 @@ void HPWH::TempBasedHeatingLogic::to(
 
     data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic logic;
 
-    checkTo(C_TO_K(decisionPoint), logic.absolute_temperature_is_set, logic.absolute_temperature, isAbsolute);
-    checkTo(decisionPoint, logic.differential_temperature_is_set, logic.differential_temperature, !isAbsolute);
+    checkTo(C_TO_K(decisionPoint),
+            logic.absolute_temperature_is_set,
+            logic.absolute_temperature,
+            isAbsolute);
+    checkTo(decisionPoint,
+            logic.differential_temperature_is_set,
+            logic.differential_temperature,
+            !isAbsolute);
 
     std::vector<double> logicDist(LOGIC_SIZE, 0);
     for (auto& nodeWeight : nodeWeights)
     {
-        logicDist[nodeWeight.nodeNum - 1] = nodeWeight.weight;
+        auto iNode = nodeWeight.nodeNum - 1;
+        if (iNode < 0)
+            iNode = 0;
+        if (iNode > LOGIC_SIZE - 1)
+            iNode = LOGIC_SIZE - 1;
+        logicDist[iNode] = nodeWeight.weight;
     }
 
     // downsample, if possible
