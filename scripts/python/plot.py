@@ -6,6 +6,103 @@ from dimes import LineProperties
 import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
 import json
+from dash import Dash, dcc, html, Input, Output, callback
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+styles = {
+    'pre': {
+        'border': 'thin lightgrey solid',
+        'overflowX': 'scroll'
+    }
+}
+
+@callback(
+    Output('hover-data', 'children'),
+    Input('basic-interactions', 'hoverData'))
+def display_hover_data(hoverData):
+    return json.dumps(hoverData, indent=2)
+
+
+@callback(
+    Output('click-data', 'children'),
+    Input('basic-interactions', 'clickData'))
+def display_click_data(clickData):
+    return json.dumps(clickData, indent=2)
+
+
+@callback(
+    Output('selected-data', 'children'),
+    Input('basic-interactions', 'selectedData'))
+def display_selected_data(selectedData):
+    return json.dumps(selectedData, indent=2)
+
+
+@callback(
+    Output('relayout-data', 'children'),
+    Input('basic-interactions', 'relayoutData'))
+def display_relayout_data(relayoutData):
+    return json.dumps(relayoutData, indent=2)
+
+
+def set_layout(fig):
+   if fig == []:
+        return html.Div([])
+
+   return html.Div([
+    dcc.Graph(
+        id='basic-interactions',
+        figure=fig
+    ),
+
+    html.Div(className='row', children=[
+        html.Div([
+            dcc.Markdown("""
+                **Hover Data**
+
+                Mouse over values in the graph.
+            """),
+            html.Pre(id='hover-data', style=styles['pre'])
+        ], className='three columns'),
+
+        html.Div([
+            dcc.Markdown("""
+                **Click Data**
+
+                Click on points in the graph.
+            """),
+            html.Pre(id='click-data', style=styles['pre']),
+        ], className='three columns'),
+
+        html.Div([
+            dcc.Markdown("""
+                **Selection Data**
+
+                Choose the lasso or rectangle tool in the graph's menu
+                bar and then select points in the graph.
+
+                Note that if `layout.clickmode = 'event+select'`, selection data also
+                accumulates (or un-accumulates) selected data if you hold down the shift
+                button while clicking.
+            """),
+            html.Pre(id='selected-data', style=styles['pre']),
+        ], className='three columns'),
+
+        html.Div([
+            dcc.Markdown("""
+                **Zoom and Relayout Data**
+
+                Click and drag on the graph to zoom or click on the zoom
+                buttons in the graph's menu bar.
+                Clicking on legend items will also fire
+                this event.
+            """),
+            html.Pre(id='relayout-data', style=styles['pre']),
+        ], className='three columns')
+    ])
+    ])
 
 DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
@@ -154,13 +251,16 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
         axis_name=variable,
     )
 
-#
-def plot(measured_path, simulated_path, plot_filename):
-    power_col_label_meas = "Power_W"
-    power_col_label_sim = "Power_W"
 
+#
+def plot(measured_path, simulated_path, plot_path):
+    
     df_measured = call_csv(measured_path, 0)
     df_simulated = call_csv(simulated_path, 0)
+
+    #
+    power_col_label_meas = "Power_W"
+    power_col_label_sim = "Power_W"
 
     variables = {
         "Y-Variables": {
@@ -237,7 +337,7 @@ def plot(measured_path, simulated_path, plot_filename):
     # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
     add_temperature_details(variables)
     
-    plot = dimes.TimeSeriesPlot(
+    the_plot = dimes.TimeSeriesPlot(
         df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
     )
     
@@ -246,11 +346,17 @@ def plot(measured_path, simulated_path, plot_filename):
             for value in range(
                     len(variables["Y-Variables"][variable]["Column Names"][variable_type])
             ):
-                plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
-
-    #plot.finalize_plot()   
-    plot.write_html_plot(plot_filename)
+                plot_graphs(the_plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
+    
+        
+    #the_plot.finalize_plot()   
+    #plot.write_html_plot(plot_filename)
    
+    the_plot.figure.update_traces(marker_size=20)
+    the_plot.figure.update_layout(clickmode='event+select')
+  
+    app.layout = set_layout(the_plot.figure) 
+ 
     # return json
     result = {}
     #result['plot_html'] = plot.figure.to_html(full_html=True)
@@ -258,16 +364,11 @@ def plot(measured_path, simulated_path, plot_filename):
     result['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
     return result
 
+
+app.layout = set_layout([]) 
+
+
 #  main
 if __name__ == "__main__":
-    n_args = len(sys.argv) - 1
-    if n_args == 3:
-        measured_path = Path(sys.argv[1])
-        simulated_path = Path(sys.argv[2])
-        plot_filename = Path(sys.argv[3])
-        plot(measured_path, simulated_path, plot_filename)
-    else:
-        sys.exit(
-            "Incorrect number of arguments. Must be two: Measured Path, Simulated Path, Plot Filename"
-        )
+    app.run(debug=True)
     
