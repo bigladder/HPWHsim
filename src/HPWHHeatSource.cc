@@ -182,12 +182,28 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
         auto& grid_variables = perf_map.grid_variables;
         perfGrid.reserve(2);
 
-        perfGrid.push_back(F_TO_K(grid_variables.evaporator_environment_temperature));
-        perfGrid.push_back(F_TO_K(grid_variables.heat_source_temperature));
+        std::vector<double> evapTs_F = {};
+        evapTs_F.reserve(grid_variables.evaporator_environment_temperature.size());
+        for (auto& T: grid_variables.evaporator_environment_temperature)
+            evapTs_F.push_back(C_TO_F(K_TO_C(T)));
+
+        std::vector<double> heatSourceTs_F = {};
+        evapTs_F.reserve(grid_variables.heat_source_temperature.size());
+        for (auto& T: grid_variables.heat_source_temperature)
+            heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
+
+        perfGrid.push_back(evapTs_F);
+        perfGrid.push_back(heatSourceTs_F);
 
         auto& lookup_variables = perf_map.lookup_variables;
         perfGridValues.reserve(2);
-        perfGridValues.push_back(lookup_variables.input_power);
+
+        std::vector<double> inputPowers_Btu_per_h = {};
+        inputPowers_Btu_per_h.reserve(lookup_variables.input_power.size());
+        for (auto& P: lookup_variables.input_power)
+            inputPowers_Btu_per_h.push_back(W_TO_BTUperH(P));
+
+        perfGridValues.push_back(inputPowers_Btu_per_h);
         perfGridValues.push_back(lookup_variables.cop);
 
         perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
@@ -313,6 +329,15 @@ void HPWH::HeatSource::to(
         standbyLogic->to(heatsourceconfiguration.standby_logic);
         heatsourceconfiguration.standby_logic_is_set = true;
     }
+
+    if (backupHeatSource != NULL)
+        checkTo(backupHeatSource->name, heatsourceconfiguration.backup_heat_source_label_is_set, heatsourceconfiguration.backup_heat_source_label);
+
+    if (followedByHeatSource != NULL)
+        checkTo(followedByHeatSource->name, heatsourceconfiguration.followed_by_heat_source_label_is_set, heatsourceconfiguration.followed_by_heat_source_label);
+
+    if (companionHeatSource != NULL)
+        checkTo(companionHeatSource->name, heatsourceconfiguration.companion_heat_source_label_is_set, heatsourceconfiguration.companion_heat_source_label);
 
     switch (typeOfHeatSource)
     {
@@ -964,8 +989,16 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
 
     if (useBtwxtGrid)
     {
-        std::vector<double> target {externalT_F, Tout_F, condenserTemp_F};
-        btwxtInterp(input_BTUperHr, cop, target);
+        if (perfGrid.size() == 2)
+        {
+            std::vector<double> target {externalT_F, condenserTemp_F};
+            btwxtInterp(input_BTUperHr, cop, target);
+        }
+        if (perfGrid.size() == 3)
+        {
+            std::vector<double> target {externalT_F, Tout_F, condenserTemp_F};
+            btwxtInterp(input_BTUperHr, cop, target);
+        }
     }
     else
     {

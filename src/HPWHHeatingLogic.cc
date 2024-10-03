@@ -368,6 +368,16 @@ void HPWH::SoCBasedHeatingLogic::to(
             logic.constant_mains_temperature_is_set,
             logic.constant_mains_temperature);
 
+    if (compare(1., 2.))
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+    }
+    else
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+
+    }
+
     heating_logic.heating_logic =
         std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
     *heating_logic.heating_logic = logic;
@@ -391,6 +401,16 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.differential_temperature_is_set,
             logic.differential_temperature,
             !isAbsolute);
+
+    if (compare(1., 2.))
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+    }
+    else
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+
+    }
 
     std::vector<double> logicDist(LOGIC_SIZE, 0);
     for (auto& nodeWeight : nodeWeights)

@@ -645,6 +645,21 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
             j_heat_source_config["standby_logic"] = j_standby_logic;
         }
 
+        if(heat_source_config.backup_heat_source_label_is_set)
+        {
+            j_heat_source_config["backup_heat_source_label"] = heat_source_config.backup_heat_source_label;
+        }
+
+        if(heat_source_config.followed_by_heat_source_label_is_set)
+        {
+            j_heat_source_config["followed_by_heat_source_label"] = heat_source_config.followed_by_heat_source_label;
+        }
+
+        if(heat_source_config.companion_heat_source_label_is_set)
+        {
+            j_heat_source_config["companion_heat_source_label"] = heat_source_config.companion_heat_source_label;
+        }
+
         j_heat_source_configs.push_back(j_heat_source_config);
     }
 
@@ -661,16 +676,18 @@ void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& 
     j["metadata"] = j_metadata;
 
     auto& perf = rstank.performance;
-    j["number_of_nodes"] = perf.number_of_nodes;
-    j["volume"] = perf.volume;
-    j["ua"] = perf.ua;
-    j["bottom_fraction_of_tank_mixing_on_draw"] = perf.bottom_fraction_of_tank_mixing_on_draw;
-    j["volume_fixed"] = perf.fixed_volume;
+    nlohmann::json j_perf;
+    j_perf["number_of_nodes"] = perf.number_of_nodes;
+    j_perf["volume"] = perf.volume;
+    j_perf["ua"] = perf.ua;
+    j_perf["bottom_fraction_of_tank_mixing_on_draw"] = perf.bottom_fraction_of_tank_mixing_on_draw;
+    j_perf["volume_fixed"] = perf.fixed_volume;
 
     if (perf.heat_exchanger_effectiveness_is_set)
     {
-        j["heat_exchanger_effectiveness"] = perf.heat_exchanger_effectiveness;
+        j_perf["heat_exchanger_effectiveness"] = perf.heat_exchanger_effectiveness;
     }
+    j["performance"] = j_perf;
 }
 
 /*static*/
@@ -704,15 +721,15 @@ void HPWH::to_json(
 
         auto& grid_vars = perf.performance_map.grid_variables;
         nlohmann::json j_grid_vars;
-        j_grid_vars.push_back(grid_vars.evaporator_environment_temperature);
-        j_grid_vars.push_back(grid_vars.heat_source_temperature);
+
+        j_grid_vars["evaporator_environment_temperature"] = grid_vars.evaporator_environment_temperature;
+        j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
+        j_perf_map["grid_variables"] = j_grid_vars;
 
         auto& lookup_vars = perf.performance_map.lookup_variables;
         nlohmann::json j_lookup_vars;
-        j_lookup_vars.push_back(lookup_vars.input_power);
-        j_lookup_vars.push_back(lookup_vars.cop);
-
-        j_perf_map["grid_variables"] = j_grid_vars;
+        j_lookup_vars["input_power"] = lookup_vars.input_power;
+        j_lookup_vars["cop"] = lookup_vars.cop;
         j_perf_map["lookup_variables"] = j_lookup_vars;
 
         j_perf["performance_map"] = j_perf_map;
@@ -797,6 +814,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& h
     {
     case data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
     {
+        j["heating_logic_type"] = "SOC_BASED";
         if (heating_logic.heating_logic_is_set)
         {
             nlohmann::json j_logic;
@@ -807,6 +825,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& h
     }
     case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
     {
+        j["heating_logic_type"] = "TEMP_BASED";
         if (heating_logic.heating_logic_is_set)
         {
             nlohmann::json j_logic;
