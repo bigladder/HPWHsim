@@ -101,7 +101,7 @@ body {font-family: Arial;}
     measE = result["measuredE_Wh"].toFixed(2);
     simE = result["simulatedE_Wh"].toFixed(2);
 
-    document.getElementById("plot_fig").src = plot_path;
+    document.getElementById("plot_fig").src = "http://127.0.0.1:8050/"; //plot_path;
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
@@ -147,9 +147,7 @@ body {font-family: Arial;}
       <button type="button" id="plot_btn" onclick="plot();">plot</button>
   </form>
 
-  <div class='wrap'>
-    <iframe id="plot_fig" src="" width=1800 height=1000 style="display:none;"></iframe>
-  </div>
+  <iframe id="plot_fig" src="" width=900 height=500 style="display:none;"></iframe>
 
   <p id="energy_measured"></p>
   <p id="energy_simulated"></p> 
