@@ -19,38 +19,39 @@ styles = {
     }
 }
 
-@callback(
-    Output('hover-data', 'children'),
-    Input('basic-interactions', 'hoverData'))
-def display_hover_data(hoverData):
-    return json.dumps(hoverData, indent=2)
-
-
-@callback(
-    Output('click-data', 'children'),
-    Input('basic-interactions', 'clickData'))
-def display_click_data(clickData):
-    return json.dumps(clickData, indent=2)
-
-
-@callback(
-    Output('selected-data', 'children'),
-    Input('basic-interactions', 'selectedData'))
-def display_selected_data(selectedData):
-    return json.dumps(selectedData, indent=2)
-
-
-@callback(
-    Output('relayout-data', 'children'),
-    Input('basic-interactions', 'relayoutData'))
-def display_relayout_data(relayoutData):
-    return json.dumps(relayoutData, indent=2)
-
-
 def set_layout(fig):
    if fig == []:
         return html.Div([])
 
+
+   @callback(
+        Output('hover-data', 'children'),
+        Input('basic-interactions', 'hoverData'))
+   def display_hover_data(hoverData):
+        return json.dumps(hoverData, indent=2)
+
+
+   @callback(
+        Output('click-data', 'children'),
+        Input('basic-interactions', 'clickData'))
+   def display_click_data(clickData):
+        return json.dumps(clickData, indent=2)
+
+
+   @callback(
+        Output('selected-data', 'children'),
+        Input('basic-interactions', 'selectedData'))
+   def display_selected_data(selectedData):
+        return json.dumps(selectedData, indent=2)
+
+
+   @callback(
+        Output('relayout-data', 'children'),
+        Input('basic-interactions', 'relayoutData'))
+   def display_relayout_data(relayoutData):
+        return json.dumps(relayoutData, indent=2)
+
+   print("changing layout")
    return html.Div([
     dcc.Graph(
         id='basic-interactions',
@@ -347,17 +348,16 @@ def plot(measured_path, simulated_path, plot_path):
                     len(variables["Y-Variables"][variable]["Column Names"][variable_type])
             ):
                 plot_graphs(the_plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
-    
-        
+
+      
     #the_plot.finalize_plot()   
-    #plot.write_html_plot(plot_filename)
+    #the_plot.write_html_plot(plot_path)
    
     the_plot.figure.update_traces(marker_size=20)
     the_plot.figure.update_layout(clickmode='event+select')
   
     app.layout = set_layout(the_plot.figure) 
- 
-    # return json
+   
     result = {}
     #result['plot_html'] = plot.figure.to_html(full_html=True)
     result['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
@@ -367,8 +367,7 @@ def plot(measured_path, simulated_path, plot_path):
 
 app.layout = set_layout([]) 
 
-
 #  main
 if __name__ == "__main__":
     app.run(debug=True)
-    
+     
