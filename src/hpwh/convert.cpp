@@ -40,7 +40,7 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     {
     }
 
-    for (auto& c :sSpecType_mod)
+    for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }

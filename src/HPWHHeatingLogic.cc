@@ -370,12 +370,15 @@ void HPWH::SoCBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
+                heating_logic.comparison_type_is_set,
+                heating_logic.comparison_type);
     }
     else
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
-
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
+                heating_logic.comparison_type_is_set,
+                heating_logic.comparison_type);
     }
 
     heating_logic.heating_logic =
@@ -404,12 +407,15 @@ void HPWH::TempBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
+                heating_logic.comparison_type_is_set,
+                heating_logic.comparison_type);
     }
     else
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN, heating_logic.comparison_type_is_set, heating_logic.comparison_type);
-
+        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
+                heating_logic.comparison_type_is_set,
+                heating_logic.comparison_type);
     }
 
     std::vector<double> logicDist(LOGIC_SIZE, 0);
