@@ -62,7 +62,7 @@ class HPWH : public Courier::Sender
     //////
     static constexpr auto UnitsTime = Units::Time::min;
     static constexpr auto UnitsTemp = Units::Temp::C;
-    static constexpr auto UnitsTemp_d = Units::Temp_to_Temp_d(UnitsTemp);
+    static constexpr auto UnitsTemp_d = Units::Temp_d::C;
     static constexpr auto UnitsLength = Units::Length::m;
     static constexpr auto UnitsArea = Units::Area::m2;
     static constexpr auto UnitsVolume = Units::Volume::L;
@@ -74,7 +74,7 @@ class HPWH : public Courier::Sender
     static constexpr auto UnitsCp = Units::Cp::kJ_per_C;
 
     typedef Units::TimeVal<UnitsTime> Time_t;
-    typedef Units::TempVal<UnitsTemp> Temp_t;
+    typedef Units::TempVal<UnitsTemp, UnitsTemp_d> Temp_t;
     typedef Units::Temp_dVal<UnitsTemp_d> Temp_d_t;
     typedef Units::LengthVal<UnitsLength> Length_t;
     typedef Units::AreaVal<UnitsArea> Area_t;
@@ -85,7 +85,7 @@ class HPWH : public Courier::Sender
     typedef Units::ScaleVal<Units::UA, UnitsUA> UA_t;
     typedef Units::ScaleVal<Units::RFactor, UnitsRFactor> RFactor_t;
     typedef Units::ScaleVal<Units::Cp, UnitsCp> Cp_t;
-    typedef Units::TempVect<UnitsTemp> TempVect_t;
+    typedef Units::TempVect<UnitsTemp, UnitsTemp_d> TempVect_t;
     typedef Units::PowerVect<UnitsPower> PowerVect_t;
 
     struct GenTemp_t : public std::variant<Temp_t, Temp_d_t>
@@ -1729,14 +1729,6 @@ inline auto HM_TO_MIN(const double h, const double min) { return Time_h_min(h, m
 
 inline auto from(const Units::Time unitsTime) { return Units::scale(unitsTime, HPWH::UnitsTime); }
 inline auto from(const Units::UA unitsUA) { return Units::scale(unitsUA, HPWH::UnitsUA); }
-
-inline auto operator+(HPWH::Temp_t T, HPWH::Temp_d_t dT) { return HPWH::Temp_t(T() + dT()); }
-inline auto operator-(HPWH::Temp_t T, HPWH::Temp_d_t dT) { return HPWH::Temp_t(T() - dT()); }
-
-inline auto operator-(HPWH::Temp_t T0, HPWH::Temp_t T1) { return HPWH::Temp_d_t(T0() - T1()); }
-
-inline auto operator+=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T += dT(); }
-inline auto operator-=(HPWH::Temp_t& T, HPWH::Temp_d_t dT) { return T -= dT(); }
 
 inline auto hmin(const double h, const double min)
 {

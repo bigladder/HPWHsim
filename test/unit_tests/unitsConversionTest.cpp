@@ -12,9 +12,9 @@ using namespace Units;
 /// units-values full specializations
 typedef TimeVal<Time::s> Time_s;
 typedef TimeVal<Time::min> Time_min;
-typedef TempVal<Temp::C> Temp_C;
-typedef TempVal<Temp::F> Temp_F;
-typedef TempVal<Temp::K> Temp_K;
+typedef TempVal<Temp::C, Temp_d::C> Temp_C;
+typedef TempVal<Temp::F, Temp_d::F> Temp_F;
+typedef TempVal<Temp::K, Temp_d::K> Temp_K;
 typedef Temp_dVal<Temp_d::C> Temp_dC;
 typedef Temp_dVal<Temp_d::F> Temp_dF;
 typedef EnergyVal<Energy::kJ> Energy_kJ;
@@ -32,12 +32,12 @@ typedef UAVal<UA::kJ_per_hC> UA_kJ_per_hC;
 typedef TimePair<Time::h, Time::min> Time_h_min;
 
 /// units-vectors full specialization
-typedef TimeVect<Time::s> TimeVect_s, TimeV_s;
-typedef TimeVect<Time::min> TimeVect_min, TimeV_min;
-typedef TempVect<Temp::C> TempVect_C, TempV_C;
-typedef TempVect_d<Temp_d::C> TempVect_dC, TempV_dC;
+typedef TimeVect<Time::s> TimeVect_s;
+typedef TimeVect<Time::min> TimeVect_min;
+typedef TempVect<Temp::C, Temp_d::C> TempVect_C;
+typedef TempVect_d<Temp_d::C> TempVect_dC;
 typedef EnergyVect<Energy::kJ> EnergyVect_kJ;
-typedef PowerVect<Power::kW> PowerVect_kW, PowerV_kW;
+typedef PowerVect<Power::kW> PowerVect_kW;
 
 /*
  * unitsConversion tests
