@@ -402,13 +402,14 @@ struct ScaleVal : TransformVal<Units_t, units, Scale, ScaleVal>
     }
 };
 
-template <typename Units_t,
-          Units_t units,
-          typename ExtUnits_t,
-          ExtUnits_t extUnits,
-          typename Transform_t,
-          template <typename = Units_t, Units_t = units, typename, ExtUnits_t>
-          typename Val_t>
+template <
+    typename Units_t,
+    Units_t units,
+    typename ExtUnits_t,
+    ExtUnits_t extUnits,
+    typename Transform_t,
+    template <typename = Units_t, Units_t = units, typename = ExtUnits_t, ExtUnits_t = extUnits>
+    typename Val_t>
 struct TransformValExt : TransformValBase<Units_t, units, Transform_t>
 {
   protected:
