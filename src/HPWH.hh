@@ -101,9 +101,14 @@ class HPWH : public Courier::Sender
     static void
     to_json(const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
             nlohmann::json& j);
-    static void to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic, nlohmann::json& j);
-    static void to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& soclogic, nlohmann::json& j);
-    static void to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& templogic, nlohmann::json& j);
+    static void to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
+                        nlohmann::json& j);
+    static void
+    to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& soclogic,
+            nlohmann::json& j);
+    static void
+    to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& templogic,
+            nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -1269,7 +1274,7 @@ template <typename T>
 void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
 {
     is_set = has_value;
-    if(has_value)
+    if (has_value)
     {
         t_new = t;
     }

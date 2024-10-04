@@ -77,7 +77,6 @@ void measure(const std::string& sSpecType,
         sSpecType_mod = "JSON";
     }
 
-
     HPWH hpwh;
     if (sSpecType_mod == "Preset")
     {
@@ -106,7 +105,7 @@ void measure(const std::string& sSpecType,
     else
     {
         std::cout << "Invalid argument, received '" << sSpecType_mod
-             << "', expected 'Preset', 'File', or 'JSON'.\n";
+                  << "', expected 'Preset', 'File', or 'JSON'.\n";
         exit(1);
     }
 

@@ -4077,7 +4077,9 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
 void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER, metadata.schema_is_set, metadata.schema);
+    checkTo(data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
+            metadata.schema_is_set,
+            metadata.schema);
 
     auto& performance = rswh.performance;
 

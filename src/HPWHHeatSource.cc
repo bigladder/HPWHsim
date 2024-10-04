@@ -184,12 +184,12 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
 
         std::vector<double> evapTs_F = {};
         evapTs_F.reserve(grid_variables.evaporator_environment_temperature.size());
-        for (auto& T: grid_variables.evaporator_environment_temperature)
+        for (auto& T : grid_variables.evaporator_environment_temperature)
             evapTs_F.push_back(C_TO_F(K_TO_C(T)));
 
         std::vector<double> heatSourceTs_F = {};
         evapTs_F.reserve(grid_variables.heat_source_temperature.size());
-        for (auto& T: grid_variables.heat_source_temperature)
+        for (auto& T : grid_variables.heat_source_temperature)
             heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
 
         perfGrid.push_back(evapTs_F);
@@ -200,7 +200,7 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
 
         std::vector<double> inputPowers_Btu_per_h = {};
         inputPowers_Btu_per_h.reserve(lookup_variables.input_power.size());
-        for (auto& P: lookup_variables.input_power)
+        for (auto& P : lookup_variables.input_power)
             inputPowers_Btu_per_h.push_back(W_TO_BTUperH(P));
 
         perfGridValues.push_back(inputPowers_Btu_per_h);
@@ -331,13 +331,19 @@ void HPWH::HeatSource::to(
     }
 
     if (backupHeatSource != NULL)
-        checkTo(backupHeatSource->name, heatsourceconfiguration.backup_heat_source_label_is_set, heatsourceconfiguration.backup_heat_source_label);
+        checkTo(backupHeatSource->name,
+                heatsourceconfiguration.backup_heat_source_label_is_set,
+                heatsourceconfiguration.backup_heat_source_label);
 
     if (followedByHeatSource != NULL)
-        checkTo(followedByHeatSource->name, heatsourceconfiguration.followed_by_heat_source_label_is_set, heatsourceconfiguration.followed_by_heat_source_label);
+        checkTo(followedByHeatSource->name,
+                heatsourceconfiguration.followed_by_heat_source_label_is_set,
+                heatsourceconfiguration.followed_by_heat_source_label);
 
     if (companionHeatSource != NULL)
-        checkTo(companionHeatSource->name, heatsourceconfiguration.companion_heat_source_label_is_set, heatsourceconfiguration.companion_heat_source_label);
+        checkTo(companionHeatSource->name,
+                heatsourceconfiguration.companion_heat_source_label_is_set,
+                heatsourceconfiguration.companion_heat_source_label);
 
     switch (typeOfHeatSource)
     {
