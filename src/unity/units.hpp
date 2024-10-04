@@ -179,10 +179,10 @@ inline Scaler<Cp>::ScaleMap Scaler<Cp>::scaleMap(kJ_per_C, {});
 /// units-values partial specializations
 template <Time units>
 using TimeVal = ScaleVal<Time, units>;
-template <Temp units>
-using TempVal = ScaleShiftVal<Temp, units>;
-template <Temp_d units>
-using Temp_dVal = ScaleVal<Temp_d, units>;
+template <Temp units, Temp_d units_d>
+using TempVal = ScaleShiftVal<Temp, units, Temp_d, units_d>;
+template <Temp_d units_d>
+using Temp_dVal = ScaleVal<Temp_d, units_d>;
 template <Energy units>
 using EnergyVal = ScaleVal<Energy, units>;
 template <Power units>
@@ -209,25 +209,12 @@ template <Time units>
 using TimeVect = ScaleVect<Time, units>;
 template <Temp_d units>
 using TempVect_d = ScaleVect<Temp_d, units>;
-template <Temp units>
-using TempVect = ScaleShiftVect<Temp, units>;
+template <Temp units, Temp_d units_d>
+using TempVect = ScaleShiftVect<Temp, units, Temp_d, units_d>;
 template <Energy units>
 using EnergyVect = ScaleVect<Energy, units>;
 template <Power units>
 using PowerVect = ScaleVect<Power, units>;
-
-inline constexpr Temp_d Temp_to_Temp_d(const Temp T)
-{
-    switch (T)
-    {
-    case Temp::C:
-        return Temp_d::C;
-    case Temp::F:
-        return Temp_d::F;
-    default:
-        return Temp_d::K;
-    }
-}
 
 } // namespace Unity
 
