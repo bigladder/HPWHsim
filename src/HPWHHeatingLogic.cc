@@ -315,12 +315,13 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         {
 
         }
+
+        std::vector<HPWH::NodeWeight> nodeWeights = {};
         if(temp_based_logic->logic_distribution_is_set)
         {
             std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
             HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
 
-            std::vector<HPWH::NodeWeight> nodeWeights;
             for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
             {
                 if (logic_dist[inode] > 0.)
