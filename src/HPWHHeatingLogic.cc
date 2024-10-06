@@ -311,15 +311,22 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             reinterpret_cast<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
-        std::vector<double> nodes(HPWH::LOGIC_SIZE);
-        HPWH::resample(nodes, temp_based_logic->logic_distribution);
-
-        std::vector<HPWH::NodeWeight> nodeWeights;
-        for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
+        if(temp_based_logic->heating_logic_type_is_set)
         {
-            if (nodes[inode] > 0.)
+
+        }
+        if(temp_based_logic->logic_distribution_is_set)
+        {
+            std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
+            HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
+
+            std::vector<HPWH::NodeWeight> nodeWeights;
+            for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
             {
-                nodeWeights.emplace_back(inode + 1, nodes[inode]);
+                if (logic_dist[inode] > 0.)
+                {
+                    nodeWeights.emplace_back(inode + 1, logic_dist[inode]);
+                }
             }
         }
 
