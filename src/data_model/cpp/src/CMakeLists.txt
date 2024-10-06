@@ -4,8 +4,6 @@ file(GLOB lib_src "${PROJECT_SOURCE_DIR}/src/*.cpp")
 set (sources "${lib_headers}"
              "${lib_src}")
 
-message(STATUS ${sources})
-
 option(${PROJECT_NAME}_STATIC_LIB "Make ${PROJECT_NAME} a static library" ON)
 
 if (${PROJECT_NAME}_STATIC_LIB)
