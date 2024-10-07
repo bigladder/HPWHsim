@@ -50,17 +50,15 @@ namespace data_model {
 			{HeatingLogicType::TEMP_BASED, {"TEMP_BASED", "Temp based", "Temperature based"}},
 			{HeatingLogicType::UNKNOWN, {"UNKNOWN", "None", "None"}}
 		};
-		enum class TankSpecifiedTempLogicType {
-			TOP_TANK,
-			BOTTOM_TANK,
-			STANDBY,
+		enum class TankNodeSpecification {
+			TOP_NODE,
+			BOTTOM_NODE,
 			UNKNOWN
 		};
-		const static std::unordered_map<TankSpecifiedTempLogicType, enum_info> TankSpecifiedTempLogicType_info {
-			{TankSpecifiedTempLogicType::TOP_TANK, {"TOP_TANK", "Top tank node", "Refers to top tank node only."}},
-			{TankSpecifiedTempLogicType::BOTTOM_TANK, {"BOTTOM_TANK", "Bottom tank node", "Refers to bottom tank node only."}},
-			{TankSpecifiedTempLogicType::STANDBY, {"STANDBY", "Top tank node with standby condition", "Refers to top tank node only with standby condition."}},
-			{TankSpecifiedTempLogicType::UNKNOWN, {"UNKNOWN", "None", "None"}}
+		const static std::unordered_map<TankNodeSpecification, enum_info> TankNodeSpecification_info {
+			{TankNodeSpecification::TOP_NODE, {"TOP_NODE", "Top tank node", "Refers to top tank node."}},
+			{TankNodeSpecification::BOTTOM_NODE, {"BOTTOM_NODE", "Bottom tank node", "Refers to bottom tank node."}},
+			{TankNodeSpecification::UNKNOWN, {"UNKNOWN", "None", "None"}}
 		};
 		enum class ComparisonType {
 			GREATER_THAN,
@@ -245,24 +243,29 @@ namespace data_model {
 			void initialize(const nlohmann::json& j) override;
 			double absolute_temperature;
 			double differential_temperature;
-			rsintegratedwaterheater_ns::TankSpecifiedTempLogicType heating_logic_type;
+			rsintegratedwaterheater_ns::TankNodeSpecification tank_node_specification;
 			std::vector<double> logic_distribution;
+			bool activates_standby;
 			bool absolute_temperature_is_set;
 			bool differential_temperature_is_set;
-			bool heating_logic_type_is_set;
+			bool tank_node_specification_is_set;
 			bool logic_distribution_is_set;
+			bool activates_standby_is_set;
 			const static std::string_view absolute_temperature_units;
 			const static std::string_view differential_temperature_units;
-			const static std::string_view heating_logic_type_units;
+			const static std::string_view tank_node_specification_units;
 			const static std::string_view logic_distribution_units;
+			const static std::string_view activates_standby_units;
 			const static std::string_view absolute_temperature_description;
 			const static std::string_view differential_temperature_description;
-			const static std::string_view heating_logic_type_description;
+			const static std::string_view tank_node_specification_description;
 			const static std::string_view logic_distribution_description;
+			const static std::string_view activates_standby_description;
 			const static std::string_view absolute_temperature_name;
 			const static std::string_view differential_temperature_name;
-			const static std::string_view heating_logic_type_name;
+			const static std::string_view tank_node_specification_name;
 			const static std::string_view logic_distribution_name;
+			const static std::string_view activates_standby_name;
 		};
 		struct SoCBasedHeatingLogic : HeatingLogicBase {
 			void initialize(const nlohmann::json& j) override;
@@ -308,11 +311,10 @@ namespace data_model {
 			{HeatingLogicType::SOC_BASED, "SOC_BASED"},
 			{HeatingLogicType::TEMP_BASED, "TEMP_BASED"},
 		})
-		NLOHMANN_JSON_SERIALIZE_ENUM (TankSpecifiedTempLogicType, {
-			{TankSpecifiedTempLogicType::UNKNOWN, "UNKNOWN"},
-			{TankSpecifiedTempLogicType::TOP_TANK, "TOP_TANK"},
-			{TankSpecifiedTempLogicType::BOTTOM_TANK, "BOTTOM_TANK"},
-			{TankSpecifiedTempLogicType::STANDBY, "STANDBY"},
+		NLOHMANN_JSON_SERIALIZE_ENUM (TankNodeSpecification, {
+			{TankNodeSpecification::UNKNOWN, "UNKNOWN"},
+			{TankNodeSpecification::TOP_NODE, "TOP_NODE"},
+			{TankNodeSpecification::BOTTOM_NODE, "BOTTOM_NODE"},
 		})
 		NLOHMANN_JSON_SERIALIZE_ENUM (ComparisonType, {
 			{ComparisonType::UNKNOWN, "UNKNOWN"},
