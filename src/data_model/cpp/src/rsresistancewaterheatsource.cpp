@@ -53,7 +53,8 @@ namespace data_model  {
 			json_get<rsresistancewaterheatsource_ns::Performance>(j, logger.get(), "performance", x.performance, x.performance_is_set, true);
 		}
 		void RSRESISTANCEWATERHEATSOURCE::initialize(const nlohmann::json& j) {
-		}
+            from_json(j, *this);
+        }
 		const std::string_view RSRESISTANCEWATERHEATSOURCE::metadata_units = "";
 
 		const std::string_view RSRESISTANCEWATERHEATSOURCE::description_units = "";

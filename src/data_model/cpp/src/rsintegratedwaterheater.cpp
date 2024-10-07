@@ -265,7 +265,8 @@ namespace data_model  {
 			json_get<bool>(j, logger.get(), "activates_standby", x.activates_standby, x.activates_standby_is_set, false);
 		}
 		void TempBasedHeatingLogic::initialize(const nlohmann::json& j) {
-		}
+            from_json(j, *this);
+        }
 		const std::string_view TempBasedHeatingLogic::absolute_temperature_units = "K";
 
 		const std::string_view TempBasedHeatingLogic::differential_temperature_units = "K";
@@ -304,7 +305,8 @@ namespace data_model  {
 			json_get<double>(j, logger.get(), "constant_mains_temperature", x.constant_mains_temperature, x.constant_mains_temperature_is_set, true);
 		}
 		void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) {
-		}
+            from_json(j, *this);
+        }
 		const std::string_view SoCBasedHeatingLogic::decision_point_units = "";
 
 		const std::string_view SoCBasedHeatingLogic::minimum_useful_temperature_units = "";

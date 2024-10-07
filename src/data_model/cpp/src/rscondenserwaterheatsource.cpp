@@ -152,7 +152,8 @@ namespace data_model  {
 			json_get<rscondenserwaterheatsource_ns::Performance>(j, logger.get(), "performance", x.performance, x.performance_is_set, true);
 		}
 		void RSCONDENSERWATERHEATSOURCE::initialize(const nlohmann::json& j) {
-		}
+            from_json(j, *this);
+        }
 		const std::string_view RSCONDENSERWATERHEATSOURCE::metadata_units = "";
 
 		const std::string_view RSCONDENSERWATERHEATSOURCE::description_units = "";
