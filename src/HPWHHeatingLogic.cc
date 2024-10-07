@@ -326,17 +326,16 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             break;
         }
 
-
         std::vector<HPWH::NodeWeight> nodeWeights = {};
 
-        if(temp_based_logic->activates_standby_is_set)
+        if (temp_based_logic->activates_standby_is_set)
         {
             label = "standby";
         }
 
-        if(temp_based_logic->tank_node_specification_is_set)
+        if (temp_based_logic->tank_node_specification_is_set)
         {
-            switch(temp_based_logic->tank_node_specification)
+            switch (temp_based_logic->tank_node_specification)
             {
             case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
             {
@@ -353,7 +352,7 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
                 break;
             }
         }
-        if(temp_based_logic->logic_distribution_is_set)
+        if (temp_based_logic->logic_distribution_is_set)
         {
             std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
             HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
