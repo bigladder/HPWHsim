@@ -313,18 +313,15 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
                 logic.heating_logic.get());
 
         double temp = 20.;
-        if (temp_based_logic->differential_temperature_is_set)
-        {
-            temp = temp_based_logic->differential_temperature;
-        }
-        else if (temp_based_logic->absolute_temperature_is_set)
+        if (temp_based_logic->absolute_temperature_is_set)
         {
             temp = K_TO_C(temp_based_logic->absolute_temperature);
         }
-        else
+        else if (temp_based_logic->differential_temperature_is_set)
         {
-            break;
+            temp = temp_based_logic->differential_temperature;
         }
+        else break;
 
         std::vector<HPWH::NodeWeight> nodeWeights = {};
 
@@ -349,7 +346,7 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
                 break;
             }
             default:
-                break;
+            {}
             }
         }
         if (temp_based_logic->logic_distribution_is_set)
