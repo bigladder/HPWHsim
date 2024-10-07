@@ -663,28 +663,30 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
                 heat_source_config.companion_heat_source_label;
         }
 
-        if(heat_source_config.hysteresis_temperature_difference_is_set)
+        if (heat_source_config.hysteresis_temperature_difference_is_set)
         {
             j_heat_source_config["hysteresis_temperature_difference"] =
                 heat_source_config.hysteresis_temperature_difference;
         }
 
-        if(heat_source_config.maximum_temperature_is_set)
+        if (heat_source_config.maximum_temperature_is_set)
         {
-            j_heat_source_config["maximum_temperature"] =
-                heat_source_config.maximum_temperature;
+            j_heat_source_config["maximum_temperature"] = heat_source_config.maximum_temperature;
         }
 
-        if(heat_source_config.minimum_temperature_is_set)
+        if (heat_source_config.minimum_temperature_is_set)
         {
-            j_heat_source_config["minimum_temperature"] =
-                heat_source_config.minimum_temperature;
+            j_heat_source_config["minimum_temperature"] = heat_source_config.minimum_temperature;
         }
 
-        if(heat_source_config.maximum_setpoint_is_set)
+        if (heat_source_config.maximum_setpoint_is_set)
         {
-            j_heat_source_config["maximum_setpoint"] =
-                heat_source_config.maximum_setpoint;
+            j_heat_source_config["maximum_setpoint"] = heat_source_config.maximum_setpoint;
+        }
+
+        if (heat_source_config.is_vip_is_set)
+        {
+            j_heat_source_config["is_vip"] = heat_source_config.is_vip;
         }
 
         j_heat_source_configs.push_back(j_heat_source_config);
@@ -727,7 +729,7 @@ void HPWH::to_json(
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
-    if(perf.performance_points_is_set)
+    if (perf.performance_points_is_set)
     {
         nlohmann::json j_perf_points;
         for (auto& perf_point : perf.performance_points)
@@ -741,7 +743,7 @@ void HPWH::to_json(
         }
         j_perf["performance_points"] = j_perf_points;
     }
-    else if(perf.performance_map_is_set)
+    else if (perf.performance_map_is_set)
     {
         nlohmann::json j_perf_map;
 
@@ -761,7 +763,7 @@ void HPWH::to_json(
 
         j_perf["performance_map"] = j_perf_map;
     }
-    if(perf.coil_configuration_is_set)
+    if (perf.coil_configuration_is_set)
     {
         switch (perf.coil_configuration)
         {
@@ -788,7 +790,7 @@ void HPWH::to_json(
 
     if (perf.standby_power_is_set)
     {
-        j_perf["standby_power"]  = perf.standby_power;
+        j_perf["standby_power"] = perf.standby_power;
     }
 
     j["performance"] = j_perf;
@@ -848,7 +850,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatin
     }
     if (tempLogic.tank_node_specification_is_set)
     {
-        switch(tempLogic.tank_node_specification)
+        switch (tempLogic.tank_node_specification)
         {
         case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
         {

@@ -30,8 +30,8 @@
           }
         },
         "heat_source_type": "RESISTANCE",
+        "is_vip": true,
         "label": "resistiveElementTop",
-        "maximum_setpoint": 373.15,
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "turn_on_logic": [
@@ -80,7 +80,6 @@
         "heat_source_type": "RESISTANCE",
         "hysteresis_temperature_difference": 2.2222222222222223,
         "label": "resistiveElementBottom",
-        "maximum_setpoint": 373.15,
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "shut_off_logic": [
@@ -161,7 +160,6 @@
         "heat_source_type": "CONDENSER",
         "hysteresis_temperature_difference": 0.5555555555555556,
         "label": "compressor",
-        "maximum_setpoint": 344.26111111111106,
         "maximum_temperature": 322.0388888888889,
         "minimum_temperature": 275.92777777777775,
         "turn_on_logic": [
