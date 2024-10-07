@@ -216,7 +216,7 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
         setupDefrostMap();
     }
 
-    if(perf.standby_power_is_set)
+    if (perf.standby_power_is_set)
     {
         standbyPower_kW = perf.standby_power / 1000.;
     }
@@ -331,11 +331,17 @@ void HPWH::HeatSource::to(
 
     checkTo(hysteresis_dC,
             heatsourceconfiguration.hysteresis_temperature_difference_is_set,
-            heatsourceconfiguration.hysteresis_temperature_difference, hysteresis_dC != 0.);
+            heatsourceconfiguration.hysteresis_temperature_difference,
+            hysteresis_dC != 0.);
 
-    checkTo(C_TO_K(minT), heatsourceconfiguration.minimum_temperature_is_set, heatsourceconfiguration.minimum_temperature);
-    checkTo(C_TO_K(maxT), heatsourceconfiguration.maximum_temperature_is_set, heatsourceconfiguration.maximum_temperature);
-    checkTo(C_TO_K(maxSetpoint_C), heatsourceconfiguration.maximum_setpoint_is_set, heatsourceconfiguration.maximum_setpoint);
+    checkTo(C_TO_K(minT),
+            heatsourceconfiguration.minimum_temperature_is_set,
+            heatsourceconfiguration.minimum_temperature);
+    checkTo(C_TO_K(maxT),
+            heatsourceconfiguration.maximum_temperature_is_set,
+            heatsourceconfiguration.maximum_temperature);
+
+    checkTo(isVIP, heatsourceconfiguration.is_vip_is_set, heatsourceconfiguration.is_vip, isVIP);
 
     if (standbyLogic != NULL)
     {
