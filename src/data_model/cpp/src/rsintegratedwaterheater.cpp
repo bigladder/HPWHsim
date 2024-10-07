@@ -260,8 +260,9 @@ namespace data_model  {
 		void from_json(const nlohmann::json& j, TempBasedHeatingLogic& x) {
 			json_get<double>(j, logger.get(), "absolute_temperature", x.absolute_temperature, x.absolute_temperature_is_set, true);
 			json_get<double>(j, logger.get(), "differential_temperature", x.differential_temperature, x.differential_temperature_is_set, true);
-			json_get<rsintegratedwaterheater_ns::TankSpecifiedTempLogicType>(j, logger.get(), "heating_logic_type", x.heating_logic_type, x.heating_logic_type_is_set, true);
+			json_get<rsintegratedwaterheater_ns::TankNodeSpecification>(j, logger.get(), "tank_node_specification", x.tank_node_specification, x.tank_node_specification_is_set, true);
 			json_get<std::vector<double>>(j, logger.get(), "logic_distribution", x.logic_distribution, x.logic_distribution_is_set, true);
+			json_get<bool>(j, logger.get(), "activates_standby", x.activates_standby, x.activates_standby_is_set, false);
 		}
 		void TempBasedHeatingLogic::initialize(const nlohmann::json& j) {
 		}
@@ -269,25 +270,31 @@ namespace data_model  {
 
 		const std::string_view TempBasedHeatingLogic::differential_temperature_units = "K";
 
-		const std::string_view TempBasedHeatingLogic::heating_logic_type_units = "";
+		const std::string_view TempBasedHeatingLogic::tank_node_specification_units = "";
 
 		const std::string_view TempBasedHeatingLogic::logic_distribution_units = "";
+
+		const std::string_view TempBasedHeatingLogic::activates_standby_units = "";
 
 		const std::string_view TempBasedHeatingLogic::absolute_temperature_description = "Absolute temperature for activation";
 
 		const std::string_view TempBasedHeatingLogic::differential_temperature_description = "Temperature difference for activation";
 
-		const std::string_view TempBasedHeatingLogic::heating_logic_type_description = "Type of tank-specified heating logic";
+		const std::string_view TempBasedHeatingLogic::tank_node_specification_description = "Tank-node specification";
 
 		const std::string_view TempBasedHeatingLogic::logic_distribution_description = "Weighted distribution for comparison, by division, in order";
+
+		const std::string_view TempBasedHeatingLogic::activates_standby_description = "Applies standby logic.";
 
 		const std::string_view TempBasedHeatingLogic::absolute_temperature_name = "absolute_temperature";
 
 		const std::string_view TempBasedHeatingLogic::differential_temperature_name = "differential_temperature";
 
-		const std::string_view TempBasedHeatingLogic::heating_logic_type_name = "heating_logic_type";
+		const std::string_view TempBasedHeatingLogic::tank_node_specification_name = "tank_node_specification";
 
 		const std::string_view TempBasedHeatingLogic::logic_distribution_name = "logic_distribution";
+
+		const std::string_view TempBasedHeatingLogic::activates_standby_name = "activates_standby";
 
 		void from_json(const nlohmann::json& j, SoCBasedHeatingLogic& x) {
 			json_get<double>(j, logger.get(), "decision_point", x.decision_point, x.decision_point_is_set, true);

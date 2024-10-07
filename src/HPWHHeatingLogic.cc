@@ -307,29 +307,10 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
     case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
     default:
     {
+        std::string label = "name";
         auto temp_based_logic =
             reinterpret_cast<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
                 logic.heating_logic.get());
-
-        if(temp_based_logic->heating_logic_type_is_set)
-        {
-
-        }
-
-        std::vector<HPWH::NodeWeight> nodeWeights = {};
-        if(temp_based_logic->logic_distribution_is_set)
-        {
-            std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
-            HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
-
-            for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
-            {
-                if (logic_dist[inode] > 0.)
-                {
-                    nodeWeights.emplace_back(inode + 1, logic_dist[inode]);
-                }
-            }
-        }
 
         double temp = 20.;
         if (temp_based_logic->differential_temperature_is_set)
@@ -345,8 +326,48 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             break;
         }
 
+
+        std::vector<HPWH::NodeWeight> nodeWeights = {};
+
+        if(temp_based_logic->activates_standby_is_set)
+        {
+            label = "standby";
+        }
+
+        if(temp_based_logic->tank_node_specification_is_set)
+        {
+            switch(temp_based_logic->tank_node_specification)
+            {
+            case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+            {
+                label = "top node";
+                nodeWeights.emplace_back(LOGIC_SIZE + 1);
+                break;
+            }
+            case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+            {
+                label = "bottom node";
+                break;
+            }
+            default:
+                break;
+            }
+        }
+        if(temp_based_logic->logic_distribution_is_set)
+        {
+            std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
+            HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
+            for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
+            {
+                if (logic_dist[inode] > 0.)
+                {
+                    nodeWeights.emplace_back(inode + 1, logic_dist[inode]);
+                }
+            }
+        }
+
         heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-            "name",
+            label,
             nodeWeights,
             temp,
             hpwh,
