@@ -336,13 +336,12 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             {
             case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
             {
-                label = "top node";
                 nodeWeights.emplace_back(LOGIC_SIZE + 1);
                 break;
             }
             case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
             {
-                label = "bottom node";
+                nodeWeights.emplace_back(0);
                 break;
             }
             default:
@@ -425,6 +424,7 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.absolute_temperature_is_set,
             logic.absolute_temperature,
             isAbsolute);
+
     checkTo(decisionPoint,
             logic.differential_temperature_is_set,
             logic.differential_temperature,
@@ -443,31 +443,46 @@ void HPWH::TempBasedHeatingLogic::to(
                 heating_logic.comparison_type);
     }
 
-    std::vector<double> logicDist(LOGIC_SIZE, 0);
-    for (auto& nodeWeight : nodeWeights)
+    if(description == "standby")
     {
-        auto iNode = nodeWeight.nodeNum - 1;
-        if (iNode < 0)
-            iNode = 0;
-        if (iNode > LOGIC_SIZE - 1)
-            iNode = LOGIC_SIZE - 1;
-        logicDist[iNode] = nodeWeight.weight;
-    }
+        checkTo(true,
+                logic.activates_standby_is_set,
+                logic.activates_standby);
 
-    // downsample, if possible
-    std::vector<double> reconstructedTempDist(LOGIC_SIZE);
-    for (std::size_t iSize = 1; 2 * iSize <= LOGIC_SIZE; ++iSize)
-    {
-        std::vector<double> resampledTempDist(iSize);
-        resample(resampledTempDist, logicDist);
-        resample(reconstructedTempDist, resampledTempDist);
-        if (reconstructedTempDist == logicDist)
-        {
-            logicDist = resampledTempDist;
-            break;
-        }
+        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
+                logic.tank_node_specification_is_set,
+                logic.tank_node_specification);
+
+        logic.logic_distribution_is_set = false;
     }
-    checkTo(logicDist, logic.logic_distribution_is_set, logic.logic_distribution);
+    else
+    {
+        std::vector<double> logicDist(LOGIC_SIZE, 0.);
+        for (auto& nodeWeight : nodeWeights)
+        {
+            auto iNode = nodeWeight.nodeNum - 1;
+            if (iNode < 0)
+                iNode = 0;
+            if (iNode > LOGIC_SIZE - 1)
+                iNode = LOGIC_SIZE - 1;
+            logicDist[iNode] = nodeWeight.weight;
+        }
+
+        // downsample, if possible
+        std::vector<double> reconstructedTempDist(LOGIC_SIZE);
+        for (std::size_t iSize = 1; 2 * iSize <= LOGIC_SIZE; ++iSize)
+        {
+            std::vector<double> resampledTempDist(iSize);
+            resample(resampledTempDist, logicDist);
+            resample(reconstructedTempDist, resampledTempDist);
+            if (reconstructedTempDist == logicDist)
+            {
+                logicDist = resampledTempDist;
+                break;
+            }
+        }
+        checkTo(logicDist, logic.logic_distribution_is_set, logic.logic_distribution);
+    }
 
     heating_logic.heating_logic =
         std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>(logic);

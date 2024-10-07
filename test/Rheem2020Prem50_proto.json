@@ -259,10 +259,6 @@
                                 ]
                             }
                         ],
-                        "standby_power": {
-                            "value": 50,
-                            "units": "W"
-                        },
                         "coil_configuration": "WRAPPED"
                     }
                 },

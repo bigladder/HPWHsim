@@ -215,6 +215,11 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
     {
         setupDefrostMap();
     }
+
+    if(perf.standby_power_is_set)
+    {
+        standbyPower_kW = perf.standby_power / 1000.;
+    }
 }
 
 void HPWH::HeatSource::from(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
@@ -323,6 +328,14 @@ void HPWH::HeatSource::to(
         heatsourceconfiguration.turn_on_logic_is_set = true;
         ++i;
     }
+
+    checkTo(hysteresis_dC,
+            heatsourceconfiguration.hysteresis_temperature_difference_is_set,
+            heatsourceconfiguration.hysteresis_temperature_difference, hysteresis_dC != 0.);
+
+    checkTo(C_TO_K(minT), heatsourceconfiguration.minimum_temperature_is_set, heatsourceconfiguration.minimum_temperature);
+    checkTo(C_TO_K(maxT), heatsourceconfiguration.maximum_temperature_is_set, heatsourceconfiguration.maximum_temperature);
+    checkTo(C_TO_K(maxSetpoint_C), heatsourceconfiguration.maximum_setpoint_is_set, heatsourceconfiguration.maximum_setpoint);
 
     if (standbyLogic != NULL)
     {
@@ -574,41 +587,44 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        convertMapToGrid(tempGrid, tempGridValues);
-
-        auto& map = perf.performance_map;
-
-        auto& grid_vars = map.grid_variables;
-        checkTo(tempGrid[0],
-                grid_vars.evaporator_environment_temperature_is_set,
-                grid_vars.evaporator_environment_temperature);
-        checkTo(tempGrid[1],
-                grid_vars.heat_source_temperature_is_set,
-                grid_vars.heat_source_temperature);
-
-        auto& lookup_vars = map.lookup_variables;
-        checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
-        checkTo(tempGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
-
-        perf.performance_map_is_set = true;
-
-        /*
-        if (perfMap.size() > 0) // convert to grid
+        if (false) // convert to grid
         {
-            auto& perf_points = perf.performance_points;
-            perf_points.reserve(perfMap.size());
+            convertMapToGrid(tempGrid, tempGridValues);
 
-            for (auto& perfPoint : perfMap)
-            {
-                data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
-                perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
-                perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
-                perf_point.cop_coefficients = perfPoint.COP_coeffs;
-                perf_points.push_back(perf_point);
-            }
-            perf.performance_points_is_set = true;
+            auto& map = perf.performance_map;
+
+            auto& grid_vars = map.grid_variables;
+            checkTo(tempGrid[0],
+                    grid_vars.evaporator_environment_temperature_is_set,
+                    grid_vars.evaporator_environment_temperature);
+            checkTo(tempGrid[1],
+                    grid_vars.heat_source_temperature_is_set,
+                    grid_vars.heat_source_temperature);
+
+            auto& lookup_vars = map.lookup_variables;
+            checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
+            checkTo(tempGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
+
+            perf.performance_map_is_set = true;
         }
-        */
+        else
+        {
+            if (perfMap.size() > 0)
+            {
+                auto& perf_points = perf.performance_points;
+                perf_points.reserve(perfMap.size());
+
+                for (auto& perfPoint : perfMap)
+                {
+                    data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
+                    perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
+                    perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
+                    perf_point.cop_coefficients = perfPoint.COP_coeffs;
+                    perf_points.push_back(perf_point);
+                }
+                perf.performance_points_is_set = true;
+            }
+        }
     }
 }
 
