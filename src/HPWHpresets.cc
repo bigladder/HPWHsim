@@ -1828,7 +1828,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->depressesTemperature = false;
 
         // Performance grid: externalT_F, Tout_F, condenserTemp_F
-        compressor->perfGrid.reserve(2);
+        compressor->perfGrid.reserve(2); // Should be 3
         compressor->perfGridValues.reserve(2);
         compressor->perfGrid.push_back(
             {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,

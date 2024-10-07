@@ -663,6 +663,30 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
                 heat_source_config.companion_heat_source_label;
         }
 
+        if(heat_source_config.hysteresis_temperature_difference_is_set)
+        {
+            j_heat_source_config["hysteresis_temperature_difference"] =
+                heat_source_config.hysteresis_temperature_difference;
+        }
+
+        if(heat_source_config.maximum_temperature_is_set)
+        {
+            j_heat_source_config["maximum_temperature"] =
+                heat_source_config.maximum_temperature;
+        }
+
+        if(heat_source_config.minimum_temperature_is_set)
+        {
+            j_heat_source_config["minimum_temperature"] =
+                heat_source_config.minimum_temperature;
+        }
+
+        if(heat_source_config.maximum_setpoint_is_set)
+        {
+            j_heat_source_config["maximum_setpoint"] =
+                heat_source_config.maximum_setpoint;
+        }
+
         j_heat_source_configs.push_back(j_heat_source_config);
     }
 
@@ -703,7 +727,7 @@ void HPWH::to_json(
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
-    if (perf.performance_points.size() > 0)
+    if(perf.performance_points_is_set)
     {
         nlohmann::json j_perf_points;
         for (auto& perf_point : perf.performance_points)
@@ -717,7 +741,7 @@ void HPWH::to_json(
         }
         j_perf["performance_points"] = j_perf_points;
     }
-    else
+    else if(perf.performance_map_is_set)
     {
         nlohmann::json j_perf_map;
 
@@ -736,6 +760,35 @@ void HPWH::to_json(
         j_perf_map["lookup_variables"] = j_lookup_vars;
 
         j_perf["performance_map"] = j_perf_map;
+    }
+    if(perf.coil_configuration_is_set)
+    {
+        switch (perf.coil_configuration)
+        {
+        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
+        {
+            j_perf["coil_configuration"] = "WRAPPED";
+            break;
+        }
+        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
+        {
+            j_perf["coil_configuration"] = "SUBMERGED";
+            break;
+        }
+        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
+        {
+            j_perf["coil_configuration"] = "EXTERNAL";
+            break;
+        }
+        default:
+        {
+        }
+        }
+    }
+
+    if (perf.standby_power_is_set)
+    {
+        j_perf["standby_power"]  = perf.standby_power;
     }
 
     j["performance"] = j_perf;
@@ -788,6 +841,28 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatin
     if (tempLogic.logic_distribution_is_set)
     {
         j["logic_distribution"] = tempLogic.logic_distribution;
+    }
+    if (tempLogic.activates_standby_is_set)
+    {
+        j["activates_standby"] = true;
+    }
+    if (tempLogic.tank_node_specification_is_set)
+    {
+        switch(tempLogic.tank_node_specification)
+        {
+        case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+        {
+            j["tank_node_specification"] = "TOP_NODE";
+            break;
+        }
+        case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+        {
+            j["tank_node_specification"] = "BOTTOM_NODE";
+        }
+        default:
+        {
+        }
+        }
     }
 }
 
