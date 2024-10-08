@@ -14,12 +14,16 @@ def simulate(model_spec, model_name, test_name, build_dir):
     os.chdir("../../test")
      
     app_cmd = os.path.join(abs_build_dir, 'src', 'hpwh', 'hpwh')
+    
     output_dir = os.path.join(abs_build_dir, 'test', 'output')
+    
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    	
     run_list = [app_cmd, 'run', '-s', model_spec, '-m', model_name, '-t', test_name, '-d', output_dir]
     print(run_list)
-
+    
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
-    print("result: " + result.stdout)
 
     os.chdir(orig_dir)
 
