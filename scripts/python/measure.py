@@ -5,35 +5,31 @@ from pathlib import Path
 
 
 #
-def measure(repo_path, model_spec, model_name, results_file):
-    orig_dir = str(Path.cwd())
-    os.chdir(os.path.join(repo_path, "test"))
+def measure(model_spec, model_name, build_dir):
 
-    app_path = os.path.join(repo_path, "build", "src", "hpwh", "hpwh")
-    output_path = os.path.join(repo_path, "build", "test", "output")
-
-    run_list = [app_path, 'measure', '-s', model_spec, '-m', model_name, '-d', output_path, '-r', results_file, '-n']
-    print(run_list)
+    app_cmd = os.path.join(build_dir, 'src', 'hpwh', 'hpwh')
+    output_dir = os.path.join(build_dir, "test", "output")
+    results_file = os.path.join(output_dir, "results.txt")
+    run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_file, '-n']
 
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
     print("result: " + result.stdout)
 
-    os.chdir(orig_dir)
 
 # main
 if __name__ == "__main__":
     n_args = len(sys.argv) - 1
 
-    if n_args == 5:
-        repo_path = sys.argv[1]
-        model_spec = sys.argv[2]
-        model_name = sys.argv[3]
-        results_file = sys.argv[4]
+    if n_args == 7:
+        model_spec = sys.argv[1]
+        model_name = sys.argv[2]
+        build_dir = sys.argv[3]
 
-        measure(repo_path, model_spec, model_name, results_file)
+        measure(model_spec, model_name, build_dir)
 
     else:
         print('measure arguments:')
-        print('1. path to root of repo')
-        print('2. model specification (Preset or File)')
-        print('3. model name')
+        print('1. model specification (Preset or File)')
+        print('2. model name')
+        print('3. build directory')
+
