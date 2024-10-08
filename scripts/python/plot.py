@@ -155,7 +155,7 @@ def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variab
     )
 
 #
-def plot(measured_path, simulated_path, output_path):
+def plot(measured_path, simulated_path, plot_path):
     power_col_label_meas = "Power_W"
     power_col_label_sim = "Power_W"
 
@@ -248,7 +248,7 @@ def plot(measured_path, simulated_path, output_path):
             ):
                 plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
 
-    plot.write_html_plot(output_path)
+    plot.write_html_plot(plot_path)
    
     # return energy string
     energy_data = {}
@@ -262,10 +262,10 @@ if __name__ == "__main__":
     if n_args == 3:
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
-        output_path = Path(sys.argv[3])
+        plot_path = Path(sys.argv[3])
         #print(plot(measured_path, simulated_path, output_path))
     else:
         sys.exit(
-            "Incorrect number of arguments. Must be four: Measured Path, Simulated Path, Output Path, (Energy Path)"
+            "Incorrect number of arguments. Must be three: Measured Path, Simulated Path, Plot Path"
         )
     

@@ -5,14 +5,15 @@ from pathlib import Path
 
 
 #
-def simulate(repo_path, model_spec, model_name, test_name, dest_path):
+def simulate(model_spec, model_name, test_name, build_dir):
     orig_dir = str(Path.cwd())
-    os.chdir(os.path.join(repo_path, "test"))
+    
+    test_dir = "../../test"
+    os.chdir(test_dir)
 
-    app_path = os.path.join(repo_path, "build", "src", "hpwh", "hpwh")
-
-    run_list = [app_path, 'run', '-s', model_spec, '-m', model_name, '-t', test_name, '-d', dest_path]
-    print(run_list)
+    app_cmd = os.path.join(build_dir, 'src', 'hpwh' 'hpwh')
+    output_dir = os.path.join(build_dir, 'test', 'output')
+    run_list = [app_cmd, 'run', '-s', model_spec, '-m', model_name, '-t', test_name, '-d', output_dir]
 
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
     print("result: " + result.stdout)
@@ -23,20 +24,18 @@ def simulate(repo_path, model_spec, model_name, test_name, dest_path):
 if __name__ == "__main__":
     n_args = len(sys.argv) - 1
 
-    if n_args == 5:
-        repo_path = sys.argv[1]
-        model_spec = sys.argv[2]
-        model_name = sys.argv[3]
-        test_name = sys.argv[4]
-        dest_path = sys.argv[5]
+    if n_args == 6:
+        model_spec = sys.argv[1]
+        model_name = sys.argv[2]
+        test_name = sys.argv[3]
+        build_dir = sys.argv[5]
 
-        simulate(repo_path, model_spec, model_name, test_name, dest_path)
+        simulate(model_spec, model_name, test_name, build_dir)
 
 
     else:
         print('run_simulation arguments:')
-        print('1. path to root of repo')
-        print('2. model specification (Preset or File)')
-        print('3. model name')
-        print('4. test name')
-        print('5. destination path')
+        print('1. model specification (Preset or File)')
+        print('2. model name')
+        print('3. test name')
+        print('4. build directory')

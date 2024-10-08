@@ -12,24 +12,24 @@ from json import dumps
 PORT = 8000
 
 
-def do_test_and_plot(model_spec, model_name, test_name, plot_name, measurements_name):
-    return main.call_test_and_plot(model_spec, model_name, test_name, plot_name, measurements_name)
+def do_test(model_spec, model_name, test_name, build_dir):
+    return main.call_test(model_spec, model_name, test_name, build_dir)
 
-def do_measure(model_spec, model_name):
-    main.call_measure(model_spec, model_name)
+def do_measure(model_spec, model_name, build_dir):
+    main.call_measure(model_spec, model_name, build_dir)
     return 'do_measure done'
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path.startswith('/test_and_plot'):
+        if self.path.startswith('/test'):
             query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-            model_spec = query_components.get('arg1', [None])[0]
-            model_name = query_components.get('arg2', [None])[0]
-            test_name = query_components.get('arg3', [None])[0]
-            plot_name = query_components.get('arg4', [None])[0]
-            measurements_name = query_components.get('arg5', [None])[0]
 
-            response = {"energy_data": do_test_and_plot(model_spec, model_name, test_name, plot_name, measurements_name)}
+            model_spec = query_components.get('model_spec', [None])[0]
+            model_name = query_components.get('model_name', [None])[0]
+            test_name = query_components.get('test_name', [None])[0]
+            build_dir = query_components.get('build_dir', [None])[0]
+            
+            response = {"energy_data": do_test(model_spec, model_name, test_name, build_dir)}
             
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -43,10 +43,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
         elif self.path.startswith('/measure'):
             query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-            model_spec = query_components.get('arg1', [None])[0]
-            model_name = query_components.get('arg2', [None])[0]
-
-            do_measure(model_spec, model_name)
+            model_spec = query_components.get('model_spec', [None])[0]
+            model_name = query_components.get('model_name', [None])[0]
+            build_dir= query_components.get('build_dir', [None])[0]
+          
+            do_measure(model_spec, model_name, build_dir)
             
             self.send_response(200)
             self.send_header("Content-type", "text/html")
