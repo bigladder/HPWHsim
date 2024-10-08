@@ -11,7 +11,8 @@ def measure(model_spec, model_name, build_dir):
     output_dir = os.path.join(build_dir, "test", "output")
     results_file = os.path.join(output_dir, "results.txt")
     run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_file, '-n']
-
+    print(run_list)
+    
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
     print("result: " + result.stdout)
 
@@ -32,4 +33,3 @@ if __name__ == "__main__":
         print('1. model specification (Preset or File)')
         print('2. model name')
         print('3. build directory')
-
