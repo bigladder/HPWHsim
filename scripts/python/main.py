@@ -21,6 +21,8 @@ def call_test(model_spec, model_name, test_name, build_dir):
     os.chdir(orig_dir)
     
     output_dir = os.path.join(abs_build_dir, "test", "output") 
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     measured_path = os.path.join(abs_test_dir, test_name, "measured.csv")   
     simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
     plot_path =  os.path.join(output_dir, "plot.html")         
