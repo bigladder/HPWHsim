@@ -159,9 +159,33 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 
+set(AeroThermSizes 50 65 80)
+set(AeroTherm2023_50_Tests
+        RE2H50_UEF50
+        RE2H50_UEF67
+        )
+set(AeroTherm2023_65_Tests
+        RE2H65_UEF50
+        RE2H65_UEF67
+        )
+set(AeroTherm2023_80_Tests
+        RE2H80_UEF50
+        RE2H80_UEF67
+        )
+set(plotTest File AquaThermAire villara_24hr67)
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
+
+cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+
+if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
+    message(STATUS "Installing python packages")
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
+    message("Poetry success? ${result} ${errors} ${outputs}")
+    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+endif ()
 
 #Tests for successful runs
 function(add_model_test)
@@ -194,6 +218,27 @@ function(add_model_test)
     add_test(NAME "${TEST_TITLE}" COMMAND $<TARGET_FILE:hpwh> ${hpwhArgs}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
+
+endfunction()
+
+#Plot test
+function(add_plot_test)
+    set(options)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measured.csv")
+    if (EXISTS ${measurementsPath})
+        set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
+        set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
+        set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
+
+        set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/plot.py" ${measurementsPath} ${simulationPlotPath} ${simulationOutputPath} )
+        set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
+    endif ()
+
 endfunction()
 
 foreach (test ${testNames})
@@ -328,6 +373,18 @@ foreach (test ${stateOfChargeTests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm2023 model
+foreach (size ${AeroThermSizes})
+    set(model AeroTherm2023_${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (test)
+endforeach (size)
+
+add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")

@@ -282,7 +282,10 @@ class HPWH : public Courier::Sender
 
         MODELS_AquaThermAire = 400, // heat exchanger model
 
-        MODELS_GenericUEF217 = 410
+        MODELS_GenericUEF217 = 410,
+        MODELS_AeroTherm2023_50 = 411,
+        MODELS_AeroTherm2023_65 = 412,
+        MODELS_AeroTherm2023_80 = 413
     };
 
     /// specifies the modes for writing output
@@ -1058,6 +1061,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
+        std::ostream* outputStream = &std::cout;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
