@@ -536,18 +536,21 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
     {
         perf.coil_configuration =
             data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED;
+        perf.coil_configuration_is_set = true;
         break;
     }
     case COIL_CONFIG::CONFIG_WRAPPED:
     {
         perf.coil_configuration =
             data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED;
+        perf.coil_configuration_is_set = true;
         break;
     }
     case COIL_CONFIG::CONFIG_EXTERNAL:
     {
         perf.coil_configuration =
             data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL;
+        perf.coil_configuration_is_set = true;
         break;
     }
     default:

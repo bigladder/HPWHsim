@@ -321,7 +321,8 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         {
             temp = temp_based_logic->differential_temperature;
         }
-        else break;
+        else
+            break;
 
         std::vector<HPWH::NodeWeight> nodeWeights = {};
 
@@ -345,7 +346,8 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
                 break;
             }
             default:
-            {}
+            {
+            }
             }
         }
         if (temp_based_logic->logic_distribution_is_set)
@@ -443,11 +445,9 @@ void HPWH::TempBasedHeatingLogic::to(
                 heating_logic.comparison_type);
     }
 
-    if(description == "standby")
+    if (description == "standby")
     {
-        checkTo(true,
-                logic.activates_standby_is_set,
-                logic.activates_standby);
+        checkTo(true, logic.activates_standby_is_set, logic.activates_standby);
 
         checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
                 logic.tank_node_specification_is_set,
