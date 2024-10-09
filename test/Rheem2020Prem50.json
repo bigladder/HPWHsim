@@ -5,8 +5,8 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "companion_heat_source_label": "compressor",
-        "followed_by_heat_source_label": "compressor",
+        "companion_heat_source_label": "heat source 2",
+        "followed_by_heat_source_label": "heat source 2",
         "heat_distribution": [
           0.0,
           0.0,
@@ -31,7 +31,7 @@
         },
         "heat_source_type": "RESISTANCE",
         "is_vip": true,
-        "label": "resistiveElementTop",
+        "label": "heat source 0",
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "turn_on_logic": [
@@ -53,8 +53,8 @@
         ]
       },
       {
-        "backup_heat_source_label": "compressor",
-        "followed_by_heat_source_label": "compressor",
+        "backup_heat_source_label": "heat source 2",
+        "followed_by_heat_source_label": "heat source 2",
         "heat_distribution": [
           1.0,
           0.0,
@@ -79,7 +79,7 @@
         },
         "heat_source_type": "RESISTANCE",
         "hysteresis_temperature_difference": 2.2222222222222223,
-        "label": "resistiveElementBottom",
+        "label": "heat source 1",
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "shut_off_logic": [
@@ -107,7 +107,7 @@
         ]
       },
       {
-        "backup_heat_source_label": "resistiveElementBottom",
+        "backup_heat_source_label": "heat source 1",
         "heat_distribution": [
           0.2,
           0.2,
@@ -128,39 +128,82 @@
           },
           "performance": {
             "coil_configuration": "WRAPPED",
-            "performance_points": [
-              {
-                "cop_coefficients": [
-                  6.7,
-                  -0.0087,
-                  -0.0002
+            "performance_map": {
+              "grid_variables": {
+                "evaporator_environment_temperature": [
+                  283.15,
+                  292.59444444444443
                 ],
-                "heat_source_temperature": 283.15,
-                "input_power_coefficients": [
-                  250.0,
-                  -1.0883,
-                  0.0176
+                "heat_source_temperature": [
+                  273.15,
+                  283.15,
+                  293.15,
+                  303.15,
+                  313.15,
+                  323.15,
+                  333.15,
+                  343.15,
+                  353.15,
+                  363.15,
+                  373.15
                 ]
               },
-              {
-                "cop_coefficients": [
-                  7.0,
-                  -0.0168,
-                  -0.0001
+              "lookup_variables": {
+                "cop": [
+                  6.2168,
+                  5.765000000000001,
+                  5.1836,
+                  4.4726,
+                  3.632,
+                  2.6618,
+                  1.5620000000000003,
+                  0.33259999999999934,
+                  -1.0264000000000006,
+                  -2.5150000000000006,
+                  -4.133199999999999,
+                  6.359999999999999,
+                  5.91,
+                  5.3952,
+                  4.815600000000001,
+                  4.171200000000002,
+                  3.462000000000001,
+                  2.6880000000000015,
+                  1.8492000000000022,
+                  0.9456000000000035,
+                  -0.022799999999996157,
+                  -1.0559999999999947
                 ],
-                "heat_source_temperature": 292.59444444444443,
-                "input_power_coefficients": [
-                  275.0,
-                  -0.6631,
-                  0.01571
+                "input_power": [
+                  233.1968,
+                  239.585,
+                  257.378,
+                  286.5758,
+                  327.1784,
+                  379.18580000000003,
+                  442.59799999999996,
+                  517.415,
+                  603.6368000000002,
+                  701.2634,
+                  810.2948,
+                  269.86784000000006,
+                  281.12000000000006,
+                  302.55224000000004,
+                  334.16456000000005,
+                  375.95696000000004,
+                  427.9294400000001,
+                  490.08200000000005,
+                  562.4146400000001,
+                  644.92736,
+                  737.6201599999999,
+                  840.4930399999998
                 ]
               }
-            ]
+            }
           }
         },
         "heat_source_type": "CONDENSER",
         "hysteresis_temperature_difference": 0.5555555555555556,
-        "label": "compressor",
+        "label": "heat source 2",
         "maximum_temperature": 322.0388888888889,
         "minimum_temperature": 275.92777777777775,
         "turn_on_logic": [

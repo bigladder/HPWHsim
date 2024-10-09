@@ -57,13 +57,11 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     }
     else if (sSpecType_mod == "File")
     {
-        std::string inputFile = sModelName + ".txt";
-        hpwh.initFromFile(inputFile);
+        hpwh.initFromFile(sModelName);
     }
     else if (sSpecType_mod == "Json")
     {
         auto inputFile = sModelName + ".json";
-
         std::ifstream inputFILE(inputFile);
         nlohmann::json j = nlohmann::json::parse(inputFILE);
 

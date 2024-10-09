@@ -209,6 +209,12 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
         perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
             Btwxt::RegularGridInterpolator(perfGrid, perfGridValues));
         useBtwxtGrid = true;
+
+        perfRGI->set_axis_interpolation_method(0, Btwxt::InterpolationMethod::linear);
+        perfRGI->set_axis_extrapolation_method(0, Btwxt::ExtrapolationMethod::linear);
+
+        perfRGI->set_axis_extrapolation_method(1, Btwxt::ExtrapolationMethod::linear);
+        perfRGI->set_axis_interpolation_method(1, Btwxt::InterpolationMethod::cubic);
     }
 
     if (perf.use_defrost_map_is_set && perf.use_defrost_map)
@@ -477,7 +483,6 @@ void HPWH::HeatSource::getCapacityFromMap(double environmentT_C,
 void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
                                         std::vector<std::vector<double>>& tempGridValues) const
 {
-
     if (perfMap.size() < 2)
         return;
 
@@ -493,11 +498,14 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGrid.push_back(envTemps_K);
 
     std::vector<double> heatSourceTemps_K = {};
-    heatSourceTemps_K.reserve(11);
-    for (double T_C = 0.; T_C <= 100.; T_C += 10.)
+    heatSourceTemps_K.reserve(101);
+
+    double T_C = 0.;
+    do
     {
         heatSourceTemps_K.push_back(C_TO_K(T_C));
-    }
+        T_C += 10.;
+    } while (T_C <= 100.);
     tempGrid.push_back(heatSourceTemps_K);
 
     std::size_t nVals = envTemps_K.size() * heatSourceTemps_K.size();
@@ -596,7 +604,7 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        if (false) // convert to grid
+        if (true) // convert to grid
         {
             convertMapToGrid(tempGrid, tempGridValues);
 
