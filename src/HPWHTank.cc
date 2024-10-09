@@ -60,7 +60,8 @@ void HPWH::Tank::to(data_model::rstank_ns::RSTANK& rstank) const
     checkTo(volume_L / 1000., perf.volume_is_set, perf.volume);
     checkTo(UA_kJperHrC, perf.ua_is_set, perf.ua);
     checkTo(fittingsUA_kJperHrC, perf.fittings_ua_is_set, perf.fittings_ua);
-    checkTo(mixBelowFractionOnDraw,
+    double out_mixBelowFractionOnDraw = mixesOnDraw ? mixBelowFractionOnDraw : 0.;
+    checkTo(out_mixBelowFractionOnDraw,
             perf.bottom_fraction_of_tank_mixing_on_draw_is_set,
             perf.bottom_fraction_of_tank_mixing_on_draw);
     checkTo(volumeFixed, perf.fixed_volume_is_set, perf.fixed_volume);

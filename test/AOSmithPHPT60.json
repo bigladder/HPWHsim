@@ -1,0 +1,234 @@
+{
+  "metadata": {
+    "schema": "RSINTEGRATEDWATERHEATER"
+  },
+  "performance": {
+    "heat_source_configurations": [
+      {
+        "followed_by_heat_source_label": "compressor",
+        "heat_distribution": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 4250.0
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "is_vip": true,
+        "label": "resistiveElementTop",
+        "maximum_temperature": 373.15,
+        "minimum_temperature": 0.0,
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 13.88888888888889,
+              "logic_distribution": [
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "heating_logic_type": "TEMP_BASED"
+          }
+        ]
+      },
+      {
+        "backup_heat_source_label": "resistiveElementBottom",
+        "followed_by_heat_source_label": "resistiveElementBottom",
+        "heat_distribution": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSCONDENSERWATERHEATSOURCE"
+          },
+          "performance": {
+            "coil_configuration": "WRAPPED",
+            "performance_map": {
+              "grid_variables": {
+                "evaporator_environment_temperature": [
+                  281.4833333333333,
+                  292.59444444444443
+                ],
+                "heat_source_temperature": [
+                  273.15,
+                  283.15,
+                  293.15,
+                  303.15,
+                  313.15,
+                  323.15,
+                  333.15,
+                  343.15,
+                  353.15,
+                  363.15,
+                  373.15
+                ]
+              },
+              "lookup_variables": {
+                "cop": [
+                  4.139359999999999,
+                  3.7249999999999983,
+                  3.304159999999999,
+                  2.8768399999999987,
+                  2.4430399999999994,
+                  2.0027599999999994,
+                  1.5559999999999996,
+                  1.1027599999999997,
+                  0.6430399999999997,
+                  0.17683999999999975,
+                  -0.2958400000000008,
+                  5.367276800000002,
+                  4.721750000000002,
+                  4.102596800000001,
+                  3.509817200000001,
+                  2.9434112000000017,
+                  2.4033788000000005,
+                  1.889720000000001,
+                  1.4024348000000004,
+                  0.9415232000000009,
+                  0.5069852000000004,
+                  0.09882080000000093
+                ],
+                "input_power": [
+                  564.2927999999998,
+                  625.4999999999999,
+                  691.3728000000002,
+                  761.9112,
+                  837.1151999999998,
+                  916.9847999999998,
+                  1001.52,
+                  1090.7207999999998,
+                  1184.5871999999997,
+                  1283.1191999999996,
+                  1386.3167999999998,
+                  606.0624,
+                  658.5,
+                  722.3424,
+                  797.5896,
+                  884.2416000000001,
+                  982.2984000000002,
+                  1091.7600000000002,
+                  1212.6264000000003,
+                  1344.8976000000005,
+                  1488.5736000000004,
+                  1643.6544000000004
+                ]
+              }
+            }
+          }
+        },
+        "heat_source_type": "CONDENSER",
+        "hysteresis_temperature_difference": 2.2222222222222223,
+        "label": "compressor",
+        "maximum_temperature": 322.0388888888889,
+        "minimum_temperature": 280.3722222222222,
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 24.22222222222222,
+              "logic_distribution": [
+                1.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMP_BASED"
+          },
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "activates_standby": true,
+              "differential_temperature": 13.222222222222221,
+              "tank_node_specification": "TOP_NODE"
+            },
+            "heating_logic_type": "TEMP_BASED"
+          }
+        ]
+      },
+      {
+        "backup_heat_source_label": "compressor",
+        "heat_distribution": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 2000.0
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "hysteresis_temperature_difference": 2.2222222222222223,
+        "label": "resistiveElementBottom",
+        "maximum_temperature": 373.15,
+        "minimum_temperature": 0.0,
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 24.22222222222222,
+              "logic_distribution": [
+                1.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMP_BASED"
+          }
+        ]
+      }
+    ],
+    "tank": {
+      "metadata": {
+        "schema": "RSTANK"
+      },
+      "performance": {
+        "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "number_of_nodes": 12,
+        "ua": 7.31,
+        "volume": 0.21580000000000002,
+        "volume_fixed": true
+      }
+    }
+  }
+}
