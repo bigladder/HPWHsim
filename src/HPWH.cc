@@ -4115,6 +4115,7 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
         setSetpoint(testOptions.setpointT_C, UNITS_C);
     }
 
+    resetTankToSetpoint();
     DRMODES drMode = DR_ALLOW;
     bool isDrawing = false;
     bool done = false;
@@ -4169,7 +4170,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    0.,                      // inlet-2 volume (L)
                    inletT_C,                // inlet-2 Temp (C)
                    NULL);                   // no extra heat
-
     }
 }
 
@@ -4194,6 +4194,7 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
         setSetpoint(testOptions.setpointT_C, UNITS_C);
     }
 
+    prepForTest(testOptions);
     double tankT_C = getAverageTankTemp_C();
     double maxTankT_C = tankT_C;
     double maxOutletT_C = 0.;
@@ -4214,8 +4215,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     bool isDrawing = false;
     bool done = false;
     int step = 0;
-
-    prepForTest(testOptions);
 
     bool firstDraw = true;
     isDrawing = true;
@@ -4242,7 +4241,6 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
                    NULL);                   // no extra heat
 
         tankT_C = getAverageTankTemp_C();
-
         switch (step)
         {
         case 0: // drawing

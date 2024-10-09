@@ -127,6 +127,7 @@
             "schema": "RSCONDENSERWATERHEATSOURCE"
           },
           "performance": {
+            "coil_configuration": "WRAPPED",
             "performance_points": [
               {
                 "cop_coefficients": [
