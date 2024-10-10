@@ -1,7 +1,24 @@
 {
-  "metadata": {
-    "schema": "RSINTEGRATEDWATERHEATER"
-  },
+    "metadata": {
+        "data_model": "ASHRAE205",
+        "schema_version": "1.0.0",
+        "schema_author": "",
+        "schema": "RSINTEGRATEDWATERHEATER",
+        "description": "AquaThermAire, 50-gallon integrated heat-pump water heater",
+        "id": "6998e64f-7824-414c-9d48-57e43ee47071",
+        "timestamp": "2022-11-23T11:45Z",
+        "data_version": 1,
+        "data_source": "",
+        "disclaimer": "",
+        "notes": ""
+    },
+    "description": {
+        "product_information": {
+            "manufacturer": "",
+            "model": "AquaThermAire",
+            "model_number": "XXXXXX"
+        }
+    },
   "performance": {
     "heat_source_configurations": [
       {
@@ -167,11 +184,12 @@
       },
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+        "fittings_ua": 0.0,
+        "fixed_volume": true,
         "heat_exchanger_effectiveness": 0.93,
         "number_of_nodes": 12,
-        "ua": 10.35,
-        "volume": 0.205926304,
-        "volume_fixed": true
+        "ua": 2.875,
+        "volume": 0.205926304
       }
     }
   }

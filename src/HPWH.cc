@@ -4016,6 +4016,9 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     auto& rstank = performance.tank;
     tank->from(rstank);
 
+    setpointFixed = performance.fixed_setpoint;
+    checkFrom(setpointFixed, performance.fixed_setpoint_is_set, performance.fixed_setpoint, false);
+
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
@@ -4085,6 +4088,11 @@ void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& r
 
     auto& rstank = performance.tank;
     tank->to(rstank);
+
+    checkTo(setpointFixed,
+            performance.fixed_setpoint_is_set,
+            performance.fixed_setpoint, setpointFixed);
+
 
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;

@@ -580,6 +580,11 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
 
     auto& tank = perf.tank;
 
+    if (perf.fixed_setpoint)
+    {
+        j_perf["fixed_setpoint"] = true;
+    }
+
     nlohmann::json j_tank;
     to_json(tank, j_tank);
     j_perf["tank"] = j_tank;

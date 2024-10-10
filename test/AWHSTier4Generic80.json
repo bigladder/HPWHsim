@@ -1,29 +1,12 @@
 {
-    "metadata": {
-        "data_model": "ASHRAE205",
-        "schema_version": "1.0.0",
-        "schema_author": "",
-        "schema": "RSINTEGRATEDWATERHEATER",
-        "description": "AOSmith, 80-gallon integrated heat-pump water heater",
-        "id": "6998e64f-7824-414c-9d48-57e43ee47071",
-        "timestamp": "2022-11-23T11:45Z",
-        "data_version": 1,
-        "data_source": "",
-        "disclaimer": "",
-        "notes": ""
-    },
-    "description": {
-        "product_information": {
-            "manufacturer": "AOSmith",
-            "model": "AOSmithHPTU80",
-            "model_number": "XXXXXX"
-        }
-    },
+  "metadata": {
+    "schema": "RSINTEGRATEDWATERHEATER"
+  },
   "performance": {
     "heat_source_configurations": [
       {
-        "companion_heat_source_label": "heat source 2",
-        "followed_by_heat_source_label": "heat source 1",
+        "companion_heat_source_label": "compressor",
+        "followed_by_heat_source_label": "compressor",
         "heat_distribution": [
           0.0,
           0.0,
@@ -48,18 +31,15 @@
         },
         "heat_source_type": "RESISTANCE",
         "is_vip": true,
-        "label": "heat source 0",
+        "label": "resistiveElementTop",
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "absolute_temperature": 313.7055555555555,
+              "differential_temperature": 6.666666666666666,
               "logic_distribution": [
-                0.0,
-                0.0,
-                0.0,
                 0.0,
                 0.0,
                 1.0
@@ -70,8 +50,8 @@
         ]
       },
       {
-        "backup_heat_source_label": "heat source 2",
-        "followed_by_heat_source_label": "heat source 2",
+        "backup_heat_source_label": "compressor",
+        "followed_by_heat_source_label": "compressor",
         "heat_distribution": [
           1.0,
           0.0,
@@ -96,14 +76,14 @@
         },
         "heat_source_type": "RESISTANCE",
         "hysteresis_temperature_difference": 1.1111111111111112,
-        "label": "heat source 1",
+        "label": "resistiveElementBottom",
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
         "shut_off_logic": [
           {
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
-              "absolute_temperature": 310.92777777777775,
+              "absolute_temperature": 299.81666666666666,
               "logic_distribution": [
                 1.0,
                 0.0,
@@ -121,16 +101,33 @@
             },
             "heating_logic_type": "TEMP_BASED"
           }
+        ],
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 33.333333333333336,
+              "logic_distribution": [
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMP_BASED"
+          }
         ]
       },
       {
-        "backup_heat_source_label": "heat source 1",
+        "backup_heat_source_label": "resistiveElementBottom",
         "heat_distribution": [
-          0.333333333333,
-          0.333333333333,
-          0.333333333333,
-          0.0,
-          0.0,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
           0.0,
           0.0,
           0.0,
@@ -149,8 +146,7 @@
               "grid_variables": {
                 "evaporator_environment_temperature": [
                   283.15,
-                  294.26111111111106,
-                  308.15
+                  292.8722222222222
                 ],
                 "heat_source_temperature": [
                   273.15,
@@ -168,74 +164,52 @@
               },
               "lookup_variables": {
                 "cop": [
-                  5.066,
-                  4.58,
-                  4.093999999999999,
-                  3.6079999999999997,
-                  3.122,
-                  2.6359999999999997,
-                  2.15,
-                  1.6639999999999997,
-                  1.178,
-                  0.6920000000000002,
-                  0.20599999999999952,
-                  6.485999999999997,
-                  5.819999999999998,
-                  5.153999999999998,
-                  4.487999999999998,
-                  3.8219999999999983,
-                  3.1559999999999997,
-                  2.4899999999999993,
-                  1.8239999999999994,
-                  1.1580000000000004,
-                  0.49200000000000044,
-                  -0.1739999999999987,
-                  9.308,
-                  8.299999999999999,
-                  7.292,
-                  6.284,
-                  5.276,
-                  4.268,
-                  3.26,
-                  2.251999999999999,
-                  1.2439999999999998,
-                  0.23599999999999888,
-                  -0.7720000000000002
+                  5.8446,
+                  5.2335,
+                  4.6224,
+                  4.0113,
+                  3.4002,
+                  2.7891000000000004,
+                  2.178,
+                  1.5668999999999995,
+                  0.9558,
+                  0.34469999999999956,
+                  -0.26639999999999997,
+                  7.4150800000000014,
+                  6.617500000000001,
+                  5.819920000000001,
+                  5.022340000000001,
+                  4.224760000000001,
+                  3.4271800000000003,
+                  2.6296000000000004,
+                  1.8320200000000002,
+                  1.03444,
+                  0.23686,
+                  -0.5607200000000001
                 ],
                 "input_power": [
-                  234.64,
-                  271.0,
-                  307.36,
-                  343.72,
-                  380.08000000000004,
-                  416.44,
-                  452.8,
-                  489.15999999999997,
-                  525.52,
-                  561.88,
-                  598.24,
-                  221.94000000000003,
-                  265.5,
-                  309.06,
-                  352.62,
-                  396.17999999999995,
-                  439.7399999999999,
-                  483.29999999999995,
-                  526.8599999999999,
-                  570.4199999999998,
-                  613.9799999999999,
-                  657.5399999999998,
-                  194.89999999999998,
-                  251.6,
-                  308.29999999999995,
-                  365.0,
-                  421.69999999999993,
-                  478.4,
-                  535.1,
-                  591.8,
-                  648.5,
-                  705.2,
-                  761.9
+                  197.78,
+                  237.65,
+                  277.52,
+                  317.39,
+                  357.26,
+                  397.13,
+                  437.0,
+                  476.87,
+                  516.74,
+                  556.61,
+                  596.48,
+                  195.54399999999998,
+                  239.95,
+                  284.356,
+                  328.762,
+                  373.168,
+                  417.57399999999996,
+                  461.98,
+                  506.386,
+                  550.792,
+                  595.198,
+                  639.604
                 ]
               }
             }
@@ -243,14 +217,14 @@
         },
         "heat_source_type": "CONDENSER",
         "hysteresis_temperature_difference": 0.5555555555555556,
-        "label": "heat source 2",
+        "label": "compressor",
         "maximum_temperature": 322.0388888888889,
-        "minimum_temperature": 278.7055555555555,
+        "minimum_temperature": 275.92777777777775,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 19.444444444444443,
+              "differential_temperature": 16.666666666666668,
               "logic_distribution": [
                 1.0,
                 0.0,
@@ -279,9 +253,9 @@
         "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
         "fittings_ua": 0.0,
         "fixed_volume": true,
-        "number_of_nodes": 24,
-        "ua": 2.5,
-        "volume": 0.2995
+        "number_of_nodes": 12,
+        "ua": 2.7777777777777777,
+        "volume": 0.285419914
       }
     }
   }
