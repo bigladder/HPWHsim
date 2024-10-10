@@ -597,7 +597,7 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
 
         std::vector<double> inputPowers_W = {};
         inputPowers_W.reserve(perfGridValues[0].size());
-        for (auto& inputPower: perfGridValues[0])
+        for (auto& inputPower : perfGridValues[0])
         {
             inputPowers_W.push_back(1000. * BTUperH_TO_KW(inputPower));
         }

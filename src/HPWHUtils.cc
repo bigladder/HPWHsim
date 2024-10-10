@@ -366,7 +366,7 @@ double convertUA_WperK(double value, const std::string& units)
 {
     if (units == "kJ_per_hC")
     {
-         value = 1000. * value / 3600.;
+        value = 1000. * value / 3600.;
     }
     return value;
 }
