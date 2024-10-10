@@ -594,7 +594,14 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
                 grid_vars.heat_source_temperature);
 
         auto& lookup_vars = map.lookup_variables;
-        checkTo(perfGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
+
+        std::vector<double> inputPowers_W = {};
+        inputPowers_W.reserve(perfGridValues[0].size());
+        for (auto& inputPower: perfGridValues[0])
+        {
+            inputPowers_W.push_back(1000. * BTUperH_TO_KW(inputPower));
+        }
+        checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
         checkTo(perfGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
 
         perf.performance_map_is_set = true;

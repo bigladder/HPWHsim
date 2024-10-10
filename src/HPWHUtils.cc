@@ -366,7 +366,7 @@ double convertUA_WperK(double value, const std::string& units)
 {
     if (units == "kJ_per_hC")
     {
-        // value = GAL_TO_L(value);
+         value = 1000. * value / 3600.;
     }
     return value;
 }
@@ -540,6 +540,7 @@ void HPWH::fromProto(nlohmann::json& j)
         auto& tankperf = tank.at("performance");
         setVolume_m3(tankperf, "volume");
         setUA_WperK(tankperf, "ua");
+        setUA_WperK(tankperf, "fittings_ua");
     }
 
     auto& heat_source_configs = perf.at("heat_source_configurations");
@@ -708,8 +709,9 @@ void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& 
     j_perf["number_of_nodes"] = perf.number_of_nodes;
     j_perf["volume"] = perf.volume;
     j_perf["ua"] = perf.ua;
+    j_perf["fittings_ua"] = perf.fittings_ua;
     j_perf["bottom_fraction_of_tank_mixing_on_draw"] = perf.bottom_fraction_of_tank_mixing_on_draw;
-    j_perf["volume_fixed"] = perf.fixed_volume;
+    j_perf["fixed_volume"] = perf.fixed_volume;
 
     if (perf.heat_exchanger_effectiveness_is_set)
     {
