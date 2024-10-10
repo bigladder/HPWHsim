@@ -4006,6 +4006,17 @@ void HPWH::initFromFile(string modelName)
 
     checkInputs();
 }
+
+void HPWH::initFromJSON(string sModelName)
+{
+    auto sInputFileName = sModelName + ".json";
+    std::ifstream inputFile(sInputFileName);
+    nlohmann::json j = nlohmann::json::parse(inputFile);
+    data_model::init(get_courier());
+    data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+    data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
+    from(rswh);
+}
 #endif
 
 void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)

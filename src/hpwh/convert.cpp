@@ -33,22 +33,18 @@ CLI::App* add_convert(CLI::App& app)
 
 void convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir)
 {
-
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
-    if (sOutputDir != "")
-    {
-    }
-
     for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    if (sSpecType_mod.length() > 0)
-    {
-        sSpecType_mod[0] =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(sSpecType_mod[0])));
-    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
     HPWH hpwh;
     if (sSpecType_mod == "Preset")
@@ -59,20 +55,9 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     {
         hpwh.initFromFile(sModelName);
     }
-    else if (sSpecType_mod == "Json")
+    else if (sSpecType_mod == "JSON")
     {
-        auto inputFile = sModelName + ".json";
-        std::ifstream inputFILE(inputFile);
-        nlohmann::json j = nlohmann::json::parse(inputFILE);
-
-        //HPWH::fromProto(j);
-        //std::cout << j.dump(2) << std::endl;
-
-        data_model::init(hpwh.get_courier());
-        data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-        data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
-
-        hpwh.from(rswh);
+        hpwh.initFromJSON(sModelName);
     }
 
     data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;

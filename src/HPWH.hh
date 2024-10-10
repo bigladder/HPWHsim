@@ -461,6 +461,7 @@ class HPWH : public Courier::Sender
      * that we typically do when creating SEEM runs
      * Appropriate use of this function can be found in the documentation
      */
+    void initFromJSON(std::string sModelName);
 #endif
 
     void runOneStep(double drawVolume_L,
