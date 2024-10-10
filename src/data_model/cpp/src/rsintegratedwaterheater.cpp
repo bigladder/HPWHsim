@@ -310,7 +310,7 @@ namespace data_model  {
 			json_get<bool>(j, logger.get(), "uses_constant_mains", x.uses_constant_mains, x.uses_constant_mains_is_set, true);
 			json_get<double>(j, logger.get(), "constant_mains_temperature", x.constant_mains_temperature, x.constant_mains_temperature_is_set, true);
 		}
-		void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) {
+		void SoCBasedHeatingLogic::initialize(const nlohmann::json& j) { from_json(j, *this);
 		}
 		const std::string_view SoCBasedHeatingLogic::decision_point_units = "";
 
