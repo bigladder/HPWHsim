@@ -1,6 +1,23 @@
 {
   "metadata": {
-    "schema": "RSINTEGRATEDWATERHEATER"
+      "data_model": "ASHRAE205",
+      "schema_version": "1.0.0",
+      "schema_author": "",
+      "schema": "RSINTEGRATEDWATERHEATER",
+      "description": "Rheem 50-gallon integrated heat-pump water heater",
+      "id": "6998e64f-7824-414c-9d48-57e43ee47071",
+      "timestamp": "2022-11-23T11:45Z",
+      "data_version": 1,
+      "data_source": "",
+      "disclaimer": "",
+      "notes": ""
+  },
+  "description": {
+      "product_information": {
+          "manufacturer": "Rheem",
+          "model": "Rheem2020Build50",
+          "model_number": "XXXXXX"
+      }
   },
   "performance": {
     "heat_source_configurations": [
@@ -237,10 +254,11 @@
       },
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "fittings_ua": 0.0,
+        "fixed_volume": true,
         "number_of_nodes": 12,
-        "ua": 9.5,
-        "volume": 0.136653301,
-        "volume_fixed": true
+        "ua": 2.638888888888889,
+        "volume": 0.136653301
       }
     }
   }
