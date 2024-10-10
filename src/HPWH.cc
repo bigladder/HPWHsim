@@ -4091,8 +4091,8 @@ void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& r
 
     checkTo(setpointFixed,
             performance.fixed_setpoint_is_set,
-            performance.fixed_setpoint, setpointFixed);
-
+            performance.fixed_setpoint,
+            setpointFixed);
 
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;
