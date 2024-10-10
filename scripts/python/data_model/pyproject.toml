@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "build-data-model"
+version = "0.1.0"
+description = ""
+authors = ["Big Ladder Software"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+#lattice = {path = "../lattice", develop = true} # "0.1.4"
+lattice = {git = "https://github.com/bigladder/lattice.git", branch = "add-basic-build-support"}
+
+[tool.poetry.dev-dependencies]
+doit = "0.36.0"
+tomli = "2.0.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
