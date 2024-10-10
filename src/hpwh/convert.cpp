@@ -65,7 +65,7 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
         std::ifstream inputFILE(inputFile);
         nlohmann::json j = nlohmann::json::parse(inputFILE);
 
-        HPWH::fromProto(j);
+        //HPWH::fromProto(j);
         //std::cout << j.dump(2) << std::endl;
 
         data_model::init(hpwh.get_courier());
