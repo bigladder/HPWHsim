@@ -264,10 +264,11 @@
       },
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "fittings_ua": 0.0,
+        "fixed_volume": true,
         "number_of_nodes": 12,
-        "ua": 6.5,
-        "volume": 0.17034345,
-        "volume_fixed": true
+        "ua": 1.8055555555555556,
+        "volume": 0.17034345
       }
     }
   }
