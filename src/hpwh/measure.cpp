@@ -52,6 +52,17 @@ void measure(const std::string& sSpecType,
 
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
+    {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
+
     if (sOutputDir != "")
     {
         standardTestOptions.saveOutput = true;
@@ -59,23 +70,6 @@ void measure(const std::string& sSpecType,
     }
     standardTestOptions.saveOutput = true;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
-
-    for (auto& c : sSpecType_mod)
-    {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    if (sSpecType_mod == "preset")
-    {
-        sSpecType_mod = "Preset";
-    }
-    else if (sSpecType_mod == "file")
-    {
-        sSpecType_mod = "File";
-    }
-    else if (sSpecType_mod == "json")
-    {
-        sSpecType_mod = "JSON";
-    }
 
     HPWH hpwh;
     if (sSpecType_mod == "Preset")
@@ -88,16 +82,7 @@ void measure(const std::string& sSpecType,
     }
     else if (sSpecType_mod == "JSON")
     {
-        auto inputFile = sModelName + ".json";
-
-        std::ifstream inputFILE(inputFile);
-        nlohmann::json j = nlohmann::json::parse(inputFILE);
-
-        data_model::init(hpwh.get_courier());
-        data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-        data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
-
-        hpwh.from(rswh);
+        hpwh.initFromJSON(sModelName);
     }
     else
     {

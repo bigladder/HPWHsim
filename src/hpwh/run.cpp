@@ -111,7 +111,18 @@ void run(const std::string& sSpecType,
         HPWH_doTempDepress = false;
     }
 
+    // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
+    {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
     // Parse the model
     newSetpoint = 0;
@@ -126,24 +137,11 @@ void run(const std::string& sSpecType,
     }
     else if (sSpecType_mod == "File")
     {
-
         hpwh.initFromFile(sModelName);
     }
     else if (sSpecType_mod == "JSON")
     {
-        auto inputFile = sModelName + ".json";
-
-        std::ifstream inputFILE(inputFile);
-        nlohmann::json j = nlohmann::json::parse(inputFILE);
-
-        HPWH::fromProto(j);
-        // std::cout << j.dump(2) << std::endl;
-
-        data_model::init(hpwh.get_courier());
-        data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-        data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
-
-        hpwh.from(rswh);
+        hpwh.initFromJSON(sModelName);
     }
     else
     {
