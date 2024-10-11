@@ -498,13 +498,13 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGrid.push_back(envTemps_K);
 
     std::vector<double> heatSourceTemps_K = {};
-    heatSourceTemps_K.reserve(101);
+    heatSourceTemps_K.reserve(3);
 
     double T_C = 0.;
     do
     {
         heatSourceTemps_K.push_back(C_TO_K(T_C));
-        T_C += 10.;
+        T_C += 50.;
     } while (T_C <= 100.);
     tempGrid.push_back(heatSourceTemps_K);
 
