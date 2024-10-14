@@ -298,6 +298,8 @@ class HPWH : public Courier::Sender
         MODELS_GenericUEF217 = 410
     };
 
+   // static std::unordered_map<MODELS, std::string> modelMap;
+
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
     enum VERBOSITY
