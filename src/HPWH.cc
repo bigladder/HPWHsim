@@ -2917,6 +2917,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_GE2014STDMode;
     }
+    else if (modelName == "GE2014STDMode_80")
+    {
+        model = HPWH::MODELS_GE2014STDMode_80;
+    }
     else if (modelName == "GE502014" || modelName == "GE2014")
     {
         model = HPWH::MODELS_GE2014;
@@ -2928,6 +2932,30 @@ void HPWH::checkInputs()
     else if (modelName == "RheemHB50")
     {
         model = HPWH::MODELS_RheemHB50;
+    }
+    else if (modelName == "RheemHBDR2250")
+    {
+        model = HPWH::MODELS_RheemHBDR2250;
+    }
+    else if (modelName == "RheemHBDR2265")
+    {
+        model = HPWH::MODELS_RheemHBDR2265;
+    }
+    else if (modelName == "RheemHBDR2280")
+    {
+        model = HPWH::MODELS_RheemHBDR2280;
+    }
+    else if (modelName == "RheemHBDR4550")
+    {
+        model = HPWH::MODELS_RheemHBDR4550;
+    }
+    else if (modelName == "RheemHBDR4565")
+    {
+        model = HPWH::MODELS_RheemHBDR4565;
+    }
+    else if (modelName == "RheemHBDR4580")
+    {
+        model = HPWH::MODELS_RheemHBDR4580;
     }
     else if (modelName == "Stiebel220e" || modelName == "Stiebel220E")
     {
