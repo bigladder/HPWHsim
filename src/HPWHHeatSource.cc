@@ -483,17 +483,20 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
         envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
         double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
         double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
-        maxPowerCurvature = magPowerCurvature > maxPowerCurvature ? magPowerCurvature: maxPowerCurvature;
-        maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature: maxCOPCurvature;
+        maxPowerCurvature =
+            magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
+        maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
     }
     tempGrid.push_back(envTemps_K);
 
     // relate to reference values (from Rheem2020Build50)
     std::size_t nPowerPoints = 11 * (maxPowerCurvature / 0.01571);
-    if (nPowerPoints < 2) nPowerPoints = 2;
+    if (nPowerPoints < 2)
+        nPowerPoints = 2;
 
     std::size_t nCOPPoints = 11 * (maxCOPCurvature / 0.0002); // untested
-    if (nCOPPoints < 2) nCOPPoints = 2;
+    if (nCOPPoints < 2)
+        nCOPPoints = 2;
 
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
     std::vector<double> heatSourceTemps_C(nPoints);
@@ -510,7 +513,7 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     std::vector<double> heatSourceTemps_K = {};
     heatSourceTemps_K.reserve(heatSourceTemps_C.size());
 
-    for (auto T_C: heatSourceTemps_C)
+    for (auto T_C : heatSourceTemps_C)
     {
         heatSourceTemps_K.push_back(C_TO_K(T_C));
     }
