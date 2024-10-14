@@ -736,21 +736,7 @@ void HPWH::to_json(
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
-    if (perf.performance_points_is_set)
-    {
-        nlohmann::json j_perf_points;
-        for (auto& perf_point : perf.performance_points)
-        {
-            nlohmann::json j_perf_point;
-            j_perf_point["heat_source_temperature"] = perf_point.heat_source_temperature;
-            j_perf_point["input_power_coefficients"] = perf_point.input_power_coefficients;
-            j_perf_point["cop_coefficients"] = perf_point.cop_coefficients;
-
-            j_perf_points.push_back(j_perf_point);
-        }
-        j_perf["performance_points"] = j_perf_points;
-    }
-    else if (perf.performance_map_is_set)
+    if (perf.performance_map_is_set)
     {
         nlohmann::json j_perf_map;
 
