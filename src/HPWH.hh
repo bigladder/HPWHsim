@@ -54,6 +54,8 @@ class HPWH : public Courier::Sender
 
     class Tank;
     class HeatSource;
+    class Condenser;
+    class Resistance;
     struct HeatingLogic;
     struct SoCBasedHeatingLogic;
     struct TempBasedHeatingLogic;
@@ -1095,7 +1097,8 @@ class HPWH : public Courier::Sender
     MODELS model;
     /**< The model id */
 
-    HeatSource* addHeatSource(const std::string& name_in);
+    HeatSource* addCondenser(const std::string& name_in);
+    HeatSource* addResistance(const std::string& name_in);
 
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/

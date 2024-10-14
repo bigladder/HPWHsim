@@ -313,7 +313,6 @@ class HPWH::HeatSource : public Sender
     double mpFlowRate_LPS; /**< The multipass flow rate */
 
     COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
-    HEATSOURCE_TYPE typeOfHeatSource; /**< compressor, resistance, extra, none */
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                                          pass is multipass*/
 
@@ -378,13 +377,27 @@ class HPWH::HeatSource : public Sender
                             double& input_BTUperHr,
                             double& cap_BTUperHr,
                             double& cop);
+
+    virtual HPWH::HEATSOURCE_TYPE typeOfHeatSource() const = 0; /**< compressor, resistance, extra, none */
+
 }; // end of HeatSource class
 
-class Condenser : public HPWH::HeatSource
+class HPWH::Condenser : public HPWH::HeatSource
 {
+    Condenser(HPWH* hpwh_in = NULL,
+               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+               const std::string& name_in = "heatsource");
+
+    HPWH::HEATSOURCE_TYPE typeOfHeatSource() const override {return HPWH::TYPE_compressor;}
 };
 
-class Resistance : public HPWH::HeatSource
+class HPWH::Resistance : public HPWH::HeatSource
 {
+    Resistance(HPWH* hpwh_in = NULL,
+              const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+              const std::string& name_in = "heatsource");
+
+    HPWH::HEATSOURCE_TYPE typeOfHeatSource() const override {return HPWH::TYPE_resistance;}
+
 };
 #endif

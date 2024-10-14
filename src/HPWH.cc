@@ -216,9 +216,15 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
 
 HPWH::~HPWH() {}
 
-HPWH::HeatSource* HPWH::addHeatSource(const std::string& name_in)
+HPWH::HeatSource* HPWH::addCondenser(const std::string& name_in)
 {
-    heatSources.emplace_back(std::make_shared<HeatSource>(this, get_courier(), name_in));
+    heatSources.emplace_back(std::make_shared<Condenser>(this, get_courier(), name_in));
+    return heatSources.back().get();
+}
+
+HPWH::HeatSource* HPWH::addResistance(const std::string& name_in)
+{
+    heatSources.emplace_back(std::make_shared<Resistance>(this, get_courier(), name_in));
     return heatSources.back().get();
 }
 

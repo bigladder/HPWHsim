@@ -1240,9 +1240,9 @@ void HPWH::HeatSource::calcHeatDist(std::vector<double>& heatDistribution)
     }
 }
 
-bool HPWH::HeatSource::isACompressor() const { return typeOfHeatSource == TYPE_compressor; }
+bool HPWH::HeatSource::isACompressor() const { return typeOfHeatSource() == TYPE_compressor; }
 
-bool HPWH::HeatSource::isAResistance() const { return typeOfHeatSource == TYPE_resistance; }
+bool HPWH::HeatSource::isAResistance() const { return typeOfHeatSource() == TYPE_resistance; }
 bool HPWH::HeatSource::isExternalMultipass() const
 {
     return isMultipass && configuration == HeatSource::CONFIG_EXTERNAL;
@@ -1529,8 +1529,6 @@ void HPWH::HeatSource::setupAsResistiveElement(int node,
     setConstantElementPower(Watts);
 
     configuration = CONFIG_SUBMERGED; // immersed in tank
-
-    typeOfHeatSource = TYPE_resistance;
 }
 
 void HPWH::HeatSource::addTurnOnLogic(std::shared_ptr<HeatingLogic> logic)
