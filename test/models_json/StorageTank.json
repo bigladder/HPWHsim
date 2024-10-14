@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "schema": "RSINTEGRATEDWATERHEATER"
+  },
+  "performance": {
+    "heat_source_configurations": null,
+    "tank": {
+      "metadata": {
+        "schema": "RSTANK"
+      },
+      "performance": {
+        "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+        "fittings_ua": 0.0,
+        "fixed_volume": false,
+        "number_of_nodes": 12,
+        "ua": 2.7777777777777777,
+        "volume": 0.3028328
+      }
+    }
+  }
+}

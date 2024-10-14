@@ -4009,7 +4009,7 @@ void HPWH::initFromFile(string modelName)
 
 void HPWH::initFromJSON(string sModelName)
 {
-    auto sInputFileName = sModelName + ".json";
+    auto sInputFileName = "models_json/" + sModelName + ".json";
     std::ifstream inputFile(sInputFileName);
     nlohmann::json j = nlohmann::json::parse(inputFile);
     data_model::init(get_courier());
