@@ -10,8 +10,11 @@ namespace hpwh_cli
 {
 
 /// measure
-static void
-convert(const std::string& sSpecType, const std::string& sModelName, bool useModelNumber, std::string sOutputDir, std::string sOutputFilename);
+static void convert(const std::string& sSpecType,
+                    const std::string& sModelName,
+                    bool useModelNumber,
+                    std::string sOutputDir,
+                    std::string sOutputFilename);
 
 CLI::App* add_convert(CLI::App& app)
 {
@@ -24,7 +27,8 @@ CLI::App* add_convert(CLI::App& app)
     subcommand->add_option("-m,--model", sModelName, "Model name or number")->required();
 
     static bool use_model_number = false;
-    subcommand->add_flag("-n,--number", use_model_number, "Identify by model number, instead of name");
+    subcommand->add_flag(
+        "-n,--number", use_model_number, "Identify by model number, instead of name");
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -32,12 +36,17 @@ CLI::App* add_convert(CLI::App& app)
     static std::string sOutputFilename = "";
     subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
 
-    subcommand->callback([&]() { convert(sSpecType, sModelName, use_model_number, sOutputDir, sOutputFilename); });
+    subcommand->callback(
+        [&]() { convert(sSpecType, sModelName, use_model_number, sOutputDir, sOutputFilename); });
 
     return subcommand;
 }
 
-void convert(const std::string& sSpecType, const std::string& sModelName, bool useModelNumber, std::string sOutputDir, std::string sOutputFilename)
+void convert(const std::string& sSpecType,
+             const std::string& sModelName,
+             bool useModelNumber,
+             std::string sOutputDir,
+             std::string sOutputFilename)
 {
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
@@ -78,7 +87,7 @@ void convert(const std::string& sSpecType, const std::string& sModelName, bool u
     std::ofstream outputFile;
     if (sOutputFilename == "")
         sOutputFilename = sModelName + "_" + sSpecType;
-    sOutputFilename  =sOutputDir + "/" + sOutputFilename + ".json";
+    sOutputFilename = sOutputDir + "/" + sOutputFilename + ".json";
     outputFile.open(sOutputFilename.c_str(), std::ifstream::out);
     if (!outputFile.is_open())
     {
