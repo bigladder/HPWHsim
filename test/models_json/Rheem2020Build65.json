@@ -1,28 +1,12 @@
 {
-    "metadata": {
-        "data_model": "ASHRAE205",
-        "schema_version": "1.0.0",
-        "schema_author": "",
-        "schema": "RSINTEGRATEDWATERHEATER",
-        "description": "Rheem 50-gallon integrated heat-pump water heater",
-        "id": "6998e64f-7824-414c-9d48-57e43ee47071",
-        "timestamp": "2022-11-23T11:45Z",
-        "data_version": 1,
-        "data_source": "",
-        "disclaimer": "",
-        "notes": ""
-    },
-    "description": {
-        "product_information": {
-            "manufacturer": "Rheem",
-            "model": "RheemHB50",
-            "model_number": "XXXXXX"
-        }
-    },
+  "metadata": {
+    "schema": "RSINTEGRATEDWATERHEATER"
+  },
   "performance": {
     "heat_source_configurations": [
       {
-        "followed_by_heat_source_label": "resistiveElementBottom",
+        "companion_heat_source_label": "compressor",
+        "followed_by_heat_source_label": "compressor",
         "heat_distribution": [
           0.0,
           0.0,
@@ -42,7 +26,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4200.0
+            "input_power": 4500.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -90,11 +74,11 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 2250.0
+            "input_power": 4500.0
           }
         },
         "heat_source_type": "RESISTANCE",
-        "hysteresis_temperature_difference": 1.1111111111111112,
+        "hysteresis_temperature_difference": 2.2222222222222223,
         "label": "resistiveElementBottom",
         "maximum_temperature": 373.15,
         "minimum_temperature": 0.0,
@@ -102,7 +86,7 @@
           {
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
-              "absolute_temperature": 298.02483333333333,
+              "absolute_temperature": 310.92777777777775,
               "logic_distribution": [
                 1.0,
                 0.0,
@@ -125,7 +109,16 @@
       {
         "backup_heat_source_label": "resistiveElementBottom",
         "heat_distribution": [
-          1.0,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
           0.0,
           0.0
         ],
@@ -138,7 +131,7 @@
             "performance_map": {
               "grid_variables": {
                 "evaporator_environment_temperature": [
-                  281.4833333333333,
+                  283.15,
                   292.59444444444443
                 ],
                 "heat_source_temperature": [
@@ -157,52 +150,52 @@
               },
               "lookup_variables": {
                 "cop": [
-                  4.690488999999999,
-                  4.159758999999998,
-                  3.6290289999999983,
-                  3.098298999999999,
-                  2.567568999999999,
-                  2.0368389999999987,
-                  1.5061089999999984,
-                  0.9753789999999983,
-                  0.4446489999999991,
-                  -0.08608100000000107,
-                  -0.6168110000000012,
-                  5.340000000000001,
-                  4.800000000000001,
-                  4.260000000000001,
-                  3.7200000000000006,
-                  3.1800000000000006,
-                  2.640000000000001,
-                  2.1000000000000005,
-                  1.5600000000000005,
-                  1.0200000000000014,
-                  0.4800000000000012,
-                  -0.05999999999999883
+                  6.5270399999999995,
+                  5.7206399999999995,
+                  4.9142399999999995,
+                  4.1078399999999995,
+                  3.3014399999999995,
+                  2.4950399999999995,
+                  1.6886399999999995,
+                  0.8822399999999995,
+                  0.07583999999999946,
+                  -0.7305600000000005,
+                  -1.5369600000000005,
+                  7.0068800000000016,
+                  6.189860000000001,
+                  5.372840000000001,
+                  4.5558200000000015,
+                  3.7388000000000012,
+                  2.921780000000001,
+                  2.1047600000000015,
+                  1.287740000000001,
+                  0.4707200000000007,
+                  -0.3462999999999988,
+                  -1.16332
                 ],
                 "input_power": [
-                  439.14944,
-                  528.671,
-                  618.19256,
-                  707.7141199999998,
-                  797.2356799999999,
-                  886.7572399999999,
-                  976.2787999999999,
-                  1065.80036,
-                  1155.3219199999996,
-                  1244.8434799999998,
-                  1334.3650399999997,
-                  451.51743999999997,
-                  547.996,
-                  644.47456,
-                  740.9531199999999,
-                  837.4316800000001,
-                  933.9102400000002,
-                  1030.3888,
-                  1126.86736,
-                  1223.34592,
-                  1319.82448,
-                  1416.3030400000005
+                  252.62656,
+                  275.065,
+                  300.44535999999994,
+                  328.76764,
+                  360.03184,
+                  394.23795999999993,
+                  431.38599999999997,
+                  471.47596,
+                  514.50784,
+                  560.48164,
+                  609.3973599999999,
+                  269.86784,
+                  281.12,
+                  302.5522399999999,
+                  334.16456,
+                  375.95696,
+                  427.92944000000006,
+                  490.0820000000001,
+                  562.4146400000001,
+                  644.9273600000001,
+                  737.6201600000002,
+                  840.4930400000002
                 ]
               }
             }
@@ -212,12 +205,12 @@
         "hysteresis_temperature_difference": 0.5555555555555556,
         "label": "compressor",
         "maximum_temperature": 322.0388888888889,
-        "minimum_temperature": 277.59444444444443,
+        "minimum_temperature": 275.92777777777775,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 21.11111111111111,
+              "differential_temperature": 16.666666666666668,
               "logic_distribution": [
                 1.0,
                 0.0,
@@ -230,7 +223,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "activates_standby": true,
-              "differential_temperature": 7.368833333333333,
+              "differential_temperature": 5.0,
               "tank_node_specification": "TOP_NODE"
             },
             "heating_logic_type": "TEMP_BASED"
@@ -247,8 +240,8 @@
         "fittings_ua": 0.0,
         "fixed_volume": true,
         "number_of_nodes": 12,
-        "ua": 1.9444444444444444,
-        "volume": 0.17034345
+        "ua": 2.9555555555555557,
+        "volume": 0.221446485
       }
     }
   }

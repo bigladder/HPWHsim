@@ -11,7 +11,7 @@ namespace hpwh_cli
 
 /// measure
 static void
-convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir, std::string sOutputFilename);
+convert(const std::string& sSpecType, const std::string& sModelName, bool useModelNumber, std::string sOutputDir, std::string sOutputFilename);
 
 CLI::App* add_convert(CLI::App& app)
 {
@@ -21,7 +21,10 @@ CLI::App* add_convert(CLI::App& app)
     subcommand->add_option("-s,--spec", sSpecType, "Specification type (Preset, File, JSON)");
 
     static std::string sModelName = "";
-    subcommand->add_option("-m,--model", sModelName, "Model name")->required();
+    subcommand->add_option("-m,--model", sModelName, "Model name or number")->required();
+
+    static bool use_model_number = false;
+    subcommand->add_flag("-n,--number", use_model_number, "Identify by model number, instead of name");
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -29,12 +32,12 @@ CLI::App* add_convert(CLI::App& app)
     static std::string sOutputFilename = "";
     subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
 
-    subcommand->callback([&]() { convert(sSpecType, sModelName, sOutputDir, sOutputFilename); });
+    subcommand->callback([&]() { convert(sSpecType, sModelName, use_model_number, sOutputDir, sOutputFilename); });
 
     return subcommand;
 }
 
-void convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir, std::string sOutputFilename)
+void convert(const std::string& sSpecType, const std::string& sModelName, bool useModelNumber, std::string sOutputDir, std::string sOutputFilename)
 {
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
@@ -52,7 +55,10 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     HPWH hpwh;
     if (sSpecType_mod == "Preset")
     {
-        hpwh.initPreset(sModelName);
+        if (useModelNumber)
+            hpwh.initPreset(static_cast<HPWH::MODELS>(std::stoi(sModelName)));
+        else
+            hpwh.initPreset(sModelName);
     }
     else if (sSpecType_mod == "File")
     {
@@ -68,8 +74,6 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
 
     nlohmann::json j;
     HPWH::to_json(rswh, j);
-
-    std::cout << j.dump(2) << std::endl;
 
     std::ofstream outputFile;
     if (sOutputFilename == "")

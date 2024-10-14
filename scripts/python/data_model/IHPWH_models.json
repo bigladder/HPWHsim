@@ -1,0 +1,222 @@
+[
+ {
+   "name": "AOSmithCAHP120",
+   "number": 108
+ },
+ {
+   "name": "AOSmithHPTS50",
+   "number": 1101
+ },
+ {
+   "name": "AOSmithHPTS66",
+   "number": 1102
+ },
+ {
+   "name": "AOSmithHPTS80",
+   "number": 1103
+ },
+ {
+   "name": "AOSmithHPTU50",
+   "number": 104
+ },
+ {
+   "name": "AOSmithHPTU66",
+   "number": 105
+ },
+ {
+   "name": "AOSmithHPTU80",
+   "number": 106
+ },
+ {
+   "name": "AOSmithHPTU80_DR",
+   "number": 107
+ },
+ {
+   "name": "AOSmithPHPT60",
+   "number": 102
+ },
+ {
+   "name": "AOSmithPHPT80",
+   "number": 103
+ },
+ {
+   "name": "AquaThermAire",
+   "number": 400
+ },
+ {
+   "name": "AWHSTier3Generic40",
+   "number": 175
+ },
+ {
+   "name": "AWHSTier3Generic50",
+   "number": 176
+ },
+ {
+   "name": "AWHSTier3Generic65",
+   "number": 177
+ },
+ {
+   "name": "AWHSTier3Generic80",
+   "number": 178
+ },
+ {
+   "name": "AWHSTier4Generic40",
+   "number": 1175
+ },
+ {
+   "name": "AWHSTier4Generic50",
+   "number": 1176
+ },
+ {
+   "name": "AWHSTier4Generic65",
+   "number": 1177
+ },
+ {
+   "name": "AWHSTier4Generic80",
+   "number": 1178
+ },
+ {
+   "name": "BWC2020_65",
+   "number": 116
+ },
+ {
+   "name": "GE",
+   "number": 110
+ },
+ {
+   "name": "GE2014STDMode",
+   "number": 111
+ },
+ {
+   "name": "GE2014STDMode_80",
+   "number": 113
+ },
+ {
+   "name": "GE502014",
+   "number": 112
+ },
+ {
+   "name": "GE802014",
+   "number": 115
+ },
+ {
+   "name": "Generic1",
+   "number": 170
+ },
+ {
+   "name": "Generic2",
+   "number": 171
+ },
+ {
+   "name": "Generic3",
+   "number": 172
+ },
+ {
+   "name": "genericCustomUEF",
+   "number": 174
+ },
+ {
+   "name": "GenericUEF217",
+   "number": 410
+ },
+ {
+   "name": "restankRealistic",
+   "number": 3
+ },
+ {
+   "name": "Rheem2020Build40",
+   "number": 155
+ },
+ {
+   "name": "Rheem2020Build50",
+   "number": 156
+ },
+ {
+   "name": "Rheem2020Build65",
+   "number": 157
+ },
+ {
+   "name": "Rheem2020Build80",
+   "number": 158
+ },
+ {
+   "name": "Rheem2020Prem40",
+   "number": 151
+ },
+ {
+   "name": "Rheem2020Prem50",
+   "number": 152
+ },
+ {
+   "name": "Rheem2020Prem65",
+   "number": 153
+ },
+ {
+   "name": "Rheem2020Prem80",
+   "number": 154
+ },
+ {
+   "name": "RheemHB50",
+   "number": 140
+ },
+ {
+   "name": "RheemHBDR2250",
+   "number": 141
+ },
+ {
+   "name": "RheemHBDR2265",
+   "number": 143
+ },
+ {
+   "name": "RheemHBDR2280",
+   "number": 145
+ },
+ {
+   "name": "RheemHBDR4550",
+   "number": 142
+ },
+ {
+   "name": "RheemHBDR4565",
+   "number": 144
+ },
+ {
+   "name": "RheemHBDR4580",
+   "number": 146
+ },
+ {
+   "name": "RheemPlugInDedicated40",
+   "number": 1160
+ },
+ {
+   "name": "RheemPlugInDedicated50",
+   "number": 1161
+ },
+ {
+   "name": "RheemPlugInShared40",
+   "number": 1150
+ },
+ {
+   "name": "RheemPlugInShared50",
+   "number": 1151
+ },
+ {
+   "name": "RheemPlugInShared65",
+   "number": 1152
+ },
+ {
+   "name": "RheemPlugInShared80",
+   "number": 1153
+ },
+ {
+   "name": "Stiebel220E",
+   "number": 160
+ },
+ {
+   "name": "StorageTank",
+   "number": 180
+ },
+ {
+   "name": "UEF2generic",
+   "number": 173
+ }
+]

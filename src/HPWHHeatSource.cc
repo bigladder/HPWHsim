@@ -488,11 +488,11 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     }
     tempGrid.push_back(envTemps_K);
 
-    // relate to reference values
-    std::size_t nPowerPoints = 10 * (maxPowerCurvature / 0.0176);
+    // relate to reference values (from Rheem2020Build50)
+    std::size_t nPowerPoints = 11 * (maxPowerCurvature / 0.01571);
     if (nPowerPoints < 2) nPowerPoints = 2;
 
-    std::size_t nCOPPoints = 10 * (maxCOPCurvature / 0.0002); // untested
+    std::size_t nCOPPoints = 11 * (maxCOPCurvature / 0.0002); // untested
     if (nCOPPoints < 2) nCOPPoints = 2;
 
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
