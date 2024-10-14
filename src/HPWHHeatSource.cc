@@ -159,21 +159,6 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
     }
     }
 
-    // uses legacy interpolation
-    if (perf.performance_points_is_set)
-    {
-        auto& perf_points = perf.performance_points;
-        perfMap.reserve(perf_points.size());
-        for (auto& perf_point : perf_points)
-        {
-            PerfPoint perfPoint = {C_TO_F(K_TO_C(perf_point.heat_source_temperature)),
-                                   perf_point.input_power_coefficients,
-                                   perf_point.cop_coefficients};
-            perfMap.push_back(perfPoint);
-        }
-        useBtwxtGrid = false;
-    }
-
     // uses btwxt performance-grid interpolation
     if (perf.performance_map_is_set)
     {
@@ -489,23 +474,46 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGrid.reserve(2);       // envT, heatSourceT
     tempGridValues.reserve(2); // inputPower, cop
 
+    double maxPowerCurvature = 0.; // curvature used to determine # of points
+    double maxCOPCurvature = 0.;
     std::vector<double> envTemps_K = {};
     envTemps_K.reserve(perfMap.size());
     for (auto& perfPoint : perfMap)
     {
         envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
+        double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
+        double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
+        maxPowerCurvature = magPowerCurvature > maxPowerCurvature ? magPowerCurvature: maxPowerCurvature;
+        maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature: maxCOPCurvature;
     }
     tempGrid.push_back(envTemps_K);
 
-    std::vector<double> heatSourceTemps_K = {};
-    heatSourceTemps_K.reserve(3);
+    // relate to reference values
+    std::size_t nPowerPoints = 10 * (maxPowerCurvature / 0.0176);
+    if (nPowerPoints < 2) nPowerPoints = 2;
 
-    double T_C = 0.;
-    do
+    std::size_t nCOPPoints = 10 * (maxCOPCurvature / 0.0002); // untested
+    if (nCOPPoints < 2) nCOPPoints = 2;
+
+    std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
+    std::vector<double> heatSourceTemps_C(nPoints);
+    {
+        double T_C = 0;
+        double dT_C = 100. / static_cast<double>(nPoints - 1);
+        for (auto& heatSourceTemp_C : heatSourceTemps_C)
+        {
+            heatSourceTemp_C = T_C;
+            T_C += dT_C;
+        }
+    }
+
+    std::vector<double> heatSourceTemps_K = {};
+    heatSourceTemps_K.reserve(heatSourceTemps_C.size());
+
+    for (auto T_C: heatSourceTemps_C)
     {
         heatSourceTemps_K.push_back(C_TO_K(T_C));
-        T_C += 50.;
-    } while (T_C <= 100.);
+    }
     tempGrid.push_back(heatSourceTemps_K);
 
     std::size_t nVals = envTemps_K.size() * heatSourceTemps_K.size();
@@ -606,49 +614,28 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
 
         perf.performance_map_is_set = true;
     }
-    else
+    else // convert to grid
     {
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        if (true) // convert to grid
-        {
-            convertMapToGrid(tempGrid, tempGridValues);
+        convertMapToGrid(tempGrid, tempGridValues);
 
-            auto& map = perf.performance_map;
+        auto& map = perf.performance_map;
 
-            auto& grid_vars = map.grid_variables;
-            checkTo(tempGrid[0],
-                    grid_vars.evaporator_environment_temperature_is_set,
-                    grid_vars.evaporator_environment_temperature);
-            checkTo(tempGrid[1],
-                    grid_vars.heat_source_temperature_is_set,
-                    grid_vars.heat_source_temperature);
+        auto& grid_vars = map.grid_variables;
+        checkTo(tempGrid[0],
+                grid_vars.evaporator_environment_temperature_is_set,
+                grid_vars.evaporator_environment_temperature);
+        checkTo(tempGrid[1],
+                grid_vars.heat_source_temperature_is_set,
+                grid_vars.heat_source_temperature);
 
-            auto& lookup_vars = map.lookup_variables;
-            checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
-            checkTo(tempGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
+        auto& lookup_vars = map.lookup_variables;
+        checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
+        checkTo(tempGridValues[1], lookup_vars.cop_is_set, lookup_vars.cop);
 
-            perf.performance_map_is_set = true;
-        }
-        else
-        {
-            if (perfMap.size() > 0)
-            {
-                auto& perf_points = perf.performance_points;
-                perf_points.reserve(perfMap.size());
-
-                for (auto& perfPoint : perfMap)
-                {
-                    data_model::rscondenserwaterheatsource_ns::PerformancePoint perf_point;
-                    perf_point.heat_source_temperature = C_TO_K(F_TO_C(perfPoint.T_F));
-                    perf_point.input_power_coefficients = perfPoint.inputPower_coeffs;
-                    perf_point.cop_coefficients = perfPoint.COP_coeffs;
-                    perf_points.push_back(perf_point);
-                }
-                perf.performance_points_is_set = true;
-            }
-        }
+        perf.performance_map_is_set = true;
     }
 }
 
