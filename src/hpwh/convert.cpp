@@ -11,7 +11,7 @@ namespace hpwh_cli
 
 /// measure
 static void
-convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir);
+convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir, std::string sOutputFilename);
 
 CLI::App* add_convert(CLI::App& app)
 {
@@ -26,12 +26,15 @@ CLI::App* add_convert(CLI::App& app)
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
-    subcommand->callback([&]() { convert(sSpecType, sModelName, sOutputDir); });
+    static std::string sOutputFilename = "";
+    subcommand->add_option("-f,--filename", sOutputFilename, "Output filename");
+
+    subcommand->callback([&]() { convert(sSpecType, sModelName, sOutputDir, sOutputFilename); });
 
     return subcommand;
 }
 
-void convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir)
+void convert(const std::string& sSpecType, const std::string& sModelName, std::string sOutputDir, std::string sOutputFilename)
 {
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
@@ -69,11 +72,13 @@ void convert(const std::string& sSpecType, const std::string& sModelName, std::s
     std::cout << j.dump(2) << std::endl;
 
     std::ofstream outputFile;
-    std::string outputFilename = sOutputDir + "/" + sModelName + "_" + sSpecType + ".json";
-    outputFile.open(outputFilename.c_str(), std::ifstream::out);
+    if (sOutputFilename == "")
+        sOutputFilename = sModelName + "_" + sSpecType;
+    sOutputFilename  =sOutputDir + "/" + sOutputFilename + ".json";
+    outputFile.open(sOutputFilename.c_str(), std::ifstream::out);
     if (!outputFile.is_open())
     {
-        std::cout << "Could not open output file " << outputFilename << "\n";
+        std::cout << "Could not open output file " << sOutputFilename << "\n";
         exit(1);
     }
     outputFile << j.dump(2);
