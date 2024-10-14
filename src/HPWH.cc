@@ -126,6 +126,14 @@ std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPa
       {HM_TO_MIN(16, 45), 7.6, 6.4},
       {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
 
+/*
+std::unordered_map<HPWH::MODELS, std::string> HPWH::modelMap = {
+    {HPWH::MODELS_AOSmithCAHP120 , "AOSmithCAHP120"},
+    {HPWH::MODELS_AOSmithHPTS50 , "AOSmithHPTS50"},
+    {HPWH::MODELS_AOSmithHPTS66 , "AOSmithHPTS66"},
+    {HPWH::MODELS_AOSmithHPTS80 , "AOSmithHPTS80"},
+};
+*/
 void HPWH::setMinutesPerStep(const double minutesPerStep_in)
 {
     minutesPerStep = minutesPerStep_in;
@@ -4045,6 +4053,18 @@ void HPWH::initFromJSON(string sModelName)
     data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
     from(rswh);
 }
+
+/*
+void HPWH::initFromJSON(MODELS modelNumber)
+{
+    if (modelMap.contains(modelNumber))
+    {
+        std::string sModelName = modelMap[modelNumber];
+        initFromJSON(sModelName);
+    }
+}
+*/
+
 #endif
 
 void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
