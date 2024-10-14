@@ -298,7 +298,7 @@ class HPWH : public Courier::Sender
         MODELS_GenericUEF217 = 410
     };
 
-   // static std::unordered_map<MODELS, std::string> modelMap;
+    // static std::unordered_map<MODELS, std::string> modelMap;
 
     /// specifies the modes for writing output
     /// the specified values are used for >= comparisons, so the numerical order is relevant
@@ -477,7 +477,7 @@ class HPWH : public Courier::Sender
     double secondsPerStep, hoursPerStep;
 
     /// the HeatSources, in order of priority
-    std::vector<HeatSource> heatSources;
+    std::vector<std::shared_ptr<HeatSource>> heatSources;
 
     /// the tank
     std::shared_ptr<Tank> tank;

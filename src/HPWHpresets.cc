@@ -107,11 +107,11 @@ void HPWH::initResistanceTank(double tankVol_L,
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -200,11 +200,11 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     isHeating = false;
     for (auto& source : heatSources)
     {
-        if (source.isOn)
+        if (source->isOn)
         {
             isHeating = true;
         }
-        source.sortPerformanceMap();
+        source->sortPerformanceMap();
     }
 }
 
@@ -332,11 +332,11 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -4422,10 +4422,10 @@ void HPWH::initPreset(MODELS presetNum)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 } // end HPWHinit_presets
