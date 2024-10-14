@@ -191,7 +191,7 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     heatSources = hpwh.heatSources;
     for (auto& heatSource : heatSources)
     {
-        heatSource.hpwh = this;
+        heatSource->hpwh = this;
     }
 
     setpoint_C = hpwh.setpoint_C;
@@ -218,8 +218,8 @@ HPWH::~HPWH() {}
 
 HPWH::HeatSource* HPWH::addHeatSource(const std::string& name_in)
 {
-    heatSources.emplace_back(this, get_courier(), name_in);
-    return &heatSources.back();
+    heatSources.emplace_back(std::make_shared<HeatSource>(this, get_courier(), name_in));
+    return heatSources.back().get();
 }
 
 void HPWH::runOneStep(double drawVolume_L,
@@ -248,9 +248,9 @@ void HPWH::runOneStep(double drawVolume_L,
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = 0;
-        heatSources[i].energyInput_kWh = 0.;
-        heatSources[i].energyOutput_kWh = 0.;
+        heatSources[i]->runtime_min = 0;
+        heatSources[i]->energyInput_kWh = 0.;
+        heatSources[i]->energyOutput_kWh = 0.;
     }
     extraEnergyInput_kWh = 0.;
 
@@ -287,11 +287,11 @@ void HPWH::runOneStep(double drawVolume_L,
             // turn on the compressor and last resistance element.
             if (hasACompressor())
             {
-                heatSources[compressorIndex].engageHeatSource(DRstatus);
+                heatSources[compressorIndex]->engageHeatSource(DRstatus);
             }
             if (lowestElementIndex >= 0)
             {
-                heatSources[lowestElementIndex].engageHeatSource(DRstatus);
+                heatSources[lowestElementIndex]->engageHeatSource(DRstatus);
             }
         }
 
@@ -302,36 +302,36 @@ void HPWH::runOneStep(double drawVolume_L,
             {
                 // check if anything that is on needs to turn off (generally for lowT cutoffs)
                 // things that just turn on later this step are checked for this in shouldHeat
-                if (heatSources[i].isEngaged() && heatSources[i].shutsOff())
+                if (heatSources[i]->isEngaged() && heatSources[i]->shutsOff())
                 {
-                    heatSources[i].disengageHeatSource();
+                    heatSources[i]->disengageHeatSource();
                     // check if the backup heat source would have to shut off too
-                    if ((heatSources[i].backupHeatSource != NULL) &&
-                        !heatSources[i].backupHeatSource->shutsOff())
+                    if ((heatSources[i]->backupHeatSource != NULL) &&
+                        !heatSources[i]->backupHeatSource->shutsOff())
                     {
                         // and if not, go ahead and turn it on
-                        heatSources[i].backupHeatSource->engageHeatSource(DRstatus);
+                        heatSources[i]->backupHeatSource->engageHeatSource(DRstatus);
                     }
                 }
 
                 // if there's a priority HeatSource (e.g. upper resistor) and it needs to
                 // come on, then turn  off and start it up
-                if (heatSources[i].isVIP)
+                if (heatSources[i]->isVIP)
                 {
-                    if (heatSources[i].shouldHeat())
+                    if (heatSources[i]->shouldHeat())
                     {
-                        if (shouldDRLockOut(heatSources[i].typeOfHeatSource, DRstatus))
+                        if (shouldDRLockOut(heatSources[i]->typeOfHeatSource, DRstatus))
                         {
                             if (hasACompressor())
                             {
-                                heatSources[compressorIndex].engageHeatSource(DRstatus);
+                                heatSources[compressorIndex]->engageHeatSource(DRstatus);
                                 break;
                             }
                         }
                         else
                         {
                             turnAllHeatSourcesOff();
-                            heatSources[i].engageHeatSource(DRstatus);
+                            heatSources[i]->engageHeatSource(DRstatus);
                             // stop looking if the VIP needs to run
                             break;
                         }
@@ -341,9 +341,9 @@ void HPWH::runOneStep(double drawVolume_L,
             // if nothing is currently on, then check if something should come on
             else /* (isHeating == false) */
             {
-                if (heatSources[i].shouldHeat())
+                if (heatSources[i]->shouldHeat())
                 {
-                    heatSources[i].engageHeatSource(DRstatus);
+                    heatSources[i]->engageHeatSource(DRstatus);
                     // engaging a heat source sets isHeating to true, so this will only trigger once
                 }
             }
@@ -355,52 +355,52 @@ void HPWH::runOneStep(double drawVolume_L,
         for (int i = 0; i < getNumHeatSources(); i++)
         {
             // check/apply lock-outs
-            if (shouldDRLockOut(heatSources[i].typeOfHeatSource, DRstatus))
+            if (shouldDRLockOut(heatSources[i]->typeOfHeatSource, DRstatus))
             {
-                heatSources[i].lockOutHeatSource();
+                heatSources[i]->lockOutHeatSource();
             }
             else
             {
                 // locks or unlocks the heat source
-                heatSources[i].toLockOrUnlock(heatSourceAmbientT_C);
+                heatSources[i]->toLockOrUnlock(heatSourceAmbientT_C);
             }
-            if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource == NULL)
+            if (heatSources[i]->isLockedOut() && heatSources[i]->backupHeatSource == NULL)
             {
-                heatSources[i].disengageHeatSource();
+                heatSources[i]->disengageHeatSource();
             }
 
             // going through in order, check if the heat source is on
-            if (heatSources[i].isEngaged())
+            if (heatSources[i]->isEngaged())
             {
 
                 HeatSource* heatSourcePtr;
-                if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource != NULL)
+                if (heatSources[i]->isLockedOut() && heatSources[i]->backupHeatSource != NULL)
                 {
 
                     // Check that the backup isn't locked out too or already engaged then it will
                     // heat on its own.
-                    if (heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
-                        shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
+                    if (heatSources[i]->backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
+                        shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource,
                                         DRstatus) || //){
-                        heatSources[i].backupHeatSource->isEngaged())
+                        heatSources[i]->backupHeatSource->isEngaged())
                     {
                         continue;
                     }
                     // Don't turn the backup electric resistance heat source on if the VIP
                     // resistance element is on .
-                    else if (VIPIndex >= 0 && heatSources[VIPIndex].isOn &&
-                             heatSources[i].backupHeatSource->isAResistance())
+                    else if (VIPIndex >= 0 && heatSources[VIPIndex]->isOn &&
+                             heatSources[i]->backupHeatSource->isAResistance())
                     {
                         continue;
                     }
                     else
                     {
-                        heatSourcePtr = heatSources[i].backupHeatSource;
+                        heatSourcePtr = heatSources[i]->backupHeatSource;
                     }
                 }
                 else
                 {
-                    heatSourcePtr = &heatSources[i];
+                    heatSourcePtr = heatSources[i].get();
                 }
 
                 addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
@@ -411,32 +411,32 @@ void HPWH::runOneStep(double drawVolume_L,
                 {
                     // subtract time it ran and turn it off
                     minutesToRun -= heatSourcePtr->runtime_min;
-                    heatSources[i].disengageHeatSource();
+                    heatSources[i]->disengageHeatSource();
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
-                    if ((heatSources[i].followedByHeatSource != NULL) &&
-                        !heatSources[i].followedByHeatSource->shutsOff())
+                    if ((heatSources[i]->followedByHeatSource != NULL) &&
+                        !heatSources[i]->followedByHeatSource->shutsOff())
                     {
                         // turn it on
-                        heatSources[i].followedByHeatSource->engageHeatSource(DRstatus);
+                        heatSources[i]->followedByHeatSource->engageHeatSource(DRstatus);
                     }
                     // or if there heat source can't produce hotter water (i.e. it's maxed out) and
                     // the tank still isn't at setpoint. the compressor should get locked out when
                     // the maxedOut is true but have to run the resistance first during this
                     // timestep to make sure tank is above the max temperature for the compressor.
-                    else if (heatSources[i].maxedOut() && heatSources[i].backupHeatSource != NULL)
+                    else if (heatSources[i]->maxedOut() && heatSources[i]->backupHeatSource != NULL)
                     {
 
                         // Check that the backup isn't locked out or already engaged then it will
                         // heat or already heated on its own.
-                        if (!heatSources[i].backupHeatSource->toLockOrUnlock(
+                        if (!heatSources[i]->backupHeatSource->toLockOrUnlock(
                                 heatSourceAmbientT_C) && // If not locked out
-                            !shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
+                            !shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource,
                                              DRstatus) && // and not DR locked out
-                            !heatSources[i].backupHeatSource->isEngaged())
+                            !heatSources[i]->backupHeatSource->isEngaged())
                         { // and not already engaged
 
-                            HeatSource* backupHeatSourcePtr = heatSources[i].backupHeatSource;
+                            HeatSource* backupHeatSourcePtr = heatSources[i]->backupHeatSource;
                             // turn it on
                             backupHeatSourcePtr->engageHeatSource(DRstatus);
                             // add heat if it hasn't heated up this whole minute already
@@ -469,8 +469,8 @@ void HPWH::runOneStep(double drawVolume_L,
         bool compressorRan = false;
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            if (heatSources[i].isEngaged() && !heatSources[i].isLockedOut() &&
-                heatSources[i].depressesTemperature)
+            if (heatSources[i]->isEngaged() && !heatSources[i]->isLockedOut() &&
+                heatSources[i]->depressesTemperature)
             {
                 compressorRan = true;
             }
@@ -503,7 +503,7 @@ void HPWH::runOneStep(double drawVolume_L,
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         energyRemovedFromEnvironment_kWh +=
-            (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
+            (heatSources[i]->energyOutput_kWh - heatSources[i]->energyInput_kWh);
     }
 
     tank->checkForInversion();
@@ -569,9 +569,9 @@ void HPWH::runNSteps(int N,
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = heatSources_runTimes_SUM[i];
-        heatSources[i].energyInput_kWh = heatSources_energyInputs_SUM[i];
-        heatSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
+        heatSources[i]->runtime_min = heatSources_runTimes_SUM[i];
+        heatSources[i]->energyInput_kWh = heatSources_energyInputs_SUM[i];
+        heatSources[i]->energyOutput_kWh = heatSources_energyOutputs_SUM[i];
     }
 }
 
@@ -772,7 +772,7 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
         send_error("Unit does not have a compressor.");
     }
 
-    double returnVal = heatSources[compressorIndex].maxSetpoint_C;
+    double returnVal = heatSources[compressorIndex]->maxSetpoint_C;
     if (units == UNITS_C)
     {
     }
@@ -823,8 +823,8 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
           // setpoint
 
             maxAllowedSetpoint_C =
-                heatSources[compressorIndex].maxSetpoint_C -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+                heatSources[compressorIndex]->maxSetpoint_C -
+                heatSources[compressorIndex]->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
             if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
             {
@@ -840,7 +840,7 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         if (lowestElementIndex >= 0)
         { // If there's a resistance element lets check the new setpoint against the its max
           // setpoint
-            maxAllowedSetpoint_C = heatSources[lowestElementIndex].maxSetpoint_C;
+            maxAllowedSetpoint_C = heatSources[lowestElementIndex]->maxSetpoint_C;
 
             if (newSetpoint_C > maxAllowedSetpoint_C)
             {
@@ -900,7 +900,7 @@ void HPWH::calcAndSetSoCFraction()
 
     std::shared_ptr<SoCBasedHeatingLogic> logicSoC =
         std::dynamic_pointer_cast<SoCBasedHeatingLogic>(
-            heatSources[compressorIndex].turnOnLogicSet[0]);
+            heatSources[compressorIndex]->turnOnLogicSet[0]);
     newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
 
     currentSoCFraction = newSoCFraction;
@@ -913,7 +913,7 @@ double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
         send_error("No compressor found in this HPWH.");
     }
 
-    double result = heatSources[compressorIndex].minT;
+    double result = heatSources[compressorIndex]->minT;
     switch (units)
     {
     case UNITS_C:
@@ -966,9 +966,9 @@ void HPWH::setAirFlowFreedom(double fanFraction)
     {
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            if (heatSources[i].isACompressor())
+            if (heatSources[i]->isACompressor())
             {
-                heatSources[i].airflowFreedom = fanFraction;
+                heatSources[i]->airflowFreedom = fanFraction;
             }
         }
     }
@@ -1173,12 +1173,12 @@ void HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExt
     if (whichExternalPort == 1)
     {
         setNodeNumFromFractionalHeight(fractionalHeight,
-                                       heatSources[heatSourceIndex].externalInletHeight);
+                                       heatSources[heatSourceIndex]->externalInletHeight);
     }
     else
     {
         setNodeNumFromFractionalHeight(fractionalHeight,
-                                       heatSources[heatSourceIndex].externalOutletHeight);
+                                       heatSources[heatSourceIndex]->externalOutletHeight);
     }
 }
 
@@ -1201,7 +1201,7 @@ int HPWH::getExternalInletHeight() const
         send_error("Does not have an external heat source.");
     }
     return heatSources[heatSourceIndex]
-        .externalInletHeight; // Return the first one since all external
+        ->externalInletHeight; // Return the first one since all external
     // sources have some ports
 }
 
@@ -1212,8 +1212,8 @@ int HPWH::getExternalOutletHeight() const
     {
         send_error("Does not have an external heat source.");
     }
-    return heatSources[heatSourceIndex].externalOutletHeight; // Return the first one since all
-                                                              // external sources have some ports
+    return heatSources[heatSourceIndex]->externalOutletHeight; // Return the first one since all
+                                                               // external sources have some ports
 }
 
 void HPWH::setTimerLimitTOT(double limit_min)
@@ -1251,12 +1251,12 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
     {
         return retVal;
     }
-    if (heatSources[heatSourceIndex].shutOffLogicSet.size() == 0)
+    if (heatSources[heatSourceIndex]->shutOffLogicSet.size() == 0)
     {
         return retVal;
     }
 
-    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex].shutOffLogicSet)
+    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex]->shutOffLogicSet)
     {
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
@@ -1312,7 +1312,7 @@ void HPWH::setEnteringWaterHighTempShutOff(double highTemp,
                                MINSINGLEPASSLIFT));
     }
 
-    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex].shutOffLogicSet)
+    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex]->shutOffLogicSet)
     {
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
@@ -1337,14 +1337,14 @@ void HPWH::setTargetSoCFraction(double target)
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].shutOffLogicSet)
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i]->shutOffLogicSet)
         {
             if (!logic->getIsEnteringWaterHighTempShutoff())
             {
                 logic->setDecisionPoint(target);
             }
         }
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].turnOnLogicSet)
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i]->turnOnLogicSet)
         {
             logic->setDecisionPoint(target);
         }
@@ -1397,27 +1397,27 @@ void HPWH::switchToSoCControls(double targetSoC,
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].clearAllTurnOnLogic();
+        heatSources[i]->clearAllTurnOnLogic();
 
-        heatSources[i].shutOffLogicSet.erase(
-            std::remove_if(heatSources[i].shutOffLogicSet.begin(),
-                           heatSources[i].shutOffLogicSet.end(),
+        heatSources[i]->shutOffLogicSet.erase(
+            std::remove_if(heatSources[i]->shutOffLogicSet.begin(),
+                           heatSources[i]->shutOffLogicSet.end(),
                            [&](const auto logic) -> bool
                            { return !logic->getIsEnteringWaterHighTempShutoff(); }),
-            heatSources[i].shutOffLogicSet.end());
+            heatSources[i]->shutOffLogicSet.end());
 
-        heatSources[i].shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off",
-                                                            targetSoC,
-                                                            hysteresisFraction,
-                                                            tempMinUseful_C,
-                                                            constantMainsT,
-                                                            mainsT_C));
-        heatSources[i].turnOnLogicSet.push_back(turnOnSoC("SoC Turn On",
-                                                          targetSoC,
-                                                          hysteresisFraction,
-                                                          tempMinUseful_C,
-                                                          constantMainsT,
-                                                          mainsT_C));
+        heatSources[i]->shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off",
+                                                             targetSoC,
+                                                             hysteresisFraction,
+                                                             tempMinUseful_C,
+                                                             constantMainsT,
+                                                             mainsT_C));
+        heatSources[i]->turnOnLogicSet.push_back(turnOnSoC("SoC Turn On",
+                                                           targetSoC,
+                                                           hysteresisFraction,
+                                                           tempMinUseful_C,
+                                                           constantMainsT,
+                                                           mainsT_C));
     }
 
     usesSoCLogic = true;
@@ -1709,7 +1709,7 @@ int HPWH::getNumResistanceElements() const
     int count = 0;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        count += heatSources[i].isAResistance() ? 1 : 0;
+        count += heatSources[i]->isAResistance() ? 1 : 0;
     }
     return count;
 }
@@ -1744,30 +1744,30 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Invalid units.");
     }
 
-    if (airTemp_C < heatSources[compressorIndex].minT ||
-        airTemp_C > heatSources[compressorIndex].maxT)
+    if (airTemp_C < heatSources[compressorIndex]->minT ||
+        airTemp_C > heatSources[compressorIndex]->maxT)
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
 
     double maxAllowedSetpoint_C =
-        heatSources[compressorIndex].maxSetpoint_C -
-        heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+        heatSources[compressorIndex]->maxSetpoint_C -
+        heatSources[compressorIndex]->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
     if (outTemp_C > maxAllowedSetpoint_C)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
-    if (heatSources[compressorIndex].isExternalMultipass())
+    if (heatSources[compressorIndex]->isExternalMultipass())
     {
         double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-        heatSources[compressorIndex].getCapacityMP(
+        heatSources[compressorIndex]->getCapacityMP(
             airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
     else
     {
-        heatSources[compressorIndex].getCapacity(
+        heatSources[compressorIndex]->getCapacity(
             airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
@@ -1795,16 +1795,16 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) cons
             "You have attempted to access the energy input of a heat source that does not exist.");
     }
 
-    double energyInput = heatSources[N].energyInput_kWh;
+    double energyInput = heatSources[N]->energyInput_kWh;
     switch (units)
     {
     case UNITS_KWH:
         break;
     case UNITS_BTU:
-        energyInput = KWH_TO_BTU(heatSources[N].energyInput_kWh);
+        energyInput = KWH_TO_BTU(heatSources[N]->energyInput_kWh);
         break;
     case UNITS_KJ:
-        energyInput = KWH_TO_KJ(heatSources[N].energyInput_kWh);
+        energyInput = KWH_TO_KJ(heatSources[N]->energyInput_kWh);
         break;
     default:
         send_error("Invalid units.");
@@ -1822,16 +1822,16 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) con
             "You have attempted to access the energy output of a heat source that does not exist.");
     }
 
-    double energyOutput = heatSources[N].energyOutput_kWh;
+    double energyOutput = heatSources[N]->energyOutput_kWh;
     switch (units)
     {
     case UNITS_KWH:
         break;
     case UNITS_BTU:
-        energyOutput = KWH_TO_BTU(heatSources[N].energyOutput_kWh);
+        energyOutput = KWH_TO_BTU(heatSources[N]->energyOutput_kWh);
         break;
     case UNITS_KJ:
-        energyOutput = KWH_TO_KJ(heatSources[N].energyOutput_kWh);
+        energyOutput = KWH_TO_KJ(heatSources[N]->energyOutput_kWh);
         break;
     default:
         send_error("Invalid units.");
@@ -1847,7 +1847,7 @@ double HPWH::getNthHeatSourceRunTime(int N) const
         send_error(
             "You have attempted to access the run time of a heat source that does not exist.");
     }
-    return heatSources[N].runtime_min;
+    return heatSources[N]->runtime_min;
 }
 
 int HPWH::isNthHeatSourceRunning(int N) const
@@ -1857,7 +1857,7 @@ int HPWH::isNthHeatSourceRunning(int N) const
         send_error("You have attempted to access the status of a heat source that does not exist.");
     }
     int result = 0;
-    if (heatSources[N].isEngaged())
+    if (heatSources[N]->isEngaged())
     {
         result = 1;
     }
@@ -1872,7 +1872,7 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
     {
         send_error("You have attempted to access the type of a heat source that does not exist.");
     }
-    return heatSources[N].typeOfHeatSource;
+    return heatSources[N]->typeOfHeatSource;
 }
 
 bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
@@ -1882,7 +1882,7 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
         send_warning("You have attempted to access the type of a heat source that does not exist.");
         return false;
     }
-    heatSource = &heatSources[N];
+    heatSource = heatSources[N].get();
     return true;
 }
 
@@ -2047,7 +2047,7 @@ int HPWH::getCompressorCoilConfig() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return heatSources[compressorIndex].configuration;
+    return heatSources[compressorIndex]->configuration;
 }
 
 int HPWH::isCompressorMultipass() const
@@ -2056,7 +2056,7 @@ int HPWH::isCompressorMultipass() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return static_cast<int>(heatSources[compressorIndex].isMultipass);
+    return static_cast<int>(heatSources[compressorIndex]->isMultipass);
 }
 
 int HPWH::isCompressorExternalMultipass() const
@@ -2065,7 +2065,7 @@ int HPWH::isCompressorExternalMultipass() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return static_cast<int>(heatSources[compressorIndex].isExternalMultipass());
+    return static_cast<int>(heatSources[compressorIndex]->isExternalMultipass());
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
@@ -2074,7 +2074,7 @@ bool HPWH::hasExternalHeatSource(int& heatSourceIndex) const
 {
     for (heatSourceIndex = 0; heatSourceIndex < getNumHeatSources(); ++heatSourceIndex)
     {
-        if (heatSources[heatSourceIndex].configuration == HeatSource::CONFIG_EXTERNAL)
+        if (heatSources[heatSourceIndex]->configuration == HeatSource::CONFIG_EXTERNAL)
         {
             return true;
         }
@@ -2088,7 +2088,7 @@ double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
     {
         send_error("Does not have an external multipass heat source.");
     }
-    double flowRate = heatSources[compressorIndex].mpFlowRate_LPS;
+    double flowRate = heatSources[compressorIndex]->mpFlowRate_LPS;
     if (units == HPWH::UNITS_LPS)
     {
     }
@@ -2141,7 +2141,7 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     }
 
     // Every compressor must have at least one on logic
-    for (std::shared_ptr<HeatingLogic> onLogic : heatSources[compressorIndex].turnOnLogicSet)
+    for (std::shared_ptr<HeatingLogic> onLogic : heatSources[compressorIndex]->turnOnLogicSet)
     {
         double tempA = onLogic->nodeWeightAvgFract(); // if standby logic will return 1
         aFract = tempA < aFract ? tempA : aFract;
@@ -2149,9 +2149,9 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     aquaFract = aFract;
 
     // Compressors don't need to have an off logic
-    if (heatSources[compressorIndex].shutOffLogicSet.size() != 0)
+    if (heatSources[compressorIndex]->shutOffLogicSet.size() != 0)
     {
-        for (std::shared_ptr<HeatingLogic> offLogic : heatSources[compressorIndex].shutOffLogicSet)
+        for (std::shared_ptr<HeatingLogic> offLogic : heatSources[compressorIndex]->shutOffLogicSet)
         {
 
             double tempUse;
@@ -2207,7 +2207,7 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
 
-    for (auto& perfP : heatSources[compressorIndex].perfMap)
+    for (auto& perfP : heatSources[compressorIndex]->perfMap)
     {
         scaleVector(perfP.inputPower_coeffs, scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
@@ -2266,15 +2266,15 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         // Just get all the elements
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            if (heatSources[i].isAResistance())
+            if (heatSources[i]->isAResistance())
             {
-                heatSources[i].changeResistanceWatts(watts);
+                heatSources[i]->changeResistanceWatts(watts);
             }
         }
     }
     else
     {
-        heatSources[resistanceHeightMap[which].index].changeResistanceWatts(watts);
+        heatSources[resistanceHeightMap[which].index]->changeResistanceWatts(watts);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2282,7 +2282,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                heatSources[resistanceHeightMap[i].index].changeResistanceWatts(watts);
+                heatSources[resistanceHeightMap[i].index]->changeResistanceWatts(watts);
             }
         }
     }
@@ -2307,9 +2307,9 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         // Just get all the elements
         for (int i = 0; i < getNumHeatSources(); i++)
         {
-            if (heatSources[i].isAResistance())
+            if (heatSources[i]->isAResistance())
             {
-                returnPower += heatSources[i].perfMap[0].inputPower_coeffs[0];
+                returnPower += heatSources[i]->perfMap[0].inputPower_coeffs[0];
             }
         }
     }
@@ -2317,7 +2317,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            heatSources[resistanceHeightMap[which].index].perfMap[0].inputPower_coeffs[0];
+            heatSources[resistanceHeightMap[which].index]->perfMap[0].inputPower_coeffs[0];
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2326,7 +2326,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 returnPower +=
-                    heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
+                    heatSources[resistanceHeightMap[i].index]->perfMap[0].inputPower_coeffs[0];
             }
         }
     }
@@ -2354,15 +2354,15 @@ int HPWH::getResistancePosition(int elementIndex) const
         send_error("Out of bounds value for which in getResistancePosition.");
     }
 
-    if (!heatSources[elementIndex].isAResistance())
+    if (!heatSources[elementIndex]->isAResistance())
     {
         send_error("This index is not a resistance element.");
     }
     bool foundPosition = false;
     int position = -1;
-    for (int i = 0; i < heatSources[elementIndex].getCondensitySize(); i++)
+    for (int i = 0; i < heatSources[elementIndex]->getCondensitySize(); i++)
     {
-        if (heatSources[elementIndex].condensity[i] > 0.)
+        if (heatSources[elementIndex]->condensity[i] > 0.)
         { // res elements have a condensity
             position = i;
             foundPosition = true;
@@ -2441,7 +2441,7 @@ void HPWH::turnAllHeatSourcesOff()
 {
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].disengageHeatSource();
+        heatSources[i]->disengageHeatSource();
     }
     isHeating = false;
 }
@@ -2451,7 +2451,7 @@ bool HPWH::areAllHeatSourcesOff() const
     bool allOff = true;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isEngaged() == true)
+        if (heatSources[i]->isEngaged() == true)
         {
             allOff = false;
         }
@@ -2476,13 +2476,13 @@ void HPWH::calcDerivedValues()
     // heat source ability to depress temp
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isACompressor())
+        if (heatSources[i]->isACompressor())
         {
-            heatSources[i].depressesTemperature = true;
+            heatSources[i]->depressesTemperature = true;
         }
-        else if (heatSources[i].isAResistance())
+        else if (heatSources[i]->isAResistance())
         {
-            heatSources[i].depressesTemperature = false;
+            heatSources[i]->depressesTemperature = false;
         }
     }
 }
@@ -2492,13 +2492,14 @@ void HPWH::calcDerivedHeatingValues()
     // find condentropy/shrinkage
     for (int i = 0; i < getNumHeatSources(); ++i)
     {
-        heatSources[i].Tshrinkage_C = findShrinkageT_C(heatSources[i].condensity);
+        heatSources[i]->Tshrinkage_C = findShrinkageT_C(heatSources[i]->condensity);
     }
 
     // find lowest node
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].lowestNode = findLowestNode(heatSources[i].condensity, tank->getNumNodes());
+        heatSources[i]->lowestNode =
+            findLowestNode(heatSources[i]->condensity, tank->getNumNodes());
     }
 
     // define condenser index and lowest resistance element index
@@ -2510,15 +2511,15 @@ void HPWH::calcDerivedHeatingValues()
     double highestPos = 0.; // -1 to make sure a an element on the bottom can still be identified.
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isACompressor())
+        if (heatSources[i]->isACompressor())
         {
             compressorIndex = i; // NOTE: Maybe won't work with multiple compressors (last
                                  // compressor will be used)
         }
-        else if (heatSources[i].isAResistance())
+        else if (heatSources[i]->isAResistance())
         {
             // Gets VIP element index
-            if (heatSources[i].isVIP)
+            if (heatSources[i]->isVIP)
             {
                 if (VIPIndex == -1)
                 {
@@ -2529,16 +2530,16 @@ void HPWH::calcDerivedHeatingValues()
                     send_warning("More than one resistance element is assigned to VIP.");
                 }
             }
-            int condensitySize = heatSources[i].getCondensitySize();
+            int condensitySize = heatSources[i]->getCondensitySize();
             for (int j = 0; j < condensitySize; ++j)
             {
                 double pos = static_cast<double>(j) / condensitySize;
-                if ((heatSources[i].condensity[j] > 0.) && (pos < lowestPos))
+                if ((heatSources[i]->condensity[j] > 0.) && (pos < lowestPos))
                 {
                     lowestElementIndex = i;
                     lowestPos = pos;
                 }
-                if ((heatSources[i].condensity[j] > 0.) && (pos >= highestPos))
+                if ((heatSources[i]->condensity[j] > 0.) && (pos >= highestPos))
                 {
                     highestElementIndex = i;
                     highestPos = pos;
@@ -2550,13 +2551,13 @@ void HPWH::calcDerivedHeatingValues()
     // heat source ability to depress temp
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isACompressor())
+        if (heatSources[i]->isACompressor())
         {
-            heatSources[i].depressesTemperature = true;
+            heatSources[i]->depressesTemperature = true;
         }
-        else if (heatSources[i].isAResistance())
+        else if (heatSources[i]->isAResistance())
         {
-            heatSources[i].depressesTemperature = false;
+            heatSources[i]->depressesTemperature = false;
         }
     }
 }
@@ -2568,7 +2569,7 @@ void HPWH::mapResRelativePosToHeatSources()
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isAResistance())
+        if (heatSources[i]->isAResistance())
         {
             resistanceHeightMap.push_back({i, getResistancePosition(i)});
         }
@@ -2665,15 +2666,15 @@ void HPWH::checkInputs()
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         // check the heat source type to make sure it has been set
-        if (heatSources[i].typeOfHeatSource == TYPE_none)
+        if (heatSources[i]->typeOfHeatSource == TYPE_none)
         {
             error_msgs.push(fmt::format(
                 "Heat source {} does not have a specified type.  Initialization failed.", i));
         }
         // check to make sure there is at least one onlogic or parent with onlogic
-        int parent = heatSources[i].findParent();
-        if (heatSources[i].turnOnLogicSet.size() == 0 &&
-            (parent == -1 || heatSources[parent].turnOnLogicSet.size() == 0))
+        int parent = heatSources[i]->findParent();
+        if (heatSources[i]->turnOnLogicSet.size() == 0 &&
+            (parent == -1 || heatSources[parent]->turnOnLogicSet.size() == 0))
         {
             error_msgs.push(
                 "You must specify at least one logic to turn on the element or the element "
@@ -2681,7 +2682,7 @@ void HPWH::checkInputs()
         }
 
         // Validate on logics
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].turnOnLogicSet)
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i]->turnOnLogicSet)
         {
             if (!logic->isValid())
             {
@@ -2689,7 +2690,7 @@ void HPWH::checkInputs()
             }
         }
         // Validate off logics
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].shutOffLogicSet)
+        for (std::shared_ptr<HeatingLogic> logic : heatSources[i]->shutOffLogicSet)
         {
             if (!logic->isValid())
             {
@@ -2700,8 +2701,8 @@ void HPWH::checkInputs()
         // check is condensity sums to 1
         condensitySum = 0;
 
-        for (int j = 0; j < heatSources[i].getCondensitySize(); j++)
-            condensitySum += heatSources[i].condensity[j];
+        for (int j = 0; j < heatSources[i]->getCondensitySize(); j++)
+            condensitySum += heatSources[i]->condensity[j];
         if (fabs(condensitySum - 1.0) > 1e-6)
         {
             error_msgs.push(fmt::format("The condensity for heatsource {:d} does not sum to 1. "
@@ -2710,44 +2711,44 @@ void HPWH::checkInputs()
                                         condensitySum));
         }
         // check that air flows are all set properly
-        if (heatSources[i].airflowFreedom > 1.0 || heatSources[i].airflowFreedom <= 0.0)
+        if (heatSources[i]->airflowFreedom > 1.0 || heatSources[i]->airflowFreedom <= 0.0)
         {
             error_msgs.push(fmt::format(
                 "\n\tThe airflowFreedom must be between 0 and 1 for heatsource {:d}.", i));
         }
 
-        if (heatSources[i].isACompressor())
+        if (heatSources[i]->isACompressor())
         {
-            if (heatSources[i].doDefrost)
+            if (heatSources[i]->doDefrost)
             {
-                if (heatSources[i].defrostMap.size() < 3)
+                if (heatSources[i]->defrostMap.size() < 3)
                 {
                     error_msgs.push(
                         "Defrost logic set to true but no valid defrost map of length 3 or "
                         "greater set.");
                 }
-                if (heatSources[i].configuration != HeatSource::CONFIG_EXTERNAL)
+                if (heatSources[i]->configuration != HeatSource::CONFIG_EXTERNAL)
                 {
                     error_msgs.push("Defrost is only simulated for external compressors.");
                 }
             }
         }
-        if (heatSources[i].configuration == HeatSource::CONFIG_EXTERNAL)
+        if (heatSources[i]->configuration == HeatSource::CONFIG_EXTERNAL)
         {
 
-            if (heatSources[i].shutOffLogicSet.size() != 1)
+            if (heatSources[i]->shutOffLogicSet.size() != 1)
             {
                 error_msgs.push("External heat sources can only have one shut off logic.");
             }
-            if (0 > heatSources[i].externalOutletHeight ||
-                heatSources[i].externalOutletHeight > getNumNodes() - 1)
+            if (0 > heatSources[i]->externalOutletHeight ||
+                heatSources[i]->externalOutletHeight > getNumNodes() - 1)
             {
                 error_msgs.push(
                     "External heat sources need an external outlet height within the bounds"
                     "from from 0 to numNodes-1.");
             }
-            if (0 > heatSources[i].externalInletHeight ||
-                heatSources[i].externalInletHeight > getNumNodes() - 1)
+            if (0 > heatSources[i]->externalInletHeight ||
+                heatSources[i]->externalInletHeight > getNumNodes() - 1)
             {
                 error_msgs.push(
                     "External heat sources need an external inlet height within the bounds "
@@ -2756,8 +2757,8 @@ void HPWH::checkInputs()
         }
         else
         {
-            if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
-                heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
+            if (heatSources[i]->secondaryHeatExchanger.extraPumpPower_W != 0 ||
+                heatSources[i]->secondaryHeatExchanger.extraPumpPower_W)
             {
                 error_msgs.push(fmt::format(
                     "Heatsource {:d} is not an external heat source but has an external "
@@ -2769,19 +2770,19 @@ void HPWH::checkInputs()
         // Check performance map
         // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and
         // that ;
-        if (heatSources[i].useBtwxtGrid)
+        if (heatSources[i]->useBtwxtGrid)
         {
             // If useBtwxtGrid is true that the perfMap is empty
-            if (heatSources[i].perfMap.size() != 0)
+            if (heatSources[i]->perfMap.size() != 0)
             {
                 error_msgs.push(
                     "\n\tUsing the grid lookups but a regression-based performance map is given.");
             }
 
             // Check length of vectors in perfGridValue are equal
-            if (heatSources[i].perfGridValues[0].size() !=
-                    heatSources[i].perfGridValues[1].size() &&
-                heatSources[i].perfGridValues[0].size() != 0)
+            if (heatSources[i]->perfGridValues[0].size() !=
+                    heatSources[i]->perfGridValues[1].size() &&
+                heatSources[i]->perfGridValues[0].size() != 0)
             {
                 error_msgs.push(
                     "When using grid lookups for performance the vectors in perfGridValues must "
@@ -2791,11 +2792,11 @@ void HPWH::checkInputs()
             // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
             // lengths
             size_t expLength = 1;
-            for (const auto& v : heatSources[i].perfGrid)
+            for (const auto& v : heatSources[i]->perfGrid)
             {
                 expLength *= v.size();
             }
-            if (expLength != heatSources[i].perfGridValues[0].size())
+            if (expLength != heatSources[i]->perfGridValues[0].size())
             {
                 error_msgs.push(
                     "When using grid lookups for perfmance the vectors in perfGridValues must "
@@ -2805,7 +2806,7 @@ void HPWH::checkInputs()
         else
         {
             // Check that perfmap only has 1 point if config_external and multipass
-            if (heatSources[i].isExternalMultipass() && heatSources[i].perfMap.size() != 1)
+            if (heatSources[i]->isExternalMultipass() && heatSources[i]->perfMap.size() != 1)
             {
                 error_msgs.push(
                     "External multipass heat sources must have a perfMap of only one point "
@@ -3477,9 +3478,9 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempString;
                 if (tempString == "true")
-                    heatSources[heatsource].isVIP = true;
+                    heatSources[heatsource]->isVIP = true;
                 else if (tempString == "false")
-                    heatSources[heatsource].isVIP = false;
+                    heatSources[heatsource]->isVIP = false;
                 else
                 {
                     send_error(fmt::format(
@@ -3490,9 +3491,9 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempString;
                 if (tempString == "true")
-                    heatSources[heatsource].isOn = true;
+                    heatSources[heatsource]->isOn = true;
                 else if (tempString == "false")
-                    heatSources[heatsource].isOn = false;
+                    heatSources[heatsource]->isOn = false;
                 else
                 {
                     send_error(fmt::format(
@@ -3502,22 +3503,22 @@ void HPWH::initFromFile(string modelName)
             else if (token == "minT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].minT = tempDouble;
+                heatSources[heatsource]->minT = tempDouble;
                 if (units == "C")
                     ;
                 else if (units == "F")
-                    heatSources[heatsource].minT = F_TO_C(tempDouble);
+                    heatSources[heatsource]->minT = F_TO_C(tempDouble);
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
             }
             else if (token == "maxT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].maxT = tempDouble;
+                heatSources[heatsource]->maxT = tempDouble;
                 if (units == "C")
                     ;
                 else if (units == "F")
-                    heatSources[heatsource].maxT = F_TO_C(tempDouble);
+                    heatSources[heatsource]->maxT = F_TO_C(tempDouble);
                 else
                     send_warning("Invalid units.");
             }
@@ -3624,15 +3625,15 @@ void HPWH::initFromFile(string modelName)
                             "custom", nodeWeights, tempDouble, this, absolute, compare);
                     if (token == "onlogic")
                     {
-                        heatSources[heatsource].addTurnOnLogic(logic);
+                        heatSources[heatsource]->addTurnOnLogic(logic);
                     }
                     else if (token == "offlogic")
                     {
-                        heatSources[heatsource].addShutOffLogic(std::move(logic));
+                        heatSources[heatsource]->addShutOffLogic(std::move(logic));
                     }
                     else
                     { // standby logic
-                        heatSources[heatsource].standbyLogic =
+                        heatSources[heatsource]->standbyLogic =
                             std::make_shared<HPWH::TempBasedHeatingLogic>(
                                 "standby logic", nodeWeights, tempDouble, this, absolute, compare);
                     }
@@ -3686,48 +3687,48 @@ void HPWH::initFromFile(string modelName)
 
                     if (tempString == "wholeTank")
                     {
-                        heatSources[heatsource].addTurnOnLogic(
+                        heatSources[heatsource]->addTurnOnLogic(
                             HPWH::wholeTank(tempDouble, UNITS_C, absolute));
                     }
                     else if (tempString == "topThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::topThird(tempDouble));
                     }
                     else if (tempString == "bottomThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::bottomThird(tempDouble));
                     }
                     else if (tempString == "standby")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::standby(tempDouble));
                     }
                     else if (tempString == "bottomSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::bottomSixth(tempDouble));
                     }
                     else if (tempString == "secondSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::secondSixth(tempDouble));
                     }
                     else if (tempString == "thirdSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::thirdSixth(tempDouble));
                     }
                     else if (tempString == "fourthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::fourthSixth(tempDouble));
                     }
                     else if (tempString == "fifthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::fifthSixth(tempDouble));
                     }
                     else if (tempString == "topSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::topSixth(tempDouble));
                     }
                     else if (tempString == "bottomHalf")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(tempDouble));
+                        heatSources[heatsource]->addTurnOnLogic(HPWH::bottomHalf(tempDouble));
                     }
                     else
                     {
@@ -3749,30 +3750,30 @@ void HPWH::initFromFile(string modelName)
 
                     if (tempString == "topNodeMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
+                        heatSources[heatsource]->addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
                     }
                     else if (tempString == "bottomNodeMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
+                        heatSources[heatsource]->addShutOffLogic(
                             HPWH::bottomNodeMaxTemp(tempDouble));
                     }
                     else if (tempString == "bottomTwelfthMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
+                        heatSources[heatsource]->addShutOffLogic(
                             HPWH::bottomTwelfthMaxTemp(tempDouble));
                     }
                     else if (tempString == "bottomSixthMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
+                        heatSources[heatsource]->addShutOffLogic(
                             HPWH::bottomSixthMaxTemp(tempDouble));
                     }
                     else if (tempString == "largeDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
+                        heatSources[heatsource]->addShutOffLogic(HPWH::largeDraw(tempDouble));
                     }
                     else if (tempString == "largerDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
+                        heatSources[heatsource]->addShutOffLogic(HPWH::largerDraw(tempDouble));
                     }
                     else
                     {
@@ -3786,11 +3787,11 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "resistor")
                 {
-                    heatSources[heatsource].typeOfHeatSource = TYPE_resistance;
+                    heatSources[heatsource]->typeOfHeatSource = TYPE_resistance;
                 }
                 else if (tempString == "compressor")
                 {
-                    heatSources[heatsource].typeOfHeatSource = TYPE_compressor;
+                    heatSources[heatsource]->typeOfHeatSource = TYPE_compressor;
                 }
                 else
                 {
@@ -3803,15 +3804,15 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "wrapped")
                 {
-                    heatSources[heatsource].configuration = HeatSource::CONFIG_WRAPPED;
+                    heatSources[heatsource]->configuration = HeatSource::CONFIG_WRAPPED;
                 }
                 else if (tempString == "submerged")
                 {
-                    heatSources[heatsource].configuration = HeatSource::CONFIG_SUBMERGED;
+                    heatSources[heatsource]->configuration = HeatSource::CONFIG_SUBMERGED;
                 }
                 else if (tempString == "external")
                 {
-                    heatSources[heatsource].configuration = HeatSource::CONFIG_EXTERNAL;
+                    heatSources[heatsource]->configuration = HeatSource::CONFIG_EXTERNAL;
                 }
                 else
                 {
@@ -3824,11 +3825,11 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "singlepass")
                 {
-                    heatSources[heatsource].isMultipass = false;
+                    heatSources[heatsource]->isMultipass = false;
                 }
                 else if (tempString == "multipass")
                 {
-                    heatSources[heatsource].isMultipass = true;
+                    heatSources[heatsource]->isMultipass = true;
                 }
                 else
                 {
@@ -3842,7 +3843,7 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalInletHeight = static_cast<int>(tempInt);
+                    heatSources[heatsource]->externalInletHeight = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -3855,7 +3856,7 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    heatSources[heatsource].externalOutletHeight = static_cast<int>(tempInt);
+                    heatSources[heatsource]->externalOutletHeight = static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -3869,19 +3870,19 @@ void HPWH::initFromFile(string modelName)
                 std::vector<double> condensity;
                 while (line_ss >> x)
                     condensity.push_back(x);
-                heatSources[heatsource].setCondensity(condensity);
+                heatSources[heatsource]->setCondensity(condensity);
             }
             else if (token == "nTemps")
             {
                 line_ss >> nTemps;
-                heatSources[heatsource].perfMap.resize(nTemps);
+                heatSources[heatsource]->perfMap.resize(nTemps);
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
                 nTemps = std::stoi(match[1].str());
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource]->perfMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -3914,7 +3915,7 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
+                heatSources[heatsource]->perfMap[nTemps - 1].T_F = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -3941,7 +3942,7 @@ void HPWH::initFromFile(string modelName)
                 }
                 */
 
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t maxTemps = heatSources[heatsource]->perfMap.size();
 
                 if (maxTemps < nTemps)
                 {
@@ -3967,12 +3968,12 @@ void HPWH::initFromFile(string modelName)
 
                 if (var == "inPow")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(
+                    heatSources[heatsource]->perfMap[nTemps - 1].inputPower_coeffs.push_back(
                         tempDouble);
                 }
                 else if (var == "cop")
                 {
-                    heatSources[heatsource].perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
+                    heatSources[heatsource]->perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
                 }
             }
             else if (token == "hysteresis")
@@ -3987,22 +3988,22 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                heatSources[heatsource].hysteresis_dC = tempDouble;
+                heatSources[heatsource]->hysteresis_dC = tempDouble;
             }
             else if (token == "backupSource")
             {
                 line_ss >> sourceNum;
-                heatSources[heatsource].backupHeatSource = &heatSources[sourceNum];
+                heatSources[heatsource]->backupHeatSource = heatSources[sourceNum].get();
             }
             else if (token == "companionSource")
             {
                 line_ss >> sourceNum;
-                heatSources[heatsource].companionHeatSource = &heatSources[sourceNum];
+                heatSources[heatsource]->companionHeatSource = heatSources[sourceNum].get();
             }
             else if (token == "followedBySource")
             {
                 line_ss >> sourceNum;
-                heatSources[heatsource].followedByHeatSource = &heatSources[sourceNum];
+                heatSources[heatsource]->followedByHeatSource = heatSources[sourceNum].get();
             }
             else
             {
@@ -4031,11 +4032,11 @@ void HPWH::initFromFile(string modelName)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 
     calcDerivedValues();
@@ -4090,11 +4091,11 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
-        HeatSource heatSource(this, get_courier(), configuration.label);
-        heatSource.from(configuration);
-        heatSources[iHeatSource] = heatSource;
+        heatSources[iHeatSource] =
+            std::make_shared<HeatSource>(this, get_courier(), configuration.label);
+        heatSources[iHeatSource]->from(configuration);
+        heatSources[iHeatSource]->name = configuration.label;
         heat_source_lookup[configuration.label] = iHeatSource;
-        heatSources[iHeatSource].name = configuration.label;
     }
 
     // set associations between heat sources
@@ -4105,19 +4106,19 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         if (configuration.backup_heat_source_label_is_set)
         {
             auto iBackup = heat_source_lookup[configuration.backup_heat_source_label];
-            heatSources[iHeatSource].backupHeatSource = &heatSources[iBackup];
+            heatSources[iHeatSource]->backupHeatSource = heatSources[iBackup].get();
         }
 
         if (configuration.followed_by_heat_source_label_is_set)
         {
             auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_label];
-            heatSources[iHeatSource].followedByHeatSource = &heatSources[iFollowedBy];
+            heatSources[iHeatSource]->followedByHeatSource = heatSources[iFollowedBy].get();
         }
 
         if (configuration.companion_heat_source_label_is_set)
         {
             auto iCompanion = heat_source_lookup[configuration.companion_heat_source_label];
-            heatSources[iHeatSource].companionHeatSource = &heatSources[iCompanion];
+            heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
 
@@ -4128,11 +4129,11 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -4159,7 +4160,7 @@ void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& r
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
-        heatSources[iHeatSource].to(configuration);
+        heatSources[iHeatSource]->to(configuration);
     }
 }
 
@@ -4453,7 +4454,7 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         heatersAreOn = false;
         for (auto& heatSource : heatSources)
         {
-            heatersAreOn |= heatSource.isEngaged();
+            heatersAreOn |= heatSource->isEngaged();
         }
 
         {

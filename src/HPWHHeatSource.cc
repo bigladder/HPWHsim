@@ -665,7 +665,7 @@ int HPWH::HeatSource::findParent() const
 {
     for (int i = 0; i < hpwh->getNumHeatSources(); ++i)
     {
-        if (this == hpwh->heatSources[i].backupHeatSource)
+        if (this == hpwh->heatSources[i]->backupHeatSource)
         {
             return i;
         }
