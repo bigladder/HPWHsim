@@ -676,7 +676,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 {
 
     // if it's already locked out, keep it locked out
-    if (isLockedOut() == true)
+    if (isLockedOut())
     {
         return true;
     }
@@ -685,7 +685,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
+        if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
         {
             lock = true;
             send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
@@ -693,7 +693,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
                                      minT));
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C < minT)
+        else if (!isEngaged() && (heatSourceAmbientT_C < minT))
         {
             lock = true;
             send_warning(fmt::format(
@@ -702,14 +702,14 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 
         // when the "external" temperature is too warm - typically used for resistance lockout
         // when running, use hysteresis
-        if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
+        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
         {
             lock = true;
             send_warning(fmt::format(
                 "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
+        else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
         {
             lock = true;
             send_warning(fmt::format(
