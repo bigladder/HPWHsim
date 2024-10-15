@@ -122,16 +122,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-std::vector<double> F_TO_K(const std::vector<double>& vect)
-{
-    std::vector<double> vect_out(vect.size());
-    for (auto& T : vect_out)
-    {
-        T = F_TO_C(C_TO_K(T));
-    }
-    return vect_out;
-}
-
 void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                                 rscondenserwaterheatsource)
 {
@@ -490,15 +480,16 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGrid.push_back(envTemps_K);
 
     // relate to reference values (from Rheem2020Build50)
-    std::size_t nPowerPoints = 11 * (maxPowerCurvature / 0.01571);
-    if (nPowerPoints < 2)
-        nPowerPoints = 2;
+    constexpr std::size_t minPoints = 2;
+    constexpr std::size_t refPowerPoints = 13;
+    constexpr std::size_t refCOP_points = 13;
+    constexpr double refPowerCurvature = 0.01571;
+    constexpr double refCOP_curvature = 0.0002;
 
-    std::size_t nCOPPoints = 11 * (maxCOPCurvature / 0.0002); // untested
-    if (nCOPPoints < 2)
-        nCOPPoints = 2;
-
+    std::size_t nPowerPoints = (refPowerPoints - minPoints) * (maxPowerCurvature / refPowerCurvature) + minPoints;
+    std::size_t nCOPPoints = (refCOP_points - minPoints) * (maxCOPCurvature / refCOP_curvature) + minPoints;
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
+
     std::vector<double> heatSourceTemps_C(nPoints);
     {
         double T_C = 0;
