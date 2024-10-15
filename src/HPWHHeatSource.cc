@@ -486,8 +486,10 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     constexpr double refPowerCurvature = 0.01571;
     constexpr double refCOP_curvature = 0.0002;
 
-    std::size_t nPowerPoints = (refPowerPoints - minPoints) * (maxPowerCurvature / refPowerCurvature) + minPoints;
-    std::size_t nCOPPoints = (refCOP_points - minPoints) * (maxCOPCurvature / refCOP_curvature) + minPoints;
+    std::size_t nPowerPoints =
+        (refPowerPoints - minPoints) * (maxPowerCurvature / refPowerCurvature) + minPoints;
+    std::size_t nCOPPoints =
+        (refCOP_points - minPoints) * (maxCOPCurvature / refCOP_curvature) + minPoints;
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
 
     std::vector<double> heatSourceTemps_C(nPoints);
@@ -688,16 +690,11 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
         {
             lock = true;
-            send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
-                                     heatSourceAmbientT_C,
-                                     minT));
         }
         // when not running, don't use hysteresis
         else if (!isEngaged() && (heatSourceAmbientT_C < minT))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: already below minT\tambient: {}\tminT: {}", heatSourceAmbientT_C, minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
@@ -705,22 +702,16 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
         // when not running, don't use hysteresis
         else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: already above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            send_warning(
-                fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
             send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
                                      maxSetpoint_C));
         }
@@ -733,7 +724,7 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 {
 
     // if it's already unlocked, keep it unlocked
-    if (isLockedOut() == false)
+    if (!isLockedOut())
     {
         return true;
     }
