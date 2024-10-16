@@ -122,16 +122,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-std::vector<double> F_TO_K(const std::vector<double>& vect)
-{
-    std::vector<double> vect_out(vect.size());
-    for (auto& T : vect_out)
-    {
-        T = F_TO_C(C_TO_K(T));
-    }
-    return vect_out;
-}
-
 void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                                 rscondenserwaterheatsource)
 {
@@ -490,15 +480,18 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGrid.push_back(envTemps_K);
 
     // relate to reference values (from Rheem2020Build50)
-    std::size_t nPowerPoints = 11 * (maxPowerCurvature / 0.01571);
-    if (nPowerPoints < 2)
-        nPowerPoints = 2;
+    constexpr std::size_t minPoints = 2;
+    constexpr std::size_t refPowerPoints = 13;
+    constexpr std::size_t refCOP_points = 13;
+    constexpr double refPowerCurvature = 0.01571;
+    constexpr double refCOP_curvature = 0.0002;
 
-    std::size_t nCOPPoints = 11 * (maxCOPCurvature / 0.0002); // untested
-    if (nCOPPoints < 2)
-        nCOPPoints = 2;
-
+    auto nPowerPoints = static_cast<std::size_t>(
+        (maxPowerCurvature / refPowerCurvature) * (refPowerPoints - minPoints) + minPoints);
+    auto nCOPPoints = static_cast<std::size_t>(
+        (maxCOPCurvature / refCOP_curvature) * (refCOP_points - minPoints) + minPoints);
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
+
     std::vector<double> heatSourceTemps_C(nPoints);
     {
         double T_C = 0;
@@ -685,7 +678,7 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
 {
 
     // if it's already locked out, keep it locked out
-    if (isLockedOut() == true)
+    if (isLockedOut())
     {
         return true;
     }
@@ -694,42 +687,31 @@ bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
         // when the "external" temperature is too cold - typically used for compressor low temp.
         // cutoffs when running, use hysteresis
         bool lock = false;
-        if (isEngaged() == true && heatSourceAmbientT_C < minT - hysteresis_dC)
+        if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
         {
             lock = true;
-            send_warning(fmt::format("lock-out: running below minT\tambient: {},\tminT: {}",
-                                     heatSourceAmbientT_C,
-                                     minT));
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C < minT)
+        else if (!isEngaged() && (heatSourceAmbientT_C < minT))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: already below minT\tambient: {}\tminT: {}", heatSourceAmbientT_C, minT));
         }
 
         // when the "external" temperature is too warm - typically used for resistance lockout
         // when running, use hysteresis
-        if (isEngaged() == true && heatSourceAmbientT_C > maxT + hysteresis_dC)
+        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: running above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
         // when not running, don't use hysteresis
-        else if (isEngaged() == false && heatSourceAmbientT_C > maxT)
+        else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
         {
             lock = true;
-            send_warning(fmt::format(
-                "lock-out: already above maxT\tambient: {}\tmaxT: {}", heatSourceAmbientT_C, maxT));
         }
 
         if (maxedOut())
         {
             lock = true;
-            send_warning(
-                fmt::format("lock-out: condenser water temperature above max: {}", maxSetpoint_C));
             send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
                                      maxSetpoint_C));
         }
@@ -742,7 +724,7 @@ bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
 {
 
     // if it's already unlocked, keep it unlocked
-    if (isLockedOut() == false)
+    if (!isLockedOut())
     {
         return true;
     }
