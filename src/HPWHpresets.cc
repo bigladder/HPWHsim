@@ -50,8 +50,8 @@ void HPWH::initResistanceTank(double tankVol_L,
     doTempDepression = false;
     tank->mixesOnDraw = true;
 
-    HeatSource* resistiveElementTop = NULL;
-    HeatSource* resistiveElementBottom = NULL;
+    Resistance* resistiveElementTop = NULL;
+    Resistance* resistiveElementBottom = NULL;
 
     heatSources.reserve(2);
     if (upperPower_W > 0.)
@@ -59,7 +59,7 @@ void HPWH::initResistanceTank(double tankVol_L,
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
         resistiveElementTop = addResistance("resistiveElementTop");
-        resistiveElementTop->setupAsResistiveElement(8, upperPower_W);
+        resistiveElementTop->setup(8, upperPower_W);
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -67,7 +67,7 @@ void HPWH::initResistanceTank(double tankVol_L,
 
     //
     resistiveElementBottom = addResistance("resistiveElementBottom");
-    resistiveElementBottom->setupAsResistiveElement(0, lowerPower_W);
+    resistiveElementBottom->setup(0, lowerPower_W);
 
     // standard logic conditions
     resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
@@ -150,14 +150,14 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     doTempDepression = false;
     tank->mixesOnDraw = true;
 
-    HeatSource* resistiveElementTop = nullptr;
-    HeatSource* resistiveElementBottom = nullptr;
+    Resistance* resistiveElementTop = nullptr;
+    Resistance* resistiveElementBottom = nullptr;
 
     heatSources.reserve(2);
     if (upperPower_W > 0.)
     {
         resistiveElementTop = addResistance("resistiveElementTop");
-        resistiveElementTop->setupAsResistiveElement(8, upperPower_W);
+        resistiveElementTop->setup(8, upperPower_W);
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -166,7 +166,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     if (lowerPower_W > 0.)
     {
         resistiveElementBottom = addResistance("resistiveElementBottom");
-        resistiveElementBottom->setupAsResistiveElement(0, lowerPower_W);
+        resistiveElementBottom->setup(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
         resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10.)));
@@ -257,11 +257,11 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
     // top resistor values
-    resistiveElementTop->setupAsResistiveElement(6, 4500);
+    resistiveElementTop->setup(6, 4500);
     resistiveElementTop->isVIP = true;
 
     // bottom resistor values
-    resistiveElementBottom->setupAsResistiveElement(0, 4000);
+    resistiveElementBottom->setup(0, 4000);
     resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -365,8 +365,8 @@ void HPWH::initPreset(MODELS presetNum)
         auto resistiveElementTop = addResistance("resistiveElementTop");
         auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementBottom->setup(0, 4500);
+        resistiveElementTop->setup(8, 4500);
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
@@ -396,8 +396,8 @@ void HPWH::initPreset(MODELS presetNum)
         auto resistiveElementTop = addResistance("resistiveElementTop");
         auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
-        resistiveElementTop->setupAsResistiveElement(9, 4500);
+        resistiveElementBottom->setup(0, 4500);
+        resistiveElementTop->setup(9, 4500);
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
@@ -427,8 +427,8 @@ void HPWH::initPreset(MODELS presetNum)
         auto resistiveElementTop = addResistance("resistiveElementTop");
         auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
-        resistiveElementTop->setupAsResistiveElement(9, 4500);
+        resistiveElementBottom->setup(0, 4500);
+        resistiveElementTop->setup(9, 4500);
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
@@ -475,8 +475,8 @@ void HPWH::initPreset(MODELS presetNum)
         auto compressor = addCondenser("compressor");
         auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
-        resistiveElementTop->setupAsResistiveElement(9, 4500);
+        resistiveElementBottom->setup(0, 4500);
+        resistiveElementTop->setup(9, 4500);
 
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
@@ -632,11 +632,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4250);
+        resistiveElementTop->setup(8, 4250);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 2000);
+        resistiveElementBottom->setup(0, 2000);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
@@ -705,11 +705,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4250);
+        resistiveElementTop->setup(8, 4250);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 2000);
+        resistiveElementBottom->setup(0, 2000);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
@@ -778,11 +778,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4200);
+        resistiveElementTop->setup(8, 4200);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4200);
+        resistiveElementBottom->setup(0, 4200);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
@@ -2299,22 +2299,22 @@ void HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2250)
         {
-            resistiveElementTop->setupAsResistiveElement(8, 2250);
+            resistiveElementTop->setup(8, 2250);
         }
         else
         {
-            resistiveElementTop->setupAsResistiveElement(8, 4500);
+            resistiveElementTop->setup(8, 4500);
         }
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2250)
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 2250);
+            resistiveElementBottom->setup(0, 2250);
         }
         else
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 4500);
+            resistiveElementBottom->setup(0, 4500);
         }
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -2405,22 +2405,22 @@ void HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2265)
         {
-            resistiveElementTop->setupAsResistiveElement(8, 2250);
+            resistiveElementTop->setup(8, 2250);
         }
         else
         {
-            resistiveElementTop->setupAsResistiveElement(8, 4500);
+            resistiveElementTop->setup(8, 4500);
         }
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2265)
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 2250);
+            resistiveElementBottom->setup(0, 2250);
         }
         else
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 4500);
+            resistiveElementBottom->setup(0, 4500);
         }
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -2503,22 +2503,22 @@ void HPWH::initPreset(MODELS presetNum)
         // top resistor values
         if (presetNum == MODELS_RheemHBDR2280)
         {
-            resistiveElementTop->setupAsResistiveElement(8, 2250);
+            resistiveElementTop->setup(8, 2250);
         }
         else
         {
-            resistiveElementTop->setupAsResistiveElement(8, 4500);
+            resistiveElementTop->setup(8, 4500);
         }
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
         if (presetNum == MODELS_RheemHBDR2280)
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 2250);
+            resistiveElementBottom->setup(0, 2250);
         }
         else
         {
-            resistiveElementBottom->setupAsResistiveElement(0, 4500);
+            resistiveElementBottom->setup(0, 4500);
         }
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -2593,11 +2593,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
@@ -2672,12 +2672,12 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         double wattRE = 6000; // 5650.;
-        resistiveElementTop->setupAsResistiveElement(7, wattRE);
+        resistiveElementTop->setup(7, wattRE);
         resistiveElementTop->isVIP = true; // VIP is the only source that turns on independently
                                            // when something else is already heating.
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, wattRE);
+        resistiveElementBottom->setup(0, wattRE);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
         resistiveElementBottom->setCondensity(
             {0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
@@ -2766,10 +2766,10 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementTop->isVIP = true;
 
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
@@ -2835,11 +2835,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -2896,11 +2896,11 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -2966,11 +2966,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3036,11 +3036,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3107,11 +3107,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3176,11 +3176,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3261,11 +3261,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
@@ -3350,11 +3350,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
@@ -3541,11 +3541,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4200);
+        resistiveElementTop->setup(8, 4200);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 2250);
+        resistiveElementBottom->setup(0, 2250);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
@@ -3585,7 +3585,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = false;
 
 
-        resistiveElement->setupAsResistiveElement(0, 1500);
+        resistiveElement->setup(0, 1500);
         resistiveElement->hysteresis_dC = dF_TO_dC(0);
 
         compressor->setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
@@ -3660,11 +3660,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
@@ -3728,11 +3728,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
@@ -3797,11 +3797,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3865,11 +3865,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -3957,11 +3957,11 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500);
+        resistiveElementTop->setup(6, 4500);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
@@ -4079,8 +4079,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         // Scale the resistance-element power
         double elementPower_W = scaleFactor * 30000.;
-        resistiveElementBottom->setupAsResistiveElement(0, elementPower_W);
-        resistiveElementTop->setupAsResistiveElement(9, elementPower_W);
+        resistiveElementBottom->setup(0, elementPower_W);
+        resistiveElementTop->setup(9, elementPower_W);
 
         // top resistor values
         // standard logic conditions
@@ -4156,8 +4156,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         });
 
-        resistiveElementBottom->setupAsResistiveElement(0, 30000);
-        resistiveElementTop->setupAsResistiveElement(9, 30000);
+        resistiveElementBottom->setup(0, 30000);
+        resistiveElementTop->setup(9, 30000);
 
         // top resistor values
         // standard logic conditions
@@ -4280,12 +4280,12 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4500.);
+        resistiveElementTop->setup(6, 4500.);
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500.);
+        resistiveElementBottom->setup(0, 4500.);
         resistiveElementBottom->addTurnOnLogic(thirdSixth(F_TO_C(60.)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(85.)));
         resistiveElementBottom->isVIP = false;
@@ -4361,12 +4361,12 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 4500);
+        resistiveElementTop->setup(8, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(0.);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4500);
+        resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2.);
 
         // logic conditions

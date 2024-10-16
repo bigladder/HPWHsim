@@ -216,7 +216,6 @@ endfunction()
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
@@ -224,7 +223,6 @@ endforeach (test)
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
@@ -245,8 +243,6 @@ endforeach (test)
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
@@ -254,8 +250,6 @@ endforeach (test)
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
@@ -272,25 +266,6 @@ foreach (test ${yearLargeTests})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
-
-# Tests for differences between File and Preset versions
-function(add_file_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "FileTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_File_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
-            )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
 
 # Tests for differences between JSON and Preset versions
 function(add_JSON_test)
@@ -310,19 +285,6 @@ function(add_JSON_test)
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
 endfunction()
-
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
 
 foreach (test ${testNamesJSON})
     foreach (model ${modelNamesJSON})
@@ -345,14 +307,13 @@ function(add_regression_test)
 
     add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
             )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
+
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
 endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 

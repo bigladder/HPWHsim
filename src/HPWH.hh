@@ -459,12 +459,6 @@ class HPWH : public Courier::Sender
 
 #ifndef HPWH_ABRIDGED
     void initFromFile(std::string modelName);
-    /**< Loads a HPWH model from a file
-     * The file name is the input - there should be at most one set of parameters per file
-     * This is useful for testing new variations, and for the sort of variability
-     * that we typically do when creating SEEM runs
-     * Appropriate use of this function can be found in the documentation
-     */
     void initFromJSON(std::string sModelName);
 #endif
 
@@ -1097,8 +1091,8 @@ class HPWH : public Courier::Sender
     MODELS model;
     /**< The model id */
 
-    HeatSource* addCondenser(const std::string& name_in);
-    HeatSource* addResistance(const std::string& name_in);
+    Condenser* addCondenser(const std::string& name_in);
+    Resistance* addResistance(const std::string& name_in);
 
     int compressorIndex;
     /**< The index of the compressor heat source (set to -1 if no compressor)*/
