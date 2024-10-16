@@ -13,14 +13,15 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     hpwh = tank_in.hpwh;
 
     volume_L = tank_in.volume_L;
+    volumeFixed = tank_in.volumeFixed;
     UA_kJperHrC = tank_in.UA_kJperHrC;
-    fittingsUA_kJperHrC = 0.;
+    fittingsUA_kJperHrC = tank_in.fittingsUA_kJperHrC;
     nodeTs_C = tank_in.nodeTs_C;
     nextNodeTs_C = tank_in.nextNodeTs_C;
     mixesOnDraw = tank_in.mixesOnDraw;
     mixBelowFractionOnDraw = tank_in.mixBelowFractionOnDraw;
     doInversionMixing = tank_in.doInversionMixing;
-    hasHeatExchanger = false;
+    hasHeatExchanger = tank_in.hasHeatExchanger;
     return *this;
 }
 
@@ -122,6 +123,7 @@ void HPWH::Tank::setVolume_L(double volume_L_in, bool forceChange /*=false*/)
         send_error("You have attempted to set the tank volume outside of bounds.");
     }
     volume_L = volume_L_in;
+    calcSizeConstants();
 }
 
 /// set the UA
@@ -151,6 +153,7 @@ void HPWH::Tank::setVolumeAndAdjustUA(double volume_L_in, bool forceChange)
 
     setVolume_L(volume_L_in, forceChange);
     setUA_kJperHrC(UA_kJperHrC * (newA / oldA));
+    calcSizeConstants();
 }
 
 /*static*/ double HPWH::Tank::getSurfaceArea_m2(double volume_L)

@@ -2196,6 +2196,11 @@ void HPWH::setInletByFraction(double fractionalHeight)
     tank->setInletByFraction(fractionalHeight);
 }
 
+void HPWH::setInlet2ByFraction(double fractionalHeight)
+{
+    tank->setInlet2ByFraction(fractionalHeight);
+}
+
 bool HPWH::isScalable() const { return canScale; }
 
 void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*=1.0*/)
