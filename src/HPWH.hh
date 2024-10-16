@@ -1197,7 +1197,7 @@ class HPWH : public Courier::Sender
                                 const double setpointT_C);
     static void scaleVector(std::vector<double>& coeffs, const double scaleFactor);
     static double getChargePerNode(double tCold, double tMix, double tHot);
-    static void fromProto(nlohmann::json& j);
+
 }; // end of HPWH class
 
 constexpr double BTUperKWH =

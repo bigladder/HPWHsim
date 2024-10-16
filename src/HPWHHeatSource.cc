@@ -38,7 +38,6 @@ HPWH::HeatSource::HeatSource(
     , externalInletHeight(-1)
     , externalOutletHeight(-1)
     , mpFlowRate_LPS(0.)
-    , typeOfHeatSource(TYPE_none)
     , isMultipass(true)
     , standbyPower_kW(0.)
     , extrapolationMethod(EXTRAP_LINEAR)
@@ -57,7 +56,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     Sender::operator=(hSource);
     hpwh = hSource.hpwh;
 
-    typeOfHeatSource = hSource.typeOfHeatSource;
     isOn = hSource.isOn;
     lockedOut = hSource.lockedOut;
     doDefrost = hSource.doDefrost;
@@ -108,7 +106,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     airflowFreedom = hSource.airflowFreedom;
 
     configuration = hSource.configuration;
-    typeOfHeatSource = hSource.typeOfHeatSource;
     isMultipass = hSource.isMultipass;
     mpFlowRate_LPS = hSource.mpFlowRate_LPS;
 
@@ -122,10 +119,13 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                                rscondenserwaterheatsource)
+void HPWH::Condenser::from(std::unique_ptr<HeatSourceBase>& rshs_ptr)
 {
-    auto& perf = rscondenserwaterheatsource.performance;
+    auto cond_ptr = reinterpret_cast<
+        data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+        rshs_ptr.get());
+
+    auto& perf = cond_ptr->performance;
     switch (perf.coil_configuration)
     {
     case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
@@ -203,16 +203,18 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
     }
 }
 
-void HPWH::HeatSource::from(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                                rsresistancewaterheatsource)
+void HPWH::Resistance::from(std::unique_ptr<HeatSourceBase>& rshs_ptr)
 {
-    auto& perf = rsresistancewaterheatsource.performance;
+    auto res_ptr = reinterpret_cast<
+         data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+         rshs_ptr.get());
+
+    auto& perf = res_ptr->performance;
     configuration = CONFIG_SUBMERGED;
     setConstantElementPower(perf.input_power);
 }
 
-void HPWH::HeatSource::from(
-    data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
+void HPWH::HeatSource::from(const data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
 {
     auto& config = heatsourceconfiguration;
     checkFrom(name, config.label_is_set, config.label, std::string("heatsource"));
@@ -257,31 +259,6 @@ void HPWH::HeatSource::from(
         {
             standbyLogic = std::move(heatingLogic);
         }
-    }
-
-    switch (config.heat_source_type)
-    {
-    case data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
-    {
-        typeOfHeatSource = TYPE_compressor;
-        auto rsconendserwaterheatsource_ptr = reinterpret_cast<
-            data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-            config.heat_source.get());
-        from(*rsconendserwaterheatsource_ptr);
-        break;
-    }
-    case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
-    {
-        typeOfHeatSource = TYPE_resistance;
-        auto rsresistancewaterheatsource_ptr = reinterpret_cast<
-            data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-            config.heat_source.get());
-        from(*rsresistancewaterheatsource_ptr);
-        break;
-    }
-    default:
-    {
-    }
     }
 }
 
@@ -345,7 +322,7 @@ void HPWH::HeatSource::to(
                 heatsourceconfiguration.companion_heat_source_label_is_set,
                 heatsourceconfiguration.companion_heat_source_label);
 
-    switch (typeOfHeatSource)
+    switch (typeOfHeatSource())
     {
     case TYPE_compressor:
     {
@@ -377,160 +354,6 @@ void HPWH::HeatSource::to(
         return;
         break;
     }
-}
-
-void HPWH::HeatSource::getCapacityFromMap(double environmentT_C,
-                                          double heatSourceT_C,
-                                          double& input_BTUperHr,
-                                          double& cop) const
-{
-    double environmentT_F = C_TO_F(environmentT_C);
-    double heatSourceT_F = C_TO_F(heatSourceT_C);
-
-    input_BTUperHr = 0.;
-    cop = 0.;
-
-    if (perfMap.size() > 1)
-    {
-        double COP_T1, COP_T2; // cop at ambient temperatures T1 and T2
-        double inputPower_T1_W,
-            inputPower_T2_W; // input power at ambient temperatures T1 and T2
-
-        size_t i_prev = 0;
-        size_t i_next = 1;
-        for (size_t i = 0; i < perfMap.size(); ++i)
-        {
-            if (environmentT_F < perfMap[i].T_F)
-            {
-                if (i == 0)
-                {
-                    i_prev = 0;
-                    i_next = 1;
-                }
-                else
-                {
-                    i_prev = i - 1;
-                    i_next = i;
-                }
-                break;
-            }
-            else
-            {
-                if (i == perfMap.size() - 1)
-                {
-                    i_prev = i - 1;
-                    i_next = i;
-                    break;
-                }
-            }
-        }
-
-        // Calculate COP and Input Power at each of the two reference temperatures
-        COP_T1 = perfMap[i_prev].COP_coeffs[0];
-        COP_T1 += perfMap[i_prev].COP_coeffs[1] * heatSourceT_F;
-        COP_T1 += perfMap[i_prev].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
-
-        COP_T2 = perfMap[i_next].COP_coeffs[0];
-        COP_T2 += perfMap[i_next].COP_coeffs[1] * heatSourceT_F;
-        COP_T2 += perfMap[i_next].COP_coeffs[2] * heatSourceT_F * heatSourceT_F;
-
-        inputPower_T1_W = perfMap[i_prev].inputPower_coeffs[0];
-        inputPower_T1_W += perfMap[i_prev].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T1_W += perfMap[i_prev].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
-
-        inputPower_T2_W = perfMap[i_next].inputPower_coeffs[0];
-        inputPower_T2_W += perfMap[i_next].inputPower_coeffs[1] * heatSourceT_F;
-        inputPower_T2_W += perfMap[i_next].inputPower_coeffs[2] * heatSourceT_F * heatSourceT_F;
-
-        // Interpolate to get COP and input power at the current ambient temperature
-        linearInterp(cop, environmentT_F, perfMap[i_prev].T_F, perfMap[i_next].T_F, COP_T1, COP_T2);
-        linearInterp(input_BTUperHr,
-                     environmentT_F,
-                     perfMap[i_prev].T_F,
-                     perfMap[i_next].T_F,
-                     inputPower_T1_W,
-                     inputPower_T2_W);
-        input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0); // 1000 converts w to kw;
-    }
-}
-
-// convert to grid
-void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
-                                        std::vector<std::vector<double>>& tempGridValues) const
-{
-    if (perfMap.size() < 2)
-        return;
-
-    tempGrid.reserve(2);       // envT, heatSourceT
-    tempGridValues.reserve(2); // inputPower, cop
-
-    double maxPowerCurvature = 0.; // curvature used to determine # of points
-    double maxCOPCurvature = 0.;
-    std::vector<double> envTemps_K = {};
-    envTemps_K.reserve(perfMap.size());
-    for (auto& perfPoint : perfMap)
-    {
-        envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
-        double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
-        double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
-        maxPowerCurvature =
-            magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
-        maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
-    }
-    tempGrid.push_back(envTemps_K);
-
-    // relate to reference values (from Rheem2020Build50)
-    constexpr std::size_t minPoints = 2;
-    constexpr std::size_t refPowerPoints = 13;
-    constexpr std::size_t refCOP_points = 13;
-    constexpr double refPowerCurvature = 0.01571;
-    constexpr double refCOP_curvature = 0.0002;
-
-    auto nPowerPoints = static_cast<std::size_t>(
-        (maxPowerCurvature / refPowerCurvature) * (refPowerPoints - minPoints) + minPoints);
-    auto nCOPPoints = static_cast<std::size_t>(
-        (maxCOPCurvature / refCOP_curvature) * (refCOP_points - minPoints) + minPoints);
-    std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
-
-    std::vector<double> heatSourceTemps_C(nPoints);
-    {
-        double T_C = 0;
-        double dT_C = 100. / static_cast<double>(nPoints - 1);
-        for (auto& heatSourceTemp_C : heatSourceTemps_C)
-        {
-            heatSourceTemp_C = T_C;
-            T_C += dT_C;
-        }
-    }
-
-    std::vector<double> heatSourceTemps_K = {};
-    heatSourceTemps_K.reserve(heatSourceTemps_C.size());
-
-    for (auto T_C : heatSourceTemps_C)
-    {
-        heatSourceTemps_K.push_back(C_TO_K(T_C));
-    }
-    tempGrid.push_back(heatSourceTemps_K);
-
-    std::size_t nVals = envTemps_K.size() * heatSourceTemps_K.size();
-
-    std::vector<double> inputPowers_W = {};
-    inputPowers_W.reserve(nVals);
-
-    std::vector<double> cops = {};
-    cops.reserve(nVals);
-
-    double input_BTUperHr, cop;
-    for (auto& envTemp_K : envTemps_K)
-        for (auto& heatSourceTemp_K : heatSourceTemps_K)
-        {
-            getCapacityFromMap(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
-            inputPowers_W.push_back(1000. * BTUperH_TO_KW(input_BTUperHr));
-            cops.push_back(cop);
-        }
-
-    tempGridValues.push_back(inputPowers_W);
-    tempGridValues.push_back(cops);
 }
 
 void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
@@ -615,7 +438,7 @@ void HPWH::HeatSource::to(data_model::rscondenserwaterheatsource_ns::RSCONDENSER
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        convertMapToGrid(tempGrid, tempGridValues);
+        convertMapToGrid(perfMap, tempGrid, tempGridValues);
 
         auto& map = perf.performance_map;
 
@@ -773,7 +596,7 @@ void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal)
     hpwh->isHeating = true;
     if ((companionHeatSource != NULL) && !(companionHeatSource->shutsOff()) &&
         !(companionHeatSource->isEngaged()) &&
-        !(hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource, DR_signal)))
+        !(hpwh->shouldDRLockOut(companionHeatSource->typeOfHeatSource(), DR_signal)))
     {
         companionHeatSource->engageHeatSource(DR_signal);
     }
@@ -1027,7 +850,7 @@ void HPWH::HeatSource::getCapacity(double externalT_C,
         }
         else if (perfMap.size() > 1)
         {
-            getCapacityFromMap(externalT_C,
+            getCapacityFromMap(perfMap, externalT_C,
                                condenserTemp_C +
                                    secondaryHeatExchanger.coldSideTemperatureOffest_dC,
                                input_BTUperHr,
@@ -1172,31 +995,6 @@ void HPWH::HeatSource::defrostDerate(double& to_derate, double airT_F)
                  defrostMap[i_prev].derate_fraction,
                  defrostMap[i_prev + 1].derate_fraction);
     to_derate *= derate_factor;
-}
-
-void HPWH::HeatSource::linearInterp(
-    double& ynew, double xnew, double x0, double x1, double y0, double y1) const
-{
-    ynew = y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
-}
-
-void HPWH::HeatSource::regressedMethod(
-    double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3)
-{
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x3 +
-           coefficents[4] * x1 * x1 + coefficents[5] * x2 * x2 + coefficents[6] * x3 * x3 +
-           coefficents[7] * x1 * x2 + coefficents[8] * x1 * x3 + coefficents[9] * x2 * x3 +
-           coefficents[10] * x1 * x2 * x3;
-}
-
-void HPWH::HeatSource::regressedMethodMP(double& ynew,
-                                         std::vector<double>& coefficents,
-                                         double x1,
-                                         double x2)
-{
-    // Const Tair Tin Tair2 Tin2 TairTin
-    ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
-           coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
 
 void HPWH::HeatSource::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
