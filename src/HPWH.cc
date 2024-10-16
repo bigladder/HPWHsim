@@ -326,7 +326,7 @@ void HPWH::runOneStep(double drawVolume_L,
                 {
                     if (heatSources[i]->shouldHeat())
                     {
-                        if (shouldDRLockOut(heatSources[i]->typeOfHeatSource, DRstatus))
+                        if (shouldDRLockOut(heatSources[i]->typeOfHeatSource(), DRstatus))
                         {
                             if (hasACompressor())
                             {
@@ -361,7 +361,7 @@ void HPWH::runOneStep(double drawVolume_L,
         for (int i = 0; i < getNumHeatSources(); i++)
         {
             // check/apply lock-outs
-            if (shouldDRLockOut(heatSources[i]->typeOfHeatSource, DRstatus))
+            if (shouldDRLockOut(heatSources[i]->typeOfHeatSource(), DRstatus))
             {
                 heatSources[i]->lockOutHeatSource();
             }
@@ -386,7 +386,7 @@ void HPWH::runOneStep(double drawVolume_L,
                     // Check that the backup isn't locked out too or already engaged then it will
                     // heat on its own.
                     if (heatSources[i]->backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
-                        shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource,
+                        shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
                                         DRstatus) || //){
                         heatSources[i]->backupHeatSource->isEngaged())
                     {
@@ -437,7 +437,7 @@ void HPWH::runOneStep(double drawVolume_L,
                         // heat or already heated on its own.
                         if (!heatSources[i]->backupHeatSource->toLockOrUnlock(
                                 heatSourceAmbientT_C) && // If not locked out
-                            !shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource,
+                            !shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
                                              DRstatus) && // and not DR locked out
                             !heatSources[i]->backupHeatSource->isEngaged())
                         { // and not already engaged
@@ -1878,7 +1878,7 @@ HPWH::HEATSOURCE_TYPE HPWH::getNthHeatSourceType(int N) const
     {
         send_error("You have attempted to access the type of a heat source that does not exist.");
     }
-    return heatSources[N]->typeOfHeatSource;
+    return heatSources[N]->typeOfHeatSource();
 }
 
 bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
@@ -2677,7 +2677,7 @@ void HPWH::checkInputs()
     for (int i = 0; i < getNumHeatSources(); i++)
     {
         // check the heat source type to make sure it has been set
-        if (heatSources[i]->typeOfHeatSource == TYPE_none)
+        if (heatSources[i]->typeOfHeatSource() == TYPE_none)
         {
             error_msgs.push(fmt::format(
                 "Heat source {} does not have a specified type.  Initialization failed.", i));
@@ -4093,7 +4093,7 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
-    heatSources.resize(num_heat_sources);
+    heatSources.reserve(num_heat_sources);
 
     std::unordered_map<std::string, std::size_t> heat_source_lookup;
     heat_source_lookup.reserve(num_heat_sources);
@@ -4101,12 +4101,29 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     // heat-source priority is retained from the entry order
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
-        auto& configuration = configurations[iHeatSource];
-        heatSources[iHeatSource] =
-            std::make_shared<HeatSource>(this, get_courier(), configuration.label);
-        heatSources[iHeatSource]->from(configuration);
-        heatSources[iHeatSource]->name = configuration.label;
-        heat_source_lookup[configuration.label] = iHeatSource;
+        auto& config = configurations[iHeatSource];
+        switch (config.heat_source_type)
+        {
+        case data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
+        {
+            heatSources[iHeatSource] =
+                std::make_shared<Condenser>(this, get_courier(), config.label);
+            heatSources[iHeatSource]->from(config.heat_source);
+            break;
+        }
+        case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
+        {
+            heatSources[iHeatSource] =
+                std::make_shared<Resistance>(this, get_courier(), config.label);
+            heatSources[iHeatSource]->from(config.heat_source);
+            break;
+        }
+        default:
+        {
+        }
+        }
+
+        heat_source_lookup[config.label] = iHeatSource;
     }
 
     // set associations between heat sources

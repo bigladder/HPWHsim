@@ -58,7 +58,7 @@ void HPWH::initResistanceTank(double tankVol_L,
     {
         // Only add an upper element when the upperPower_W > 0 otherwise ignore this.
         // If the element is added this can mess with the intended logic.
-        resistiveElementTop = addHeatSource("resistiveElementTop");
+        resistiveElementTop = addResistance("resistiveElementTop");
         resistiveElementTop->setupAsResistiveElement(8, upperPower_W);
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -66,7 +66,7 @@ void HPWH::initResistanceTank(double tankVol_L,
     }
 
     //
-    resistiveElementBottom = addHeatSource("resistiveElementBottom");
+    resistiveElementBottom = addResistance("resistiveElementBottom");
     resistiveElementBottom->setupAsResistiveElement(0, lowerPower_W);
 
     // standard logic conditions
@@ -156,7 +156,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     heatSources.reserve(2);
     if (upperPower_W > 0.)
     {
-        resistiveElementTop = addHeatSource("resistiveElementTop");
+        resistiveElementTop = addResistance("resistiveElementTop");
         resistiveElementTop->setupAsResistiveElement(8, upperPower_W);
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -165,7 +165,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
 
     if (lowerPower_W > 0.)
     {
-        resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        resistiveElementBottom = addResistance("resistiveElementBottom");
         resistiveElementBottom->setupAsResistiveElement(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
@@ -226,14 +226,13 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     tank->mixesOnDraw = true;
 
     heatSources.reserve(3);
-    auto resistiveElementTop = addHeatSource("resistiveElementTop");
-    auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-    auto compressor = addHeatSource("compressor");
+    auto resistiveElementTop = addResistance("resistiveElementTop");
+    auto resistiveElementBottom = addResistance("resistiveElementBottom");
+    auto compressor = addCondenser("compressor");
 
     // compressor values
     compressor->isOn = false;
     compressor->isVIP = false;
-    compressor->typeOfHeatSource = TYPE_compressor;
 
     compressor->setCondensity({1., 0., 0.});
 
@@ -363,8 +362,8 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(2);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         resistiveElementBottom->setupAsResistiveElement(0, 4500);
         resistiveElementTop->setupAsResistiveElement(8, 4500);
@@ -394,8 +393,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         // set up a resistive element at the bottom, 4500 kW
         heatSources.reserve(2);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         resistiveElementBottom->setupAsResistiveElement(0, 4500);
         resistiveElementTop->setupAsResistiveElement(9, 4500);
@@ -425,8 +424,8 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(2);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         resistiveElementBottom->setupAsResistiveElement(0, 4500);
         resistiveElementTop->setupAsResistiveElement(9, 4500);
@@ -472,9 +471,9 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto compressor = addHeatSource("compressor");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto compressor = addCondenser("compressor");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         resistiveElementBottom->setupAsResistiveElement(0, 4500);
         resistiveElementTop->setupAsResistiveElement(9, 4500);
@@ -490,7 +489,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         // double oneSixth = 1.0 / 6.0;
         compressor->setCondensity({1., 0.});
@@ -546,11 +544,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
@@ -598,14 +595,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto compressor = addHeatSource("compressor");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto compressor = addCondenser("compressor");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
@@ -672,14 +668,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto compressor = addHeatSource("compressor");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto compressor = addCondenser("compressor");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
@@ -747,14 +742,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto compressor = addHeatSource("compressor");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto compressor = addCondenser("compressor");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
@@ -829,11 +823,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
@@ -1077,11 +1070,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
@@ -1269,11 +1261,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
@@ -1518,11 +1509,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
@@ -1705,11 +1695,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
@@ -1798,11 +1787,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->minT = F_TO_C(-13.);
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->externalOutletHeight = 0;
@@ -2092,11 +2080,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->minT = F_TO_C(-25.);
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->externalOutletHeight = 0;
@@ -2184,11 +2171,10 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->minT = F_TO_C(-25.);
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = getIndexTopNode();
@@ -2272,14 +2258,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         double split = 1.0 / 5.0;
         compressor->setCondensity({split, split, split, split, split, 0, 0, 0, 0, 0, 0, 0});
@@ -2378,14 +2363,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         // double split = 1.0 / 4.0;
         compressor->setCondensity({1., 0., 0.});
@@ -2477,14 +2462,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -2575,14 +2560,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->setCondensity({1., 0., 0.});
@@ -2646,14 +2631,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({0.3, 0.3, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
         // From CAHP 120 COP Tests
@@ -2745,13 +2730,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0});
 
         // performance map
@@ -2818,14 +2803,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -2885,14 +2870,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -2948,14 +2933,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3018,14 +3003,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3089,14 +3074,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3158,14 +3143,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3244,14 +3229,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
@@ -3333,14 +3318,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
@@ -3423,12 +3408,12 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
         compressor->perfMap.reserve(2);
@@ -3476,12 +3461,12 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(1);
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({0.5, 0.5, 0.});
 
         compressor->perfMap.reserve(2);
@@ -3522,14 +3507,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3593,12 +3578,12 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = false;
 
         heatSources.reserve(2);
-        auto compressor = addHeatSource("compressor");
-        auto resistiveElement = addHeatSource("resistiveElement");
+        auto compressor = addCondenser("compressor");
+        auto resistiveElement = addResistance("resistiveElement");
 
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         resistiveElement->setupAsResistiveElement(0, 1500);
         resistiveElement->hysteresis_dC = dF_TO_dC(0);
@@ -3644,13 +3629,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3710,14 +3695,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3779,14 +3764,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->setCondensity({1., 0., 0.});
@@ -3848,14 +3833,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -3937,14 +3922,14 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -4012,13 +3997,13 @@ void HPWH::initPreset(MODELS presetNum)
         setTankSize_adjustUA(600., UNITS_GAL);
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
@@ -4125,13 +4110,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->UA_kJperHrC = 7;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         compressor->isOn = false;
         compressor->isVIP = true;
-        compressor->typeOfHeatSource = TYPE_compressor;
+
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
@@ -4206,12 +4191,11 @@ void HPWH::initPreset(MODELS presetNum)
         tank->hasHeatExchanger = true;
         tank->heatExchangerEffectiveness = 0.93;
 
-        auto compressor = addHeatSource("compressor");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         compressor->setCondensity({1.});
 
@@ -4263,14 +4247,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -4347,14 +4330,13 @@ void HPWH::initPreset(MODELS presetNum)
         tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0., 0., 0., 0., 0., 0., 0.});
 
         //

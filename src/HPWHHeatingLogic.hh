@@ -41,9 +41,9 @@ struct HPWH::HeatingLogic
     bool getIsEnteringWaterHighTempShutoff() { return isEnteringWaterHighTempShutoff; }
 
     static std::shared_ptr<HeatingLogic>
-    make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
+    make(const data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
 
-    virtual void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) = 0;
+    virtual void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const = 0;
 
   protected:
     double decisionPoint;
@@ -79,7 +79,7 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
     void setConstantMainsTemperature(double mains_C);
 
     // void to(data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& heating_logic);
-    void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) override;
+    void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const override;
 
   private:
     double tempMinUseful_C;
@@ -110,7 +110,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     void setDecisionPoint(double value) override;
     void setDecisionPoint(double value, bool absolute);
 
-    void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) override;
+    void to(data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const override;
 
   private:
     bool areNodeWeightsValid();

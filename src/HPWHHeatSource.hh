@@ -17,12 +17,9 @@ class HPWH::HeatSource : public Sender
     HeatSource(const HeatSource& heatSource);         /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void
-    from(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
-    void from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                  rscondenserwaterheatsource);
-    void from(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                  rsresistancewaterheatsource);
+    void from(const data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
+
+    virtual void from(std::unique_ptr<HeatSourceBase>& rshs_ptr) = 0;
 
     void to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
                 heatsourceconfiguration) const;
@@ -87,16 +84,6 @@ class HPWH::HeatSource : public Sender
 
     int getCondensitySize() const;
 
-    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1) const;
-    /**< Does a simple linear interpolation between two points to the xnew point */
-
-    void regressedMethod(
-        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
     void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
     /**< Does a linear interpolation in btwxt to the target point*/
 
@@ -128,14 +115,6 @@ class HPWH::HeatSource : public Sender
     /// Linear interpolation is applied to the collection of points.
     /// Only the first entry is used for cases 2. and 3.
     std::vector<PerfPoint> perfMap;
-
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
-
-    void convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
-                          std::vector<std::vector<double>>& tempGridValues) const;
 
   private:
     // start with a few type definitions
@@ -372,32 +351,53 @@ class HPWH::HeatSource : public Sender
     void sortPerformanceMap();
     /**< sorts the Performance Map by increasing external temperatures */
 
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double& input_BTUperHr,
-                            double& cap_BTUperHr,
-                            double& cop);
-
     virtual HPWH::HEATSOURCE_TYPE typeOfHeatSource() const = 0; /**< compressor, resistance, extra, none */
+
+  public:
+
+    static void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1) const;
+    /**< Does a simple linear interpolation between two points to the xnew point */
+
+    static void regressedMethod(
+        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
+    /**< Does a calculation based on the ten term regression equation  */
+
+    static void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
+    /**< Does a calculation based on the five term regression equation for MP split systems  */
+
+    static void getCapacityFromMap(std::vector<PerfPoint>& perfMap, double environmentT_C,
+                                  double heatSourceT_C,
+                                  double& input_BTUperHr,
+                                  double& cop);
+
+    static void convertMapToGrid(const std::vector<PerfPoint>& perfMap,
+                          std::vector<std::vector<double>>& tempGrid,
+                          std::vector<std::vector<double>>& tempGridValues);
 
 }; // end of HeatSource class
 
 class HPWH::Condenser : public HPWH::HeatSource
 {
+  public:
     Condenser(HPWH* hpwh_in = NULL,
                const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
                const std::string& name_in = "heatsource");
 
     HPWH::HEATSOURCE_TYPE typeOfHeatSource() const override {return HPWH::TYPE_compressor;}
+
+    void from(std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
 };
 
 class HPWH::Resistance : public HPWH::HeatSource
 {
+  public:
     Resistance(HPWH* hpwh_in = NULL,
               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
               const std::string& name_in = "heatsource");
 
     HPWH::HEATSOURCE_TYPE typeOfHeatSource() const override {return HPWH::TYPE_resistance;}
+
+    void from(std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
 
 };
 #endif
