@@ -486,10 +486,10 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     constexpr double refPowerCurvature = 0.01571;
     constexpr double refCOP_curvature = 0.0002;
 
-    std::size_t nPowerPoints =
-        (refPowerPoints - minPoints) * (maxPowerCurvature / refPowerCurvature) + minPoints;
-    std::size_t nCOPPoints =
-        (refCOP_points - minPoints) * (maxCOPCurvature / refCOP_curvature) + minPoints;
+    auto nPowerPoints = static_cast<std::size_t>(
+        (maxPowerCurvature / refPowerCurvature) * (refPowerPoints - minPoints) + minPoints);
+    auto nCOPPoints = static_cast<std::size_t>(
+        (maxCOPCurvature / refCOP_curvature) * (refCOP_points - minPoints) + minPoints);
     std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
 
     std::vector<double> heatSourceTemps_C(nPoints);
