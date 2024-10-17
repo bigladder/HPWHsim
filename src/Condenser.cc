@@ -1,5 +1,5 @@
 /*
- * Implementation of class HPWH::HeatSource
+ * Implementation of class HPWH::Condenser
  */
 
 #include <algorithm>
@@ -398,7 +398,6 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
 {
     double externalT_F, condenserTemp_F;
     bool resDefrostHeatingOn = false;
-    // Convert Celsius to Fahrenheit for the curve fits
     condenserTemp_F = C_TO_F(condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
     externalT_F = C_TO_F(externalT_C);
 
