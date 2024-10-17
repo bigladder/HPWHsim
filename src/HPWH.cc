@@ -3366,15 +3366,13 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         {
         case data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
         {
-            heatSources[iHeatSource] =
-                std::make_shared<Condenser>(this, get_courier(), config.label);
+            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.label));
             heatSources[iHeatSource]->from(config.heat_source);
             break;
         }
         case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
         {
-            heatSources[iHeatSource] =
-                std::make_shared<Resistance>(this, get_courier(), config.label);
+            heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.label));
             heatSources[iHeatSource]->from(config.heat_source);
             break;
         }
