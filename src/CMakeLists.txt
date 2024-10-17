@@ -18,6 +18,9 @@ set(headers
         HPWHTank.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
+
+        Condenser.hh
+        Resistance.hh
         )
 
 set(sources
@@ -28,6 +31,9 @@ set(sources
         HPWHHeatingLogic.cc
         HPWH.cc
         HPWHpresets.cc
+
+        Condenser.cc
+        Resistance.cc
         )
 
 set(library_sources
