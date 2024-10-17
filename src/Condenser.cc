@@ -23,7 +23,8 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     , standbyPower_kW(0.)
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
     , isMultipass(true)
-{}
+{
+}
 
 HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 {
@@ -768,7 +769,6 @@ void HPWH::Condenser::sortPerformanceMap()
               perfMap.end(),
               [](const PerfPoint& a, const PerfPoint& b) -> bool { return a.T_F < b.T_F; });
 }
-
 
 /*static*/
 void HPWH::Condenser::linearInterp(

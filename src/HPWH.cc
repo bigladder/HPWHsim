@@ -834,12 +834,10 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         { // If there's a compressor lets check the new setpoint against the compressor's max
           // setpoint
 
-            auto cond_ptr  =
-                reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+            auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-            maxAllowedSetpoint_C =
-                cond_ptr->maxSetpoint_C -
-                cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+            maxAllowedSetpoint_C = cond_ptr->maxSetpoint_C -
+                                   cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
             if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
             {
@@ -1761,15 +1759,13 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
 
     auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
 
-    if (airTemp_C < cond_ptr->minT ||
-        airTemp_C > cond_ptr->maxT)
+    if (airTemp_C < cond_ptr->minT || airTemp_C > cond_ptr->maxT)
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
 
     double maxAllowedSetpoint_C =
-        cond_ptr->maxSetpoint_C -
-        cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+        cond_ptr->maxSetpoint_C - cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
     if (outTemp_C > maxAllowedSetpoint_C)
     {
@@ -2093,7 +2089,7 @@ bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
 bool HPWH::hasExternalHeatSource(std::size_t& heatSourceIndex) const
 {
     heatSourceIndex = 0;
-    for (auto heatSource_ptr:heatSources)
+    for (auto heatSource_ptr : heatSources)
     {
         if (heatSource_ptr->isACompressor())
         {
@@ -2307,7 +2303,8 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
     }
     else
     {
-        reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())->changeWatts(watts);
+        reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
+            ->changeWatts(watts);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2315,7 +2312,8 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())->changeWatts(watts);
+                reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
+                    ->changeWatts(watts);
             }
         }
     }
@@ -2350,7 +2348,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())->power_kW;
+            reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
+                ->power_kW;
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2359,7 +2358,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 returnPower +=
-                    reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())->power_kW;
+                    reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
+                        ->power_kW;
             }
         }
     }
@@ -2798,20 +2798,23 @@ void HPWH::checkInputs()
             }
 
             // Check performance map
-            // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and that ;
+            // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal
+            // and that ;
             if (cond_ptr->useBtwxtGrid)
             {
                 // If useBtwxtGrid is true that the perfMap is empty
                 if (cond_ptr->perfMap.size() != 0)
                 {
-                    error_msgs.push("\n\tUsing the grid lookups but a regression-based performance map is given.");
+                    error_msgs.push("\n\tUsing the grid lookups but a regression-based performance "
+                                    "map is given.");
                 }
 
                 // Check length of vectors in perfGridValue are equal
                 if (cond_ptr->perfGridValues[0].size() != cond_ptr->perfGridValues[1].size() &&
                     cond_ptr->perfGridValues[0].size() != 0)
                 {
-                    error_msgs.push("When using grid lookups for performance the vectors in perfGridValues must "
+                    error_msgs.push("When using grid lookups for performance the vectors in "
+                                    "perfGridValues must "
                                     "be the same length.");
                 }
 
