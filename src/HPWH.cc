@@ -2395,10 +2395,8 @@ void HPWH::mixTankInversions() { tank->mixInversions(); }
 
 double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 {
-
     // Do not exceed maxT_C or setpoint
     double maxHeatToT_C = std::min(maxT_C, setpoint_C);
-
     return tank->addHeatAboveNode(qAdd_kJ, nodeNum, maxHeatToT_C);
 }
 
