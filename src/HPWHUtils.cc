@@ -904,9 +904,9 @@ void HPWH::Condenser::regressedMethod(
 
 /*static*/
 void HPWH::Condenser::regressedMethodMP(double& ynew,
-                                         std::vector<double>& coefficents,
-                                         double x1,
-                                         double x2)
+                                        std::vector<double>& coefficents,
+                                        double x1,
+                                        double x2)
 {
     // Const Tair Tin Tair2 Tin2 TairTin
     ynew = coefficents[0] + coefficents[1] * x1 + coefficents[2] * x2 + coefficents[3] * x1 * x1 +
@@ -915,10 +915,10 @@ void HPWH::Condenser::regressedMethodMP(double& ynew,
 
 /*static*/
 void HPWH::Condenser::getCapacityFromMap(const std::vector<HPWH::Condenser::PerfPoint>& perfMap,
-                        double environmentT_C,
-                        double heatSourceT_C,
-                        double& input_BTUperHr,
-                        double& cop)
+                                         double environmentT_C,
+                                         double heatSourceT_C,
+                                         double& input_BTUperHr,
+                                         double& cop)
 {
     double environmentT_F = C_TO_F(environmentT_C);
     double heatSourceT_F = C_TO_F(heatSourceT_C);
@@ -990,12 +990,11 @@ void HPWH::Condenser::getCapacityFromMap(const std::vector<HPWH::Condenser::Perf
     }
 }
 
-
 // convert to grid
 /*static*/
 void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPoint>& perfMap,
-                                        std::vector<std::vector<double>>& tempGrid,
-                                        std::vector<std::vector<double>>& tempGridValues)
+                                       std::vector<std::vector<double>>& tempGrid,
+                                       std::vector<std::vector<double>>& tempGridValues)
 {
     if (perfMap.size() < 2)
         return;
@@ -1063,7 +1062,8 @@ void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPo
     for (auto& envTemp_K : envTemps_K)
         for (auto& heatSourceTemp_K : heatSourceTemps_K)
         {
-            getCapacityFromMap(perfMap, K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
+            getCapacityFromMap(
+                perfMap, K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
             inputPowers_W.push_back(1000. * BTUperH_TO_KW(input_BTUperHr));
             cops.push_back(cop);
         }

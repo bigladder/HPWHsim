@@ -111,7 +111,6 @@ void HPWH::initResistanceTank(double tankVol_L,
         {
             isHeating = true;
         }
-        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -204,7 +203,6 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         {
             isHeating = true;
         }
-        source->sortPerformanceMap();
     }
 }
 
@@ -253,7 +251,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     compressor->minT = F_TO_C(45.);
     compressor->maxT = F_TO_C(120.);
     compressor->hysteresis_dC = dF_TO_dC(2);
-    compressor->configuration = HeatSource::CONFIG_WRAPPED;
+    compressor->configuration = Condenser::CONFIG_WRAPPED;
     compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
     // top resistor values
@@ -335,8 +333,8 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
         {
             isHeating = true;
         }
-        heatSources[i]->sortPerformanceMap();
     }
+    compressor->sortPerformanceMap();
 }
 
 void HPWH::initPreset(MODELS presetNum)
@@ -515,7 +513,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = 0;
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(4);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED; // wrapped around tank
+        compressor->configuration = Condenser::CONFIG_WRAPPED; // wrapped around tank
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
@@ -572,7 +570,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = 0; // no hysteresis
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -628,7 +626,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(4);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -701,7 +699,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(4);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -774,7 +772,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(4);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -828,7 +826,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
         compressor->hysteresis_dC = 0;
@@ -1075,7 +1073,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
@@ -1266,8 +1264,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
         compressor->externalOutletHeight = 0;
@@ -1514,8 +1512,8 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
         compressor->externalInletHeight = static_cast<int>(getNumNodes() / 3.) - 1;
@@ -1700,7 +1698,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
@@ -1798,7 +1796,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // What to do about these?!
         compressor->hysteresis_dC = 4;
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = F_TO_C(176.1);
 
@@ -2122,7 +2120,7 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->hysteresis_dC = 4;
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = MAXOUTLET_R744;
 
@@ -2214,7 +2212,7 @@ void HPWH::initPreset(MODELS presetNum)
         });
 
         compressor->hysteresis_dC = 4;
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = MAXOUTLET_R744;
 
@@ -2293,7 +2291,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -2371,7 +2369,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         // double split = 1.0 / 4.0;
         compressor->setCondensity({1., 0., 0.});
 
@@ -2399,7 +2396,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -2470,7 +2467,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // double split = 1.0 / 3.0;
@@ -2590,7 +2587,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop->setup(8, 4500);
@@ -2667,7 +2664,7 @@ void HPWH::initPreset(MODELS presetNum)
             F_TO_C(47.0); // Product documentation says 45F doesn't look like it in CMP-T test//
         compressor->maxT = F_TO_C(110.0);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -2763,7 +2760,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(1.);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         resistiveElementTop->setup(8, 4500);
@@ -2811,7 +2808,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         compressor->perfMap.reserve(2);
@@ -2831,7 +2827,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -2877,7 +2873,6 @@ void HPWH::initPreset(MODELS presetNum)
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-
 
         compressor->setCondensity({1., 0., 0.});
 
@@ -2941,7 +2936,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -2962,7 +2956,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3011,7 +3005,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3032,7 +3025,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3082,7 +3075,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3103,7 +3095,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3151,7 +3143,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3172,7 +3163,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3237,7 +3228,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
         compressor->perfMap.reserve(2);
@@ -3257,7 +3247,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.0);
         compressor->hysteresis_dC = dF_TO_dC(1);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3326,7 +3316,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0});
 
         compressor->perfMap.reserve(2);
@@ -3347,7 +3336,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = F_TO_C(120.0);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop->setup(8, 4500);
@@ -3433,7 +3422,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.0);
         compressor->hysteresis_dC = dF_TO_dC(1);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // logic conditions
@@ -3487,7 +3476,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = F_TO_C(120.0);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         // logic conditions
         double compStart = dF_TO_dC(20);
@@ -3515,7 +3504,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3538,7 +3526,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxT = F_TO_C(120.0);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop->setup(8, 4200);
@@ -3584,7 +3572,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         resistiveElement->setup(0, 1500);
         resistiveElement->hysteresis_dC = dF_TO_dC(0);
 
@@ -3607,7 +3594,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(32.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = 0; // no hysteresis
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(thirdSixth(dF_TO_dC(6.5509)));
@@ -3636,7 +3623,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         compressor->perfMap.reserve(2);
@@ -3656,7 +3642,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(45.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3703,7 +3689,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3724,7 +3709,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(40.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3794,7 +3779,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(35.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         // top resistor values
         resistiveElementTop->setup(6, 4500);
@@ -3841,7 +3826,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         compressor->perfMap.reserve(2);
@@ -3861,7 +3845,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -3930,7 +3914,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isOn = false;
         compressor->isVIP = false;
 
-
         compressor->setCondensity({1., 0., 0.});
 
         // voltex60 tier 1 values
@@ -3953,7 +3936,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(42.0);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -4005,7 +3988,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
 
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
         compressor->hysteresis_dC = 0;
@@ -4118,7 +4101,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
 
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->configuration = HeatSource::CONFIG_EXTERNAL;
+        compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->perfMap.reserve(1);
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
@@ -4229,7 +4212,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(-25);
         compressor->maxT = F_TO_C(125.);
         compressor->hysteresis_dC = dF_TO_dC(1);
-        compressor->configuration = HeatSource::CONFIG_SUBMERGED;
+        compressor->configuration = Condenser::CONFIG_SUBMERGED;
 
         // logic conditions
         compressor->addTurnOnLogic(wholeTank(111, UNITS_F, true));
@@ -4274,7 +4257,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(45);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(2);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
         compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
@@ -4357,7 +4340,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(37.);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(1.);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         // top resistor values
@@ -4408,6 +4391,6 @@ void HPWH::initPreset(MODELS presetNum)
         {
             isHeating = true;
         }
-        heatSources[i]->sortPerformanceMap();
     }
+    compressor->sortPerformanceMap();
 } // end HPWHinit_presets

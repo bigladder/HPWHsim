@@ -262,7 +262,8 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(const data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh)
+HPWH::HeatingLogic::make(const data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
+                         HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
 

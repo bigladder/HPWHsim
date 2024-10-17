@@ -585,11 +585,23 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
                          double heatSourceAmbientT_C,
                          double minutesToRun)
 {
-    // Check the air temprature and setpoint against maxOut_at_LowT
     if (heatSourcePtr->isACompressor())
     {
         auto cond_ptr = reinterpret_cast<Condenser*>(heatSourcePtr);
+
+        // Check the air temprature and setpoint against maxOut_at_LowT
+        double tempSetpoint_C = -273.15;
+        if (heatSourceAmbientT_C <= cond_ptr->maxOut_at_LowT.airT_C &&
+            setpoint_C >= cond_ptr->maxOut_at_LowT.outT_C)
+        {
+            tempSetpoint_C = setpoint_C; // Store setpoint
+            setSetpoint(cond_ptr->maxOut_at_LowT
+                            .outT_C); // Reset to new setpoint as this is used in the add heat calc
+        }
+
         cond_ptr->addHeat(heatSourceAmbientT_C, minutesToRun);
+
+        // Change the setpoint back to what it was pre-compressor depression
         if (tempSetpoint_C > -273.15)
         {
             setSetpoint(tempSetpoint_C);
@@ -597,11 +609,10 @@ void HPWH::addHeatParent(HeatSource* heatSourcePtr,
     }
     else
     {
-        heatSourcePtr->addHeat(minutesToRun);
+        auto res_ptr = reinterpret_cast<Resistance*>(heatSourcePtr);
+        res_ptr->addHeat(minutesToRun);
     }
     // and add heat if it is
-
-    // Change the setpoint back to what it was pre-compressor depression
 }
 
 // public members to write to CSV file

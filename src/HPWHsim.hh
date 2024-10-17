@@ -5,5 +5,7 @@
 #include "HPWHTank.hh"
 #include "HPWHHeatingLogic.hh"
 #include "HPWHHeatSource.hh"
+#include "Condenser.hh"
+#include "Resistance.hh"
 
 #endif
