@@ -14,7 +14,7 @@ class HPWH::HeatSource : public Sender
                const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
                const std::string& name_in = "heatsource");
 
-    HeatSource(const HeatSource& heatSource);         /// copy constructor
+    HeatSource(const HeatSource& heatSource); /// copy constructor
 
     virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
@@ -27,9 +27,9 @@ class HPWH::HeatSource : public Sender
     virtual void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) = 0;
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 
-    bool isACompressor() const{return typeOfHeatSource() == TYPE_compressor;}
+    bool isACompressor() const { return typeOfHeatSource() == TYPE_compressor; }
     /**< returns if the heat source uses a compressor or not */
-    bool isAResistance() const{return typeOfHeatSource() == TYPE_resistance;}
+    bool isAResistance() const { return typeOfHeatSource() == TYPE_resistance; }
 
     bool isEngaged() const;
     /**< return whether or not the heat source is engaged */

@@ -7,7 +7,6 @@
 class HPWH::Resistance : public HPWH::HeatSource
 {
   private:
-
   public:
     Resistance(HPWH* hpwh_in = NULL,
                const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
@@ -20,7 +19,7 @@ class HPWH::Resistance : public HPWH::HeatSource
     HEATSOURCE_TYPE typeOfHeatSource() const override { return HPWH::TYPE_resistance; }
     void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
     void to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const override;
-    //void calcHeatDist(std::vector<double>& heatDistribution) override;
+    // void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     void setup(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
 
