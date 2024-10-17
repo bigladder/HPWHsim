@@ -2297,14 +2297,14 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (heatSources[i]->isAResistance())
             {
-                reinterpret_cast<Resistance*>(heatSources[i].get())->changeWatts(watts);
+                reinterpret_cast<Resistance*>(heatSources[i].get())->setPower_W(watts);
             }
         }
     }
     else
     {
         reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
-            ->changeWatts(watts);
+            ->setPower_W(watts);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2313,7 +2313,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
-                    ->changeWatts(watts);
+                    ->setPower_W(watts);
             }
         }
     }
@@ -2340,7 +2340,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (heatSources[i]->isAResistance())
             {
-                returnPower += reinterpret_cast<Resistance*>(heatSources[i].get())->power_kW;
+                returnPower += 1000. * reinterpret_cast<Resistance*>(heatSources[i].get())->getPower_W();
             }
         }
     }
@@ -2348,8 +2348,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
-                ->power_kW;
+            1000. * reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
+                ->getPower_W();
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2358,8 +2358,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 returnPower +=
-                    reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
-                        ->power_kW;
+                    1000. * reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
+                        ->getPower_W();
             }
         }
     }

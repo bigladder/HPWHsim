@@ -7,6 +7,8 @@
 class HPWH::Resistance : public HPWH::HeatSource
 {
   private:
+    double power_kW;
+
   public:
     Resistance(HPWH* hpwh_in = NULL,
                const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
@@ -23,8 +25,8 @@ class HPWH::Resistance : public HPWH::HeatSource
 
     void setup(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
 
-    double power_kW;
-    void changeWatts(double watts) { power_kW = watts / 1000.; }
+    double getPower_W() { return 1000. * power_kW; }
+    void setPower_W(double watts) { power_kW = watts / 1000.; }
 
     void addHeat(double minutesToRun);
 };

@@ -1,17 +1,10 @@
 /*
- * Implementation of class HPWH::HeatSource
+ * Implementation of class HPWH::Resistance
  */
-
-#include <algorithm>
-#include <regex>
-
-// vendor
-#include <btwxt/btwxt.h>
 
 #include "HPWH.hh"
 #include "Resistance.hh"
 
-// public HPWH::HeatSource functions
 HPWH::Resistance::Resistance(HPWH* hpwh_in,
                              const std::shared_ptr<Courier::Courier> courier_in,
                              const std::string& name_in)
