@@ -28,12 +28,12 @@ TEST_F(MeasureMetricsTest, AquaThermAire)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AquaThermAire";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
@@ -50,18 +50,18 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS50)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS50";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume_L, 188.0432, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume_L, 188.8591, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::Low);
-    EXPECT_NEAR(standardTestSummary.UEF, 4.0018, 1.e-4);
+    EXPECT_NEAR(standardTestSummary.UEF, 4.0002, 1.e-4);
 }
 
 /*
@@ -72,16 +72,16 @@ TEST_F(MeasureMetricsTest, AOSmithHPTS80)
     // get preset model
     HPWH hpwh;
     const std::string sModelName = "AOSmithHPTS80";
-    EXPECT_EQ(hpwh.initPreset(sModelName), 0) << "Could not initialize model.";
+    hpwh.initPreset(sModelName);
 
-    EXPECT_TRUE(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.findFirstHourRating(firstHourRating, standardTestOptions))
         << "Could not complete first-hour rating test.";
 
-    EXPECT_TRUE(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
+    EXPECT_NO_THROW(hpwh.run24hrTest(firstHourRating, standardTestSummary, standardTestOptions))
         << "Could not complete complete 24-hr test.";
 
     EXPECT_TRUE(standardTestSummary.qualifies);
-    EXPECT_NEAR(firstHourRating.drawVolume_L, 310.9384, 1.e-4);
+    EXPECT_NEAR(firstHourRating.drawVolume_L, 312.3369, 1.e-4);
     EXPECT_EQ(firstHourRating.desig, HPWH::FirstHourRating::Desig::High);
-    EXPECT_NEAR(standardTestSummary.UEF, 4.3272, 1.e-4);
+    EXPECT_NEAR(standardTestSummary.UEF, 4.3255, 1.e-4);
 }

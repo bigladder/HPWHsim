@@ -13,15 +13,27 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 set(headers
         HPWHversion.in.hh
+        HPWHsim.hh
         HPWH.hh
+        HPWHTank.hh
+        HPWHHeatSource.hh
+        HPWHHeatingLogic.hh
+
+        Condenser.hh
+        Resistance.hh
         )
 
 set(sources
         HPWHversion.cc
+        HPWHUtils.cc
+        HPWHTank.cc
+        HPWHHeatSource.cc
+        HPWHHeatingLogic.cc
         HPWH.cc
-        HPWHHeatSources.cc
-        HPWHHeatingLogics.cc
         HPWHpresets.cc
+
+        Condenser.cc
+        Resistance.cc
         )
 
 set(library_sources
@@ -39,14 +51,19 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${library_sources})
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME}
+        PUBLIC ${PROJECT_BINARY_DIR}/src
+        PUBLIC ${PROJECT_SOURCE_DIR}/src
+        #PUBLIC ${PROJECT_SOURCE_DIR}/src/data_model
+        )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
+#find_package(nlohmann_json 3.11.3 REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json data_model)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
-
 
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
 
@@ -65,3 +82,10 @@ if (${PROJECT_NAME}_COVERAGE)
     add_coverage(${PROJECT_NAME})
 endif ()
 
+if (NOT TARGET data_model)
+    add_subdirectory(data_model/cpp)
+endif ()
+
+if (${PROJECT_NAME}_BUILD_TESTING)
+    add_subdirectory(hpwh)
+endif ()
