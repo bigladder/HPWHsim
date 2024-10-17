@@ -17,10 +17,11 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
     : HeatSource(hpwh_in, courier, name_in)
     , useBtwxtGrid(false)
     , extrapolationMethod(EXTRAP_LINEAR)
+    , maxOut_at_LowT {100, -273.15}
+    , secondaryHeatExchanger {0., 0., 0.}
     , configuration(COIL_CONFIG::CONFIG_WRAPPED)
 
-{
-}
+{}
 
 HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 {
