@@ -213,22 +213,49 @@ function(add_model_test)
             )
 endfunction()
 
+# Tests for differences between JSON and Preset versions
+function(add_JSON_test)
+    set(options)
+    set(oneValueArgs MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
+        return()
+    endif ()
+
+    set(TEST_TITLE "JSONTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_JSON_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
+            )
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+endfunction()
+
+
+# Tests for regression differences against reference results
+function(add_regression_test)
+    set(options)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
+        return()
+    endif ()
+
+    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
+
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
+            )
+
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+endfunction()
+
+
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-foreach (test ${testNamesJSON})
-    foreach (model ${modelNamesJSON})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
     endforeach (model)
 endforeach (test)
 
@@ -253,63 +280,12 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-#Add small compressor yearly tests to the list
-foreach (test ${yearTests})
-    foreach (model ${yearTestsModels})
+#Test(s) specifically for heat-exchange models
+foreach (test ${heatExchangeTests})
+    foreach (model ${heatExchangeModelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
-
-#Add LARGE compressor yearly tests to the list
-foreach (test ${yearLargeTests})
-    foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-# Tests for differences between JSON and Preset versions
-function(add_JSON_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "JSONTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_JSON_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
-            )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
-
-foreach (test ${testNamesJSON})
-    foreach (model ${modelNamesJSON})
-        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
-
-# Tests for regression differences against reference results
-function(add_regression_test)
-    set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
-            )
-
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
@@ -335,6 +311,32 @@ endforeach (test)
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+#Add small compressor yearly tests to the list
+foreach (test ${yearTests})
+    foreach (model ${yearTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add LARGE compressor yearly tests to the list
+foreach (test ${yearLargeTests})
+    foreach (model ${yearLargeTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
