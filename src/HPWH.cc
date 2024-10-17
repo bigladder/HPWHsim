@@ -2332,7 +2332,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         send_error("Out of bounds value for \"which\" in getResistanceCapacity().");
     }
 
-    double returnPower = 0;
+    double returnPower_W = 0;
     if (which == -1)
     {
         // Just get all the elements
@@ -2340,15 +2340,15 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (heatSources[i]->isAResistance())
             {
-                returnPower += 1000. * reinterpret_cast<Resistance*>(heatSources[i].get())->getPower_W();
+                returnPower_W += reinterpret_cast<Resistance*>(heatSources[i].get())->getPower_W();
             }
         }
     }
     else
     {
         // get the power from "which" element by height
-        returnPower +=
-            1000. * reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
+        returnPower_W +=
+            reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())
                 ->getPower_W();
 
         // Then check for repeats in the position
@@ -2357,8 +2357,8 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                returnPower +=
-                    1000. * reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
+                returnPower_W +=
+                    reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())
                         ->getPower_W();
             }
         }
@@ -2368,15 +2368,14 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     switch (pwrUnit)
     {
     case UNITS_KW:
-        break;
+        return returnPower_W / 1000.;
     case UNITS_BTUperHr:
-        returnPower = KWH_TO_BTU(returnPower); // kW to BTU/h
-        break;
+        return KWH_TO_BTU(returnPower_W / 1000.); // kW to BTU/h
     default:
         send_error("Invalid units.");
     }
 
-    return returnPower;
+    return 0.;
 }
 
 int HPWH::getResistancePosition(int elementIndex) const
