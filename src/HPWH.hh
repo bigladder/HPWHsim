@@ -789,7 +789,7 @@ class HPWH : public Courier::Sender
     /// returns 1 if compressor running, 0 if compressor not running, ABORT if no compressor
     int isCompressorRunning() const;
 
-    bool hasExternalHeatSource(int& heatSourceIndex) const;
+    bool hasExternalHeatSource(std::size_t& heatSourceIndex) const;
     /**< Returns if the HPWH model has any external heat sources or not, could be a compressor or
      * resistance element. */
     double getExternalMPFlowRate(UNITS units = UNITS_GPM) const;
