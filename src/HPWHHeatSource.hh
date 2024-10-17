@@ -22,7 +22,7 @@ class HPWH::HeatSource : public Sender
 
     virtual HEATSOURCE_TYPE typeOfHeatSource() const = 0;
     virtual void to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const = 0;
-    virtual void from(std::unique_ptr<HeatSourceBase>& rshs_ptr) = 0;
+    virtual void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) = 0;
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
 
     bool isEngaged() const;
@@ -65,7 +65,6 @@ class HPWH::HeatSource : public Sender
     /**< calculates the distance the current state is from the shutOff logic for external
      * configurations*/
 
-
     void addHeat(double externalT_C, double minutesToRun);
     /**< adds heat to the hpwh - this is the function that interprets the
         various configurations (internal/external, resistance/heat pump) to add heat */
@@ -76,9 +75,7 @@ class HPWH::HeatSource : public Sender
 
     int getCondensitySize() const;
 
-
   private:
-
     /** the creator of the heat source, necessary to access HPWH variables */
     HPWH* hpwh;
 
@@ -186,8 +183,6 @@ class HPWH::HeatSource : public Sender
     double heat(double cap_kJ);
 
   public:
-
-
 }; // end of HeatSource class
 
 #endif

@@ -94,7 +94,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::from(const data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config)
+void HPWH::HeatSource::from(
+    const data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config)
 {
     checkFrom(name, config.label_is_set, config.label, std::string("heatsource"));
     setCondensity(config.heat_distribution);
@@ -171,12 +172,8 @@ void HPWH::HeatSource::to(
             config.hysteresis_temperature_difference,
             hysteresis_dC != 0.);
 
-    checkTo(C_TO_K(minT),
-            config.minimum_temperature_is_set,
-            config.minimum_temperature);
-    checkTo(C_TO_K(maxT),
-            config.maximum_temperature_is_set,
-            config.maximum_temperature);
+    checkTo(C_TO_K(minT), config.minimum_temperature_is_set, config.minimum_temperature);
+    checkTo(C_TO_K(maxT), config.maximum_temperature_is_set, config.maximum_temperature);
 
     checkTo(isVIP, config.is_vip_is_set, config.is_vip, isVIP);
 
@@ -200,7 +197,6 @@ void HPWH::HeatSource::to(
         checkTo(companionHeatSource->name,
                 config.companion_heat_source_label_is_set,
                 config.companion_heat_source_label);
-
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)

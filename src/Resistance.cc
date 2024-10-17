@@ -12,18 +12,14 @@
 #include "Resistance.hh"
 
 // public HPWH::HeatSource functions
-HPWH::Resistance::Resistance(
-    HPWH* hpwh_in,
-    const std::shared_ptr<Courier::Courier> courier_in,
-    const std::string& name_in)
-    : HPWH::HeatSource(hpwh_in, courier_in, name_in),
-    power_kW(0.)
+HPWH::Resistance::Resistance(HPWH* hpwh_in,
+                             const std::shared_ptr<Courier::Courier> courier_in,
+                             const std::string& name_in)
+    : HPWH::HeatSource(hpwh_in, courier_in, name_in), power_kW(0.)
 {
 }
 
-HPWH::Resistance::Resistance(const Resistance& r_in) : HeatSource(r_in),
-    power_kW(r_in.power_kW)
-{}
+HPWH::Resistance::Resistance(const Resistance& r_in) : HeatSource(r_in), power_kW(r_in.power_kW) {}
 
 HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 {
@@ -38,22 +34,21 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
     return *this;
 }
 
-void HPWH::Resistance::from(std::unique_ptr<HeatSourceBase>& rshs_ptr)
+void HPWH::Resistance::from(const std::unique_ptr<HeatSourceBase>& rshs_ptr)
 {
-    auto res_ptr = reinterpret_cast<
-         data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-         rshs_ptr.get());
+    auto res_ptr =
+        reinterpret_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            rshs_ptr.get());
 
     auto& perf = res_ptr->performance;
     power_kW = perf.input_power / 1000.;
 }
 
-
 void HPWH::Resistance::to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const
 {
-    auto res_ptr = reinterpret_cast<
-        data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-        rshs_ptr.get());
+    auto res_ptr =
+        reinterpret_cast<data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+            rshs_ptr.get());
 
     auto& metadata = res_ptr->metadata;
     checkTo(data_model::ashrae205_ns::SchemaType::RSRESISTANCEWATERHEATSOURCE,

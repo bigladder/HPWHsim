@@ -3,19 +3,20 @@
 
 #include "HPWH.hh"
 #include "HPWHHeatSource.hh"
+#include "HPWHTank.hh"
 
 class HPWH::Condenser : public HPWH::HeatSource
 {
   public:
     Condenser(HPWH* hpwh_in = NULL,
-               const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
-               const std::string& name_in = "condenser");
+              const std::shared_ptr<Courier::Courier> courier = std::make_shared<DefaultCourier>(),
+              const std::string& name_in = "condenser");
 
     Condenser& operator=(const Condenser& hSource);
 
-    HEATSOURCE_TYPE typeOfHeatSource() const override {return TYPE_compressor;}
+    HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
     void to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const override;
-    void from(std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
+    void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     std::vector<std::vector<double>> perfGrid;
@@ -58,17 +59,17 @@ class HPWH::Condenser : public HPWH::HeatSource
     EXTRAP_METHOD extrapolationMethod; /**< linear or nearest neighbor*/
 
     void getCapacity(double externalT_C,
-                      double condenserTemp_C,
-                      double setpointTemp_C,
-                      double& input_BTUperHr,
-                      double& cap_BTUperHr,
-                      double& cop);
+                     double condenserTemp_C,
+                     double setpointTemp_C,
+                     double& input_BTUperHr,
+                     double& cap_BTUperHr,
+                     double& cop);
 
     void getCapacityMP(double externalT_C,
-                        double condenserTemp_C,
-                        double& input_BTUperHr,
-                        double& cap_BTUperHr,
-                        double& cop);
+                       double condenserTemp_C,
+                       double& input_BTUperHr,
+                       double& cap_BTUperHr,
+                       double& cop);
 
     /** An overloaded function that uses uses the setpoint temperature  */
     void getCapacity(double externalT_C,
@@ -154,10 +155,12 @@ class HPWH::Condenser : public HPWH::HeatSource
         double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
     /**< Does a calculation based on the ten term regression equation  */
 
-    static void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
+    static void
+    regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
 
-    static void getCapacityFromMap(const std::vector<PerfPoint>& perfMap, double environmentT_C,
+    static void getCapacityFromMap(const std::vector<PerfPoint>& perfMap,
+                                   double environmentT_C,
                                    double heatSourceT_C,
                                    double& input_BTUperHr,
                                    double& cop);
@@ -172,7 +175,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     double mpFlowRate_LPS; /**< The multipass flow rate */
 
-    COIL_CONFIG configuration;        /**<  submerged, wrapped, external */
+    COIL_CONFIG configuration; /**<  submerged, wrapped, external */
     bool isMultipass; /**< single pass or multi-pass. Anything not obviously split system single
                                                   pass is multipass*/
 
@@ -189,12 +192,10 @@ class HPWH::Condenser : public HPWH::HeatSource
                              double minutesToRun,
                              double& cap_BTUperHr,
                              double& input_BTUperHr,
-                                 double& cop);
+                             double& cop);
 
     void sortPerformanceMap();
     /**< sorts the Performance Map by increasing external temperatures */
-
-    void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     void addHeat(double externalT_C, double minutesToRun);
 };

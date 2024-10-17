@@ -13,18 +13,50 @@
 
 HPWH::Condenser::Condenser(HPWH* hpwh_in,
                            const std::shared_ptr<Courier::Courier> courier,
-                           const std::string& name_in):HeatSource(hpwh_in, courier, name_in),
-    useBtwxtGrid(false),
-    extrapolationMethod(EXTRAP_LINEAR),
-    configuration(COIL_CONFIG::CONFIG_WRAPPED)
+                           const std::string& name_in)
+    : HeatSource(hpwh_in, courier, name_in)
+    , useBtwxtGrid(false)
+    , extrapolationMethod(EXTRAP_LINEAR)
+    , configuration(COIL_CONFIG::CONFIG_WRAPPED)
 
-{}
-
-void HPWH::Condenser::from(std::unique_ptr<HeatSourceBase>& rshs_ptr)
 {
-    auto cond_ptr = reinterpret_cast<
-        data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-        rshs_ptr.get());
+}
+
+HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
+{
+    HPWH::HeatSource::operator=(cond_in);
+
+    Tshrinkage_C = cond_in.Tshrinkage_C;
+
+    perfMap = cond_in.perfMap;
+
+    perfGrid = cond_in.perfGrid;
+    perfGridValues = cond_in.perfGridValues;
+    perfRGI = cond_in.perfRGI;
+    useBtwxtGrid = cond_in.useBtwxtGrid;
+
+    defrostMap = cond_in.defrostMap;
+    resDefrost = cond_in.resDefrost;
+
+    configuration = cond_in.configuration;
+    isMultipass = cond_in.isMultipass;
+    mpFlowRate_LPS = cond_in.mpFlowRate_LPS;
+
+    externalInletHeight = cond_in.externalInletHeight;
+    externalOutletHeight = cond_in.externalOutletHeight;
+
+    lowestNode = cond_in.lowestNode;
+    extrapolationMethod = cond_in.extrapolationMethod;
+    secondaryHeatExchanger = cond_in.secondaryHeatExchanger;
+
+    return *this;
+}
+
+void HPWH::Condenser::from(const std::unique_ptr<HeatSourceBase>& rshs_ptr)
+{
+    auto cond_ptr =
+        reinterpret_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            rshs_ptr.get());
 
     auto& perf = cond_ptr->performance;
     switch (perf.coil_configuration)
@@ -104,19 +136,11 @@ void HPWH::Condenser::from(std::unique_ptr<HeatSourceBase>& rshs_ptr)
     }
 }
 
-void HPWH::Condenser::to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config) const
+void HPWH::Condenser::to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const
 {
-    HPWH::HeatSource::to(config);
-
-    config.heat_source_type =
-        data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER;
-
-    config.heat_source = std::make_unique<
-        data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
-
-    auto cond_ptr = reinterpret_cast<
-        data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-        config.heat_source.get());
+    auto cond_ptr =
+        reinterpret_cast<data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+            rshs_ptr.get());
 
     auto& metadata = cond_ptr->metadata;
     checkTo(data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE,
@@ -217,7 +241,6 @@ void HPWH::Condenser::to(data_model::rsintegratedwaterheater_ns::HeatSourceConfi
     }
 }
 
-
 void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
 {
     double input_BTUperHr = 0., cap_BTUperHr = 0., cop = 0.;
@@ -265,19 +288,17 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
         break;
     }
 
-    hpwh->setSetpoint(tempSetpoint_C);
-
     // update the input & output energy
     energyInput_kWh += BTU_TO_KWH(input_BTUperHr * runtime_min / min_per_hr);
     energyOutput_kWh += BTU_TO_KWH(cap_BTUperHr * runtime_min / min_per_hr);
 }
 
 void HPWH::Condenser::getCapacity(double externalT_C,
-                                   double condenserTemp_C,
-                                   double setpointTemp_C,
-                                   double& input_BTUperHr,
-                                   double& cap_BTUperHr,
-                                   double& cop)
+                                  double condenserTemp_C,
+                                  double setpointTemp_C,
+                                  double& input_BTUperHr,
+                                  double& cap_BTUperHr,
+                                  double& cop)
 {
     double externalT_F, condenserTemp_F;
 
@@ -310,7 +331,8 @@ void HPWH::Condenser::getCapacity(double externalT_C,
         }
         else if (perfMap.size() > 1)
         {
-            getCapacityFromMap(perfMap, externalT_C,
+            getCapacityFromMap(perfMap,
+                               externalT_C,
                                condenserTemp_C +
                                    secondaryHeatExchanger.coldSideTemperatureOffest_dC,
                                input_BTUperHr,
@@ -363,10 +385,10 @@ void HPWH::Condenser::getCapacity(double externalT_C,
 }
 
 void HPWH::Condenser::getCapacityMP(double externalT_C,
-                                     double condenserTemp_C,
-                                     double& input_BTUperHr,
-                                     double& cap_BTUperHr,
-                                     double& cop)
+                                    double condenserTemp_C,
+                                    double& input_BTUperHr,
+                                    double& cap_BTUperHr,
+                                    double& cop)
 {
     double externalT_F, condenserTemp_F;
     bool resDefrostHeatingOn = false;
@@ -459,16 +481,16 @@ void HPWH::Condenser::defrostDerate(double& to_derate, double airT_F)
 
 void HPWH::Condenser::calcHeatDist(std::vector<double>& heatDistribution)
 {
-
     // Populate the vector of heat distribution
     if (configuration == CONFIG_SUBMERGED)
     {
-        HPWH::HeatSource::calcHeatDist(heatDistribution));
+        HPWH::HeatSource::calcHeatDist(heatDistribution);
     }
     else if (configuration == CONFIG_WRAPPED)
     { // Wrapped around the tank, send through the logistic function
-        calcThermalDist(
-            heatDistribution, Tshrinkage_C, lowestNode, hpwh->tank->nodeTs_C, hpwh->setpoint_C);
+        std::vector<double> tankTs_C;
+        hpwh->getTankTemps(tankTs_C);
+        calcThermalDist(heatDistribution, Tshrinkage_C, lowestNode, tankTs_C, hpwh->setpoint_C);
     }
 }
 
@@ -482,10 +504,10 @@ void HPWH::Condenser::calcHeatDist(std::vector<double>& heatDistribution)
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
 double HPWH::Condenser::addHeatExternal(double externalT_C,
-                                         double stepTime_min,
-                                         double& cap_BTUperHr,
-                                         double& input_BTUperHr,
-                                         double& cop)
+                                        double stepTime_min,
+                                        double& cap_BTUperHr,
+                                        double& input_BTUperHr,
+                                        double& cop)
 {
     input_BTUperHr = 0.;
     cap_BTUperHr = 0.;
@@ -614,10 +636,10 @@ double HPWH::Condenser::addHeatExternal(double externalT_C,
 /// @return	elapsed time (min)
 //-----------------------------------------------------------------------------
 double HPWH::Condenser::addHeatExternalMP(double externalT_C,
-                                           double stepTime_min,
-                                           double& cap_BTUperHr,
-                                           double& input_BTUperHr,
-                                           double& cop)
+                                          double stepTime_min,
+                                          double& cap_BTUperHr,
+                                          double& input_BTUperHr,
+                                          double& cop)
 {
     input_BTUperHr = 0.;
     cap_BTUperHr = 0.;
@@ -721,36 +743,6 @@ double HPWH::Condenser::addHeatExternalMP(double externalT_C,
 
     // return the elapsed time
     return elapsedTime_min;
-}
-
-HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& hSource)
-{
-    HPWH::HeatSource::operator=(hSource);
-
-    Tshrinkage_C = hSource.Tshrinkage_C;
-
-    perfMap = hSource.perfMap;
-
-    perfGrid = hSource.perfGrid;
-    perfGridValues = hSource.perfGridValues;
-    perfRGI = hSource.perfRGI;
-    useBtwxtGrid = hSource.useBtwxtGrid;
-
-    defrostMap = hSource.defrostMap;
-    resDefrost = hSource.resDefrost;
-
-    configuration = hSource.configuration;
-    isMultipass = hSource.isMultipass;
-    mpFlowRate_LPS = hSource.mpFlowRate_LPS;
-
-    externalInletHeight = hSource.externalInletHeight;
-    externalOutletHeight = hSource.externalOutletHeight;
-
-    lowestNode = hSource.lowestNode;
-    extrapolationMethod = hSource.extrapolationMethod;
-    secondaryHeatExchanger = hSource.secondaryHeatExchanger;
-
-    return *this;
 }
 
 void HPWH::Condenser::btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target)
