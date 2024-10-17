@@ -15,6 +15,8 @@ class HPWH::HeatSource : public Sender
                const std::string& name_in = "heatsource");
 
     HeatSource(const HeatSource& heatSource);         /// copy constructor
+
+    virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
     void to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config) const;
@@ -24,6 +26,10 @@ class HPWH::HeatSource : public Sender
     virtual void to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const = 0;
     virtual void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) = 0;
     virtual void calcHeatDist(std::vector<double>& heatDistribution);
+
+    bool isACompressor() const{return typeOfHeatSource() == TYPE_compressor;}
+    /**< returns if the heat source uses a compressor or not */
+    bool isAResistance() const{return typeOfHeatSource() == TYPE_resistance;}
 
     bool isEngaged() const;
     /**< return whether or not the heat source is engaged */
@@ -136,10 +142,6 @@ class HPWH::HeatSource : public Sender
     void clearAllShutOffLogic();
     void clearAllLogic();
     /**< these are two small functions to remove some of the cruft in initiation functions */
-
-    bool isACompressor() const;
-    /**< returns if the heat source uses a compressor or not */
-    bool isAResistance() const;
 
     double minT;
     /**<  minimum operating temperature of HPWH environment */

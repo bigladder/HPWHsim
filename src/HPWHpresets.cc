@@ -4391,6 +4391,10 @@ void HPWH::initPreset(MODELS presetNum)
         {
             isHeating = true;
         }
+        if (heatSources[i]->isACompressor())
+        {
+            reinterpret_cast<Condenser*>(heatSources[i].get())->sortPerformanceMap();
+        }
     }
-    compressor->sortPerformanceMap();
+
 } // end HPWHinit_presets

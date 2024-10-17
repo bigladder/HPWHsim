@@ -834,9 +834,12 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         { // If there's a compressor lets check the new setpoint against the compressor's max
           // setpoint
 
+            auto cond_ptr  =
+                reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+
             maxAllowedSetpoint_C =
-                heatSources[compressorIndex]->maxSetpoint_C -
-                heatSources[compressorIndex]->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+                cond_ptr->maxSetpoint_C -
+                cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
             if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
             {
@@ -1176,7 +1179,7 @@ void HPWH::setExternalOutletHeightByFraction(double fractionalHeight)
 
 void HPWH::setExternalPortHeightByFraction(double fractionalHeight, int whichExternalPort)
 {
-    int heatSourceIndex;
+    std::size_t heatSourceIndex;
     if (!hasExternalHeatSource(heatSourceIndex))
     {
         send_error("Does not have an external heat source.");
@@ -1207,7 +1210,7 @@ void HPWH::setNodeNumFromFractionalHeight(double fractionalHeight, int& inletNum
 
 int HPWH::getExternalInletHeight() const
 {
-    int heatSourceIndex;
+    std::size_t heatSourceIndex;
     if (!hasExternalHeatSource(heatSourceIndex))
     {
         send_error("Does not have an external heat source.");
@@ -1219,7 +1222,7 @@ int HPWH::getExternalInletHeight() const
 
 int HPWH::getExternalOutletHeight() const
 {
-    int heatSourceIndex;
+    std::size_t heatSourceIndex;
     if (!hasExternalHeatSource(heatSourceIndex))
     {
         send_error("Does not have an external heat source.");
@@ -1368,7 +1371,7 @@ bool HPWH::isSoCControlled() const { return usesSoCLogic; }
 bool HPWH::canUseSoCControls()
 {
     bool retVal = true;
-    if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL)
+    if (getCompressorCoilConfig() != HPWH::Condenser::CONFIG_EXTERNAL)
     {
         retVal = false;
     }
@@ -1756,30 +1759,32 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Invalid units.");
     }
 
-    if (airTemp_C < heatSources[compressorIndex]->minT ||
-        airTemp_C > heatSources[compressorIndex]->maxT)
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+
+    if (airTemp_C < cond_ptr->minT ||
+        airTemp_C > cond_ptr->maxT)
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
 
     double maxAllowedSetpoint_C =
-        heatSources[compressorIndex]->maxSetpoint_C -
-        heatSources[compressorIndex]->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+        cond_ptr->maxSetpoint_C -
+        cond_ptr->secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
     if (outTemp_C > maxAllowedSetpoint_C)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
-    if (heatSources[compressorIndex]->isExternalMultipass())
+    if (cond_ptr->isExternalMultipass())
     {
         double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-        heatSources[compressorIndex]->getCapacityMP(
+        cond_ptr->getCapacityMP(
             airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
     else
     {
-        heatSources[compressorIndex]->getCapacity(
+        cond_ptr->getCapacity(
             airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
@@ -2059,7 +2064,8 @@ int HPWH::getCompressorCoilConfig() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return heatSources[compressorIndex]->configuration;
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return cond_ptr->configuration;
 }
 
 int HPWH::isCompressorMultipass() const
@@ -2068,7 +2074,8 @@ int HPWH::isCompressorMultipass() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return static_cast<int>(heatSources[compressorIndex]->isMultipass);
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return static_cast<int>(cond_ptr->isMultipass);
 }
 
 int HPWH::isCompressorExternalMultipass() const
@@ -2077,19 +2084,26 @@ int HPWH::isCompressorExternalMultipass() const
     {
         send_error("Current model does not have a compressor.");
     }
-    return static_cast<int>(heatSources[compressorIndex]->isExternalMultipass());
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    return static_cast<int>(cond_ptr->isExternalMultipass());
 }
 
 bool HPWH::hasACompressor() const { return compressorIndex >= 0; }
 
-bool HPWH::hasExternalHeatSource(int& heatSourceIndex) const
+bool HPWH::hasExternalHeatSource(std::size_t& heatSourceIndex) const
 {
-    for (heatSourceIndex = 0; heatSourceIndex < getNumHeatSources(); ++heatSourceIndex)
+    heatSourceIndex = 0;
+    for (auto heatSource_ptr:heatSources)
     {
-        if (heatSources[heatSourceIndex]->configuration == HeatSource::CONFIG_EXTERNAL)
+        if (heatSource_ptr->isACompressor())
         {
-            return true;
+            auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+            if (cond_ptr->configuration == Condenser::CONFIG_EXTERNAL)
+            {
+                return true;
+            }
         }
+        ++heatSourceIndex;
     }
     return false;
 }
@@ -2100,7 +2114,8 @@ double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
     {
         send_error("Does not have an external multipass heat source.");
     }
-    double flowRate = heatSources[compressorIndex]->mpFlowRate_LPS;
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    double flowRate = cond_ptr->mpFlowRate_LPS;
     if (units == HPWH::UNITS_LPS)
     {
     }
@@ -2224,7 +2239,8 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
         send_error("Can not scale the HPWH Capacity or COP to 0 or less than 0.");
     }
 
-    for (auto& perfP : heatSources[compressorIndex]->perfMap)
+    auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    for (auto& perfP : cond_ptr->perfMap)
     {
         scaleVector(perfP.inputPower_coeffs, scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
@@ -2285,13 +2301,13 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (heatSources[i]->isAResistance())
             {
-                heatSources[i]->changeResistanceWatts(watts);
+                reinterpret_cast<Resistance*>(heatSources[i].get())->changeWatts(watts);
             }
         }
     }
     else
     {
-        heatSources[resistanceHeightMap[which].index]->changeResistanceWatts(watts);
+        reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())->changeWatts(watts);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2299,7 +2315,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                heatSources[resistanceHeightMap[i].index]->changeResistanceWatts(watts);
+                reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())->changeWatts(watts);
             }
         }
     }
@@ -2326,7 +2342,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         {
             if (heatSources[i]->isAResistance())
             {
-                returnPower += heatSources[i]->perfMap[0].inputPower_coeffs[0];
+                returnPower += reinterpret_cast<Resistance*>(heatSources[i].get())->power_kW;
             }
         }
     }
@@ -2334,7 +2350,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
     {
         // get the power from "which" element by height
         returnPower +=
-            heatSources[resistanceHeightMap[which].index]->perfMap[0].inputPower_coeffs[0];
+            reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[which].index].get())->power_kW;
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2343,13 +2359,12 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
             if (which != i && resistanceHeightMap[i].position == pos)
             {
                 returnPower +=
-                    heatSources[resistanceHeightMap[i].index]->perfMap[0].inputPower_coeffs[0];
+                    reinterpret_cast<Resistance*>(heatSources[resistanceHeightMap[i].index].get())->power_kW;
             }
         }
     }
 
     // Unit conversion
-    returnPower /= 1000.; // W to KW
     switch (pwrUnit)
     {
     case UNITS_KW:
@@ -2734,98 +2749,96 @@ void HPWH::checkInputs()
 
         if (heatSources[i]->isACompressor())
         {
-            if (heatSources[i]->doDefrost)
+            auto cond_ptr = reinterpret_cast<Condenser*>(heatSources[i].get());
+            if (cond_ptr->doDefrost)
             {
-                if (heatSources[i]->defrostMap.size() < 3)
+                if (cond_ptr->defrostMap.size() < 3)
                 {
                     error_msgs.push(
                         "Defrost logic set to true but no valid defrost map of length 3 or "
                         "greater set.");
                 }
-                if (heatSources[i]->configuration != HeatSource::CONFIG_EXTERNAL)
+                if (cond_ptr->configuration != Condenser::CONFIG_EXTERNAL)
                 {
                     error_msgs.push("Defrost is only simulated for external compressors.");
                 }
             }
-        }
-        if (heatSources[i]->configuration == HeatSource::CONFIG_EXTERNAL)
-        {
 
-            if (heatSources[i]->shutOffLogicSet.size() != 1)
+            if (cond_ptr->configuration == Condenser::CONFIG_EXTERNAL)
             {
-                error_msgs.push("External heat sources can only have one shut off logic.");
+                if (heatSources[i]->shutOffLogicSet.size() != 1)
+                {
+                    error_msgs.push("External heat sources can only have one shut off logic.");
+                }
+                if (0 > heatSources[i]->externalOutletHeight ||
+                    heatSources[i]->externalOutletHeight > getNumNodes() - 1)
+                {
+                    error_msgs.push(
+                        "External heat sources need an external outlet height within the bounds"
+                        "from from 0 to numNodes-1.");
+                }
+                if (0 > heatSources[i]->externalInletHeight ||
+                    heatSources[i]->externalInletHeight > getNumNodes() - 1)
+                {
+                    error_msgs.push(
+                        "External heat sources need an external inlet height within the bounds "
+                        "from from 0 to numNodes-1.");
+                }
             }
-            if (0 > heatSources[i]->externalOutletHeight ||
-                heatSources[i]->externalOutletHeight > getNumNodes() - 1)
+            else
             {
-                error_msgs.push(
-                    "External heat sources need an external outlet height within the bounds"
-                    "from from 0 to numNodes-1.");
-            }
-            if (0 > heatSources[i]->externalInletHeight ||
-                heatSources[i]->externalInletHeight > getNumNodes() - 1)
-            {
-                error_msgs.push(
-                    "External heat sources need an external inlet height within the bounds "
-                    "from from 0 to numNodes-1.");
-            }
-        }
-        else
-        {
-            if (heatSources[i]->secondaryHeatExchanger.extraPumpPower_W != 0 ||
-                heatSources[i]->secondaryHeatExchanger.extraPumpPower_W)
-            {
-                error_msgs.push(fmt::format(
-                    "Heatsource {:d} is not an external heat source but has an external "
-                    "secondary heat exchanger.",
-                    i));
-            }
-        }
-
-        // Check performance map
-        // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and
-        // that ;
-        if (heatSources[i]->useBtwxtGrid)
-        {
-            // If useBtwxtGrid is true that the perfMap is empty
-            if (heatSources[i]->perfMap.size() != 0)
-            {
-                error_msgs.push(
-                    "\n\tUsing the grid lookups but a regression-based performance map is given.");
+                if (cond_ptr->secondaryHeatExchanger.extraPumpPower_W != 0 ||
+                    cond_ptr->secondaryHeatExchanger.extraPumpPower_W)
+                {
+                    error_msgs.push(fmt::format(
+                        "Heatsource {:d} is not an external heat source but has an external "
+                        "secondary heat exchanger.",
+                        i));
+                }
             }
 
-            // Check length of vectors in perfGridValue are equal
-            if (heatSources[i]->perfGridValues[0].size() !=
-                    heatSources[i]->perfGridValues[1].size() &&
-                heatSources[i]->perfGridValues[0].size() != 0)
+            // Check performance map
+            // perfGrid and perfGridValues, and the length of vectors in perfGridValues are equal and that ;
+            if (cond_ptr->useBtwxtGrid)
             {
-                error_msgs.push(
-                    "When using grid lookups for performance the vectors in perfGridValues must "
-                    "be the same length.");
+                // If useBtwxtGrid is true that the perfMap is empty
+                if (cond_ptr->perfMap.size() != 0)
+                {
+                    error_msgs.push("\n\tUsing the grid lookups but a regression-based performance map is given.");
+                }
+
+                // Check length of vectors in perfGridValue are equal
+                if (cond_ptr->perfGridValues[0].size() != cond_ptr->perfGridValues[1].size() &&
+                    cond_ptr->perfGridValues[0].size() != 0)
+                {
+                    error_msgs.push("When using grid lookups for performance the vectors in perfGridValues must "
+                                    "be the same length.");
+                }
+
+                // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
+                // lengths
+                size_t expLength = 1;
+                for (const auto& v : cond_ptr->perfGrid)
+                {
+                    expLength *= v.size();
+                }
+                if (expLength != cond_ptr->perfGridValues[0].size())
+                {
+                    error_msgs.push(
+                        "When using grid lookups for perfmance the vectors in perfGridValues must "
+                        "be the same length.");
+                }
             }
 
-            // Check perfGrid's vectors lengths multiplied together == the perfGridValues vector
-            // lengths
-            size_t expLength = 1;
-            for (const auto& v : heatSources[i]->perfGrid)
+            else
             {
-                expLength *= v.size();
-            }
-            if (expLength != heatSources[i]->perfGridValues[0].size())
-            {
-                error_msgs.push(
-                    "When using grid lookups for perfmance the vectors in perfGridValues must "
-                    "be the same length.");
-            }
-        }
-        else
-        {
-            // Check that perfmap only has 1 point if config_external and multipass
-            if (heatSources[i]->isExternalMultipass() && heatSources[i]->perfMap.size() != 1)
-            {
-                error_msgs.push(
-                    "External multipass heat sources must have a perfMap of only one point "
-                    "with regression equations.");
+                // Check that perfmap only has 1 point if config_external and multipass
+                if (cond_ptr->isExternalMultipass() && cond_ptr->perfMap.size() != 1)
+                {
+                    error_msgs.push(
+                        "External multipass heat sources must have a perfMap of only one point "
+                        "with regression equations.");
+                }
             }
         }
     }
@@ -3409,7 +3422,6 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         {
             isHeating = true;
         }
-        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -4345,7 +4357,12 @@ void HPWH::makeGeneric(const double targetUEF)
             HPWH::HeatSource* heatSource;
             hpwh.getNthHeatSource(heatSourceIndex, heatSource);
 
-            auto& perfMap = heatSource->perfMap;
+            auto cond_ptr = reinterpret_cast<Condenser*>(heatSource);
+            auto& perfMap = cond_ptr->perfMap;
+            if (!heatSource->isACompressor())
+            {
+                hpwh.send_error("Invalid heat-source performance-map cop-coefficient power.");
+            }
             if (tempIndex >= perfMap.size())
             {
                 hpwh.send_error("Invalid heat-source performance-map temperature index.");
