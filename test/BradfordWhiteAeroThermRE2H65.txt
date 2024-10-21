@@ -65,7 +65,7 @@ heatsource 2 condensity 1 0 0
 
 heatsource 2 nTemps 2
 heatsource 2 T1 50 F
-heatsource 2 inPowT1const 150
+heatsource 2 inPowT1const 148
 heatsource 2 inPowT1lin 2
 heatsource 2 inPowT1quad 0
 heatsource 2 copT1const 5.88
@@ -77,7 +77,7 @@ heatsource 2 inPowT2const 110
 heatsource 2 inPowT2lin 2.5
 heatsource 2 inPowT2quad 0
 heatsource 2 copT2const 6.8
-heatsource 2 copT2lin -0.03
+heatsource 2 copT2lin -0.0323
 heatsource 2 copT2quad 0.0
 
 heatsource 2 minT 37 F
