@@ -1,8 +1,9 @@
+# Calls the hpwh command 'run' to perform a test simulation HPWH model.
+
 import os
 import sys
 import subprocess
 from pathlib import Path
-
 
 #
 def simulate(model_spec, model_name, test_name, build_dir):

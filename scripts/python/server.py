@@ -1,13 +1,14 @@
+# Launches a simple tcp server for dispatching commands initiated from a web page.
+# Two command strings are supported currently: 'test' and 'measure'.
+# Launch the server with "poetry run python server.py".
+# Exit the server with "ctrl-c".
+# Open the local file "index.html" in a browser to access the server functions.
+
 import http.server
 import socketserver
 import urllib.parse as urlparse
 import main
 from json import dumps
-# in scripts/python
-# poetry run python server.py
-# open "index.html" in browser
-
-# quit the server with ctrl-c
 
 PORT = 8000
 
