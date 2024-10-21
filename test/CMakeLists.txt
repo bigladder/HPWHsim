@@ -159,16 +159,16 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 
-set(AeroThermSizes 50 65 80)
-set(AeroTherm2023_50_Tests
+set(BradfordWhiteAeroThermSizes 50 65 80)
+set(BradfordWhiteAeroThermRE2H50_Tests
         RE2H50_UEF50
         RE2H50_UEF67
         )
-set(AeroTherm2023_65_Tests
+set(BradfordWhiteAeroThermRE2H65_Tests
         RE2H65_UEF50
         RE2H65_UEF67
         )
-set(AeroTherm2023_80_Tests
+set(BradfordWhiteAeroThermRE2H80_Tests
         RE2H80_UEF50
         RE2H80_UEF67
         )
@@ -190,11 +190,15 @@ endif ()
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_COLLECTION_DIR TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    if("${ARG_TEST_COLLECTION_DIR}" STREQUAL "")
+         set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    else()
+        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -c ${ARG_TEST_COLLECTION_DIR} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
+    endif()
 
     if (${ARG_TEST_NAME} STREQUAL "testLockout")
         if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
@@ -243,18 +247,28 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "")
     endforeach (model)
 endforeach (test)
 
 #Test(s) specifically for heat-exchange models
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "")
     endforeach (model)
 endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "BradfordWhite/AeroTherm2023")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "BradfordWhite/AeroTherm2023")
+    endforeach (test)
+endforeach (size)
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
@@ -327,6 +341,7 @@ foreach (test ${heatExchangeTests})
     endforeach (model)
 endforeach (test)
 
+
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
@@ -374,15 +389,6 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for Bradford White AeroTherm2023 model
-foreach (size ${AeroThermSizes})
-    set(model AeroTherm2023_${size})
-    set(tests "${${model}_Tests}")
-    foreach (test ${tests})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (test)
-endforeach (size)
 
 add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 

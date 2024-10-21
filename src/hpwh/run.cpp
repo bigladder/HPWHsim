@@ -23,7 +23,8 @@ namespace hpwh_cli
 /// run
 static void run(const std::string& sSpecType,
                 const std::string& sModelName,
-                std::string testDirectory,
+                std::string sTestCollectionDirectory,
+                std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
 
@@ -37,8 +38,11 @@ CLI::App* add_run(CLI::App& app)
     static std::string sModelName = "";
     subcommand->add_option("-m,--model", sModelName, "Model name")->required();
 
+    static std::string sTestCollectionDir = "";
+    subcommand->add_option("-c,--collection", sTestCollectionDir, "Test collection directory name");
+
     static std::string sTestName = "";
-    subcommand->add_option("-t,--test", sTestName, "Test directory name")->required();
+    subcommand->add_option("-t,--test", sTestName, "Test name")->required();
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -46,7 +50,8 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+    subcommand->callback(
+        [&]() { run(sSpecType, sModelName, sTestCollectionDir, sTestName, sOutputDir, airTemp); });
 
     return subcommand;
 }
@@ -55,7 +60,8 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
 void run(const std::string& sSpecType,
          const std::string& sModelName,
-         std::string testDirectory,
+         std::string sTestCollectionDir,
+         std::string sTestName,
          std::string sOutputDir,
          double airTemp)
 {
@@ -143,7 +149,10 @@ void run(const std::string& sSpecType,
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
-    fileToOpen = testDirectory + "/" + "testInfo.txt";
+    fileToOpen = "";
+    if (sTestCollectionDir != "")
+        fileToOpen = sTestCollectionDir + "/";
+    fileToOpen += sTestName + "/" + "testInfo.txt";
     controlFile.open(fileToOpen.c_str());
     if (!controlFile.is_open())
     {
@@ -161,7 +170,11 @@ void run(const std::string& sSpecType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
-    cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << testDirectory << endl;
+
+    cout << "Running: " << sModelName << ", " << sPresetOrFile;
+    if (sTestCollectionDir != "")
+        cout << ", " << sTestCollectionDir;
+    cout << "/" << sTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -226,7 +239,10 @@ void run(const std::string& sSpecType,
 
     for (i = 0; (unsigned)i < scheduleNames.size(); i++)
     {
-        fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
+        fileToOpen = "";
+        if (sTestCollectionDir != "")
+            fileToOpen += sTestCollectionDir + "/";
+        fileToOpen += sTestName + "/" + scheduleNames[i] + "schedule.csv";
         outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
         if (outputCode != 0)
         {
@@ -310,8 +326,7 @@ void run(const std::string& sSpecType,
     }
     else
     {
-        fileToOpen =
-            sOutputDir + "/" + testDirectory + "_" + sPresetOrFile + "_" + sModelName + ".csv";
+        fileToOpen = sOutputDir + "/" + sTestName + "_" + sPresetOrFile + "_" + sModelName + ".csv";
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -464,7 +479,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
-        firstCol = testDirectory + "," + sPresetOrFile + "," + sModelName;
+        firstCol = sTestName + "," + sPresetOrFile + "," + sModelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
