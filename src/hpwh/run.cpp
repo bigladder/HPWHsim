@@ -46,8 +46,7 @@ CLI::App* add_run(CLI::App& app)
     static double airTemp = -1000.;
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
-    subcommand->callback(
-        [&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
+    subcommand->callback([&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
 
     return subcommand;
 }
