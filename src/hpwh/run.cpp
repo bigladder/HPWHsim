@@ -23,7 +23,6 @@ namespace hpwh_cli
 /// run
 static void run(const std::string& sSpecType,
                 const std::string& sModelName,
-                std::string sTestCollectionDirectory,
                 std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
@@ -38,9 +37,6 @@ CLI::App* add_run(CLI::App& app)
     static std::string sModelName = "";
     subcommand->add_option("-m,--model", sModelName, "Model name")->required();
 
-    static std::string sTestCollectionDir = "";
-    subcommand->add_option("-c,--collection", sTestCollectionDir, "Test collection directory name");
-
     static std::string sTestName = "";
     subcommand->add_option("-t,--test", sTestName, "Test name")->required();
 
@@ -51,7 +47,7 @@ CLI::App* add_run(CLI::App& app)
     subcommand->add_option("-a,--air_temp_C", airTemp, "Air temperature (degC)");
 
     subcommand->callback(
-        [&]() { run(sSpecType, sModelName, sTestCollectionDir, sTestName, sOutputDir, airTemp); });
+        [&]() { run(sSpecType, sModelName, sTestName, sOutputDir, airTemp); });
 
     return subcommand;
 }
@@ -60,8 +56,7 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
 void run(const std::string& sSpecType,
          const std::string& sModelName,
-         std::string sTestCollectionDir,
-         std::string sTestName,
+         std::string sFullTestName,
          std::string sOutputDir,
          double airTemp)
 {
@@ -132,7 +127,6 @@ void run(const std::string& sSpecType,
     }
     else if (sPresetOrFile == "File")
     {
-
         hpwh.initFromFile(sModelName);
     }
     else
@@ -142,6 +136,13 @@ void run(const std::string& sSpecType,
         exit(1);
     }
 
+    std::string sTestName = sFullTestName;
+    if (sFullTestName.find("/") != std::string::npos)
+    {
+        std::size_t iLast = sFullTestName.find_last_of("/");
+        sTestName = sFullTestName.substr(iLast + 1);
+    }
+
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
     tempDepressThresh = 4;
@@ -149,10 +150,7 @@ void run(const std::string& sSpecType,
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
-    fileToOpen = "";
-    if (sTestCollectionDir != "")
-        fileToOpen = sTestCollectionDir + "/";
-    fileToOpen += sTestName + "/" + "testInfo.txt";
+    fileToOpen = sFullTestName + "/" + "testInfo.txt";
     controlFile.open(fileToOpen.c_str());
     if (!controlFile.is_open())
     {
@@ -171,10 +169,7 @@ void run(const std::string& sSpecType,
     useSoC = false;
     bool hasInitialTankTemp = false;
 
-    cout << "Running: " << sModelName << ", " << sPresetOrFile;
-    if (sTestCollectionDir != "")
-        cout << ", " << sTestCollectionDir;
-    cout << "/" << sTestName << endl;
+    cout << "Running: " << sModelName << ", " << sPresetOrFile << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -239,10 +234,7 @@ void run(const std::string& sSpecType,
 
     for (i = 0; (unsigned)i < scheduleNames.size(); i++)
     {
-        fileToOpen = "";
-        if (sTestCollectionDir != "")
-            fileToOpen += sTestCollectionDir + "/";
-        fileToOpen += sTestName + "/" + scheduleNames[i] + "schedule.csv";
+        fileToOpen = sFullTestName + "/" + scheduleNames[i] + "schedule.csv";
         outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
         if (outputCode != 0)
         {

@@ -159,7 +159,8 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 
-set(BradfordWhiteAeroThermSizes 50 65 80)
+set(BradfordWhiteAeroThermRE2Dir "BradfordWhite/AeroThermRE2H")
+set(BradfordWhiteAeroThermRE2HSizes 50 65 80)
 set(BradfordWhiteAeroThermRE2H50_Tests
         RE2H50_UEF50
         RE2H50_UEF67
@@ -190,7 +191,7 @@ endif ()
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_COLLECTION_DIR TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -261,12 +262,13 @@ foreach (test ${heatExchangeTests})
 endforeach (test)
 
 #Test(s) specifically for Bradford White AeroTherm model
-foreach (size ${BradfordWhiteAeroThermSizes})
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     set(model BradfordWhiteAeroThermRE2H${size})
     set(tests "${${model}_Tests}")
     foreach (test ${tests})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "BradfordWhite/AeroTherm2023")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "BradfordWhite/AeroTherm2023")
+        set(fullTestName "${BradfordWhiteAeroThermRE2Dir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (test)
 endforeach (size)
 

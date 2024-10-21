@@ -45,18 +45,18 @@ body {font-family: Arial;}
     <input type="text" id="model_spec" name="model_spec" required><br><br>
 
     <label for="model_name">model name:</label>
-    <input type="text" id="model_name" name="model_name" required><br><br>
+    <input type="text" id="model_name" name="model_name" style="width: 200px" required><br><br>
 </form>
 
 <form id="build_form">
     <label for="build_dir">build directory:</label>
-    <input type="text" id="build_dir" name="build_dir" width="200" required><br><br>
+    <input type="text" id="build_dir" name="build_dir" style="width: 200px" required><br><br>
 </form>
 
 <script>
   const model_form = document.getElementById('model_form');
-  model_form.model_spec.value = "File";
-  model_form.model_name.value = "AquaThermAire";
+  model_form.model_spec.value = "Preset";
+  model_form.model_name.value = "BradfordWhiteAeroThermRE2H65";
 
   const build_form = document.getElementById('build_form');
   build_form.build_dir.value = "../../build";
@@ -155,10 +155,10 @@ body {font-family: Arial;}
 <div class="content">
   <form id="test_form">
 
-      <label for="test_name">test name:</label>
-      <input type="text" id="test_name" name="test_name" required><br><br>
+    <label for="test_name">test name:</label>
+    <input type="text" id="test_name" name="test_name" style="width: 200px" required><br><br>
 
-      <button type="button" id="test_btn" onclick="test();">test</button>
+    <button type="button" id="test_btn" onclick="test();">test</button>
   </form>
 
   <iframe title="plots" src="" id="plots" width=1200 height=800 style="display:none;"></iframe>
@@ -199,7 +199,7 @@ for (i = 0; i < coll.length; i++) {
 
 <script>
   const test_form = document.getElementById('test_form');
-  test_form.test_name.value = "villara_24hr67";
+  test_form.test_name.value = "BradfordWhite/AeroThermRE2H/RE2H50_UEF50";
 
   //var test_btn = document.getElementById("test_btn");
 
