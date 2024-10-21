@@ -247,16 +247,16 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
 #Test(s) specifically for heat-exchange models
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset" TEST_COLLECTION_DIR "")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" TEST_COLLECTION_DIR "")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
