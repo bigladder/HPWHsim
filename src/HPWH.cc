@@ -4102,17 +4102,17 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_GenericUEF217;
     }
-    else if (modelName == "AeroTherm2023_50")
+    else if (modelName == "BradfordWhiteAeroThermRE2H50")
     {
-        model = HPWH::MODELS_AeroTherm2023_50;
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H50;
     }
-    else if (modelName == "AeroTherm2023_65")
+    else if (modelName == "BradfordWhiteAeroThermRE2H65")
     {
-        model = HPWH::MODELS_AeroTherm2023_65;
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H65;
     }
-    else if (modelName == "AeroTherm2023_80")
+    else if (modelName == "BradfordWhiteAeroThermRE2H80")
     {
-        model = HPWH::MODELS_AeroTherm2023_80;
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H80;
     }
     else
     {
