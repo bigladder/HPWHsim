@@ -1,3 +1,7 @@
+# Provides function 'plot' to display HPWH simulated vs. measured parameters as functions of time. 
+# The plot is written as html to a file at plot_path. 
+# Returns the energy use for both simulated and measured profiles. 
+
 import sys
 from pathlib import Path
 
@@ -5,7 +9,6 @@ import dimes  # type: ignore
 from dimes import LineProperties
 import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
-import json
 
 DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
@@ -24,8 +27,6 @@ NUMBER_OF_THERMOCOUPLES = 6
 
 
 def call_csv(path, skip_rows):
-    print(path)
-
     data = pd.read_csv(path, skiprows=skip_rows)
     df = pd.DataFrame(data)
     return df
@@ -263,7 +264,9 @@ if __name__ == "__main__":
         measured_path = Path(sys.argv[1])
         simulated_path = Path(sys.argv[2])
         plot_path = Path(sys.argv[3])
-        #print(plot(measured_path, simulated_path, output_path))
+
+        plot(measured_path, simulated_path, plot_path)
+
     else:
         sys.exit(
             "Incorrect number of arguments. Must be three: Measured Path, Simulated Path, Plot Path"

@@ -1,8 +1,10 @@
+# Calls the hpwh command 'measure' to determine HPWH metrics from standard 24-hr test.
+# Results are written to a text file in the output directory.
+
 import os
 import sys
 import subprocess
 from pathlib import Path
-
 
 #
 def measure(model_spec, model_name, build_dir):

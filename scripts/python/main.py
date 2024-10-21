@@ -1,3 +1,5 @@
+# Functions to perform composite calls to hpwh
+
 import os
 import sys
 import subprocess
@@ -6,9 +8,9 @@ from simulate import simulate
 from plot import plot
 from measure import measure
 
-
+# Runs a simulation and generates plot
 def call_test(model_spec, model_name, test_dir, build_dir):
-    #
+
     simulate(model_spec, model_name, test_dir, build_dir)
     
     orig_dir = str(Path.cwd())
@@ -28,11 +30,12 @@ def call_test(model_spec, model_name, test_dir, build_dir):
     test_name = Path(test_dir).name
     
     simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
-    plot_path =  os.path.join(output_dir, "plot.html")         
+    plot_path =  os.path.join(output_dir, "plot.html") 
+            
     return plot(measured_path, simulated_path, plot_path)
 
-
+# Calls the 24-hr test function.
 def call_measure(model_spec, model_name, build_dir):
-    #s
+
     measure(model_spec, model_name, build_dir)
     return 'success'
