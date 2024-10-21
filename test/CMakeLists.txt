@@ -195,11 +195,7 @@ function(add_model_test)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if("${ARG_TEST_COLLECTION_DIR}" STREQUAL "")
-         set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
-    else()
-        set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -c ${ARG_TEST_COLLECTION_DIR} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
-    endif()
+    set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
     if (${ARG_TEST_NAME} STREQUAL "testLockout")
         if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
@@ -272,45 +268,6 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     endforeach (test)
 endforeach (size)
 
-#Test models follow control logic with max temperatures.
-foreach (test ${maxTempTests})
-    foreach (model ${maxTempModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Add large compressor tests to the list
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
-    endforeach (model)
-endforeach (test)
-
-#Add State of Charge tests to the list
-foreach (test ${stateOfChargeTests})
-    foreach (model ${stateOfChargeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
-    endforeach (model)
-endforeach (test)
-
-#Add small compressor yearly tests to the list
-foreach (test ${yearTests})
-    foreach (model ${yearTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Add LARGE compressor yearly tests to the list
-foreach (test ${yearLargeTests})
-    foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
 # Tests for differences between File and Preset versions
 function(add_file_test)
     set(options)
@@ -343,6 +300,14 @@ foreach (test ${heatExchangeTests})
     endforeach (model)
 endforeach (test)
 
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (test)
+endforeach (size)
 
 # Tests for regression differences against reference results
 function(add_regression_test)
@@ -370,6 +335,41 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (size)
+
+#Test models follow control logic with max temperatures.
+foreach (test ${maxTempTests})
+    foreach (model ${maxTempModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add large compressor tests to the list
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        #No files for these yet
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
+    endforeach (model)
+endforeach (test)
+
+#Add State of Charge tests to the list
+foreach (test ${stateOfChargeTests})
+    foreach (model ${stateOfChargeCompressorNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        #No files for these yet
+        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
+    endforeach (model)
+endforeach (test)
+
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
@@ -391,6 +391,19 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
+#Add small compressor yearly tests to the list
+foreach (test ${yearTests})
+    foreach (model ${yearTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add LARGE compressor yearly tests to the list
+foreach (test ${yearLargeTests})
+    foreach (model ${yearLargeTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
 
 add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
