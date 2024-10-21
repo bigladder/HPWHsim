@@ -12,8 +12,8 @@ from json import dumps
 PORT = 8000
 
 
-def do_test(model_spec, model_name, test_name, build_dir):
-    return main.call_test(model_spec, model_name, test_name, build_dir)
+def do_test(model_spec, model_name, test_dir, build_dir):
+    return main.call_test(model_spec, model_name, test_dir, build_dir)
 
 def do_measure(model_spec, model_name, build_dir):
     main.call_measure(model_spec, model_name, build_dir)
@@ -26,10 +26,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
             model_spec = query_components.get('model_spec', [None])[0]
             model_name = query_components.get('model_name', [None])[0]
-            test_name = query_components.get('test_name', [None])[0]
+            test_dir = query_components.get('test_dir', [None])[0]
             build_dir = query_components.get('build_dir', [None])[0]
             
-            response = {"energy_data": do_test(model_spec, model_name, test_name, build_dir)}
+            response = {"energy_data": do_test(model_spec, model_name, test_dir, build_dir)}
             
             self.send_response(200)
             self.send_header("Content-type", "application/json")

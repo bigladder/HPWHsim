@@ -45,12 +45,12 @@ body {font-family: Arial;}
     <input type="text" id="model_spec" name="model_spec" required><br><br>
 
     <label for="model_name">model name:</label>
-    <input type="text" id="model_name" name="model_name" style="width: 200px" required><br><br>
+    <input type="text" id="model_name" name="model_name" style="width: 400px" required><br><br>
 </form>
 
 <form id="build_form">
     <label for="build_dir">build directory:</label>
-    <input type="text" id="build_dir" name="build_dir" style="width: 200px" required><br><br>
+    <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
 </form>
 
 <script>
@@ -73,11 +73,11 @@ body {font-family: Arial;}
     const model_name = model_form.model_name.value;
 
     const test_form = document.getElementById('test_form');
-    const test_name = test_form.test_name.value;
+    const test_dir = test_form.test_dir.value;
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
-    fst += '&test_name=' + test_name;
+    fst += '&test_dir=' + test_dir;
     fst += '&build_dir=' + build_dir;
     document.getElementById("test_btn").disabled = true;
 
@@ -100,17 +100,17 @@ body {font-family: Arial;}
 
     document.getElementById("model_spec").value = model_spec; 
     document.getElementById("model_name").value = model_name;
-    document.getElementById("test_name").value = test_name; 
+    document.getElementById("test_dir").value = test_dir; 
     document.getElementById("build_dir").value = build_dir; 
 
     document.getElementById("model_spec").defaultValue = model_spec; 
     document.getElementById("model_name").defaultValue = model_name; 
-    document.getElementById("test_name").defaultValue = test_name; 
+    document.getElementById("test_dir").defaultValue = test_dir; 
     document.getElementById("build_dir").defaultValue = build_dir; 
  
     localStorage.setItem("model_spec", model_spec);
     localStorage.setItem("model_name", model_name);
-    localStorage.setItem("test_name", test_name);
+    localStorage.setItem("test_dir", test_dir);
     localStorage.setItem("build_dir", build_dir);
 
     document.getElementById("plots").src = build_dir + "/test/output/plot.html"
@@ -155,8 +155,8 @@ body {font-family: Arial;}
 <div class="content">
   <form id="test_form">
 
-    <label for="test_name">test name:</label>
-    <input type="text" id="test_name" name="test_name" style="width: 200px" required><br><br>
+    <label for="test_dir">test directory:</label>
+    <input type="text" id="test_dir" name="test_dir" style="width: 400px" required><br><br>
 
     <button type="button" id="test_btn" onclick="test();">test</button>
   </form>
@@ -199,7 +199,7 @@ for (i = 0; i < coll.length; i++) {
 
 <script>
   const test_form = document.getElementById('test_form');
-  test_form.test_name.value = "BradfordWhite/AeroThermRE2H/RE2H50_UEF50";
+  test_form.test_dir.value = "BradfordWhite/AeroThermRE2H/RE2H50_UEF50";
 
   //var test_btn = document.getElementById("test_btn");
 
