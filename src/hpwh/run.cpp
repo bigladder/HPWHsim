@@ -135,7 +135,7 @@ void run(const std::string& sSpecType,
         exit(1);
     }
 
-    std::string sTestName = sFullTestName; //remove path prefixes
+    std::string sTestName = sFullTestName; // remove path prefixes
     if (sFullTestName.find("/") != std::string::npos)
     {
         std::size_t iLast = sFullTestName.find_last_of("/");
