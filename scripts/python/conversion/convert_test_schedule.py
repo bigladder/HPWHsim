@@ -1,3 +1,5 @@
+# Raw script for converting typical supplied data to a HPWHsim draw schedule.
+
 import os
 import sys
 from pathlib import Path

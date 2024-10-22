@@ -162,7 +162,7 @@ def plot(measured_path, simulated_path, plot_path):
 
     df_measured = call_csv(measured_path, 0)
     df_simulated = call_csv(simulated_path, 0)
-
+    
     variables = {
         "Y-Variables": {
             "Power Input": {
