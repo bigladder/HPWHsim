@@ -326,10 +326,6 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
 
         std::vector<HPWH::NodeWeight> nodeWeights = {};
 
-        if (temp_based_logic->activates_standby_is_set)
-        {
-            label = "standby";
-        }
 
         if (temp_based_logic->tank_node_specification_is_set)
         {
@@ -337,11 +333,13 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             {
             case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
             {
+                label = "top node";
                 nodeWeights.emplace_back(LOGIC_SIZE + 1);
                 break;
             }
             case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
             {
+                label = "bottom node";
                 nodeWeights.emplace_back(0);
                 break;
             }
@@ -350,6 +348,12 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             }
             }
         }
+
+        if (temp_based_logic->activates_standby_is_set)
+        {
+            label = "standby";
+        }
+
         if (temp_based_logic->logic_distribution_is_set)
         {
             std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
@@ -450,6 +454,22 @@ void HPWH::TempBasedHeatingLogic::to(
         checkTo(true, logic.activates_standby_is_set, logic.activates_standby);
 
         checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
+                logic.tank_node_specification_is_set,
+                logic.tank_node_specification);
+
+        logic.logic_distribution_is_set = false;
+    }
+    else if (description == "top node")
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
+                logic.tank_node_specification_is_set,
+                logic.tank_node_specification);
+
+        logic.logic_distribution_is_set = false;
+    }
+    else if (description == "bottom node")
+    {
+        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE,
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 

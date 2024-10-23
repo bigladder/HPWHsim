@@ -37,20 +37,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 320.16988888888886,
-              "logic_distribution": [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ]
+              "tank_node_specification": "TOP_NODE"
             },
             "heating_logic_type": "TEMP_BASED"
           }
@@ -202,7 +189,6 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "activates_standby": true,
               "differential_temperature": 6.147111111111111,
               "tank_node_specification": "TOP_NODE"
             },

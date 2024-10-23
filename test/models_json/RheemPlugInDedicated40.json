@@ -66,7 +66,6 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "activates_standby": true,
               "differential_temperature": 5.0,
               "tank_node_specification": "TOP_NODE"
             },
