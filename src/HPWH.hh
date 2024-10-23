@@ -383,6 +383,8 @@ class HPWH : public Courier::Sender
     std::shared_ptr<TempBasedHeatingLogic> topSixth(double decisionPoint);
 
     std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topNode(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> bottomNode(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic>
     bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff = false);
