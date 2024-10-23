@@ -3,16 +3,16 @@ include(initialize-submodules)
 # btwxt library
 add_submodule(btwxt)
 
+# googletest library
 if (${PROJECT_NAME}_BUILD_TESTING)
-
-    # googletest library
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    set(BUILD_GTEST ON CACHE BOOL "" FORCE MARK)
-    set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
-    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-    mark_as_advanced(BUILD_GTEST BUILD_GMOCK INSTALL_GTEST)
-	add_submodule(googletest gtest "${btwxt_SOURCE_DIR}")
-
-    # CLI11 library
-    add_submodule(CLI11)
+    add_submodule(googletest
+            TARGET_NAME gtest
+            PARENT_SUBMODULE_PATH "${btwxt_SOURCE_DIR}"
+            MARK_AS_ADVANCED BUILD_GTEST BUILD_GMOCK INSTALL_GTEST
+            CACHE_ON gtest_force_shared_crt BUILD_GTEST BUILD_GMOCK
+            CACHE_OFF INSTALL_GTEST
+            )
 endif ()
+
+# CLI11 library
+add_submodule(CLI11)
