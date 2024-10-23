@@ -26,8 +26,11 @@ class RegularGridInterpolator;
 /**<  Definition of HPWH_ABRIDGED excludes some functions to reduce the size of the
  * compiled library.  */
 
-#include "HPWHversion.hh"
+#include "version.h"
 #include "courier/helpers.h"
+
+#define STRING(x) #x
+#define XSTRING(x) STRING(x)
 
 class HPWH : public Courier::Sender
 {
@@ -48,11 +51,6 @@ class HPWH : public Courier::Sender
             }
         }
     };
-
-    static const int version_major = HPWHVRSN_MAJOR;
-    static const int version_minor = HPWHVRSN_MINOR;
-    static const int version_patch = HPWHVRSN_PATCH;
-    static const std::string version_maint;
 
     static const int CONDENSITY_SIZE =
         12; /**<number of condensity nodes associated with each heat source */
@@ -500,7 +498,7 @@ class HPWH : public Courier::Sender
     std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
 
-    static std::string getVersion();
+    static inline std::string getVersion() {return XSTRING(HPWHSIM_VERSION);}
     /**< This function returns a string with the current version number */
 
     void initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */

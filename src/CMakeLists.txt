@@ -1,23 +1,9 @@
-# Set HPWHsim Version
-add_custom_target(${PROJECT_NAME}_version_header
-        DEPENDS ${PROJECT_SOURCE_DIR}/src/HPWHversion.in.hh
-        COMMAND ${CMAKE_COMMAND}
-        ARGS -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-        -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
-        -DPROJECT_NAME=${PROJECT_NAME}
-        -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
-        -P "${PROJECT_SOURCE_DIR}/cmake/git-version.cmake"
-        )
-
-set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
 set(headers
-        HPWHversion.in.hh
         HPWH.hh
         )
 
 set(sources
-        HPWHversion.cc
         HPWH.cc
         HPWHHeatSources.cc
         HPWHHeatingLogics.cc
@@ -39,16 +25,13 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${library_sources})
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include/${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
-
-
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
