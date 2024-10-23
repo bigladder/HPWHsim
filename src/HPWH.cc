@@ -1584,6 +1584,22 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
         "standby", nodeWeights, decisionPoint, this);
 }
 
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNode(double decisionPoint)
+{
+    std::vector<NodeWeight> nodeWeights;
+    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses top tank node
+    return std::make_shared<HPWH::TempBasedHeatingLogic>(
+        "top node", nodeWeights, decisionPoint, this);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomNode(double decisionPoint)
+{
+    std::vector<NodeWeight> nodeWeights;
+    nodeWeights.emplace_back(0); // uses bottom tank node
+    return std::make_shared<HPWH::TempBasedHeatingLogic>(
+        "bottom node", nodeWeights, decisionPoint, this);
+}
+
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
     std::vector<NodeWeight> nodeWeights;
