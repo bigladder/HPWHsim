@@ -498,7 +498,7 @@ class HPWH : public Courier::Sender
     std::shared_ptr<TempBasedHeatingLogic> largeDraw(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> largerDraw(double decisionPoint);
 
-    static inline std::string getVersion() {return XSTRING(HPWHSIM_VERSION);}
+    static inline std::string getVersion() { return XSTRING(HPWHSIM_VERSION); }
     /**< This function returns a string with the current version number */
 
     void initResistanceTank(); /**< Default resistance tank, EF 0.95, volume 47.5 */
