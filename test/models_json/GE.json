@@ -79,20 +79,25 @@
                 ],
                 "heat_source_temperature": [
                   273.15,
+                  323.15,
                   373.15
                 ]
               },
               "lookup_variables": {
                 "cop": [
                   4.0280000000000005,
+                  2.137999999999999,
                   0.24799999999999842,
                   4.2656,
+                  2.762600000000001,
                   1.2596000000000012
                 ],
                 "input_power": [
                   351.97567999999984,
+                  509.9058799999999,
                   685.17008,
                   418.9318400000001,
+                  557.7694400000001,
                   731.59904
                 ]
               }
@@ -135,7 +140,6 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "activates_standby": true,
               "differential_temperature": 2.888888888888889,
               "tank_node_specification": "TOP_NODE"
             },
