@@ -19,4 +19,3 @@ add_submodule(CLI11)
 
 # JSON library
 add_submodule(json)
-
