@@ -2,14 +2,13 @@
 	path = vendor/btwxt
 	url = https://github.com/bigladder/btwxt.git
 
-[submodule "CLI11"]
-	path = vendor/CLI11
-	url = https://github.com/CLIUtils/CLI11.git
-
 [submodule "vendor/json"]
 	path = vendor/json
 	url = https://github.com/nlohmann/json.git
 
 [submodule "vendor/hpwh-data-model"]
 	path = vendor/hpwh-data-model
-	url = https://github.com/bigladder/hpwh-data-model.git
+
+[submodule "vendor/CLI11"]
+	path = vendor/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
