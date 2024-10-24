@@ -18,7 +18,7 @@
 #include <courier/courier.h>
 
 #include <nlohmann/json.hpp>
-#include "data-model.h"
+#include "hpwh-data-model.h"
 
 namespace Btwxt
 {
@@ -104,10 +104,10 @@ class HPWH : public Courier::Sender
     static void to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
                         nlohmann::json& j);
     static void
-    to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& soclogic,
+    to_json(const data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
             nlohmann::json& j);
     static void
-    to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& templogic,
+    to_json(const data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
             nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities

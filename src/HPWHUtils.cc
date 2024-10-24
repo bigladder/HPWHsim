@@ -593,7 +593,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
     for (auto& heat_source_config : heat_source_configs)
     {
         nlohmann::json j_heat_source_config;
-        j_heat_source_config["label"] = heat_source_config.label;
+        j_heat_source_config["id"] = heat_source_config.id;
         j_heat_source_config["heat_distribution"] = heat_source_config.heat_distribution;
 
         auto& heat_source = heat_source_config.heat_source;
@@ -650,43 +650,22 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
             j_heat_source_config["standby_logic"] = j_standby_logic;
         }
 
-        if (heat_source_config.backup_heat_source_label_is_set)
+        if (heat_source_config.backup_heat_source_id_is_set)
         {
-            j_heat_source_config["backup_heat_source_label"] =
-                heat_source_config.backup_heat_source_label;
+            j_heat_source_config["backup_heat_source_id"] =
+                heat_source_config.backup_heat_source_id;
         }
 
-        if (heat_source_config.followed_by_heat_source_label_is_set)
+        if (heat_source_config.followed_by_heat_source_id_is_set)
         {
-            j_heat_source_config["followed_by_heat_source_label"] =
-                heat_source_config.followed_by_heat_source_label;
+            j_heat_source_config["followed_by_heat_source_id"] =
+                heat_source_config.followed_by_heat_source_id;
         }
 
-        if (heat_source_config.companion_heat_source_label_is_set)
+        if (heat_source_config.companion_heat_source_id_is_set)
         {
-            j_heat_source_config["companion_heat_source_label"] =
-                heat_source_config.companion_heat_source_label;
-        }
-
-        if (heat_source_config.hysteresis_temperature_difference_is_set)
-        {
-            j_heat_source_config["hysteresis_temperature_difference"] =
-                heat_source_config.hysteresis_temperature_difference;
-        }
-
-        if (heat_source_config.maximum_temperature_is_set)
-        {
-            j_heat_source_config["maximum_temperature"] = heat_source_config.maximum_temperature;
-        }
-
-        if (heat_source_config.minimum_temperature_is_set)
-        {
-            j_heat_source_config["minimum_temperature"] = heat_source_config.minimum_temperature;
-        }
-
-        if (heat_source_config.maximum_setpoint_is_set)
-        {
-            j_heat_source_config["maximum_setpoint"] = heat_source_config.maximum_setpoint;
+            j_heat_source_config["companion_heat_source_id"] =
+                heat_source_config.companion_heat_source_id;
         }
 
         if (heat_source_config.is_vip_is_set)
@@ -735,6 +714,28 @@ void HPWH::to_json(
 
     auto& perf = rshs.performance;
     nlohmann::json j_perf;
+
+    if (perf.compressor_lockout_temperature_hysteresis_is_set)
+    {
+        j_perf["compressor_lockout_temperature_hysteresis"] =
+            perf.compressor_lockout_temperature_hysteresis;
+    }
+
+    if (perf.maximum_temperature_is_set)
+    {
+        j_perf["maximum_temperature"] = perf.maximum_temperature;
+    }
+
+    if (perf.minimum_temperature_is_set)
+    {
+        j_perf["minimum_temperature"] = perf.minimum_temperature;
+    }
+
+    if (perf.maximum_refrigerant_temperature_is_set)
+    {
+        j_perf["maximum_refrigerant_temperature"] = perf.maximum_refrigerant_temperature;
+    }
+
     if (perf.performance_map_is_set)
     {
         nlohmann::json j_perf_map;
@@ -742,24 +743,15 @@ void HPWH::to_json(
         auto& grid_vars = perf.performance_map.grid_variables;
         nlohmann::json j_grid_vars;
 
-        j_grid_vars["evaporator_environment_temperature"] =
-            grid_vars.evaporator_environment_temperature;
+        j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
+            grid_vars.evaporator_environment_dry_bulb_temperature;
         j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
         j_perf_map["grid_variables"] = j_grid_vars;
 
         auto& lookup_vars = perf.performance_map.lookup_variables;
         nlohmann::json j_lookup_vars;
         j_lookup_vars["input_power"] = lookup_vars.input_power;
-
-        std::size_t nvars = lookup_vars.cop.size();
-        std::vector<double> heating_capacity(nvars);
-        std::size_t i = 0;
-        for (double copval: lookup_vars.cop)
-        {
-            heating_capacity[i] = copval * lookup_vars.input_power[i];
-            ++i;
-        }
-        j_lookup_vars["heating_capacity"] = heating_capacity;
+        j_lookup_vars["heating_capacity"] = lookup_vars.heating_capacity;
         j_perf_map["lookup_variables"] = j_lookup_vars;
 
         j_perf["performance_map"] = j_perf_map;
@@ -815,8 +807,9 @@ void HPWH::to_json(
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& socLogic,
-                   nlohmann::json& j)
+void HPWH::to_json(
+    const data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& socLogic,
+    nlohmann::json& j)
 {
     j["decision_point"] = socLogic.decision_point;
     j["minimum_useful_temperature"] = socLogic.minimum_useful_temperature;
@@ -830,8 +823,9 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeating
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& tempLogic,
-                   nlohmann::json& j)
+void HPWH::to_json(
+    const data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& tempLogic,
+    nlohmann::json& j)
 {
     if (tempLogic.absolute_temperature_is_set)
     {
@@ -841,14 +835,11 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatin
     {
         j["differential_temperature"] = tempLogic.differential_temperature;
     }
-    if (tempLogic.logic_distribution_is_set)
+    if (tempLogic.temperature_weight_distribution_is_set)
     {
-        j["logic_distribution"] = tempLogic.logic_distribution;
+        j["logic_distribution"] = tempLogic.temperature_weight_distribution;
     }
-    if (tempLogic.activates_standby_is_set)
-    {
-        j["activates_standby"] = true;
-    }
+
     if (tempLogic.tank_node_specification_is_set)
     {
         switch (tempLogic.tank_node_specification)
@@ -896,28 +887,29 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& h
     {
         switch (heating_logic.heating_logic_type)
         {
-        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
+        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
         {
-            j["heating_logic_type"] = "SOC_BASED";
+            j["heating_logic_type"] = "StateOfChargeBasedHeatingLogic";
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                to_json(*reinterpret_cast<
-                            data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
-                            heating_logic.heating_logic.get()),
-                        j_logic);
+                to_json(
+                    *reinterpret_cast<
+                        data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
+                        heating_logic.heating_logic.get()),
+                    j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
+        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
         {
-            j["heating_logic_type"] = "TEMP_BASED";
+            j["heating_logic_type"] = "TEMPERATURE_BASED";
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
                 to_json(*reinterpret_cast<
-                            data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
+                            data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
                             heating_logic.heating_logic.get()),
                         j_logic);
                 j["heating_logic"] = j_logic;

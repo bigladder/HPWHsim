@@ -292,11 +292,11 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
 
     switch (logic.heating_logic_type)
     {
-    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED:
+    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
     {
-        auto soc_based_logic =
-            reinterpret_cast<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic*>(
-                logic.heating_logic.get());
+        auto soc_based_logic = reinterpret_cast<
+            data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
+            logic.heating_logic.get());
 
         heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
             "name", soc_based_logic->decision_point, hpwh);
@@ -304,12 +304,12 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         break;
     }
 
-    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED:
+    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
     default:
     {
         std::string label = "name";
         auto temp_based_logic =
-            reinterpret_cast<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic*>(
+            reinterpret_cast<data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
         double temp = 20.;
@@ -325,7 +325,6 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             break;
 
         std::vector<HPWH::NodeWeight> nodeWeights = {};
-
 
         if (temp_based_logic->tank_node_specification_is_set)
         {
@@ -349,15 +348,10 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
             }
         }
 
-        if (temp_based_logic->activates_standby_is_set)
-        {
-            label = "standby";
-        }
-
-        if (temp_based_logic->logic_distribution_is_set)
+        if (temp_based_logic->temperature_weight_distribution_is_set)
         {
             std::vector<double> logic_dist(HPWH::LOGIC_SIZE);
-            HPWH::resample(logic_dist, temp_based_logic->logic_distribution);
+            HPWH::resample(logic_dist, temp_based_logic->temperature_weight_distribution);
             for (auto inode = 0; inode < HPWH::LOGIC_SIZE; ++inode)
             {
                 if (logic_dist[inode] > 0.)
@@ -383,11 +377,11 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
 void HPWH::SoCBasedHeatingLogic::to(
     data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
-    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::SOC_BASED,
+    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic logic;
+    data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic logic;
     checkTo(decisionPoint, logic.decision_point_is_set, logic.decision_point);
     checkTo(C_TO_K(tempMinUseful_C),
             logic.minimum_useful_temperature_is_set,
@@ -412,7 +406,7 @@ void HPWH::SoCBasedHeatingLogic::to(
     }
 
     heating_logic.heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic>();
+        std::make_unique<data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic>();
     *heating_logic.heating_logic = logic;
     heating_logic.heating_logic_is_set = true;
 }
@@ -420,11 +414,11 @@ void HPWH::SoCBasedHeatingLogic::to(
 void HPWH::TempBasedHeatingLogic::to(
     data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
-    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMP_BASED,
+    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic logic;
+    data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic logic;
 
     checkTo(C_TO_K(decisionPoint),
             logic.absolute_temperature_is_set,
@@ -451,13 +445,11 @@ void HPWH::TempBasedHeatingLogic::to(
 
     if (description == "standby")
     {
-        checkTo(true, logic.activates_standby_is_set, logic.activates_standby);
-
         checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
-        logic.logic_distribution_is_set = false;
+        logic.temperature_weight_distribution_is_set = false;
     }
     else if (description == "top node")
     {
@@ -465,7 +457,7 @@ void HPWH::TempBasedHeatingLogic::to(
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
-        logic.logic_distribution_is_set = false;
+        logic.temperature_weight_distribution_is_set = false;
     }
     else if (description == "bottom node")
     {
@@ -473,7 +465,7 @@ void HPWH::TempBasedHeatingLogic::to(
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
-        logic.logic_distribution_is_set = false;
+        logic.temperature_weight_distribution_is_set = false;
     }
     else
     {
@@ -501,11 +493,14 @@ void HPWH::TempBasedHeatingLogic::to(
                 break;
             }
         }
-        checkTo(logicDist, logic.logic_distribution_is_set, logic.logic_distribution);
+        checkTo(logicDist,
+                logic.temperature_weight_distribution_is_set,
+                logic.temperature_weight_distribution);
     }
 
     heating_logic.heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic>(logic);
+        std::make_unique<data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic>(
+            logic);
 
     heating_logic.heating_logic_is_set = true;
 }

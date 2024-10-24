@@ -5,7 +5,7 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "followed_by_heat_source_label": "resistiveElementBottom",
+        "followed_by_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
           0.0,
           0.0,
@@ -29,10 +29,8 @@
           }
         },
         "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementTop",
         "is_vip": true,
-        "label": "resistiveElementTop",
-        "maximum_temperature": 373.15,
-        "minimum_temperature": 0.0,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -44,7 +42,7 @@
                 1.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       },
@@ -72,9 +70,7 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "label": "resistiveElementBottom",
-        "maximum_temperature": 373.15,
-        "minimum_temperature": 0.0,
+        "id": "resistiveElementBottom",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -86,7 +82,7 @@
                 0.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           },
           {
             "comparison_type": "LESS_THAN",
@@ -94,7 +90,7 @@
               "differential_temperature": 15.0,
               "tank_node_specification": "TOP_NODE"
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       }

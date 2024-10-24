@@ -4113,10 +4113,10 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     {
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource] =
-            std::make_shared<HeatSource>(this, get_courier(), configuration.label);
+            std::make_shared<HeatSource>(this, get_courier(), configuration.id);
         heatSources[iHeatSource]->from(configuration);
-        heatSources[iHeatSource]->name = configuration.label;
-        heat_source_lookup[configuration.label] = iHeatSource;
+        heatSources[iHeatSource]->name = configuration.id;
+        heat_source_lookup[configuration.id] = iHeatSource;
     }
 
     // set associations between heat sources
@@ -4124,21 +4124,21 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     {
         auto& configuration = configurations[iHeatSource];
 
-        if (configuration.backup_heat_source_label_is_set)
+        if (configuration.backup_heat_source_id_is_set)
         {
-            auto iBackup = heat_source_lookup[configuration.backup_heat_source_label];
+            auto iBackup = heat_source_lookup[configuration.backup_heat_source_id];
             heatSources[iHeatSource]->backupHeatSource = heatSources[iBackup].get();
         }
 
-        if (configuration.followed_by_heat_source_label_is_set)
+        if (configuration.followed_by_heat_source_id_is_set)
         {
-            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_label];
+            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_id];
             heatSources[iHeatSource]->followedByHeatSource = heatSources[iFollowedBy].get();
         }
 
-        if (configuration.companion_heat_source_label_is_set)
+        if (configuration.companion_heat_source_id_is_set)
         {
-            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_label];
+            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_id];
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
