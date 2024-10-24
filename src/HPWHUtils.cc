@@ -567,7 +567,7 @@ void HPWH::fromProto(nlohmann::json& j)
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
     nlohmann::json j_metadata;
@@ -600,20 +600,20 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
         nlohmann::json j_heat_source;
 
         if (heat_source_config.heat_source_type ==
-            data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE)
+            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE)
         {
             j_heat_source_config["heat_source_type"] = "RESISTANCE";
             auto hs = reinterpret_cast<
-                data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+                hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
                 heat_source.get());
             to_json(*hs, j_heat_source);
         }
         if (heat_source_config.heat_source_type ==
-            data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER)
+            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER)
         {
             j_heat_source_config["heat_source_type"] = "CONDENSER";
             auto hs = reinterpret_cast<
-                data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+                hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
                 heat_source.get());
             to_json(*hs, j_heat_source);
         }
@@ -681,7 +681,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& j)
+void HPWH::to_json(const hpwh_data_model::rstank_ns::RSTANK& rstank, nlohmann::json& j)
 {
     nlohmann::json j_metadata;
     j_metadata["schema"] = "RSTANK";
@@ -705,7 +705,7 @@ void HPWH::to_json(const data_model::rstank_ns::RSTANK& rstank, nlohmann::json& 
 
 /*static*/
 void HPWH::to_json(
-    const data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
+    const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
     nlohmann::json j_metadata;
@@ -760,17 +760,17 @@ void HPWH::to_json(
     {
         switch (perf.coil_configuration)
         {
-        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
+        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::WRAPPED:
         {
             j_perf["coil_configuration"] = "WRAPPED";
             break;
         }
-        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
+        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::SUBMERGED:
         {
             j_perf["coil_configuration"] = "SUBMERGED";
             break;
         }
-        case data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
+        case hpwh_data_model::rscondenserwaterheatsource_ns::CoilConfiguration::EXTERNAL:
         {
             j_perf["coil_configuration"] = "EXTERNAL";
             break;
@@ -791,7 +791,7 @@ void HPWH::to_json(
 
 /*static*/
 void HPWH::to_json(
-    const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+    const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
     nlohmann::json& j)
 {
     nlohmann::json j_metadata;
@@ -808,7 +808,7 @@ void HPWH::to_json(
 
 /*static*/
 void HPWH::to_json(
-    const data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& socLogic,
+    const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& socLogic,
     nlohmann::json& j)
 {
     j["decision_point"] = socLogic.decision_point;
@@ -824,7 +824,7 @@ void HPWH::to_json(
 
 /*static*/
 void HPWH::to_json(
-    const data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& tempLogic,
+    const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& tempLogic,
     nlohmann::json& j)
 {
     if (tempLogic.absolute_temperature_is_set)
@@ -844,12 +844,12 @@ void HPWH::to_json(
     {
         switch (tempLogic.tank_node_specification)
         {
-        case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+        case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
         {
             j["tank_node_specification"] = "TOP_NODE";
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+        case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
         {
             j["tank_node_specification"] = "BOTTOM_NODE";
         }
@@ -861,19 +861,19 @@ void HPWH::to_json(
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
+void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
                    nlohmann::json& j)
 {
     if (heating_logic.comparison_type_is_set)
     {
         switch (heating_logic.comparison_type)
         {
-        case data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
         {
             j["comparison_type"] = "GREATER_THAN";
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
         {
             j["comparison_type"] = "LESS_THAN";
             break;
@@ -887,7 +887,7 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& h
     {
         switch (heating_logic.heating_logic_type)
         {
-        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
         {
             j["heating_logic_type"] = "StateOfChargeBasedHeatingLogic";
             if (heating_logic.heating_logic_is_set)
@@ -895,28 +895,28 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& h
                 nlohmann::json j_logic;
                 to_json(
                     *reinterpret_cast<
-                        data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
+                        hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
                         heating_logic.heating_logic.get()),
                     j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
         {
             j["heating_logic_type"] = "TEMPERATURE_BASED";
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
                 to_json(*reinterpret_cast<
-                            data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
+                            hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
                             heating_logic.heating_logic.get()),
                         j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::HeatingLogicType::UNKNOWN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::UNKNOWN:
             break;
         }
     }

@@ -262,7 +262,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh)
+HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
 
@@ -271,20 +271,20 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
     {
         switch (logic.comparison_type)
         {
-        case data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN:
         {
             comparison_type = std::greater<>();
             break;
         }
 
-        case data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN:
         {
             comparison_type = std::less<>();
             break;
         }
 
         default:
-        case data_model::rsintegratedwaterheater_ns::ComparisonType::UNKNOWN:
+        case hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::UNKNOWN:
         {
         }
         }
@@ -292,10 +292,10 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
 
     switch (logic.heating_logic_type)
     {
-    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED:
     {
         auto soc_based_logic = reinterpret_cast<
-            data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
+            hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
             logic.heating_logic.get());
 
         heatingLogic = std::make_shared<HPWH::SoCBasedHeatingLogic>(
@@ -304,12 +304,12 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         break;
     }
 
-    case data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
+    case hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED:
     default:
     {
         std::string label = "name";
         auto temp_based_logic =
-            reinterpret_cast<data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
+            reinterpret_cast<hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
                 logic.heating_logic.get());
 
         double temp = 20.;
@@ -330,13 +330,13 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
         {
             switch (temp_based_logic->tank_node_specification)
             {
-            case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+            case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
             {
                 label = "top node";
                 nodeWeights.emplace_back(LOGIC_SIZE + 1);
                 break;
             }
-            case data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+            case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
             {
                 label = "bottom node";
                 nodeWeights.emplace_back(0);
@@ -375,13 +375,13 @@ HPWH::HeatingLogic::make(data_model::rsintegratedwaterheater_ns::HeatingLogic& l
 }
 
 void HPWH::SoCBasedHeatingLogic::to(
-    data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
+    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
-    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED,
+    checkTo(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic logic;
+    hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic logic;
     checkTo(decisionPoint, logic.decision_point_is_set, logic.decision_point);
     checkTo(C_TO_K(tempMinUseful_C),
             logic.minimum_useful_temperature_is_set,
@@ -394,31 +394,31 @@ void HPWH::SoCBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
     else
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
 
     heating_logic.heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic>();
+        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic>();
     *heating_logic.heating_logic = logic;
     heating_logic.heating_logic_is_set = true;
 }
 
 void HPWH::TempBasedHeatingLogic::to(
-    data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
+    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
 {
-    checkTo(data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED,
+    checkTo(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED,
             heating_logic.heating_logic_type_is_set,
             heating_logic.heating_logic_type);
 
-    data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic logic;
+    hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic logic;
 
     checkTo(C_TO_K(decisionPoint),
             logic.absolute_temperature_is_set,
@@ -432,20 +432,20 @@ void HPWH::TempBasedHeatingLogic::to(
 
     if (compare(1., 2.))
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::LESS_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
     else
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::ComparisonType::GREATER_THAN,
                 heating_logic.comparison_type_is_set,
                 heating_logic.comparison_type);
     }
 
     if (description == "standby")
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
@@ -453,7 +453,7 @@ void HPWH::TempBasedHeatingLogic::to(
     }
     else if (description == "top node")
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
@@ -461,7 +461,7 @@ void HPWH::TempBasedHeatingLogic::to(
     }
     else if (description == "bottom node")
     {
-        checkTo(data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE,
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE,
                 logic.tank_node_specification_is_set,
                 logic.tank_node_specification);
 
@@ -499,7 +499,7 @@ void HPWH::TempBasedHeatingLogic::to(
     }
 
     heating_logic.heating_logic =
-        std::make_unique<data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic>(
+        std::make_unique<hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic>(
             logic);
 
     heating_logic.heating_logic_is_set = true;

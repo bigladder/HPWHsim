@@ -18,18 +18,18 @@ class HPWH::HeatSource : public Sender
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
     void
-    from(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
-    void from(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+    from(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
+    void from(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                   rscondenserwaterheatsource);
-    void from(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+    void from(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
                   rsresistancewaterheatsource);
 
-    void to(data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+    void to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
                 heatsourceconfiguration) const;
 
-    void to(data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+    void to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                 rscondenserwaterheatsource) const;
-    void to(data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+    void to(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
                 rsresistancewaterheatsource) const;
 
     void setConstantElementPower(double power_W);
