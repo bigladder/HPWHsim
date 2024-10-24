@@ -506,7 +506,7 @@ stringcase = "1.2.0"
 type = "git"
 url = "https://github.com/bigladder/lattice.git"
 reference = "add-basic-build-support"
-resolved_reference = "fdce7f703f8fc9b7677c243e9a128ea2a13fc1aa"
+resolved_reference = "c383d66be2fbd9c865b557cc511939449b5395e0"
 
 [[package]]
 name = "markdown"
