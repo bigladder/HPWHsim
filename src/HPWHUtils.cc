@@ -521,7 +521,6 @@ void setCondenserHeatSource(nlohmann::json& j)
     try
     {
         auto& heat_source_perf = j.at("performance");
-        setPerformancePoints(heat_source_perf, "performance_points");
         setPerformanceMap(heat_source_perf, "performance_map");
         setPower_W(heat_source_perf, "standby_power");
     }
@@ -751,7 +750,16 @@ void HPWH::to_json(
         auto& lookup_vars = perf.performance_map.lookup_variables;
         nlohmann::json j_lookup_vars;
         j_lookup_vars["input_power"] = lookup_vars.input_power;
-        j_lookup_vars["cop"] = lookup_vars.cop;
+
+        std::size_t nvars = lookup_vars.cop.size();
+        std::vector<double> heating_capacity(nvars);
+        std::size_t i = 0;
+        for (double copval: lookup_vars.cop)
+        {
+            heating_capacity[i] = copval * lookup_vars.input_power[i];
+            ++i;
+        }
+        j_lookup_vars["heating_capacity"] = heating_capacity;
         j_perf_map["lookup_variables"] = j_lookup_vars;
 
         j_perf["performance_map"] = j_perf_map;

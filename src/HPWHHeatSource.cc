@@ -173,13 +173,16 @@ void HPWH::HeatSource::from(data_model::rscondenserwaterheatsource_ns::RSCONDENS
         auto& lookup_variables = perf_map.lookup_variables;
         perfGridValues.reserve(2);
 
-        std::vector<double> inputPowers_Btu_per_h = {};
-        inputPowers_Btu_per_h.reserve(lookup_variables.input_power.size());
-        for (auto& P : lookup_variables.input_power)
-            inputPowers_Btu_per_h.push_back(W_TO_BTUperH(P));
+        std::size_t nVals = lookup_variables.input_power.size();
+        std::vector<double> inputPowers_Btu_per_h(nVals), cops(nVals);
+        for (std::size_t i = 0; i < nVals; ++i)
+        {
+            inputPowers_Btu_per_h[i] = W_TO_BTUperH(lookup_variables.input_power[i]);
+            cops[i] = lookup_variables.heating_capacity[i] / lookup_variables.input_power[i];
+        }
 
         perfGridValues.push_back(inputPowers_Btu_per_h);
-        perfGridValues.push_back(lookup_variables.cop);
+        perfGridValues.push_back(cops);
 
         perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(
             Btwxt::RegularGridInterpolator(perfGrid, perfGridValues));
