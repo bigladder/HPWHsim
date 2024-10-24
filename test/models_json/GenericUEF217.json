@@ -5,7 +5,7 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "followed_by_heat_source_label": "resistiveElementBottom",
+        "followed_by_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
           0.0,
           0.0,
@@ -29,10 +29,8 @@
           }
         },
         "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementTop",
         "is_vip": true,
-        "label": "resistiveElementTop",
-        "maximum_temperature": 373.15,
-        "minimum_temperature": 0.0,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -44,13 +42,13 @@
                 1.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       },
       {
-        "backup_heat_source_label": "compressor",
-        "followed_by_heat_source_label": "compressor",
+        "backup_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
         "heat_distribution": [
           1.0,
           0.0,
@@ -74,9 +72,7 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "label": "resistiveElementBottom",
-        "maximum_temperature": 373.15,
-        "minimum_temperature": 0.0,
+        "id": "resistiveElementBottom",
         "shut_off_logic": [
           {
             "comparison_type": "GREATER_THAN",
@@ -97,7 +93,7 @@
                 0.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ],
         "turn_on_logic": [
@@ -114,12 +110,12 @@
                 0.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       },
       {
-        "backup_heat_source_label": "resistiveElementBottom",
+        "backup_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
           1.0,
           0.0,
@@ -131,9 +127,13 @@
           },
           "performance": {
             "coil_configuration": "WRAPPED",
+            "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
+            "maximum_refrigerant_temperature": 100.0,
+            "maximum_temperature": 322.0388888888889,
+            "minimum_temperature": 280.3722222222222,
             "performance_map": {
               "grid_variables": {
-                "evaporator_environment_temperature": [
+                "evaporator_environment_dry_bulb_temperature": [
                   283.15,
                   292.59444444444443
                 ],
@@ -160,10 +160,7 @@
           }
         },
         "heat_source_type": "CONDENSER",
-        "hysteresis_temperature_difference": 1.1111111111111112,
-        "label": "compressor",
-        "maximum_temperature": 322.0388888888889,
-        "minimum_temperature": 280.3722222222222,
+        "id": "compressor",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -175,7 +172,7 @@
                 0.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           },
           {
             "comparison_type": "LESS_THAN",
@@ -183,7 +180,7 @@
               "differential_temperature": 6.111111111111111,
               "tank_node_specification": "TOP_NODE"
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       }

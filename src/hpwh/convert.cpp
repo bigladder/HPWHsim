@@ -4,7 +4,7 @@
 
 #include <CLI/CLI.hpp>
 #include "HPWH.hh"
-#include "data-model.h"
+#include "hpwh-data-model.h"
 
 namespace hpwh_cli
 {

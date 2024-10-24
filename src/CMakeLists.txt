@@ -18,6 +18,7 @@ set(headers
         HPWHTank.hh
         HPWHHeatSource.hh
         HPWHHeatingLogic.hh
+        hpwh-data-model.h
         )
 
 set(sources
@@ -28,6 +29,7 @@ set(sources
         HPWHHeatingLogic.cc
         HPWH.cc
         HPWHpresets.cc
+        hpwh-data-model.cpp
         )
 
 set(library_sources
@@ -53,7 +55,7 @@ target_include_directories(${PROJECT_NAME}
 
 #find_package(nlohmann_json 3.11.3 REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh-data-model)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
