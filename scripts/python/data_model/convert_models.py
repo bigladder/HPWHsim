@@ -1,5 +1,5 @@
 # 'poetry update lattice', if needed
-# 'poetry run python build_data_model'
+# 'poetry run python convert_models.py IHPWH_models.json ../../../build ../../../build/out'
 
 # Generates hpwh-data-model source code based on schema in 'data_model'dir'
 # into 'src_out_dir'.
