@@ -16,7 +16,7 @@ def generate(data_model_dir, src_out_dir):
 	os.chdir(orig_dir)
 
 	if data_model_dir == '':
-		data_model_dir = os.path.join(repo_dir, "vendor", "hpwh-data-model")
+		data_model_dir = os.path.join(repo_dir, "vendor", "hpwh_data_model")
             
 	build_dir = "."
 	if src_out_dir == '':    

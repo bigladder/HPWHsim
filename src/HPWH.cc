@@ -4070,9 +4070,9 @@ void HPWH::initFromJSON(string sModelName)
     auto sInputFileName = "models_json/" + sModelName + ".json";
     std::ifstream inputFile(sInputFileName);
     nlohmann::json j = nlohmann::json::parse(inputFile);
-    data_model::init(get_courier());
-    data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-    data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
+    hpwh_data_model::init(get_courier());
+    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+    hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
     from(rswh);
 }
 
@@ -4089,7 +4089,7 @@ void HPWH::initFromJSON(MODELS modelNumber)
 
 #endif
 
-void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
     setpoint_C = F_TO_C(135.0);
@@ -4158,10 +4158,10 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     }
 }
 
-void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
+    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
             metadata.schema_is_set,
             metadata.schema);
 
