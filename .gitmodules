@@ -11,5 +11,5 @@
 	url = https://github.com/nlohmann/json.git
 
 [submodule "hpwh-data-model"]
-	path = vendor/hpwh-data-model
+	path = vendor/hpwh_data_model
 	url = https://github.com/bigladder/hpwh-data-model.git

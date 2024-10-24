@@ -20,4 +20,4 @@ add_submodule(CLI11)
 # JSON library
 add_submodule(json)
 
-add_subdirectory("hpwh-data-model/cpp")
+add_subdirectory("hpwh_data_model/cpp")
