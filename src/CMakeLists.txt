@@ -11,15 +11,6 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
-# Generate data model
-set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
-add_custom_target(build_data_model
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/src/hpwh_data_model"
-        COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}"
-        )
-
-set_target_properties(build_data_model PROPERTIES FOLDER Dependencies/HPWHsim)
-
 set(headers
         HPWHversion.in.hh
         HPWHsim.hh
@@ -70,7 +61,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header build_data_model)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
 
 add_custom_command(TARGET ${PROJECT_NAME}
     PRE_BUILD COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}")
@@ -90,9 +81,16 @@ if (${PROJECT_NAME}_COVERAGE)
     add_coverage(${PROJECT_NAME})
 endif ()
 
+# Generate data model
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
+add_custom_command(
+        TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/src/hpwh_data_model"
+        COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}"
+)
+
 if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()
 
-add_subdirectory(hpwh_data_model/cpp)
 
