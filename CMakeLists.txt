@@ -48,6 +48,19 @@ if (${PROJECT_NAME}_BUILD_TESTING)
     endif ()
 endif ()
 
+cmake_dependent_option(${PROJECT_NAME}_GENERATE "Generate data model" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+
+if (${PROJECT_NAME}_GENERATE)
+    message(STATUS "Installing python packages")
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
+    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
+    message("Poetry success? ${result} ${errors} ${outputs}")
+    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+
+    execute_process(COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}")
+
+endif ()
+
 add_subdirectory(vendor)
 add_subdirectory(src)
 
@@ -57,3 +70,4 @@ if (${PROJECT_NAME}_BUILD_TESTING)
         coverage_evaluate()
     endif ()
 endif ()
+
