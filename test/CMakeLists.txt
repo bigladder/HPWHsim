@@ -31,6 +31,23 @@ set(modelNames
         Rheem2020Build50
         #  RheemPlugInDedicated50
         )
+set(testNamesJSON
+        test30
+        test50
+        test70
+        test95
+        )
+set(modelNamesJSON
+        AOSmithHPTS50
+        AOSmithPHPT60
+        AOSmithHPTU80
+        RheemHB50
+        Stiebel220e
+        GE502014
+        Rheem2020Prem40
+        Rheem2020Prem50
+        Rheem2020Build50
+        )
 set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
@@ -211,6 +228,12 @@ foreach (test ${heatExchangeTests})
     endforeach (model)
 endforeach (test)
 
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
+
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
@@ -269,6 +292,25 @@ function(add_file_test)
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
 endfunction()
 
+# Tests for differences between JSON and Preset versions
+function(add_JSON_test)
+    set(options)
+    set(oneValueArgs MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
+        return()
+    endif ()
+
+    set(TEST_TITLE "JSONTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_JSON_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
+            )
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+endfunction()
+
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
@@ -279,6 +321,12 @@ endforeach (test)
 foreach (test ${heatExchangeTests})
     foreach (model ${heatExchangeModelNames})
         add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
     endforeach (model)
 endforeach (test)
 

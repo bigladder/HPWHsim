@@ -2,7 +2,7 @@
 Initialize all presets available in HPWHsim
 */
 
-#include "HPWH.hh"
+#include "HPWHsim.hh"
 #include <btwxt/btwxt.h>
 
 #include <algorithm>
@@ -20,8 +20,6 @@ void HPWH::initResistanceTank(double tankVol_L,
 {
     setAllDefaults();
 
-    heatSources.clear();
-
     // low power element will cause divide by zero/negative UA in EF -> UA conversion
     if (lowerPower_W < 550)
     {
@@ -36,10 +34,12 @@ void HPWH::initResistanceTank(double tankVol_L,
         send_error("Energy Factor less than zero.");
     }
 
+    heatSources.clear();
+
     setNumNodes(12);
 
     // use tank size setting function since it has bounds checking
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
     setTankSize(tankVol_L);
 
     setpoint_C = F_TO_C(127.0);
@@ -48,7 +48,7 @@ void HPWH::initResistanceTank(double tankVol_L,
     resetTankToSetpoint();
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     HeatSource* resistiveElementTop = NULL;
     HeatSource* resistiveElementBottom = NULL;
@@ -71,7 +71,7 @@ void HPWH::initResistanceTank(double tankVol_L,
 
     // standard logic conditions
     resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-    resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+    resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
     if (resistiveElementTop && resistiveElementBottom)
     {
@@ -87,15 +87,15 @@ void HPWH::initResistanceTank(double tankVol_L,
     double numerator = (1.0 / energyFactor) - (1.0 / recoveryEfficiency);
     double temp = 1.0 / (recoveryEfficiency * lowerPower_W * 3.41443);
     double denominator = 67.5 * ((24.0 / 41094.0) - temp);
-    tankUA_kJperHrC = UAf_TO_UAc(numerator / denominator);
+    tank->UA_kJperHrC = UAf_TO_UAc(numerator / denominator);
 
-    if (tankUA_kJperHrC < 0.)
+    if (tank->UA_kJperHrC < 0.)
     {
-        if (tankUA_kJperHrC < -0.1)
+        if (tank->UA_kJperHrC < -0.1)
         {
-            send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+            send_warning("Computed tank->UA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA_kJperHrC = 0.0;
+        tank->UA_kJperHrC = 0.0;
     }
 
     model = MODELS_CustomResTank;
@@ -107,11 +107,11 @@ void HPWH::initResistanceTank(double tankVol_L,
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -140,7 +140,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     setNumNodes(12);
 
     // set tank size function has bounds checking
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
     setTankSize(tankVol_L);
     canScale = true;
 
@@ -148,7 +148,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     resetTankToSetpoint(); // start tank off at setpoint
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     HeatSource* resistiveElementTop = nullptr;
     HeatSource* resistiveElementBottom = nullptr;
@@ -169,7 +169,7 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
         resistiveElementBottom->setupAsResistiveElement(0, lowerPower_W);
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40.)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10.)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10.)));
     }
 
     if (resistiveElementTop && resistiveElementBottom)
@@ -180,15 +180,15 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     // Calc UA
     double SA_M2 = getTankSurfaceArea(tankVol_L, UNITS_L, UNITS_M2);
     double tankUA_WperK = SA_M2 / rValue_m2KperW;
-    tankUA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
+    tank->UA_kJperHrC = tankUA_WperK * sec_per_hr / 1000.; // 1000 J/kJ
 
-    if (tankUA_kJperHrC < 0.)
+    if (tank->UA_kJperHrC < 0.)
     {
-        if (tankUA_kJperHrC < -0.1)
+        if (tank->UA_kJperHrC < -0.1)
         {
-            send_warning("Computed tankUA_kJperHrC is less than 0, and is reset to 0.");
+            send_warning("Computed tank->UA_kJperHrC is less than 0, and is reset to 0.");
         }
-        tankUA_kJperHrC = 0.0;
+        tank->UA_kJperHrC = 0.0;
     }
 
     model = MODELS_CustomResTankGeneric;
@@ -200,11 +200,11 @@ void HPWH::initResistanceTankGeneric(double tankVol_L,
     isHeating = false;
     for (auto& source : heatSources)
     {
-        if (source.isOn)
+        if (source->isOn)
         {
             isHeating = true;
         }
-        source.sortPerformanceMap();
+        source->sortPerformanceMap();
     }
 }
 
@@ -220,10 +220,10 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     // start tank off at setpoint
     resetTankToSetpoint();
 
-    tankSizeFixed = false;
+    tank->volumeFixed = false;
 
     doTempDepression = false;
-    tankMixesOnDraw = true;
+    tank->mixesOnDraw = true;
 
     heatSources.reserve(3);
     auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -274,7 +274,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
     compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-    compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+    compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
     // custom adjustment for poorer performance
     // compressor->addShutOffLogic(lowT(F_TO_C(37)));
@@ -289,7 +289,7 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     //   curve fit by Jim Lutz, 5-25-2016
     double tankVol_gal = tankVol_L / GAL_TO_L(1.);
     double v1 = 7.5156316175 * pow(tankVol_gal, 0.33) + 5.9995357658;
-    tankUA_kJperHrC = 0.0076183819 * v1 * v1;
+    tank->UA_kJperHrC = 0.0076183819 * v1 * v1;
 
     // do a linear interpolation to scale COP curve constant, using measured values
     //  Chip's attempt 24-May-2014
@@ -332,11 +332,11 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 }
 
@@ -355,12 +355,12 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 0; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 0; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(2);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -371,7 +371,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        resistiveElementBottom->addTurnOnLogic(standby(dF_TO_dC(10)));
+        resistiveElementBottom->addTurnOnLogic(topNode(dF_TO_dC(10)));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->isVIP = true;
@@ -385,12 +385,12 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        tankUA_kJperHrC = 500; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        tank->UA_kJperHrC = 500; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         // set up a resistive element at the bottom, 4500 kW
         heatSources.reserve(2);
@@ -402,7 +402,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -416,13 +416,13 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 10; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 10; // 0 to turn off
 
         doTempDepression = false;
         // should eventually put tankmixes to true when testing progresses
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(2);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -433,7 +433,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -449,12 +449,12 @@ void HPWH::initPreset(MODELS presetNum)
         initialTankT_C = F_TO_C(127.);
         hasInitialTankTemp = true;
 
-        tankSizeFixed = false;
-        tankVolume_L = GAL_TO_L(80);
-        tankUA_kJperHrC = 10; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = GAL_TO_L(80);
+        tank->UA_kJperHrC = 10; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
     }
 
     // basic compressor tank for testing
@@ -463,13 +463,13 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        tankUA_kJperHrC = 10; // 0 to turn off
-                              // tankUA_kJperHrC = 0; //0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        tank->UA_kJperHrC = 10; // 0 to turn off
+                                // tank->UA_kJperHrC = 0; //0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -483,7 +483,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
-        resistiveElementBottom->addTurnOnLogic(standby(15));
+        resistiveElementBottom->addTurnOnLogic(topNode(15));
 
         resistiveElementTop->addTurnOnLogic(topThird(20));
         resistiveElementTop->isVIP = true;
@@ -521,7 +521,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
+        compressor->addTurnOnLogic(topNode(15));
 
         //
         resistiveElementBottom->backupHeatSource = compressor;
@@ -537,13 +537,13 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(96);
         setpoint_C = 50;
 
-        tankSizeFixed = false;
-        tankVolume_L = 120;
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 0; // 0 to turn off
+        tank->volumeFixed = false;
+        tank->volume_L = 120;
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 0; // 0 to turn off
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -580,7 +580,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
         compressor->addTurnOnLogic(bottomThird(20));
-        compressor->addTurnOnLogic(standby(15));
+        compressor->addTurnOnLogic(topNode(15));
 
         // lowT cutoff
         compressor->addShutOffLogic(bottomNodeMaxTemp(20, true));
@@ -591,11 +591,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 215.8;
-        tankUA_kJperHrC = 7.31;
+        tank->volume_L = 215.8;
+        tank->UA_kJperHrC = 7.31;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -647,7 +647,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -665,11 +665,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 283.9;
-        tankUA_kJperHrC = 8.8;
+        tank->volume_L = 283.9;
+        tank->UA_kJperHrC = 8.8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -721,7 +721,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(43.6);
         double standbyT = dF_TO_dC(23.8);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(compStart));
 
@@ -740,11 +740,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 172;
-        tankUA_kJperHrC = 6.8;
+        tank->volume_L = 172;
+        tank->UA_kJperHrC = 6.8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -796,7 +796,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(40.0);
         double standbyT = dF_TO_dC(5.2);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
         // compressor->addShutOffLogic(largeDraw(F_TO_C(66)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
@@ -820,13 +820,13 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1068,13 +1068,13 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1260,13 +1260,13 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(96);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1275,7 +1275,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = EXTRAP_NEAREST;
+        compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->perfMap.reserve(1);
@@ -1509,13 +1509,13 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1524,7 +1524,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = true;
         compressor->typeOfHeatSource = TYPE_compressor;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
-        compressor->extrapolationMethod = EXTRAP_NEAREST;
+        compressor->extrapolationMethod = HeatSource::EXTRAP_NEAREST;
         compressor->configuration = HeatSource::CONFIG_EXTERNAL;
         compressor->hysteresis_dC = 0;
         compressor->externalOutletHeight = 0;
@@ -1696,13 +1696,13 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1790,12 +1790,12 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(96);
         setpoint_C = 65;
 
-        tankVolume_L = GAL_TO_L(500);
-        tankUA_kJperHrC = 12;
-        tankSizeFixed = false;
+        tank->volume_L = GAL_TO_L(500);
+        tank->UA_kJperHrC = 12;
+        tank->volumeFixed = false;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -1828,7 +1828,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->depressesTemperature = false;
 
         // Performance grid: externalT_F, Tout_F, condenserTemp_F
-        compressor->perfGrid.reserve(2);
+        compressor->perfGrid.reserve(2); // Should be 3
         compressor->perfGridValues.reserve(2);
         compressor->perfGrid.push_back(
             {-13,  -11.2, -7.6, -4,   -0.4, 3.2,  6.8,  10.4, 14,    17.6, 21.2, 24.8,
@@ -2075,21 +2075,21 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_SANCO2_119)
         {
-            tankVolume_L = GAL_TO_L(119);
-            tankUA_kJperHrC = 9;
+            tank->volume_L = GAL_TO_L(119);
+            tank->UA_kJperHrC = 9;
         }
         else
         {
-            tankVolume_L = 315;
-            tankUA_kJperHrC = 7;
+            tank->volume_L = 315;
+            tank->UA_kJperHrC = 7;
             if (presetNum == MODELS_SANCO2_GS3_45HPA_US_SP)
             {
-                tankSizeFixed = false;
+                tank->volumeFixed = false;
             }
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -2176,12 +2176,12 @@ void HPWH::initPreset(MODELS presetNum)
         setpoint_C = 65;
         setpointFixed = true;
 
-        tankVolume_L = 160;
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 5;
+        tank->volume_L = 160;
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 5;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -2265,11 +2265,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 171;
-        tankUA_kJperHrC = 6;
+        tank->volume_L = 171;
+        tank->UA_kJperHrC = 6;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2337,7 +2337,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2366,16 +2366,16 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTU66)
         {
-            tankVolume_L = 244.6;
+            tank->volume_L = 244.6;
         }
         else
         {
-            tankVolume_L = 221.4;
+            tank->volume_L = 221.4;
         }
-        tankUA_kJperHrC = 8;
+        tank->UA_kJperHrC = 8;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2443,7 +2443,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2470,11 +2470,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 299.5;
-        tankUA_kJperHrC = 9;
+        tank->volume_L = 299.5;
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2541,7 +2541,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(35);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
 
@@ -2568,11 +2568,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = 283.9;
-        tankUA_kJperHrC = 9;
+        tank->volume_L = 283.9;
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2619,7 +2619,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(34.1636);
         double standbyT = dF_TO_dC(7.1528);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80.108)));
 
@@ -2639,11 +2639,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(24);
         setpoint_C = F_TO_C(150.0);
 
-        tankVolume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
-        tankUA_kJperHrC = UAf_TO_UAc(3.94);
+        tank->volume_L = GAL_TO_L(111.76); // AOSmith docs say 111.76
+        tank->UA_kJperHrC = UAf_TO_UAc(3.94);
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2701,7 +2701,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(5.25);
         double standbyT = dF_TO_dC(5.); // Given CMP_T test
         compressor->addTurnOnLogic(secondSixth(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         double resistanceStart = 12.;
         resistiveElementTop->addTurnOnLogic(topThird(resistanceStart));
@@ -2728,21 +2728,21 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTS50)
         {
-            tankVolume_L = GAL_TO_L(45.6);
-            tankUA_kJperHrC = 6.403;
+            tank->volume_L = GAL_TO_L(45.6);
+            tank->UA_kJperHrC = 6.403;
         }
         else if (presetNum == MODELS_AOSmithHPTS66)
         {
-            tankVolume_L = GAL_TO_L(67.63);
-            tankUA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
+            tank->volume_L = GAL_TO_L(67.63);
+            tank->UA_kJperHrC = UAf_TO_UAc(1.5) * 6.403 / UAf_TO_UAc(1.16);
         }
         else if (presetNum == MODELS_AOSmithHPTS80)
         {
-            tankVolume_L = GAL_TO_L(81.94);
-            tankUA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
+            tank->volume_L = GAL_TO_L(81.94);
+            tank->UA_kJperHrC = UAf_TO_UAc(1.73) * 6.403 / UAf_TO_UAc(1.16);
         }
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2791,7 +2791,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(30.2);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(11.87)));
 
@@ -2811,11 +2811,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2864,7 +2864,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -2878,11 +2878,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2925,7 +2925,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
         compressor->minT = F_TO_C(37);
         compressor->maxSetpoint_C = MAXOUTLET_R134A;
 
@@ -2941,11 +2941,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -2994,7 +2994,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3011,11 +3011,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3064,7 +3064,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         // compressor->addShutOffLogic(largerDraw(F_TO_C(62.4074)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
@@ -3082,11 +3082,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(75.4);
-        tankUA_kJperHrC = 10.;
+        tank->volume_L = GAL_TO_L(75.4);
+        tank->UA_kJperHrC = 10.;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3134,7 +3134,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird_absolute(F_TO_C(87)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
 
@@ -3151,11 +3151,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(64);
-        tankUA_kJperHrC = 7.6;
+        tank->volume_L = GAL_TO_L(64);
+        tank->UA_kJperHrC = 7.6;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3204,7 +3204,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
 
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
@@ -3221,27 +3221,27 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_Rheem2020Prem40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Prem50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.1);
+            tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Prem65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Prem80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3287,7 +3287,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3310,27 +3310,27 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_Rheem2020Build40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_Rheem2020Build50)
         {
-            tankVolume_L = GAL_TO_L(45.1);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.1);
+            tank->UA_kJperHrC = 8.55;
         }
         else if (presetNum == MODELS_Rheem2020Build65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
         }
         else if (presetNum == MODELS_Rheem2020Build80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3376,7 +3376,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(30);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(100)));
         resistiveElementTop->addTurnOnLogic(topSixth(dF_TO_dC(20.4167)));
@@ -3396,31 +3396,31 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_RheemPlugInShared40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.0);
+            tank->UA_kJperHrC = 9.5;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 8.55;
+            tank->volume_L = GAL_TO_L(45.0);
+            tank->UA_kJperHrC = 8.55;
             setpoint_C = F_TO_C(140.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared65)
         {
-            tankVolume_L = GAL_TO_L(58.5);
-            tankUA_kJperHrC = 10.64;
+            tank->volume_L = GAL_TO_L(58.5);
+            tank->UA_kJperHrC = 10.64;
             setpoint_C = F_TO_C(127.0);
         }
         else if (presetNum == MODELS_RheemPlugInShared80)
         {
-            tankVolume_L = GAL_TO_L(72.0);
-            tankUA_kJperHrC = 10.83;
+            tank->volume_L = GAL_TO_L(72.0);
+            tank->UA_kJperHrC = 10.83;
             setpoint_C = F_TO_C(127.0);
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -3455,7 +3455,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(32);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
     else if (presetNum == MODELS_RheemPlugInDedicated40 ||
              presetNum == MODELS_RheemPlugInDedicated50)
@@ -3464,16 +3464,16 @@ void HPWH::initPreset(MODELS presetNum)
         setpoint_C = F_TO_C(127.0);
         if (presetNum == MODELS_RheemPlugInDedicated40)
         {
-            tankVolume_L = GAL_TO_L(36);
-            tankUA_kJperHrC = 5.5;
+            tank->volume_L = GAL_TO_L(36);
+            tank->UA_kJperHrC = 5.5;
         }
         else if (presetNum == MODELS_RheemPlugInDedicated50)
         {
-            tankVolume_L = GAL_TO_L(45);
-            tankUA_kJperHrC = 6.33;
+            tank->volume_L = GAL_TO_L(45);
+            tank->UA_kJperHrC = 6.33;
         }
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(1);
         auto compressor = addHeatSource("compressor");
@@ -3508,18 +3508,18 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(20);
         double standbyT = dF_TO_dC(9);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
     }
     else if (presetNum == MODELS_RheemHB50)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 7;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 7;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3567,7 +3567,7 @@ void HPWH::initPreset(MODELS presetNum)
         double compStart = dF_TO_dC(38);
         double standbyT = dF_TO_dC(13.2639);
         compressor->addTurnOnLogic(bottomThird(compStart));
-        compressor->addTurnOnLogic(standby(standbyT));
+        compressor->addTurnOnLogic(topNode(standbyT));
 
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(76.7747)));
 
@@ -3585,12 +3585,12 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127);
 
-        tankVolume_L = GAL_TO_L(56);
-        // tankUA_kJperHrC = 10; //0 to turn off
-        tankUA_kJperHrC = 9;
+        tank->volume_L = GAL_TO_L(56);
+        // tank->UA_kJperHrC = 10; //0 to turn off
+        tank->UA_kJperHrC = 9;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(2);
         auto compressor = addHeatSource("compressor");
@@ -3638,10 +3638,10 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 9;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 9;
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3684,7 +3684,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(65)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3704,10 +3704,10 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 7.5;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 7.5;
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3752,7 +3752,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(60)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(80)));
@@ -3772,11 +3772,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(50);
-        tankUA_kJperHrC = 5;
+        tank->volume_L = GAL_TO_L(50);
+        tank->UA_kJperHrC = 5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3822,7 +3822,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(10)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(10)));
         compressor->addShutOffLogic(largeDraw(F_TO_C(55)));
 
         resistiveElementBottom->addTurnOnLogic(bottomThird(dF_TO_dC(60)));
@@ -3841,11 +3841,11 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        tankVolume_L = GAL_TO_L(45);
-        tankUA_kJperHrC = 6.5;
+        tank->volume_L = GAL_TO_L(45);
+        tank->UA_kJperHrC = 6.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3894,7 +3894,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1111)));
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(12.392)));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;
@@ -3910,23 +3910,23 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AWHSTier3Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic50)
         {
-            tankVolume_L = GAL_TO_L(45);
-            tankUA_kJperHrC = 6.5;
+            tank->volume_L = GAL_TO_L(45);
+            tank->UA_kJperHrC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier3Generic65)
         {
-            tankVolume_L = GAL_TO_L(64);
-            tankUA_kJperHrC = 7.6;
+            tank->volume_L = GAL_TO_L(64);
+            tank->UA_kJperHrC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier3Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
-            tankUA_kJperHrC = 10.;
+            tank->volume_L = GAL_TO_L(75.4);
+            tank->UA_kJperHrC = 10.;
         }
         else
         {
@@ -3934,7 +3934,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -3984,7 +3984,7 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
         resistiveElementTop->addShutOffLogic(topNodeMaxTemp(F_TO_C(116.6358)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(33.6883)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.0648)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.0648)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4001,14 +4001,14 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
-        canScale = true; // a fully scallable model
+        tank->volumeFixed = false; // a fully scalable model
+        canScale = true;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315;
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315;
+        tank->UA_kJperHrC = 7;
         setTankSize_adjustUA(600., UNITS_GAL);
 
         heatSources.reserve(3);
@@ -4115,14 +4115,14 @@ void HPWH::initPreset(MODELS presetNum)
     {
         setNumNodes(24);
         setpoint_C = F_TO_C(135.0);
-        tankSizeFixed = false;
-        canScale = true; // a fully scallable model
+        tank->volumeFixed = false;
+        canScale = true;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
-        tankVolume_L = 315; // Gets adjust per model but ratio between vol and UA is important
-        tankUA_kJperHrC = 7;
+        tank->volume_L = 315; // Gets adjust per model but ratio between vol and UA is important
+        tank->UA_kJperHrC = 7;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4196,17 +4196,16 @@ void HPWH::initPreset(MODELS presetNum)
         initialTankT_C = 49.32;
         hasInitialTankTemp = true;
 
-        tankVolume_L = GAL_TO_L(54.4);
-        tankUA_kJperHrC = 10.35;
+        tank->volume_L = GAL_TO_L(54.4);
+        tank->UA_kJperHrC = 10.35;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         // heat exchangers only
-        hasHeatExchanger = true;
-        heatExchangerEffectiveness = 0.93;
+        tank->hasHeatExchanger = true;
+        tank->heatExchangerEffectiveness = 0.93;
 
-        heatSources.reserve(3);
         auto compressor = addHeatSource("compressor");
 
         // compressor values
@@ -4250,18 +4249,18 @@ void HPWH::initPreset(MODELS presetNum)
 
         // logic conditions
         compressor->addTurnOnLogic(wholeTank(111, UNITS_F, true));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(14)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(14)));
     }
     else if (presetNum == MODELS_GenericUEF217)
     { // GenericUEF217: 67 degF COP coefficients refined to give UEF=2.17 with high draw profile
         setNumNodes(12);
         setpoint_C = F_TO_C(127.);
 
-        tankVolume_L = GAL_TO_L(58.5);
-        tankUA_kJperHrC = 8.5;
+        tank->volume_L = GAL_TO_L(58.5);
+        tank->UA_kJperHrC = 8.5;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4295,7 +4294,7 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(11.)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(11.)));
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(6, 4500.);
@@ -4321,23 +4320,23 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AWHSTier4Generic40)
         {
-            tankVolume_L = GAL_TO_L(36.0);
-            tankUA_kJperHrC = 5.0;
+            tank->volume_L = GAL_TO_L(36.0);
+            tank->UA_kJperHrC = 5.0;
         }
         else if (presetNum == MODELS_AWHSTier4Generic50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 6.5;
+            tank->volume_L = GAL_TO_L(45.0);
+            tank->UA_kJperHrC = 6.5;
         }
         else if (presetNum == MODELS_AWHSTier4Generic65)
         {
-            tankVolume_L = GAL_TO_L(64.0);
-            tankUA_kJperHrC = 7.6;
+            tank->volume_L = GAL_TO_L(64.0);
+            tank->UA_kJperHrC = 7.6;
         }
         else if (presetNum == MODELS_AWHSTier4Generic80)
         {
-            tankVolume_L = GAL_TO_L(75.4);
-            tankUA_kJperHrC = 10.0;
+            tank->volume_L = GAL_TO_L(75.4);
+            tank->UA_kJperHrC = 10.0;
         }
         else
         {
@@ -4345,7 +4344,7 @@ void HPWH::initPreset(MODELS presetNum)
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tank->mixesOnDraw = true;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4391,7 +4390,7 @@ void HPWH::initPreset(MODELS presetNum)
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(12.0)));
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30.0)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(9.0)));
+        compressor->addTurnOnLogic(topNode(dF_TO_dC(9.0)));
         resistiveElementBottom->addTurnOnLogic(thirdSixth(dF_TO_dC(60)));
         resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(80)));
 
@@ -4423,10 +4422,10 @@ void HPWH::initPreset(MODELS presetNum)
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        if (heatSources[i].isOn)
+        if (heatSources[i]->isOn)
         {
             isHeating = true;
         }
-        heatSources[i].sortPerformanceMap();
+        heatSources[i]->sortPerformanceMap();
     }
 } // end HPWHinit_presets
