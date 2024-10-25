@@ -48,8 +48,6 @@ if (${PROJECT_NAME}_BUILD_TESTING)
     endif ()
 endif ()
 
-cmake_dependent_option(${PROJECT_NAME}_GENERATE "Generate data model" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-
 add_subdirectory(vendor)
 add_subdirectory(src)
 
