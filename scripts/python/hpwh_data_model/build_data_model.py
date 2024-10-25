@@ -20,7 +20,7 @@ def generate(data_model_dir, src_out_dir):
             
 	build_dir = "."
 	if src_out_dir == '':    
-		src_out_dir = data_model_dir
+		src_out_dir = os.path.join(repo_dir, "src", "hpwh_data_model")
 		
 	lat = Lattice(data_model_dir, build_dir, src_out_dir, False)
 	lat.generate_cpp_project([])

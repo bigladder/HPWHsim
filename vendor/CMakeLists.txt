@@ -26,4 +26,4 @@ set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
 execute_process(COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
 
 # hpwh-data-model library
-add_subdirectory("hpwh_data_model/cpp")
+#add_subdirectory("hpwh_data_model/cpp")
