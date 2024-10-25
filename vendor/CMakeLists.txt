@@ -21,13 +21,9 @@ add_submodule(CLI11)
 add_submodule(json)
 
 #generate hpwh-data-model source
-message(STATUS "Installing python packages")
+message(STATUS "Building data model")
 set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
-execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-message("Poetry success? ${result} ${errors} ${outputs}")
-set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 execute_process(COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-message("Build data model success? ${result} ${errors} ${outputs}")
 
 # hpwh-data-model library
 add_subdirectory("hpwh_data_model/cpp")

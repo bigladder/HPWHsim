@@ -63,6 +63,9 @@ generate_export_header(${PROJECT_NAME})
 
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
 
+add_custom_command(TARGET ${PROJECT_NAME}
+    PRE_BUILD COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}")
+
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
 
