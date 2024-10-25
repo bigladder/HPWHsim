@@ -133,6 +133,7 @@ class HPWH : public Courier::Sender
         MODELS_AOSmithHPTU80_DR = 107, /**< 80 gallon AOSmith HPTU */
         MODELS_AOSmithCAHP120 = 108,   /**< 12 gallon AOSmith CAHP commercial grade */
 
+        MODELS_AOSmithHPTS40 = 1100, /**< 40 gallon, AOSmith HPTS */
         MODELS_AOSmithHPTS50 = 1101, /**< 50 gallon, AOSmith HPTS */
         MODELS_AOSmithHPTS66 = 1102, /**< 66 gallon, AOSmith HPTS */
         MODELS_AOSmithHPTS80 = 1103, /**< 80 gallon, AOSmith HPTS */
