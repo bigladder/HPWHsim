@@ -2721,12 +2721,17 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->companionHeatSource = resistiveElementBottom;
         resistiveElementBottom->companionHeatSource = compressor;
     }
-    else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTS50)
+        if (presetNum == MODELS_AOSmithHPTS40)
+        {
+            tankVolume_L = GAL_TO_L(36.1);
+            tankUA_kJperHrC = 9.5;
+        }
+        else if (presetNum == MODELS_AOSmithHPTS50)
         {
             tankVolume_L = GAL_TO_L(45.6);
             tankUA_kJperHrC = 6.403;

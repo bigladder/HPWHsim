@@ -3779,6 +3779,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_AOSmithHPTU80;
     }
+    else if (modelName == "AOSmithHPTS40")
+    {
+        model = HPWH::MODELS_AOSmithHPTS40;
+    }
     else if (modelName == "AOSmithHPTS50")
     {
         model = HPWH::MODELS_AOSmithHPTS50;

@@ -19,6 +19,7 @@ set(testNames
         )
 set(modelNames
         #  StorageTank
+        AOSmithHPTS40
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
