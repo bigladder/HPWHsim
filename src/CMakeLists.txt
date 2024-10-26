@@ -91,6 +91,3 @@ if (${PROJECT_NAME}_BUILD_TESTING)
 endif ()
 
 add_subdirectory(hpwh_data_model/cpp)
-
-
-
