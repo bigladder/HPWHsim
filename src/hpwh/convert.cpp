@@ -4,7 +4,7 @@
 
 #include <CLI/CLI.hpp>
 #include "HPWH.hh"
-#include "data-model.h"
+#include "hpwh-data-model.h"
 
 namespace hpwh_cli
 {
@@ -78,7 +78,7 @@ void convert(const std::string& sSpecType,
         hpwh.initFromJSON(sModelName);
     }
 
-    data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
     hpwh.to(rswh);
 
     nlohmann::json j;
