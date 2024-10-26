@@ -18,7 +18,7 @@
 #include <courier/courier.h>
 
 #include <nlohmann/json.hpp>
-#include "data-model.h"
+#include "hpwh-data-model.h"
 
 namespace Btwxt
 {
@@ -91,25 +91,25 @@ class HPWH : public Courier::Sender
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
-    void from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
-    void to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
+    void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
+    void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    static void to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
                         nlohmann::json& j);
-    static void to_json(const data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
+    static void to_json(const hpwh_data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
     static void
-    to_json(const data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
+    to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
             nlohmann::json& j);
     static void
-    to_json(const data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+    to_json(const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
             nlohmann::json& j);
-    static void to_json(const data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
+    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
                         nlohmann::json& j);
     static void
-    to_json(const data_model::rsintegratedwaterheater_ns::SoCBasedHeatingLogic& soclogic,
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
             nlohmann::json& j);
     static void
-    to_json(const data_model::rsintegratedwaterheater_ns::TempBasedHeatingLogic& templogic,
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
             nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
@@ -385,6 +385,8 @@ class HPWH : public Courier::Sender
     std::shared_ptr<TempBasedHeatingLogic> topSixth(double decisionPoint);
 
     std::shared_ptr<TempBasedHeatingLogic> standby(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> topNode(double decisionPoint);
+    std::shared_ptr<TempBasedHeatingLogic> bottomNode(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic> topNodeMaxTemp(double decisionPoint);
     std::shared_ptr<TempBasedHeatingLogic>
     bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff = false);

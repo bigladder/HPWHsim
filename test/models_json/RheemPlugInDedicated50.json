@@ -16,9 +16,13 @@
           },
           "performance": {
             "coil_configuration": "WRAPPED",
+            "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
+            "maximum_refrigerant_temperature": 71.11111111111111,
+            "maximum_temperature": 322.0388888888889,
+            "minimum_temperature": 275.92777777777775,
             "performance_map": {
               "grid_variables": {
-                "evaporator_environment_temperature": [
+                "evaporator_environment_dry_bulb_temperature": [
                   283.15,
                   308.15
                 ],
@@ -28,11 +32,11 @@
                 ]
               },
               "lookup_variables": {
-                "cop": [
-                  3.9961240000000005,
-                  1.7563840000000006,
-                  4.96861,
-                  2.08141
+                "heating_capacity": [
+                  2740.0287368783997,
+                  2753.0539365504005,
+                  3683.1371831320002,
+                  4437.710153571999
                 ],
                 "input_power": [
                   685.6715999999999,
@@ -45,11 +49,8 @@
           }
         },
         "heat_source_type": "CONDENSER",
-        "hysteresis_temperature_difference": 0.5555555555555556,
+        "id": "compressor",
         "is_vip": true,
-        "label": "compressor",
-        "maximum_temperature": 322.0388888888889,
-        "minimum_temperature": 275.92777777777775,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -61,16 +62,15 @@
                 0.0
               ]
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           },
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "activates_standby": true,
               "differential_temperature": 5.0,
               "tank_node_specification": "TOP_NODE"
             },
-            "heating_logic_type": "TEMP_BASED"
+            "heating_logic_type": "TEMPERATURE_BASED"
           }
         ]
       }

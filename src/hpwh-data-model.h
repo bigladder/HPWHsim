@@ -3,8 +3,8 @@
 
 #include <ashrae205.h>
 #include <load-object.h>
-#include <heat-source-base.h>
-#include <heating-logic-base.h>
+#include <heat-source-template.h>
+#include <heating-logic-template.h>
 #include <rsresistancewaterheatsource.h>
 #include <rscondenserwaterheatsource.h>
 #include <rsintegratedwaterheater.h>
@@ -12,7 +12,7 @@
 
 #define JSON_HAS_CPP_17
 
-namespace data_model
+namespace hpwh_data_model
 {
 void init(std::shared_ptr<Courier::Courier> logger_in);
 }

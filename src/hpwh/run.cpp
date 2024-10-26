@@ -2,7 +2,7 @@
  * Simulate a HPWH model using a test schedule.
  */
 #include "HPWH.hh"
-#include "data-model.h"
+#include "hpwh-data-model.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

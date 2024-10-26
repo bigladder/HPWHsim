@@ -25,7 +25,7 @@ HPWH::Tank& HPWH::Tank::operator=(const HPWH::Tank& tank_in)
     return *this;
 }
 
-void HPWH::Tank::from(data_model::rstank_ns::RSTANK& rstank)
+void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
 {
     auto& perf = rstank.performance;
     setNumNodes(perf.number_of_nodes_is_set ? perf.number_of_nodes : 12);
@@ -51,10 +51,10 @@ void HPWH::Tank::from(data_model::rstank_ns::RSTANK& rstank)
     // bool diameter_is_set;
 }
 
-void HPWH::Tank::to(data_model::rstank_ns::RSTANK& rstank) const
+void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
 {
     auto& metadata = rstank.metadata;
-    checkTo(data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
+    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
 
     auto& perf = rstank.performance;
     checkTo(getNumNodes(), perf.number_of_nodes_is_set, perf.number_of_nodes);
