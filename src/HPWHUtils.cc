@@ -803,6 +803,12 @@ void HPWH::to_json(
     nlohmann::json j_perf;
     j_perf["input_power"] = perf.input_power;
 
+    if (perf.resistance_lockout_temperature_hysteresis_is_set)
+    {
+        j_perf["resistance_lockout_temperature_hysteresis"] =
+            perf.resistance_lockout_temperature_hysteresis;
+    }
+
     j["performance"] = j_perf;
 }
 
@@ -837,7 +843,7 @@ void HPWH::to_json(
     }
     if (tempLogic.temperature_weight_distribution_is_set)
     {
-        j["logic_distribution"] = tempLogic.temperature_weight_distribution;
+        j["temperature_weight_distribution"] = tempLogic.temperature_weight_distribution;
     }
 
     if (tempLogic.tank_node_specification_is_set)
@@ -893,11 +899,10 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                to_json(
-                    *reinterpret_cast<
-                        hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
-                        heating_logic.heating_logic.get()),
-                    j_logic);
+                to_json(*reinterpret_cast<hpwh_data_model::rsintegratedwaterheater_ns::
+                                              StateOfChargeBasedHeatingLogic*>(
+                            heating_logic.heating_logic.get()),
+                        j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
@@ -908,10 +913,11 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                to_json(*reinterpret_cast<
-                            hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
-                            heating_logic.heating_logic.get()),
-                        j_logic);
+                to_json(
+                    *reinterpret_cast<
+                        hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
+                        heating_logic.heating_logic.get()),
+                    j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;

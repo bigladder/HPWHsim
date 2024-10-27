@@ -54,7 +54,8 @@ void HPWH::Tank::from(hpwh_data_model::rstank_ns::RSTANK& rstank)
 void HPWH::Tank::to(hpwh_data_model::rstank_ns::RSTANK& rstank) const
 {
     auto& metadata = rstank.metadata;
-    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
+    checkTo(
+        hpwh_data_model::ashrae205_ns::SchemaType::RSTANK, metadata.schema_is_set, metadata.schema);
 
     auto& perf = rstank.performance;
     checkTo(getNumNodes(), perf.number_of_nodes_is_set, perf.number_of_nodes);

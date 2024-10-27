@@ -26,7 +26,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -37,7 +38,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "absolute_temperature": 313.7055555555555,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 0.0,
@@ -72,7 +73,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 1.1111111111111112
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -82,7 +84,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 310.92777777777775,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0,
@@ -116,7 +118,7 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
-            "maximum_refrigerant_temperature": 71.11111111111111,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 278.7055555555555,
             "performance_map": {
@@ -159,7 +161,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 19.444444444444443,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0

@@ -17,8 +17,8 @@ class HPWH::HeatSource : public Sender
     HeatSource(const HeatSource& heatSource);         /// copy constructor
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void
-    from(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration);
+    void from(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+                  heatsourceconfiguration);
     void from(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                   rscondenserwaterheatsource);
     void from(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
@@ -29,6 +29,7 @@ class HPWH::HeatSource : public Sender
 
     void to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
                 rscondenserwaterheatsource) const;
+
     void to(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
                 rsresistancewaterheatsource) const;
 
