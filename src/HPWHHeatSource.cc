@@ -31,7 +31,7 @@ HPWH::HeatSource::HeatSource(
     , maxOut_at_LowT {100, -273.15}
     , secondaryHeatExchanger {0., 0., 0.}
     , minT(-273.15)
-    , maxT(100)
+    , maxT(100.)
     , maxSetpoint_C(100.)
     , hysteresis_dC(0)
     , airflowFreedom(1.0)
@@ -122,8 +122,9 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     return *this;
 }
 
-void HPWH::HeatSource::from(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                                rscondenserwaterheatsource)
+void HPWH::HeatSource::from(
+    hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+        rscondenserwaterheatsource)
 {
     auto& perf = rscondenserwaterheatsource.performance;
 
@@ -218,12 +219,17 @@ void HPWH::HeatSource::from(hpwh_data_model::rscondenserwaterheatsource_ns::RSCO
     }
 }
 
-void HPWH::HeatSource::from(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                                rsresistancewaterheatsource)
+void HPWH::HeatSource::from(
+    hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+        rsresistancewaterheatsource)
 {
     auto& perf = rsresistancewaterheatsource.performance;
     configuration = CONFIG_SUBMERGED;
     setConstantElementPower(perf.input_power);
+    checkFrom(hysteresis_dC,
+              perf.resistance_lockout_temperature_hysteresis_is_set,
+              perf.resistance_lockout_temperature_hysteresis,
+              0.);
 }
 
 void HPWH::HeatSource::from(
@@ -232,6 +238,7 @@ void HPWH::HeatSource::from(
     auto& config = heatsourceconfiguration;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
     setCondensity(config.heat_distribution);
+    checkFrom(isVIP, config.is_vip_is_set, config.is_vip, false);
 
     if (config.turn_on_logic_is_set)
     {
@@ -292,8 +299,8 @@ void HPWH::HeatSource::from(
     }
 }
 
-void HPWH::HeatSource::to(
-    hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration) const
+void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+                              heatsourceconfiguration) const
 {
     heatsourceconfiguration.heat_distribution = condensity;
     heatsourceconfiguration.is_vip = isVIP;
@@ -526,8 +533,9 @@ void HPWH::HeatSource::convertMapToGrid(std::vector<std::vector<double>>& tempGr
     tempGridValues.push_back(heatingCapacities_W);
 }
 
-void HPWH::HeatSource::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                              rscondenserwaterheatsource) const
+void HPWH::HeatSource::to(
+    hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
+        rscondenserwaterheatsource) const
 {
     auto& metadata = rscondenserwaterheatsource.metadata;
     checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE,
@@ -536,7 +544,7 @@ void HPWH::HeatSource::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCOND
 
     auto& perf = rscondenserwaterheatsource.performance;
 
-    checkTo(maxSetpoint_C,
+    checkTo(C_TO_K(maxSetpoint_C),
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
@@ -646,8 +654,9 @@ void HPWH::HeatSource::to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCOND
     }
 }
 
-void HPWH::HeatSource::to(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                              rsresistancewaterheatsource) const
+void HPWH::HeatSource::to(
+    hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
+        rsresistancewaterheatsource) const
 {
     auto& metadata = rsresistancewaterheatsource.metadata;
     checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSRESISTANCEWATERHEATSOURCE,
@@ -656,6 +665,9 @@ void HPWH::HeatSource::to(hpwh_data_model::rsresistancewaterheatsource_ns::RSRES
 
     auto& perf = rsresistancewaterheatsource.performance;
     checkTo(perfMap[0].inputPower_coeffs[0], perf.input_power_is_set, perf.input_power);
+    checkTo(hysteresis_dC,
+            perf.resistance_lockout_temperature_hysteresis_is_set,
+            perf.resistance_lockout_temperature_hysteresis);
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)
