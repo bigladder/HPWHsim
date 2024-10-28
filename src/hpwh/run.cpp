@@ -24,7 +24,7 @@ namespace hpwh_cli
 /// run
 static void run(const std::string& sSpecType,
                 const std::string& sModelName,
-                std::string testDirectory,
+                std::string sTestName,
                 std::string sOutputDir,
                 double airTemp);
 
@@ -39,7 +39,7 @@ CLI::App* add_run(CLI::App& app)
     subcommand->add_option("-m,--model", sModelName, "Model name")->required();
 
     static std::string sTestName = "";
-    subcommand->add_option("-t,--test", sTestName, "Test directory name")->required();
+    subcommand->add_option("-t,--test", sTestName, "Test name")->required();
 
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
@@ -56,7 +56,7 @@ int readSchedule(schedule& scheduleArray, string scheduleFileName, long minutesO
 
 void run(const std::string& sSpecType,
          const std::string& sModelName,
-         std::string testDirectory,
+         std::string sFullTestName,
          std::string sOutputDir,
          double airTemp)
 {
@@ -150,6 +150,13 @@ void run(const std::string& sSpecType,
         exit(1);
     }
 
+    std::string sTestName = sFullTestName; // remove path prefixes
+    if (sFullTestName.find("/") != std::string::npos)
+    {
+        std::size_t iLast = sFullTestName.find_last_of("/");
+        sTestName = sFullTestName.substr(iLast + 1);
+    }
+
     // Use the built-in temperature depression for the lockout test. Set the temp depression of 4C
     // to better try and trigger the lockout and hysteresis conditions
     tempDepressThresh = 4;
@@ -157,7 +164,7 @@ void run(const std::string& sSpecType,
     hpwh.setDoTempDepression(HPWH_doTempDepress);
 
     // Read the test control file
-    fileToOpen = testDirectory + "/" + "testInfo.txt";
+    fileToOpen = sFullTestName + "/" + "testInfo.txt";
     controlFile.open(fileToOpen.c_str());
     if (!controlFile.is_open())
     {
@@ -175,7 +182,7 @@ void run(const std::string& sSpecType,
     tot_limit = 0.;
     useSoC = false;
     bool hasInitialTankTemp = false;
-    cout << "Running: " << sModelName << ", " << sSpecType_mod << ", " << testDirectory << endl;
+    cout << "Running: " << sModelName << ", " << sSpecType_mod << ", " << sFullTestName << endl;
 
     while (controlFile >> var1 >> testVal)
     {
@@ -240,7 +247,7 @@ void run(const std::string& sSpecType,
 
     for (i = 0; (unsigned)i < scheduleNames.size(); i++)
     {
-        fileToOpen = testDirectory + "/" + scheduleNames[i] + "schedule.csv";
+        fileToOpen = sFullTestName + "/" + scheduleNames[i] + "schedule.csv";
         outputCode = readSchedule(allSchedules[i], fileToOpen, minutesToRun);
         if (outputCode != 0)
         {
@@ -324,8 +331,10 @@ void run(const std::string& sSpecType,
     }
     else
     {
+
         fileToOpen =
             sOutputDir + "/" + testDirectory + "_" + sSpecType_mod + "_" + sModelName + ".csv";
+
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
         {
@@ -477,6 +486,7 @@ void run(const std::string& sSpecType,
 
     if (minutesToRun > 500000.)
     {
+
         firstCol = testDirectory + "," + sSpecType_mod + "," + sModelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;

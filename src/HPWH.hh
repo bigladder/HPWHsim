@@ -220,6 +220,8 @@ class HPWH : public Courier::Sender
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
+        MODELS_GenericUEF217 = 179,
+
         MODELS_AWHSTier4Generic40 = 1175, /**< Generic AWHS Tier 4 40 gallons*/
         MODELS_AWHSTier4Generic50 = 1176, /**< Generic AWHS Tier 4 50 gallons*/
         MODELS_AWHSTier4Generic65 = 1177, /**< Generic AWHS Tier 4 65 gallons*/
@@ -297,7 +299,9 @@ class HPWH : public Courier::Sender
 
         MODELS_AquaThermAire = 400, // heat exchanger model
 
-        MODELS_GenericUEF217 = 410
+        MODELS_BradfordWhiteAeroThermRE2H50 = 500,
+        MODELS_BradfordWhiteAeroThermRE2H65 = 501,
+        MODELS_BradfordWhiteAeroThermRE2H80 = 502
     };
 
     // static std::unordered_map<MODELS, std::string> modelMap;
@@ -973,6 +977,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
+        std::ostream* outputStream = &std::cout;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
