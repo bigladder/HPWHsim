@@ -14,4 +14,4 @@ void init(std::shared_ptr<Courier::Courier> logger_in)
     hpwh_data_model::rscondenserwaterheatsource_ns::logger = logger_in;
     hpwh_data_model::rsresistancewaterheatsource_ns::logger = logger_in;
 }
-} // namespace data_model
+} // namespace hpwh_data_model

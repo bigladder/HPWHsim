@@ -4119,6 +4119,19 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         heat_source_lookup[configuration.id] = iHeatSource;
     }
 
+    std::string sPrimaryHeatSource_id = "";
+    checkFrom(sPrimaryHeatSource_id,
+              performance.primary_heat_source_id_is_set,
+              performance.primary_heat_source_id,
+              sPrimaryHeatSource_id);
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        if (heatSources[iHeatSource]->name == sPrimaryHeatSource_id)
+        {
+            heatSources[iHeatSource]->isVIP = true;
+        }
+    }
+
     // set associations between heat sources
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
@@ -4178,11 +4191,22 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEAT
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;
     configurations.resize(getNumHeatSources());
+    bool hasPrimaryHeatSource = false;
+    std::string sPrimaryHeatSource_id = "";
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource]->to(configuration);
+        if (heatSources[iHeatSource]->isVIP)
+        {
+            hasPrimaryHeatSource = true;
+            sPrimaryHeatSource_id = heatSources[iHeatSource]->name;
+        }
     }
+    checkTo(sPrimaryHeatSource_id,
+            performance.primary_heat_source_id_is_set,
+            performance.primary_heat_source_id,
+            hasPrimaryHeatSource);
 }
 
 //-----------------------------------------------------------------------------

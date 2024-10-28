@@ -238,7 +238,6 @@ void HPWH::HeatSource::from(
     auto& config = heatsourceconfiguration;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
     setCondensity(config.heat_distribution);
-    checkFrom(isVIP, config.is_vip_is_set, config.is_vip, false);
 
     if (config.turn_on_logic_is_set)
     {
@@ -303,7 +302,6 @@ void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourc
                               heatsourceconfiguration) const
 {
     heatsourceconfiguration.heat_distribution = condensity;
-    heatsourceconfiguration.is_vip = isVIP;
     heatsourceconfiguration.id = name;
 
     heatsourceconfiguration.shut_off_logic.resize(shutOffLogicSet.size());
@@ -323,8 +321,6 @@ void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourc
         heatsourceconfiguration.turn_on_logic_is_set = true;
         ++i;
     }
-
-    checkTo(isVIP, heatsourceconfiguration.is_vip_is_set, heatsourceconfiguration.is_vip, isVIP);
 
     if (standbyLogic != NULL)
     {

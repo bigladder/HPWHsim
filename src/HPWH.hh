@@ -92,23 +92,25 @@ class HPWH : public Courier::Sender
     void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
     void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
-                        nlohmann::json& j);
+    static void
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+            nlohmann::json& j);
     static void to_json(const hpwh_data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
     static void
     to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
             nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+        nlohmann::json& j);
     static void
-    to_json(const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
             nlohmann::json& j);
-    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
-                        nlohmann::json& j);
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
-            nlohmann::json& j);
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
-            nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
+        nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
+        nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
