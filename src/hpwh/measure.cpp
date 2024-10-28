@@ -65,7 +65,6 @@ void measure(const std::string& sSpecType,
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
 
-
     // process command line arguments
     std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
     for (auto& c : sSpecType_mod)
@@ -149,7 +148,7 @@ void measure(const std::string& sSpecType,
         }
     }
 
-    *standardTestOptions.outputStream << "Spec type: " << sSpecType_mod<< "\n";
+    *standardTestOptions.outputStream << "Spec type: " << sSpecType_mod << "\n";
     *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
 
     standardTestOptions.sOutputFilename = "test24hr_" + sSpecType_mod + "_" + sModelName + ".csv";
