@@ -259,21 +259,6 @@ function(add_plot_test)
 
 endfunction()
 
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
 # Tests for differences between File and Preset versions
 function(add_file_test)
     set(options)
@@ -312,34 +297,6 @@ function(add_JSON_test)
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
 endfunction()
 
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
-
-foreach (test ${testNamesJSON})
-    foreach (model ${modelNamesJSON})
-        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for Bradford White AeroTherm model
-foreach (size ${BradfordWhiteAeroThermRE2HSizes})
-    set(model BradfordWhiteAeroThermRE2H${size})
-    set(tests "${${model}_Tests}")
-    foreach (test ${tests})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (test)
-endforeach (size)
-
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
@@ -361,20 +318,35 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
+#Test(s) specifically for heat-exchange models
+foreach (test ${heatExchangeTests})
+    foreach (model ${heatExchangeModelNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (model)
+endforeach (test)
 
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     set(model BradfordWhiteAeroThermRE2H${size})
     set(tests "${${model}_Tests}")
     foreach (test ${tests})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        set(fullTestName "${BradfordWhiteAeroThermRE2Dir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (test)
 endforeach (size)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
@@ -387,8 +359,6 @@ endforeach (test)
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
@@ -396,10 +366,51 @@ endforeach (test)
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
+
+foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for heat-exchange models
+foreach (test ${heatExchangeTests})
+    foreach (model ${heatExchangeModelNames})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (test)
+endforeach (size)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (size)
 
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
