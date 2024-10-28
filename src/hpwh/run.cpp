@@ -333,7 +333,7 @@ void run(const std::string& sSpecType,
     {
 
         fileToOpen =
-            sOutputDir + "/" + testDirectory + "_" + sSpecType_mod + "_" + sModelName + ".csv";
+            sOutputDir + "/" + sTestName + "_" + sSpecType_mod + "_" + sModelName + ".csv";
 
         outputFile.open(fileToOpen.c_str(), std::ifstream::out);
         if (!outputFile.is_open())
@@ -487,7 +487,7 @@ void run(const std::string& sSpecType,
     if (minutesToRun > 500000.)
     {
 
-        firstCol = testDirectory + "," + sSpecType_mod + "," + sModelName;
+        firstCol = sTestName + "," + sSpecType_mod + "," + sModelName;
         yearOutFile << firstCol;
         double totalIn = 0, totalOut = 0;
         for (int iHS = 0; iHS < 3; iHS++)
