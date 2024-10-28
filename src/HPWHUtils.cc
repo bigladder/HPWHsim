@@ -668,15 +668,16 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRAT
                 heat_source_config.companion_heat_source_id;
         }
 
-        if (heat_source_config.is_vip_is_set)
-        {
-            j_heat_source_config["is_vip"] = heat_source_config.is_vip;
-        }
-
         j_heat_source_configs.push_back(j_heat_source_config);
     }
 
     j_perf["heat_source_configurations"] = j_heat_source_configs;
+
+    if (perf.primary_heat_source_id_is_set)
+    {
+        j_perf["primary_heat_source_id"] = perf.primary_heat_source_id;
+    }
+
     j["performance"] = j_perf;
 }
 

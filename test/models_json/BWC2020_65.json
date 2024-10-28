@@ -30,7 +30,6 @@
         },
         "heat_source_type": "RESISTANCE",
         "id": "resistiveElementTop",
-        "is_vip": true,
         "shut_off_logic": [
           {
             "comparison_type": "GREATER_THAN",
@@ -195,6 +194,7 @@
         ]
       }
     ],
+    "primary_heat_source_id": "resistiveElementTop",
     "tank": {
       "metadata": {
         "schema": "RSTANK"
