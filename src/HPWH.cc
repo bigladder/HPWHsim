@@ -4126,10 +4126,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
               sPrimaryHeatSource_id);
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
-        if (heatSources[iHeatSource]->name == sPrimaryHeatSource_id)
-        {
-            heatSources[iHeatSource]->isVIP = true;
-        }
+        heatSources[iHeatSource]->isVIP = (heatSources[iHeatSource]->name == sPrimaryHeatSource_id);
     }
 
     // set associations between heat sources
