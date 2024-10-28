@@ -4411,22 +4411,22 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 6.8373;
+            tank->volume_L = GAL_TO_L(45.0);
+            tank->UA_kJperHrC = 6.8373;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            tankVolume_L = GAL_TO_L(64.0);
-            tankUA_kJperHrC = 6.7292;
+            tank->volume_L = GAL_TO_L(64.0);
+            tank->UA_kJperHrC = 6.7292;
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            tankVolume_L = GAL_TO_L(75.0);
-            tankUA_kJperHrC = 7.2217;
+            tank->volume_L = GAL_TO_L(75.0);
+            tank->UA_kJperHrC = 7.2217;
         }
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
