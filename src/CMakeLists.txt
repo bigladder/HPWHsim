@@ -13,11 +13,11 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 
 # Generate data model
 set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/hpwh_data_model")
-add_custom_target(
-        ${PROJECT_NAME}_data_model
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/src/hpwh_data_model"
-        COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}"
-)
+#add_custom_target(
+#        ${PROJECT_NAME}_data_model
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/src/hpwh_data_model"
+#        COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}"
+#)
 
 set(headers
         HPWHversion.in.hh
@@ -69,7 +69,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header ${PROJECT_NAME}_data_model)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header) #${PROJECT_NAME}_data_model)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
