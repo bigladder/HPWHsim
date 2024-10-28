@@ -22,7 +22,7 @@ TEST(SizingFractionsTest, TamScalable_SP_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
@@ -40,7 +40,7 @@ TEST(SizingFractionsTest, Sanden80_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 8. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
@@ -58,7 +58,7 @@ TEST(SizingFractionsTest, ColmacCxV_5_SP_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = 4. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
@@ -76,7 +76,7 @@ TEST(SizingFractionsTest, AOSmithHPTU50_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1., tol);
 }
@@ -94,7 +94,7 @@ TEST(SizingFractionsTest, GE_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (1. + 2. + 3. + 4.) / 4. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1., tol);
 }
@@ -112,7 +112,7 @@ TEST(SizingFractionsTest, Stiebel220e_SizingFract)
     double aquaFrac, useableFrac;
     const double aquaFrac_answer = (5. + 6.) / 2. / logicSize;
 
-    EXPECT_EQ(hpwh.getSizingFractions(aquaFrac, useableFrac), 0);
+    EXPECT_NO_THROW(hpwh.getSizingFractions(aquaFrac, useableFrac));
     EXPECT_NEAR(aquaFrac, aquaFrac_answer, tol);
     EXPECT_NEAR(useableFrac, 1. - 1. / logicSize, tol);
 }
