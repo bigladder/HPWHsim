@@ -896,7 +896,7 @@ class HPWH : public Courier::Sender
 
     double getCompressorMinRuntime(UNITS units = UNITS_MIN) const;
 
-    int getSizingFractions(double& aquafract, double& percentUseable) const;
+    void getSizingFractions(double& aquafract, double& percentUseable) const;
     /**< returns the fraction of total tank volume from the bottom up where the aquastat is
     or the turn on logic for the compressor, and the USEable fraction of storage or 1 minus
     where the shut off logic is for the compressor. If the logic spans multiple nodes it
