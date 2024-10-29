@@ -11,30 +11,29 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
-set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-if (NOT ${PROJECT_NAME}_PYTHON_SETUP)
-    message(STATUS "Installing python packages")
-    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-    message("Poetry success? ${result} ${errors} ${outputs}")
-endif ()
-
 #generate hpwh-data-model source
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
-execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}")
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
-
-if(NOT EXISTS "${dataModelDir}/schema")
-    message(STATUS "Updating submodule \"hpwh-data-model\"")
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+#if (NOT ${PROJECT_NAME}_PYTHON_SETUP)
+message(STATUS "Installing python packages")
+execute_process(
+        COMMAND poetry install --no-root
+            WORKING_DIRECTORY "${pythonScriptDir}"
+            RESULT_VARIABLE result
+            ERROR_VARIABLE errors
+            OUTPUT_VARIABLE outputs
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
+        COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-        message(FATAL_ERROR "Unable to update submodule \"hpwh-data-model\"")
-    endif()
-endif()
-
-execute_process(COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}" WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-message("Generated data model success? ${result} ${errors} ${outputs}")
+            RESULT_VARIABLE GIT_SUBMOD_RESULT
+        COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
+            WORKING_DIRECTORY "${pythonScriptDir}"
+            RESULT_VARIABLE result
+            ERROR_VARIABLE errors
+            OUTPUT_VARIABLE outputs)
+message("Data-model generation success? ${result} ${errors} ${outputs}")
+#endif ()
 
 set(headers
         HPWHversion.in.hh
