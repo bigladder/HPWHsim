@@ -9,31 +9,28 @@ from pathlib import Path
 import os
 import sys
 
-def generate(data_model_dir, src_out_dir):
-	orig_dir = str(Path.cwd())
-	os.chdir("../../../")
-	repo_dir = str(Path.cwd())
-	os.chdir(orig_dir)
+def generate(repo_dir, data_model_dir, gen_out_dir):
 
 	if data_model_dir == '':
 		data_model_dir = os.path.join(repo_dir, "vendor", "hpwh_data_model")
             
 	build_dir = "."
-	if src_out_dir == '':    
-		src_out_dir = os.path.join(repo_dir, "src", "hpwh_data_model")
+	if gen_out_dir == '':    
+		gen_out_dir = os.path.join(repo_dir, "src", "hpwh_data_model")
 		
-	lat = Lattice(data_model_dir, build_dir, src_out_dir, False)
+	lat = Lattice(data_model_dir, build_dir, gen_out_dir, False)
 	lat.generate_cpp_project([])
 
 # main
 if __name__ == "__main__":
-		
+
+		repo_dir = "../../"
 		data_model_dir = ""
-		src_out_dir = ""
+		gen_out_dir = ""
 		n_args = len(sys.argv) - 1
 		if n_args == 2:
 			data_model_dir = sys.argv[1]
-			src_out_dir = sys.argv[2]
+			gen_out_dir = sys.argv[2]
 
-		generate(data_model_dir, src_out_dir)
+		generate(repo_dir, data_model_dir, gen_out_dir)
 
