@@ -20,6 +20,8 @@ endif ()
 
 #generate hpwh-data-model source
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
+execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}")
+
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 execute_process(COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}" WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
