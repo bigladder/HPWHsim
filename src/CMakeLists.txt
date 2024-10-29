@@ -21,9 +21,18 @@ endif ()
 #generate hpwh-data-model source
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}")
-
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
-set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+
+if(NOT EXISTS "${dataModelDir}/schema")
+    message(STATUS "Updating submodule \"hpwh-data-model\"")
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            RESULT_VARIABLE GIT_SUBMOD_RESULT)
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "Unable to update submodule \"hpwh-data-model\"")
+    endif()
+endif()
+
 execute_process(COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}" WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
 message("Generated data model success? ${result} ${errors} ${outputs}")
 
