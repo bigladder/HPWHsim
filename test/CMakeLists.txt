@@ -397,6 +397,9 @@ foreach (test ${testNamesJSON})
     endforeach (model)
 endforeach (test)
 
+## Plot test
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
+
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
@@ -432,9 +435,6 @@ foreach (test ${stateOfChargeTests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
-
-## Plot test
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 #Add small compressor yearly tests to the list
 foreach (test ${yearTests})
