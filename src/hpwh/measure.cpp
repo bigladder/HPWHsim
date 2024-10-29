@@ -12,6 +12,8 @@ namespace hpwh_cli
 static void measure(const std::string& sSpecType,
                     const std::string& sModelName,
                     std::string sOutputDir,
+                    bool sSupressOutput,
+                    std::string sResultsFilename,
                     std::string sCustomDrawProfile);
 
 CLI::App* add_measure(CLI::App& app)
@@ -27,10 +29,20 @@ CLI::App* add_measure(CLI::App& app)
     static std::string sOutputDir = ".";
     subcommand->add_option("-d,--dir", sOutputDir, "Output directory");
 
+    static bool noData = false;
+    subcommand->add_flag("-n,--no_data", noData, "Suppress data output");
+
+    static std::string sResultsFilename = "";
+    subcommand->add_option("-r,--results", sResultsFilename, "Results filename");
+
     static std::string sCustomDrawProfile = "";
     subcommand->add_option("-p,--profile", sCustomDrawProfile, "Custom draw profile");
 
-    subcommand->callback([&]() { measure(sSpecType, sModelName, sOutputDir, sCustomDrawProfile); });
+    subcommand->callback(
+        [&]() {
+            measure(
+                sSpecType, sModelName, sOutputDir, noData, sResultsFilename, sCustomDrawProfile);
+        });
 
     return subcommand;
 }
@@ -38,6 +50,8 @@ CLI::App* add_measure(CLI::App& app)
 void measure(const std::string& sSpecType,
              const std::string& sModelName,
              std::string sOutputDir,
+             bool sSupressOutput,
+             std::string sResultsFilename,
              std::string sCustomDrawProfile)
 {
     HPWH::StandardTestSummary standardTestSummary;
@@ -46,18 +60,32 @@ void measure(const std::string& sSpecType,
     standardTestOptions.saveOutput = false;
     standardTestOptions.sOutputFilename = "";
     standardTestOptions.sOutputDirectory = "";
+    standardTestOptions.outputStream = &std::cout;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT = {51.7, Units::C};
 
-    // process command line arguments
+    bool useResultsFile = false;
+
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
     if (sOutputDir != "")
     {
         standardTestOptions.saveOutput = true;
         standardTestOptions.sOutputDirectory = sOutputDir;
+
+        if (sResultsFilename != "")
+        {
+            std::ostream* tempStream = new std::ofstream;
+            std::ofstream* resultsFile = static_cast<std::ofstream*>(tempStream);
+            resultsFile->open(sResultsFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
+            if (resultsFile->is_open())
+            {
+                standardTestOptions.outputStream = resultsFile;
+                useResultsFile = true;
+            }
+        }
     }
-    standardTestOptions.saveOutput = true;
+    standardTestOptions.saveOutput = !sSupressOutput;
     bool useCustomDrawProfile = (sCustomDrawProfile != "");
 
     for (auto& c : sPresetOrFile)
@@ -77,7 +105,7 @@ void measure(const std::string& sSpecType,
     }
     else
     {
-        std::string inputFile = sModelName + ".txt";
+        std::string inputFile = sModelName;
         hpwh.initFromFile(inputFile);
     }
 
@@ -110,12 +138,17 @@ void measure(const std::string& sSpecType,
         }
     }
 
-    std::cout << "Spec type: " << sPresetOrFile << "\n";
-    std::cout << "Model name: " << sModelName << "\n";
+    *standardTestOptions.outputStream << "Spec type: " << sPresetOrFile << "\n";
+    *standardTestOptions.outputStream << "Model name: " << sModelName << "\n";
 
     standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
 
     HPWH::FirstHourRating firstHourRating;
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
+
+    if (useResultsFile)
+    {
+        delete standardTestOptions.outputStream;
+    }
 }
 } // namespace hpwh_cli

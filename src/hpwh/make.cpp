@@ -68,7 +68,7 @@ void make(const std::string& sSpecType,
     }
     else
     {
-        std::string sInputFile = sModelName + ".txt";
+        std::string sInputFile = sModelName;
         hpwh.initFromFile(sInputFile);
     }
 
