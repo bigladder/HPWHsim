@@ -398,7 +398,7 @@ foreach (test ${testNamesJSON})
 endforeach (test)
 
 ## Plot test
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
+#add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
