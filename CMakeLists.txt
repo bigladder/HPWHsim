@@ -57,4 +57,3 @@ if (${PROJECT_NAME}_BUILD_TESTING)
         coverage_evaluate()
     endif ()
 endif ()
-

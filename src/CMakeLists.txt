@@ -15,15 +15,10 @@ set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependenc
 set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
-#if (NOT ${PROJECT_NAME}_PYTHON_SETUP)
-message(STATUS "Installing python packages")
-execute_process(
-        COMMAND poetry install
-            WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE result0
-            ERROR_VARIABLE errors0
-            OUTPUT_VARIABLE outputs0
 
+include(poetry-install)
+install_poetry()
+execute_process(
         COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
 
         COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
@@ -36,6 +31,7 @@ execute_process(
             ERROR_VARIABLE errors1
             OUTPUT_VARIABLE outputs1)
 
+set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
 message("Poetry install success? ${result0} ${errors0} ${outputs0}")
 message("Update submodule success? ${GIT_SUBMOD_RESULT}")
 message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
