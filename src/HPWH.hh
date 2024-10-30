@@ -1079,8 +1079,9 @@ class HPWH : public Courier::Sender
     struct StandardTestOptions
     {
         bool saveOutput = false;
-        std::string sOutputDirectory;
-        std::string sOutputFilename;
+        std::string sOutputDirectory = "";
+        std::string sOutputFilename = "";
+        std::ostream* outputStream = &std::cout;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
