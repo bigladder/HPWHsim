@@ -18,21 +18,27 @@ set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 #if (NOT ${PROJECT_NAME}_PYTHON_SETUP)
 message(STATUS "Installing python packages")
 execute_process(
-        COMMAND poetry install --no-root
+        COMMAND poetry install
             WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE result
-            ERROR_VARIABLE errors
-            OUTPUT_VARIABLE outputs
+            RESULT_VARIABLE result0
+            ERROR_VARIABLE errors0
+            OUTPUT_VARIABLE outputs0
+
         COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
+
         COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             RESULT_VARIABLE GIT_SUBMOD_RESULT
+
         COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
             WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE result
-            ERROR_VARIABLE errors
-            OUTPUT_VARIABLE outputs)
-message("Data-model generation success? ${result} ${errors} ${outputs}")
+            RESULT_VARIABLE result1
+            ERROR_VARIABLE errors1
+            OUTPUT_VARIABLE outputs1)
+
+message("Poetry install success? ${result0} ${errors0} ${outputs0}")
+message("Update submodule success? ${GIT_SUBMOD_RESULT}")
+message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
 #endif ()
 
 set(headers
