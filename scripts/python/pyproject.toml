@@ -9,7 +9,7 @@ python = "^3.8"
 pandas = "*"
 plotly = "*"
 koozie = "*"
-#dimes = { git = "https://github.com/bigladder/dimes", rev = "1b8082f06909d551b36e7b784816d7abd915b58a"}
+dimes = { git = "https://github.com/bigladder/dimes", rev = "1b8082f06909d551b36e7b784816d7abd915b58a"}
 lattice = {git = "https://github.com/bigladder/lattice.git", branch = "add-basic-build-support"}
 
 [tool.poetry.dev-dependencies]

@@ -335,6 +335,25 @@ files = [
 ]
 
 [[package]]
+name = "dimes"
+version = "0.0.0"
+description = "A dimensionally aware scientific plotting package."
+optional = false
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.dependencies]
+koozie = "^1.2.0"
+plotly = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/bigladder/dimes"
+reference = "1b8082f06909d551b36e7b784816d7abd915b58a"
+resolved_reference = "1b8082f06909d551b36e7b784816d7abd915b58a"
+
+[[package]]
 name = "doit"
 version = "0.36.0"
 description = "doit - Automation Tool"
@@ -884,8 +903,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -1586,4 +1605,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "bb181e220ed687650514de361bd3f2bd6d9fc0087de39a9edfbe3cad5c6256b3"
+content-hash = "93440d66e9d4d5ed872675d1e81465b02c799952e8f3f07c41ee97eee53450ba"
