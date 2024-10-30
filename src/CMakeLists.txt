@@ -11,6 +11,32 @@ add_custom_target(${PROJECT_NAME}_version_header
 
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
+#generate hpwh-data-model source
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
+set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
+
+include(poetry-install)
+install_poetry()
+execute_process(
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
+
+        COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            RESULT_VARIABLE GIT_SUBMOD_RESULT
+
+        COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
+            WORKING_DIRECTORY "${pythonScriptDir}"
+            RESULT_VARIABLE result1
+            ERROR_VARIABLE errors1
+            OUTPUT_VARIABLE outputs1)
+
+set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+message("Poetry install success? ${result0} ${errors0} ${outputs0}")
+message("Update submodule success? ${GIT_SUBMOD_RESULT}")
+message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
+#endif ()
+
 set(headers
         HPWHversion.in.hh
         HPWHsim.hh
@@ -54,18 +80,21 @@ endif ()
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${PROJECT_BINARY_DIR}/src
         PUBLIC ${PROJECT_SOURCE_DIR}/src
-        #PUBLIC ${PROJECT_SOURCE_DIR}/src/data_model
+        PUBLIC ${PROJECT_SOURCE_DIR}/src/hpwh_data_model
         )
 
 #find_package(nlohmann_json 3.11.3 REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json data_model)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt nlohmann_json::nlohmann_json hpwh_data_model)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
 
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
+
+add_custom_command(TARGET ${PROJECT_NAME}
+    PRE_BUILD COMMAND poetry run python "build_data_model.py" "" "" WORKING_DIRECTORY "${pythonScriptDir}")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES PDB_NAME ${PROJECT_NAME})
@@ -82,10 +111,8 @@ if (${PROJECT_NAME}_COVERAGE)
     add_coverage(${PROJECT_NAME})
 endif ()
 
-if (NOT TARGET data_model)
-    add_subdirectory(data_model/cpp)
-endif ()
-
 if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()
+
+add_subdirectory(hpwh_data_model/cpp)

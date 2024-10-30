@@ -10,6 +10,7 @@
 *TestToolOutput.csv
 !Documentation/**
 nightly_pull.sh
+scripts/python/__pycache__
 
 build/
 builds/

@@ -3287,6 +3287,18 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_GenericUEF217;
     }
+    else if (modelName == "BradfordWhiteAeroThermRE2H50")
+    {
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H50;
+    }
+    else if (modelName == "BradfordWhiteAeroThermRE2H65")
+    {
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H65;
+    }
+    else if (modelName == "BradfordWhiteAeroThermRE2H80")
+    {
+        model = HPWH::MODELS_BradfordWhiteAeroThermRE2H80;
+    }
     else
     {
         model = HPWH::MODELS_basicIntegrated;
@@ -3387,6 +3399,16 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         heat_source_lookup[config.label] = iHeatSource;
     }
 
+    std::string sPrimaryHeatSource_id = "";
+    checkFrom(sPrimaryHeatSource_id,
+              performance.primary_heat_source_id_is_set,
+              performance.primary_heat_source_id,
+              sPrimaryHeatSource_id);
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        heatSources[iHeatSource]->isVIP = (heatSources[iHeatSource]->name == sPrimaryHeatSource_id);
+    }
+
     // set associations between heat sources
     for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
     {
@@ -3445,11 +3467,22 @@ void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& r
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;
     configurations.resize(getNumHeatSources());
+    bool hasPrimaryHeatSource = false;
+    std::string sPrimaryHeatSource_id = "";
     for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
     {
         auto& configuration = configurations[iHeatSource];
         heatSources[iHeatSource]->to(configuration);
+        if (heatSources[iHeatSource]->isVIP)
+        {
+            hasPrimaryHeatSource = true;
+            sPrimaryHeatSource_id = heatSources[iHeatSource]->name;
+        }
     }
+    checkTo(sPrimaryHeatSource_id,
+            performance.primary_heat_source_id_is_set,
+            performance.primary_heat_source_id,
+            hasPrimaryHeatSource);
 }
 
 //-----------------------------------------------------------------------------
@@ -3690,9 +3723,9 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
     const std::string sFirstHourRatingDesig =
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
 
-    std::cout << "\tFirst-Hour Rating:\n";
-    std::cout << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
-    std::cout << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
+    *testOptions.outputStream << "\tFirst-Hour Rating:\n";
+    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -4214,7 +4247,6 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         {
             send_error(fmt::format("Could not open output file {}", sFullOutputFilename));
         }
-        std::cout << "Output file: " << sFullOutputFilename << "\n";
 
         std::string strPreamble;
         std::string sHeader = "minutes,Ta,Tsetpoint,inletT,draw,";
@@ -4232,47 +4264,55 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         firstHourRating.desig = customTestOptions.desig;
         const std::string sFirstHourRatingDesig =
             HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
-        std::cout << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
+        *standardTestOptions.outputStream
+            << "\t\tUser-Specified Designation: " << sFirstHourRatingDesig << "\n";
     }
 
     run24hrTest(firstHourRating, standardTestSummary, standardTestOptions);
 
-    std::cout << "\t24-Hour Test Results:\n";
+    *standardTestOptions.outputStream << "\t24-Hour Test Results:\n";
     if (!standardTestSummary.qualifies)
     {
-        std::cout << "\t\tDoes not qualify as consumer water heater.\n";
+        *standardTestOptions.outputStream << "\t\tDoes not qualify as consumer water heater.\n";
     }
 
-    std::cout << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
 
-    std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
-              << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+    *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
+                                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
 
-    std::cout << "\t\tUEF: " << standardTestSummary.UEF << "\n";
+    *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
-    std::cout << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C
-              << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
 
-    std::cout << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C
-              << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
 
-    std::cout << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
 
-    std::cout << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
+                                      << "\n";
 
-    std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-    std::cout << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
 
-    std::cout << "\tAnnual Values:\n";
-    std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream << "\tAnnual Values:\n";
+    *standardTestOptions.outputStream
+        << "\t\tAnnual Electrical Energy Consumption (kWh): "
+        << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
 
-    std::cout << "\t\tAnnual Energy Consumption (kWh): "
-              << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
+                                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
+                                      << "\n";
 
     if (standardTestOptions.saveOutput)
     {

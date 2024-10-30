@@ -25,18 +25,18 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
         "id": "resistiveElementTop",
-        "is_vip": true,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 10.555555555555555,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 1.0
@@ -68,7 +68,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -78,7 +79,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 302.59444444444443,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0,
@@ -101,7 +102,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 15.555555555555555,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 1.0,
@@ -128,7 +129,7 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
-            "maximum_refrigerant_temperature": 100.0,
+            "maximum_refrigerant_temperature": 373.15,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 280.3722222222222,
             "performance_map": {
@@ -166,7 +167,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 16.666666666666668,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0
@@ -185,6 +186,7 @@
         ]
       }
     ],
+    "primary_heat_source_id": "resistiveElementTop",
     "tank": {
       "metadata": {
         "schema": "RSTANK"
