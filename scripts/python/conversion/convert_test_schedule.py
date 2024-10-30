@@ -4,17 +4,18 @@ import os
 import sys
 from pathlib import Path
 
-numRowsPerMin = 6
 setpointT_C = 51.1
 initialTankT_C = 51.1
+initTime_min = -60
+numRowsPerMin = 1
+
 #
-def convert_draw_schedule(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'drawschedule.csv'
+def convert_draw_schedule(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'drawschedule.csv'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -29,17 +30,18 @@ def convert_draw_schedule(main_test_folder, test_name):
 	flowRate_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = 0
+	iMin = initTime_min
 	first = True
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			flowRate_sum = flowRate_sum + float(columns[13].strip('\n'))
+			flowRate_sum = flowRate_sum + float(columns[10].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:
 				if flowRate_sum > 0:
-					out_file.writelines(f"{iMin}," + format(flowRate_sum / nLines, '.3f') + '\n')
+					if iMin >= 0:
+						out_file.writelines(f"{iMin}," + format(flowRate_sum / nLines, '.3f') + '\n')
 				jLine = 0
 				nLines = 0
 				flowRate_sum = 0
@@ -48,13 +50,12 @@ def convert_draw_schedule(main_test_folder, test_name):
 	out_file.close()
 
 #
-def convert_ambientT_schedule(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'ambientTschedule.csv'
+def convert_ambientT_schedule(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'ambientTschedule.csv'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -69,7 +70,7 @@ def convert_ambientT_schedule(main_test_folder, test_name):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[1].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
 			nLines = nLines + 1
 		first = False
 	ambientT = ambientT_sum / nLines
@@ -80,16 +81,17 @@ def convert_ambientT_schedule(main_test_folder, test_name):
 	ambientT_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = 0
+	iMin = initTime_min
 	first = True
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[1].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:
-				out_file.writelines(f"{iMin}," + format(ambientT_sum / nLines, '.3f') + '\n')	
+				if iMin >= 0:
+					out_file.writelines(f"{iMin}," + format(ambientT_sum / nLines, '.3f') + '\n')	
 				ambientT_sum = 0
 				nLines = 0
 				jLine = 0
@@ -99,13 +101,12 @@ def convert_ambientT_schedule(main_test_folder, test_name):
 	out_file.close()
 
 #
-def convert_evaporatorT_schedule(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'evaporatorTschedule.csv'
+def convert_evaporatorT_schedule(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'evaporatorTschedule.csv'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -121,7 +122,7 @@ def convert_evaporatorT_schedule(main_test_folder, test_name):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[1].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
 			nLines = nLines + 1
 		first = False
 	ambientT = ambientT_sum / nLines
@@ -133,16 +134,17 @@ def convert_evaporatorT_schedule(main_test_folder, test_name):
 	ambientT_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = 0
+	iMin = initTime_min
 	first = True
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[1].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
-			if jLine >= numRowsPerMin:
-				out_file.writelines(f"{iMin}," + format(ambientT_sum / nLines, '.3f') + '\n')	
+			if jLine >= numRowsPerMin:				
+				if iMin >= 0:
+					out_file.writelines(f"{iMin}," + format(ambientT_sum / nLines, '.3f') + '\n')	
 				ambientT_sum = 0
 				nLines = 0
 				jLine = 0
@@ -153,13 +155,12 @@ def convert_evaporatorT_schedule(main_test_folder, test_name):
 	
 
 # inletT schedule
-def convert_inletT_schedule(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'inletTschedule.csv'
+def convert_inletT_schedule(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'inletTschedule.csv'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -175,9 +176,9 @@ def convert_inletT_schedule(main_test_folder, test_name):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			flowRate = float(columns[13].strip('\n'))			
+			flowRate = float(columns[10].strip('\n'))			
 			if flowRate != 0:
-				inletT_sum = inletT_sum  + float(columns[11].strip('\n'))
+				inletT_sum = inletT_sum  + float(columns[12].strip('\n'))
 				nLines = nLines + 1
 		first = False
 	out_file.writelines("default " + format(inletT_sum / nLines, '.3f') + '\n')	
@@ -189,18 +190,21 @@ def convert_inletT_schedule(main_test_folder, test_name):
 	flowRate_sum = 0
 	nLines = 0
 	jLine = numRowsPerMin - 1
-	iMin = 0
+	iMin = initTime_min
 	first = True
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			inletT_sum = inletT_sum + float(columns[1].strip('\n'))
-			flowRate_sum = flowRate_sum + float(columns[13].strip('\n'))		
+			flowRate = float(columns[10].strip('\n'))
+			if flowRate != 0:
+				inletT_sum = inletT_sum + float(columns[12].strip('\n'))
+				flowRate_sum = flowRate_sum + flowRate		
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:
 				if flowRate_sum != 0:
-					out_file.writelines(f"{iMin}," + format(inletT_sum / nLines, '.3f') + '\n')
+					if iMin >= 0:
+						out_file.writelines(f"{iMin}," + format(inletT_sum / nLines, '.3f') + '\n')
 				flowRate_sum = 0
 				inletT_sum = 0
 				nLines = 0
@@ -209,13 +213,12 @@ def convert_inletT_schedule(main_test_folder, test_name):
 		first = False
 		
 # DR schedule
-def create_DR_schedule(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'DRschedule.csv'
+def create_DR_schedule(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'DRschedule.csv'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -228,13 +231,12 @@ def create_DR_schedule(main_test_folder, test_name):
 
 
 # test info
-def create_test_into(main_test_folder, test_name):
-	in_file_name = str(test_name) + '.csv'
-	out_file_name = 'testInfo.txt'
+def create_test_into(test_dir, data_filename):
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'testInfo.txt'
 	
-	test_folder = os.path.join(main_test_folder, test_name)
-	in_file_path = os.path.join(test_folder, in_file_name)
-	out_file_path = os.path.join(test_folder, out_file_name)
+	in_file_path = os.path.join(test_dir, in_filename)
+	out_file_path = os.path.join(test_dir, out_filename)
 
 	# load data
 	in_file = open(in_file_path, 'r')
@@ -243,7 +245,8 @@ def create_test_into(main_test_folder, test_name):
 
 	# count minutes
 	jLine = numRowsPerMin - 1
-	iMin = 0
+	iMin = initTime_min
+	testTime_min = 0
 	first = True
 	for line in Lines:
 		if not first:
@@ -251,6 +254,8 @@ def create_test_into(main_test_folder, test_name):
 			if jLine >= numRowsPerMin:
 				jLine = 0
 				iMin = iMin + 1
+				if iMin >= 0:
+					testTime_min = testTime_min + 1
 		first = False
 		
 	out_file = open(out_file_path,"w+")
@@ -263,16 +268,16 @@ def create_test_into(main_test_folder, test_name):
 if __name__ == "__main__":
     n_args = len(sys.argv) - 1
     if n_args == 2:
-      main_test_folder = Path(sys.argv[1])
-      test_name = Path(sys.argv[2])
-      convert_draw_schedule(main_test_folder, test_name)
-      convert_ambientT_schedule(main_test_folder, test_name)
-      convert_evaporatorT_schedule(main_test_folder, test_name)
-      convert_inletT_schedule(main_test_folder, test_name)
-      create_DR_schedule(main_test_folder, test_name)
-      create_test_into(main_test_folder, test_name)
+      test_dir = Path(sys.argv[1])
+      data_filename = Path(sys.argv[2])
+      convert_draw_schedule(test_dir,data_filename)
+      convert_ambientT_schedule(test_dir,data_filename)
+      convert_evaporatorT_schedule(test_dir,data_filename)
+      convert_inletT_schedule(test_dir,data_filename)
+      create_DR_schedule(test_dir,data_filename)
+      create_test_into(test_dir,data_filename)
     else:
       sys.exit(
-        "Expected two arguments: test_folder test_name"
+        "Expected two arguments: test_dir data_filename"
         )
   
