@@ -26,18 +26,18 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 2250.0
+            "input_power": 2250.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
         "id": "resistiveElementTop",
-        "is_vip": true,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "absolute_temperature": 313.7055555555555,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 0.0,
@@ -72,7 +72,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 2250.0
+            "input_power": 2250.0,
+            "resistance_lockout_temperature_hysteresis": 1.1111111111111112
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -82,7 +83,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 310.92777777777775,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0,
@@ -124,7 +125,7 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
-            "maximum_refrigerant_temperature": 71.11111111111111,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 278.7055555555555,
             "performance_map": {
@@ -136,25 +137,25 @@
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  373.15
+                  344.26111111111106
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
                   1188.68624,
-                  123.23743999999971,
+                  794.0520000000004,
                   1439.5028399999994,
-                  -114.41195999999913,
+                  930.4750000000008,
                   1814.1291999999999,
-                  -588.1868000000002
+                  1279.9340000000009
                 ],
                 "input_power": [
                   234.64,
-                  598.24,
+                  493.1999999999999,
                   221.94000000000003,
-                  657.5399999999998,
+                  531.6999999999997,
                   194.89999999999998,
-                  761.9
+                  598.0999999999998
                 ]
               }
             }
@@ -167,7 +168,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 19.444444444444443,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0
@@ -186,6 +187,7 @@
         ]
       }
     ],
+    "primary_heat_source_id": "resistiveElementTop",
     "tank": {
       "metadata": {
         "schema": "RSTANK"

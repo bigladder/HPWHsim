@@ -17,7 +17,7 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
-            "maximum_refrigerant_temperature": 71.11111111111111,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 275.92777777777775,
             "performance_map": {
@@ -28,21 +28,21 @@
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  373.15
+                  344.26111111111106
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
                   2740.0287368783997,
-                  2753.0539365504005,
+                  3155.012695560001,
                   3683.1371831320002,
-                  4437.710153571999
+                  5044.631530140001
                 ],
                 "input_power": [
                   685.6715999999999,
-                  1567.4555999999998,
+                  1312.7179999999996,
                   741.2812,
-                  2132.0692
+                  1730.2859999999996
                 ]
               }
             }
@@ -50,13 +50,12 @@
         },
         "heat_source_type": "CONDENSER",
         "id": "compressor",
-        "is_vip": true,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 11.11111111111111,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0
@@ -75,6 +74,7 @@
         ]
       }
     ],
+    "primary_heat_source_id": "compressor",
     "tank": {
       "metadata": {
         "schema": "RSTANK"

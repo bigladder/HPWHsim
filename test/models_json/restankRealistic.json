@@ -25,18 +25,18 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
         "id": "resistiveElementTop",
-        "is_vip": true,
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 20.0,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 1.0
@@ -66,7 +66,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -76,7 +77,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 20.0,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0
@@ -95,6 +96,7 @@
         ]
       }
     ],
+    "primary_heat_source_id": "resistiveElementTop",
     "tank": {
       "metadata": {
         "schema": "RSTANK"

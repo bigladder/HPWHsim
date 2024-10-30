@@ -26,7 +26,7 @@
           },
           "performance": {
             "coil_configuration": "WRAPPED",
-            "maximum_refrigerant_temperature": 71.11111111111111,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 273.15,
             "performance_map": {
@@ -37,21 +37,21 @@
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  373.15
+                  344.26111111111106
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
                   1811.63246823398,
-                  189.9842883159803,
+                  1053.1031907248607,
                   2514.617379191681,
-                  -298.70465284352093
+                  1253.457673622402
                 ],
                 "input_power": [
                   368.67913,
-                  780.01153,
+                  661.1821699999998,
                   372.45291999999995,
-                  880.0547200000003
+                  733.4141999999999
                 ]
               }
             }
@@ -64,7 +64,7 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "absolute_temperature": 310.92777777777775,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 1.0,
                 0.0,
                 0.0,
@@ -87,7 +87,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 3.639388888888889,
-              "logic_distribution": [
+              "temperature_weight_distribution": [
                 0.0,
                 0.0,
                 1.0,
@@ -120,7 +120,8 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 1500.0
+            "input_power": 1500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
         "heat_source_type": "RESISTANCE",

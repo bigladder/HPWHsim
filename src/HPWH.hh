@@ -94,23 +94,25 @@ class HPWH : public Courier::Sender
     void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
     void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
 
-    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
-                        nlohmann::json& j);
+    static void
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+            nlohmann::json& j);
     static void to_json(const hpwh_data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
     static void
     to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
             nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+        nlohmann::json& j);
     static void
-    to_json(const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
+    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
             nlohmann::json& j);
-    static void to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
-                        nlohmann::json& j);
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
-            nlohmann::json& j);
-    static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
-            nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
+        nlohmann::json& j);
+    static void to_json(
+        const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
+        nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used
@@ -220,6 +222,8 @@ class HPWH : public Courier::Sender
         MODELS_AWHSTier3Generic65 = 177, /**< Generic AWHS Tier 3 65 gallons*/
         MODELS_AWHSTier3Generic80 = 178, /**< Generic AWHS Tier 3 80 gallons*/
 
+        MODELS_GenericUEF217 = 179,
+
         MODELS_AWHSTier4Generic40 = 1175, /**< Generic AWHS Tier 4 40 gallons*/
         MODELS_AWHSTier4Generic50 = 1176, /**< Generic AWHS Tier 4 50 gallons*/
         MODELS_AWHSTier4Generic65 = 1177, /**< Generic AWHS Tier 4 65 gallons*/
@@ -297,7 +301,9 @@ class HPWH : public Courier::Sender
 
         MODELS_AquaThermAire = 400, // heat exchanger model
 
-        MODELS_GenericUEF217 = 410
+        MODELS_BradfordWhiteAeroThermRE2H50 = 500,
+        MODELS_BradfordWhiteAeroThermRE2H65 = 501,
+        MODELS_BradfordWhiteAeroThermRE2H80 = 502
     };
 
     // static std::unordered_map<MODELS, std::string> modelMap;
@@ -967,6 +973,7 @@ class HPWH : public Courier::Sender
         bool saveOutput = false;
         std::string sOutputDirectory = "";
         std::string sOutputFilename = "";
+        std::ostream* outputStream = &std::cout;
         bool changeSetpoint = false;
         std::ofstream outputFile;
         int nTestTCouples = 6;
