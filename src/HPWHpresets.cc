@@ -4425,22 +4425,22 @@ void HPWH::initPreset(MODELS presetNum)
              (presetNum <= MODELS_BradfordWhiteAeroThermRE2H80))
     {
         setNumNodes(12);
-        setpoint_C = F_TO_C(127.0);
+        setpointT = {127.0, Units::F};
 
         if (presetNum == MODELS_BradfordWhiteAeroThermRE2H50)
         {
-            tankVolume_L = GAL_TO_L(45.0);
-            tankUA_kJperHrC = 6.8373;
+            tankVolume = {45.0, Units::gal};
+            tankUA = {6.8373, Units::kJ_per_hC};
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H65)
         {
-            tankVolume_L = GAL_TO_L(64.0);
-            tankUA_kJperHrC = 6.7292;
+            tankVolume = {64.0, Units::gal};
+            tankUA = {6.7292, Units::kJ_per_hC};
         }
         else if (presetNum == MODELS_BradfordWhiteAeroThermRE2H80)
         {
-            tankVolume_L = GAL_TO_L(75.0);
-            tankUA_kJperHrC = 7.2217;
+            tankVolume = {75.0, Units::gal};
+            tankUA = {7.2217, Units::kJ_per_hC};
         }
 
         doTempDepression = false;
@@ -4461,39 +4461,39 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(2);
 
         compressor->perfMap.push_back({
-            50,                 // Temperature (T_F)
-            {148, 2.0, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {5.88, -0.024, 0.0} // COP Coefficients (COP_coeffs)
+            {50, Units::F},              // Temperature
+            {{148, 2.0, 0.0}, Units::W}, // Input Power Coefficients
+            {5.88, -0.024, 0.0}          // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            70,                 // Temperature (T_F)
-            {110, 2.5, 0.0},    // Input Power Coefficients (inputPower_coeffs)
-            {6.8, -0.0323, 0.0} // COP Coefficients (COP_coeffs)
+            {70, Units::F},              // Temperature
+            {{110, 2.5, 0.0}, Units::W}, // Input Power Coefficients
+            {6.8, -0.0323, 0.0}          // COP Coefficients
         });
 
-        compressor->minT = F_TO_C(37.0);
-        compressor->maxT = F_TO_C(120.);
-        compressor->hysteresis_dC = dF_TO_dC(2);
+        compressor->minT = {37.0, Units::F};
+        compressor->maxT = {120., Units::F};
+        compressor->hysteresis_dT = {2, Units::dF};
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
-        compressor->maxSetpoint_C = MAXOUTLET_R134A;
+        compressor->maxSetpointT = MAXOUTLET_R134A();
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(6, 4000);
+        resistiveElementTop->setupAsResistiveElement(6, {4000, Units::W});
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 4000);
+        resistiveElementBottom->setupAsResistiveElement(0, {4000, Units::W});
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
+        resistiveElementBottom->hysteresis_dT = {2., Units::dF};
 
         // logic conditions
-        resistiveElementTop->addTurnOnLogic(fourthSixth(dF_TO_dC(32)));
+        resistiveElementTop->addTurnOnLogic(fourthSixth({32, Units::dF}));
 
-        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp(F_TO_C(86.1)));
+        resistiveElementBottom->addShutOffLogic(bottomTwelfthMaxTemp({86.1, Units::dF}));
 
-        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(30)));
-        compressor->addTurnOnLogic(standby(dF_TO_dC(12.392)));
+        compressor->addTurnOnLogic(bottomThird({30, Units::dF}));
+        compressor->addTurnOnLogic(standby({12.392, Units::dF}));
 
         //
         compressor->backupHeatSource = resistiveElementBottom;

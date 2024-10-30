@@ -510,11 +510,11 @@ void HPWH::setAllDefaults()
     setpointFixed = false;
     tankSizeFixed = true;
     canScale = false;
-    member_inletT_C = -1.; // invalid unit setInletT called
+    member_inletT = Temp_t(-1., Units::F); // invalid unit setInletT called
     haveInletT = false;
     currentSoCFraction = 1.;
     doTempDepression = false;
-    locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
+    locationT = UNINITIALIZED_LOCATIONTEMP();
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
@@ -4720,7 +4720,8 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
 
     *testOptions.outputStream << "\tFirst-Hour Rating:\n";
-    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume(Units::L)
+                              << "\n";
     *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 }
 
@@ -5362,26 +5363,28 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
     *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
     *standardTestOptions.outputStream
-        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT(Units::C)<< "\n";
+        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT(Units::C)
+        << "\n";
 
     *standardTestOptions.outputStream
-        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT(Units::C) << "\n";
+        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT(Units::C)
+        << "\n";
 
     *standardTestOptions.outputStream
         << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume(Units::L) << "\n";
 
     *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                                      << standardTestSummary.waterHeatingEnergy(Units::kWh)
-                                      << "\n";
+                                      << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
 
     *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-              << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
+                                      << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
 
     std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
               << standardTestSummary.adjustedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
-    *standardTestOptions.outputStream << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-              << standardTestSummary.modifiedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
+    *standardTestOptions.outputStream
+        << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
+        << standardTestSummary.modifiedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
     *standardTestOptions.outputStream << "\tAnnual Values:\n";
     *standardTestOptions.outputStream
