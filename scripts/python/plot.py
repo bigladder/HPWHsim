@@ -76,9 +76,7 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
         variable_type
     ]:
         for index in range(len(df)):
-            df.loc[index, temperature_column] = convert(
-                df.loc[index, temperature_column], "degC", "degF"
-            )
+            df.loc[index, temperature_column] = 1.8 * df.loc[index, temperature_column] + 32
 
     return df
 

@@ -4490,6 +4490,74 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
+    else if (presetNum == MODELS_LG_APHWC50)
+    { //
+        setNumNodes(12);
+        setpoint_C = F_TO_C(125.);
+
+        tankVolume_L = GAL_TO_L(52.8);
+        tankUA_kJperHrC = 7.78;
+
+        doTempDepression = false;
+        tankMixesOnDraw = true;
+
+        heatSources.reserve(3);
+        auto resistiveElementTop = addHeatSource("resistiveElementTop");
+        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto compressor = addHeatSource("compressor");
+
+        // compressor values
+        compressor->isOn = false;
+        compressor->isVIP = false;
+        compressor->typeOfHeatSource = TYPE_compressor;
+
+        compressor->setCondensity({0.17, 0.166, 0.166, 0.166, 0.166, 0.166, 0, 0, 0, 0, 0, 0});
+
+        compressor->perfMap.reserve(3);
+
+        compressor->perfMap.push_back({
+            50,                   // Temperature (F)
+            {125.6, 0.7262, 0.},  // Input Power Coefficients (kW)
+            {7.788, -0.04284, 0.} // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            67.5,                 // Temperature (F)
+            {26.42, 1.878, 0.},   // Input Power Coefficients (kW)
+            {10.93, -0.06291, 0.} // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            95,                     // Temperature (F)
+            {-31.81, 2.309, 0.},    // Input Power Coefficients (kW)
+            {20.29913, -0.1329, 0.} // COP Coefficients
+        });
+
+        compressor->minT = F_TO_C(23);
+        compressor->maxT = F_TO_C(120.);
+        compressor->hysteresis_dC = dF_TO_dC(1);
+        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+
+        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(45.)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
+
+        // top resistor values
+        resistiveElementTop->setupAsResistiveElement(9, 5000.);
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20.)));
+        resistiveElementTop->isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom->setupAsResistiveElement(0, 5000.);
+        resistiveElementBottom->isVIP = false;
+
+        resistiveElementTop->followedByHeatSource = compressor;
+        resistiveElementBottom->followedByHeatSource = compressor;
+
+        compressor->backupHeatSource = resistiveElementBottom;
+        resistiveElementBottom->backupHeatSource = compressor;
+
+        resistiveElementTop->companionHeatSource = compressor;
+    }
     else
     {
         send_error("You have tried to select a preset model which does not exist.");

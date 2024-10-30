@@ -4116,6 +4116,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_BradfordWhiteAeroThermRE2H80;
     }
+    else if (modelName == "LG_APHWC50")
+    {
+        model = HPWH::MODELS_LG_APHWC50;
+    }
     else
     {
         model = HPWH::MODELS_basicIntegrated;
