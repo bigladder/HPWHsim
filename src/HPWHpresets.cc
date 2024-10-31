@@ -4516,15 +4516,15 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->perfMap.reserve(3);
 
         compressor->perfMap.push_back({
-            50,                   // Temperature (F)
-            {125.6, 0.7262, 0.},  // Input Power Coefficients (kW)
-            {7.788, -0.04284, 0.} // COP Coefficients
+            50,             // Temperature (F)
+            {128, 1.7, 0.}, // Input Power Coefficients (kW)
+            {3.5, 0, 0.}    // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            67.5,                 // Temperature (F)
-            {26.42, 1.878, 0.},   // Input Power Coefficients (kW)
-            {10.93, -0.06291, 0.} // COP Coefficients
+            67.5,            // Temperature (F)
+            {26., 1.8, 0.},  // Input Power Coefficients (kW)
+            {9.5, -0.05, 0.} // COP Coefficients
         });
 
         compressor->perfMap.push_back({
@@ -4543,7 +4543,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(9, 5000.);
-        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20.)));
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(30.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
