@@ -530,7 +530,7 @@ void setCondenserHeatSource(nlohmann::json& j)
 }
 
 /*static*/
-void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
+void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
                    nlohmann::json& j)
 {
     nlohmann::json j_metadata;
@@ -611,27 +611,6 @@ void HPWH::to_json(const data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWAT
             nlohmann::json j_standby_logic;
             to_json(heat_source_config.standby_logic, j_standby_logic);
             j_heat_source_config["standby_logic"] = j_standby_logic;
-        }
-
-        if (heat_source_config.backup_heat_source_id_is_set)
-        {
-            j_heat_source_config["hysteresis_temperature_difference"] =
-                heat_source_config.hysteresis_temperature_difference;
-        }
-
-        if (heat_source_config.maximum_temperature_is_set)
-        {
-            j_heat_source_config["maximum_temperature"] = heat_source_config.maximum_temperature;
-        }
-
-        if (heat_source_config.minimum_temperature_is_set)
-        {
-            j_heat_source_config["minimum_temperature"] = heat_source_config.minimum_temperature;
-        }
-
-        if (heat_source_config.maximum_setpoint_is_set)
-        {
-            j_heat_source_config["maximum_setpoint"] = heat_source_config.maximum_setpoint;
         }
 
         j_heat_source_configs.push_back(j_heat_source_config);
