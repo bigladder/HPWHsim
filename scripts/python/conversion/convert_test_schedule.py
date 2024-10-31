@@ -6,7 +6,7 @@ from pathlib import Path
 
 setpointT_C = 51.1
 initialTankT_C = 51.1
-initTime_min = -60
+initTime_min = 0
 numRowsPerMin = 1
 
 #
@@ -14,9 +14,11 @@ def convert_draw_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
 	out_filename = 'drawschedule.csv'
 	
+	print("Opening files.")
 	in_file_path = os.path.join(test_dir, in_filename)
+	print("Opened in file.")
 	out_file_path = os.path.join(test_dir, out_filename)
-
+	print("Opened out file.")
 	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
