@@ -262,7 +262,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /*static*/
 std::shared_ptr<HPWH::HeatingLogic>
-HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
+HPWH::HeatingLogic::make(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic,
                          HPWH* hpwh)
 {
     std::shared_ptr<HPWH::HeatingLogic> heatingLogic = nullptr;
@@ -376,7 +376,7 @@ HPWH::HeatingLogic::make(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
 }
 
 void HPWH::SoCBasedHeatingLogic::to(
-    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
+    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic) const
 {
     checkTo(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::STATE_OF_CHARGE_BASED,
             heating_logic.heating_logic_type_is_set,
@@ -413,7 +413,7 @@ void HPWH::SoCBasedHeatingLogic::to(
 }
 
 void HPWH::TempBasedHeatingLogic::to(
-    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic)
+    hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic) const
 {
     checkTo(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogicType::TEMPERATURE_BASED,
             heating_logic.heating_logic_type_is_set,

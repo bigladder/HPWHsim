@@ -15,8 +15,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     Condenser& operator=(const Condenser& hSource);
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
-    void to(std::unique_ptr<HeatSourceBase>& rshs_ptr) const override;
-    void from(const std::unique_ptr<HeatSourceBase>& rshs_ptr) override;
+    void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const override;
+    void from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr) override;
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     std::vector<std::vector<double>> perfGrid;

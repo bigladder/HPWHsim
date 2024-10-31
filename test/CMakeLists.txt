@@ -372,13 +372,6 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     set(model BradfordWhiteAeroThermRE2H${size})

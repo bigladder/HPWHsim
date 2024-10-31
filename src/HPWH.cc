@@ -3334,9 +3334,9 @@ void HPWH::initFromJSON(string sModelName)
     auto sInputFileName = "models_json/" + sModelName + ".json";
     std::ifstream inputFile(sInputFileName);
     nlohmann::json j = nlohmann::json::parse(inputFile);
-    data_model::init(get_courier());
-    data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-    data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
+    hpwh_data_model::init(get_courier());
+    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
+    hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
     from(rswh);
 }
 
@@ -3353,7 +3353,7 @@ void HPWH::initFromJSON(MODELS modelNumber)
 
 #endif
 
-void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
+void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
     setpoint_C = F_TO_C(135.0);
@@ -3378,15 +3378,15 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
         {
-            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.label));
+            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
             break;
         }
-        case data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
         {
-            heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.label));
+            heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
             break;
         }
@@ -3396,7 +3396,7 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
         }
 
         heatSources[iHeatSource]->from(config);
-        heat_source_lookup[config.label] = iHeatSource;
+        heat_source_lookup[config.id] = iHeatSource;
     }
 
     std::string sPrimaryHeatSource_id = "";
@@ -3414,21 +3414,21 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     {
         auto& configuration = configurations[iHeatSource];
 
-        if (configuration.backup_heat_source_label_is_set)
+        if (configuration.backup_heat_source_id_is_set)
         {
-            auto iBackup = heat_source_lookup[configuration.backup_heat_source_label];
+            auto iBackup = heat_source_lookup[configuration.backup_heat_source_id];
             heatSources[iHeatSource]->backupHeatSource = heatSources[iBackup].get();
         }
 
-        if (configuration.followed_by_heat_source_label_is_set)
+        if (configuration.followed_by_heat_source_id_is_set)
         {
-            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_label];
+            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_id];
             heatSources[iHeatSource]->followedByHeatSource = heatSources[iFollowedBy].get();
         }
 
-        if (configuration.companion_heat_source_label_is_set)
+        if (configuration.companion_heat_source_id_is_set)
         {
-            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_label];
+            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_id];
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
@@ -3447,10 +3447,10 @@ void HPWH::from(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER&
     }
 }
 
-void HPWH::to(data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
+void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
-    checkTo(data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
+    checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSINTEGRATEDWATERHEATER,
             metadata.schema_is_set,
             metadata.schema);
 

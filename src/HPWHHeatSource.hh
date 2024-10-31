@@ -19,12 +19,8 @@ class HPWH::HeatSource : public Sender
     virtual ~HeatSource() = default;
     HeatSource& operator=(const HeatSource& hSource); /// assignment operator
 
-    void from(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
-                  heatsourceconfiguration);
-    void from(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                  rscondenserwaterheatsource);
-    void from(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                  rsresistancewaterheatsource);
+    void to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config) const;
+    void from(const hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& config);
 
     virtual HEATSOURCE_TYPE typeOfHeatSource() const = 0;
     virtual void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const = 0;
@@ -34,16 +30,7 @@ class HPWH::HeatSource : public Sender
     bool isACompressor() const { return typeOfHeatSource() == TYPE_compressor; }
     /**< returns if the heat source uses a compressor or not */
     bool isAResistance() const { return typeOfHeatSource() == TYPE_resistance; }
-    void to(hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE&
-                rscondenserwaterheatsource) const;
 
-    void to(hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE&
-                rsresistancewaterheatsource) const;
-
-    void setConstantElementPower(double power_W);
-    void setupAsResistiveElement(int node, double Watts, int condensitySize = CONDENSITY_SIZE);
-    /**< configure the heat source to be a resisive element, positioned at the
-        specified node, with the specified power in watts */
 
     bool isEngaged() const;
     /**< return whether or not the heat source is engaged */
@@ -95,73 +82,7 @@ class HPWH::HeatSource : public Sender
 
     int getCondensitySize() const;
 
-    void linearInterp(double& ynew, double xnew, double x0, double x1, double y0, double y1) const;
-    /**< Does a simple linear interpolation between two points to the xnew point */
-
-    void regressedMethod(
-        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
-    /**< Does a calculation based on the ten term regression equation  */
-
-    void regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
-    /**< Does a calculation based on the five term regression equation for MP split systems  */
-
-    void btwxtInterp(double& input_BTUperHr, double& cop, std::vector<double>& target);
-    /**< Does a linear interpolation in btwxt to the target point*/
-
-    void setupDefrostMap(double derate35 = 0.8865);
-    /**< configure the heat source with a default for the defrost derating */
-    void defrostDerate(double& to_derate, double airT_C);
-    /**< Derates the COP of a system based on the air temperature */
-
-    /// Polynomials for evaluating input power and COP.
-    /// Three different representations of the temperature variations are used:
-    /// 1.  one-dimensional quadratic expansions (three terms each) wrt condenser temperature of
-    ///     input power and cop at the specified external temperature.
-    /// 2.  three-dimensional polynomial (11 terms each) wrt external, outlet, and condenser
-    ///     temperatures. The variation with external temperature
-    ///     is clipped at the specified temperature.
-    /// 3.  two-dimensional polynomial (six terms each) wrt external and condenser
-    ///     temperatures.The variation with external temperature
-    ///     is clipped at the specified temperature.
-
-    struct PerfPoint
-    {
-        double T_F;
-        std::vector<double> inputPower_coeffs;
-        std::vector<double> COP_coeffs;
-    };
-
-    /// Performance map containing one or more performance points.
-    /// For case 1. above, the map typically contains multiple points, at various temperatures.
-    /// Linear interpolation is applied to the collection of points.
-    /// Only the first entry is used for cases 2. and 3.
-    std::vector<PerfPoint> perfMap;
-
-    void getCapacityFromMap(double environmentT_C,
-                            double heatSourceT_C,
-                            double& input_BTUperHr,
-                            double& cop) const;
-
-    void convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
-                          std::vector<std::vector<double>>& tempGridValues) const;
-
   private:
-    // start with a few type definitions
-    enum COIL_CONFIG
-    {
-        CONFIG_SUBMERGED,
-        CONFIG_WRAPPED,
-        CONFIG_EXTERNAL
-    };
-
-    /** specifies the extrapolation method based on Tair, from the perfmap for a heat source  */
-    enum EXTRAP_METHOD
-    {
-        EXTRAP_LINEAR, /**< the default extrapolates linearly */
-        EXTRAP_NEAREST /**< extrapolates using nearest neighbor, will just continue from closest
-                          point  */
-    };
-
     /** the creator of the heat source, necessary to access HPWH variables */
     HPWH* hpwh;
 
@@ -171,9 +92,6 @@ class HPWH::HeatSource : public Sender
 
     bool lockedOut;
     /**< is the heat source locked out	 */
-
-    bool doDefrost;
-    /**<  If and only if true will derate the COP of a compressor to simulate a defrost cycle  */
 
     // some outputs
     double runtime_min;
