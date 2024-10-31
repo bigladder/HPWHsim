@@ -27,7 +27,7 @@ if format == "LG":
 	orig_columns = dict([ ("Time", 0), ("AmbientT", 14), ("Power", 2), ("TankT1", 8), ("InletT", 12), ("OutletT", 13), ("Draw", 10) ])
 	power_factor = 1000.
 
-initTime_min = -60					 
+initTime_min = 0					 
 numRowsPerMin = 1
 numTankTs = 6
 tankTsOrder = -1
@@ -50,7 +50,7 @@ def convert_measurements(test_dir, data_filename):
 	iSum = 0
 
 	out_file = open(out_file_path,"w+")
-	iMin = -63
+	iMin = initTime_min 
 	jRow = numRowsPerMin
 	iLine = 0
 	for line in Lines:
