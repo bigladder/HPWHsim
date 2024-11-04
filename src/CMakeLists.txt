@@ -16,7 +16,6 @@ set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 
-set(${PROJECT_NAME}_DATA_MODEL_GENERATED TRUE CACHE BOOL "Generate data-model code" FORCE)
 if (NOT ${PROJECT_NAME}_DATA_MODEL_GENERATED)
     include(poetry-install)
     install_poetry()
