@@ -54,12 +54,13 @@ body {font-family: Arial;}
 </form>
 
 <script>
-  const model_form = document.getElementById('model_form');
-  model_form.model_spec.value = "Preset";
-  model_form.model_name.value = "BradfordWhiteAeroThermRE2H65";
-
-  const build_form = document.getElementById('build_form');
-  build_form.build_dir.value = "../../build";
+function initFormValue(elem_id, defaultVal)
+{
+	if (document.getElementById(elem_id).value == "")
+	{
+		document.getElementById(elem_id).value = (localStorage.getItem(elem_id) == null)? defaultVal: localStorage.getItem(elem_id);
+	}
+}
 </script>
 
 <script>
@@ -110,8 +111,8 @@ body {font-family: Arial;}
  
     localStorage.setItem("model_spec", model_spec);
     localStorage.setItem("model_name", model_name);
-    localStorage.setItem("test_dir", test_dir);
     localStorage.setItem("build_dir", build_dir);
+    localStorage.setItem("test_dir", test_dir);
 
     document.getElementById("plots").src = build_dir + "/test/output/plot.html"
     document.getElementById("plots").style = "display:block;"
@@ -197,12 +198,12 @@ for (i = 0; i < coll.length; i++) {
 
 </body>
 
+
 <script>
-  const test_form = document.getElementById('test_form');
-  test_form.test_dir.value = "BradfordWhite/AeroThermRE2H/RE2H50_UEF50";
-
-  //var test_btn = document.getElementById("test_btn");
-
+	initFormValue("model_spec", "File");
+	initFormValue("model_name", "BradfordWhiteAeroThermRE2H65");
+ 	initFormValue("build_dir", "../../build");
+	initFormValue("test_dir", "BradfordWhite/AeroThermRE2H/RE2H50_UEF50");
 </script>
 
 </html>
