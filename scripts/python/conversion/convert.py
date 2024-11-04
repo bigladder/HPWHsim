@@ -1,4 +1,4 @@
-# Raw script for converting typical supplied data to a HPWHsim draw schedule.
+# Raw script for converting typical supplied data to HPWHsim schedules and measured data.
 
 import os
 import sys
@@ -34,11 +34,10 @@ def convert_draw_schedule(test_dir, data_filename):
 	in_filename = str(data_filename) + '.csv'
 	out_filename = 'drawschedule.csv'
 	
-	print("Opening files.")
 	in_file_path = os.path.join(test_dir, in_filename)
-	print("Opened in file.")
+	print("Opened in-file.")
 	out_file_path = os.path.join(test_dir, out_filename)
-	print("Opened out file.")
+	print("Opened out-file.")
 	# load data
 	in_file = open(in_file_path, 'r')
 	Lines = in_file.readlines()
@@ -57,7 +56,7 @@ def convert_draw_schedule(test_dir, data_filename):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			flowRate_sum = flowRate_sum + float(columns[10].strip('\n'))
+			flowRate_sum = flowRate_sum + float(columns[orig_columns["Draw"]].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:
@@ -92,7 +91,7 @@ def convert_ambientT_schedule(test_dir, data_filename):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 		first = False
 	out_file.writelines("default {ambientT_avg:.3f}\n".format(ambientT_avg=ambientT_sum / nLines))	
@@ -107,7 +106,7 @@ def convert_ambientT_schedule(test_dir, data_filename):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:
@@ -143,7 +142,7 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 		first = False
 	ambientT = ambientT_sum / nLines
@@ -160,7 +159,7 @@ def convert_evaporatorT_schedule(test_dir, data_filename):
 	for line in Lines:
 		if not first:
 			columns = line.split(',')
-			ambientT_sum = ambientT_sum + float(columns[14].strip('\n'))
+			ambientT_sum = ambientT_sum + float(columns[orig_columns["AmbientT"]].strip('\n'))
 			nLines = nLines + 1
 			jLine = jLine + 1
 			if jLine >= numRowsPerMin:				
@@ -199,7 +198,7 @@ def convert_inletT_schedule(test_dir, data_filename):
 			columns = line.split(',')
 			flowRate = float(columns[10].strip('\n'))			
 			if flowRate != 0:
-				inletT_sum = inletT_sum  + float(columns[12].strip('\n'))
+				inletT_sum = inletT_sum  + float(columns[orig_columns["InletT"]].strip('\n'))
 				nLines = nLines + 1
 		first = False
 	out_file.writelines("default {inletT_avg:.3f}\n".format(inletT_avg=inletT_sum / nLines))	
@@ -218,7 +217,7 @@ def convert_inletT_schedule(test_dir, data_filename):
 			columns = line.split(',')
 			flowRate = float(columns[10].strip('\n'))
 			if flowRate != 0:
-				inletT_sum = inletT_sum + float(columns[12].strip('\n'))
+				inletT_sum = inletT_sum + float(columns[orig_columns["InletT"]].strip('\n'))
 				flowRate_sum = flowRate_sum + flowRate		
 			nLines = nLines + 1
 			jLine = jLine + 1
@@ -284,6 +283,11 @@ def create_test_into(test_dir, data_filename):
 	out_file.writelines(f"length_of_test {iMin}\n")
 	out_file.writelines(f"initialTankT_C {initialTankT_C}\n")
 	out_file.close()
+
+# measured data
+def convert_measured(test_dir, data_filename):	
+	in_filename = str(data_filename) + '.csv'
+	out_filename = 'measured.csv'
 	
 # 
 def convert_measured(test_dir, data_filename):
@@ -373,7 +377,7 @@ def convert_measured(test_dir, data_filename):
 		iLine = iLine + 1
 			
 	out_file.close()
-
+	
 #  main
 if __name__ == "__main__":
     n_args = len(sys.argv) - 1
