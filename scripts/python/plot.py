@@ -187,7 +187,7 @@ def plot(measured_path, simulated_path, plot_path):
                     ],
                     "Simulated": [
                         f"tcouple{number} (C)"
-                        for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+                        for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
                     ],
                 },
                 "Labels": [
@@ -195,7 +195,7 @@ def plot(measured_path, simulated_path, plot_path):
                     for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
                 ],
                 "Units": f"{DEGREE_SIGN}F",
-                "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+                "Colors": list(RED_BLUE_DIVERGING_PALLETTE),
                 "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
                 "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
             },
