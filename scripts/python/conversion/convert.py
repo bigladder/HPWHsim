@@ -6,7 +6,7 @@ from pathlib import Path
 
 setpointT_C = 51.1
 initialTankT_C = 51.1
-initTime_min = 0
+initTime_min = -10
 numRowsPerMin = 1
 numTankTs = 6
 tankTsOrder = -1
