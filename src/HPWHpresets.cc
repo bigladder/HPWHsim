@@ -4543,7 +4543,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         resistiveElementTop->setupAsResistiveElement(9, 5000.);
-        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(30.)));
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(34.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
