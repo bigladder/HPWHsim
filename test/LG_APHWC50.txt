@@ -104,7 +104,7 @@ heatsource 2 coilConfig wrapped
 
 
 #this might be better as the 5/6 layer at 20F below setpoint
-heatsource 0 onlogic topThird 30.0 F
+heatsource 0 onlogic topThird 34.0 F
 
 heatsource 2 onlogic bottomThird 45.0 F 
 heatsource 2 onlogic standby 9.0 F
