@@ -3326,7 +3326,785 @@ void HPWH::initPreset(const std::string& modelName)
 #ifndef HPWH_ABRIDGED
 void HPWH::initFromFile(string modelName)
 {
-    send_error(fmt::format("Text file input ({}) is no longer supported.\n", modelName.c_str()));
+    std::string configFile = modelName + ".txt";
+
+    setAllDefaults(); // reset all defaults if you're re-initializing
+
+    // open file, check and report errors
+    std::ifstream inputFILE;
+    inputFILE.open(configFile.c_str());
+    if (!inputFILE.is_open())
+    {
+        send_error("Input file failed to open.");
+    }
+    name = modelName;
+
+    nlohmann::json j; // assign file params to JSON
+
+    // some variables that will be handy
+    std::size_t heatsource, sourceNum, nTemps, tempInt;
+    std::size_t num_nodes = 0, numHeatSources = 0;
+
+    string tempString, units;
+    double tempDouble;
+
+    // being file processing, line by line
+    string line_s;
+    std::stringstream line_ss;
+    string token;
+    while (std::getline(inputFILE, line_s))
+    {
+        line_ss.clear();
+        line_ss.str(line_s);
+
+        // grab the first word, and start comparing
+        token = "";
+        line_ss >> token;
+        if (line_s.empty() || (token.length() == 0))
+        {
+            continue;
+        }
+        if (token.at(0) == '#')
+        {
+            // if you hit a comment, skip to next line
+            continue;
+        }
+        else if (token == "numNodes")
+        {
+            line_ss >> num_nodes;
+            j["tank"]["performance"]["number_of_nodes"] = num_nodes;
+        }
+        else if (token == "volume")
+        {
+            line_ss >> tempDouble >> units;
+            if (units == "gal")
+                j["tank"]["performance"]["volume"] = GAL_TO_L(tempDouble);
+            else if (units == "L")
+                j["tank"]["performance"]["volume"] = tempDouble; // do nothing, lol
+            else
+            {
+                send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
+            }
+        }
+        else if (token == "UA")
+        {
+            line_ss >> tempDouble >> units;
+            if (units != "kJperHrC")
+            {
+                send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
+            }
+            //tank->setUA_kJperHrC(tempDouble);
+            j["tank"]["performance"]["ua"] = tempDouble;
+        }
+        else if (token == "depressTemp")
+        {
+            line_ss >> tempString;
+            if (tempString == "true")
+            {
+                j["do_temperature_depression"] = true;
+            }
+            else if (tempString == "false")
+            {
+                j["do_temperature_depression"] = false;
+            }
+            else
+            {
+                send_error(fmt::format("Improper value for {}", token.c_str()));
+            }
+        }
+        else if (token == "mixOnDraw")
+        {
+            line_ss >> tempString;
+            if (tempString == "true")
+            {
+                j["mix_on_draw"] = true;//tank->mixesOnDraw = true;
+            }
+            else if (tempString == "false")
+            {
+                j["mix_on_draw"] = false;
+            }
+            else
+            {
+                send_error(fmt::format("Improper value for {}.", token.c_str()));
+            }
+        }
+        else if (token == "mixBelowFractionOnDraw")
+        {
+            line_ss >> tempDouble;
+            if (tempDouble < 0 || tempDouble > 1)
+            {
+                send_error(fmt::format("Out of bounds value for {}. Should be between 0 and 1.",
+                                       token.c_str()));
+            }
+            //tank->mixBelowFractionOnDraw = tempDouble;
+            j["mix_on_draw"] = tempDouble;
+        }
+        else if (token == "setpoint")
+        {
+            line_ss >> tempDouble >> units;
+            if (units == "C")
+                j["setpoint"] = tempDouble;
+            else if (units == "F")
+                j["setpoint"] = F_TO_C(tempDouble);
+            else
+                send_warning(fmt::format("Invalid units: {}", token));
+
+            //setpoint_C = tempDouble;
+        }
+        else if (token == "setpointFixed")
+        {
+            line_ss >> tempString;
+            if (tempString == "true")
+                j["setpoint_fixed"] = true;//setpointFixed = true;
+            else if (tempString == "false")
+                j["setpoint_fixed"] = false;
+            else
+            {
+                send_error(fmt::format("Improper value for {}", token.c_str()));
+            }
+        }
+        else if (token == "initialTankTemp")
+        {
+            line_ss >> tempDouble >> units;
+            if (units == "C")
+            {
+                j["initial_tank_temperature"] = tempDouble;
+            }
+            else if (units == "F")
+                j["initial_tank_temperature"] = F_TO_C(tempDouble);
+            else
+                send_warning(fmt::format("Invalid units: {}", token));
+        }
+        else if (token == "hasHeatExchanger")
+        {
+            // false of this model uses heat exchange
+            line_ss >> tempString;
+            if (tempString == "true")
+                j["tank"]["has_heat_exchanger"] = true;//tank->hasHeatExchanger = true;
+            else if (tempString == "false")
+                j["tank"]["has_heat_exchanger"] = false;//tank->hasHeatExchanger = false;
+            else
+            {
+                send_error(fmt::format("Improper value for {}", token.c_str()));
+            }
+        }
+        else if (token == "heatExchangerEffectiveness")
+        {
+            // applies to heat-exchange models only
+            line_ss >> tempDouble;
+            //tank->heatExchangerEffectiveness = tempDouble;
+            j["tank"]["heat_exchanger_effectiveness"] = tempDouble;
+        }
+        else if (token == "verbosity")
+        {
+        }
+
+        else if (token == "numHeatSources")
+        {
+            line_ss >> numHeatSources;
+            //heatSources.reserve(numHeatSources);
+            j["performance"]["heat_source_configurations"] = nlohmann::json::array({});
+            for (std::size_t i = 0; i < numHeatSources; i++)
+            {
+                //addHeatSource(fmt::format("heat source {:d}", i));
+            }
+
+            //j["performance"]["heat_source_configurations"] = tank->hasHeatExchanger;
+        }
+        else if (token == "heatsource")
+        {
+            if (numHeatSources == 0)
+            {
+                send_error(
+                    "You must specify the number of heat sources before setting their properties.");
+            }
+            line_ss >> heatsource >> token;
+            nlohmann::json j_heatsourceconfig = j["performance"]["heat_source_configurations"][heatsource];
+            if (token == "isVIP")
+            {
+                line_ss >> tempString;
+                if (tempString == "true")
+                    j_heatsourceconfig["is_vip"] = true;//heatSources[heatsource]->isVIP = true;
+                else if (tempString == "false")
+                    j_heatsourceconfig["is_vip"] = false;//heatSources[heatsource]->isVIP = false;
+                else
+                {
+                    send_error(fmt::format(
+                        "Improper value for for heat source.", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "isOn")
+            {
+                line_ss >> tempString;
+                if (tempString == "true")
+                    j_heatsourceconfig["is_on"] = true;//heatSources[heatsource]->isOn = true;
+                else if (tempString == "false")
+                    j_heatsourceconfig = false;
+                else
+                {
+                    send_error(fmt::format(
+                        "Improper value for for heat source.", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "minT")
+            {
+                line_ss >> tempDouble >> units;
+                j_heatsourceconfig[heatsource]["minT"] = tempDouble;//heatSources[heatsource]->minT = tempDouble;
+                if (units == "C")
+                    ;
+                else if (units == "F")
+                    j_heatsourceconfig[heatsource]["minT"] = F_TO_C(tempDouble);
+                else
+                    send_warning(fmt::format("Invalid units: {}", token));
+            }
+            else if (token == "maxT")
+            {
+                line_ss >> tempDouble >> units;
+                j_heatsourceconfig[heatsource]["maxT"]  = tempDouble;//heatSources[heatsource]->maxT = tempDouble;
+                if (units == "C")
+                    ;
+                else if (units == "F")
+                    j_heatsourceconfig[heatsource]["maxT"] = F_TO_C(tempDouble);
+                else
+                    send_warning("Invalid units.");
+            }
+            else if (token == "onlogic" || token == "offlogic" || token == "standbylogic")
+            {
+                nlohmann::json j_logic;
+                line_ss >> tempString;
+                if (tempString == "nodes")
+                {
+                    j_logic["heating_logic_type"] = "TEMPERATURE_BASED";
+                    std::vector<int> nodeNums;
+                    std::vector<double> weights;
+                    std::string nextToken;
+                    line_ss >> nextToken;
+                    while (std::regex_match(nextToken, std::regex("\\d+")))
+                    {
+                        int nodeNum = std::stoi(nextToken);
+                        if (nodeNum > LOGIC_SIZE + 1 || nodeNum < 0)
+                        {
+                            send_error(fmt::format(
+                                "Node number for heat source {:d} {} must be between 0 and {:d}.",
+                                heatsource,
+                                token.c_str(),
+                                LOGIC_SIZE + 1));
+                        }
+                        nodeNums.push_back(nodeNum);
+                        line_ss >> nextToken;
+                    }
+                    if (nextToken == "weights")
+                    {
+                        line_ss >> nextToken;
+                        while (std::regex_match(nextToken, std::regex("-?\\d*\\.\\d+(?:e-?\\d+)?")))
+                        {
+                            weights.push_back(std::stod(nextToken));
+                            line_ss >> nextToken;
+                        }
+                    }
+                    else
+                    {
+                        for ([[maybe_unused]] auto n : nodeNums)
+                        {
+                            weights.push_back(1.0);
+                        }
+                    }
+                    if (nodeNums.size() != weights.size())
+                    {
+                        send_error(fmt::format(
+                            "Number of weights for heatsource {:d} {} ({:d}) does not match number "
+                            "of nodes for {} ({:d}).",
+                            heatsource,
+                            token.c_str(),
+                            weights.size(),
+                            token.c_str(),
+                            nodeNums.size()));
+                    }
+                    j_logic["node_nums"] = nodeNums;
+                    j_logic["node_weights"] = weights;
+                    if (nextToken != "absolute" && nextToken != "relative")
+                    {
+                        send_error(fmt::format(
+                            "Improper definition, \"{}\", for heat source {:d} {}. Should be "
+                            "\"relative\" or \"absolute\".",
+                            nextToken.c_str(),
+                            heatsource,
+                            token.c_str()));
+                    }
+                    bool absolute = (nextToken == "absolute");
+                    std::string compareStr;
+                    line_ss >> compareStr >> tempDouble >> units;
+                    std::function<bool(double, double)> compare;
+                    if (compareStr == "<")
+                        j_logic["comparison_type"] = "LESS_THAN";
+                        //compare = std::less<>();
+                    else if (compareStr == ">")
+                        j_logic["comparison_type"] = "GREATER_THAN";
+                        //compare = std::greater<>();
+                    else
+                    {
+                        send_error(fmt::format(
+                            "Improper comparison, \"{}\", for heat source {:d} {}. Should be "
+                            "\"<\" or \">\".\n",
+                            compareStr.c_str(),
+                            heatsource,
+                            token.c_str()));
+                    }
+                    if (units == "C")
+                    {
+                        if (absolute)
+                            j_logic["absolute_temperature"] = tempDouble;
+                        else
+                            j_logic["differential_temperature"] = tempDouble;
+                    }
+                    else if (units == "F")
+                    {
+                        if (absolute)
+                            j_logic["absolute_temperature"]  = F_TO_C(tempDouble);
+                        else
+                            j_logic["differential_temperature"]  = dF_TO_dC(tempDouble);
+                    }
+                    else
+                        send_warning(fmt::format("Invalid units: {}", token));
+
+                    std::vector<NodeWeight> nodeWeights;
+                    for (size_t i = 0; i < nodeNums.size(); i++)
+                    {
+                        nodeWeights.emplace_back(nodeNums[i], weights[i]);
+                    }
+                    std::shared_ptr<HPWH::TempBasedHeatingLogic> logic =
+                        std::make_shared<HPWH::TempBasedHeatingLogic>(
+                            "custom", nodeWeights, tempDouble, this, absolute, compare);
+                    if (token == "onlogic")
+                    {
+
+                        j_heatsourceconfig["turn_on_logic"].push_back(j_logic);
+                        //heatSources[heatsource]->addTurnOnLogic(logic);
+                    }
+                    else if (token == "offlogic")
+                    {
+                        j_heatsourceconfig["shut_off_logic"].push_back(j_logic);
+                        //heatSources[heatsource]->addShutOffLogic(std::move(logic));
+                    }
+                    else
+                    { // standby logic
+                        j_heatsourceconfig["standby_logic"] = j_logic;
+                        //heatSources[heatsource]->standbyLogic =
+                        //    std::make_shared<HPWH::TempBasedHeatingLogic>(
+                        //        "standby logic", nodeWeights, tempDouble, this, absolute, compare);
+                    }
+                }
+                else if (token == "onlogic")
+                {
+                    j_logic["heating_logic_type"] = "TEMPERATURE_BASED";
+                    std::string nextToken;
+                    line_ss >> nextToken;
+                    bool absolute = (nextToken == "absolute");
+                    if (absolute)
+                    {
+                        std::string compareStr;
+                        line_ss >> compareStr >> tempDouble >> units;
+                        std::function<bool(double, double)> compare;
+                        if (compareStr == "<")
+                            j_logic["comparison_type"] = "LESS_THAN";
+                            //compare = std::less<>();
+                        else if (compareStr == ">")
+                            j_logic["comparison_type"] = "GREATER_THAN";
+                            //compare = std::greater<>();
+                        else
+                        {
+                            send_error(fmt::format(
+                                "Improper comparison, \"{}\", for heat source {:d} {}. Should be "
+                                "\"<\" or \">\".",
+                                compareStr.c_str(),
+                                heatsource,
+                                token.c_str()));
+                        }
+                        line_ss >> tempDouble;
+                    }
+                    else
+                    {
+                        tempDouble = std::stod(nextToken);
+                    }
+
+                    line_ss >> units;
+                    if (units == "C")
+                    {
+                        if (absolute)
+                            j_logic["absolute_temperature"] = tempDouble;
+                        else
+                            j_logic["differential_temperature"] = tempDouble;
+                    }
+                    else if (units == "F")
+                    {
+                        if (absolute)
+                            j_logic["absolute_temperature"] = F_TO_C(tempDouble);
+                        else
+                            j_logic["differential_temperature"] = dF_TO_dC(tempDouble);
+                    }
+                    else
+                        send_warning(fmt::format("Invalid units: {}", token));
+
+                    std::shared_ptr<HPWH::TempBasedHeatingLogic> logic;
+                    if (tempString == "wholeTank")
+                    {
+                        logic = wholeTank(tempDouble, UNITS_C, absolute);
+                    }
+                    else if (tempString == "topThird")
+                    {
+                        logic = topThird(tempDouble);
+                     }
+                    else if (tempString == "bottomThird")
+                    {
+                        logic = bottomThird(tempDouble);
+                    }
+                    else if (tempString == "standby")
+                    {
+                        logic = standby(tempDouble);
+                    }
+                    else if (tempString == "bottomSixth")
+                    {
+                        logic = bottomSixth(tempDouble);
+                    }
+                    else if (tempString == "secondSixth")
+                    {
+                        logic = secondSixth(tempDouble);
+                    }
+                    else if (tempString == "thirdSixth")
+                    {
+                        logic = thirdSixth(tempDouble);
+                    }
+                    else if (tempString == "fourthSixth")
+                    {
+                        logic = fourthSixth(tempDouble);
+                    }
+                    else if (tempString == "fifthSixth")
+                    {
+                        logic = fifthSixth(tempDouble);
+                    }
+                    else if (tempString == "topSixth")
+                    {
+                        logic = topSixth(tempDouble);
+                    }
+                    else if (tempString == "bottomHalf")
+                    {
+                        logic = bottomHalf(tempDouble);
+                    }
+                    else
+                    {
+                        send_error(fmt::format(
+                            "Improper {} for heat source {:d}", token.c_str(), heatsource));
+                    }
+                    for(auto& node: logic->nodeWeights)
+                    {
+                        j_logic["node_nums"].push_back(node.nodeNum);
+                        j_logic["node_weights"].push_back(node.weight);
+                    }
+                    j_heatsourceconfig["turn_on_logic"].push_back(j_logic);
+
+                }
+                else if (token == "offlogic")
+                {
+                    line_ss >> tempDouble >> units;
+                    if (units == "C")
+                        ;
+                    else if (units == "F")
+                    {
+                        tempDouble = F_TO_C(tempDouble);
+                    }
+                    else
+                        send_warning(fmt::format("Invalid units: {}", token));
+
+                    std::shared_ptr<HPWH::TempBasedHeatingLogic> logic;
+                    if (tempString == "topNodeMaxTemp")
+                    {
+                        logic = topNodeMaxTemp(tempDouble);
+                    }
+                    else if (tempString == "bottomNodeMaxTemp")
+                    {
+                        logic = bottomNodeMaxTemp(tempDouble);
+                    }
+                    else if (tempString == "bottomTwelfthMaxTemp")
+                    {
+                        logic = bottomTwelfthMaxTemp(tempDouble);
+                    }
+                    else if (tempString == "bottomSixthMaxTemp")
+                    {
+                        logic = bottomSixthMaxTemp(tempDouble);
+                    }
+                    else if (tempString == "largeDraw")
+                    {
+                        logic = largeDraw(tempDouble);
+                    }
+                    else if (tempString == "largerDraw")
+                    {
+                        logic = largerDraw(tempDouble);
+                    }
+                    else
+                    {
+                        send_error(fmt::format(
+                            "Improper {} for heat source {:d}", token.c_str(), heatsource));
+                    }
+                }
+            }
+            else if (token == "type")
+            {
+                line_ss >> tempString;
+                if (tempString == "resistor")
+                {
+                    j_heatsourceconfig["heat_source_type"] = "RESISTANCE";//heatSources[heatsource]->typeOfHeatSource = TYPE_resistance;
+                }
+                else if (tempString == "compressor")
+                {
+                    j_heatsourceconfig["heat_source_type"] = "CONDENSER";//TYPE_compressor;
+                }
+                else
+                {
+                    send_error(
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "coilConfig")
+            {
+                line_ss >> tempString;
+                if (tempString == "wrapped")
+                {
+                    j_heatsourceconfig["coil_cofiguration"] = "WRAPPED"; //heatSources[heatsource]->configuration = HeatSource::CONFIG_WRAPPED;
+                }
+                else if (tempString == "submerged")
+                {
+                    j_heatsourceconfig["coil_cofiguration"] = "SUBMERGED";
+                }
+                else if (tempString == "external")
+                {
+                    j_heatsourceconfig["coil_cofiguration"] = "EXTERNAL";
+                }
+                else
+                {
+                    send_error(
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "heatCycle")
+            {
+                line_ss >> tempString;
+                if (tempString == "singlepass")
+                {
+                    j_heatsourceconfig["is_multipass"] = false;
+                    //heatSources[heatsource]->isMultipass = false;
+                }
+                else if (tempString == "multipass")
+                {
+                    j_heatsourceconfig["is_multipass"] = true;
+                    //heatSources[heatsource]->isMultipass = true;
+                }
+                else
+                {
+                    send_error(
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                }
+            }
+
+            else if (token == "externalInlet")
+            {
+                line_ss >> tempInt;
+                if (tempInt < num_nodes)
+                {
+                    j_heatsourceconfig["external_inlet_height"] = static_cast<int>(tempInt);
+                    //heatSources[heatsource]->externalInletHeight = static_cast<int>(tempInt);
+                }
+                else
+                {
+                    send_error(
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "externalOutlet")
+            {
+                line_ss >> tempInt;
+                if (tempInt < num_nodes)
+                {
+                    j_heatsourceconfig["external_outlet_height"] = static_cast<int>(tempInt);
+                    //heatSources[heatsource]->externalOutletHeight = static_cast<int>(tempInt);
+                }
+                else
+                {
+                    send_error(
+                        fmt::format("Improper {} for heat source {:d}", token.c_str(), heatsource));
+                }
+            }
+            else if (token == "condensity")
+            {
+                double x;
+                std::vector<double> condensity;
+                while (line_ss >> x)
+                    condensity.push_back(x);
+                //heatSources[heatsource]->setCondensity(condensity);
+                j_heatsourceconfig["heat_distribution"] = condensity;
+            }
+            else if (token == "nTemps")
+            {
+                line_ss >> nTemps;
+                j_heatsourceconfig["performance_points"] = nlohmann::json::array({});
+            }
+            else if (std::regex_match(token, std::regex("T\\d+")))
+            {
+                std::smatch match;
+                std::regex_match(token, match, std::regex("T(\\d+)"));
+                std::size_t nTemp = std::stoi(match[1].str());
+                //std::size_t maxTemps = heatSources[heatsource]->perfMap.size();
+
+                if (nTemp > nTemps)
+                {
+                    if (nTemps == 0)
+                    {
+                        send_error(fmt::format(
+                            "{} specified for heat source {:d} before definition of nTemps.",
+                            token.c_str(),
+                            heatsource));
+                    }
+                    else
+                    {
+                        send_error(fmt::format(
+                            "Incorrect specification for {} from heat source {:d}. nTemps, {}, is "
+                            "less than {}.  \n",
+                            token.c_str(),
+                            heatsource,
+                            nTemps,
+                            nTemp));
+                    }
+                }
+                line_ss >> tempDouble >> units;
+                if (units == "C")
+                {
+                    tempDouble = C_TO_F(tempDouble);
+                }
+                else if (units == "F")
+                {
+                }
+                else
+                    send_warning(fmt::format("Invalid units: {}", token));
+
+                j_heatsourceconfig["performance_points"][nTemps - 1]["evaporator_temperature"] = tempDouble;
+                //heatSources[heatsource]->perfMap[nTemps - 1].T_F = tempDouble;
+            }
+            else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
+            {
+                std::smatch match;
+                std::regex_match(token, match, std::regex("(inPow|cop)T(\\d+)(const|lin|quad)"));
+                string var = match[1].str();
+                std::size_t nTemp = std::stoi(match[2].str());
+                string coeff = match[3].str();
+
+                //std::size_t maxTemps = heatSources[heatsource]->perfMap.size();
+
+                if (nTemp > nTemps)
+                {
+                    if (nTemps == 0)
+                    {
+                        send_error(fmt::format(
+                            "{} specified for heat source {:d} before definition of nTemps.",
+                            token.c_str(),
+                            heatsource));
+                    }
+                    else
+                    {
+                        send_error(fmt::format("Incorrect specification for {} from heat source "
+                                               "{:d}. nTemps, {:d}, is "
+                                               "less than {:d}.  \n",
+                                               token.c_str(),
+                                               heatsource,
+                                               nTemps,
+                                               nTemp));
+                    }
+                }
+                line_ss >> tempDouble;
+
+                if (var == "inPow")
+                {
+                    j_heatsourceconfig["performance_points"]["power_coefficients"].push_back(tempDouble);
+                    //heatSources[heatsource]->perfMap[nTemps - 1].inputPower_coeffs.push_back(
+                     //   tempDouble);
+                }
+                else if (var == "cop")
+                {
+                    j_heatsourceconfig["performance_points"]["cop_coefficients"].push_back(tempDouble);
+                    //heatSources[heatsource]->perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
+                }
+            }
+            else if (token == "hysteresis")
+            {
+                line_ss >> tempDouble >> units;
+                if (units == "C")
+                    ;
+                else if (units == "F")
+                {
+                    tempDouble = dF_TO_dC(tempDouble);
+                }
+                else
+                    send_warning(fmt::format("Invalid units: {}", token));
+
+                j_heatsourceconfig["temperature_hysteresis"] = tempDouble;
+                //heatSources[heatsource]->hysteresis_dC = tempDouble;
+            }
+            else if (token == "backupSource")
+            {
+                line_ss >> sourceNum;
+                j_heatsourceconfig["backup_heat_source_index"] = sourceNum;
+                //heatSources[heatsource]->backupHeatSource = heatSources[sourceNum].get();
+            }
+            else if (token == "companionSource")
+            {
+                line_ss >> sourceNum;
+                j_heatsourceconfig["companion_heat_source_index"] = sourceNum;
+                //heatSources[heatsource]->companionHeatSource = heatSources[sourceNum].get();
+            }
+            else if (token == "followedBySource")
+            {
+                line_ss >> sourceNum;
+                j_heatsourceconfig["followed_by_heat_source_index"] = sourceNum;
+                //heatSources[heatsource]->followedByHeatSource = heatSources[sourceNum].get();
+            }
+            else
+            {
+                send_error(fmt::format(
+                    "Improper specifier ({:d}) for heat source {:g}", token.c_str(), heatsource));
+            }
+
+            j["heat_source_configurations"].push_back(j_heatsourceconfig);
+        } // end heatsource options
+        else
+        {
+            send_error(fmt::format("Improper keyword: {}", token.c_str()));
+        }
+
+    } // end while over lines
+
+    /*
+    // take care of the non-input processing
+    model = MODELS_CustomFile;
+
+    tank->setNumNodes(num_nodes);
+
+    if (hasInitialTankTemp)
+        setTankToTemperature(initialTankT_C);
+    else
+        resetTankToSetpoint();
+
+    isHeating = false;
+    for (int i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i]->isOn)
+        {
+            isHeating = true;
+        }
+        heatSources[i]->sortPerformanceMap();
+    }
+*/
+    j.dump(2);
+    calcDerivedValues();
+
+    checkInputs();
 }
 
 void HPWH::initFromJSON(string sModelName)
@@ -3339,17 +4117,6 @@ void HPWH::initFromJSON(string sModelName)
     hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
     from(rswh);
 }
-
-/*
-void HPWH::initFromJSON(MODELS modelNumber)
-{
-    if (modelMap.contains(modelNumber))
-    {
-        std::string sModelName = modelMap[modelNumber];
-        initFromJSON(sModelName);
-    }
-}
-*/
 
 #endif
 

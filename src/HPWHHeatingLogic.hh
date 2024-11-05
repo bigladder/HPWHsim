@@ -112,11 +112,12 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
 
     void to(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const override;
 
+    bool isAbsolute;
+    std::vector<NodeWeight> nodeWeights;
+
   private:
     bool areNodeWeightsValid();
 
-    bool isAbsolute;
-    std::vector<NodeWeight> nodeWeights;
 };
 
 #endif
