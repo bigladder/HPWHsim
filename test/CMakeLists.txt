@@ -356,7 +356,6 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
-
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     set(model BradfordWhiteAeroThermRE2H${size})
