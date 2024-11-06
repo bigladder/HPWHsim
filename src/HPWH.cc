@@ -3341,6 +3341,8 @@ void HPWH::initFromFile(string modelName)
 
     nlohmann::json j; // assign file params to JSON
 
+    nlohmann::json j_tank({});
+    nlohmann::json j_heatsourceconfigs = nlohmann::json::array({});
     // some variables that will be handy
     std::size_t heatsource, sourceNum, nTemps, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
@@ -3360,6 +3362,8 @@ void HPWH::initFromFile(string modelName)
         // grab the first word, and start comparing
         token = "";
         line_ss >> token;
+
+
         if (line_s.empty() || (token.length() == 0))
         {
             continue;
@@ -3372,15 +3376,15 @@ void HPWH::initFromFile(string modelName)
         else if (token == "numNodes")
         {
             line_ss >> num_nodes;
-            j["tank"]["performance"]["number_of_nodes"] = num_nodes;
+            j_tank["number_of_nodes"] = num_nodes;
         }
         else if (token == "volume")
         {
             line_ss >> tempDouble >> units;
             if (units == "gal")
-                j["tank"]["performance"]["volume"] = GAL_TO_L(tempDouble);
+                j_tank["volume"] = GAL_TO_L(tempDouble);
             else if (units == "L")
-                j["tank"]["performance"]["volume"] = tempDouble; // do nothing, lol
+                j_tank["volume"] = tempDouble; // do nothing, lol
             else
             {
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
@@ -3394,18 +3398,18 @@ void HPWH::initFromFile(string modelName)
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
             }
             //tank->setUA_kJperHrC(tempDouble);
-            j["tank"]["performance"]["ua"] = tempDouble;
+            j_tank["ua"] = tempDouble;
         }
         else if (token == "depressTemp")
         {
             line_ss >> tempString;
             if (tempString == "true")
             {
-                j["do_temperature_depression"] = true;
+                j_tank["do_temperature_depression"] = true;
             }
             else if (tempString == "false")
             {
-                j["do_temperature_depression"] = false;
+                j_tank["do_temperature_depression"] = false;
             }
             else
             {
@@ -3417,11 +3421,11 @@ void HPWH::initFromFile(string modelName)
             line_ss >> tempString;
             if (tempString == "true")
             {
-                j["mix_on_draw"] = true;//tank->mixesOnDraw = true;
+                j_tank["mix_on_draw"] = true;//tank->mixesOnDraw = true;
             }
             else if (tempString == "false")
             {
-                j["mix_on_draw"] = false;
+                j_tank["mix_on_draw"] = false;
             }
             else
             {
@@ -3436,28 +3440,25 @@ void HPWH::initFromFile(string modelName)
                 send_error(fmt::format("Out of bounds value for {}. Should be between 0 and 1.",
                                        token.c_str()));
             }
-            //tank->mixBelowFractionOnDraw = tempDouble;
-            j["mix_on_draw"] = tempDouble;
+            j_tank["mix_below_fraction_on_draw"] = tempDouble;
         }
         else if (token == "setpoint")
         {
             line_ss >> tempDouble >> units;
             if (units == "C")
-                j["setpoint"] = tempDouble;
+                j_tank["setpoint"] = tempDouble;
             else if (units == "F")
-                j["setpoint"] = F_TO_C(tempDouble);
+                j_tank["setpoint"] = F_TO_C(tempDouble);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
-
-            //setpoint_C = tempDouble;
         }
         else if (token == "setpointFixed")
         {
             line_ss >> tempString;
             if (tempString == "true")
-                j["setpoint_fixed"] = true;//setpointFixed = true;
+                j_tank["setpoint_fixed"] = true;//setpointFixed = true;
             else if (tempString == "false")
-                j["setpoint_fixed"] = false;
+                j_tank["setpoint_fixed"] = false;
             else
             {
                 send_error(fmt::format("Improper value for {}", token.c_str()));
@@ -3468,10 +3469,10 @@ void HPWH::initFromFile(string modelName)
             line_ss >> tempDouble >> units;
             if (units == "C")
             {
-                j["initial_tank_temperature"] = tempDouble;
+                j_tank["initial_temperature"] = tempDouble;
             }
             else if (units == "F")
-                j["initial_tank_temperature"] = F_TO_C(tempDouble);
+                j_tank["initial_temperature"] = F_TO_C(tempDouble);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
         }
@@ -3480,9 +3481,9 @@ void HPWH::initFromFile(string modelName)
             // false of this model uses heat exchange
             line_ss >> tempString;
             if (tempString == "true")
-                j["tank"]["has_heat_exchanger"] = true;//tank->hasHeatExchanger = true;
+                j_tank["has_heat_exchanger"] = true;//tank->hasHeatExchanger = true;
             else if (tempString == "false")
-                j["tank"]["has_heat_exchanger"] = false;//tank->hasHeatExchanger = false;
+                j_tank["has_heat_exchanger"] = false;//tank->hasHeatExchanger = false;
             else
             {
                 send_error(fmt::format("Improper value for {}", token.c_str()));
@@ -3492,8 +3493,7 @@ void HPWH::initFromFile(string modelName)
         {
             // applies to heat-exchange models only
             line_ss >> tempDouble;
-            //tank->heatExchangerEffectiveness = tempDouble;
-            j["tank"]["heat_exchanger_effectiveness"] = tempDouble;
+            j_tank["heat_exchanger_effectiveness"] = tempDouble;
         }
         else if (token == "verbosity")
         {
@@ -3502,14 +3502,6 @@ void HPWH::initFromFile(string modelName)
         else if (token == "numHeatSources")
         {
             line_ss >> numHeatSources;
-            //heatSources.reserve(numHeatSources);
-            j["performance"]["heat_source_configurations"] = nlohmann::json::array({});
-            for (std::size_t i = 0; i < numHeatSources; i++)
-            {
-                //addHeatSource(fmt::format("heat source {:d}", i));
-            }
-
-            //j["performance"]["heat_source_configurations"] = tank->hasHeatExchanger;
         }
         else if (token == "heatsource")
         {
@@ -3519,14 +3511,14 @@ void HPWH::initFromFile(string modelName)
                     "You must specify the number of heat sources before setting their properties.");
             }
             line_ss >> heatsource >> token;
-            nlohmann::json j_heatsourceconfig = j["performance"]["heat_source_configurations"][heatsource];
+            //nlohmann::json& j_heatsourceconfig = j_heatsourceconfigs[heatsource];
             if (token == "isVIP")
             {
                 line_ss >> tempString;
                 if (tempString == "true")
-                    j_heatsourceconfig["is_vip"] = true;//heatSources[heatsource]->isVIP = true;
+                    j_heatsourceconfigs[heatsource]["is_vip"] = true;//heatSources[heatsource]->isVIP = true;
                 else if (tempString == "false")
-                    j_heatsourceconfig["is_vip"] = false;//heatSources[heatsource]->isVIP = false;
+                    j_heatsourceconfigs[heatsource]["is_vip"] = false;//heatSources[heatsource]->isVIP = false;
                 else
                 {
                     send_error(fmt::format(
@@ -3537,9 +3529,9 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempString;
                 if (tempString == "true")
-                    j_heatsourceconfig["is_on"] = true;//heatSources[heatsource]->isOn = true;
+                    j_heatsourceconfigs[heatsource]["is_on"] = true;//heatSources[heatsource]->isOn = true;
                 else if (tempString == "false")
-                    j_heatsourceconfig = false;
+                    j_heatsourceconfigs[heatsource]["is_on"] = false;
                 else
                 {
                     send_error(fmt::format(
@@ -3549,22 +3541,20 @@ void HPWH::initFromFile(string modelName)
             else if (token == "minT")
             {
                 line_ss >> tempDouble >> units;
-                j_heatsourceconfig[heatsource]["minT"] = tempDouble;//heatSources[heatsource]->minT = tempDouble;
                 if (units == "C")
-                    ;
+                    j_heatsourceconfigs[heatsource]["minT"] = tempDouble;
                 else if (units == "F")
-                    j_heatsourceconfig[heatsource]["minT"] = F_TO_C(tempDouble);
+                    j_heatsourceconfigs[heatsource]["minT"] = F_TO_C(tempDouble);
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
             }
             else if (token == "maxT")
             {
                 line_ss >> tempDouble >> units;
-                j_heatsourceconfig[heatsource]["maxT"]  = tempDouble;//heatSources[heatsource]->maxT = tempDouble;
                 if (units == "C")
-                    ;
+                    j_heatsourceconfigs[heatsource]["maxT"] = tempDouble;
                 else if (units == "F")
-                    j_heatsourceconfig[heatsource]["maxT"] = F_TO_C(tempDouble);
+                    j_heatsourceconfigs[heatsource]["maxT"] =  F_TO_C(tempDouble);
                 else
                     send_warning("Invalid units.");
             }
@@ -3678,17 +3668,17 @@ void HPWH::initFromFile(string modelName)
                     if (token == "onlogic")
                     {
 
-                        j_heatsourceconfig["turn_on_logic"].push_back(j_logic);
+                        j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
                         //heatSources[heatsource]->addTurnOnLogic(logic);
                     }
                     else if (token == "offlogic")
                     {
-                        j_heatsourceconfig["shut_off_logic"].push_back(j_logic);
+                        j_heatsourceconfigs[heatsource]["shut_off_logic"].push_back(j_logic);
                         //heatSources[heatsource]->addShutOffLogic(std::move(logic));
                     }
                     else
                     { // standby logic
-                        j_heatsourceconfig["standby_logic"] = j_logic;
+                        j_heatsourceconfigs[heatsource]["standby_logic"] = j_logic;
                         //heatSources[heatsource]->standbyLogic =
                         //    std::make_shared<HPWH::TempBasedHeatingLogic>(
                         //        "standby logic", nodeWeights, tempDouble, this, absolute, compare);
@@ -3800,7 +3790,7 @@ void HPWH::initFromFile(string modelName)
                         j_logic["node_nums"].push_back(node.nodeNum);
                         j_logic["node_weights"].push_back(node.weight);
                     }
-                    j_heatsourceconfig["turn_on_logic"].push_back(j_logic);
+                    j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
 
                 }
                 else if (token == "offlogic")
@@ -3852,11 +3842,11 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "resistor")
                 {
-                    j_heatsourceconfig["heat_source_type"] = "RESISTANCE";//heatSources[heatsource]->typeOfHeatSource = TYPE_resistance;
+                    j_heatsourceconfigs[heatsource]["heat_source_type"] = "RESISTANCE";//heatSources[heatsource]->typeOfHeatSource = TYPE_resistance;
                 }
                 else if (tempString == "compressor")
                 {
-                    j_heatsourceconfig["heat_source_type"] = "CONDENSER";//TYPE_compressor;
+                    j_heatsourceconfigs[heatsource]["heat_source_type"] = "CONDENSER";//TYPE_compressor;
                 }
                 else
                 {
@@ -3869,15 +3859,15 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "wrapped")
                 {
-                    j_heatsourceconfig["coil_cofiguration"] = "WRAPPED"; //heatSources[heatsource]->configuration = HeatSource::CONFIG_WRAPPED;
+                    j_heatsourceconfigs[heatsource]["coil_cofiguration"] = "WRAPPED"; //heatSources[heatsource]->configuration = HeatSource::CONFIG_WRAPPED;
                 }
                 else if (tempString == "submerged")
                 {
-                    j_heatsourceconfig["coil_cofiguration"] = "SUBMERGED";
+                    j_heatsourceconfigs[heatsource]["coil_cofiguration"] = "SUBMERGED";
                 }
                 else if (tempString == "external")
                 {
-                    j_heatsourceconfig["coil_cofiguration"] = "EXTERNAL";
+                    j_heatsourceconfigs[heatsource]["coil_cofiguration"] = "EXTERNAL";
                 }
                 else
                 {
@@ -3890,13 +3880,11 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempString;
                 if (tempString == "singlepass")
                 {
-                    j_heatsourceconfig["is_multipass"] = false;
-                    //heatSources[heatsource]->isMultipass = false;
+                    j_heatsourceconfigs[heatsource]["is_multipass"] = false;
                 }
                 else if (tempString == "multipass")
                 {
-                    j_heatsourceconfig["is_multipass"] = true;
-                    //heatSources[heatsource]->isMultipass = true;
+                    j_heatsourceconfigs[heatsource]["is_multipass"] = true;
                 }
                 else
                 {
@@ -3910,7 +3898,7 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    j_heatsourceconfig["external_inlet_height"] = static_cast<int>(tempInt);
+                    j_heatsourceconfigs[heatsource]["external_inlet_height"] = static_cast<int>(tempInt);
                     //heatSources[heatsource]->externalInletHeight = static_cast<int>(tempInt);
                 }
                 else
@@ -3924,7 +3912,7 @@ void HPWH::initFromFile(string modelName)
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    j_heatsourceconfig["external_outlet_height"] = static_cast<int>(tempInt);
+                    j_heatsourceconfigs[heatsource]["external_outlet_height"] = static_cast<int>(tempInt);
                     //heatSources[heatsource]->externalOutletHeight = static_cast<int>(tempInt);
                 }
                 else
@@ -3940,12 +3928,12 @@ void HPWH::initFromFile(string modelName)
                 while (line_ss >> x)
                     condensity.push_back(x);
                 //heatSources[heatsource]->setCondensity(condensity);
-                j_heatsourceconfig["heat_distribution"] = condensity;
+                j_heatsourceconfigs[heatsource]["heat_distribution"] = condensity;
             }
             else if (token == "nTemps")
             {
                 line_ss >> nTemps;
-                j_heatsourceconfig["performance_points"] = nlohmann::json::array({});
+                j_heatsourceconfigs[heatsource]["performance_points"] = nlohmann::json::array({});
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
@@ -3985,7 +3973,7 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                j_heatsourceconfig["performance_points"][nTemps - 1]["evaporator_temperature"] = tempDouble;
+                j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["evaporator_temperature"] = tempDouble;
                 //heatSources[heatsource]->perfMap[nTemps - 1].T_F = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
@@ -4022,13 +4010,13 @@ void HPWH::initFromFile(string modelName)
 
                 if (var == "inPow")
                 {
-                    j_heatsourceconfig["performance_points"]["power_coefficients"].push_back(tempDouble);
+                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["power_coefficients"].push_back(tempDouble);
                     //heatSources[heatsource]->perfMap[nTemps - 1].inputPower_coeffs.push_back(
                      //   tempDouble);
                 }
                 else if (var == "cop")
                 {
-                    j_heatsourceconfig["performance_points"]["cop_coefficients"].push_back(tempDouble);
+                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["cop_coefficients"].push_back(tempDouble);
                     //heatSources[heatsource]->perfMap[nTemps - 1].COP_coeffs.push_back(tempDouble);
                 }
             }
@@ -4044,25 +4032,25 @@ void HPWH::initFromFile(string modelName)
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                j_heatsourceconfig["temperature_hysteresis"] = tempDouble;
+                j_heatsourceconfigs[heatsource]["temperature_hysteresis"] = tempDouble;
                 //heatSources[heatsource]->hysteresis_dC = tempDouble;
             }
             else if (token == "backupSource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfig["backup_heat_source_index"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["backup_heat_source_index"] = sourceNum;
                 //heatSources[heatsource]->backupHeatSource = heatSources[sourceNum].get();
             }
             else if (token == "companionSource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfig["companion_heat_source_index"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["companion_heat_source_index"] = sourceNum;
                 //heatSources[heatsource]->companionHeatSource = heatSources[sourceNum].get();
             }
             else if (token == "followedBySource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfig["followed_by_heat_source_index"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["followed_by_heat_source_index"] = sourceNum;
                 //heatSources[heatsource]->followedByHeatSource = heatSources[sourceNum].get();
             }
             else
@@ -4071,7 +4059,6 @@ void HPWH::initFromFile(string modelName)
                     "Improper specifier ({:d}) for heat source {:g}", token.c_str(), heatsource));
             }
 
-            j["heat_source_configurations"].push_back(j_heatsourceconfig);
         } // end heatsource options
         else
         {
@@ -4101,7 +4088,9 @@ void HPWH::initFromFile(string modelName)
         heatSources[i]->sortPerformanceMap();
     }
 */
-    j.dump(2);
+    j["tank"] = j_tank;
+    j["heat_source_configurations"] = j_heatsourceconfigs;
+    std::cout << j.dump(2);
     calcDerivedValues();
 
     checkInputs();

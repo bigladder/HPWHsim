@@ -1,0 +1,43 @@
+verbosity reluctant
+numNodes 12 #number of nodes
+setpoint 127 F
+volume 45.0 gal
+UA 6.33 kJperHrC
+depressTemp false
+mixOnDraw true
+numHeatSources 1
+
+heatsource 0 isVIP true
+heatsource 0 isOn false
+heatsource 0 type compressor
+heatsource 0 condensity 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0 0 0 0
+heatsource 0 nTemps 2
+heatsource 0 T1 50 F
+heatsource 0 T2 95 F
+
+########################################################################################################
+
+# Last shot data based ####################################################
+heatsource 0 inPowT1const 528.91
+heatsource 0 inPowT1lin   4.8988
+heatsource 0 inPowT1quad  0
+heatsource 0 inPowT2const 494.03
+heatsource 0 inPowT2lin   7.7266
+heatsource 0 inPowT2quad  0
+
+heatsource 0 copT1const 4.3943
+heatsource 0 copT1lin   -0.012443
+heatsource 0 copT1quad  0
+heatsource 0 copT2const 5.48189
+heatsource 0 copT2lin   -0.01604
+heatsource 0 copT2quad  0
+
+########################################################################################################
+heatsource 0 minT 37 F
+heatsource 0 maxT 120 F
+heatsource 0 hysteresis 1 F
+heatsource 0 coilConfig wrapped
+
+heatsource 0 onlogic bottomThird 20 F
+heatsource 0 onlogic standby 9 F
+
