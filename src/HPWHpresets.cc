@@ -4499,7 +4499,7 @@ void HPWH::initPreset(MODELS presetNum)
         tankUA_kJperHrC = 7.78;
 
         doTempDepression = false;
-        tankMixesOnDraw = true;
+        tankMixesOnDraw = false;
 
         heatSources.reserve(3);
         auto resistiveElementTop = addHeatSource("resistiveElementTop");
@@ -4538,17 +4538,18 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->hysteresis_dC = dF_TO_dC(1);
         compressor->configuration = HeatSource::CONFIG_WRAPPED;
 
-        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(45.)));
+        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.7)));
         compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(9, 5000.);
+        resistiveElementTop->setupAsResistiveElement(8, 5000.);
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(34.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
         resistiveElementBottom->setupAsResistiveElement(0, 5000.);
         resistiveElementBottom->isVIP = false;
+        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         resistiveElementTop->followedByHeatSource = compressor;
         resistiveElementBottom->followedByHeatSource = compressor;
