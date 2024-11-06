@@ -3495,6 +3495,9 @@ void HPWH::initFromFile(string modelName)
             line_ss >> tempDouble;
             j_tank["heat_exchanger_effectiveness"] = tempDouble;
         }
+        else if (token == "verbosity")
+        {
+        }
         else if (token == "numHeatSources")
         {
             line_ss >> numHeatSources;
