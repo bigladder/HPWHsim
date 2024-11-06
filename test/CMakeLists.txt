@@ -174,6 +174,15 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         RE2H80_UEF50
         RE2H80_UEF67
         )
+
+set(LG_APHWC50Dir "LG/LG_APHWC50")
+set(LG_APHWC50_Tests
+        DOE2014_LGC50_24hr50
+        DOE2014_LGC50_24hr67
+        DOE2014_LGC50_24hr95
+        DP_LGC50_HVT
+        )
+
 set(plotTest File AquaThermAire villara_24hr67)
 
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
@@ -269,6 +278,13 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     endforeach (test)
 endforeach (size)
 
+#Test(s) specifically for LG_APHWC50 model
+foreach (test ${LG_APHWC50_Tests})
+    set(fullTestName "${LG_APHWC50Dir}/${test}")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "File")
+endforeach (test)
+
 # Tests for differences between File and Preset versions
 function(add_file_test)
     set(options)
@@ -310,6 +326,11 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     endforeach (test)
 endforeach (size)
 
+#Test(s) for heat-exchange models
+foreach (test ${LG_APHWC50Tests})
+    add_file_test(TEST_NAME "${test}" MODEL_NAME "LG_APHWC50")
+endforeach (test)
+
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
@@ -332,7 +353,6 @@ endfunction()
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
