@@ -198,8 +198,9 @@ list(REMOVE_DUPLICATES extendedModelNames)
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 
 if (${PROJECT_NAME}_PYTHON_PLOTS)
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
     include(poetry-install)
-    install_poetry()
+    poetry_install(${pythonScriptDir})
 endif ()
 
 #Tests for successful runs

@@ -24,7 +24,7 @@ def generate(repo_dir, data_model_dir, gen_out_dir):
 # main
 if __name__ == "__main__":
 
-		repo_dir = "../../"
+		repo_dir = "../../../"
 		data_model_dir = ""
 		gen_out_dir = ""
 		n_args = len(sys.argv) - 1

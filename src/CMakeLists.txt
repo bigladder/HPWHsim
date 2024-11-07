@@ -12,12 +12,12 @@ add_custom_target(${PROJECT_NAME}_version_header
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
 #generate hpwh-data-model source
-set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 
 include(poetry-install)
-install_poetry()
+poetry_install(${pythonScriptDir})
 execute_process(
         COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
 
@@ -25,7 +25,7 @@ execute_process(
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         RESULT_VARIABLE GIT_SUBMOD_RESULT
 
-        COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
+        COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
         WORKING_DIRECTORY "${pythonScriptDir}"
         RESULT_VARIABLE result1
         ERROR_VARIABLE errors1
