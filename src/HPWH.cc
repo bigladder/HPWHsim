@@ -3324,8 +3324,8 @@ void HPWH::initPreset(const std::string& modelName)
 }
 
 #ifndef HPWH_ABRIDGED
-void HPWH::initFromFile(string modelName)
-{
+void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
+
     std::string configFile = modelName + ".txt";
 
     setAllDefaults(); // reset all defaults if you're re-initializing
@@ -3338,8 +3338,6 @@ void HPWH::initFromFile(string modelName)
         send_error("Input file failed to open.");
     }
     name = modelName;
-
-    nlohmann::json j; // assign file params to JSON
 
     nlohmann::json j_tank({});
     nlohmann::json j_heatsourceconfigs = nlohmann::json::array({});
@@ -3629,10 +3627,10 @@ void HPWH::initFromFile(string modelName)
                     std::function<bool(double, double)> compare;
                     if (compareStr == "<")
                         j_logic["comparison_type"] = "LESS_THAN";
-                        //compare = std::less<>();
+                    //compare = std::less<>();
                     else if (compareStr == ">")
                         j_logic["comparison_type"] = "GREATER_THAN";
-                        //compare = std::greater<>();
+                    //compare = std::greater<>();
                     else
                     {
                         send_error(fmt::format(
@@ -3692,7 +3690,7 @@ void HPWH::initFromFile(string modelName)
                         std::function<bool(double, double)> compare;
                         if (compareStr == "<")
                             j_logic["comparison_type"] = "LESS_THAN";
-                         else if (compareStr == ">")
+                        else if (compareStr == ">")
                             j_logic["comparison_type"] = "GREATER_THAN";
                         else
                         {
@@ -3742,7 +3740,7 @@ void HPWH::initFromFile(string modelName)
                     else if (tempString == "topThird")
                     {
                         logic = topThird(tempDouble);
-                     }
+                    }
                     else if (tempString == "bottomThird")
                     {
                         logic = bottomThird(tempDouble);
@@ -3917,7 +3915,7 @@ void HPWH::initFromFile(string modelName)
                 if (tempInt < num_nodes)
                 {
                     j_heatsourceconfigs[heatsource]["external_inlet_height"] = static_cast<int>(tempInt);
-                 }
+                }
                 else
                 {
                     send_error(
@@ -4072,6 +4070,12 @@ void HPWH::initFromFile(string modelName)
 
     j["tank"] = j_tank;
     j["heat_source_configurations"] = j_heatsourceconfigs;
+}
+
+void HPWH::initFromFileJSON(nlohmann::json& j) {
+
+    auto& j_tank = j["tank"];
+    auto& j_heatsourceconfigs = j["heat_source_configurations"];
     //std::cout << j.dump(2) << "\n";
 
     // initialize the HPWH object from json input
@@ -4146,7 +4150,7 @@ void HPWH::initFromFile(string modelName)
             checkFrom(compressor->externalOutletHeight, j_heatsourceconfig, "external_outlet_height", getNumNodes() - 1);
         }
         else
-            send_error(fmt::format("Invalid data: {}", token));
+            send_error("Invalid data.");
 
         checkFrom(element->isOn, j_heatsourceconfig, "is_on", false);
         checkFrom(element->isVIP, j_heatsourceconfig, "is_vip", false);
@@ -4300,6 +4304,13 @@ void HPWH::initFromFile(string modelName)
     checkInputs();
 }
 
+void HPWH::initFromFile(string modelName)
+{
+    nlohmann::json j;
+    readFileAsJSON(modelName, j);
+    initFromFileJSON(j);
+}
+
 void HPWH::initFromJSON(string sModelName)
 {
     auto sInputFileName = "models_json/" + sModelName + ".json";
@@ -4327,7 +4338,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
-    heatSources.resize(num_heat_sources);
+    heatSources.reserve(num_heat_sources);
 
     std::unordered_map<std::string, std::size_t> heat_source_lookup;
     heat_source_lookup.reserve(num_heat_sources);
