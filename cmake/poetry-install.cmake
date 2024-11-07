@@ -1,9 +1,9 @@
 # run 'poetry install' in python folder
 
-macro(install_poetry)
+macro(poetry_install pythonScriptDir)
 
     # execute 'poetry install'
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
+    #set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
     if (NOT ${PROJECT_NAME}_PYTHON_SETUP)
         execute_process(
                 COMMAND poetry install

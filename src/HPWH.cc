@@ -3326,7 +3326,6 @@ void HPWH::initPreset(const std::string& modelName)
 #ifndef HPWH_ABRIDGED
 void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
 {
-
     std::string configFile = modelName + ".txt";
 
     setAllDefaults(); // reset all defaults if you're re-initializing
@@ -3341,10 +3340,12 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
     name = modelName;
 
     nlohmann::json j_tank({});
-    nlohmann::json j_heatsourceconfigs = nlohmann::json::array({});
-    // some variables that will be handy
-    std::size_t heatsource, sourceNum, nTemps, tempInt;
-    std::size_t num_nodes = 0, numHeatSources = 0;
+    nlohmann::json j_heatsourceconfigs;
+
+    std::size_t heatsource, sourceNum, tempInt;
+    std::size_t num_nodes = 0;
+    std::size_t numHeatSources = 0;
+    std::size_t nTemps = 0;
 
     string tempString, units;
     double tempDouble;
@@ -4084,8 +4085,6 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
 
 void HPWH::initFromFileJSON(nlohmann::json& j)
 {
-
-    // std::cout << j.dump(2) << "\n";
     auto& j_tank = j["tank"];
     auto& j_heatsourceconfigs = j["heat_source_configurations"];
 
