@@ -4117,7 +4117,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
     for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
     {
-        int iconfig = heat_source_lookup[heatsource_id];
+        auto iconfig = heat_source_lookup[heatsource_id];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
 
         HeatSource* element = nullptr;
@@ -4269,7 +4269,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     //
     for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
     {
-        int iconfig = heat_source_lookup[heatsource_id];
+        auto iconfig = heat_source_lookup[heatsource_id];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
 
         int id;
