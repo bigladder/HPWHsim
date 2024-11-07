@@ -3782,6 +3782,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                         send_error(fmt::format(
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
+
                     for(auto& node: logic->nodeWeights)
                     {
                         j_logic["node_weights"].push_back({node.nodeNum, node.weight});
@@ -3794,6 +3795,8 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                         j_logic["comparison_type"] = "LESS_THAN";
                     else
                         j_logic["comparison_type"] = "GREATER_THAN";
+                    j_logic["description"] = tempString;
+
                     j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
 
                 }
@@ -3851,6 +3854,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                         j_logic["comparison_type"] = "LESS_THAN";
                     else
                         j_logic["comparison_type"] = "GREATER_THAN";
+                    j_logic["description"] = tempString;
                     j_heatsourceconfigs[heatsource]["shut_off_logic"].push_back(j_logic);
                 }
             }
@@ -4074,9 +4078,10 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
 
 void HPWH::initFromFileJSON(nlohmann::json& j) {
 
+    std::cout << j.dump(2) << "\n";
+
     auto& j_tank = j["tank"];
     auto& j_heatsourceconfigs = j["heat_source_configurations"];
-    //std::cout << j.dump(2) << "\n";
 
     // initialize the HPWH object from json input
     model = MODELS_CustomFile;
@@ -4176,13 +4181,15 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
             else
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
+            std::string desc;
+            checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
             if(j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                "name",
+                desc,
                 nodeWeights,
                 temp,
                 this,
@@ -4210,13 +4217,15 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
             else
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
+            std::string desc;
+            checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
             if(j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                "name",
+                desc,
                 nodeWeights,
                 temp,
                 this,
