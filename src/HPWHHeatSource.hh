@@ -31,7 +31,6 @@ class HPWH::HeatSource : public Sender
     /**< returns if the heat source uses a compressor or not */
     bool isAResistance() const { return typeOfHeatSource() == TYPE_resistance; }
 
-
     bool isEngaged() const;
     /**< return whether or not the heat source is engaged */
     void engageHeatSource(DRMODES DRstatus = DR_ALLOW);

@@ -29,9 +29,9 @@ HPWH::Resistance& HPWH::Resistance::operator=(const HPWH::Resistance& r_in)
 
 void HPWH::Resistance::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
 {
-    auto res_ptr =
-        reinterpret_cast<hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-            rshs_ptr.get());
+    auto res_ptr = reinterpret_cast<
+        hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+        rshs_ptr.get());
 
     auto& perf = res_ptr->performance;
     power_kW = perf.input_power / 1000.;
@@ -39,9 +39,9 @@ void HPWH::Resistance::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
 
 void HPWH::Resistance::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
 {
-    auto res_ptr =
-        reinterpret_cast<hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
-            rshs_ptr.get());
+    auto res_ptr = reinterpret_cast<
+        hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE*>(
+        rshs_ptr.get());
 
     auto& metadata = res_ptr->metadata;
     checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSRESISTANCEWATERHEATSOURCE,

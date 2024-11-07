@@ -3324,7 +3324,8 @@ void HPWH::initPreset(const std::string& modelName)
 }
 
 #ifndef HPWH_ABRIDGED
-void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
+void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
+{
 
     std::string configFile = modelName + ".txt";
 
@@ -3361,7 +3362,6 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
         token = "";
         line_ss >> token;
 
-
         if (line_s.empty() || (token.length() == 0))
         {
             continue;
@@ -3395,7 +3395,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
             {
                 send_error(fmt::format("Incorrect units specification for {}.", token.c_str()));
             }
-            //tank->setUA_kJperHrC(tempDouble);
+            // tank->setUA_kJperHrC(tempDouble);
             j_tank["ua"] = tempDouble;
         }
         else if (token == "depressTemp")
@@ -3551,7 +3551,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                 if (units == "C")
                     j_heatsourceconfigs[heatsource]["maximum_temperature_C"] = tempDouble;
                 else if (units == "F")
-                    j_heatsourceconfigs[heatsource]["maximum_temperature_C"] =  F_TO_C(tempDouble);
+                    j_heatsourceconfigs[heatsource]["maximum_temperature_C"] = F_TO_C(tempDouble);
                 else
                     send_warning("Invalid units.");
             }
@@ -3607,7 +3607,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                             token.c_str(),
                             nodeNums.size()));
                     }
-                    for(std::size_t i = 0; i < nodeNums.size(); ++i)
+                    for (std::size_t i = 0; i < nodeNums.size(); ++i)
                     {
                         j_logic["node_weights"].push_back({nodeNums[i], weights[i]});
                     }
@@ -3627,10 +3627,10 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                     std::function<bool(double, double)> compare;
                     if (compareStr == "<")
                         j_logic["comparison_type"] = "LESS_THAN";
-                    //compare = std::less<>();
+                    // compare = std::less<>();
                     else if (compareStr == ">")
                         j_logic["comparison_type"] = "GREATER_THAN";
-                    //compare = std::greater<>();
+                    // compare = std::greater<>();
                     else
                     {
                         send_error(fmt::format(
@@ -3650,9 +3650,9 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                     else if (units == "F")
                     {
                         if (absolute)
-                            j_logic["absolute_temperature_C"]  = F_TO_C(tempDouble);
+                            j_logic["absolute_temperature_C"] = F_TO_C(tempDouble);
                         else
-                            j_logic["differential_temperature_dC"]  = dF_TO_dC(tempDouble);
+                            j_logic["differential_temperature_dC"] = dF_TO_dC(tempDouble);
                     }
                     else
                         send_warning(fmt::format("Invalid units: {}", token));
@@ -3783,22 +3783,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    for(auto& node: logic->nodeWeights)
+                    for (auto& node : logic->nodeWeights)
                     {
                         j_logic["node_weights"].push_back({node.nodeNum, node.weight});
                     }
-                    if(logic->isAbsolute)
+                    if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
                         j_logic["differential_temperature_dC"] = tempDouble;
-                    if(logic->compare(1, 2))
+                    if (logic->compare(1, 2))
                         j_logic["comparison_type"] = "LESS_THAN";
                     else
                         j_logic["comparison_type"] = "GREATER_THAN";
                     j_logic["description"] = tempString;
 
                     j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
-
                 }
                 else if (token == "offlogic")
                 {
@@ -3842,15 +3841,15 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                         send_error(fmt::format(
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
-                    for(auto& node: logic->nodeWeights)
+                    for (auto& node : logic->nodeWeights)
                     {
                         j_logic["node_weights"].push_back({node.nodeNum, node.weight});
                     }
-                    if(logic->isAbsolute)
+                    if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
                         j_logic["differential_temperature_dC"] = tempDouble;
-                    if(logic->compare(1, 2))
+                    if (logic->compare(1, 2))
                         j_logic["comparison_type"] = "LESS_THAN";
                     else
                         j_logic["comparison_type"] = "GREATER_THAN";
@@ -3918,7 +3917,8 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    j_heatsourceconfigs[heatsource]["external_inlet_height"] = static_cast<int>(tempInt);
+                    j_heatsourceconfigs[heatsource]["external_inlet_height"] =
+                        static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -3931,7 +3931,8 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                 line_ss >> tempInt;
                 if (tempInt < num_nodes)
                 {
-                    j_heatsourceconfigs[heatsource]["external_outlet_height"] = static_cast<int>(tempInt);
+                    j_heatsourceconfigs[heatsource]["external_outlet_height"] =
+                        static_cast<int>(tempInt);
                 }
                 else
                 {
@@ -3988,7 +3989,8 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
 
-                j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["evaporator_temperature_F"] = tempDouble;
+                j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]
+                                   ["evaporator_temperature_F"] = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -4022,11 +4024,15 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
 
                 if (var == "inPow")
                 {
-                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["power_coefficients"].push_back(tempDouble);
+                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]
+                                       ["power_coefficients"]
+                                           .push_back(tempDouble);
                 }
                 else if (var == "cop")
                 {
-                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]["cop_coefficients"].push_back(tempDouble);
+                    j_heatsourceconfigs[heatsource]["performance_points"][nTemp - 1]
+                                       ["cop_coefficients"]
+                                           .push_back(tempDouble);
                 }
             }
             else if (token == "hysteresis")
@@ -4076,7 +4082,8 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j) {
     j["heat_source_configurations"] = j_heatsourceconfigs;
 }
 
-void HPWH::initFromFileJSON(nlohmann::json& j) {
+void HPWH::initFromFileJSON(nlohmann::json& j)
+{
 
     std::cout << j.dump(2) << "\n";
 
@@ -4102,57 +4109,61 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
     std::unordered_map<std::size_t, std::size_t> heat_source_lookup;
     heat_source_lookup.reserve(num_heat_sources);
 
-    for(std::size_t iconfig = 0; iconfig < num_heat_sources; ++iconfig)
+    for (std::size_t iconfig = 0; iconfig < num_heat_sources; ++iconfig)
     {
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
         int heatsource_id = j_heatsourceconfig["id"];
         heat_source_lookup[heatsource_id] = iconfig;
     }
 
-    for(std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
+    for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
     {
         int iconfig = heat_source_lookup[heatsource_id];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
 
-        HeatSource *element = nullptr;
-        if(j_heatsourceconfig["heat_source_type"] == "RESISTANCE")
+        HeatSource* element = nullptr;
+        if (j_heatsourceconfig["heat_source_type"] == "RESISTANCE")
         {
             auto resistance = addResistance(fmt::format("{}", heatsource_id));
             element = reinterpret_cast<HeatSource*>(resistance);
 
-            resistance->setPower_W(j_heatsourceconfig["performance_points"][0]["power_coefficients"][0]);
+            resistance->setPower_W(
+                j_heatsourceconfig["performance_points"][0]["power_coefficients"][0]);
         }
-        else if(j_heatsourceconfig["heat_source_type"] == "CONDENSER")
+        else if (j_heatsourceconfig["heat_source_type"] == "CONDENSER")
         {
             auto compressor = addCondenser(fmt::format("{}", heatsource_id));
             element = reinterpret_cast<HeatSource*>(compressor);
 
             auto perfPoints = j_heatsourceconfig["performance_points"];
             compressor->perfMap.reserve(perfPoints.size());
-            for(auto& perfPoint: perfPoints)
+            for (auto& perfPoint : perfPoints)
             {
                 compressor->perfMap.push_back({
-                    perfPoint["evaporator_temperature_F"],                 // Temperature (T_F)
-                    perfPoint["power_coefficients"],    // Input Power Coefficients (inputPower_coeffs)
-                    perfPoint["cop_coefficients"] // COP Coefficients (COP_coeffs)
+                    perfPoint["evaporator_temperature_F"], // Temperature (T_F)
+                    perfPoint["power_coefficients"], // Input Power Coefficients (inputPower_coeffs)
+                    perfPoint["cop_coefficients"]    // COP Coefficients (COP_coeffs)
                 });
-
             }
 
             checkFrom(compressor->minT, j_heatsourceconfig, "minimum_temperature_C", -273.15);
             checkFrom(compressor->maxT, j_heatsourceconfig, "maximum_temperature_C", 100.);
 
-            if(j_heatsourceconfig["coil_configuration"] == "WRAPPED")
+            if (j_heatsourceconfig["coil_configuration"] == "WRAPPED")
                 compressor->configuration = Condenser::CONFIG_WRAPPED;
-            else if(j_heatsourceconfig["coil_configuration"] == "SUBMERGED")
+            else if (j_heatsourceconfig["coil_configuration"] == "SUBMERGED")
                 compressor->configuration = Condenser::CONFIG_SUBMERGED;
             else
                 compressor->configuration = Condenser::CONFIG_EXTERNAL;
 
-            //compressor->maxSetpoint_C = MAXOUTLET_R134A;
+            // compressor->maxSetpoint_C = MAXOUTLET_R134A;
             checkFrom(compressor->isMultipass, j_heatsourceconfig, "is_multipass", false);
-            checkFrom(compressor->externalInletHeight, j_heatsourceconfig, "external_inlet_height", 0);
-            checkFrom(compressor->externalOutletHeight, j_heatsourceconfig, "external_outlet_height", getNumNodes() - 1);
+            checkFrom(
+                compressor->externalInletHeight, j_heatsourceconfig, "external_inlet_height", 0);
+            checkFrom(compressor->externalOutletHeight,
+                      j_heatsourceconfig,
+                      "external_outlet_height",
+                      getNumNodes() - 1);
         }
         else
             send_error("Invalid data.");
@@ -4163,17 +4174,17 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
         element->setCondensity(j_heatsourceconfig["heat_distribution"]);
         checkFrom(element->hysteresis_dC, j_heatsourceconfig, "temperature_hysteresis_dC", 0.);
 
-        for(auto& j_logic: j_heatsourceconfig["turn_on_logic"])
+        for (auto& j_logic : j_heatsourceconfig["turn_on_logic"])
         {
             std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight: j_logic["node_weights"])
+            for (auto& node_weight : j_logic["node_weights"])
             {
                 nodeWeights.emplace_back(node_weight[0], node_weight[1]);
             }
 
             bool is_absolute = false;
             double temp = 0.;
-            if(j_logic.contains("absolute_temperature_C"))
+            if (j_logic.contains("absolute_temperature_C"))
             {
                 is_absolute = true;
                 temp = j_logic["absolute_temperature_C"];
@@ -4184,32 +4195,27 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
             std::string desc;
             checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
-            if(j_logic["comparison_type"] == "GREATER_THAN")
+            if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc,
-                nodeWeights,
-                temp,
-                this,
-                is_absolute,
-                compare);
+                desc, nodeWeights, temp, this, is_absolute, compare);
 
             element->addTurnOnLogic(heatingLogic);
         }
 
-        for(auto& j_logic: j_heatsourceconfig["shut_off_logic"])
+        for (auto& j_logic : j_heatsourceconfig["shut_off_logic"])
         {
             std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight: j_logic["node_weights"])
+            for (auto& node_weight : j_logic["node_weights"])
             {
                 nodeWeights.emplace_back(node_weight[0], node_weight[1]);
             }
 
             bool is_absolute = false;
             double temp = 0.;
-            if(j_logic.contains("absolute_temperature_C"))
+            if (j_logic.contains("absolute_temperature_C"))
             {
                 is_absolute = true;
                 temp = j_logic["absolute_temperature_C"];
@@ -4220,33 +4226,28 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
             std::string desc;
             checkFrom(desc, j_logic, "description", std::string("none"));
             std::function<bool(double, double)> compare = std::less<>();
-            if(j_logic["comparison_type"] == "GREATER_THAN")
+            if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc,
-                nodeWeights,
-                temp,
-                this,
-                is_absolute,
-                compare);
+                desc, nodeWeights, temp, this, is_absolute, compare);
 
             element->addShutOffLogic(heatingLogic);
         }
 
-        if(j_heatsourceconfig.contains("standby_logic"))
+        if (j_heatsourceconfig.contains("standby_logic"))
         {
             auto& j_logic = j_heatsourceconfig["standby_logic"];
             std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight: j_logic["node_weights"])
+            for (auto& node_weight : j_logic["node_weights"])
             {
                 nodeWeights.emplace_back(node_weight[0], node_weight[1]);
             }
 
             bool is_absolute = false;
             double temp = 0.;
-            if(j_logic.contains("absolute_temperature_C"))
+            if (j_logic.contains("absolute_temperature_C"))
             {
                 is_absolute = true;
                 temp = j_logic["absolute_temperature_C"];
@@ -4255,39 +4256,33 @@ void HPWH::initFromFileJSON(nlohmann::json& j) {
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
             std::function<bool(double, double)> compare = std::less<>();
-            if(j_logic["comparison_type"] == "GREATER_THAN")
+            if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                "name",
-                nodeWeights,
-                temp,
-                this,
-                is_absolute,
-                compare);
+                "name", nodeWeights, temp, this, is_absolute, compare);
 
             element->standbyLogic = heatingLogic;
-
         }
     }
 
     //
-    for(std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
+    for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
     {
         int iconfig = heat_source_lookup[heatsource_id];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
 
         int id;
-        if(checkFrom(id, j_heatsourceconfig, "backup_heat_source_id", 0))
+        if (checkFrom(id, j_heatsourceconfig, "backup_heat_source_id", 0))
         {
             heatSources[heatsource_id]->backupHeatSource = heatSources[id].get();
         }
-        if(checkFrom(id, j_heatsourceconfig, "followed_by_heat_source_id", 0))
+        if (checkFrom(id, j_heatsourceconfig, "followed_by_heat_source_id", 0))
         {
             heatSources[heatsource_id]->followedByHeatSource = heatSources[id].get();
         }
-        if(checkFrom(id, j_heatsourceconfig, "companion_heat_source_id", 0))
+        if (checkFrom(id, j_heatsourceconfig, "companion_heat_source_id", 0))
         {
             heatSources[heatsource_id]->companionHeatSource = heatSources[id].get();
         }

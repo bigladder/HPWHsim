@@ -58,9 +58,9 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
 
 void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
 {
-    auto cond_ptr =
-        reinterpret_cast<hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-            rshs_ptr.get());
+    auto cond_ptr = reinterpret_cast<
+        hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+        rshs_ptr.get());
 
     auto& perf = cond_ptr->performance;
     switch (perf.coil_configuration)
@@ -96,7 +96,6 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
               perf.compressor_lockout_temperature_hysteresis_is_set,
               perf.compressor_lockout_temperature_hysteresis,
               0.);
-
 
     // uses btwxt performance-grid interpolation
     if (perf.performance_map_is_set)
@@ -157,9 +156,9 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
 
 void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
 {
-    auto cond_ptr =
-        reinterpret_cast<hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
-            rshs_ptr.get());
+    auto cond_ptr = reinterpret_cast<
+        hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE*>(
+        rshs_ptr.get());
 
     auto& metadata = cond_ptr->metadata;
     checkTo(hpwh_data_model::ashrae205_ns::SchemaType::RSCONDENSERWATERHEATSOURCE,
