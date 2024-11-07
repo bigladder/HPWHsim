@@ -4085,8 +4085,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
 void HPWH::initFromFileJSON(nlohmann::json& j)
 {
 
-    std::cout << j.dump(2) << "\n";
-
+    // std::cout << j.dump(2) << "\n";
     auto& j_tank = j["tank"];
     auto& j_heatsourceconfigs = j["heat_source_configurations"];
 

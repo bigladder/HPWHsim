@@ -16,28 +16,25 @@ set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
 set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 
-if (NOT ${PROJECT_NAME}_DATA_MODEL_GENERATED)
-    include(poetry-install)
-    install_poetry()
-    execute_process(
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
+include(poetry-install)
+install_poetry()
+execute_process(
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
 
-            COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                RESULT_VARIABLE GIT_SUBMOD_RESULT
+        COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT
 
-            COMMAND poetry run python "${pythonScriptDir}/data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
-                WORKING_DIRECTORY "${pythonScriptDir}"
-                RESULT_VARIABLE result1
-                ERROR_VARIABLE errors1
-                OUTPUT_VARIABLE outputs1)
+        COMMAND poetry run python "data_model/build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
+        WORKING_DIRECTORY "${pythonScriptDir}"
+        RESULT_VARIABLE result1
+        ERROR_VARIABLE errors1
+        OUTPUT_VARIABLE outputs1)
 
-
-    set(${PROJECT_NAME}_DATA_MODEL_GENERATED TRUE CACHE BOOL "Data-model code has been generated" FORCE)
-    message("Poetry install success? ${result0} ${errors0} ${outputs0}")
-    message("Update submodule success? ${GIT_SUBMOD_RESULT}")
-    message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
-endif ()
+set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+message("Poetry install success? ${result0} ${errors0} ${outputs0}")
+message("Update submodule success? ${GIT_SUBMOD_RESULT}")
+message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
 
 set(headers
         HPWHversion.in.hh
