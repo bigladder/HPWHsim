@@ -43,7 +43,8 @@ struct HPWH::HeatingLogic
     static std::shared_ptr<HeatingLogic>
     make(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& logic, HPWH* hpwh);
 
-    virtual void to(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const = 0;
+    virtual void
+    to(hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heatingLogic) const = 0;
 
   protected:
     double decisionPoint;
@@ -117,7 +118,6 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
 
   private:
     bool areNodeWeightsValid();
-
 };
 
 #endif

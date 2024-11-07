@@ -95,7 +95,8 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 }
 
 void HPWH::HeatSource::from(
-    const hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration& heatsourceconfiguration)
+    const hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
+        heatsourceconfiguration)
 {
     auto& config = heatsourceconfiguration;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
@@ -179,7 +180,6 @@ void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourc
         checkTo(companionHeatSource->name,
                 heatsourceconfiguration.companion_heat_source_id_is_set,
                 heatsourceconfiguration.companion_heat_source_id);
-
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)

@@ -426,6 +426,20 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
+#Add small compressor yearly tests to the list
+foreach (test ${yearTests})
+    foreach (model ${yearTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add LARGE compressor yearly tests to the list
+foreach (test ${yearLargeTests})
+    foreach (model ${yearLargeTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
 

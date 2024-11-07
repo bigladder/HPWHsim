@@ -845,11 +845,10 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                to_json(
-                    *reinterpret_cast<
-                        hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic*>(
-                        heating_logic.heating_logic.get()),
-                    j_logic);
+                to_json(*reinterpret_cast<hpwh_data_model::rsintegratedwaterheater_ns::
+                                              StateOfChargeBasedHeatingLogic*>(
+                            heating_logic.heating_logic.get()),
+                        j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
@@ -860,10 +859,11 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLog
             if (heating_logic.heating_logic_is_set)
             {
                 nlohmann::json j_logic;
-                to_json(*reinterpret_cast<
-                            hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
-                            heating_logic.heating_logic.get()),
-                        j_logic);
+                to_json(
+                    *reinterpret_cast<
+                        hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic*>(
+                        heating_logic.heating_logic.get()),
+                    j_logic);
                 j["heating_logic"] = j_logic;
             }
             break;
