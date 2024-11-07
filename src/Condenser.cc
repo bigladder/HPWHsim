@@ -86,6 +86,18 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
     }
     }
 
+    checkFrom(maxSetpoint_C,
+              perf.maximum_refrigerant_temperature_is_set,
+              K_TO_C(perf.maximum_refrigerant_temperature),
+              100.);
+    checkFrom(maxT, perf.maximum_temperature_is_set, K_TO_C(perf.maximum_temperature), 100.);
+    checkFrom(minT, perf.minimum_temperature_is_set, K_TO_C(perf.minimum_temperature), -273.15);
+    checkFrom(hysteresis_dC,
+              perf.compressor_lockout_temperature_hysteresis_is_set,
+              perf.compressor_lockout_temperature_hysteresis,
+              0.);
+
+
     // uses btwxt performance-grid interpolation
     if (perf.performance_map_is_set)
     {
