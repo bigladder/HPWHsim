@@ -1288,4 +1288,18 @@ void checkTo(const T t, bool& is_set, T& t_new, const bool has_value = true)
         t_new = t;
     }
 }
+
+template <typename T>
+bool checkFrom(T& t, nlohmann::json& j, std::string_view key, const T t_default)
+{
+    bool has_key = false;
+    if (j.contains(key))
+    {
+        has_key = true;
+        t = j[key];
+    }
+    else
+        t = t_default;
+    return has_key;
+}
 #endif
