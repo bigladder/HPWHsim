@@ -12,29 +12,32 @@ add_custom_target(${PROJECT_NAME}_version_header
 set_target_properties(${PROJECT_NAME}_version_header PROPERTIES FOLDER Dependencies/HPWHsim)
 
 #generate hpwh-data-model source
-set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
-set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
-set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
+if (NOT ${PROJECT_NAME}_DATA_MODEL_GENERATED)
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+    set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
+    set(genCodeDir "${PROJECT_SOURCE_DIR}/src/hpwh_data_model")
 
-include(poetry-install)
-poetry_install(${pythonScriptDir})
-execute_process(
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
+    include(poetry-install)
+    poetry_install(${pythonScriptDir})
+    execute_process(
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${dataModelDir}"
 
-        COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        RESULT_VARIABLE GIT_SUBMOD_RESULT
+            COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 
-        COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
-        WORKING_DIRECTORY "${pythonScriptDir}"
-        RESULT_VARIABLE result1
-        ERROR_VARIABLE errors1
-        OUTPUT_VARIABLE outputs1)
+            COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
+            WORKING_DIRECTORY "${pythonScriptDir}"
+            ERROR_VARIABLE build_data_model_err)
 
-set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
-message("Poetry install success? ${result0} ${errors0} ${outputs0}")
-message("Update submodule success? ${GIT_SUBMOD_RESULT}")
-message("Data-model generation success? ${result1} ${errors1} ${outputs1}")
+    if(NOT build_data_model_err)
+        set(${PROJECT_NAME}_DATA_MODEL_GENERATED TRUE CACHE BOOL "Python data-model source code has been generated" FORCE)
+        message(STATUS "Data-model source-code generation succeeded")
+    else()
+        message(STATUS "Data-model source-code generation failed")
+    endif()
+else()
+    message(STATUS "Using existing data-model source code")
+endif()
 
 set(headers
         HPWHversion.in.hh
@@ -114,4 +117,6 @@ if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()
 
-add_subdirectory(hpwh_data_model/cpp)
+if (${PROJECT_NAME}_DATA_MODEL_GENERATED)
+	add_subdirectory(hpwh_data_model/cpp)
+endif ()
