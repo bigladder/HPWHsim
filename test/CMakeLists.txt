@@ -195,13 +195,13 @@ set(plotTest File AquaThermAire villara_24hr67)
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
-cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+#cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 
-if (${PROJECT_NAME}_PYTHON_PLOTS)
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
-    include(poetry-install)
-    poetry_install(${pythonScriptDir})
-endif ()
+#if (${PROJECT_NAME}_PYTHON_PLOTS)
+set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
+include(poetry-install)
+poetry_install(${pythonScriptDir})
+#endif ()
 
 #Tests for successful runs
 function(add_model_test)
@@ -251,7 +251,7 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/plotting/plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
+        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python "${PROJECT_SOURCE_DIR}/scripts/python/plotting/plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
         set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
@@ -389,7 +389,7 @@ foreach (test ${testNamesJSON})
 endforeach (test)
 
 ## Plot test
-#add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
