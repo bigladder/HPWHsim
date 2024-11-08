@@ -195,13 +195,13 @@ set(plotTest File AquaThermAire villara_24hr67)
 list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
-#cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-
-#if (${PROJECT_NAME}_PYTHON_PLOTS)
-set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
-include(poetry-install)
-poetry_install(${pythonScriptDir})
-#endif ()
+cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
+if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
+    include(poetry-install)
+    poetry_install(${pythonScriptDir})
+    set(${PROJECT_NAME}_PYTHON_PLOTS_SETUP TRUE CACHE BOOL "Python plotting environment is already setup" FORCE)
+endif ()
 
 #Tests for successful runs
 function(add_model_test)
