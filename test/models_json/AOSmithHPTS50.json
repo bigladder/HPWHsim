@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "schema": "RSINTEGRATEDWATERHEATER"
+  },
+  "performance": {
+    "heat_source_configurations": [
+      {
+        "companion_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
+        "heat_distribution": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 0.0
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementTop",
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 6.594444444444444,
+              "temperature_weight_distribution": [
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          }
+        ]
+      },
+      {
+        "backup_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
+        "heat_distribution": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 4500.0,
+            "resistance_lockout_temperature_hysteresis": 1.1111111111111112
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementBottom"
+      },
+      {
+        "backup_heat_source_id": "resistiveElementBottom",
+        "heat_distribution": [
+          0.0,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSCONDENSERWATERHEATSOURCE"
+          },
+          "performance": {
+            "coil_configuration": "WRAPPED",
+            "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
+            "maximum_refrigerant_temperature": 344.26111111111106,
+            "maximum_temperature": 322.0388888888889,
+            "minimum_temperature": 275.92777777777775,
+            "performance_map": {
+              "grid_variables": {
+                "evaporator_environment_dry_bulb_temperature": [
+                  283.15,
+                  292.8722222222222,
+                  308.15
+                ],
+                "heat_source_temperature": [
+                  273.15,
+                  344.26111111111106
+                ]
+              },
+              "lookup_variables": {
+                "heating_capacity": [
+                  1061.3632,
+                  774.1260800000014,
+                  1460.4995680000004,
+                  933.6636000000017,
+                  1868.607808,
+                  2020.603200000001
+                ],
+                "input_power": [
+                  146.5,
+                  465.2199999999999,
+                  161.26,
+                  465.8999999999999,
+                  172.84,
+                  508.1999999999999
+                ]
+              }
+            }
+          }
+        },
+        "heat_source_type": "CONDENSER",
+        "id": "compressor",
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 16.77777777777778,
+              "temperature_weight_distribution": [
+                1.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          },
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 5.0,
+              "tank_node_specification": "TOP_NODE"
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          }
+        ]
+      }
+    ],
+    "primary_heat_source_id": "resistiveElementTop",
+    "tank": {
+      "metadata": {
+        "schema": "RSTANK"
+      },
+      "performance": {
+        "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "fittings_ua": 0.0,
+        "fixed_volume": true,
+        "number_of_nodes": 12,
+        "ua": 1.7786111111111111,
+        "volume": 0.172614696
+      }
+    }
+  }
+}

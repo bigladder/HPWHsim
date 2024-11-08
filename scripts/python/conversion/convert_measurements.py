@@ -1,9 +1,15 @@
-import pandas as pd  # type: ignore
+# Raw script for converting typical supplied data to format used within HPWHsim for plotting.
+# New format parameters definitions could be added.
 
 import os
 
 test_name = 'villara_24hr67'
 format = "Villara"
+
+# for plotting
+output_column_headers = ["Time(min)",  "AmbientT(C)", "PowerIn(W)",
+						 "TankT1(C)", "TankT2(C)", "TankT3(C)", "TankT4(C)", "TankT5(C)", "TankT6(C)",
+						 "InletT(C)", "OutletT(C)", "FlowRate(gal/min)"]	
 
 in_data_folder = os.path.join('test/', test_name)
 out_data_folder = os.path.join('test/', test_name)
@@ -44,9 +50,7 @@ for line in Lines:
 	columns = line.split(',')
 
 	if iLine == 0:
-		new_columns = ["Time(min)",  "AmbientT(C)", "PowerIn(W)",
-								 "TankT1(C)", "TankT2(C)", "TankT3(C)", "TankT4(C)", "TankT5(C)", "TankT6(C)",
-								 "InletT(C)", "OutletT(C)", "FlowRate(gal/min)"]	
+		new_columns = output_column_headers
 		firstCol = True
 		for new_column in new_columns:
 			if firstCol:			

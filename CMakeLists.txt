@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.7)
 project(HPWHsim LANGUAGES CXX)
 cmake_policy(SET CMP0079 NEW) # target_link_libraries() allows use with targets in other directories.
 cmake_policy(SET CMP0091 NEW)
+cmake_policy(SET CMP0076 NEW)
 
 # Set a default build type if none was specified
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
