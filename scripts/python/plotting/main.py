@@ -18,7 +18,7 @@ def call_test(model_spec, model_name, test_dir, build_dir):
     abs_build_dir = str(Path.cwd())
     os.chdir(orig_dir)
     
-    os.chdir("../../test")
+    os.chdir("../../../test")
     abs_test_dir = str(Path.cwd())
     os.chdir(orig_dir)
     
@@ -35,7 +35,7 @@ def call_test(model_spec, model_name, test_dir, build_dir):
     return plot(measured_path, simulated_path, plot_path)
 
 # Calls the 24-hr test function.
-def call_measure(model_spec, model_name, build_dir):
+def call_measure(model_spec, model_name, build_dir, draw_profile):
 
-    measure(model_spec, model_name, build_dir)
+    measure(model_spec, model_name, build_dir, draw_profile)
     return 'success'

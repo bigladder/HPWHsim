@@ -21,8 +21,8 @@ PORT = 8000
 def do_test(model_spec, model_name, test_dir, build_dir):
     return main.call_test(model_spec, model_name, test_dir, build_dir)
 
-def do_measure(model_spec, model_name, build_dir):
-    main.call_measure(model_spec, model_name, build_dir)
+def do_measure(model_spec, model_name, build_dir, draw_profile):
+    main.call_measure(model_spec, model_name, build_dir, draw_profile)
     return 'do_measure done'
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
@@ -52,8 +52,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             model_spec = query_components.get('model_spec', [None])[0]
             model_name = query_components.get('model_name', [None])[0]
             build_dir= query_components.get('build_dir', [None])[0]
+            draw_profile= query_components.get('draw_profile', [None])[0]
 
-            do_measure(model_spec, model_name, build_dir)
+            do_measure(model_spec, model_name, build_dir, draw_profile)
             
             self.send_response(200)
             self.send_header("Content-type", "text/html")

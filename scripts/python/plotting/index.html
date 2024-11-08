@@ -42,7 +42,10 @@ body {font-family: Arial;}
 
 <form id="model_form">
     <label for="model_spec">model spec:</label>
-    <input type="text" id="model_spec" name="model_spec" required><br><br>
+	  <select name="model_spec" id="model_spec">    
+	    <option selected="selected" value="File">File</option>
+			<option value="Preset">Preset</option>
+	  </select><br><br>
 
     <label for="model_name">model name:</label>
     <input type="text" id="model_name" name="model_name" style="width: 400px" required><br><br>
@@ -59,7 +62,7 @@ body {font-family: Arial;}
   model_form.model_name.value = "BradfordWhiteAeroThermRE2H65";
 
   const build_form = document.getElementById('build_form');
-  build_form.build_dir.value = "../../build";
+  build_form.build_dir.value = "../../../build";
 </script>
 
 <script>
@@ -127,9 +130,13 @@ body {font-family: Arial;}
     const model_spec = model_form.model_spec.value;
     const model_name = model_form.model_name.value;
 
+		const measure_form = document.getElementById('measure_form');
+    const draw_profile = measure_form.draw_profile.value;
+
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
     fst += '&build_dir=' + build_dir;
+    fst += '&draw_profile=' + draw_profile;
 
     document.getElementById("measure_btn").disabled = true;
 
@@ -137,10 +144,11 @@ body {font-family: Arial;}
 
     model_form.model_spec.value = model_spec;
     model_form.model_name.value = model_name;
-
+ 
     document.getElementById("model_spec").value = model_spec; 
     document.getElementById("model_name").value = model_name; 
     document.getElementById("build_dir").value = build_dir; 
+    document.getElementById("draw_profile").value = draw_profile; 
 
     document.getElementById("results").style="display:block;"
     document.getElementById("results").data = build_dir + "/test/output/results.txt";
@@ -171,7 +179,19 @@ body {font-family: Arial;}
 <!-- content -->
 <button id="measure_tab" class="collapsible">Measure</button>
 <div class="content">
-  <button type="button" id="measure_btn" onclick="measure();">measure</button>
+  <form id="measure_form">
+    <label for="draw_profile">draw profile:</label>
+    <select name="draw_profile" id="draw_profile">
+      <option selected="auto" value="auto">auto</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+      <option value="Very Small">Very Small</option>
+    </select><br><br>
+
+    <button type="button" id="measure_btn" onclick="measure();">measure</button>
+  </form>
+
   <object id="results" data="" width=800 height=800 style="display:none;"></object>
 </div>
 
