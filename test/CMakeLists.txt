@@ -31,6 +31,23 @@ set(modelNames
         Rheem2020Build50
         #  RheemPlugInDedicated50
         )
+set(testNamesJSON
+        test30
+        test50
+        test70
+        test95
+        )
+set(modelNamesJSON
+        AOSmithHPTS50
+        AOSmithPHPT60
+        AOSmithHPTU80
+        RheemHB50
+        Stiebel220e
+        GE502014
+        Rheem2020Prem40
+        Rheem2020Prem50
+        Rheem2020Build50
+        )
 set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
@@ -159,16 +176,17 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 
-set(AeroThermSizes 50 65 80)
-set(AeroTherm2023_50_Tests
+set(BradfordWhiteAeroThermRE2Dir "BradfordWhite/AeroThermRE2H")
+set(BradfordWhiteAeroThermRE2HSizes 50 65 80)
+set(BradfordWhiteAeroThermRE2H50_Tests
         RE2H50_UEF50
         RE2H50_UEF67
         )
-set(AeroTherm2023_65_Tests
+set(BradfordWhiteAeroThermRE2H65_Tests
         RE2H65_UEF50
         RE2H65_UEF67
         )
-set(AeroTherm2023_80_Tests
+set(BradfordWhiteAeroThermRE2H80_Tests
         RE2H80_UEF50
         RE2H80_UEF67
         )
@@ -178,13 +196,11 @@ list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
 list(REMOVE_DUPLICATES extendedModelNames)
 
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
-
-if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_SETUP)
-    message(STATUS "Installing python packages")
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python")
-    execute_process(COMMAND poetry install --no-root WORKING_DIRECTORY "${pythonScriptDir}" RESULT_VARIABLE result ERROR_VARIABLE errors OUTPUT_VARIABLE outputs)
-    message("Poetry success? ${result} ${errors} ${outputs}")
-    set(${PROJECT_NAME}_PYTHON_SETUP TRUE CACHE BOOL "Python environment is already setup" FORCE)
+if (${PROJECT_NAME}_PYTHON_PLOTS AND NOT ${PROJECT_NAME}_PYTHON_PLOTS_SETUP)
+    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/plotting")
+    include(poetry-install)
+    poetry_install(${pythonScriptDir})
+    set(${PROJECT_NAME}_PYTHON_PLOTS_SETUP TRUE CACHE BOOL "Python plotting environment is already setup" FORCE)
 endif ()
 
 #Tests for successful runs
@@ -235,65 +251,11 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python" run python "${PROJECT_SOURCE_DIR}/scripts/python/plot.py" ${measurementsPath} ${simulationPlotPath} ${simulationOutputPath} )
+        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python "${PROJECT_SOURCE_DIR}/scripts/python/plotting/plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
         set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
 endfunction()
-
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
-#Test models follow control logic with max temperatures.
-foreach (test ${maxTempTests})
-    foreach (model ${maxTempModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Add large compressor tests to the list
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
-    endforeach (model)
-endforeach (test)
-
-#Add State of Charge tests to the list
-foreach (test ${stateOfChargeTests})
-    foreach (model ${stateOfChargeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
-    endforeach (model)
-endforeach (test)
-
-#Add small compressor yearly tests to the list
-foreach (test ${yearTests})
-    foreach (model ${yearTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Add LARGE compressor yearly tests to the list
-foreach (test ${yearLargeTests})
-    foreach (model ${yearLargeTestsModels})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
 
 # Tests for differences between File and Preset versions
 function(add_file_test)
@@ -314,18 +276,24 @@ function(add_file_test)
     set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
 endfunction()
 
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
+# Tests for differences between JSON and Preset versions
+function(add_JSON_test)
+    set(options)
+    set(oneValueArgs MODEL_NAME TEST_NAME)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
-endforeach (test)
+    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
+        return()
+    endif ()
+
+    set(TEST_TITLE "JSONTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
+
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_JSON_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
+            )
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
+    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+endfunction()
 
 # Tests for regression differences against reference results
 function(add_regression_test)
@@ -348,10 +316,95 @@ endfunction()
 
 foreach (test ${testNames})
     foreach (model ${modelNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
+
+#Test(s) specifically for heat-exchange models
+foreach (test ${heatExchangeTests})
+    foreach (model ${heatExchangeModelNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        set(fullTestName "${BradfordWhiteAeroThermRE2Dir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (test)
+endforeach (size)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
+
+#Test models follow control logic with max temperatures.
+foreach (test ${maxTempTests})
+    foreach (model ${maxTempModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add large compressor tests to the list
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add State of Charge tests to the list
+foreach (test ${stateOfChargeTests})
+    foreach (model ${stateOfChargeCompressorNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (test)
+endforeach (size)
+
+foreach (test ${testNamesJSON})
+    foreach (model ${modelNamesJSON})
+        add_JSON_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+    endforeach (model)
+endforeach (test)
+
+## Plot test
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
+
+foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (size ${BradfordWhiteAeroThermRE2HSizes})
+    set(model BradfordWhiteAeroThermRE2H${size})
+    set(tests "${${model}_Tests}")
+    foreach (test ${tests})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (size)
 
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
@@ -374,17 +427,19 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for Bradford White AeroTherm2023 model
-foreach (size ${AeroThermSizes})
-    set(model AeroTherm2023_${size})
-    set(tests "${${model}_Tests}")
-    foreach (test ${tests})
+#Add small compressor yearly tests to the list
+foreach (test ${yearTests})
+    foreach (model ${yearTestsModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (test)
-endforeach (size)
+    endforeach (model)
+endforeach (test)
 
-add_plot_test(SPEC_TYPE "File" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
+#Add LARGE compressor yearly tests to the list
+foreach (test ${yearLargeTests})
+    foreach (model ${yearLargeTestsModels})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")

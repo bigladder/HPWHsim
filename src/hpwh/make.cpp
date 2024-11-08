@@ -52,25 +52,35 @@ void make(const std::string& sSpecType,
     standardTestOptions.nTestTCouples = 6;
     standardTestOptions.setpointT_C = 51.7;
 
-    // process command line arguments
-    std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
-    standardTestOptions.sOutputDirectory = sOutputDir;
+    HPWH hpwh;
 
-    for (auto& c : sPresetOrFile)
+    // process command line arguments
+    std::string sSpecType_mod = (sSpecType != "") ? sSpecType : "Preset";
+    for (auto& c : sSpecType_mod)
     {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
+    if (sSpecType_mod == "preset")
+        sSpecType_mod = "Preset";
+    else if (sSpecType_mod == "file")
+        sSpecType_mod = "File";
+    else if (sSpecType_mod == "json")
+        sSpecType_mod = "JSON";
 
-    HPWH hpwh;
-    if (sPresetOrFile == "preset")
+    if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(sModelName);
     }
-    else
+    else if (sSpecType_mod == "File")
     {
-        std::string sInputFile = sModelName;
-        hpwh.initFromFile(sInputFile);
+        hpwh.initFromFile(sModelName);
     }
+    else if (sSpecType_mod == "JSON")
+    {
+        hpwh.initFromJSON(sModelName);
+    }
+
+    standardTestOptions.sOutputDirectory = sOutputDir;
 
     std::cout << "Model name: " << sModelName << "\n";
     std::cout << "Target UEF: " << targetUEF << "\n";
@@ -78,9 +88,7 @@ void make(const std::string& sSpecType,
 
     hpwh.makeGeneric(targetUEF);
 
-    sPresetOrFile[0] =
-        static_cast<char>(std::toupper(static_cast<unsigned char>(sPresetOrFile[0])));
-    standardTestOptions.sOutputFilename = "test24hr_" + sPresetOrFile + "_" + sModelName + ".csv";
+    standardTestOptions.sOutputFilename = "test24hr_" + sSpecType_mod + "_" + sModelName + ".csv";
 
     hpwh.measureMetrics(firstHourRating, standardTestOptions, standardTestSummary);
 }

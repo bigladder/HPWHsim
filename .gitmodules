@@ -1,8 +1,15 @@
-[submodule "vendor/btwxt"]
+[submodule "btwxt"]
 	path = vendor/btwxt
 	url = https://github.com/bigladder/btwxt.git
 
-[submodule "vendor/CLI11"]
+[submodule "CLI11"]
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
-	ignore = untracked
+
+[submodule "json"]
+	path = vendor/json
+	url = https://github.com/nlohmann/json.git
+
+[submodule "hpwh-data-model"]
+	path = vendor/hpwh_data_model
+	url = https://github.com/bigladder/hpwh-data-model.git
