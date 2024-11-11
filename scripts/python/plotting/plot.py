@@ -7,10 +7,7 @@ import pandas as pd  # type: ignore
 from koozie import convert  # type: ignore
 import json
 from dash import Dash, dcc, html, Input, Output, callback
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+import plotly.express as px
 
 styles = {
     'pre': {
@@ -18,92 +15,6 @@ styles = {
         'overflowX': 'scroll'
     }
 }
-
-def set_layout(fig):
-   if fig == []:
-        return html.Div([])
-
-
-   @callback(
-        Output('hover-data', 'children'),
-        Input('basic-interactions', 'hoverData'))
-   def display_hover_data(hoverData):
-        return json.dumps(hoverData, indent=2)
-
-
-   @callback(
-        Output('click-data', 'children'),
-        Input('basic-interactions', 'clickData'))
-   def display_click_data(clickData):
-        return json.dumps(clickData, indent=2)
-
-
-   @callback(
-        Output('selected-data', 'children'),
-        Input('basic-interactions', 'selectedData'))
-   def display_selected_data(selectedData):
-        return json.dumps(selectedData, indent=2)
-
-
-   @callback(
-        Output('relayout-data', 'children'),
-        Input('basic-interactions', 'relayoutData'))
-   def display_relayout_data(relayoutData):
-        return json.dumps(relayoutData, indent=2)
-
-   print("changing layout")
-   return html.Div([
-    dcc.Graph(
-        id='basic-interactions',
-        figure=fig
-    ),
-
-    html.Div(className='row', children=[
-        html.Div([
-            dcc.Markdown("""
-                **Hover Data**
-
-                Mouse over values in the graph.
-            """),
-            html.Pre(id='hover-data', style=styles['pre'])
-        ], className='three columns'),
-
-        html.Div([
-            dcc.Markdown("""
-                **Click Data**
-
-                Click on points in the graph.
-            """),
-            html.Pre(id='click-data', style=styles['pre']),
-        ], className='three columns'),
-
-        html.Div([
-            dcc.Markdown("""
-                **Selection Data**
-
-                Choose the lasso or rectangle tool in the graph's menu
-                bar and then select points in the graph.
-
-                Note that if `layout.clickmode = 'event+select'`, selection data also
-                accumulates (or un-accumulates) selected data if you hold down the shift
-                button while clicking.
-            """),
-            html.Pre(id='selected-data', style=styles['pre']),
-        ], className='three columns'),
-
-        html.Div([
-            dcc.Markdown("""
-                **Zoom and Relayout Data**
-
-                Click and drag on the graph to zoom or click on the zoom
-                buttons in the graph's menu bar.
-                Clicking on legend items will also fire
-                this event.
-            """),
-            html.Pre(id='relayout-data', style=styles['pre']),
-        ], className='three columns')
-    ])
-    ])
 
 DEGREE_SIGN = "\N{DEGREE SIGN}"
 GRID_LINE_WIDTH = 1.5
@@ -118,38 +29,33 @@ RED_BLUE_DIVERGING_PALLETTE = [
     "#003a6d",
 ]
 
+
 NUMBER_OF_THERMOCOUPLES = 6
 
-
 def call_csv(path, skip_rows):
-    print(path)
-
-    data = pd.read_csv(path, skiprows=skip_rows)
-    df = pd.DataFrame(data)
-    return df
-
+	data = pd.read_csv(path, skiprows=skip_rows)
+	df = pd.DataFrame(data)
+	return df
 
 def convert_values(df_column, from_units, to_units):
-    converted_column = df_column.apply(lambda x: convert(x, from_units, to_units))
-    return converted_column
-
+	converted_column = df_column.apply(lambda x: convert(x, from_units, to_units))
+	return converted_column
 
 def filter_dataframe_range(df, variable_type, variables):
-    column_time_name = variables["X-Variables"]["Time"]["Column Names"][variable_type]
-    return df[(df[column_time_name] > 0) & (df[column_time_name] <= 1440)].reset_index()
-
+	column_time_name = variables["X-Variables"]["Time"]["Column Names"][variable_type]
+	return df[(df[column_time_name] > 0) & (df[column_time_name] <= 1440)].reset_index()
 
 def calculate_average_tank_temperature(df_measured, df_simulated, variable_type, variables):
-    if variable_type == "Measured":
-        df = df_measured
-    elif variable_type == "Simulated":
-        df = df_simulated
+	if variable_type == "Measured":
+		df = df_measured
+	elif variable_type == "Simulated":
+		df = df_simulated
 
-    df["Storage Tank Average Temperature"] = df[
+	df["Storage Tank Average Temperature"] = df[
         variables["Y-Variables"]["Temperature"]["Column Names"][variable_type]
     ].mean(axis=1)
 
-    TEMPERATURE_DETAILS = {
+	TEMPERATURE_DETAILS = {
         "Measured": [
             "Storage Tank Average Temperature",
             "OutletT(C)",
@@ -164,210 +70,228 @@ def calculate_average_tank_temperature(df_measured, df_simulated, variable_type,
         ],
     }
 
-    for index, label in enumerate(TEMPERATURE_DETAILS[variable_type]):
-        variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(
-            index, label
-        )
+	for index, label in enumerate(TEMPERATURE_DETAILS[variable_type]):
+		variables["Y-Variables"]["Temperature"]["Column Names"][variable_type].insert(
+		index, label)
 
-    for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"][
+	for temperature_column in variables["Y-Variables"]["Temperature"]["Column Names"][
         variable_type
     ]:
-        for index in range(len(df)):
-            df.loc[index, temperature_column] = convert(
-                df.loc[index, temperature_column], "degC", "degF"
-            )
+			for index in range(len(df)):
+				df.loc[index, temperature_column] = convert(df.loc[index, temperature_column], "degC", "degF")
 
-    return df
-
-def add_temperature_details(variables):
-    TEMPERATURE_DETAILS = {
-        "Labels": [
-            "Storage Tank Average Temperature",
-            "Storage Tank Outlet Temperature",
-            "Storage Tank Inlet Temperature",
-            "Ambient Temperature",
-        ],
-        "Colors": ["black", "orange", "purple", "limegreen"],
-        "Line Mode": ["lines", "lines+markers", "lines", "lines"],
-        "Line Visibility": [True, True, False, False],
-    }
-
-    for key in TEMPERATURE_DETAILS.keys():
-        for index in range(len(TEMPERATURE_DETAILS[key])):
-            variables["Y-Variables"]["Temperature"][key].insert(
-                index, TEMPERATURE_DETAILS[key][index]
-            )
+	return df
 
 def retrieve_dataframe(df_measured, df_simulated, variable_type):
-    if variable_type == "Measured":
-        return df_measured
-    elif variable_type == "Simulated":
-        return df_simulated
-
+	if variable_type == "Measured":
+		return df_measured
+	elif variable_type == "Simulated":
+		return df_simulated
 
 def retrieve_line_type(variable_type):
-    if variable_type == "Measured":
-        return None
-    elif variable_type == "Simulated":
-        return "dot"
+	if variable_type == "Measured":
+		return None
+	elif variable_type == "Simulated":
+		return "dot"
 
+def add_temperature_details(variables):
+	TEMPERATURE_DETAILS = {
+		"Labels": [
+			"Storage Tank Average Temperature",
+			"Storage Tank Outlet Temperature",
+			"Storage Tank Inlet Temperature",
+			"Ambient Temperature",
+		],
+		"Colors": ["black", "orange", "purple", "limegreen"],
+		"Line Mode": ["lines", "lines+markers", "lines", "lines"],
+		"Line Visibility": [True, True, False, False],
+  }
+
+	for key in TEMPERATURE_DETAILS.keys():
+		for index in range(len(TEMPERATURE_DETAILS[key])):
+			variables["Y-Variables"]["Temperature"][key].insert(index, TEMPERATURE_DETAILS[key][index])
 
 def plot_graphs(plot, df_measured, df_simulated, variable_type, variable, variables, value, row):
-    df = retrieve_dataframe(df_measured, df_simulated, variable_type)
+	df = retrieve_dataframe(df_measured, df_simulated, variable_type)
 
-    if (value in [1, 2]) and (variable_type == "Measured"):
-        marker_symbol = "circle"
-        marker_size = 7
-        marker_fill_color = "white"
-        marker_line_color = variables["Y-Variables"][variable]["Colors"][value]
-    elif (value == 1) and (variable_type == "Simulated"):
-        marker_symbol = "circle"
-        marker_size = 7
-        marker_fill_color = variables["Y-Variables"][variable]["Colors"][value]
-        marker_line_color = variables["Y-Variables"][variable]["Colors"][value]
-    else:
-        marker_symbol = None
-        marker_size = None
-        marker_fill_color = None
-        marker_line_color = None
+	if (value in [1, 2]) and (variable_type == "Measured"):
+		marker_symbol = "circle"
+		marker_size = 7
+		marker_fill_color = "white"
+		marker_line_color = variables["Y-Variables"][variable]["Colors"][value]
+	elif (value == 1) and (variable_type == "Simulated"):
+		marker_symbol = "circle"
+		marker_size = 7
+		marker_fill_color = variables["Y-Variables"][variable]["Colors"][value]
+		marker_line_color = variables["Y-Variables"][variable]["Colors"][value]
+	else:
+		marker_symbol = None
+		marker_size = None
+		marker_fill_color = None
+		marker_line_color = None
 
-    plot.add_time_series(
-        dimes.TimeSeriesData(
-            df[
-                variables["Y-Variables"][variable]["Column Names"][variable_type][value]
-            ],
-            name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
-            native_units=variables["Y-Variables"][variable]["Units"],
-            line_properties=LineProperties(
-                color=variables["Y-Variables"][variable]["Colors"][value],
-                line_type=retrieve_line_type(variable_type),
-                marker_symbol=marker_symbol,
-                marker_size=marker_size,
-                marker_line_color=marker_line_color,
-                marker_fill_color=marker_fill_color,
-                is_visible=variables["Y-Variables"][variable]["Line Visibility"][value],
-            ),
-        ),
-        subplot_number=row,
-        axis_name=variable,
-    )
+	plot.add_time_series(
+	    dimes.TimeSeriesData(
+	        df[
+	            variables["Y-Variables"][variable]["Column Names"][variable_type][value]
+	        ],
+	        name=f"{variables['Y-Variables'][variable]['Labels'][value]} - {variable_type}",
+	        native_units=variables["Y-Variables"][variable]["Units"],
+	        line_properties=LineProperties(
+	            color=variables["Y-Variables"][variable]["Colors"][value],
+	            line_type=retrieve_line_type(variable_type),
+	            marker_symbol=marker_symbol,
+	            marker_size=marker_size,
+	            marker_line_color=marker_line_color,
+	            marker_fill_color=marker_fill_color,
+	            is_visible=variables["Y-Variables"][variable]["Line Visibility"][value],
+	        ),
+	    ),
+	    subplot_number=row,
+	    axis_name=variable,
+  )
 
+class Plotter:
+	def __init__(self):
+		self.the_plot = {}   #
+		self.fig = {}
+		self.measured_path="/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/test/BradfordWhite/AeroThermRE2H/RE2H50_UEF50/measured.csv"
+		self.simulated_path="/Users/phil-ahrenkiel/Documents/GitHub/HPWHsim/build/test/output/RE2H50_UEF50_Preset_BradfordWhiteAeroThermRE2H65.csv"
+				
+	def redraw_plot(self):		   
+		df_measured = call_csv(self.measured_path, 0)
+		df_simulated = call_csv(self.simulated_path, 0)
+
+		power_col_label_meas = "Power_W"
+		power_col_label_sim = "Power_W"
+
+		variables = {
+	        "Y-Variables": {
+	            "Power Input": {
+	                "Column Names": {"Measured": [power_col_label_meas], "Simulated": [power_col_label_sim]},
+	                "Labels": ["Power Input"],
+	                "Units": "W",
+	                "Colors": ["red"],
+	                "Line Mode": ["lines"],
+	                "Line Visibility": [True],
+	            },
+	            "Flow Rate": {
+	                "Column Names": {"Measured": ["FlowRate(gal/min)"], "Simulated": ["draw"]},
+	                "Labels": ["Flow Rate"],
+	                "Units": "gal/min",
+	                "Colors": ["green"],
+	                "Line Mode": ["lines"],
+	                "Line Visibility": [True],
+	            },
+	            "Temperature": {
+	                "Column Names": {
+	                    "Measured": [
+	                        f"TankT{number}(C)"
+	                        for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+	                    ],
+	                    "Simulated": [
+	                        f"tcouple{number} (C)"
+	                        for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
+	                    ],
+	                },
+	                "Labels": [
+	                    f"Storage Tank Temperature {number}"
+	                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
+	                ],
+	                "Units": f"{DEGREE_SIGN}F",
+	                "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
+	                "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
+	                "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
+	            },
+	        },
+	        "X-Variables": {
+	            "Time": {
+	                "Column Names": {"Measured": "Time(min)", "Simulated": "minutes"},
+	                "Units": "Min",
+	            }
+	        },
+	    }
+
+	    # remove rows from dataframes outside of inclusive range [1,1440]
+		df_measured = filter_dataframe_range(df_measured, "Measured", variables)
+		df_simulated = filter_dataframe_range(df_simulated, "Simulated", variables)
+
+		df_measured = calculate_average_tank_temperature(df_measured, df_simulated, "Measured", variables)
+		df_simulated = calculate_average_tank_temperature(df_measured, df_simulated, "Simulated", variables)
+
+		df_measured[power_col_label_meas] = df_measured["PowerIn(W)"]
+
+		# sum sim power if multiple heat sources
+		i = 1
+		src_exists = True
+		while src_exists:
+			col_label = f"h_src{i}In (Wh)"
+			src_exists = df_simulated.columns.isin([col_label]).any()
+			if src_exists:
+				if i == 1:
+					df_simulated[power_col_label_sim] = df_simulated[col_label]
+				else:
+					df_simulated[power_col_label_sim] = df_simulated[power_col_label_sim] + df_simulated[col_label]
+			i = i + 1
+
+	    # convert simulated energy consumption (Wh) for every minute to power (W)
+			df_simulated[power_col_label_sim] = convert_values(df_simulated[power_col_label_sim], "Wh/min", "W")
+
+	    # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
+			add_temperature_details(variables)
+	    
+			self.the_plot = dimes.TimeSeriesPlot(
+	        df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
+	    )
+	    
+			for row, variable in enumerate(variables["Y-Variables"].keys()):
+				for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
+					for value in range(
+						len(variables["Y-Variables"][variable]["Column Names"][variable_type])
+					):
+						plot_graphs(self.the_plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
+
+			self.the_plot.finalize_plot()
+			#print(self.the_plot.figure)
+	    #result['plot_html'] = plot.figure.to_html(full_html=True)
+	    
+			print("Drew the plot.")
+			energy_data = {}   
+			#energy_data['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
+			#energy_data['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
+			#return energy_data
+			return self.the_plot.figure
+
+	def draw_plot(self, measured_path_in, simulated_path_in):
+		self.measured_path = measured_path_in
+		self.simulated_path = simulated_path_in
+		return self.redraw_plot()
+
+plotter = Plotter()
+
+def plot(measured_path, simulated_path):
+	print("plotting...")
+	return plotter.draw_plot(measured_path, simulated_path)
 
 #
-def plot(measured_path, simulated_path, plot_path):
+app = Dash(__name__)
+app.layout = [
     
-    df_measured = call_csv(measured_path, 0)
-    df_simulated = call_csv(simulated_path, 0)
+    dcc.Graph(id='test-graph'),
+		html.Button('Redraw', id='redraw', n_clicks=0)
+]
 
-    #
-    power_col_label_meas = "Power_W"
-    power_col_label_sim = "Power_W"
+# Add controls to build the interaction
+@callback(
+    Output(component_id='test-graph', component_property='figure'),
+    Input('redraw', 'n_clicks')
+)
+def update_graph(n_clicks):
+		print("Updating...")
+		return plotter.redraw_plot()
 
-    variables = {
-        "Y-Variables": {
-            "Power Input": {
-                "Column Names": {"Measured": [power_col_label_meas], "Simulated": [power_col_label_sim]},
-                "Labels": ["Power Input"],
-                "Units": "W",
-                "Colors": ["red"],
-                "Line Mode": ["lines"],
-                "Line Visibility": [True],
-            },
-            "Flow Rate": {
-                "Column Names": {"Measured": ["FlowRate(gal/min)"], "Simulated": ["draw"]},
-                "Labels": ["Flow Rate"],
-                "Units": "gal/min",
-                "Colors": ["green"],
-                "Line Mode": ["lines"],
-                "Line Visibility": [True],
-            },
-            "Temperature": {
-                "Column Names": {
-                    "Measured": [
-                        f"TankT{number}(C)"
-                        for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
-                    ],
-                    "Simulated": [
-                        f"tcouple{number} (C)"
-                        for number in reversed(range(1, NUMBER_OF_THERMOCOUPLES + 1))
-                    ],
-                },
-                "Labels": [
-                    f"Storage Tank Temperature {number}"
-                    for number in range(1, NUMBER_OF_THERMOCOUPLES + 1)
-                ],
-                "Units": f"{DEGREE_SIGN}F",
-                "Colors": list(reversed(RED_BLUE_DIVERGING_PALLETTE)),
-                "Line Mode": ["lines"] * NUMBER_OF_THERMOCOUPLES,
-                "Line Visibility": [False] * NUMBER_OF_THERMOCOUPLES,
-            },
-        },
-        "X-Variables": {
-            "Time": {
-                "Column Names": {"Measured": "Time(min)", "Simulated": "minutes"},
-                "Units": "Min",
-            }
-        },
-    }
-
-    # remove rows from dataframes outside of inclusive range [1,1440]
-    df_measured = filter_dataframe_range(df_measured, "Measured", variables)
-    df_simulated = filter_dataframe_range(df_simulated, "Simulated", variables)
-
-    df_measured = calculate_average_tank_temperature(df_measured, df_simulated, "Measured", variables)
-    df_simulated = calculate_average_tank_temperature(df_measured, df_simulated, "Simulated", variables)
-
-    df_measured[power_col_label_meas] = df_measured["PowerIn(W)"]
-
-    # sum sim power if multiple heat sources
-    i = 1
-    src_exists = True
-    while src_exists:
-        col_label = f"h_src{i}In (Wh)"
-        src_exists = df_simulated.columns.isin([col_label]).any()
-        if src_exists:
-            if i == 1:
-                df_simulated[power_col_label_sim] = df_simulated[col_label]
-            else:
-                df_simulated[power_col_label_sim] = df_simulated[power_col_label_sim] + df_simulated[col_label]
-        i = i + 1
-
-    # convert simulated energy consumption (Wh) for every minute to power (W)
-    df_simulated[power_col_label_sim] = convert_values(df_simulated[power_col_label_sim], "Wh/min", "W")
-
-    # add average, inlet, and outlet temperature details (ex. visibility, color, etc.) to variables dictionary
-    add_temperature_details(variables)
-    
-    the_plot = dimes.TimeSeriesPlot(
-        df_measured[variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
-    )
-    
-    for row, variable in enumerate(variables["Y-Variables"].keys()):
-        for variable_type in variables["Y-Variables"][variable]["Column Names"].keys():
-            for value in range(
-                    len(variables["Y-Variables"][variable]["Column Names"][variable_type])
-            ):
-                plot_graphs(the_plot, df_measured, df_simulated, variable_type, variable, variables, value, row + 1)
-
-      
-    #the_plot.finalize_plot()   
-    #the_plot.write_html_plot(plot_path)
-   
-    the_plot.figure.update_traces(marker_size=20)
-    the_plot.figure.update_layout(clickmode='event+select')
-  
-    app.layout = set_layout(the_plot.figure) 
-   
-    result = {}
-    #result['plot_html'] = plot.figure.to_html(full_html=True)
-    result['measuredE_Wh'] = df_measured[power_col_label_meas].sum()/60
-    result['simulatedE_Wh'] = df_simulated[power_col_label_sim].sum()/60
-    return result
-
-
-app.layout = set_layout([]) 
-
+ 
 #  main
 if __name__ == "__main__":
     app.run(debug=True)
-     
+      

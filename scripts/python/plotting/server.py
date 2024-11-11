@@ -29,7 +29,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/test'):
             query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-
             model_spec = query_components.get('model_spec', [None])[0]
             model_name = query_components.get('model_name', [None])[0]
             test_dir = query_components.get('test_dir', [None])[0]

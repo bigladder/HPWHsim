@@ -91,10 +91,10 @@ body {font-family: Arial;}
 	  );
 
     const data = await response.json();
-    const energy_data = data["energy_data"];
+    const test_data = data["energy_data"];
 
-    measE = energy_data["measuredE_Wh"].toFixed(2);
-    simE = energy_data["simulatedE_Wh"].toFixed(2);
+    measE = test_data["measuredE_Wh"].toFixed(2);
+    simE = test_data["simulatedE_Wh"].toFixed(2);
     document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
     document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
 
@@ -116,7 +116,7 @@ body {font-family: Arial;}
     localStorage.setItem("test_dir", test_dir);
     localStorage.setItem("build_dir", build_dir);
 
-    document.getElementById("plots").src = build_dir + "/test/output/plot.html"
+    document.getElementById("plots").src = "http://localhost:8050" ;//build_dir + "/test/output/plot.html"
     document.getElementById("plots").style = "display:block;"
   
     document.getElementById("test_btn").disabled = false;

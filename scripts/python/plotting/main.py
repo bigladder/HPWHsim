@@ -11,7 +11,7 @@ from measure import measure
 # Runs a simulation and generates plot
 def call_test(model_spec, model_name, test_dir, build_dir):
 
-    simulate(model_spec, model_name, test_dir, build_dir)
+    #simulate(model_spec, model_name, test_dir, build_dir)
     
     orig_dir = str(Path.cwd())
     os.chdir(build_dir)
@@ -30,9 +30,9 @@ def call_test(model_spec, model_name, test_dir, build_dir):
     test_name = Path(test_dir).name
     
     simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
-    plot_path =  os.path.join(output_dir, "plot.html") 
-            
-    return plot(measured_path, simulated_path, plot_path)
+    #plot_path =  os.path.join(output_dir, "plot.html") 
+         
+    return plot(measured_path, simulated_path)
 
 # Calls the 24-hr test function.
 def call_measure(model_spec, model_name, build_dir, draw_profile):
