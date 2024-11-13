@@ -28,9 +28,10 @@ if __name__ == "__main__":
 		data_model_dir = ""
 		gen_out_dir = ""
 		n_args = len(sys.argv) - 1
-		if n_args == 2:
-			data_model_dir = sys.argv[1]
-			gen_out_dir = sys.argv[2]
+		if n_args == 3:
+			repo_dir = sys.argv[1]
+			data_model_dir = sys.argv[2]
+			gen_out_dir = sys.argv[3]
 
 		generate(repo_dir, data_model_dir, gen_out_dir)
 
