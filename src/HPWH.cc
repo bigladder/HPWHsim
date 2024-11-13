@@ -53,89 +53,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-const double HPWH::DENSITYWATER_kgperL = 0.995; /// mass density of water
-const double HPWH::KWATER_WpermC = 0.62;        /// thermal conductivity of water
-const double HPWH::CPWATER_kJperkgC = 4.180;    /// specific heat capcity of water
-
-const double HPWH::TOL_MINVALUE = 0.0001;
-const float HPWH::UNINITIALIZED_LOCATIONTEMP = -500.f;
-const float HPWH::ASPECTRATIO = 4.75f;
-
-const double HPWH::MAXOUTLET_R134A = F_TO_C(160.);
-const double HPWH::MAXOUTLET_R410A = F_TO_C(140.);
-const double HPWH::MAXOUTLET_R744 = F_TO_C(190.);
-const double HPWH::MINSINGLEPASSLIFT = dF_TO_dC(15.);
-
-std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> HPWH::firstDrawClusterSizes = {
-    {HPWH::FirstHourRating::Desig::VerySmall, 5},
-    {HPWH::FirstHourRating::Desig::Low, 3},
-    {HPWH::FirstHourRating::Desig::Medium, 3},
-    {HPWH::FirstHourRating::Desig::High, 4}};
-
-std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> HPWH::drawPatterns = {
-    {HPWH::FirstHourRating::Desig::VerySmall,
-     {{HM_TO_MIN(0, 00), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(1, 05), 1.9, 3.8},
-      {HM_TO_MIN(1, 10), 1.9, 3.8},
-      {HM_TO_MIN(1, 15), 1.9, 3.8},
-      {HM_TO_MIN(8, 00), 3.8, 3.8},
-      {HM_TO_MIN(8, 15), 7.6, 3.8},
-      {HM_TO_MIN(9, 00), 5.7, 3.8},
-      {HM_TO_MIN(9, 15), 3.8, 3.8}}},
-
-    {HPWH::FirstHourRating::Desig::Low,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 00), 3.8, 3.8},
-      {HM_TO_MIN(10, 30), 22.7, 6.4},
-      {HM_TO_MIN(11, 30), 15.1, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 11.4, 6.4}}},
-
-    {HPWH::FirstHourRating::Desig::Medium,
-     {{HM_TO_MIN(0, 00), 56.8, 6.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 34.1, 6.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 3.8, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 26.5, 6.4}}},
-
-    {HPWH::FirstHourRating::Desig::High,
-     {{HM_TO_MIN(0, 00), 102, 11.4},
-      {HM_TO_MIN(0, 30), 7.6, 3.8},
-      {HM_TO_MIN(0, 40), 3.8, 3.8},
-      {HM_TO_MIN(1, 40), 34.1, 6.4},
-      {HM_TO_MIN(10, 30), 56.8, 11.4},
-      {HM_TO_MIN(11, 30), 18.9, 6.4},
-      {HM_TO_MIN(12, 00), 3.8, 3.8},
-      {HM_TO_MIN(12, 45), 3.8, 3.8},
-      {HM_TO_MIN(12, 50), 3.8, 3.8},
-      {HM_TO_MIN(16, 00), 7.6, 3.8},
-      {HM_TO_MIN(16, 15), 7.6, 3.8},
-      {HM_TO_MIN(16, 30), 7.6, 6.4},
-      {HM_TO_MIN(16, 45), 7.6, 6.4},
-      {HM_TO_MIN(17, 00), 53.0, 11.4}}}};
-
-//-----------------------------------------------------------------------------
-///	@brief	Samples a std::vector to extract a single value spanning the fractional
-///			coordinate range from frac_begin to frac_end.
-/// @note	Bounding fractions are clipped or swapped, if needed.
-/// @param[in]	sampleValues	Contains values to be sampled
-///	@param[in]	beginFraction		Lower (left) bounding fraction (0 to 1)
-///	@param[in]	endFraction			Upper (right) bounding fraction (0 to 1)
-/// @return	Resampled value; 0 if undefined.
-//-----------------------------------------------------------------------------
 double
 getResampledValue(const std::vector<double>& sampleValues, double beginFraction, double endFraction)
 {
@@ -172,17 +89,10 @@ getResampledValue(const std::vector<double>& sampleValues, double beginFraction,
     return resampled_value;
 }
 
-//-----------------------------------------------------------------------------
-///	@brief	Replaces the values in a std::vector by resampling another std::vector of
-///			arbitrary size.
-/// @param[in,out]	values			Contains values to be replaced
-///	@param[in]		sampleValues	Contains values to replace with
-/// @return	Success: true; Failure: false
-//-----------------------------------------------------------------------------
-bool resample(std::vector<double>& values, const std::vector<double>& sampleValues)
+void resample(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
     if (sampleValues.empty())
-        return false;
+        return;
     double actualSize = static_cast<double>(values.size());
     double sizeRatio = static_cast<double>(sampleValues.size()) / actualSize;
     auto binSize = static_cast<std::size_t>(1. / sizeRatio);
@@ -214,24 +124,22 @@ bool resample(std::vector<double>& values, const std::vector<double>& sampleValu
         }
         beginFraction = endFraction;
     }
-    return true;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Resample an extensive property (e.g., heat)
 ///	@note	See definition of int resample.
 //-----------------------------------------------------------------------------
-bool resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
+void resampleExtensive(std::vector<double>& values, const std::vector<double>& sampleValues)
 {
-    if (resample(values, sampleValues))
+    resample(values, sampleValues);
+    if (!values.empty())
     {
         double scale =
             static_cast<double>(sampleValues.size()) / static_cast<double>(values.size());
         for (auto& value : values)
             value *= scale;
-        return true;
     }
-    return false;
 }
 
 double expitFunc(double x, double offset)
@@ -241,7 +149,7 @@ double expitFunc(double x, double offset)
     return val;
 }
 
-void normalize(std::vector<double>& distribution)
+std::vector<double> normalize(std::vector<double> distribution)
 {
     size_t N = distribution.size();
 
@@ -280,6 +188,7 @@ void normalize(std::vector<double>& distribution)
             }
         }
     }
+    return distribution;
 }
 
 //-----------------------------------------------------------------------------
@@ -302,7 +211,6 @@ int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
             break;
         }
     }
-
     return lowest;
 }
 
@@ -312,9 +220,8 @@ int findLowestNode(const std::vector<double>& nodeDist, const int numTankNodes)
 ///								is derived
 /// @returns	width parameter (in degC)
 //-----------------------------------------------------------------------------
-double findShrinkageT_C(const std::vector<double>& nodeDist)
+HPWH::Temp_d_t findShrinkage_dT(const std::vector<double>& nodeDist)
 {
-    double alphaT_C = 1., betaT_C = 2.;
     double condentropy = 0.;
     for (std::size_t iNode = 0; iNode < nodeDist.size(); ++iNode)
     {
@@ -328,38 +235,38 @@ double findShrinkageT_C(const std::vector<double>& nodeDist)
     double size_factor = static_cast<double>(nodeDist.size()) / HPWH::CONDENSITY_SIZE;
     double standard_condentropy = condentropy - log(size_factor);
 
-    return alphaT_C + standard_condentropy * betaT_C;
+    HPWH::Temp_d_t alpha_dT(1., Units::dC), beta_dT(2., Units::dC);
+    return alpha_dT + standard_condentropy * beta_dT;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Calculates a thermal distribution for heat distribution.
-/// @note	Fails if all nodeTemp_C values exceed setpointT_C
+/// @note	Fails if all nodeTemp_C values exceed setpointT
 /// @param[out]	thermalDist		resulting thermal distribution; does not require pre-allocation
 /// @param[in]	shrinkageT_C	width of distribution
 /// @param[in]	lowestNode		index of lowest non-zero contribution
 /// @param[in]	nodeTemp_C		node temperatures
 /// @param[in]	setpointT_C		distribution parameter
 //-----------------------------------------------------------------------------
-void calcThermalDist(std::vector<double>& thermalDist,
-                     const double shrinkageT_C,
-                     const int lowestNode,
-                     const std::vector<double>& nodeT_C,
-                     const double setpointT_C)
+std::vector<double> calcThermalDist(HPWH::Temp_d_t shrinkage_dT,
+                                    int lowestNode,
+                                    const HPWH::TempVect_t& nodeTs,
+                                    const HPWH::Temp_t setpointT)
 {
-
-    thermalDist.resize(nodeT_C.size());
+    std::vector<double> thermalDist(nodeTs.size());
 
     // Populate the vector of heat distribution
     double totDist = 0.;
-    for (int i = 0; i < static_cast<int>(nodeT_C.size()); i++)
+    for (int i = 0; i < static_cast<int>(nodeTs.size()); i++)
     {
         double dist = 0.;
         if (i >= lowestNode)
         {
-            double Toffset_C = 5.0 / 1.8;   // 5 degF
-            double offset = Toffset_C / 1.; // should be dimensionless
-            dist = expitFunc((nodeT_C[i] - nodeT_C[lowestNode]) / shrinkageT_C, offset);
-            dist *= (setpointT_C - nodeT_C[i]);
+            HPWH::Temp_d_t standardOffset_dT(1.0, Units::dC);
+            HPWH::Temp_d_t offset_dT(5.0, Units::dF);
+            double offset = offset_dT / standardOffset_dT; // dimensionless
+            dist = expitFunc((nodeTs[i] - nodeTs[lowestNode]) / shrinkage_dT, offset);
+            dist *= (setpointT - nodeTs[i])();
             if (dist < 0.)
                 dist = 0.;
         }
@@ -369,12 +276,13 @@ void calcThermalDist(std::vector<double>& thermalDist,
 
     if (totDist > 0.)
     {
-        normalize(thermalDist);
+        thermalDist = normalize(thermalDist);
     }
     else
     {
         thermalDist.assign(thermalDist.size(), 1. / static_cast<double>(thermalDist.size()));
     }
+    return thermalDist;
 }
 
 //-----------------------------------------------------------------------------
@@ -393,12 +301,197 @@ void scaleVector(std::vector<double>& coeffs, const double scaleFactor)
     }
 }
 
-void HPWH::setMinutesPerStep(const double minutesPerStep_in)
+double linearInterp(double xnew, double x0, double x1, double y0, double y1)
 {
-    minutesPerStep = minutesPerStep_in;
-    secondsPerStep = sec_per_min * minutesPerStep;
-    hoursPerStep = minutesPerStep / min_per_hr;
+    return y0 + (xnew - x0) * (y1 - y0) / (x1 - x0);
 }
+
+double factorial(const int n)
+{
+    double f = 1.;
+    for (int i = 1; i <= n; ++i)
+        f *= i;
+    return f;
+}
+
+double choose(const int n, const int i)
+{
+    double f = 0.;
+    if (i <= n)
+    {
+        f = factorial(n) / factorial(i) / factorial(n - i);
+    }
+    return f;
+}
+
+double regressedMethod(const std::vector<double>& coeffs, double x1, double x2, double x3)
+{
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x3 + coeffs[4] * x1 * x1 +
+           coeffs[5] * x2 * x2 + coeffs[6] * x3 * x3 + coeffs[7] * x1 * x2 + coeffs[8] * x1 * x3 +
+           coeffs[9] * x2 * x3 + coeffs[10] * x1 * x2 * x3;
+}
+
+double regressedMethodMP(const std::vector<double>& coeffs, double x1, double x2)
+{
+    // Const Tair Tin Tair2 Tin2 TairTin
+    return coeffs[0] + coeffs[1] * x1 + coeffs[2] * x2 + coeffs[3] * x1 * x1 + coeffs[4] * x2 * x2 +
+           coeffs[5] * x1 * x2;
+}
+
+const std::vector<int> HPWH::powers3 = {0, 1, 2};
+
+const std::vector<std::pair<int, int>> HPWH::powers6 = {
+    {0, 0}, {1, 0}, {0, 1}, {2, 0}, {0, 2}, {1, 1}};
+
+const std::vector<std::tuple<int, int, int>> HPWH::powers11 = {{0, 0, 0},
+                                                               {1, 0, 0},
+                                                               {0, 1, 0},
+                                                               {0, 0, 1},
+                                                               {2, 0, 0},
+                                                               {0, 2, 0},
+                                                               {0, 0, 2},
+                                                               {1, 1, 0},
+                                                               {1, 0, 1},
+                                                               {0, 1, 1},
+                                                               {1, 1, 1}};
+
+std::vector<double> changeSeriesUnitsTemp3(const std::vector<double> coeffs,
+                                           const Units::Temp fromUnits,
+                                           const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleShift(toUnits, fromUnits);
+    double alpha = t.shift()(), beta = t.scale()();
+
+    auto& powers = HPWH::powers3;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i = powers[i];
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j = powers[j];
+            double fac = choose(power_j, power_i) * std::pow(alpha, power_j - power_i) *
+                         std::pow(beta, power_i);
+
+            newCoeffs[i] += fac * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp6(const std::vector<double> coeffs,
+                                           const Units::Temp fromUnits,
+                                           const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleShift(toUnits, fromUnits);
+    double alpha = t.shift()(), beta = t.scale()();
+
+    auto& powers = HPWH::powers6;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            newCoeffs[i] += fac0 * fac1 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+std::vector<double> changeSeriesUnitsTemp11(const std::vector<double> coeffs,
+                                            const Units::Temp fromUnits,
+                                            const Units::Temp toUnits)
+{
+    auto newCoeffs = coeffs;
+    if (fromUnits == toUnits)
+    {
+        return newCoeffs;
+    }
+
+    auto t = Units::scaleShift(toUnits, fromUnits);
+    double alpha = t.shift()(), beta = t.scale()();
+
+    auto& powers = HPWH::powers11;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+        newCoeffs[i] = 0.;
+        int power_i0 = std::get<0>(powers[i]);
+        int power_i1 = std::get<1>(powers[i]);
+        int power_i2 = std::get<2>(powers[i]);
+        for (std::size_t j = 0; j < coeffs.size(); ++j)
+        {
+            int power_j0 = std::get<0>(powers[j]);
+            int power_j1 = std::get<1>(powers[j]);
+            int power_j2 = std::get<2>(powers[j]);
+
+            double fac0 = choose(power_j0, power_i0) * std::pow(alpha, power_j0 - power_i0) *
+                          std::pow(beta, power_i0);
+
+            double fac1 = choose(power_j1, power_i1) * std::pow(alpha, power_j1 - power_i1) *
+                          std::pow(beta, power_i1);
+
+            double fac2 = choose(power_j2, power_i2) * std::pow(alpha, power_j2 - power_i2) *
+                          std::pow(beta, power_i2);
+
+            newCoeffs[i] += fac0 * fac1 * fac2 * coeffs[j];
+        }
+    }
+    return newCoeffs;
+}
+
+HPWH::PerfPoint::PerfPoint(std::pair<double, Units::Temp> T_in,
+                           PowerVect_t inputPower_coeffs_in, // with appropriate temperature factors
+                           std::vector<double> COP_coeffs_in)
+    : T(T_in.first, T_in.second), inputPower_coeffs(inputPower_coeffs_in), COP_coeffs(COP_coeffs_in)
+{
+    auto unitsTemp_in = T_in.second;
+    if (inputPower_coeffs.size() == 3) // use expandSeries
+    {
+        inputPower_coeffs() =
+            changeSeriesUnitsTemp3(inputPower_coeffs_in(), unitsTemp_in, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp3(COP_coeffs_in, unitsTemp_in, UnitsTemp);
+        return;
+    }
+
+    if (inputPower_coeffs.size() == 11) // use regressMethod
+    {
+        inputPower_coeffs() = changeSeriesUnitsTemp11(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp11(COP_coeffs, unitsTemp_in, UnitsTemp);
+        return;
+    }
+
+    if (inputPower_coeffs.size() == 6) // use regressMethodMP
+    {
+        inputPower_coeffs() = changeSeriesUnitsTemp6(inputPower_coeffs(), unitsTemp_in, UnitsTemp);
+        COP_coeffs = changeSeriesUnitsTemp6(COP_coeffs, unitsTemp_in, UnitsTemp);
+        return;
+    }
+}
+
+void HPWH::setStepTime(const Time_t stepTime_in) { stepTime = stepTime_in; }
 
 // public HPWH functions
 HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& name_in /*"hpwh"*/)
@@ -409,30 +502,30 @@ HPWH::HPWH(const std::shared_ptr<Courier::Courier>& courier, const std::string& 
 
 void HPWH::setAllDefaults()
 {
-    tankTemps_C.clear();
-    nextTankTemps_C.clear();
+    tankTs.clear();
+    nextTankTs.clear();
     heatSources.clear();
 
     isHeating = false;
     setpointFixed = false;
     tankSizeFixed = true;
     canScale = false;
-    member_inletT_C = -1.; // invalid unit setInletT called
+    member_inletT = Temp_t(-1., Units::F); // invalid unit setInletT called
     haveInletT = false;
     currentSoCFraction = 1.;
     doTempDepression = false;
-    locationTemperature_C = UNINITIALIZED_LOCATIONTEMP;
+    locationT = UNINITIALIZED_LOCATIONTEMP();
     mixBelowFractionOnDraw = 1. / 3.;
     doInversionMixing = true;
     doConduction = true;
     inletHeight = 0;
     inlet2Height = 0;
-    fittingsUA_kJperHrC = 0.;
+    fittingsUA() = 0.;
     prevDRstatus = DR_ALLOW;
     timerLimitTOT = 60.;
     timerTOT = 0.;
     usesSoCLogic = false;
-    setMinutesPerStep(1.0);
+    stepTime = Time_t(1.0, Units::min);
     hasHeatExchanger = false;
     heatExchangerEffectiveness = 0.9;
 }
@@ -455,24 +548,24 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
         heatSource.hpwh = this;
     }
 
-    tankVolume_L = hpwh.tankVolume_L;
-    tankUA_kJperHrC = hpwh.tankUA_kJperHrC;
-    fittingsUA_kJperHrC = hpwh.fittingsUA_kJperHrC;
+    tankVolume = hpwh.tankVolume;
+    tankUA = hpwh.tankUA;
+    fittingsUA = hpwh.fittingsUA;
 
-    setpoint_C = hpwh.setpoint_C;
+    setpointT = hpwh.setpointT;
 
-    tankTemps_C = hpwh.tankTemps_C;
-    nextTankTemps_C = hpwh.nextTankTemps_C;
+    tankTs = hpwh.tankTs;
+    nextTankTs = hpwh.nextTankTs;
 
     inletHeight = hpwh.inletHeight;
     inlet2Height = hpwh.inlet2Height;
 
-    outletTemp_C = hpwh.outletTemp_C;
-    condenserInlet_C = hpwh.condenserInlet_C;
-    condenserOutlet_C = hpwh.condenserOutlet_C;
-    externalVolumeHeated_L = hpwh.externalVolumeHeated_L;
-    energyRemovedFromEnvironment_kWh = hpwh.energyRemovedFromEnvironment_kWh;
-    standbyLosses_kWh = hpwh.standbyLosses_kWh;
+    outletT = hpwh.outletT;
+    condenserInletT = hpwh.condenserInletT;
+    condenserOutletT = hpwh.condenserOutletT;
+    externalVolumeHeated = hpwh.externalVolumeHeated;
+    energyRemovedFromEnvironment = hpwh.energyRemovedFromEnvironment;
+    standbyLosses = hpwh.standbyLosses;
 
     tankMixesOnDraw = hpwh.tankMixesOnDraw;
     mixBelowFractionOnDraw = hpwh.mixBelowFractionOnDraw;
@@ -482,15 +575,15 @@ HPWH& HPWH::operator=(const HPWH& hpwh)
     doInversionMixing = hpwh.doInversionMixing;
     doConduction = hpwh.doConduction;
 
-    locationTemperature_C = hpwh.locationTemperature_C;
+    locationT = hpwh.locationT;
 
     prevDRstatus = hpwh.prevDRstatus;
     timerLimitTOT = hpwh.timerLimitTOT;
 
     usesSoCLogic = hpwh.usesSoCLogic;
 
-    nodeVolume_L = hpwh.nodeVolume_L;
-    nodeHeight_m = hpwh.nodeHeight_m;
+    nodeVolume = hpwh.nodeVolume;
+    nodeHeight = hpwh.nodeHeight;
     fracAreaTop = hpwh.fracAreaTop;
     fracAreaSide = hpwh.fracAreaSide;
     return *this;
@@ -504,52 +597,52 @@ HPWH::HeatSource* HPWH::addHeatSource(const std::string& name_in)
     return &heatSources.back();
 }
 
-void HPWH::runOneStep(double drawVolume_L,
-                      double tankAmbientT_C,
-                      double heatSourceAmbientT_C,
+void HPWH::runOneStep(Volume_t drawVolume,
+                      Temp_t tankAmbientT,
+                      Temp_t heatSourceAmbientT,
                       DRMODES DRstatus,
-                      double inletVol2_L,
-                      double inletT2_C,
-                      std::vector<double>* extraHeatDist_W)
+                      Volume_t inlet2Vol,
+                      Temp_t inlet2T,
+                      PowerVect_t* extraHeatDist)
 {
 
     // check for errors
-    if (doTempDepression && (minutesPerStep != 1))
+    if (doTempDepression && (stepTime(Units::min) != 1))
     {
         send_error("minutesPerStep must equal one for temperature depression to work.");
     }
 
     // reset the output variables
-    outletTemp_C = 0.;
-    condenserInlet_C = 0.;
-    condenserOutlet_C = 0.;
-    externalVolumeHeated_L = 0.;
-    energyRemovedFromEnvironment_kWh = 0.;
-    standbyLosses_kWh = 0.;
+    outletT = Temp_t(0., Units::C);
+    condenserInletT = Temp_t(0., Units::C);
+    condenserOutletT = Temp_t(0., Units::C);
+    externalVolumeHeated() = 0.;
+    energyRemovedFromEnvironment() = 0.;
+    standbyLosses() = 0.;
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = 0;
-        heatSources[i].energyInput_kWh = 0.;
-        heatSources[i].energyOutput_kWh = 0.;
+        heatSources[i].runtime() = 0;
+        heatSources[i].energyInput() = 0.;
+        heatSources[i].energyOutput() = 0.;
     }
-    extraEnergyInput_kWh = 0.;
+    extraEnergyInput() = 0.;
 
     // if you are doing temp. depression, set tank and heatSource ambient temps
     // to the tracked locationTemperature
-    double temperatureGoal = tankAmbientT_C;
+    Temp_t temperatureGoal = tankAmbientT;
     if (doTempDepression)
     {
-        if (locationTemperature_C == UNINITIALIZED_LOCATIONTEMP)
+        if (locationT == UNINITIALIZED_LOCATIONTEMP())
         {
-            locationTemperature_C = tankAmbientT_C;
+            locationT = tankAmbientT;
         }
-        tankAmbientT_C = locationTemperature_C;
-        heatSourceAmbientT_C = locationTemperature_C;
+        tankAmbientT = locationT;
+        heatSourceAmbientT = locationT;
     }
 
     // process draws and standby losses
-    updateTankTemps(drawVolume_L, member_inletT_C, tankAmbientT_C, inletVol2_L, inletT2_C);
+    updateTankTemps(drawVolume, member_inletT, tankAmbientT, inlet2Vol, inlet2T);
 
     updateSoCIfNecessary();
 
@@ -632,7 +725,7 @@ void HPWH::runOneStep(double drawVolume_L,
         } // end loop over heat sources
 
         // do heating logic
-        double minutesToRun = minutesPerStep;
+        Time_t availableTime = stepTime;
         for (int i = 0; i < getNumHeatSources(); i++)
         {
             // check/apply lock-outs
@@ -643,7 +736,7 @@ void HPWH::runOneStep(double drawVolume_L,
             else
             {
                 // locks or unlocks the heat source
-                heatSources[i].toLockOrUnlock(heatSourceAmbientT_C);
+                heatSources[i].toLockOrUnlock(heatSourceAmbientT);
             }
             if (heatSources[i].isLockedOut() && heatSources[i].backupHeatSource == NULL)
             {
@@ -660,7 +753,7 @@ void HPWH::runOneStep(double drawVolume_L,
 
                     // Check that the backup isn't locked out too or already engaged then it will
                     // heat on its own.
-                    if (heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
+                    if (heatSources[i].backupHeatSource->toLockOrUnlock(heatSourceAmbientT) ||
                         shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
                                         DRstatus) || //){
                         heatSources[i].backupHeatSource->isEngaged())
@@ -684,14 +777,15 @@ void HPWH::runOneStep(double drawVolume_L,
                     heatSourcePtr = &heatSources[i];
                 }
 
-                addHeatParent(heatSourcePtr, heatSourceAmbientT_C, minutesToRun);
+                addHeatParent(heatSourcePtr, heatSourceAmbientT, availableTime);
 
                 // if it finished early. i.e. shuts off early like if the heatsource met setpoint or
                 // maxed out
-                if (heatSourcePtr->runtime_min < minutesToRun)
+                // static const Time_t minRuntime = 0.;
+                if (availableTime > heatSourcePtr->runtime)
                 {
                     // subtract time it ran and turn it off
-                    minutesToRun -= heatSourcePtr->runtime_min;
+                    availableTime -= heatSourcePtr->runtime;
                     heatSources[i].disengageHeatSource();
                     // and if there's a heat source that follows this heat source (regardless of
                     // lockout) that's able to come on,
@@ -711,7 +805,7 @@ void HPWH::runOneStep(double drawVolume_L,
                         // Check that the backup isn't locked out or already engaged then it will
                         // heat or already heated on its own.
                         if (!heatSources[i].backupHeatSource->toLockOrUnlock(
-                                heatSourceAmbientT_C) && // If not locked out
+                                heatSourceAmbientT) && // If not locked out
                             !shouldDRLockOut(heatSources[i].backupHeatSource->typeOfHeatSource,
                                              DRstatus) && // and not DR locked out
                             !heatSources[i].backupHeatSource->isEngaged())
@@ -721,11 +815,11 @@ void HPWH::runOneStep(double drawVolume_L,
                             // turn it on
                             backupHeatSourcePtr->engageHeatSource(DRstatus);
                             // add heat if it hasn't heated up this whole minute already
-                            if (backupHeatSourcePtr->runtime_min >= 0.)
+                            if (backupHeatSourcePtr->runtime >= 0.)
                             {
                                 addHeatParent(backupHeatSourcePtr,
-                                              heatSourceAmbientT_C,
-                                              minutesToRun - backupHeatSourcePtr->runtime_min);
+                                              heatSourceAmbientT,
+                                              availableTime - backupHeatSourcePtr->runtime);
                             }
                         }
                     }
@@ -738,9 +832,9 @@ void HPWH::runOneStep(double drawVolume_L,
         isHeating = false;
     }
     // If there's extra user defined heat to add -> Add extra heat!
-    if ((extraHeatDist_W != NULL) && (extraHeatDist_W->size() != 0))
+    if ((extraHeatDist != NULL) && (extraHeatDist->size() != 0))
     {
-        addExtraHeat(*extraHeatDist_W);
+        addExtraHeat(*extraHeatDist);
         updateSoCIfNecessary();
     }
 
@@ -759,8 +853,8 @@ void HPWH::runOneStep(double drawVolume_L,
 
         if (compressorRan)
         {
-            temperatureGoal -= maxDepression_C; // hardcoded 4.5 degree total drop - from
-                                                // experimental data. Changed to an input
+            temperatureGoal -= maxDepression_dT; // hardcoded 4.5 degree total drop - from
+                                                 // experimental data. Changed to an input
         }
         else
         {
@@ -772,23 +866,18 @@ void HPWH::runOneStep(double drawVolume_L,
         // experimental data - 9.4 minute half life and 4.5 degree total drop
         // minus-equals is important, and fits with the order of locationTemperature
         // and temperatureGoal, so as to not use fabs() and conditional tests
-        locationTemperature_C -= (locationTemperature_C - temperatureGoal) * (1 - 0.9289);
+        locationT -= Temp_d_t((1 - 0.9289) * (locationT - temperatureGoal));
     }
-
-    // settle outputs
-
-    // outletTemp_C and standbyLosses_kWh are taken care of in updateTankTemps
 
     // sum energyRemovedFromEnvironment_kWh for each heat source;
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        energyRemovedFromEnvironment_kWh +=
-            (heatSources[i].energyOutput_kWh - heatSources[i].energyInput_kWh);
+        energyRemovedFromEnvironment += (heatSources[i].energyOutput - heatSources[i].energyInput);
     }
 
 #if !NDEBUG
     // cursory check for inverted temperature profile
-    if (tankTemps_C[getNumNodes() - 1] < tankTemps_C[0])
+    if (tankTs[getNumNodes() - 1] < tankTs[0])
     {
         send_debug("The top of the tank is cooler than the bottom.");
     }
@@ -797,7 +886,7 @@ void HPWH::runOneStep(double drawVolume_L,
     // Handle DR timer
     prevDRstatus = DRstatus;
     // DR check for TOT to increase timer.
-    timerTOT += minutesPerStep;
+    timerTOT += stepTime(Units::min);
     // Restart the time if we're over the limit or the command is not a top off.
     if ((DRstatus & DR_TOT) != 0 && timerTOT >= timerLimitTOT)
     {
@@ -810,33 +899,32 @@ void HPWH::runOneStep(double drawVolume_L,
 } // end runOneStep
 
 void HPWH::runNSteps(int N,
-                     double* inletT_C,
-                     double* drawVolume_L,
-                     double* tankAmbientT_C,
-                     double* heatSourceAmbientT_C,
+                     Temp_t* inletT,
+                     Volume_t* drawVolume,
+                     Temp_t* tankAmbientT,
+                     Temp_t* heatSourceAmbientT,
                      DRMODES* DRstatus)
 {
     // these are all the accumulating variables we'll need
-    double energyRemovedFromEnvironment_kWh_SUM = 0;
-    double standbyLosses_kWh_SUM = 0;
-    double outletTemp_C_AVG = 0;
-    double totalDrawVolume_L = 0;
-    std::vector<double> heatSources_runTimes_SUM(getNumHeatSources());
-    std::vector<double> heatSources_energyInputs_SUM(getNumHeatSources());
-    std::vector<double> heatSources_energyOutputs_SUM(getNumHeatSources());
+    Energy_t energyRemovedFromEnvironment_SUM(0.);
+    Energy_t standbyLosses_SUM(0.);
+    double outletT_AVG = 0;
+    Volume_t totalDrawVolume(0.);
+    std::vector<Time_t> heatSources_runTimes_SUM(getNumHeatSources());
+    std::vector<Energy_t> heatSources_energyInputs_SUM(getNumHeatSources());
+    std::vector<Energy_t> heatSources_energyOutputs_SUM(getNumHeatSources());
 
     // run the sim one step at a time, accumulating the outputs as you go
     for (int i = 0; i < N; i++)
     {
+        runOneStep(inletT[i], drawVolume[i], tankAmbientT[i], heatSourceAmbientT[i], DRstatus[i]);
 
-        runOneStep(
-            inletT_C[i], drawVolume_L[i], tankAmbientT_C[i], heatSourceAmbientT_C[i], DRstatus[i]);
+        energyRemovedFromEnvironment_SUM += energyRemovedFromEnvironment;
+        standbyLosses_SUM += standbyLosses;
 
-        energyRemovedFromEnvironment_kWh_SUM += energyRemovedFromEnvironment_kWh;
-        standbyLosses_kWh_SUM += standbyLosses_kWh;
-
-        outletTemp_C_AVG += outletTemp_C * drawVolume_L[i];
-        totalDrawVolume_L += drawVolume_L[i];
+        Volume_t vol_i = drawVolume[i];
+        outletT_AVG += outletT() * vol_i();
+        totalDrawVolume += vol_i;
 
         for (int j = 0; j < getNumHeatSources(); j++)
         {
@@ -846,46 +934,43 @@ void HPWH::runNSteps(int N,
         }
     }
     // finish weighted avg. of outlet temp by dividing by the total drawn volume
-    outletTemp_C_AVG /= totalDrawVolume_L;
+    outletT_AVG /= totalDrawVolume();
 
     // now, reassign all accumulated values to their original spots
-    energyRemovedFromEnvironment_kWh = energyRemovedFromEnvironment_kWh_SUM;
-    standbyLosses_kWh = standbyLosses_kWh_SUM;
-    outletTemp_C = outletTemp_C_AVG;
+    energyRemovedFromEnvironment = energyRemovedFromEnvironment_SUM;
+    standbyLosses = standbyLosses_SUM;
+    outletT() = outletT_AVG;
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        heatSources[i].runtime_min = heatSources_runTimes_SUM[i];
-        heatSources[i].energyInput_kWh = heatSources_energyInputs_SUM[i];
-        heatSources[i].energyOutput_kWh = heatSources_energyOutputs_SUM[i];
+        heatSources[i].runtime = heatSources_runTimes_SUM[i];
+        heatSources[i].energyInput = heatSources_energyInputs_SUM[i];
+        heatSources[i].energyOutput = heatSources_energyOutputs_SUM[i];
     }
 }
 
-void HPWH::addHeatParent(HeatSource* heatSourcePtr,
-                         double heatSourceAmbientT_C,
-                         double minutesToRun)
+void HPWH::addHeatParent(HeatSource* heatSourcePtr, Temp_t heatSourceAmbientT, Time_t availableTime)
 {
-
-    double tempSetpoint_C = -273.15;
+    Temp_t tempSetpointT(-273.15, Units::C);
 
     // Check the air temprature and setpoint against maxOut_at_LowT
     if (heatSourcePtr->isACompressor())
     {
-        if (heatSourceAmbientT_C <= heatSourcePtr->maxOut_at_LowT.airT_C &&
-            setpoint_C >= heatSourcePtr->maxOut_at_LowT.outT_C)
+        if (heatSourceAmbientT <= heatSourcePtr->maxOut_at_LowT.airT &&
+            setpointT >= heatSourcePtr->maxOut_at_LowT.outT)
         {
-            tempSetpoint_C = setpoint_C; // Store setpoint
-            setSetpoint(heatSourcePtr->maxOut_at_LowT
-                            .outT_C); // Reset to new setpoint as this is used in the add heat calc
+            tempSetpointT = setpointT; // Store setpoint
+            setSetpointT(heatSourcePtr->maxOut_at_LowT
+                             .outT); // Reset to new setpoint as this is used in the add heat calc
         }
     }
     // and add heat if it is
-    heatSourcePtr->addHeat(heatSourceAmbientT_C, minutesToRun);
+    heatSourcePtr->addHeat(heatSourceAmbientT, availableTime);
 
     // Change the setpoint back to what it was pre-compressor depression
-    if (tempSetpoint_C > -273.15)
+    if (tempSetpointT(Units::C) > -273.15)
     {
-        setSetpoint(tempSetpoint_C);
+        setSetpointT(tempSetpointT);
     }
 }
 
@@ -932,19 +1017,19 @@ int HPWH::WriteCSVRow(std::ofstream& outFILE,
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               getNthHeatSourceEnergyInput(iHS, UNITS_KWH) * 1000.,
-                               getNthHeatSourceEnergyOutput(iHS, UNITS_KWH) * 1000.);
+                               getNthHeatSourceEnergyInput(iHS)(Units::kWh) * 1000.,
+                               getNthHeatSourceEnergyOutput(iHS)(Units::kWh) * 1000.);
     }
 
     for (int iTC = 0; iTC < nTCouples; iTC++)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               getNthSimTcouple(iTC + 1, nTCouples, doIP ? UNITS_F : UNITS_C));
+                               getNthSimTcouple(iTC + 1, nTCouples)(doIP ? Units::F : Units::C));
     }
 
     if (options & HPWH::CSVOPT_IS_DRAWING)
     {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outletTemp_C) : outletTemp_C);
+        outFILE << fmt::format(",{:0.2f}", outletT(doIP ? Units::F : Units::C));
     }
     else
     {
@@ -963,35 +1048,36 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
     bool doIP = (options & CSVOPT_IPUNITS) != 0;
 
     //
-    outFILE << fmt::format("{:d}", outputData.time_min);
+    outFILE << fmt::format("{:d}", outputData.time(Units::min));
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.ambientT_C) : outputData.ambientT_C);
+                           doIP ? outputData.ambientT(Units::F) : outputData.ambientT(Units::C));
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? C_TO_F(outputData.setpointT_C) : outputData.setpointT_C);
-    outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(outputData.inletT_C) : outputData.inletT_C);
+                           doIP ? outputData.setpointT(Units::C) : outputData.setpointT(Units::C));
     outFILE << fmt::format(",{:0.2f}",
-                           doIP ? L_TO_GAL(outputData.drawVolume_L) : outputData.drawVolume_L);
+                           doIP ? outputData.inletT(Units::F) : outputData.inletT(Units::C));
+    outFILE << fmt::format(
+        ",{:0.2f}", doIP ? outputData.drawVolume(Units::gal) : outputData.drawVolume(Units::L));
     outFILE << fmt::format(",{}", static_cast<int>(outputData.drMode));
 
     //
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
         outFILE << fmt::format(",{:0.2f},{:0.2f}",
-                               outputData.h_srcIn_kWh[iHS] * 1000.,
-                               outputData.h_srcOut_kWh[iHS] * 1000.);
+                               outputData.h_srcIn[iHS](Units::kWh) * 1000.,
+                               outputData.h_srcOut[iHS](Units::kWh) * 1000.);
     }
 
     //
-    for (auto thermocoupleT_C : outputData.thermocoupleT_C)
-    {
-        outFILE << fmt::format(",{:0.2f}", doIP ? C_TO_F(thermocoupleT_C) : thermocoupleT_C);
-    }
-
-    //
-    if (outputData.drawVolume_L > 0.)
+    for (auto thermocoupleT : outputData.thermocoupleT)
     {
         outFILE << fmt::format(",{:0.2f}",
-                               doIP ? C_TO_F(outputData.outletT_C) : outputData.outletT_C);
+                               doIP ? thermocoupleT(Units::F) : thermocoupleT(Units::C));
+    }
+
+    //
+    if (outputData.drawVolume > 0.)
+    {
+        outFILE << fmt::format(",{:0.2f}", outputData.outletT(doIP ? Units::F : Units::C));
     }
     else
     {
@@ -1004,97 +1090,46 @@ int HPWH::writeRowAsCSV(std::ofstream& outFILE,
 
 bool HPWH::isSetpointFixed() const { return setpointFixed; }
 
-void HPWH::setSetpoint(double newSetpoint, UNITS units /*=UNITS_C*/)
+void HPWH::setSetpointT(Temp_t newSetpointT)
 {
-    double newSetpoint_C = newSetpoint;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        newSetpoint_C = F_TO_C(newSetpoint);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    double maxAllowedSetpointT_C;
+    Temp_t maxAllowedSetpointT;
     string why;
-    if (isNewSetpointPossible(newSetpoint_C, maxAllowedSetpointT_C, why))
+    if (isNewSetpointPossible(newSetpointT, maxAllowedSetpointT, why))
     {
-        setpoint_C = newSetpoint_C;
+        setpointT = newSetpointT;
     }
     else
     {
         send_error(fmt::format("Cannot set this setpoint for the currently selected model, "
                                "max setpoint is {:0.2f} C. {}",
-                               maxAllowedSetpointT_C,
+                               maxAllowedSetpointT(Units::C),
                                why.c_str()));
     }
 }
 
-double HPWH::getSetpoint(UNITS units /*=UNITS_C*/) const
-{
-    double result = setpoint_C;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        result = C_TO_F(result);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return result;
-}
+HPWH::Temp_t HPWH::getSetpointT() const { return setpointT; }
 
-double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
+HPWH::Temp_t HPWH::getMaxCompressorSetpointT() const
 {
-
     if (!hasACompressor())
     {
         send_error("Unit does not have a compressor.");
     }
-
-    double returnVal = heatSources[compressorIndex].maxSetpoint_C;
-    if (units == UNITS_C)
-    {
-    }
-    else if (units == UNITS_F)
-    {
-        returnVal = C_TO_F(returnVal);
-    }
-    else
-        send_error("Invalid units.");
-
-    return returnVal;
+    return heatSources[compressorIndex].maxSetpointT;
 }
 
-bool HPWH::isNewSetpointPossible(double newSetpoint,
-                                 double& maxAllowedSetpoint,
-                                 string& why,
-                                 UNITS units /*=UNITS_C*/) const
+bool HPWH::isNewSetpointPossible(Temp_t newSetpointT,
+                                 Temp_t& maxAllowedSetpointT,
+                                 string& why) const
 {
-    double newSetpoint_C = newSetpoint;
-    double maxAllowedSetpoint_C = -273.15;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        newSetpoint_C = F_TO_C(newSetpoint);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
+    maxAllowedSetpointT = {-273.15, Units::C};
 
     bool returnVal = false;
 
     if (isSetpointFixed())
     {
-        returnVal = (newSetpoint_C == setpoint_C);
-        maxAllowedSetpoint_C = setpoint_C;
+        returnVal = (newSetpointT == setpointT);
+        maxAllowedSetpointT = setpointT;
         if (!returnVal)
         {
             why = "The set point is fixed for the currently selected model.";
@@ -1107,11 +1142,11 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         { // If there's a compressor lets check the new setpoint against the compressor's max
           // setpoint
 
-            maxAllowedSetpoint_C =
-                heatSources[compressorIndex].maxSetpoint_C -
-                heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+            maxAllowedSetpointT =
+                heatSources[compressorIndex].maxSetpointT -
+                heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffset_dT;
 
-            if (newSetpoint_C > maxAllowedSetpoint_C && lowestElementIndex == -1)
+            if (newSetpointT > maxAllowedSetpointT && lowestElementIndex == -1)
             {
                 why = "The compressor cannot meet the setpoint temperature and there is no "
                       "resistance backup.";
@@ -1125,9 +1160,9 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         if (lowestElementIndex >= 0)
         { // If there's a resistance element lets check the new setpoint against the its max
           // setpoint
-            maxAllowedSetpoint_C = heatSources[lowestElementIndex].maxSetpoint_C;
+            maxAllowedSetpointT = heatSources[lowestElementIndex].maxSetpointT;
 
-            if (newSetpoint_C > maxAllowedSetpoint_C)
+            if (newSetpointT > maxAllowedSetpointT)
             {
                 why = "The resistance elements cannot produce water this hot.";
                 returnVal = false;
@@ -1151,41 +1186,28 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
             }
         }
     }
-
-    maxAllowedSetpoint = maxAllowedSetpoint_C;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        maxAllowedSetpoint = C_TO_F(maxAllowedSetpoint_C);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
     return returnVal;
 }
 
-double HPWH::calcSoCFraction(double tMains_C, double tMinUseful_C, double tMax_C) const
+double HPWH::calcSoCFraction(Temp_t mainsT, Temp_t minUsefulT, Temp_t maxT) const
 {
     // Note that volume is ignored in here since with even nodes it cancels out of the SoC
     // fractional equation
-    if (tMains_C >= tMinUseful_C)
+    if (mainsT >= minUsefulT)
     {
-        send_warning("tMains_C is greater than or equal tMinUseful_C.");
+        send_warning("mainsT is greater than or equal to minUsefulT.");
     }
-    if (tMinUseful_C > tMax_C)
+    if (minUsefulT > maxT)
     {
-        send_warning("tMinUseful_C is greater tMax_C.");
+        send_warning("minUsefulT is greater maxT.");
     }
 
     double chargeEquivalent = 0.;
-    for (auto& T : tankTemps_C)
+    for (auto& T : tankTs)
     {
-        chargeEquivalent += getChargePerNode(tMains_C, tMinUseful_C, T);
+        chargeEquivalent += getChargePerNode(mainsT, minUsefulT, T);
     }
-    double maxSoC = getNumNodes() * getChargePerNode(tMains_C, tMinUseful_C, tMax_C);
+    double maxSoC = getNumNodes() * getChargePerNode(mainsT, minUsefulT, maxT);
     return chargeEquivalent / maxSoC;
 }
 
@@ -1198,78 +1220,49 @@ void HPWH::calcAndSetSoCFraction()
     std::shared_ptr<SoCBasedHeatingLogic> logicSoC =
         std::dynamic_pointer_cast<SoCBasedHeatingLogic>(
             heatSources[compressorIndex].turnOnLogicSet[0]);
-    newSoCFraction = calcSoCFraction(logicSoC->getMainsT_C(), logicSoC->getTempMinUseful_C());
+    newSoCFraction = calcSoCFraction(logicSoC->getMainsT(), logicSoC->getMinUsefulT());
 
     currentSoCFraction = newSoCFraction;
 }
 
-double HPWH::getChargePerNode(double tCold, double tMix, double tHot) const
+double HPWH::getChargePerNode(Temp_t coldT, Temp_t mixT, Temp_t hotT) const
 {
-    if (tHot < tMix)
+    if (hotT < mixT)
     {
         return 0.;
     }
-    return (tHot - tCold) / (tMix - tCold);
+    return (hotT - coldT) / (mixT - coldT);
 }
 
-double HPWH::getMinOperatingTemp(UNITS units /*=UNITS_C*/) const
+HPWH::Temp_t HPWH::getMinOperatingT() const
 {
     if (!hasACompressor())
     {
         send_error("No compressor found in this HPWH.");
     }
-
-    double result = heatSources[compressorIndex].minT;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        result = C_TO_F(result);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return result;
+    return heatSources[compressorIndex].minT;
 }
 
-void HPWH::resetTankToSetpoint() { setTankToTemperature(setpoint_C); }
+void HPWH::resetTankToSetpoint() { setTankToT(setpointT); }
 
 //-----------------------------------------------------------------------------
-///	@brief	Assigns new temps provided from a std::vector to tankTemps_C.
+///	@brief	Assigns new temps provided from a std::vector to tankTs.
 /// @param[in]	setTankTemps	new tank temps (arbitrary non-zero size)
 ///	@param[in]	units          temp units in setTankTemps (default = UNITS_C)
 //-----------------------------------------------------------------------------
-void HPWH::setTankLayerTemperatures(std::vector<double> setTankTemps, const UNITS units)
+void HPWH::setTankTs(const TempVect_t& setTankTs)
 {
-    std::size_t numSetNodes = setTankTemps.size();
+    std::size_t numSetNodes = setTankTs.size();
     if (numSetNodes == 0)
     {
         send_error("No temperatures provided.");
     }
 
-    // convert setTankTemps to �C, if necessary
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        for (auto& T : setTankTemps)
-            T = F_TO_C(T);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
     // set node temps
-    if (!resampleIntensive(tankTemps_C, setTankTemps))
-    {
-        send_error("Unable to resample tank temperatures.");
-    }
+    resampleIntensive(tankTs(), setTankTs());
 }
 
-void HPWH::getTankTemps(std::vector<double>& tankTemps) { tankTemps = tankTemps_C; }
+void HPWH::getTankTs(TempVect_t& tankTemps) { tankTemps = tankTs; }
 
 void HPWH::setAirFlowFreedom(double fanFraction)
 {
@@ -1291,148 +1284,75 @@ void HPWH::setAirFlowFreedom(double fanFraction)
 
 void HPWH::setDoTempDepression(bool doTempDepress) { doTempDepression = doTempDepress; }
 
-void HPWH::setTankSize_adjustUA(double HPWH_size,
-                                UNITS units /*=UNITS_L*/,
-                                bool forceChange /*=false*/)
+// Uses the UA before the function is called and adjusts the A part of the UA to match
+// the input volume given getTankSurfaceArea().
+int HPWH::setTankSizeAdjustUA(Volume_t vol, bool forceChange /*=false*/)
 {
-    // Uses the UA before the function is called and adjusts the A part of the UA to match the input
-    // volume given getTankSurfaceArea().
-    double oldA = getTankSurfaceArea(UNITS_FT2);
+    double oldTankU_kJperhCm2 = tankUA(Units::kJ_per_hC) / getTankSurfaceArea()(Units::m2);
 
-    double HPWH_size_L = HPWH_size;
-    switch (units)
-    {
-    case UNITS_L:
-        break;
-    case UNITS_GAL:
-        HPWH_size_L = GAL_TO_L(HPWH_size);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    setTankSize(HPWH_size_L, UNITS_L, forceChange);
-    setUA(tankUA_kJperHrC / oldA * getTankSurfaceArea(UNITS_FT2), UNITS_kJperHrC);
+    setTankSize(vol, forceChange);
+    tankUA = {oldTankU_kJperhCm2 * getTankSurfaceArea()(Units::m2), Units::kJ_per_hC};
+    return 0;
 }
 
-/*static*/ double
-HPWH::getTankSurfaceArea(double vol, UNITS volUnits /*=UNITS_L*/, UNITS surfAUnits /*=UNITS_FT2*/)
+/*static*/ HPWH::Area_t HPWH::getTankSurfaceArea(const Volume_t vol)
 {
     // returns tank surface area, old defualt was in ft2
-    // Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith,
-    // HTP, Rheem, and Niles. Corresponds to the inner tank with volume tankVolume_L with the
-    // assumption that the aspect ratio is the same as the outer dimenisions of the whole unit.
-    double radius = getTankRadius(vol, volUnits, UNITS_FT);
-
-    double value = 2. * 3.14159 * pow(radius, 2) * (ASPECTRATIO + 1.);
-    if (value >= 0.)
-    {
-        switch (surfAUnits)
-        {
-        case UNITS_FT2:
-            break;
-        case UNITS_M2:
-            value = FT2_TO_M2(value);
-            break;
-        default:;
-        }
-    }
-    return value;
+    // Based off 88 insulated storage tanks currently available on the market from Sanden,
+    // AOSmith, HTP, Rheem, and Niles. Corresponds to the inner tank with volume
+    // tankVolume_L with the assumption that the aspect ratio is the same as the outer
+    // dimenisions of the whole unit.
+    Length_t radius = getTankRadius(vol);
+    return {2. * Pi * pow(radius(Units::m), 2) * (ASPECTRATIO + 1.), Units::m2};
 }
 
-double HPWH::getTankSurfaceArea(UNITS units /*=UNITS_FT2*/) const
-{
-    // returns tank surface area, old defualt was in ft2
-    // Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith,
-    // HTP, Rheem, and Niles. Corresponds to the inner tank with volume tankVolume_L with the
-    // assumption that the aspect ratio is the same as the outer dimenisions of the whole unit.
-    double value = getTankSurfaceArea(tankVolume_L, UNITS_L, units);
-    if (value < 0.)
-    {
-        send_error("Incorrect value for getTankSurfaceArea.");
-    }
-    return value;
-}
+HPWH::Area_t HPWH::getTankSurfaceArea() const { return getTankSurfaceArea(tankVolume); }
 
-/*static*/ double
-HPWH::getTankRadius(double vol, UNITS volUnits /*=UNITS_L*/, UNITS radiusUnits /*=UNITS_FT*/)
+/*static*/ HPWH::Length_t HPWH::getTankRadius(const Volume_t vol)
 { // returns tank radius, ft for use in calculation of heat loss in the bottom and top of the tank.
     // Based off 88 insulated storage tanks currently available on the market from Sanden, AOSmith,
     // HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is the same is the
     // actual tank.
-    double volft3 = L_TO_FT3(vol);
-    switch (volUnits)
-    {
-    case UNITS_L:
-        break;
-    case UNITS_GAL:
-        volft3 = L_TO_FT3(GAL_TO_L(vol));
-        break;
-    default:;
-    }
 
-    double value = -1.;
-    if (volft3 >= 0.)
-    {
-        value = pow(volft3 / 3.14159 / ASPECTRATIO, 1. / 3.);
-        switch (radiusUnits)
-        {
-        case UNITS_FT:
-            break;
-
-        case UNITS_M:
-            value = FT_TO_M(value);
-            break;
-        default:;
-        }
-    }
-    return value;
+    if (vol < 0.)
+        return Length_t(0.);
+    return {std::pow(vol(Units::m3) / Pi / ASPECTRATIO, 1. / 3.), Units::m};
 }
 
-double HPWH::getTankRadius(UNITS units /*=UNITS_FT*/) const
+HPWH::Length_t HPWH::getTankRadius() const
 {
     // returns tank radius, ft for use in calculation of heat loss in the bottom and top of the
     // tank. Based off 88 insulated storage tanks currently available on the market from Sanden,
     // AOSmith, HTP, Rheem, and Niles, assumes the aspect ratio for the outer measurements is the
     // same is the actual tank.
 
-    double value = getTankRadius(tankVolume_L, UNITS_L, units);
-    if (value < 0.)
+    Length_t radius = getTankRadius(tankVolume);
+    if (radius < 0.)
     {
         send_error("Negative value for getTankRadius.");
     }
-    return value;
+    return radius;
 }
 
 bool HPWH::isTankSizeFixed() const { return tankSizeFixed; }
 
-void HPWH::setTankSize(double HPWH_size, UNITS units /*=UNITS_L*/, bool forceChange /*=false*/)
+void HPWH::setTankSize(const Volume_t vol, bool forceChange /*=false*/)
 {
     if (isTankSizeFixed() && !forceChange)
     {
         send_error("Can not change the tank size for your currently selected model.");
     }
-    if (HPWH_size <= 0)
+    if (vol <= 0)
     {
         send_error("You have attempted to set the tank volume outside of bounds.");
     }
     else
     {
-        switch (units)
-        {
-        case UNITS_L:
-            tankVolume_L = HPWH_size;
-            break;
-
-        case UNITS_GAL:
-            tankVolume_L = GAL_TO_L(HPWH_size);
-            break;
-        default:
-            send_error("Invalid units.");
-        }
+        tankVolume = vol;
     }
     calcSizeConstants();
 }
+
 void HPWH::setDoInversionMixing(bool doInversionMixing_in)
 {
     doInversionMixing = doInversionMixing_in;
@@ -1440,62 +1360,13 @@ void HPWH::setDoInversionMixing(bool doInversionMixing_in)
 
 void HPWH::setDoConduction(bool doConduction_in) { doConduction = doConduction_in; }
 
-void HPWH::setUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
-{
-    switch (units)
-    {
-    case UNITS_kJperHrC:
-        tankUA_kJperHrC = UA;
-        break;
-    case UNITS_BTUperHrF:
-        tankUA_kJperHrC = UAf_TO_UAc(UA);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-}
+void HPWH::setUA(const UA_t UA) { tankUA = UA; }
 
-void HPWH::getUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
-{
-    switch (units)
-    {
-    case UNITS_kJperHrC:
-        UA = tankUA_kJperHrC;
-        break;
-    case UNITS_BTUperHrF:
-        UA = tankUA_kJperHrC / UAf_TO_UAc(1.);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-}
+void HPWH::getUA(UA_t& UA) const { UA = tankUA; }
 
-void HPWH::setFittingsUA(double UA, UNITS units /*=UNITS_kJperHrC*/)
-{
-    if (units == UNITS_kJperHrC)
-    {
-        fittingsUA_kJperHrC = UA;
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        fittingsUA_kJperHrC = UAf_TO_UAc(UA);
-    }
-    else
-        send_error("Invalid units.");
-}
-void HPWH::getFittingsUA(double& UA, UNITS units /*=UNITS_kJperHrC*/) const
-{
-    UA = fittingsUA_kJperHrC;
-    if (units == UNITS_kJperHrC)
-    {
-    }
-    else if (units == UNITS_BTUperHrF)
-    {
-        UA = UA / UAf_TO_UAc(1.);
-    }
-    else
-        send_error("Invalid units.");
-}
+void HPWH::setFittingsUA(const UA_t UA) { fittingsUA = UA; }
+
+void HPWH::getFittingsUA(UA_t& UA) const { UA = fittingsUA; }
 
 void HPWH::setInletByFraction(double fractionalHeight)
 {
@@ -1599,19 +1470,9 @@ int HPWH::getInletHeight(int whichInlet) const
     return result;
 }
 
-void HPWH::setMaxTempDepression(double maxDepression, UNITS units /*=UNITS_C*/)
+void HPWH::setMaxDepression_dT(Temp_d_t maxDepression_dT_in)
 {
-    maxDepression_C = maxDepression;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        maxDepression_C = F_TO_C(maxDepression);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
+    maxDepression_dT = maxDepression_dT_in;
 }
 
 bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
@@ -1637,57 +1498,45 @@ bool HPWH::hasEnteringWaterHighTempShutOff(int heatSourceIndex)
     return retVal;
 }
 
-void HPWH::setEnteringWaterHighTempShutOff(double highTemp,
-                                           bool tempIsAbsolute,
-                                           int heatSourceIndex,
-                                           UNITS units /*=UNITS_C*/)
+void HPWH::setEnteringWaterHighTempShutOff(GenTemp_t highT, int heatSourceIndex)
 {
     if (!hasEnteringWaterHighTempShutOff(heatSourceIndex))
     {
         send_error("You have attempted to access a heating logic that does not exist.");
     }
 
-    double highTemp_C = highTemp;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        highTemp_C = F_TO_C(highTemp);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
     bool highTempIsNotValid = false;
-    if (tempIsAbsolute)
+    if (highT.index() == 0)
     {
-        // check differnce with setpoint
-        if (setpoint_C - highTemp_C < MINSINGLEPASSLIFT)
+        // check difference with setpoint
+        if (setpointT(Units::C) - std::get<Temp_t>(highT)(Units::C) <
+            MINSINGLEPASSLIFT()(Units::dC))
         {
             highTempIsNotValid = true;
         }
     }
     else
     {
-        if (highTemp_C < MINSINGLEPASSLIFT)
+        auto dT = std::get<Temp_d_t>(highT);
+        if (dT < MINSINGLEPASSLIFT())
         {
             highTempIsNotValid = true;
         }
     }
+
     if (highTempIsNotValid)
     {
         send_error(fmt::format("High temperature shut off is too close to the setpoint, expected "
                                "a minimum difference of {:g}",
-                               MINSINGLEPASSLIFT));
+                               MINSINGLEPASSLIFT()(Units::dC)));
     }
 
-    for (std::shared_ptr<HeatingLogic> shutOffLogic : heatSources[heatSourceIndex].shutOffLogicSet)
+    for (const std::shared_ptr<HeatingLogic>& shutOffLogic :
+         heatSources[heatSourceIndex].shutOffLogicSet)
     {
         if (shutOffLogic->getIsEnteringWaterHighTempShutoff())
         {
-            std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)
-                ->setDecisionPoint(highTemp_C, tempIsAbsolute);
+            std::dynamic_pointer_cast<TempBasedHeatingLogic>(shutOffLogic)->setDecisionPoint(highT);
             break;
         }
     }
@@ -1707,23 +1556,23 @@ void HPWH::setTargetSoCFraction(double target)
 
     for (int i = 0; i < getNumHeatSources(); i++)
     {
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].shutOffLogicSet)
+        for (auto logic : heatSources[i].shutOffLogicSet)
         {
             if (!logic->getIsEnteringWaterHighTempShutoff())
             {
-                logic->setDecisionPoint(target);
+                std::dynamic_pointer_cast<SoCBasedHeatingLogic>(logic)->setDecisionPoint(target);
             }
         }
-        for (std::shared_ptr<HeatingLogic> logic : heatSources[i].turnOnLogicSet)
+        for (auto& logic : heatSources[i].turnOnLogicSet)
         {
-            logic->setDecisionPoint(target);
+            std::dynamic_pointer_cast<SoCBasedHeatingLogic>(logic)->setDecisionPoint(target);
         }
     }
 }
 
 bool HPWH::isSoCControlled() const { return usesSoCLogic; }
 
-bool HPWH::canUseSoCControls()
+bool HPWH::canUseSoCControls() const
 {
     bool retVal = true;
     if (getCompressorCoilConfig() != HPWH::HeatSource::CONFIG_EXTERNAL)
@@ -1734,32 +1583,17 @@ bool HPWH::canUseSoCControls()
 }
 
 void HPWH::switchToSoCControls(double targetSoC,
-                               double hysteresisFraction /*= 0.05*/,
-                               double tempMinUseful /*= 43.333*/,
-                               bool constantMainsT /*= false*/,
-                               double mainsT /*= 18.333*/,
-                               UNITS tempUnits /*= UNITS_C*/)
+                               double hysteresisFraction /*0.05*/,
+                               Temp_t minUsefulT /*{43.333, Units::C}*/,
+                               bool constantMainsT /*false*/,
+                               Temp_t mainsT /*{18.333, Units::C});*/)
 {
     if (!canUseSoCControls())
     {
         send_error("Cannot set up state of charge controls for integrated or wrapped HPWHs.");
     }
 
-    double tempMinUseful_C = tempMinUseful;
-    double mainsT_C = mainsT;
-    switch (tempUnits)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        tempMinUseful_C = F_TO_C(tempMinUseful);
-        mainsT_C = F_TO_C(mainsT);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    if (mainsT_C >= tempMinUseful_C)
+    if (mainsT >= minUsefulT)
     {
         send_error("The mains temperature can't be equal to or greater than the minimum useful "
                    "temperature.");
@@ -1776,48 +1610,40 @@ void HPWH::switchToSoCControls(double targetSoC,
                            { return !logic->getIsEnteringWaterHighTempShutoff(); }),
             heatSources[i].shutOffLogicSet.end());
 
-        heatSources[i].shutOffLogicSet.push_back(shutOffSoC("SoC Shut Off",
-                                                            targetSoC,
-                                                            hysteresisFraction,
-                                                            tempMinUseful_C,
-                                                            constantMainsT,
-                                                            mainsT_C));
-        heatSources[i].turnOnLogicSet.push_back(turnOnSoC("SoC Turn On",
-                                                          targetSoC,
-                                                          hysteresisFraction,
-                                                          tempMinUseful_C,
-                                                          constantMainsT,
-                                                          mainsT_C));
+        heatSources[i].shutOffLogicSet.push_back(shutOffSoC(
+            "SoC Shut Off", targetSoC, hysteresisFraction, minUsefulT, constantMainsT, mainsT));
+        heatSources[i].turnOnLogicSet.push_back(turnOnSoC(
+            "SoC Turn On", targetSoC, hysteresisFraction, minUsefulT, constantMainsT, mainsT));
     }
 
     usesSoCLogic = true;
 }
 
-std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(string desc,
+std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::turnOnSoC(std::string desc,
                                                             double targetSoC,
                                                             double hystFract,
-                                                            double tempMinUseful_C,
+                                                            Temp_t minUsefulT,
                                                             bool constantMainsT,
-                                                            double mainsT_C)
+                                                            Temp_t mainsT)
 {
     return std::make_shared<SoCBasedHeatingLogic>(
-        desc, targetSoC, this, -hystFract, tempMinUseful_C, constantMainsT, mainsT_C);
+        desc, targetSoC, this, -hystFract, minUsefulT, constantMainsT, mainsT);
 }
 
 std::shared_ptr<HPWH::SoCBasedHeatingLogic> HPWH::shutOffSoC(string desc,
                                                              double targetSoC,
                                                              double hystFract,
-                                                             double tempMinUseful_C,
+                                                             Temp_t minUsefulT,
                                                              bool constantMainsT,
-                                                             double mainsT_C)
+                                                             Temp_t mainsT)
 {
     return std::make_shared<SoCBasedHeatingLogic>(desc,
                                                   targetSoC,
                                                   this,
                                                   hystFract,
-                                                  tempMinUseful_C,
+                                                  minUsefulT,
                                                   constantMainsT,
-                                                  mainsT_C,
+                                                  mainsT,
                                                   std::greater<double>());
 }
 
@@ -1842,230 +1668,194 @@ std::vector<HPWH::NodeWeight> HPWH::getNodeWeightRange(double bottomFraction, do
     return nodeWeights;
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(double decisionPoint,
-                                                             const UNITS units /* = UNITS_C */,
-                                                             const bool absolute /* = false */)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::wholeTank(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1.);
-    double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "whole tank", nodeWeights, decisionPoint_C, this, absolute);
+        "whole tank", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third", nodeWeights, decisionPoint, this);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("top third", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThird_absolute(double decisionPoint)
-{
-    auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third absolute", nodeWeights, decisionPoint, this, true);
-}
-
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(double decisionPoint,
-                                                               const UNITS units /* = UNITS_C */,
-                                                               const bool absolute /* = false */)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondThird(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(1. / 3., 2. / 3.);
-    double decisionPoint_C = convertTempToC(decisionPoint, units, absolute);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second third", nodeWeights, decisionPoint_C, this, absolute);
+        "second third", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomThird(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 3.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom third", nodeWeights, decisionPoint, this);
+        "bottom third", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth", nodeWeights, decisionPoint, this);
+        "bottom sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixth_absolute(double decisionPoint)
-{
-    auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth absolute", nodeWeights, decisionPoint, this, true);
-}
-
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second sixth", nodeWeights, decisionPoint, this);
+        "second sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::thirdSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::thirdSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(2. / 6., 3. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "third sixth", nodeWeights, decisionPoint, this);
+        "third sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fourthSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fourthSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(3. / 6., 4. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "fourth sixth", nodeWeights, decisionPoint, this);
+        "fourth sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "fifth sixth", nodeWeights, decisionPoint, this);
+        "fifth sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("top sixth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomHalf(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom half", nodeWeights, decisionPoint, this);
+        "bottom half", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom twelfth", nodeWeights, decisionPoint, this);
+        "bottom twelfth", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(GenTemp_t decisionT)
+{
+    std::vector<NodeWeight> nodeWeights;
+    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("standby", nodeWeights, decisionT, this);
+}
+
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(GenTemp_t decisionT)
 {
     std::vector<NodeWeight> nodeWeights;
     nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "standby", nodeWeights, decisionPoint, this);
-}
-
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
-{
-    std::vector<NodeWeight> nodeWeights;
-    nodeWeights.emplace_back(LOGIC_SIZE + 1); // uses very top computation node
-    return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top node", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top node", nodeWeights, decisionT, this, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic>
-HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff /*=false*/)
+HPWH::bottomNodeMaxTemp(GenTemp_t decisionT, bool enteringHighTempShutoff /*=false*/)
 {
     std::vector<NodeWeight> nodeWeights;
     nodeWeights.emplace_back(0); // uses very bottom computation node
     return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node",
                                                          nodeWeights,
-                                                         decisionPoint,
+                                                         decisionT,
                                                          this,
-                                                         true,
                                                          std::greater<double>(),
-                                                         isEnteringWaterHighTempShutoff);
+                                                         enteringHighTempShutoff);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfthMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfthMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 12.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom twelfth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "bottom twelfth", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topThirdMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(2. / 3., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top third", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top third", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixthMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomSixthMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "bottom sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "bottom sixth", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixthMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::secondSixthMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(1. / 6., 2. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "second sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "second sixth", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixthMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::fifthSixthMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(4. / 6., 5. / 6.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top sixth", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixthMaxTemp(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topSixthMaxTemp(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(5. / 6., 1.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top sixth", nodeWeights, decisionPoint, this, true, std::greater<double>());
+        "top sixth", nodeWeights, decisionT, this, std::greater<double>());
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largeDraw(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 4.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "large draw", nodeWeights, decisionPoint, this, true);
+        "large draw", nodeWeights, decisionT, this);
 }
 
-std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(double decisionPoint)
+std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::largerDraw(GenTemp_t decisionT)
 {
     auto nodeWeights = getNodeWeightRange(0., 1. / 2.);
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "larger draw", nodeWeights, decisionPoint, this, true);
+        "larger draw", nodeWeights, decisionT, this);
 }
 
 void HPWH::setNumNodes(const std::size_t num_nodes)
 {
-    tankTemps_C.resize(num_nodes);
-    nextTankTemps_C.resize(num_nodes);
+    tankTs.resize(num_nodes);
+    nextTankTs.resize(num_nodes);
 }
 
-int HPWH::getNumNodes() const { return static_cast<int>(tankTemps_C.size()); }
+int HPWH::getNumNodes() const { return static_cast<int>(tankTs.size()); }
 
 int HPWH::getIndexTopNode() const { return getNumNodes() - 1; }
 
-double HPWH::getTankNodeTemp(int nodeNum, UNITS units /*=UNITS_C*/) const
+HPWH::Temp_t HPWH::getTankNodeT(int nodeNum) const
 {
-    if (tankTemps_C.empty())
+    if (tankTs.empty())
     {
         send_error(
             "You have attempted to access the temperature of a tank node that does not exist.");
     }
 
-    double result = tankTemps_C[nodeNum];
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        result = C_TO_F(result);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return result;
+    return tankTs[nodeNum];
 }
 
-double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C*/) const
+HPWH::Temp_t HPWH::getNthSimTcouple(int iTCouple, int nTCouple) const
 {
     if (iTCouple > nTCouple || iTCouple < 1)
     {
@@ -2074,19 +1864,8 @@ double HPWH::getNthSimTcouple(int iTCouple, int nTCouple, UNITS units /*=UNITS_C
 
     double beginFraction = static_cast<double>(iTCouple - 1.) / static_cast<double>(nTCouple);
     double endFraction = static_cast<double>(iTCouple) / static_cast<double>(nTCouple);
-    double simTcoupleTemp = getResampledValue(tankTemps_C, beginFraction, endFraction);
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        simTcoupleTemp = C_TO_F(simTcoupleTemp);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return simTcoupleTemp;
+    auto simTcoupleT = Temp_t(getResampledValue(tankTs(), beginFraction, endFraction));
+    return simTcoupleT;
 }
 
 int HPWH::getNumHeatSources() const { return static_cast<int>(heatSources.size()); }
@@ -2103,82 +1882,45 @@ int HPWH::getNumResistanceElements() const
     return count;
 }
 
-double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
-                                   double inletTemp /*=14.444*/,
-                                   double outTemp /*=57.222*/,
-                                   UNITS pwrUnit /*=UNITS_KW*/,
-                                   UNITS tempUnit /*=UNITS_C*/)
+HPWH::Power_t HPWH::getCompressorCapacity(Temp_t airT, Temp_t inletT, Temp_t outT)
 {
-    // calculate capacity btu/hr, input btu/hr, and cop
-    double capTemp_BTUperHr, inputTemp_BTUperHr, copTemp; // temporary variables
-    double airTemp_C = airTemp;
-    double inletTemp_C = inletTemp;
-    double outTemp_C = outTemp;
-
     if (!hasACompressor())
     {
         send_error("Current model does not have a compressor.");
     }
 
-    airTemp_C = airTemp;
-    inletTemp_C = inletTemp;
-    outTemp_C = outTemp;
-    switch (tempUnit)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        airTemp_C = F_TO_C(airTemp);
-        inletTemp_C = F_TO_C(inletTemp);
-        outTemp_C = F_TO_C(outTemp);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
+    // calculate capacity btu/hr, input btu/hr, and cop
+    Power_t inputPower, outputPower;
+    double cop;
 
-    if (airTemp_C < heatSources[compressorIndex].minT ||
-        airTemp_C > heatSources[compressorIndex].maxT)
+    if (airT < heatSources[compressorIndex].minT || airT > heatSources[compressorIndex].maxT)
     {
         send_error("The compress does not operate at the specified air temperature.");
     }
 
-    double maxAllowedSetpoint_C =
-        heatSources[compressorIndex].maxSetpoint_C -
-        heatSources[compressorIndex].secondaryHeatExchanger.hotSideTemperatureOffset_dC;
+    double maxAllowedSetpointT =
+        heatSources[compressorIndex].maxSetpointT() -
+        heatSources[compressorIndex].secondaryHeatExchanger.hotSideOffset_dT();
 
-    if (outTemp_C > maxAllowedSetpoint_C)
+    if (outT > maxAllowedSetpointT)
     {
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
     if (heatSources[compressorIndex].isExternalMultipass())
     {
-        double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-        heatSources[compressorIndex].getCapacityMP(
-            airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        Temp_t averageT((outT() + inletT()) / 2.);
+        heatSources[compressorIndex].getCapacityMP(airT, averageT, inputPower, outputPower, cop);
     }
     else
     {
-        heatSources[compressorIndex].getCapacity(
-            airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        heatSources[compressorIndex].getCapacity(airT, inletT, outT, inputPower, outputPower, cop);
     }
 
-    double outputCapacity = capTemp_BTUperHr;
-    switch (pwrUnit)
-    {
-    case UNITS_BTUperHr:
-        break;
-    case UNITS_KW:
-        outputCapacity = BTU_TO_KWH(capTemp_BTUperHr);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return outputCapacity;
+    return outputPower;
 }
 
-double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) const
+HPWH::Energy_t HPWH::getNthHeatSourceEnergyInput(int N) const
 {
     // energy used by the heat source is positive - this should always be positive
     if (N >= getNumHeatSources() || N < 0)
@@ -2186,26 +1928,10 @@ double HPWH::getNthHeatSourceEnergyInput(int N, UNITS units /*=UNITS_KWH*/) cons
         send_error(
             "You have attempted to access the energy input of a heat source that does not exist.");
     }
-
-    double energyInput = heatSources[N].energyInput_kWh;
-    switch (units)
-    {
-    case UNITS_KWH:
-        break;
-    case UNITS_BTU:
-        energyInput = KWH_TO_BTU(heatSources[N].energyInput_kWh);
-        break;
-    case UNITS_KJ:
-        energyInput = KWH_TO_KJ(heatSources[N].energyInput_kWh);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return energyInput;
+    return heatSources[N].energyInput;
 }
 
-double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) const
+HPWH::Energy_t HPWH::getNthHeatSourceEnergyOutput(int N) const
 {
     // returns energy from the heat source into the water - this should always be positive
     if (N >= getNumHeatSources() || N < 0)
@@ -2213,33 +1939,17 @@ double HPWH::getNthHeatSourceEnergyOutput(int N, UNITS units /*=UNITS_KWH*/) con
         send_error(
             "You have attempted to access the energy output of a heat source that does not exist.");
     }
-
-    double energyOutput = heatSources[N].energyOutput_kWh;
-    switch (units)
-    {
-    case UNITS_KWH:
-        break;
-    case UNITS_BTU:
-        energyOutput = KWH_TO_BTU(heatSources[N].energyOutput_kWh);
-        break;
-    case UNITS_KJ:
-        energyOutput = KWH_TO_KJ(heatSources[N].energyOutput_kWh);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-
-    return energyOutput;
+    return heatSources[N].energyOutput;
 }
 
-double HPWH::getNthHeatSourceRunTime(int N) const
+HPWH::Time_t HPWH::getNthHeatSourceRunTime(int N) const
 {
     if (N >= getNumHeatSources() || N < 0)
     {
         send_error(
             "You have attempted to access the run time of a heat source that does not exist.");
     }
-    return heatSources[N].runtime_min;
+    return heatSources[N].runtime;
 }
 
 int HPWH::isNthHeatSourceRunning(int N) const
@@ -2278,141 +1988,43 @@ bool HPWH::getNthHeatSource(int N, HPWH::HeatSource*& heatSource)
     return true;
 }
 
-double HPWH::getTankSize(UNITS units /*=UNITS_L*/) const
+HPWH::Volume_t HPWH::getTankSize() const { return tankVolume; }
+
+HPWH::Volume_t HPWH::getExternalVolumeHeated() const { return externalVolumeHeated; }
+
+HPWH::Energy_t HPWH::getEnergyRemovedFromEnvironment() const
 {
-    double volume = tankVolume_L;
-    switch (units)
-    {
-    case UNITS_L:
-        break;
-    case UNITS_GAL:
-        volume = L_TO_GAL(tankVolume_L);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return volume;
+    return energyRemovedFromEnvironment;
 }
 
-double HPWH::getExternalVolumeHeated(UNITS units /*=UNITS_L*/) const
+HPWH::Energy_t HPWH::getStandbyLosses() const
 {
-    double volume = externalVolumeHeated_L;
-    switch (units)
-    {
-    case UNITS_L:
-        break;
-    case UNITS_GAL:
-        volume = L_TO_GAL(externalVolumeHeated_L);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return volume;
+    return standbyLosses;
+    ;
 }
 
-double HPWH::getEnergyRemovedFromEnvironment(UNITS units /*=UNITS_KWH*/) const
-{
-    // moving heat from the space to the water is the positive direction
-    double energy = energyRemovedFromEnvironment_kWh;
-    switch (units)
-    {
-    case UNITS_KWH:
-        break;
-    case UNITS_BTU:
-        energy = KWH_TO_BTU(energyRemovedFromEnvironment_kWh);
-        break;
-    case UNITS_KJ:
-        energy = KWH_TO_KJ(energyRemovedFromEnvironment_kWh);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return energy;
-}
+HPWH::Temp_t HPWH::getOutletT() const { return outletT; }
 
-double HPWH::getStandbyLosses(UNITS units /*=UNITS_KWH*/) const
-{
-    // moving heat from the water to the space is the positive direction
-    double energy = standbyLosses_kWh;
-    switch (units)
-    {
-    case UNITS_KWH:
-        break;
-    case UNITS_BTU:
-        energy = KWH_TO_BTU(standbyLosses_kWh);
-        break;
-    case UNITS_KJ:
-        energy = KWH_TO_KJ(standbyLosses_kWh);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return energy;
-}
+HPWH::Temp_t HPWH::getCondenserWaterInletT() const { return condenserInletT; }
 
-double HPWH::getOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    double temp = outletTemp_C;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        temp = C_TO_F(outletTemp_C);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return temp;
-}
+HPWH::Temp_t HPWH::getCondenserWaterOutletT() const { return condenserOutletT; }
 
-double HPWH::getCondenserWaterInletTemp(UNITS units /*=UNITS_C*/) const
-{
-    double temp = condenserInlet_C;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        temp = C_TO_F(condenserInlet_C);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return temp;
-}
-
-double HPWH::getCondenserWaterOutletTemp(UNITS units /*=UNITS_C*/) const
-{
-    double temp = condenserOutlet_C;
-    switch (units)
-    {
-    case UNITS_C:
-        break;
-    case UNITS_F:
-        temp = C_TO_F(condenserOutlet_C);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return temp;
-}
-
-double HPWH::getLocationTemp_C() const { return locationTemperature_C; }
+HPWH::Temp_t HPWH::getLocationT() const { return locationT; }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Evaluates the tank temperature averaged uniformly
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C() const
+HPWH::Temp_t HPWH::getAverageTankT() const
 {
-    double totalT_C = 0.;
-    for (auto& T_C : tankTemps_C)
+    double totalT(0.);
+
+    for (auto& T : tankTs())
     {
-        totalT_C += T_C;
+        totalT += T;
     }
-    return totalT_C / static_cast<double>(getNumNodes());
+    return Temp_t(totalT / static_cast<double>(getNumNodes()));
 }
 
 //-----------------------------------------------------------------------------
@@ -2420,20 +2032,20 @@ double HPWH::getAverageTankTemp_C() const
 /// @note	Distribution must have positive size and be normalized.
 /// @param[in]	dist	Discrete set of distribution values
 //-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
+HPWH::Temp_t HPWH::getAverageTankT(const std::vector<double>& dist) const
 {
-    std::vector<double> resampledTankTemps_C(dist.size());
-    resample(resampledTankTemps_C, tankTemps_C);
+    std::vector<double> resampledTankTs(dist.size());
+    resample(resampledTankTs, tankTs());
 
-    double tankT_C = 0.;
+    double tankT(0);
 
     std::size_t j = 0;
-    for (auto& nodeT_C : resampledTankTemps_C)
+    for (auto& nodeT : resampledTankTs)
     {
-        tankT_C += dist[j] * nodeT_C;
+        tankT += dist[j] * nodeT;
         ++j;
     }
-    return tankT_C;
+    return Temp_t(tankT);
 }
 
 //-----------------------------------------------------------------------------
@@ -2446,44 +2058,52 @@ double HPWH::getAverageTankTemp_C(const std::vector<double>& dist) const
 /// @param[in]	nodeWeights	Discrete set of weighted nodes
 /// @return	Tank temperature (C)
 //-----------------------------------------------------------------------------
-double HPWH::getAverageTankTemp_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const
+HPWH::Temp_t HPWH::getAverageTankT(const std::vector<HPWH::NodeWeight>& nodeWeights) const
 {
     double sum = 0;
     double totWeight = 0;
 
-    std::vector<double> resampledTankTemps(LOGIC_SIZE);
-    resample(resampledTankTemps, tankTemps_C);
+    std::vector<double> resampledTankTs_t(LOGIC_SIZE);
+    resample(resampledTankTs_t, tankTs());
 
     for (auto& nodeWeight : nodeWeights)
     {
         if (nodeWeight.nodeNum == 0)
         { // bottom node only
-            sum += tankTemps_C.front() * nodeWeight.weight;
+            sum += tankTs.front()() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
         else if (nodeWeight.nodeNum > LOGIC_SIZE)
         { // top node only
-            sum += tankTemps_C.back() * nodeWeight.weight;
+            sum += tankTs.back()() * nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
         else
         { // general case; sum over all weighted nodes
-            sum += resampledTankTemps[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
+            sum += resampledTankTs_t[static_cast<std::size_t>(nodeWeight.nodeNum - 1)] *
                    nodeWeight.weight;
             totWeight += nodeWeight.weight;
         }
     }
-    return sum / totWeight;
+    return Temp_t(sum / totWeight);
 }
 
-void HPWH::setTankToTemperature(double temp_C) { setTankLayerTemperatures({temp_C}); }
+void HPWH::setTankToT(Temp_t T) { setTankTs({{T(Units::C)}, Units::C}); }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-double HPWH::getTankHeatContent_kJ() const
+HPWH::Energy_t HPWH::getTankHeatContent() const
 {
     // returns tank heat content relative to 0 C using kJ
-    return DENSITYWATER_kgperL * tankVolume_L * CPWATER_kJperkgC * getAverageTankTemp_C();
+    const double nodeHeatCapacity =
+        DENSITYWATER_kg_per_L * nodeVolume(Units::L) * CPWATER_kJ_per_kgC;
+
+    Temp_t totalT(0.);
+    for (auto& T : tankTs)
+    {
+        totalT += T();
+    }
+    return {nodeHeatCapacity * totalT(Units::C), Units::kJ};
 }
 
 int HPWH::getModel() const { return model; }
@@ -2529,50 +2149,25 @@ bool HPWH::hasExternalHeatSource(int& heatSourceIndex) const
     return false;
 }
 
-double HPWH::getExternalMPFlowRate(UNITS units /*=UNITS_GPM*/) const
+HPWH::FlowRate_t HPWH::getExternalMPFlowRate() const
 {
     if (!isCompressorExternalMultipass())
     {
         send_error("Does not have an external multipass heat source.");
     }
-    double flowRate = heatSources[compressorIndex].mpFlowRate_LPS;
-    if (units == HPWH::UNITS_LPS)
-    {
-    }
-    else if (units == HPWH::UNITS_GPM)
-    {
-        flowRate = LPS_TO_GPM(flowRate);
-    }
-    else
-        send_error("Invalid units.");
-
-    return flowRate;
+    return heatSources[compressorIndex].mpFlowRate;
 }
 
-double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const
+HPWH::Time_t HPWH::getCompressorMinRuntime() const
 {
     if (!hasACompressor())
     {
         send_error("Current model does not have a compressor.");
     }
-    double minimumRuntime = 10.;
-    switch (units)
-    {
-    case UNITS_MIN:
-        break;
-    case UNITS_SEC:
-        minimumRuntime = MIN_TO_SEC(minimumRuntime);
-        break;
-    case UNITS_HR:
-        minimumRuntime = MIN_TO_HR(minimumRuntime);
-        break;
-    default:
-        send_error("Invalid units.");
-    }
-    return minimumRuntime;
+    return {10., Units::min};
 }
 
-void HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
+int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
 {
     double aFract = 1.;
     double useFract = 1.;
@@ -2628,6 +2223,8 @@ void HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     {
         useableFract = 1. - aquaFract + TOL_MINVALUE;
     }
+
+    return 0;
 }
 
 bool HPWH::isHPWHScalable() const { return canScale; }
@@ -2649,27 +2246,20 @@ void HPWH::setScaleCapacityCOP(double scaleCapacity /*=1.0*/, double scaleCOP /*
 
     for (auto& perfP : heatSources[compressorIndex].perfMap)
     {
-        scaleVector(perfP.inputPower_coeffs, scaleCapacity);
+        scaleVector(perfP.inputPower_coeffs(), scaleCapacity);
         scaleVector(perfP.COP_coeffs, scaleCOP);
     }
 }
 
-void HPWH::setCompressorOutputCapacity(double newCapacity,
-                                       double airTemp /*=19.722*/,
-                                       double inletTemp /*=14.444*/,
-                                       double outTemp /*=57.222*/,
-                                       UNITS pwrUnit /*=UNITS_KW*/,
-                                       UNITS tempUnit /*=UNITS_C*/)
+void HPWH::setCompressorOutputCapacity(Power_t newCapacity, Temp_t airT, Temp_t inletT, Temp_t outT)
 {
-
-    double oldCapacity = getCompressorCapacity(airTemp, inletTemp, outTemp, pwrUnit, tempUnit);
+    Power_t oldCapacity = getCompressorCapacity(airT, inletT, outT);
     double scale = newCapacity / oldCapacity;
     setScaleCapacityCOP(scale, 1.); // Scale the compressor capacity
 }
 
-void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
+void HPWH::setResistanceCapacity(const Power_t power, int which /*=-1*/)
 {
-
     // Input checks
     if (!isHPWHScalable())
     {
@@ -2685,19 +2275,7 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
     }
     if (power < 0)
     {
-        send_error("Can not have a negative input power.");
-    }
-    // Unit conversion
-    double watts = 1000. * power;
-    switch (pwrUnit)
-    {
-    case UNITS_KW:
-        break;
-    case UNITS_BTUperHr:
-        watts = BTU_TO_KWH(watts); // kBTU/h to W
-        break;
-    default:
-        send_error("Invalid units.");
+        send_error("Cannot have a negative input power.");
     }
 
     // Whew so many checks...
@@ -2708,13 +2286,13 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (heatSources[i].isAResistance())
             {
-                heatSources[i].changeResistanceWatts(watts);
+                heatSources[i].changeResistancePower(power);
             }
         }
     }
     else
     {
-        heatSources[resistanceHeightMap[which].index].changeResistanceWatts(watts);
+        heatSources[resistanceHeightMap[which].index].changeResistancePower(power);
 
         // Then check for repeats in the position
         int pos = resistanceHeightMap[which].position;
@@ -2722,13 +2300,13 @@ void HPWH::setResistanceCapacity(double power, int which /*=-1*/, UNITS pwrUnit 
         {
             if (which != i && resistanceHeightMap[i].position == pos)
             {
-                heatSources[resistanceHeightMap[i].index].changeResistanceWatts(watts);
+                heatSources[resistanceHeightMap[i].index].changeResistancePower(power);
             }
         }
     }
 }
 
-double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*/)
+HPWH::Power_t HPWH::getResistanceCapacity(int which /*=-1*/)
 {
 
     // Input checks
@@ -2741,7 +2319,7 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
         send_error("Out of bounds value for \"which\" in getResistanceCapacity().");
     }
 
-    double returnPower = 0;
+    Power_t returnPower(0.);
     if (which == -1)
     {
         // Just get all the elements
@@ -2769,19 +2347,6 @@ double HPWH::getResistanceCapacity(int which /*=-1*/, UNITS pwrUnit /*=UNITS_KW*
                     heatSources[resistanceHeightMap[i].index].perfMap[0].inputPower_coeffs[0];
             }
         }
-    }
-
-    // Unit conversion
-    returnPower /= 1000.; // W to KW
-    switch (pwrUnit)
-    {
-    case UNITS_KW:
-        break;
-    case UNITS_BTUperHr:
-        returnPower = KWH_TO_BTU(returnPower); // kW to BTU/h
-        break;
-    default:
-        send_error("Invalid units.");
     }
 
     return returnPower;
@@ -2817,86 +2382,80 @@ int HPWH::getResistancePosition(int elementIndex) const
 }
 
 // the privates
-void HPWH::updateTankTemps(double drawVolume_L,
-                           double inletT_C,
-                           double tankAmbientT_C,
-                           double inletVol2_L,
-                           double inletT2_C)
+void HPWH::updateTankTemps(
+    Volume_t drawVolume, Temp_t inletT, Temp_t tankAmbientT, Volume_t inlet2Vol, Temp_t inlet2T)
 {
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    if (drawVolume_L > 0.)
+    double nodeCp_kJ_per_C = nodeCp(Units::kJ_per_C);
+    if (drawVolume > 0.)
     {
-        if (inletVol2_L > drawVolume_L)
+        if (inlet2Vol > drawVolume)
         {
             send_error("Volume in inlet 2 is greater than the draw volume.");
         }
 
         // sort the inlets by height
         int highInletNodeIndex;
-        double highInletT_C;
+        Temp_t highInletT;
         double highInletFraction; // fraction of draw from high inlet
 
         int lowInletNodeIndex;
-        double lowInletT_C;
+        Temp_t lowInletT;
         double lowInletFraction; // fraction of draw from low inlet
 
         if (inletHeight > inlet2Height)
         {
             highInletNodeIndex = inletHeight;
-            highInletFraction = 1. - inletVol2_L / drawVolume_L;
-            highInletT_C = inletT_C;
+            highInletFraction = 1. - inlet2Vol / drawVolume;
+            highInletT = inletT;
             lowInletNodeIndex = inlet2Height;
-            lowInletT_C = inletT2_C;
-            lowInletFraction = inletVol2_L / drawVolume_L;
+            lowInletT = inlet2T;
+            lowInletFraction = inlet2Vol / drawVolume;
         }
         else
         {
             highInletNodeIndex = inlet2Height;
-            highInletFraction = inletVol2_L / drawVolume_L;
-            highInletT_C = inletT2_C;
+            highInletFraction = inlet2Vol / drawVolume;
+            highInletT = inlet2T;
             lowInletNodeIndex = inletHeight;
-            lowInletT_C = inletT_C;
-            lowInletFraction = 1. - inletVol2_L / drawVolume_L;
+            lowInletT = inletT;
+            lowInletFraction = 1. - inlet2Vol / drawVolume;
         }
 
         // calculate number of nodes to draw
-        double drawVolume_N = drawVolume_L / nodeVolume_L;
-        double drawCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVolume_L;
-
+        double drawVolume_N = drawVolume / nodeVolume;
+        double drawCp_kJ_per_C = CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVolume(Units::L);
         // heat-exchange models
         if (hasHeatExchanger)
         {
-            outletTemp_C = inletT_C;
-            for (auto& nodeT_C : tankTemps_C)
+            outletT = inletT;
+            for (auto& nodeT : tankTs)
             {
-                double maxHeatExchange_kJ = drawCp_kJperC * (nodeT_C - outletTemp_C);
-                double heatExchange_kJ = nodeHeatExchangerEffectiveness * maxHeatExchange_kJ;
+                Energy_t maxHeatExchange(drawCp_kJ_per_C * (nodeT - outletT)(Units::dC), Units::kJ);
+                Energy_t heatExchange = nodeHeatExchangerEffectiveness * maxHeatExchange;
 
-                nodeT_C -= heatExchange_kJ / nodeCp_kJperC;
-                outletTemp_C += heatExchange_kJ / drawCp_kJperC;
+                nodeT -= Temp_d_t(heatExchange(Units::kJ) / nodeCp_kJ_per_C, Units::dC);
+                outletT += Temp_d_t(heatExchange(Units::kJ) / drawCp_kJ_per_C, Units::dC);
             }
         }
         else
         {
             double remainingDrawVolume_N = drawVolume_N;
-            if (drawVolume_L > tankVolume_L)
+            if (drawVolume > tankVolume)
             {
                 for (int i = 0; i < getNumNodes(); i++)
                 {
-                    outletTemp_C += tankTemps_C[i];
-                    tankTemps_C[i] =
-                        (inletT_C * (drawVolume_L - inletVol2_L) + inletT2_C * inletVol2_L) /
-                        drawVolume_L;
+                    outletT += Temp_d_t(tankTs[i]());
+                    tankTs[i]() =
+                        (inletT() * (drawVolume - inlet2Vol) + inlet2T() * inlet2Vol) / drawVolume;
                 }
-                outletTemp_C = (outletTemp_C / getNumNodes() * tankVolume_L +
-                                tankTemps_C[0] * (drawVolume_L - tankVolume_L)) /
-                               drawVolume_L * remainingDrawVolume_N;
+                outletT() = (outletT() / getNumNodes() * tankVolume +
+                             tankTs[0]() * (drawVolume - tankVolume)) /
+                            drawVolume * remainingDrawVolume_N;
 
                 remainingDrawVolume_N = 0.;
             }
 
-            double totalExpelledHeat_kJ = 0.;
+            Energy_t totalExpelledHeat(0.);
             while (remainingDrawVolume_N > 0.)
             {
 
@@ -2904,9 +2463,10 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 double incrementalDrawVolume_N =
                     remainingDrawVolume_N > 1. ? 1. : remainingDrawVolume_N;
 
-                double outputHeat_kJ = nodeCp_kJperC * incrementalDrawVolume_N * tankTemps_C.back();
-                totalExpelledHeat_kJ += outputHeat_kJ;
-                tankTemps_C.back() -= outputHeat_kJ / nodeCp_kJperC;
+                Energy_t outputHeat = {
+                    incrementalDrawVolume_N * nodeCp_kJ_per_C * tankTs.back()(Units::C), Units::kJ};
+                totalExpelledHeat += outputHeat;
+                tankTs.back() -= Temp_d_t(outputHeat(Units::kJ) / nodeCp_kJ_per_C, Units::dC);
 
                 for (int i = getNumNodes() - 1; i >= 0; --i)
                 {
@@ -2915,21 +2475,20 @@ void HPWH::updateTankTemps(double drawVolume_L,
                     if (i == highInletNodeIndex)
                     {
                         inletFraction += highInletFraction;
-                        tankTemps_C[i] +=
-                            incrementalDrawVolume_N * highInletFraction * highInletT_C;
+                        tankTs[i] += incrementalDrawVolume_N * highInletFraction * highInletT();
                     }
                     if (i == lowInletNodeIndex)
                     {
                         inletFraction += lowInletFraction;
-                        tankTemps_C[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT_C;
+                        tankTs[i] += incrementalDrawVolume_N * lowInletFraction * lowInletT();
                     }
 
                     if (i > 0)
                     {
-                        double transferT_C =
-                            incrementalDrawVolume_N * (1. - inletFraction) * tankTemps_C[i - 1];
-                        tankTemps_C[i] += transferT_C;
-                        tankTemps_C[i - 1] -= transferT_C;
+                        Temp_d_t transfer_dT(incrementalDrawVolume_N * (1. - inletFraction) *
+                                             tankTs[i - 1]());
+                        tankTs[i] += transfer_dT;
+                        tankTs[i - 1] -= transfer_dT;
                     }
                 }
 
@@ -2937,61 +2496,63 @@ void HPWH::updateTankTemps(double drawVolume_L,
                 mixTankInversions();
             }
 
-            outletTemp_C = totalExpelledHeat_kJ / drawCp_kJperC;
+            outletT = Temp_t(totalExpelledHeat(Units::kJ) / drawCp_kJ_per_C, Units::C);
         }
 
         // account for mixing at the bottom of the tank
-        if (tankMixesOnDraw && drawVolume_L > 0.)
+        if (tankMixesOnDraw && drawVolume > 0.)
         {
             int mixedBelowNode = (int)(getNumNodes() * mixBelowFractionOnDraw);
             mixTankNodes(0, mixedBelowNode, 1. / 3.);
         }
 
-    } // end if(draw_volume_L > 0)
+    } // end if(draw_volume > 0)
 
     // Initialize newTankTemps_C
-    nextTankTemps_C = tankTemps_C;
+    nextTankTs = tankTs;
 
-    double standbyLossesBottom_kJ = 0.;
-    double standbyLossesTop_kJ = 0.;
-    double standbyLossesSides_kJ = 0.;
+    Energy_t standbyLossesBottom(0.);
+    Energy_t standbyLossesTop(0.);
+    Energy_t standbyLossesSides(0.);
 
     // Standby losses from the top and bottom of the tank
     {
-        auto standbyLossRate_kJperHrC = tankUA_kJperHrC * fracAreaTop;
+        UA_t standbyLossRate = fracAreaTop * tankUA;
 
-        standbyLossesBottom_kJ =
-            standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[0] - tankAmbientT_C);
-        standbyLossesTop_kJ = standbyLossRate_kJperHrC * hoursPerStep *
-                              (tankTemps_C[getNumNodes() - 1] - tankAmbientT_C);
+        standbyLossesBottom = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
+                                           (tankTs[0] - tankAmbientT)(Units::dC),
+                                       Units::kJ);
+        standbyLossesTop = Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
+                                        (tankTs[getNumNodes() - 1] - tankAmbientT)(Units::dC),
+                                    Units::kJ);
 
-        nextTankTemps_C.front() -= standbyLossesBottom_kJ / nodeCp_kJperC;
-        nextTankTemps_C.back() -= standbyLossesTop_kJ / nodeCp_kJperC;
+        nextTankTs.front() -= standbyLossesBottom(Units::kJ) / nodeCp_kJ_per_C;
+        nextTankTs.back() -= standbyLossesTop(Units::kJ) / nodeCp_kJ_per_C;
     }
 
     // Standby losses from the sides of the tank
     {
-        auto standbyLossRate_kJperHrC =
-            (tankUA_kJperHrC * fracAreaSide + fittingsUA_kJperHrC) / getNumNodes();
+        UA_t standbyLossRate((fracAreaSide * tankUA + fittingsUA) / getNumNodes());
         for (int i = 0; i < getNumNodes(); i++)
         {
-            double standbyLosses_kJ =
-                standbyLossRate_kJperHrC * hoursPerStep * (tankTemps_C[i] - tankAmbientT_C);
-            standbyLossesSides_kJ += standbyLosses_kJ;
+            Energy_t standbyLossesNode =
+                Energy_t(standbyLossRate(Units::kJ_per_hC) * stepTime(Units::h) *
+                             (tankTs[i] - tankAmbientT)(Units::dC),
+                         Units::kJ);
+            standbyLossesSides += standbyLossesNode;
 
-            nextTankTemps_C[i] -= standbyLosses_kJ / nodeCp_kJperC;
+            nextTankTs[i] -= standbyLossesNode(Units::kJ) / nodeCp_kJ_per_C;
         }
     }
 
     // Heat transfer between nodes
     if (doConduction)
     {
-
         // Get the "constant" tau for the stability condition and the conduction calculation
-        const double tau = 2. * KWATER_WpermC /
-                           ((CPWATER_kJperkgC * 1000.0) * (DENSITYWATER_kgperL * 1000.0) *
-                            (nodeHeight_m * nodeHeight_m)) *
-                           secondsPerStep;
+        const double tau = 2. * KWATER_W_per_mC /
+                           (Units::scale(Units::kJ, Units::J) * CPWATER_kJ_per_kgC) /
+                           (DENSITYWATER_kg_per_L / Units::scale(Units::L, Units::m3)) /
+                           std::pow(nodeHeight(Units::m), 2.) * stepTime(Units::s);
         if (tau > 1.)
         {
             send_error(fmt::format("The stability condition for conduction has failed!"));
@@ -3000,23 +2561,21 @@ void HPWH::updateTankTemps(double drawVolume_L,
         // End nodes
         if (getNumNodes() > 1)
         { // inner edges of top and bottom nodes
-            nextTankTemps_C.front() += tau * (tankTemps_C[1] - tankTemps_C.front());
-            nextTankTemps_C.back() += tau * (tankTemps_C[getNumNodes() - 2] - tankTemps_C.back());
+            nextTankTs.front() += tau * (tankTs[1] - tankTs.front());
+            nextTankTs.back() += tau * (tankTs[getNumNodes() - 2] - tankTs.back());
         }
 
         // Internal nodes
         for (int i = 1; i < getNumNodes() - 1; i++)
         {
-            nextTankTemps_C[i] +=
-                tau * (tankTemps_C[i + 1] - 2. * tankTemps_C[i] + tankTemps_C[i - 1]);
+            nextTankTs[i] += tau * (tankTs[i + 1]() - 2. * tankTs[i]() + tankTs[i - 1]());
         }
     }
 
-    // Update tankTemps_C
-    tankTemps_C = nextTankTemps_C;
+    // Update tankTs
+    tankTs = nextTankTs;
 
-    standbyLosses_kWh +=
-        KJ_TO_KWH(standbyLossesBottom_kJ + standbyLossesTop_kJ + standbyLossesSides_kJ);
+    standbyLosses += standbyLossesBottom + standbyLossesTop + standbyLossesSides;
 
     // check for inverted temperature profile
     mixTankInversions();
@@ -3035,7 +2594,6 @@ void HPWH::updateSoCIfNecessary()
 void HPWH::mixTankInversions()
 {
     bool hasInversion;
-    const double volumePerNode_L = tankVolume_L / getNumNodes();
     // int numdos = 0;
     if (doInversionMixing)
     {
@@ -3043,32 +2601,33 @@ void HPWH::mixTankInversions()
         {
             hasInversion = false;
             // Start from the top and check downwards
+            double nodeMass_kg = (nodeVolume(Units::L) * DENSITYWATER_kg_per_L);
             for (int i = getNumNodes() - 1; i > 0; i--)
             {
-                if (tankTemps_C[i] < tankTemps_C[i - 1])
+                if (tankTs[i] < tankTs[i - 1])
                 {
                     // Temperature inversion!
                     hasInversion = true;
 
                     // Mix this inversion mixing temperature by averaging all inverted nodes
                     // together.
-                    double Tmixed = 0.0;
-                    double massMixed = 0.0;
-                    int m;
-                    for (m = i; m >= 0; m--)
+                    double Tmixed_sum = 0.;
+                    double massMixed = 0.;
+                    int j = i;
+                    for (; j >= 0; --j)
                     {
-                        Tmixed += tankTemps_C[m] * (volumePerNode_L * DENSITYWATER_kgperL);
-                        massMixed += (volumePerNode_L * DENSITYWATER_kgperL);
-                        if ((m == 0) || (Tmixed / massMixed > tankTemps_C[m - 1]))
+                        Tmixed_sum += nodeMass_kg * tankTs[j]();
+                        massMixed += nodeMass_kg;
+                        if ((j == 0) || (Tmixed_sum > massMixed * tankTs[j - 1]()))
                         {
                             break;
                         }
                     }
-                    Tmixed /= massMixed;
+                    Temp_t mixT(Tmixed_sum / massMixed);
 
                     // Assign the tank temps from i to k
-                    for (int k = i; k >= m; k--)
-                        tankTemps_C[k] = Tmixed;
+                    for (int k = i; k >= j; k--)
+                        tankTs[k] = mixT;
                 }
             }
 
@@ -3084,17 +2643,17 @@ void HPWH::mixTankInversions()
 ///	@param[in]	nodeNum		Lowest node at which to add heat
 /// @param[in]	maxT_C		Maximum allowable temperature to maintain
 //-----------------------------------------------------------------------------
-double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
+HPWH::Energy_t HPWH::addHeatAboveNode(Energy_t qAdd, int nodeNum, Temp_t maxT)
 {
 
     // Do not exceed maxT_C or setpoint
-    double maxHeatToT_C = std::min(maxT_C, setpoint_C);
+    Temp_t maxHeatToT = std::min(maxT, setpointT);
 
     // find number of nodes at or above nodeNum with the same temperature
     int numNodesToHeat = 1;
     for (int i = nodeNum; i < getNumNodes() - 1; i++)
     {
-        if (tankTemps_C[i] != tankTemps_C[i + 1])
+        if (tankTs[i] != tankTs[i + 1])
         {
             break;
         }
@@ -3104,51 +2663,55 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
         }
     }
 
-    while ((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes()))
+    while ((qAdd > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes()))
     {
         // assume there is another node above the equal-temp nodes
         int targetTempNodeNum = nodeNum + numNodesToHeat;
 
-        double heatToT_C;
+        Temp_t heatToT;
         if (targetTempNodeNum > (getNumNodes() - 1))
         {
             // no nodes above the equal-temp nodes; target temperature is the maximum
-            heatToT_C = maxHeatToT_C;
+            heatToT = maxHeatToT;
         }
         else
         {
-            heatToT_C = tankTemps_C[targetTempNodeNum];
-            if (heatToT_C > maxHeatToT_C)
+            heatToT = tankTs[targetTempNodeNum];
+            if (heatToT > maxHeatToT)
             {
                 // Ensure temperature does not exceed maximum
-                heatToT_C = maxHeatToT_C;
+                heatToT = maxHeatToT;
             }
         }
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
-        double qIncrement_kJ = numNodesToHeat * nodeCp_kJperC * (heatToT_C - tankTemps_C[nodeNum]);
+        Energy_t qIncrement(numNodesToHeat * nodeCp(Units::kJ_per_C) *
+                                (heatToT(Units::C) - tankTs[nodeNum](Units::C)),
+                            Units::kJ);
 
-        if (qIncrement_kJ > qAdd_kJ)
+        if (qIncrement > qAdd)
         {
             // insufficient heat to reach heatToT_C; use all available heat
-            heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+            heatToT = Temp_t(tankTs[nodeNum](Units::C) +
+                                 qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat,
+                             Units::C);
             for (int j = 0; j < numNodesToHeat; ++j)
             {
-                tankTemps_C[nodeNum + j] = heatToT_C;
+                tankTs[nodeNum + j] = heatToT;
             }
-            qAdd_kJ = 0.;
+            qAdd() = 0.;
         }
-        else if (qIncrement_kJ > 0.)
+        else if (qIncrement > 0.)
         { // add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C
             for (int j = 0; j < numNodesToHeat; ++j)
-                tankTemps_C[nodeNum + j] = heatToT_C;
-            qAdd_kJ -= qIncrement_kJ;
+                tankTs[nodeNum + j] = heatToT;
+            qAdd -= qIncrement;
         }
         numNodesToHeat++;
     }
 
     // return any unused heat
-    return qAdd_kJ;
+    return qAdd;
 }
 
 //-----------------------------------------------------------------------------
@@ -3157,13 +2720,13 @@ double HPWH::addHeatAboveNode(double qAdd_kJ, int nodeNum, const double maxT_C)
 /// @param[in]	qAdd_kJ				Amount of heat to add
 ///	@param[in]	nodeNum				Lowest node at which to add heat
 //-----------------------------------------------------------------------------
-void HPWH::addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum)
+void HPWH::addExtraHeatAboveNode(Energy_t qAdd, const int nodeNum)
 {
     // find number of nodes at or above nodeNum with the same temperature
     int numNodesToHeat = 1;
     for (int i = nodeNum; i < getNumNodes() - 1; i++)
     {
-        if (tankTemps_C[i] != tankTemps_C[i + 1])
+        if (tankTs[i] != tankTs[i + 1])
         {
             break;
         }
@@ -3173,41 +2736,47 @@ void HPWH::addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum)
         }
     }
 
-    while ((qAdd_kJ > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes()))
+    while ((qAdd > 0.) && (nodeNum + numNodesToHeat - 1 < getNumNodes()))
     {
 
         // assume there is another node above the equal-temp nodes
         int targetTempNodeNum = nodeNum + numNodesToHeat;
 
-        double heatToT_C;
+        Temp_t heatToT;
         if (targetTempNodeNum > (getNumNodes() - 1))
         {
             // no nodes above the equal-temp nodes; target temperature limited by the heat available
-            heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+            heatToT =
+                tankTs[nodeNum] +
+                Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
         }
         else
         {
-            heatToT_C = tankTemps_C[targetTempNodeNum];
+            heatToT = tankTs[targetTempNodeNum];
         }
 
         // heat needed to bring all equal-temp nodes up to heatToT_C
-        double qIncrement_kJ = nodeCp_kJperC * numNodesToHeat * (heatToT_C - tankTemps_C[nodeNum]);
+        Energy_t qIncrement = {nodeCp(Units::kJ_per_C) * numNodesToHeat *
+                                   (heatToT(Units::C) - tankTs[nodeNum](Units::C)),
+                               Units::kJ};
 
-        if (qIncrement_kJ > qAdd_kJ)
+        if (qIncrement > qAdd)
         {
             // insufficient heat to reach heatToT_C; use all available heat
-            heatToT_C = tankTemps_C[nodeNum] + qAdd_kJ / nodeCp_kJperC / numNodesToHeat;
+            heatToT =
+                tankTs[nodeNum] +
+                Temp_d_t(qAdd(Units::kJ) / nodeCp(Units::kJ_per_C) / numNodesToHeat, Units::dC);
             for (int j = 0; j < numNodesToHeat; ++j)
             {
-                tankTemps_C[nodeNum + j] = heatToT_C;
+                tankTs[nodeNum + j] = heatToT;
             }
-            qAdd_kJ = 0.;
+            qAdd() = 0.;
         }
-        else if (qIncrement_kJ > 0.)
+        else if (qIncrement > 0.)
         { // add qIncrement_kJ to raise all equal-temp-nodes to heatToT_C
             for (int j = 0; j < numNodesToHeat; ++j)
-                tankTemps_C[nodeNum + j] = heatToT_C;
-            qAdd_kJ -= qIncrement_kJ;
+                tankTs[nodeNum + j] = heatToT;
+            qAdd -= qIncrement;
         }
         numNodesToHeat++;
     }
@@ -3217,56 +2786,53 @@ void HPWH::addExtraHeatAboveNode(double qAdd_kJ, const int nodeNum)
 ///	@brief	Modifies a heat distribution using a thermal distribution.
 /// @param[in,out]	heatDistribution_W		The distribution to be modified
 //-----------------------------------------------------------------------------
-void HPWH::modifyHeatDistribution(std::vector<double>& heatDistribution_W)
+template <typename V>
+V HPWH::modifyHeatDistribution(V heatDistribution)
 {
-    double totalHeat_W = 0.;
-    for (auto& heatDist_W : heatDistribution_W)
-        totalHeat_W += heatDist_W;
+    double totalHeat = 0.;
+    for (auto& heatDist : heatDistribution)
+        totalHeat += heatDist;
 
-    if (totalHeat_W == 0.)
-        return;
+    if (totalHeat == 0.)
+        return heatDistribution;
 
-    for (auto& heatDist_W : heatDistribution_W)
-        heatDist_W /= totalHeat_W;
+    for (auto& heatDist : heatDistribution)
+        heatDist /= totalHeat;
 
-    double shrinkageT_C = findShrinkageT_C(heatDistribution_W);
-    int lowestNode = findLowestNode(heatDistribution_W, getNumNodes());
+    Temp_d_t shrinkage_dT = findShrinkage_dT(heatDistribution);
+    int lowestNode = findLowestNode(heatDistribution, getNumNodes());
 
-    std::vector<double> modHeatDistribution_W;
-    calcThermalDist(modHeatDistribution_W, shrinkageT_C, lowestNode, tankTemps_C, setpoint_C);
+    heatDistribution = calcThermalDist(shrinkage_dT, lowestNode, tankTs, setpointT);
+    ;
+    for (auto& heatDist : heatDistribution)
+        heatDist *= totalHeat;
 
-    heatDistribution_W = modHeatDistribution_W;
-    for (auto& heatDist_W : heatDistribution_W)
-        heatDist_W *= totalHeat_W;
+    return heatDistribution;
 }
 
 //-----------------------------------------------------------------------------
 ///	@brief	Adds extra heat to tank.
 /// @param[in]	extraHeatDist_W		A distribution of extra heat to add
 //-----------------------------------------------------------------------------
-void HPWH::addExtraHeat(std::vector<double>& extraHeatDist_W)
+void HPWH::addExtraHeat(PowerVect_t& extraHeatDist)
 {
 
-    auto modHeatDistribution_W = extraHeatDist_W;
-    modifyHeatDistribution(modHeatDistribution_W);
-
-    std::vector<double> heatDistribution_W(getNumNodes());
-    resampleExtensive(heatDistribution_W, modHeatDistribution_W);
+    PowerVect_t heatDistribution(getNumNodes());
+    resampleExtensive(heatDistribution(), modifyHeatDistribution(extraHeatDist()));
 
     // Unnecessary unit conversions used here to match former method
-    double tot_qAdded_BTUperHr = 0.;
+    Energy_t tot_qAdded(0.);
     for (int i = getNumNodes() - 1; i >= 0; i--)
     {
-        if (heatDistribution_W[i] != 0)
+        if (heatDistribution[i] != 0)
         {
-            double qAdd_BTUperHr = KWH_TO_BTU(heatDistribution_W[i] / 1000.);
-            double qAdd_KJ = BTU_TO_KJ(qAdd_BTUperHr * minutesPerStep / min_per_hr);
-            addExtraHeatAboveNode(qAdd_KJ, i);
-            tot_qAdded_BTUperHr += qAdd_BTUperHr;
+            Energy_t qAdd = {heatDistribution[i](Units::W) * stepTime(Units::s), Units::J};
+            addExtraHeatAboveNode(qAdd, i);
+            tot_qAdded += qAdd;
         }
     }
     // Write the input & output energy
-    extraEnergyInput_kWh = BTU_TO_KWH(tot_qAdded_BTUperHr * minutesPerStep / min_per_hr);
+    extraEnergyInput = tot_qAdded;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -3295,17 +2861,17 @@ bool HPWH::areAllHeatSourcesOff() const
 
 void HPWH::mixTankNodes(int mixBottomNode, int mixBelowNode, double mixFactor)
 {
-    double avgT_C = 0.;
+    Temp_t avgT(0.);
     double numAvgNodes = static_cast<double>(mixBelowNode - mixBottomNode);
     for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        avgT_C += tankTemps_C[i];
+        avgT += tankTs[i]();
     }
-    avgT_C /= numAvgNodes;
+    avgT() = avgT() / numAvgNodes;
 
     for (int i = mixBottomNode; i < mixBelowNode; i++)
     {
-        tankTemps_C[i] += mixFactor * (avgT_C - tankTemps_C[i]);
+        tankTs[i] += mixFactor * (avgT - tankTs[i]);
     }
 }
 
@@ -3317,19 +2883,19 @@ void HPWH::calcSizeConstants()
     // fraction of UA that corresponds to the top and bottom of the tank. The assumption is that the
     // aspect ratio is the same for all tanks and is the same for the outside measurements of the
     // unit and the inner water tank.
-    const double tankRad_m = getTankRadius(UNITS_M);
-    const double tankHeight_m = ASPECTRATIO * tankRad_m;
+    const Length_t tankRad = getTankRadius();
+    const Length_t tankHeight = ASPECTRATIO * tankRad;
 
-    nodeVolume_L = tankVolume_L / getNumNodes();
-    nodeCp_kJperC = CPWATER_kJperkgC * DENSITYWATER_kgperL * nodeVolume_L;
-    nodeHeight_m = tankHeight_m / getNumNodes();
+    nodeVolume = tankVolume / getNumNodes();
+    nodeCp = {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * nodeVolume(Units::L), Units::kJ_per_C};
+    nodeHeight = tankHeight / getNumNodes();
 
     // The fraction of UA that is on the top or the bottom of the tank. So 2 * fracAreaTop +
     // fracAreaSide is the total tank area.
-    fracAreaTop = tankRad_m / (2.0 * (tankHeight_m + tankRad_m));
+    fracAreaTop = tankRad / (2.0 * (tankHeight + tankRad));
 
     // fracAreaSide is the faction of the area of the cylinder that's not the top or bottom.
-    fracAreaSide = tankHeight_m / (tankHeight_m + tankRad_m);
+    fracAreaSide = tankHeight / (tankHeight + tankRad);
 
     /// Single-node heat-exchange effectiveness
     nodeHeatExchangerEffectiveness =
@@ -3364,7 +2930,7 @@ void HPWH::calcDerivedHeatingValues()
     // find condentropy/shrinkage
     for (int i = 0; i < getNumHeatSources(); ++i)
     {
-        heatSources[i].Tshrinkage_C = findShrinkageT_C(heatSources[i].condensity);
+        heatSources[i].shrinkage_dT = findShrinkage_dT(heatSources[i].condensity);
     }
 
     // find lowest node
@@ -3479,39 +3045,41 @@ void HPWH::resetTopOffTimer() { timerTOT = 0.; }
 ///	@param[in]	fracEnergyTolerance		Fractional tolerance for energy imbalance
 /// @return	true if balanced; false otherwise.
 //-----------------------------------------------------------------------------
-bool HPWH::isEnergyBalanced(const double drawVol_L,
-                            const double prevHeatContent_kJ,
+bool HPWH::isEnergyBalanced(const Volume_t drawVol,
+                            const Energy_t prevHeatContent,
                             const double fracEnergyTolerance /* = 0.001 */)
 {
-    double drawCp_kJperC =
-        CPWATER_kJperkgC * DENSITYWATER_kgperL * drawVol_L; // heat capacity of draw
-
     // Check energy balancing.
-    double qInElectrical_kJ = 0.;
+    Energy_t qInElectrical(0.);
     for (int iHS = 0; iHS < getNumHeatSources(); iHS++)
     {
-        qInElectrical_kJ += getNthHeatSourceEnergyInput(iHS, UNITS_KJ);
+        qInElectrical += getNthHeatSourceEnergyInput(iHS);
     }
 
-    double qInExtra_kJ = KWH_TO_KJ(extraEnergyInput_kWh);
-    double qInHeatSourceEnviron_kJ = getEnergyRemovedFromEnvironment(UNITS_KJ);
-    double qOutTankEnviron_kJ = KWH_TO_KJ(standbyLosses_kWh);
-    double qOutWater_kJ =
-        drawCp_kJperC * (outletTemp_C - member_inletT_C); // assumes only one inlet
-    double expectedTankHeatContent_kJ =
-        prevHeatContent_kJ        // previous heat content
-        + qInElectrical_kJ        // electrical energy delivered to heat sources
-        + qInExtra_kJ             // extra energy delivered to heat sources
-        + qInHeatSourceEnviron_kJ // heat extracted from environment by condenser
-        - qOutTankEnviron_kJ      // heat released from tank to environment
-        - qOutWater_kJ;           // heat expelled to outlet by water flow
+    Energy_t qInHeatSourceEnviron = getEnergyRemovedFromEnvironment();
+    Energy_t qInExtra = extraEnergyInput;
+    Energy_t qOutTankEnviron = standbyLosses;
 
-    double qBal_kJ = getTankHeatContent_kJ() - expectedTankHeatContent_kJ;
-    double fracEnergyDiff = fabs(qBal_kJ) / std::max(prevHeatContent_kJ, 1.);
+    Cp_t drawCp = {CPWATER_kJ_per_kgC * DENSITYWATER_kg_per_L * drawVol(Units::L),
+                   Units::kJ_per_C}; // heat capacity of draw
+    Energy_t qOutWater = {drawCp(Units::kJ_per_C) * (outletT - member_inletT)(Units::dC),
+                          Units::kJ}; // assumes only one inlet
+
+    Energy_t expectedTankHeatContent =
+        prevHeatContent        // previous heat content
+        + qInElectrical        // electrical energy delivered to heat sources
+        + qInHeatSourceEnviron // heat extracted from environment by condenser
+        + qInExtra             // extra energy delivered to heat sources
+        - qOutTankEnviron      // heat released from tank to environment
+        - qOutWater;           // heat expelled to outlet by water flow
+
+    auto currTankHeatContent = getTankHeatContent();
+    Energy_t qBal = currTankHeatContent - expectedTankHeatContent;
+    double fracEnergyDiff = fabs(qBal(Units::kJ)) / std::max(prevHeatContent(Units::kJ), 1.);
     if (fracEnergyDiff > fracEnergyTolerance)
     {
-        send_warning(
-            fmt::format("Energy-balance error: {:g} kJ, {:g} %", qBal_kJ, 100. * fracEnergyDiff));
+        send_warning(fmt::format(
+            "Energy-balance error: {:g} kJ, {:g} %", qBal(Units::kJ), 100. * fracEnergyDiff));
         return false;
     }
     return true;
@@ -3628,8 +3196,8 @@ void HPWH::checkInputs()
         }
         else
         {
-            if (heatSources[i].secondaryHeatExchanger.extraPumpPower_W != 0 ||
-                heatSources[i].secondaryHeatExchanger.extraPumpPower_W)
+            if ((heatSources[i].secondaryHeatExchanger.extraPumpPower() != 0) ||
+                heatSources[i].secondaryHeatExchanger.extraPumpPower())
             {
                 error_msgs.push(fmt::format(
                     "Heatsource {:d} is not an external heat source but has an external "
@@ -3699,21 +3267,21 @@ void HPWH::checkInputs()
         }
     }
 
-    double maxTemp;
+    Temp_t maxT;
     string why;
-    double tempSetpoint = setpoint_C;
-    if (!isNewSetpointPossible(tempSetpoint, maxTemp, why))
+    Temp_t tempSetpointT = setpointT;
+    if (!isNewSetpointPossible(tempSetpointT, maxT, why))
     {
         error_msgs.push(fmt::format("Cannot set new setpoint. ({})", why.c_str()));
     }
 
     // Check if the UA is out of bounds
-    if (tankUA_kJperHrC < 0.0)
+    if (tankUA < 0.0)
     {
         error_msgs.push(
             fmt::format("The tankUA_kJperHrC is less than 0 for a HPWH, it must be greater than 0, "
                         "tankUA_kJperHrC is: {:g}",
-                        tankUA_kJperHrC));
+                        tankUA(Units::kJ_per_hC)));
     }
 
     // Check single-node heat-exchange effectiveness validity
@@ -4153,13 +3721,15 @@ void HPWH::initFromFile(string modelName)
     name = modelName;
 
     // some variables that will be handy
-    std::size_t heatsource, sourceNum, nTemps, tempInt;
+    std::size_t heatsource, sourceNum, nTemps = 0, tempInt;
     std::size_t num_nodes = 0, numHeatSources = 0;
     bool hasInitialTankTemp = false;
-    double initialTankT_C = F_TO_C(120.);
+    Temp_t initialTankT = {120., Units::F};
 
     string tempString, units;
     double tempDouble;
+    bool convertPerfMap = false;
+    std::vector<Units::Temp> perfT_unit;
 
     // being file processing, line by line
     string line_s;
@@ -4189,12 +3759,12 @@ void HPWH::initFromFile(string modelName)
         else if (token == "volume")
         {
             line_ss >> tempDouble >> units;
-            tankVolume_L = tempDouble;
+
             if (units == "L")
-                ;
+                tankVolume = Volume_t(tempDouble, Units::L);
             else if (units == "gal")
             {
-                tankVolume_L = GAL_TO_L(tempDouble);
+                tankVolume = Volume_t(tempDouble, Units::gal);
             }
             else
                 send_warning(fmt::format("Invalid units: {}", token));
@@ -4202,7 +3772,7 @@ void HPWH::initFromFile(string modelName)
         else if (token == "UA")
         {
             line_ss >> tempDouble >> units;
-            tankUA_kJperHrC = tempDouble;
+            tankUA = UA_t(tempDouble, Units::kJ_per_hC);
         }
         else if (token == "depressTemp")
         {
@@ -4250,13 +3820,11 @@ void HPWH::initFromFile(string modelName)
         {
             line_ss >> tempDouble >> units;
             if (units == "C")
-                ;
+                setpointT = Temp_t(tempDouble, Units::C);
             else if (units == "F")
-                tempDouble = F_TO_C(tempDouble);
+                setpointT = Temp_t(tempDouble, Units::F);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
-
-            setpoint_C = tempDouble;
             // tank will be set to setpoint at end of function
         }
         else if (token == "setpointFixed")
@@ -4276,13 +3844,13 @@ void HPWH::initFromFile(string modelName)
             line_ss >> tempDouble >> units;
             if (units == "C")
             {
+                initialTankT = Temp_t(tempDouble, Units::C);
             }
             else if (units == "F")
-                tempDouble = F_TO_C(tempDouble);
+                initialTankT = Temp_t(tempDouble, Units::F);
             else
                 send_warning(fmt::format("Invalid units: {}", token));
 
-            initialTankT_C = tempDouble;
             hasInitialTankTemp = true;
         }
         else if (token == "hasHeatExchanger")
@@ -4316,6 +3884,7 @@ void HPWH::initFromFile(string modelName)
             {
                 addHeatSource(fmt::format("heat source {:d}", i));
             }
+            perfT_unit.resize(numHeatSources);
         }
         else if (token == "heatsource")
         {
@@ -4354,22 +3923,20 @@ void HPWH::initFromFile(string modelName)
             else if (token == "minT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].minT = tempDouble;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].minT = {tempDouble, Units::C};
                 else if (units == "F")
-                    heatSources[heatsource].minT = F_TO_C(tempDouble);
+                    heatSources[heatsource].minT = {tempDouble, Units::F};
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
             }
             else if (token == "maxT")
             {
                 line_ss >> tempDouble >> units;
-                heatSources[heatsource].maxT = tempDouble;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].maxT = {tempDouble, Units::C};
                 else if (units == "F")
-                    heatSources[heatsource].maxT = F_TO_C(tempDouble);
+                    heatSources[heatsource].maxT = {tempDouble, Units::F};
                 else
                     send_warning("Invalid units.");
             }
@@ -4449,31 +4016,42 @@ void HPWH::initFromFile(string modelName)
                             heatsource,
                             token.c_str()));
                     }
-                    if (units == "C")
-                    {
-                    }
-                    else if (units == "F")
-                    {
-                        if (absolute)
-                        {
-                            tempDouble = F_TO_C(tempDouble);
-                        }
-                        else
-                        {
-                            tempDouble = dF_TO_dC(tempDouble);
-                        }
-                    }
-                    else
-                        send_warning(fmt::format("Invalid units: {}", token));
 
                     std::vector<NodeWeight> nodeWeights;
                     for (size_t i = 0; i < nodeNums.size(); i++)
                     {
                         nodeWeights.emplace_back(nodeNums[i], weights[i]);
                     }
-                    std::shared_ptr<HPWH::TempBasedHeatingLogic> logic =
-                        std::make_shared<HPWH::TempBasedHeatingLogic>(
-                            "custom", nodeWeights, tempDouble, this, absolute, compare);
+
+                    GenTemp_t logicT;
+                    if (absolute)
+                    {
+                        if (units == "C")
+                        {
+                            logicT = {tempDouble, Units::C};
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = {tempDouble, Units::F};
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
+                    else
+                    {
+                        if (units == "C")
+                        {
+                            logicT = {tempDouble, Units::dF};
+                        }
+                        else if (units == "F")
+                        {
+                            logicT = {tempDouble, Units::dC};
+                        }
+                        else
+                            send_warning(fmt::format("Invalid units: {}", token));
+                    }
+                    auto logic = std::make_shared<HPWH::TempBasedHeatingLogic>(
+                        "custom", nodeWeights, logicT, this, compare);
                     if (token == "onlogic")
                     {
                         heatSources[heatsource].addTurnOnLogic(logic);
@@ -4486,7 +4064,7 @@ void HPWH::initFromFile(string modelName)
                     { // standby logic
                         heatSources[heatsource].standbyLogic =
                             std::make_shared<HPWH::TempBasedHeatingLogic>(
-                                "standby logic", nodeWeights, tempDouble, this, absolute, compare);
+                                "standby logic", nodeWeights, logicT, this, compare);
                     }
                 }
                 else if (token == "onlogic")
@@ -4520,66 +4098,69 @@ void HPWH::initFromFile(string modelName)
                     }
 
                     line_ss >> units;
+                    GenTemp_t logicT;
                     if (units == "C")
-                        ;
+                    {
+                        if (absolute)
+                            logicT = {tempDouble, Units::C};
+                        else
+                            logicT = {tempDouble, Units::dC};
+                    }
                     else if (units == "F")
                     {
                         if (absolute)
-                        {
-                            tempDouble = F_TO_C(tempDouble);
-                        }
+                            logicT = {tempDouble, Units::F};
                         else
-                        {
-                            tempDouble = dF_TO_dC(tempDouble);
-                        }
+                            logicT = {tempDouble, Units::dF};
                     }
                     else
+                    {
                         send_warning(fmt::format("Invalid units: {}", token));
+                    }
 
                     if (tempString == "wholeTank")
                     {
-                        heatSources[heatsource].addTurnOnLogic(
-                            HPWH::wholeTank(tempDouble, UNITS_C, absolute));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::wholeTank(logicT));
                     }
                     else if (tempString == "topThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::topThird(logicT));
                     }
                     else if (tempString == "bottomThird")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomThird(logicT));
                     }
                     else if (tempString == "standby")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::standby(logicT));
                     }
                     else if (tempString == "bottomSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomSixth(logicT));
                     }
                     else if (tempString == "secondSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::secondSixth(logicT));
                     }
                     else if (tempString == "thirdSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::thirdSixth(logicT));
                     }
                     else if (tempString == "fourthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::fourthSixth(logicT));
                     }
                     else if (tempString == "fifthSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::fifthSixth(logicT));
                     }
                     else if (tempString == "topSixth")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::topSixth(logicT));
                     }
                     else if (tempString == "bottomHalf")
                     {
-                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(tempDouble));
+                        heatSources[heatsource].addTurnOnLogic(HPWH::bottomHalf(logicT));
                     }
                     else
                     {
@@ -4590,41 +4171,41 @@ void HPWH::initFromFile(string modelName)
                 else if (token == "offlogic")
                 {
                     line_ss >> tempDouble >> units;
+                    GenTemp_t logicT = {0, Units::dC};
                     if (units == "C")
-                        ;
+                    {
+                        logicT = {tempDouble, Units::C};
+                    }
                     else if (units == "F")
                     {
-                        tempDouble = F_TO_C(tempDouble);
+                        logicT = Temp_t(tempDouble, Units::F);
                     }
                     else
                         send_warning(fmt::format("Invalid units: {}", token));
 
                     if (tempString == "topNodeMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::topNodeMaxTemp(logicT));
                     }
                     else if (tempString == "bottomNodeMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomNodeMaxTemp(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::bottomNodeMaxTemp(logicT));
                     }
                     else if (tempString == "bottomTwelfthMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomTwelfthMaxTemp(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::bottomTwelfthMaxTemp(logicT));
                     }
                     else if (tempString == "bottomSixthMaxTemp")
                     {
-                        heatSources[heatsource].addShutOffLogic(
-                            HPWH::bottomSixthMaxTemp(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::bottomSixthMaxTemp(logicT));
                     }
                     else if (tempString == "largeDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largeDraw(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::largeDraw(logicT));
                     }
                     else if (tempString == "largerDraw")
                     {
-                        heatSources[heatsource].addShutOffLogic(HPWH::largerDraw(tempDouble));
+                        heatSources[heatsource].addShutOffLogic(HPWH::largerDraw(logicT));
                     }
                     else
                     {
@@ -4727,17 +4308,17 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> nTemps;
                 heatSources[heatsource].perfMap.resize(nTemps);
+                convertPerfMap = true;
             }
             else if (std::regex_match(token, std::regex("T\\d+")))
             {
                 std::smatch match;
                 std::regex_match(token, match, std::regex("T(\\d+)"));
-                nTemps = std::stoi(match[1].str());
-                std::size_t maxTemps = heatSources[heatsource].perfMap.size();
+                std::size_t nTemp = std::stoi(match[1].str());
 
-                if (maxTemps < nTemps)
+                if (nTemp > nTemps)
                 {
-                    if (maxTemps == 0)
+                    if (nTemps == 0)
                     {
                         send_error(fmt::format(
                             "{} specified for heat source {:d} before definition of nTemps.",
@@ -4751,22 +4332,24 @@ void HPWH::initFromFile(string modelName)
                             "less than {}.  \n",
                             token.c_str(),
                             heatsource,
-                            maxTemps,
-                            nTemps));
+                            nTemps,
+                            nTemp));
                     }
                 }
                 line_ss >> tempDouble >> units;
+                auto& T = heatSources[heatsource].perfMap[nTemp - 1].T;
                 if (units == "C")
                 {
-                    tempDouble = C_TO_F(tempDouble);
+                    perfT_unit[heatsource] = Units::C;
+                    T = {tempDouble, Units::C};
                 }
                 else if (units == "F")
                 {
+                    perfT_unit[heatsource] = Units::F;
+                    T = {tempDouble, Units::F};
                 }
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
-
-                heatSources[heatsource].perfMap[nTemps - 1].T_F = tempDouble;
             }
             else if (std::regex_match(token, std::regex("(?:inPow|cop)T\\d+(?:const|lin|quad)")))
             {
@@ -4775,23 +4358,6 @@ void HPWH::initFromFile(string modelName)
                 string var = match[1].str();
                 nTemps = std::stoi(match[2].str());
                 string coeff = match[3].str();
-
-                /*
-                // TODO: Currently relies on the coefficients being defined in the correct order
-                int coeff_num;
-                if (coeff == "const")
-                {
-                    coeff_num = 0;
-                }
-                else if (coeff == "lin")
-                {
-                    coeff_num = 1;
-                }
-                else if (coeff == "quad")
-                {
-                    coeff_num = 2;
-                }
-                */
 
                 std::size_t maxTemps = heatSources[heatsource].perfMap.size();
 
@@ -4820,7 +4386,7 @@ void HPWH::initFromFile(string modelName)
                 if (var == "inPow")
                 {
                     heatSources[heatsource].perfMap[nTemps - 1].inputPower_coeffs.push_back(
-                        tempDouble);
+                        {tempDouble, Units::W});
                 }
                 else if (var == "cop")
                 {
@@ -4831,15 +4397,13 @@ void HPWH::initFromFile(string modelName)
             {
                 line_ss >> tempDouble >> units;
                 if (units == "C")
-                    ;
+                    heatSources[heatsource].hysteresis_dT = {tempDouble, Units::dC};
                 else if (units == "F")
                 {
-                    tempDouble = dF_TO_dC(tempDouble);
+                    heatSources[heatsource].hysteresis_dT = {tempDouble, Units::dF};
                 }
                 else
                     send_warning(fmt::format("Invalid units: {}", token));
-
-                heatSources[heatsource].hysteresis_dC = tempDouble;
             }
             else if (token == "backupSource")
             {
@@ -4870,17 +4434,35 @@ void HPWH::initFromFile(string modelName)
 
     } // end while over lines
 
+    if (convertPerfMap)
+    {
+        std::size_t j = 0;
+        for (auto& heatSource : heatSources)
+        {
+            auto uT = perfT_unit[j];
+            auto& perfMap = heatSource.perfMap;
+            std::size_t nPoints = perfMap.size();
+            for (std::size_t i = 0; i < nPoints; ++i)
+            {
+                auto& p = perfMap[i];
+                PerfPoint newPoint({p.T(uT), uT}, p.inputPower_coeffs, p.COP_coeffs);
+                p = newPoint;
+            }
+            j++;
+        }
+    }
+
     // take care of the non-input processing
     model = MODELS_CustomFile;
 
-    tankTemps_C.resize(num_nodes);
+    tankTs.resize(num_nodes);
 
     if (hasInitialTankTemp)
-        setTankToTemperature(initialTankT_C);
+        setTankToT(initialTankT);
     else
         resetTankToSetpoint();
 
-    nextTankTemps_C.resize(num_nodes);
+    nextTankTs.resize(num_nodes);
 
     isHeating = false;
     for (int i = 0; i < getNumHeatSources(); i++)
@@ -4904,24 +4486,23 @@ void HPWH::initFromFile(string modelName)
 //-----------------------------------------------------------------------------
 void HPWH::prepForTest(StandardTestOptions& testOptions)
 {
-    double flowRate_Lper_min = GAL_TO_L(3.);
-    if (tankVolume_L < GAL_TO_L(20.))
-        flowRate_Lper_min = GAL_TO_L(1.5);
+    FlowRate_t flowRate(3., Units::gal_per_min);
+    if (tankVolume(Units::L) < 20.)
+        flowRate = FlowRate_t(1.5, Units::gal_per_min);
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double externalT_C = 19.7;
+    const Temp_t inletT(14.4, Units::C);   // EERE-2019-BT-TP-0032-0058, p. 40433
+    const Temp_t ambientT(19.7, Units::C); // EERE-2019-BT-TP-0032-0058, p. 40435
+    const Temp_t externalT(19.7, Units::C);
 
     if (testOptions.changeSetpoint)
     {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
+        setSetpointT(testOptions.setpointT);
     }
 
     DRMODES drMode = DR_ALLOW;
     bool isDrawing = false;
     bool done = false;
     int step = 0;
-    int time_min = 0;
     while (!done)
     {
         switch (step)
@@ -4958,22 +4539,22 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
         }
 
         // limit draw-volume increment to tank volume
-        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
-        if (incrementalDrawVolume_L > tankVolume_L)
+        Volume_t maxFlowVolume = {flowRate(Units::L_per_s) * Time_t(1., Units::min)(Units::s),
+                                  Units::L};
+        Volume_t incrementalDrawVolume = isDrawing ? maxFlowVolume : Volume_t(0.);
+        if (incrementalDrawVolume > tankVolume)
         {
-            incrementalDrawVolume_L = tankVolume_L;
+            incrementalDrawVolume = tankVolume;
         }
 
-        runOneStep(inletT_C,                // inlet water temperature (C)
-                   incrementalDrawVolume_L, // draw volume (L)
-                   ambientT_C,              // ambient Temp (C)
-                   externalT_C,             // external Temp (C)
-                   drMode,                  // DDR Status
-                   0.,                      // inlet-2 volume (L)
-                   inletT_C,                // inlet-2 Temp (C)
-                   NULL);                   // no extra heat
-
-        ++time_min;
+        runOneStep(inletT,                // inlet water temperature (C)
+                   incrementalDrawVolume, // draw volume (L)
+                   ambientT,              // ambient Temp (C)
+                   externalT,             // external Temp (C)
+                   drMode,                // DDR Status
+                   V0(),                  // inlet-2 volume (L)
+                   inletT,                // inlet-2 Temp (C)
+                   NULL);                 // no extra heat
     }
 }
 
@@ -4985,35 +4566,35 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
 //-----------------------------------------------------------------------------
 void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOptions& testOptions)
 {
-    double flowRate_Lper_min = GAL_TO_L(3.);
-    if (tankVolume_L < GAL_TO_L(20.))
-        flowRate_Lper_min = GAL_TO_L(1.5);
+    FlowRate_t flowRate(3., Units::gal_per_min);
+    if (tankVolume(Units::gal) < 20.)
+        flowRate = {1.5, Units::gal_per_min};
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double externalT_C = 19.7;
+    const Temp_t inletT = {14.4, Units::C};   // EERE-2019-BT-TP-0032-0058, p. 40433
+    const Temp_t ambientT = {19.7, Units::C}; // EERE-2019-BT-TP-0032-0058, p. 40435
+    const Temp_t externalT = {19.7, Units::C};
 
     if (testOptions.changeSetpoint)
     {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
+        setSetpointT(testOptions.setpointT);
     }
 
-    double tankT_C = getAverageTankTemp_C();
-    double maxTankT_C = tankT_C;
-    double maxOutletT_C = 0.;
+    Temp_t tankT = getAverageTankT();
+    Temp_t maxTankT = tankT;
+    Temp_t maxOutletT = {0., Units::C};
 
     DRMODES drMode = DR_ALLOW;
-    double drawVolume_L = 0.;
+    Volume_t drawVolume(0.);
 
-    firstHourRating.drawVolume_L = 0.;
+    firstHourRating.drawVolume() = 0.;
 
-    double sumOutletVolumeT_LC = 0.;
-    double sumOutletVolume_L = 0.;
+    double sumOutletVolumeT = 0.;
+    double sumOutletVolume = 0.;
 
-    double avgOutletT_C = 0.;
-    double minOutletT_C = 0.;
-    double prevAvgOutletT_C = 0.;
-    double prevMinOutletT_C = 0.;
+    Temp_t avgOutletT = {0., Units::C};
+    Temp_t minOutletT = {0., Units::C};
+    Temp_t prevAvgOutletT = {0., Units::C};
+    Temp_t prevMinOutletT = {0., Units::C};
 
     bool isDrawing = false;
     bool done = false;
@@ -5023,64 +4604,64 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
     bool firstDraw = true;
     isDrawing = true;
-    maxOutletT_C = 0.;
+    maxOutletT = {0., Units::C};
     drMode = DR_LOC;
-    int elapsedTime_min = 0;
+    Time_t elapsedTime(0.);
     while (!done)
     {
 
         // limit draw-volume increment to tank volume
-        double incrementalDrawVolume_L = isDrawing ? flowRate_Lper_min * (1.) : 0.;
-        if (incrementalDrawVolume_L > tankVolume_L)
+        Volume_t incrementalDrawVolume = {
+            isDrawing ? flowRate(Units::L_per_s) * Time_t(1., Units::min)(Units::s) : 0., Units::L};
+        if (incrementalDrawVolume > tankVolume)
         {
-            incrementalDrawVolume_L = tankVolume_L;
+            incrementalDrawVolume = tankVolume;
         }
 
-        runOneStep(inletT_C,                // inlet water temperature (C)
-                   incrementalDrawVolume_L, // draw volume (L)
-                   ambientT_C,              // ambient Temp (C)
-                   externalT_C,             // external Temp (C)
-                   drMode,                  // DDR Status
-                   0.,                      // inlet-2 volume (L)
-                   inletT_C,                // inlet-2 Temp (C)
-                   NULL);                   // no extra heat
+        runOneStep(inletT,                // inlet water temperature
+                   incrementalDrawVolume, // draw volume
+                   ambientT,              // ambient Temp
+                   externalT,             // external Temp
+                   drMode,                // DDR Status
+                   V0(),                  // inlet-2 volume
+                   inletT,                // inlet-2 Temp
+                   NULL);                 // no extra heat
 
-        tankT_C = getAverageTankTemp_C();
+        tankT = getAverageTankT();
 
         switch (step)
         {
         case 0: // drawing
         {
-            sumOutletVolume_L += incrementalDrawVolume_L;
-            sumOutletVolumeT_LC += incrementalDrawVolume_L * outletTemp_C;
+            sumOutletVolume += incrementalDrawVolume();
+            sumOutletVolumeT += incrementalDrawVolume() * outletT();
 
-            maxOutletT_C = std::max(outletTemp_C, maxOutletT_C);
-            if (outletTemp_C <
-                maxOutletT_C - dF_TO_dC(15.)) // outletT has dropped by 15 degF below max T
+            maxOutletT = std::max(outletT, maxOutletT);
+            if (outletT < (maxOutletT -
+                           Temp_d_t(15., Units::dF))) // outletT has dropped by 15 degF below max T
             {
-                avgOutletT_C = sumOutletVolumeT_LC / sumOutletVolume_L;
-                minOutletT_C = outletTemp_C;
-                if (elapsedTime_min >= 60)
+                avgOutletT() = sumOutletVolumeT / sumOutletVolume;
+                minOutletT = outletT;
+                if (elapsedTime(Units::h) >= 1.)
                 {
                     double fac = 1;
                     if (!firstDraw)
                     {
-                        fac = (avgOutletT_C - prevMinOutletT_C) /
-                              (prevAvgOutletT_C - prevMinOutletT_C);
+                        fac = (avgOutletT - prevMinOutletT) / (prevAvgOutletT - prevMinOutletT);
                     }
-                    firstHourRating.drawVolume_L += fac * drawVolume_L;
+                    firstHourRating.drawVolume += fac * drawVolume;
                     done = true;
                 }
                 else
                 {
-                    firstHourRating.drawVolume_L += drawVolume_L;
-                    drawVolume_L = 0.;
+                    firstHourRating.drawVolume += drawVolume;
+                    drawVolume() = 0.;
                     isDrawing = false;
                     drMode = DR_ALLOW;
-                    maxTankT_C = tankT_C;        // initialize for next pass
-                    maxOutletT_C = outletTemp_C; // initialize for next pass
-                    prevAvgOutletT_C = avgOutletT_C;
-                    prevMinOutletT_C = minOutletT_C;
+                    maxTankT = tankT;     // initialize for next pass
+                    maxOutletT = outletT; // initialize for next pass
+                    prevAvgOutletT = avgOutletT;
+                    prevMinOutletT = minOutletT;
                     ++step;
                 }
             }
@@ -5098,37 +4679,35 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
 
         case 2: // heating
         {
-            if ((tankT_C > maxTankT_C) && isHeating &&
-                (elapsedTime_min <
-                 60)) // has not reached maxTankT, heat is on, and less than 1 hr has elpased
-            {
-                maxTankT_C = std::max(tankT_C, maxTankT_C);
+            if ((tankT > maxTankT) && isHeating && (elapsedTime(Units::h) < 1.))
+            { // has not reached maxTankT, heat is on, and less than 1 hr has elapsed
+                maxTankT = std::max(tankT, maxTankT);
             }
             else // start another draw
             {
                 firstDraw = false;
                 isDrawing = true;
-                drawVolume_L = 0.;
+                drawVolume() = 0.;
                 drMode = DR_LOC;
                 step = 0; // repeat
             }
         }
         }
 
-        drawVolume_L += incrementalDrawVolume_L;
-        ++elapsedTime_min;
+        drawVolume += incrementalDrawVolume;
+        elapsedTime += Time_t(1., Units::min);
     }
 
     //
-    if (firstHourRating.drawVolume_L < GAL_TO_L(18.))
+    if (firstHourRating.drawVolume(Units::gal) < 18.)
     {
         firstHourRating.desig = FirstHourRating::Desig::VerySmall;
     }
-    else if (firstHourRating.drawVolume_L < GAL_TO_L(51.))
+    else if (firstHourRating.drawVolume(Units::gal) < 51.)
     {
         firstHourRating.desig = FirstHourRating::Desig::Low;
     }
-    else if (firstHourRating.drawVolume_L < GAL_TO_L(75.))
+    else if (firstHourRating.drawVolume(Units::gal) < 75.)
     {
         firstHourRating.desig = FirstHourRating::Desig::Medium;
     }
@@ -5141,7 +4720,8 @@ void HPWH::findFirstHourRating(FirstHourRating& firstHourRating, StandardTestOpt
         HPWH::FirstHourRating::sDesigMap[firstHourRating.desig];
 
     *testOptions.outputStream << "\tFirst-Hour Rating:\n";
-    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume_L << "\n";
+    *testOptions.outputStream << "\t\tVolume Drawn (L): " << firstHourRating.drawVolume(Units::L)
+                              << "\n";
     *testOptions.outputStream << "\t\tDesignation: " << sFirstHourRatingDesig << "\n";
 }
 
@@ -5157,18 +4737,80 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                        StandardTestSummary& testSummary,
                        StandardTestOptions& testOptions)
 {
+    /// collection of standard draw patterns
+    static std::unordered_map<HPWH::FirstHourRating::Desig, std::size_t> firstDrawClusterSizes = {
+        {HPWH::FirstHourRating::Desig::VerySmall, 5},
+        {HPWH::FirstHourRating::Desig::Low, 3},
+        {HPWH::FirstHourRating::Desig::Medium, 3},
+        {HPWH::FirstHourRating::Desig::High, 4}};
+
+    static std::unordered_map<HPWH::FirstHourRating::Desig, HPWH::DrawPattern> drawPatterns = {
+        {HPWH::FirstHourRating::Desig::VerySmall,
+         {{hmin(0, 00), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 05), {1.9, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 10), {1.9, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 15), {1.9, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(8, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(8, 15), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(9, 00), {5.7, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(9, 15), {3.8, Units::L}, {3.8, Units::L_per_s}}}},
+
+        {HPWH::FirstHourRating::Desig::Low,
+         {{hmin(0, 00), {56.8, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(0, 30), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(10, 30), {22.7, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(11, 30), {15.1, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(12, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 45), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 50), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 15), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 45), {7.6, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(17, 00), {11.4, Units::L}, {6.4, Units::L_per_s}}}},
+
+        {HPWH::FirstHourRating::Desig::Medium,
+         {{hmin(0, 00), {56.8, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(0, 30), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 40), {34.1, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(10, 30), {34.1, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(11, 30), {18.9, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(12, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 45), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 50), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 15), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 45), {7.6, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(17, 00), {26.5, Units::L}, {6.4, Units::L_per_s}}}},
+
+        {HPWH::FirstHourRating::Desig::High,
+         {{hmin(0, 00), {102, Units::L}, {11.4, Units::L_per_s}},
+          {hmin(0, 30), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(0, 40), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(1, 40), {34.1, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(10, 30), {56.8, Units::L}, {11.4, Units::L_per_s}},
+          {hmin(11, 30), {18.9, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(12, 00), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 45), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(12, 50), {3.8, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 00), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 15), {7.6, Units::L}, {3.8, Units::L_per_s}},
+          {hmin(16, 30), {7.6, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(16, 45), {7.6, Units::L}, {6.4, Units::L_per_s}},
+          {hmin(17, 00), {53.0, Units::L}, {11.4, Units::L_per_s}}}}};
+
     // select the first draw cluster size and pattern
     auto firstDrawClusterSize = firstDrawClusterSizes[firstHourRating.desig];
     DrawPattern& drawPattern = drawPatterns[firstHourRating.desig];
 
-    constexpr double inletT_C = 14.4;   // EERE-2019-BT-TP-0032-0058, p. 40433
-    constexpr double ambientT_C = 19.7; // EERE-2019-BT-TP-0032-0058, p. 40435
-    constexpr double externalT_C = 19.7;
+    const Temp_t inletT(14.4, Units::C);   // EERE-2019-BT-TP-0032-0058, p. 40433
+    const Temp_t ambientT(19.7, Units::C); // EERE-2019-BT-TP-0032-0058, p. 40435
+    const Temp_t externalT(19.7, Units::C);
     DRMODES drMode = DR_ALLOW;
 
     if (testOptions.changeSetpoint)
     {
-        setSetpoint(testOptions.setpointT_C, UNITS_C);
+        setSetpointT(testOptions.setpointT);
     }
 
     prepForTest(testOptions);
@@ -5176,18 +4818,18 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     std::vector<OutputData> outputDataSet;
 
     // idle for 1 hr
-    int preTime_min = 0;
+    Time_t preTime(0.);
     bool heatersAreOn = false;
-    while ((preTime_min < 60) || heatersAreOn)
+    while ((preTime(Units::min) < 60.) || heatersAreOn)
     {
-        runOneStep(inletT_C,    // inlet water temperature (C)
-                   0,           // draw volume (L)
-                   ambientT_C,  // ambient Temp (C)
-                   externalT_C, // external Temp (C)
-                   drMode,      // DDR Status
-                   0.,          // inlet-2 volume (L)
-                   inletT_C,    // inlet-2 Temp (C)
-                   NULL);       // no extra heat
+        runOneStep(inletT,    // inlet water temperature
+                   V0(),      // draw volume
+                   ambientT,  // ambient Temp
+                   externalT, // external Temp
+                   drMode,    // DDR Status
+                   V0(),      // inlet-2 volume
+                   inletT,    // inlet-2 Temp
+                   NULL);     // no extra heat
 
         heatersAreOn = false;
         for (auto& heatSource : heatSources)
@@ -5197,68 +4839,67 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
         {
             OutputData outputData;
-            outputData.time_min = preTime_min;
-            outputData.ambientT_C = ambientT_C;
-            outputData.setpointT_C = getSetpoint();
-            outputData.inletT_C = inletT_C;
-            outputData.drawVolume_L = 0.;
+            outputData.time = preTime;
+            outputData.ambientT = ambientT;
+            outputData.setpointT = getSetpointT();
+            outputData.inletT = inletT;
+            outputData.drawVolume() = 0.;
             outputData.drMode = drMode;
 
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
-                outputData.h_srcOut_kWh.push_back(
-                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcIn.push_back(getNthHeatSourceEnergyInput(iHS));
+                outputData.h_srcOut.push_back(getNthHeatSourceEnergyOutput(iHS));
             }
 
             for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
             {
-                outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+                outputData.thermocoupleT.push_back(
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples));
             }
-            outputData.outletT_C = 0.;
+            outputData.outletT = {0., Units::C};
 
             outputDataSet.push_back(outputData);
         }
 
-        ++preTime_min;
+        preTime += Time_t(1., Units::min);
     }
 
     // correct time to start test at 0 min
     for (auto& outputData : outputDataSet)
     {
-        outputData.time_min -= preTime_min;
+        outputData.time -= preTime;
     }
 
-    double tankT_C = getAverageTankTemp_C();
-    double initialTankT_C = tankT_C;
+    Temp_t tankT = getAverageTankT();
+    Temp_t initialTankT = tankT;
 
     // used to find average draw temperatures
-    double drawSumOutletVolumeT_LC = 0.;
-    double drawSumInletVolumeT_LC = 0.;
+    double drawSumOutletVolumeT = 0.;
+    double drawSumInletVolumeT = 0.;
 
     // used to find average 24-hr test temperatures
-    double sumOutletVolumeT_LC = 0.;
-    double sumInletVolumeT_LC = 0.;
+    double sumOutletVolumeT = 0.;
+    double sumInletVolumeT = 0.;
 
     // first-recovery info
-    testSummary.recoveryStoredEnergy_kJ = 0.;
-    testSummary.recoveryDeliveredEnergy_kJ = 0.;
-    testSummary.recoveryUsedEnergy_kJ = 0.;
+    testSummary.recoveryStoredEnergy() = 0.;
+    testSummary.recoveryDeliveredEnergy() = 0.;
+    testSummary.recoveryUsedEnergy() = 0.;
 
-    double deliveredEnergy_kJ = 0.; // total energy delivered to water
-    testSummary.removedVolume_L = 0.;
-    testSummary.usedEnergy_kJ = 0.;           // Q
-    testSummary.usedFossilFuelEnergy_kJ = 0.; // total fossil-fuel energy consumed, Qf
-    testSummary.usedElectricalEnergy_kJ = 0.; // total electrical energy consumed, Qe
+    Energy_t deliveredEnergy(0.); // total energy delivered to water
+    testSummary.removedVolume() = 0.;
+    testSummary.usedEnergy() = 0.;           // Q
+    testSummary.usedFossilFuelEnergy() = 0.; // total fossil-fuel energy consumed, Qf
+    testSummary.usedElectricalEnergy() = 0.; // total electrical energy consumed, Qe
 
     bool hasHeated = false;
 
-    int endTime_min = 24 * static_cast<int>(min_per_hr);
+    Time_t endTime(24., Units::h);
     std::size_t iDraw = 0;
-    double remainingDrawVolume_L = 0.;
-    double drawVolume_L = 0.;
-    double prevDrawEndTime_min = 0.;
+    Volume_t remainingDrawVolume(0.);
+    Volume_t drawVolume(0.);
+    Time_t prevDrawEndTime(0.);
 
     bool isFirstRecoveryPeriod = true;
     bool isInFirstDrawCluster = true;
@@ -5268,24 +4909,26 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
     bool isDrawing = false;
     bool isDrawPatternComplete = false;
 
-    int recoveryEndTime_min = 0;
+    Time_t recoveryEndTime(0.);
 
-    int standbyStartTime_min = 0;
-    int standbyEndTime_min = 0;
-    double standbyStartT_C = 0;
-    double standbyEndT_C = 0;
-    double standbyStartTankEnergy_kJ = 0.;
-    double standbyEndTankEnergy_kJ = 0.;
-    double standbySumTimeTankT_minC = 0.;
-    double standbySumTimeAmbientT_minC = 0.;
+    Time_t standbyStartTime(0.);
+    Time_t standbyEndTime(0.);
+    Temp_t standbyStartT(0.);
+    Temp_t standbyEndT(0.);
+    Energy_t standbyStartTankEnergy(0.);
+    Energy_t standbyEndTankEnergy(0.);
+    double standbySumTimeTankT(0.);
+    double standbySumTimeAmbientT(0.);
 
-    int noDrawTotalTime_min = 0;
-    double noDrawSumTimeAmbientT_minC = 0.;
+    Time_t noDrawTotalTime(0.);
+    double noDrawSumTimeAmbientT = 0.;
 
     bool inLastHour = false;
-    double stepDrawVolume_L = 0.;
-    for (int runTime_min = 0; runTime_min <= endTime_min; ++runTime_min)
+    Volume_t stepDrawVolume(0.);
+    auto endStep = static_cast<int>(endTime(Units::min));
+    for (int runStep = 0; runStep <= endStep; ++runStep)
     {
+        Time_t runTime = {static_cast<double>(runStep), Units::min};
         if (inLastHour)
         {
             drMode = DR_LOC | DR_LOR;
@@ -5294,29 +4937,30 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         if (nextDraw)
         {
             auto& draw = drawPattern[iDraw];
-            if (runTime_min >= draw.startTime_min)
+            if (runTime >= draw.startTime)
             {
                 // limit draw-volume step to tank volume
-                stepDrawVolume_L = draw.flowRate_Lper_min * (1.);
-                if (stepDrawVolume_L > tankVolume_L)
+                stepDrawVolume = {draw.flowRate(Units::L_per_s) * Time_t(1., Units::min)(Units::s),
+                                  Units::L};
+                if (stepDrawVolume > tankVolume)
                 {
-                    stepDrawVolume_L = tankVolume_L;
+                    stepDrawVolume = tankVolume;
                 }
 
-                remainingDrawVolume_L = drawVolume_L = draw.volume_L;
+                remainingDrawVolume = drawVolume = draw.volume;
 
                 nextDraw = false;
                 isDrawing = true;
 
-                drawSumOutletVolumeT_LC = 0.;
-                drawSumInletVolumeT_LC = 0.;
+                drawSumOutletVolumeT = 0.;
+                drawSumInletVolumeT = 0.;
 
                 if (hasStandbyPeriodStarted && (!hasStandbyPeriodEnded))
                 {
                     hasStandbyPeriodEnded = true;
-                    standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
-                    standbyEndT_C = tankT_C;                             // Tsu,0
-                    standbyEndTime_min = runTime_min;
+                    standbyEndTankEnergy = testSummary.usedEnergy; // Qsu,0
+                    standbyEndT = tankT;                           // Tsu,0
+                    standbyEndTime = runTime;
                 }
             }
         }
@@ -5325,92 +4969,93 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         // do not exceed specified draw volume
         if (isDrawing)
         {
-            if (stepDrawVolume_L >= remainingDrawVolume_L)
+            if (stepDrawVolume >= remainingDrawVolume)
             {
-                stepDrawVolume_L = remainingDrawVolume_L;
-                remainingDrawVolume_L = 0.;
+                stepDrawVolume = remainingDrawVolume;
+                remainingDrawVolume() = 0.;
                 isDrawing = false;
-                prevDrawEndTime_min = runTime_min;
+                prevDrawEndTime = runTime;
             }
             else
             {
-                remainingDrawVolume_L -= stepDrawVolume_L;
+                remainingDrawVolume -= stepDrawVolume;
             }
         }
         else
         {
-            remainingDrawVolume_L = stepDrawVolume_L = 0.;
-            noDrawSumTimeAmbientT_minC += (1.) * ambientT_C;
-            ++noDrawTotalTime_min;
+            remainingDrawVolume() = stepDrawVolume() = 0.;
+            noDrawSumTimeAmbientT += (1.) * ambientT();
+            noDrawTotalTime += Time_t(1., Units::min);
         }
 
         // run a step
-        runOneStep(inletT_C,         // inlet water temperature (C)
-                   stepDrawVolume_L, // draw volume (L)
-                   ambientT_C,       // ambient Temp (C)
-                   externalT_C,      // external Temp (C)
-                   drMode,           // DDR Status
-                   0.,               // inlet-2 volume (L)
-                   inletT_C,         // inlet-2 Temp (C)
-                   NULL);            // no extra heat
+        runOneStep(inletT,         // inlet water temperature
+                   stepDrawVolume, // draw volume
+                   ambientT,       // ambient Temp
+                   externalT,      // external Temp
+                   drMode,         // DDR Status
+                   V0(),           // inlet-2 volume
+                   inletT,         // inlet-2 Temp
+                   NULL);          // no extra heat
 
         {
             OutputData outputData;
-            outputData.time_min = runTime_min;
-            outputData.ambientT_C = ambientT_C;
-            outputData.setpointT_C = getSetpoint();
-            outputData.inletT_C = inletT_C;
-            outputData.drawVolume_L = stepDrawVolume_L;
+            outputData.time = runTime;
+            outputData.ambientT = ambientT;
+            outputData.setpointT = getSetpointT();
+            outputData.inletT = inletT;
+            outputData.drawVolume = stepDrawVolume;
             outputData.drMode = drMode;
 
             for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
             {
-                outputData.h_srcIn_kWh.push_back(getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KWH));
-                outputData.h_srcOut_kWh.push_back(
-                    getNthHeatSourceEnergyOutput(iHS, HPWH::UNITS_KWH));
+                outputData.h_srcIn.push_back(getNthHeatSourceEnergyInput(iHS));
+                outputData.h_srcOut.push_back(getNthHeatSourceEnergyOutput(iHS));
             }
 
             for (int iTC = 0; iTC < testOptions.nTestTCouples; ++iTC)
             {
-                outputData.thermocoupleT_C.push_back(
-                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples, UNITS_C));
+                outputData.thermocoupleT.push_back(
+                    getNthSimTcouple(iTC + 1, testOptions.nTestTCouples));
             }
-            outputData.outletT_C = outletTemp_C;
+            outputData.outletT = outletT;
 
             outputDataSet.push_back(outputData);
         }
 
-        tankT_C = getAverageTankTemp_C();
+        tankT = getAverageTankT();
         hasHeated |= isHeating;
 
-        drawSumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
-        drawSumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
+        drawSumOutletVolumeT += stepDrawVolume() * outletT();
+        drawSumInletVolumeT += stepDrawVolume() * inletT();
 
-        sumOutletVolumeT_LC += stepDrawVolume_L * outletTemp_C;
-        sumInletVolumeT_LC += stepDrawVolume_L * inletT_C;
+        sumOutletVolumeT += stepDrawVolume() * outletT();
+        sumInletVolumeT += stepDrawVolume() * inletT();
 
         // collect energy added to water
-        double stepDrawMass_kg = DENSITYWATER_kgperL * stepDrawVolume_L;
-        double stepDrawHeatCapacity_kJperC = CPWATER_kJperkgC * stepDrawMass_kg;
-        deliveredEnergy_kJ += stepDrawHeatCapacity_kJperC * (outletTemp_C - inletT_C);
+        double stepDrawMass_kg = DENSITYWATER_kg_per_L * stepDrawVolume(Units::L);
+        Cp_t stepDrawHeatCapacity = {CPWATER_kJ_per_kgC * stepDrawMass_kg, Units::kJ_per_C};
+        deliveredEnergy +=
+            Energy_t(stepDrawHeatCapacity(Units::kJ_per_C) * (outletT(Units::C) - inletT(Units::C)),
+                     Units::kJ);
 
         // collect used-energy info
-        double usedFossilFuelEnergy_kJ = 0.;
-        double usedElectricalEnergy_kJ = 0.;
+        Energy_t usedFossilFuelEnergy(0.);
+        Energy_t usedElectricalEnergy(0.);
         for (int iHS = 0; iHS < getNumHeatSources(); ++iHS)
         {
-            usedElectricalEnergy_kJ += getNthHeatSourceEnergyInput(iHS, HPWH::UNITS_KJ);
+            usedElectricalEnergy += getNthHeatSourceEnergyInput(iHS);
         }
 
         // collect 24-hr test info
-        testSummary.removedVolume_L += stepDrawVolume_L;
-        testSummary.usedFossilFuelEnergy_kJ += usedFossilFuelEnergy_kJ;
-        testSummary.usedElectricalEnergy_kJ += usedElectricalEnergy_kJ;
-        testSummary.usedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+        testSummary.removedVolume += stepDrawVolume;
+        testSummary.usedFossilFuelEnergy += usedFossilFuelEnergy;
+        testSummary.usedElectricalEnergy += usedElectricalEnergy;
+        testSummary.usedEnergy += usedFossilFuelEnergy + usedElectricalEnergy;
 
         if (isFirstRecoveryPeriod)
         {
-            testSummary.recoveryUsedEnergy_kJ += usedFossilFuelEnergy_kJ + usedElectricalEnergy_kJ;
+            testSummary.recoveryUsedEnergy += usedFossilFuelEnergy + usedElectricalEnergy;
         }
 
         if (!isDrawing)
@@ -5422,22 +5067,27 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
                     // collect recovery info
                     isFirstRecoveryPeriod = false;
 
-                    double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
-                    double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
-                    testSummary.recoveryStoredEnergy_kJ =
-                        tankHeatCapacity_kJperC * (tankT_C - initialTankT_C);
+                    double tankContentMass_kg = DENSITYWATER_kg_per_L * tankVolume(Units::L);
+                    Cp_t tankHeatCapacity = {CPWATER_kJ_per_kgC * tankContentMass_kg,
+                                             Units::kJ_per_C};
+                    testSummary.recoveryStoredEnergy = {
+                        tankHeatCapacity(Units::kJ_per_C) *
+                            (tankT(Units::C) - initialTankT(Units::C)),
+                        Units::kJ};
                 }
 
                 if (!nextDraw)
                 {
-                    double meanDrawOutletT_C = drawSumOutletVolumeT_LC / drawVolume_L;
-                    double meanDrawInletT_C = drawSumInletVolumeT_LC / drawVolume_L;
+                    Temp_t meanDrawOutletT(drawSumOutletVolumeT / drawVolume());
+                    Temp_t meanDrawInletT(drawSumInletVolumeT / drawVolume());
 
-                    double drawMass_kg = DENSITYWATER_kgperL * drawVolume_L;
-                    double drawHeatCapacity_kJperC = CPWATER_kJperkgC * drawMass_kg;
+                    double drawMass_kg = DENSITYWATER_kg_per_L * drawVolume(Units::L);
+                    Cp_t drawHeatCapacity = {CPWATER_kJ_per_kgC * drawMass_kg, Units::kJ_per_C};
 
-                    testSummary.recoveryDeliveredEnergy_kJ +=
-                        drawHeatCapacity_kJperC * (meanDrawOutletT_C - meanDrawInletT_C);
+                    testSummary.recoveryDeliveredEnergy +=
+                        Energy_t(drawHeatCapacity(Units::kJ_per_C) *
+                                     (meanDrawOutletT(Units::C) - meanDrawInletT(Units::C)),
+                                 Units::kJ);
                 }
             }
 
@@ -5445,39 +5095,39 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
             {
                 if (hasStandbyPeriodStarted)
                 {
-                    standbySumTimeTankT_minC += (1.) * tankT_C;
-                    standbySumTimeAmbientT_minC += (1.) * ambientT_C;
+                    standbySumTimeTankT += Time_t(1., Units::min)() * tankT();
+                    standbySumTimeAmbientT += Time_t(1., Units::min)() * ambientT();
 
-                    if (runTime_min >= standbyStartTime_min + 8 * min_per_hr)
+                    if (runTime >= standbyStartTime + Time_t(8, Units::h))
                     {
                         hasStandbyPeriodEnded = true;
-                        standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
-                        standbyEndT_C = tankT_C;                             // Tsu,0
-                        standbyEndTime_min = runTime_min;
+                        standbyEndTankEnergy = testSummary.usedEnergy; // Qsu,0
+                        standbyEndT = tankT;                           // Tsu,0
+                        standbyEndTime = runTime;
                     }
                 }
                 else
                 {
                     if (isHeating)
                     {
-                        recoveryEndTime_min = runTime_min;
+                        recoveryEndTime = runTime;
                     }
                     else
                     {
                         if ((!isInFirstDrawCluster) || isDrawPatternComplete)
                         {
-                            if ((runTime_min > prevDrawEndTime_min + 5) &&
-                                (runTime_min > recoveryEndTime_min + 5))
+                            if ((runTime > prevDrawEndTime + Time_t(5, Units::min)) &&
+                                (runTime > recoveryEndTime + Time_t(5, Units::min)))
                             {
                                 hasStandbyPeriodStarted = true;
-                                standbyStartTime_min = runTime_min;
-                                standbyStartTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
-                                standbyStartT_C = tankT_C;                             // Tsu,0
+                                standbyStartTime = runTime;
+                                standbyStartTankEnergy = testSummary.usedEnergy; // Qsu,0
+                                standbyStartT = tankT;                           // Tsu,0
 
                                 if (isDrawPatternComplete &&
-                                    (runTime_min + 8 * min_per_hr > endTime_min))
+                                    (runTime + Time_t(8, Units::h) > endTime))
                                 {
-                                    endTime_min = runTime_min + 8 * static_cast<int>(min_per_hr);
+                                    endTime = runTime + Time_t(8, Units::h);
                                 }
                             }
                         }
@@ -5501,14 +5151,14 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         }
     }
 
-    double finalTankT_C = tankT_C;
+    Temp_t finalTankT = tankT;
 
     if (!hasStandbyPeriodEnded)
     {
         hasStandbyPeriodEnded = true;
-        standbyEndTime_min = endTime_min;
-        standbyEndTankEnergy_kJ = testSummary.usedEnergy_kJ; // Qsu,0
-        standbyEndT_C = tankT_C;                             // Tsu,0
+        standbyEndTime = endTime;
+        standbyEndTankEnergy = testSummary.usedEnergy; // Qsu,0
+        standbyEndT = tankT;                           // Tsu,0
     }
 
     if (testOptions.saveOutput)
@@ -5519,18 +5169,18 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
         }
     }
 
-    testSummary.avgOutletT_C = sumOutletVolumeT_LC / testSummary.removedVolume_L;
-    testSummary.avgInletT_C = sumInletVolumeT_LC / testSummary.removedVolume_L;
+    testSummary.avgOutletT() = sumOutletVolumeT / testSummary.removedVolume();
+    testSummary.avgInletT() = sumInletVolumeT / testSummary.removedVolume();
 
-    constexpr double standardSetpointT_C = 51.7;
-    constexpr double standardInletT_C = 14.4;
-    constexpr double standardAmbientT_C = 19.7;
+    const Temp_t standardSetpointT = {51.7, Units::C};
+    const Temp_t standardInletT = {14.4, Units::C};
+    const Temp_t standardAmbientT = {19.7, Units::C};
 
-    double tankContentMass_kg = DENSITYWATER_kgperL * tankVolume_L;
-    double tankHeatCapacity_kJperC = CPWATER_kJperkgC * tankContentMass_kg;
+    double tankContentMass_kg = DENSITYWATER_kg_per_L * tankVolume(Units::L);
+    Cp_t tankHeatCapacity = {CPWATER_kJ_per_kgC * tankContentMass_kg, Units::kJ_per_C};
 
-    double removedMass_kg = DENSITYWATER_kgperL * testSummary.removedVolume_L;
-    double removedHeatCapacity_kJperC = CPWATER_kJperkgC * removedMass_kg;
+    double removedMass_kg = DENSITYWATER_kg_per_L * testSummary.removedVolume(Units::L);
+    Cp_t removedHeatCapacity = {CPWATER_kJ_per_kgC * removedMass_kg, Units::kJ_per_C};
 
     // require heating during 24-hr test for unit to qualify as consumer water heater
     if (hasHeated && !isDrawing)
@@ -5540,113 +5190,122 @@ void HPWH::run24hrTest(const FirstHourRating firstHourRating,
 
     // find the "Recovery Efficiency" (6.3.3)
     testSummary.recoveryEfficiency = 0.;
-    if (testSummary.recoveryUsedEnergy_kJ > 0.)
+    if (testSummary.recoveryUsedEnergy > 0.)
     {
         testSummary.recoveryEfficiency =
-            (testSummary.recoveryStoredEnergy_kJ + testSummary.recoveryDeliveredEnergy_kJ) /
-            testSummary.recoveryUsedEnergy_kJ;
+            (testSummary.recoveryStoredEnergy + testSummary.recoveryDeliveredEnergy) /
+            testSummary.recoveryUsedEnergy;
     }
 
     // find the energy consumed during the standby-loss test, Qstdby
-    testSummary.standbyUsedEnergy_kJ = standbyEndTankEnergy_kJ - standbyStartTankEnergy_kJ;
+    testSummary.standbyUsedEnergy = standbyEndTankEnergy - standbyStartTankEnergy;
 
-    int standbyPeriodTime_min = standbyEndTime_min - standbyStartTime_min - 1;
-    testSummary.standbyPeriodTime_h = standbyPeriodTime_min / min_per_hr; // tau_stby,1
-    if ((testSummary.standbyPeriodTime_h > 0) && (testSummary.recoveryEfficiency > 0.))
+    Time_t standbyPeriodTime = standbyEndTime - standbyStartTime - Time_t(1, Units::min);
+    testSummary.standbyPeriodTime = standbyPeriodTime; // tau_stby,1
+    if ((testSummary.standbyPeriodTime > 0) && (testSummary.recoveryEfficiency > 0.))
     {
-        double standardTankEnergy_kJ = tankHeatCapacity_kJperC * (standbyEndT_C - standbyStartT_C) /
-                                       testSummary.recoveryEfficiency;
-        testSummary.standbyHourlyLossEnergy_kJperh =
-            (testSummary.standbyUsedEnergy_kJ - standardTankEnergy_kJ) /
-            testSummary.standbyPeriodTime_h;
+        Energy_t standardTankEnergy = {tankHeatCapacity(Units::kJ_per_C) *
+                                           (standbyEndT(Units::C) - standbyStartT(Units::C)) /
+                                           testSummary.recoveryEfficiency,
+                                       Units::kJ};
+        testSummary.standbyHourlyLossEnergy = {
+            (testSummary.standbyUsedEnergy(Units::kJ) - standardTankEnergy(Units::kJ)) /
+                testSummary.standbyPeriodTime(Units::s),
+            Units::kW};
 
-        double standbyAverageTankT_C = standbySumTimeTankT_minC / standbyPeriodTime_min;
-        double standbyAverageAmbientT_C = standbySumTimeAmbientT_minC / standbyPeriodTime_min;
+        Temp_t standbyAverageTankT(standbySumTimeTankT / standbyPeriodTime());
+        Temp_t standbyAverageAmbientT(standbySumTimeAmbientT / standbyPeriodTime());
 
-        double dT_C = standbyAverageTankT_C - standbyAverageAmbientT_C;
-        if (dT_C > 0.)
+        Temp_d_t dT(standbyAverageTankT(Units::C) - standbyAverageAmbientT(Units::C), Units::dC);
+        if (dT > 0.)
         {
-            testSummary.standbyLossCoefficient_kJperhC =
-                testSummary.standbyHourlyLossEnergy_kJperh / dT_C; // UA
+            testSummary.standbyLossCoefficient() =
+                testSummary.standbyHourlyLossEnergy() / dT(); // UA
         }
     }
 
     //
-    testSummary.noDrawTotalTime_h = noDrawTotalTime_min / min_per_hr; // tau_stby,2
-    if (noDrawTotalTime_min > 0)
+    testSummary.noDrawTotalTime = noDrawTotalTime; // tau_stby,2
+    if (noDrawTotalTime > 0)
     {
-        testSummary.noDrawAverageAmbientT_C =
-            noDrawSumTimeAmbientT_minC / noDrawTotalTime_min; // <Ta,stby,2>
+        testSummary.noDrawAverageAmbientT() =
+            noDrawSumTimeAmbientT / noDrawTotalTime(); // <Ta,stby,2>
     }
 
     // find the standard delivered daily energy
-    double standardDeliveredEnergy_kJ =
-        removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
+    Energy_t standardDeliveredEnergy(removedHeatCapacity(Units::kJ_per_C) *
+                                         (standardSetpointT(Units::C) - standardInletT(Units::C)),
+                                     Units::kJ);
 
     // find the "Daily Water Heating Energy Consumption (Q_d)" (6.3.5)
-    testSummary.consumedHeatingEnergy_kJ = testSummary.usedEnergy_kJ;
+    testSummary.consumedHeatingEnergy = testSummary.usedEnergy;
     if (testSummary.recoveryEfficiency > 0.)
     {
-        testSummary.consumedHeatingEnergy_kJ -= tankHeatCapacity_kJperC *
-                                                (finalTankT_C - initialTankT_C) /
-                                                testSummary.recoveryEfficiency;
+        testSummary.consumedHeatingEnergy -= Energy_t(
+            tankHeatCapacity(Units::kJ_per_C) * (finalTankT(Units::C) - initialTankT(Units::C)) /
+                testSummary.recoveryEfficiency,
+            Units::kJ);
     }
 
     // find the "Adjusted Daily Water Heating Energy Consumption (Q_da)" (6.3.6)
-    testSummary.adjustedConsumedWaterHeatingEnergy_kJ =
-        testSummary.consumedHeatingEnergy_kJ -
-        (standardAmbientT_C - testSummary.noDrawAverageAmbientT_C) *
-            testSummary.standbyLossCoefficient_kJperhC * testSummary.noDrawTotalTime_h;
+    testSummary.adjustedConsumedWaterHeatingEnergy =
+        testSummary.consumedHeatingEnergy -
+        Energy_t((standardAmbientT(Units::C) - testSummary.noDrawAverageAmbientT(Units::C)) *
+                     testSummary.standbyLossCoefficient(Units::kJ_per_hC) *
+                     testSummary.noDrawTotalTime(Units::h),
+                 Units::kJ);
 
     // find the "Energy Used to Heat Water (Q_HW)" (6.3.6)
-    testSummary.waterHeatingEnergy_kJ = 0.;
+    testSummary.waterHeatingEnergy() = 0.;
     if (testSummary.recoveryEfficiency > 0.)
     {
-        testSummary.waterHeatingEnergy_kJ = deliveredEnergy_kJ / testSummary.recoveryEfficiency;
+        testSummary.waterHeatingEnergy = deliveredEnergy / testSummary.recoveryEfficiency;
     }
 
     // find the "Standard Energy Used to Heat Water (Q_HW,T)" (6.3.6)
-    testSummary.standardWaterHeatingEnergy_kJ = 0.;
+    testSummary.standardWaterHeatingEnergy() = 0.;
     if (testSummary.recoveryEfficiency > 0.)
     {
-        double standardRemovedEnergy_kJ =
-            removedHeatCapacity_kJperC * (standardSetpointT_C - standardInletT_C);
-        testSummary.standardWaterHeatingEnergy_kJ =
-            standardRemovedEnergy_kJ / testSummary.recoveryEfficiency;
+        Energy_t standardRemovedEnergy(removedHeatCapacity(Units::kJ_per_C) *
+                                           (standardSetpointT(Units::C) - standardInletT(Units::C)),
+                                       Units::kJ);
+        testSummary.standardWaterHeatingEnergy =
+            standardRemovedEnergy / testSummary.recoveryEfficiency;
     }
 
     // find the "Modified Daily Water Heating Energy Consumption (Q_dm = Q_da - Q_HWD) (p.
     // 40487) note: same as Q_HW,T
-    double waterHeatingDifferenceEnergy_kJ =
-        testSummary.standardWaterHeatingEnergy_kJ - testSummary.waterHeatingEnergy_kJ; // Q_HWD
-    testSummary.modifiedConsumedWaterHeatingEnergy_kJ =
-        testSummary.adjustedConsumedWaterHeatingEnergy_kJ + waterHeatingDifferenceEnergy_kJ;
+    Energy_t waterHeatingDifferenceEnergy =
+        testSummary.standardWaterHeatingEnergy - testSummary.waterHeatingEnergy; // Q_HWD
+    testSummary.modifiedConsumedWaterHeatingEnergy =
+        testSummary.adjustedConsumedWaterHeatingEnergy + waterHeatingDifferenceEnergy;
 
     // find the "Uniform Energy Factor" (6.4.4)
     testSummary.UEF = 0.;
-    if (testSummary.modifiedConsumedWaterHeatingEnergy_kJ > 0.)
+    if (testSummary.modifiedConsumedWaterHeatingEnergy > 0.)
     {
-        testSummary.UEF =
-            standardDeliveredEnergy_kJ / testSummary.modifiedConsumedWaterHeatingEnergy_kJ;
+        testSummary.UEF = standardDeliveredEnergy / testSummary.modifiedConsumedWaterHeatingEnergy;
     }
 
     // find the "Annual Energy Consumption" (6.4.5)
-    testSummary.annualConsumedEnergy_kJ = 0.;
+    testSummary.annualConsumedEnergy() = 0.;
     if (testSummary.UEF > 0.)
     {
         constexpr double days_per_year = 365.;
-        const double nominalDifferenceT_C = F_TO_C(67.);
-        testSummary.annualConsumedEnergy_kJ =
-            days_per_year * removedHeatCapacity_kJperC * nominalDifferenceT_C / testSummary.UEF;
+        const Temp_d_t nominalDifference_dT(67., Units::dF);
+        testSummary.annualConsumedEnergy =
+            Energy_t(days_per_year * removedHeatCapacity(Units::kJ_per_C) *
+                         nominalDifference_dT(Units::dC) / testSummary.UEF,
+                     Units::kJ);
     }
 
     // find the "Annual Electrical Energy Consumption" (6.4.6)
-    testSummary.annualConsumedElectricalEnergy_kJ = 0.;
-    if (testSummary.usedEnergy_kJ > 0.)
+    testSummary.annualConsumedElectricalEnergy() = 0.;
+    if (testSummary.usedEnergy > 0.)
     {
-        testSummary.annualConsumedElectricalEnergy_kJ =
-            (testSummary.usedElectricalEnergy_kJ / testSummary.usedEnergy_kJ) *
-            testSummary.annualConsumedEnergy_kJ;
+        testSummary.annualConsumedElectricalEnergy =
+            (testSummary.usedElectricalEnergy / testSummary.usedEnergy) *
+            testSummary.annualConsumedEnergy;
     }
 }
 
@@ -5697,39 +5356,46 @@ void HPWH::measureMetrics(FirstHourRating& firstHourRating,
         << "\t\tRecovery Efficiency: " << standardTestSummary.recoveryEfficiency << "\n";
 
     *standardTestOptions.outputStream << "\t\tStandby Loss Coefficient (kJ/h degC): "
-                                      << standardTestSummary.standbyLossCoefficient_kJperhC << "\n";
+                                      << standardTestSummary.standbyLossCoefficient() << "\n";
+    std::cout << "\t\tStandby Loss Coefficient (kJ/h degC): "
+              << standardTestSummary.standbyLossCoefficient() << "\n";
 
     *standardTestOptions.outputStream << "\t\tUEF: " << standardTestSummary.UEF << "\n";
 
     *standardTestOptions.outputStream
-        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT_C << "\n";
+        << "\t\tAverage Inlet Temperature (degC): " << standardTestSummary.avgInletT(Units::C)
+        << "\n";
 
     *standardTestOptions.outputStream
-        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT_C << "\n";
+        << "\t\tAverage Outlet Temperature (degC): " << standardTestSummary.avgOutletT(Units::C)
+        << "\n";
 
     *standardTestOptions.outputStream
-        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume_L << "\n";
+        << "\t\tTotal Volume Drawn (L): " << standardTestSummary.removedVolume(Units::L) << "\n";
 
     *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.waterHeatingEnergy_kJ)
-                                      << "\n";
+                                      << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
 
-    *standardTestOptions.outputStream
-        << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.adjustedConsumedWaterHeatingEnergy_kJ) << "\n";
+    *standardTestOptions.outputStream << "\t\tDaily Water-Heating Energy Consumption (kWh): "
+                                      << standardTestSummary.waterHeatingEnergy(Units::kWh) << "\n";
+
+    std::cout << "\t\tAdjusted Daily Water-Heating Energy Consumption (kWh): "
+              << standardTestSummary.adjustedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
     *standardTestOptions.outputStream
         << "\t\tModified Daily Water-Heating Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.modifiedConsumedWaterHeatingEnergy_kJ) << "\n";
+        << standardTestSummary.modifiedConsumedWaterHeatingEnergy(Units::kWh) << "\n";
 
     *standardTestOptions.outputStream << "\tAnnual Values:\n";
     *standardTestOptions.outputStream
         << "\t\tAnnual Electrical Energy Consumption (kWh): "
-        << KJ_TO_KWH(standardTestSummary.annualConsumedElectricalEnergy_kJ) << "\n";
+        << standardTestSummary.annualConsumedElectricalEnergy(Units::kWh) << "\n";
+    std::cout << "\tAnnual Values:\n";
+    std::cout << "\t\tAnnual Electrical Energy Consumption (kWh): "
+              << standardTestSummary.annualConsumedElectricalEnergy(Units::kWh) << "\n";
 
-    *standardTestOptions.outputStream << "\t\tAnnual Energy Consumption (kWh): "
-                                      << KJ_TO_KWH(standardTestSummary.annualConsumedEnergy_kJ)
-                                      << "\n";
+    std::cout << "\t\tAnnual Energy Consumption (kWh): "
+              << standardTestSummary.annualConsumedEnergy(Units::kWh) << "\n";
 
     if (standardTestOptions.saveOutput)
     {
@@ -5898,7 +5564,7 @@ void HPWH::makeGeneric(const double targetUEF)
     standardTestOptions.saveOutput = false;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.setpointT = {51.7, Units::C};
 
     findFirstHourRating(firstHourRating, standardTestOptions);
     if (customTestOptions.overrideFirstHourRating)

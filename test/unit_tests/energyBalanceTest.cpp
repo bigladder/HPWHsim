@@ -22,32 +22,31 @@ TEST(EnergyBalanceTest, energyBalance)
         const std::string sModelName = "AOSmithHPTS50";
         hpwh.initPreset(sModelName);
 
-        const double maxDrawVol_L = 1.;
-        const double ambientT_C = 20.;
-        const double externalT_C = 20.;
+        const HPWH::Volume_t maxDrawVol = {1., Units::L};
+        const HPWH::Temp_t ambientT = {20., Units::C};
+        const HPWH::Temp_t externalT = {20., Units::C};
 
         //
-        hpwh.setTankToTemperature(20.);
-        hpwh.setInletT(5.);
+        hpwh.setTankToT({20., Units::C});
+        hpwh.setInletT({5., Units::C});
 
-        constexpr double testDuration_min = 60.;
+        const HPWH::Time_t testDuration = {60., Units::min};
+        const HPWH::Time_t stepTime = {1., Units::min};
+        HPWH::Time_t time = {0., Units::min};
         bool result = true;
-        int i_min = 0;
         do
         {
-            double t_min = static_cast<double>(i_min);
-
-            double flowFac = sin(Pi * t_min / testDuration_min) - 0.5;
+            double flowFac = sin(Pi * time / testDuration) - 0.5;
             flowFac += fabs(flowFac); // semi-sinusoidal flow profile
-            double drawVol_L = flowFac * maxDrawVol_L;
+            HPWH::Volume_t drawVol = flowFac * maxDrawVol;
 
-            double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-            EXPECT_NO_THROW(hpwh.runOneStep(drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW))
+            HPWH::Energy_t prevHeatContent = hpwh.getTankHeatContent();
+            EXPECT_NO_THROW(hpwh.runOneStep(drawVol, ambientT, externalT, HPWH::DR_ALLOW))
                 << "Failure in hpwh.runOneStep.";
-            result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
+            result &= hpwh.isEnergyBalanced(drawVol, prevHeatContent, 1.e-6);
 
-            ++i_min;
-        } while (result && (i_min < testDuration_min));
+            time += stepTime;
+        } while (result && (time < testDuration));
 
         EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
     }
@@ -59,34 +58,39 @@ TEST(EnergyBalanceTest, energyBalance)
         const std::string sModelName = "StorageTank";
         hpwh.initPreset(sModelName);
 
-        const double maxDrawVol_L = 1.;
-        const double ambientT_C = 20.;
-        const double externalT_C = 20.;
+        const HPWH::Volume_t maxDrawVol = {1., Units::L};
+        const HPWH::Temp_t ambientT = {20., Units::C};
+        const HPWH::Temp_t externalT = {20., Units::C};
 
         //
-        std::vector<double> nodePowerExtra_W = {1000.};
-        hpwh.setTankToTemperature(20.);
-        hpwh.setInletT(5.);
+        HPWH::PowerVect_t nodePowerExtra = {{1000.}, Units::W};
+        hpwh.setTankToT({20., Units::C});
+        hpwh.setInletT({5., Units::C});
 
         constexpr double testDuration_min = 60.;
         bool result = true;
-        int i_min = 0;
+        const HPWH::Time_t testDuration = {60., Units::min};
+        const HPWH::Time_t stepTime = {1., Units::min};
+        HPWH::Time_t time = {0., Units::min};
         do
         {
-            double t_min = static_cast<double>(i_min);
-
-            double flowFac = sin(Pi * t_min / testDuration_min) - 0.5;
+            double flowFac = sin(Pi * time / testDuration) - 0.5;
             flowFac += fabs(flowFac); // semi-sinusoidal flow profile
-            double drawVol_L = flowFac * maxDrawVol_L;
+            HPWH::Volume_t drawVol = flowFac * maxDrawVol;
 
-            double prevHeatContent_kJ = hpwh.getTankHeatContent_kJ();
-            EXPECT_NO_THROW(hpwh.runOneStep(
-                drawVol_L, ambientT_C, externalT_C, HPWH::DR_ALLOW, 0., 0., &nodePowerExtra_W))
+            HPWH::Energy_t prevHeatContent = hpwh.getTankHeatContent();
+            EXPECT_NO_THROW(hpwh.runOneStep(drawVol,
+                                            ambientT,
+                                            externalT,
+                                            HPWH::DR_ALLOW,
+                                            HPWH::V0(),
+                                            {0., Units::C},
+                                            &nodePowerExtra))
                 << "Failure in hpwh.runOneStep.";
-            result &= hpwh.isEnergyBalanced(drawVol_L, prevHeatContent_kJ, 1.e-6);
+            result &= hpwh.isEnergyBalanced(drawVol, prevHeatContent, 1.e-6);
 
-            ++i_min;
-        } while (result && (i_min < testDuration_min));
+            time += stepTime;
+        } while (result && (time < testDuration));
 
         EXPECT_TRUE(result) << "Energy balance failed for model " << sModelName;
     }

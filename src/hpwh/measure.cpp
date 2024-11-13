@@ -63,7 +63,7 @@ void measure(const std::string& sSpecType,
     standardTestOptions.outputStream = &std::cout;
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.setpointT = {51.7, Units::C};
 
     bool useResultsFile = false;
 

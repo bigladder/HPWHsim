@@ -155,16 +155,8 @@ TEST(SizingFractionsTest, getCompressorMinRuntime)
     const std::string sModelName = "TamScalable_SP"; // Just a compressor with R134A
     hpwh.initPreset(sModelName);
 
-    double expectedRunTime_min = 10.;
-    double expectedRunTime_sec = expectedRunTime_min * 60.;
-    double expectedRunTime_hr = expectedRunTime_min / 60.;
+    HPWH::Time_t expectedRunTime = {10., Units::min};
 
-    double runTime_min = hpwh.getCompressorMinRuntime();
-    EXPECT_EQ(runTime_min, expectedRunTime_min);
-
-    double runTime_sec = hpwh.getCompressorMinRuntime(HPWH::UNITS_SEC);
-    EXPECT_EQ(runTime_sec, expectedRunTime_sec);
-
-    double runTime_hr = hpwh.getCompressorMinRuntime(HPWH::UNITS_HR);
-    EXPECT_EQ(runTime_hr, expectedRunTime_hr);
+    auto runTime = hpwh.getCompressorMinRuntime();
+    EXPECT_EQ(runTime, expectedRunTime);
 }

@@ -39,14 +39,13 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${library_sources})
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/unity)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_common_interface PUBLIC btwxt unity)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME})
-
 
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_version_header)
 
@@ -68,3 +67,5 @@ endif ()
 if (${PROJECT_NAME}_BUILD_TESTING)
     add_subdirectory(hpwh)
 endif ()
+
+add_subdirectory(unity)

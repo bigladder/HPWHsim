@@ -50,7 +50,7 @@ void make(const std::string& sSpecType,
     standardTestOptions.sOutputDirectory = "";
     standardTestOptions.changeSetpoint = true;
     standardTestOptions.nTestTCouples = 6;
-    standardTestOptions.setpointT_C = 51.7;
+    standardTestOptions.setpointT = {51.7, Units::F};
 
     // process command line arguments
     std::string sPresetOrFile = (sSpecType != "") ? sSpecType : "Preset";
