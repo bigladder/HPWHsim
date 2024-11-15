@@ -25,7 +25,7 @@ def measure(model_spec, model_name, build_dir, draw_profile):
     if draw_profile != "auto":
         run_list.append('-p')
         run_list.append(draw_profile)
-    print(run_list)
+    #print(run_list)
     
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
     os.chdir(orig_dir)
