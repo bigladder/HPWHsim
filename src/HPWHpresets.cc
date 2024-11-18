@@ -2710,8 +2710,8 @@ void HPWH::initPreset(MODELS presetNum)
 
         if (presetNum == MODELS_AOSmithHPTS40)
         {
-            tankVolume_L = GAL_TO_L(36.1);
-            tankUA_kJperHrC = 9.5;
+            tank->volume_L = GAL_TO_L(36.1);
+            tank->UA_kJperHrC = 9.5;
         }
         else if (presetNum == MODELS_AOSmithHPTS50)
         {
@@ -4458,21 +4458,20 @@ void HPWH::initPreset(MODELS presetNum)
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
-        tankVolume_L = GAL_TO_L(52.8);
-        tankUA_kJperHrC = 7.78;
+        tank->volume_L = GAL_TO_L(52.8);
+        tank->UA_kJperHrC = 7.78;
 
         doTempDepression = false;
-        tankMixesOnDraw = false;
+        tank->mixesOnDraw = false;
 
         heatSources.reserve(3);
-        auto resistiveElementTop = addHeatSource("resistiveElementTop");
-        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
-        auto compressor = addHeatSource("compressor");
+        auto resistiveElementTop = addResistance("resistiveElementTop");
+        auto resistiveElementBottom = addResistance("resistiveElementBottom");
+        auto compressor = addCondenser("compressor");
 
         // compressor values
         compressor->isOn = false;
         compressor->isVIP = false;
-        compressor->typeOfHeatSource = TYPE_compressor;
 
         compressor->setCondensity({0.17, 0.166, 0.166, 0.166, 0.166, 0.166, 0, 0, 0, 0, 0, 0});
 
@@ -4499,18 +4498,18 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->minT = F_TO_C(23);
         compressor->maxT = F_TO_C(120.);
         compressor->hysteresis_dC = dF_TO_dC(1);
-        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+        compressor->configuration = Condenser::CONFIG_WRAPPED;
 
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.7)));
         compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
 
         // top resistor values
-        resistiveElementTop->setupAsResistiveElement(8, 5000.);
+        resistiveElementTop->setup(8, 5000.);
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(34.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setupAsResistiveElement(0, 5000.);
+        resistiveElementBottom->setup(0, 5000.);
         resistiveElementBottom->isVIP = false;
         resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
