@@ -19,6 +19,7 @@ set(testNames
         )
 set(modelNames
         #  StorageTank
+        AOSmithHPTS40
         AOSmithHPTS50
         AOSmithPHPT60
         AOSmithHPTU80
@@ -138,12 +139,7 @@ set(yearLargeTestsModels
         TamScalable_SP
         Scalable_MP
         )
-set(heatExchangeModelNames
-        AquaThermAire
-        )
-set(heatExchangeTests
-        villara_24hr67
-        )
+
 set(yearLargeTests
         testCA_36Unit_CTZ12
         )
@@ -159,6 +155,13 @@ set(stateOfChargeCompressorNames
         NyleC25A_SP
         )
 
+#
+set(Villara_AquaThermAireDir "Villara/AquaThermAire")
+set(Villara_AquaThermAireTests
+        villara_24hr67
+        )
+
+#
 set(BradfordWhiteAeroThermRE2Dir "BradfordWhite/AeroThermRE2H")
 set(BradfordWhiteAeroThermRE2HSizes 50 65 80)
 set(BradfordWhiteAeroThermRE2H50_Tests
@@ -173,10 +176,15 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         RE2H80_UEF50
         RE2H80_UEF67
         )
-set(plotTest File AquaThermAire villara_24hr67)
 
-list(APPEND extendedModelNames ${modelNames} ${heatExchangeModelNames})
-list(REMOVE_DUPLICATES extendedModelNames)
+#
+set(LG_APHWC50Dir "LG/LG_APHWC50")
+set(LG_APHWC50_Tests
+        DOE2014_LGC50_24hr50
+        DOE2014_LGC50_24hr67
+        DOE2014_LGC50_24hr95
+        DP_LGC50_HVT
+        )
 
 cmake_dependent_option(${PROJECT_NAME}_PYTHON_PLOTS "Generate plots using python comparing measured and simulated data" ON "${PROJECT_NAME}_IS_TOP_LEVEL" OFF)
 
@@ -249,12 +257,11 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
+#Test(s) specifically for Villara AquaThermAire model
+foreach (test ${Villara_AquaThermAireTests})
+    set(fullTestName "Villara/AquaThermAire/${test}")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "AquaThermAire" SPEC_TYPE "File")
 endforeach (test)
 
 #Test(s) specifically for Bradford White AeroTherm model
@@ -267,6 +274,15 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (test)
 endforeach (size)
+
+#Test(s) specifically for LG APHWC50 model
+foreach (test ${LG_APHWC50_Tests})
+    set(fullTestName "${LG_APHWC50Dir}/${test}")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "File")
+endforeach (test)
+
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 # Tests for differences between File and Preset versions
 function(add_file_test)
@@ -293,11 +309,9 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
-    endforeach (model)
+#Test(s) specifically for Villara AquaThermAire model
+foreach (test ${Villara_AquaThermAireTests})
+    add_file_test(TEST_NAME "${test}" MODEL_NAME "AquaThermAire")
 endforeach (test)
 
 #Test(s) specifically for Bradford White AeroTherm model
@@ -308,6 +322,11 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
         add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
     endforeach (test)
 endforeach (size)
+
+#Test(s) for heat-exchange models
+foreach (test ${LG_APHWC50Tests})
+    add_file_test(TEST_NAME "${test}" MODEL_NAME "LG_APHWC50")
+endforeach (test)
 
 # Tests for regression differences against reference results
 function(add_regression_test)
@@ -331,10 +350,13 @@ endfunction()
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
+#Test(s) specifically for Villara AquaThermAire model
+foreach (test ${Villara_AquaThermAireTests})
+    add_regression_test(TEST_NAME "${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
+endforeach (test)
 
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (size ${BradfordWhiteAeroThermRE2HSizes})
@@ -404,8 +426,6 @@ foreach (test ${yearLargeTests})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
-
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")

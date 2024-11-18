@@ -2721,12 +2721,17 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->companionHeatSource = resistiveElementBottom;
         resistiveElementBottom->companionHeatSource = compressor;
     }
-    else if (MODELS_AOSmithHPTS50 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
+    else if (MODELS_AOSmithHPTS40 <= presetNum && presetNum <= MODELS_AOSmithHPTS80)
     {
         setNumNodes(12);
         setpoint_C = F_TO_C(127.0);
 
-        if (presetNum == MODELS_AOSmithHPTS50)
+        if (presetNum == MODELS_AOSmithHPTS40)
+        {
+            tankVolume_L = GAL_TO_L(36.1);
+            tankUA_kJperHrC = 9.5;
+        }
+        else if (presetNum == MODELS_AOSmithHPTS50)
         {
             tankVolume_L = GAL_TO_L(45.6);
             tankUA_kJperHrC = 6.403;
@@ -4484,6 +4489,75 @@ void HPWH::initPreset(MODELS presetNum)
 
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
+    }
+    else if (presetNum == MODELS_LG_APHWC50)
+    { //
+        setNumNodes(12);
+        setpoint_C = F_TO_C(125.);
+
+        tankVolume_L = GAL_TO_L(52.8);
+        tankUA_kJperHrC = 7.78;
+
+        doTempDepression = false;
+        tankMixesOnDraw = false;
+
+        heatSources.reserve(3);
+        auto resistiveElementTop = addHeatSource("resistiveElementTop");
+        auto resistiveElementBottom = addHeatSource("resistiveElementBottom");
+        auto compressor = addHeatSource("compressor");
+
+        // compressor values
+        compressor->isOn = false;
+        compressor->isVIP = false;
+        compressor->typeOfHeatSource = TYPE_compressor;
+
+        compressor->setCondensity({0.17, 0.166, 0.166, 0.166, 0.166, 0.166, 0, 0, 0, 0, 0, 0});
+
+        compressor->perfMap.reserve(3);
+
+        compressor->perfMap.push_back({
+            50,             // Temperature (F)
+            {128, 1.7, 0.}, // Input Power Coefficients (kW)
+            {3.5, 0, 0.}    // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            67.5,            // Temperature (F)
+            {26., 1.8, 0.},  // Input Power Coefficients (kW)
+            {9.5, -0.05, 0.} // COP Coefficients
+        });
+
+        compressor->perfMap.push_back({
+            95,                     // Temperature (F)
+            {-31.81, 2.309, 0.},    // Input Power Coefficients (kW)
+            {20.29913, -0.1329, 0.} // COP Coefficients
+        });
+
+        compressor->minT = F_TO_C(23);
+        compressor->maxT = F_TO_C(120.);
+        compressor->hysteresis_dC = dF_TO_dC(1);
+        compressor->configuration = HeatSource::CONFIG_WRAPPED;
+
+        compressor->addTurnOnLogic(bottomThird(dF_TO_dC(52.7)));
+        compressor->addTurnOnLogic(standby(dF_TO_dC(9.)));
+
+        // top resistor values
+        resistiveElementTop->setupAsResistiveElement(8, 5000.);
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(34.)));
+        resistiveElementTop->isVIP = true;
+
+        // bottom resistor values
+        resistiveElementBottom->setupAsResistiveElement(0, 5000.);
+        resistiveElementBottom->isVIP = false;
+        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
+
+        resistiveElementTop->followedByHeatSource = compressor;
+        resistiveElementBottom->followedByHeatSource = compressor;
+
+        compressor->backupHeatSource = resistiveElementBottom;
+        resistiveElementBottom->backupHeatSource = compressor;
+
+        resistiveElementTop->companionHeatSource = compressor;
     }
     else
     {
