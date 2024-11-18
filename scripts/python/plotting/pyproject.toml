@@ -11,6 +11,7 @@ plotly = "*"
 koozie = "*"
 dimes = { git = "https://github.com/bigladder/dimes" }
 dash = "^2.18.2"
+promptlib = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

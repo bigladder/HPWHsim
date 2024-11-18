@@ -624,6 +624,16 @@ packaging = "*"
 tenacity = ">=6.2.0"
 
 [[package]]
+name = "promptlib"
+version = "1.0.0"
+description = "Prompt library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "promptlib-1.0.0.tar.gz", hash = "sha256:b2aee79f39253241bdba09f997a89f23f497a655629580a2d78deead1a7426da"},
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -806,4 +816,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "67631e347de7c65efcac1f6a0a15f54973bf4623ab4f9dead02584652be12204"
+content-hash = "5f48d13dd3a59c84f78e0c6f5d96845ac24842f37102dc57f2df3d025ff9697f"

@@ -1,6 +1,8 @@
 import os
 import sys
 from pathlib import Path
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
 
 import dimes  # type: ignore
 from dimes import LineProperties
@@ -36,12 +38,14 @@ app.layout = [
 		dcc.Input(id='model-name', type="text", value="BradfordWhiteAeroThermRE2H65", style={'width': '400px', "margin-left": "5px"}),
 		html.Br(), html.Br(),
 		
-		html.Label("test directory", htmlFor='test-dir'),
-		dcc.Input(id='test-dir', type="text", value="BradfordWhite/AeroThermRE2H/RE2H50_UEF50", style={'width': '400px', "margin-left": "5px"}),
+		html.Label("test directory", htmlFor='test-dir'),	
+		dcc.Input(id="test-dir", type="text", value="BradfordWhite/AeroThermRE2H65/RE2H65_UEF50", style={'width': '400px', "margin-left": "5px"}),
+		dcc.Upload(html.Button('Select'), id='test-dir-upload'),
+
 		html.Br(), html.Br(),
 		
 		html.Div([
-			html.Label("Draw profile for first-hour rating", htmlFor='draw-profile'),
+			html.Label("Draw profile", htmlFor='draw-profile'),
 	    dcc.Dropdown(
 		    id='draw-profile',
 		    options=["auto", "High", "Medium", "Low", "Very Small"],
@@ -61,19 +65,32 @@ app.layout = [
 ]
 
 @callback(
+	Output('test-dir', 'value'),
+			
+	Input('test-dir-upload', 'filename'),
+	prevent_initial_call=True
+)
+def select_test_dir(filename):
+	orig_dir = str(Path.cwd())
+	os.chdir("../../../test")
+	
+	print(filename)
+	
+	os.chdir(orig_dir)
+	return filename
+	
+@callback(
 		Output('test-graph', 'figure'),
 		Output('results', 'children'),
 
 		Input('test-btn', "n_clicks"),
 		State('build-dir', "value"),
-		State('test-dir', "value"),	
 		State('model-spec', "value"),
 		State('model-name', "value"),
 		State('draw-profile', "value"),
 		running=[(Output('test-btn', "disabled"), True, False), (Output('test-div', "hidden"), True, False)],
 		prevent_initial_call=True,	
 )
-
 def update_graph(n_clicks, build_dir, test_dir, model_spec, model_name, draw_profile):
 
 	simulate(model_spec, model_name, test_dir, build_dir)
