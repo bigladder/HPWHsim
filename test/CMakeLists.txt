@@ -184,8 +184,11 @@ set(Villara_AquaThermAireTests
         )
 
 #
-set(BradfordWhiteAeroThermRE2Dir "BradfordWhite/AeroThermRE2H")
-set(BradfordWhiteAeroThermRE2HSizes 50 65 80)
+set(BradfordWhiteModels
+        AeroThermRE2H50
+        AeroThermRE2H65
+        AeroThermRE2H80
+        )
 set(BradfordWhiteAeroThermRE2H50_Tests
         RE2H50_UEF50
         RE2H50_UEF67
@@ -200,7 +203,9 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         )
 
 #
-set(LG_APHWC50Dir "LG/LG_APHWC50")
+set(LG_Models
+       APHWC50)
+
 set(LG_APHWC50_Tests
         DOE2014_LGC50_24hr50
         DOE2014_LGC50_24hr67
@@ -250,6 +255,33 @@ function(add_model_test)
 
 endfunction()
 
+# Tests for regression differences against reference results
+function(add_regression_test)
+    set(options)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME COMPARE_SPEC_TYPE)
+    set(multValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if (${ARG_COMPARE_SPEC_TYPE})
+        set(compareSpecType ${ARG_COMPARE_SPEC_TYPE})
+    else()
+        set(compareSpecType ${ARG_SPEC_TYPE})
+    endif()
+
+    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
+        return()
+    endif ()
+
+    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}.${compareSpecType}")
+
+    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files
+            "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
+            "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
+            )
+    #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
+    #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
+endfunction()
+
 #Plot test
 function(add_plot_test)
     set(options)
@@ -264,12 +296,14 @@ function(add_plot_test)
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
         set(plotTestName "Plot.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python "${PROJECT_SOURCE_DIR}/scripts/python/plotting/plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
+        add_test(NAME "${plotTestName}" COMMAND poetry -C "${PROJECT_SOURCE_DIR}/scripts/python/plotting" run python
+                "${PROJECT_SOURCE_DIR}/scripts/python/plotting/plot.py" ${measurementsPath} ${simulationOutputPath} ${simulationPlotPath} )
         set_property(TEST "${plotTestName}" APPEND PROPERTY DEPENDS "${TEST_TITLE}")
     endif ()
 
 endfunction()
 
+## Model tests
 foreach (test ${testNames})
     foreach (model ${modelNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
@@ -278,121 +312,28 @@ foreach (test ${testNames})
 endforeach (test)
 
 #Test(s) specifically for Villara AquaThermAire model
-foreach (test ${Villara_AquaThermAireTests})
-    set(fullTestName "Villara/AquaThermAire/${test}")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "AquaThermAire" SPEC_TYPE "File")
-endforeach (test)
+foreach (model ${VillaraModels})
+    foreach (test "${model}_Tests")
+        add_model_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (test)
+endforeach (model)
 
 #Test(s) specifically for Bradford White AeroTherm model
-foreach (size ${BradfordWhiteAeroThermRE2HSizes})
-    set(model BradfordWhiteAeroThermRE2H${size})
-    set(tests "${${model}_Tests}")
-    foreach (test ${tests})
-        set(fullTestName "${BradfordWhiteAeroThermRE2Dir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+foreach (model ${BradfordWhiteModels})
+    foreach (test "${BradfordWhite${model}_Tests}")
+        add_model_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "File")
     endforeach (test)
-endforeach (size)
+endforeach (model)
 
 #Test(s) specifically for LG APHWC50 model
-foreach (test ${LG_APHWC50_Tests})
-    set(fullTestName "${LG_APHWC50Dir}/${test}")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "File")
-endforeach (test)
-
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
-
-# Tests for differences between File and Preset versions
-function(add_file_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "FileTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_File_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
-            )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
-
-# Tests for differences between JSON and Preset versions
-function(add_JSON_test)
-    set(options)
-    set(oneValueArgs MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "JSONTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_JSON_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_Preset_${ARG_MODEL_NAME}.csv"
-            )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.JSON")
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
-
-# Tests for regression differences against reference results
-function(add_regression_test)
-    set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
-    set(multValueArgs)
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
-
-    set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
-
-    add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
-            )
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
-    set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
-endfunction()
-
-foreach (test ${testNames})
-    foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for heat-exchange models
-foreach (test ${heatExchangeTests})
-    foreach (model ${heatExchangeModelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Test(s) specifically for Villara AquaThermAire model
-foreach (test ${Villara_AquaThermAireTests})
-    add_regression_test(TEST_NAME "${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
-endforeach (test)
-
-#Test(s) specifically for Bradford White AeroTherm model
-foreach (size ${BradfordWhiteAeroThermRE2HSizes})
-    set(short_model_name AeroThermRE2H${size})
-		set(model_name "BradfordWhite${short_model_name}")
-    set(tests "${${short_model_name}_Tests}")
-    foreach (test ${tests})
-        set(testName "${model_name}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+foreach (model ${LG_Models})
+    foreach (test "${LG_${model}_Tests}")
+        add_model_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "File")
     endforeach (test)
-endforeach (size)
+endforeach (model)
 
 foreach (test ${testNamesJSON})
     foreach (model ${modelNamesJSON})
@@ -411,8 +352,6 @@ endforeach (test)
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
@@ -420,11 +359,13 @@ endforeach (test)
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        #No files for these yet
-        #add_model_test( TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE"File")
     endforeach (model)
 endforeach (test)
 
+## Plot test
+#add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
+
+## Regression tests
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
@@ -446,6 +387,15 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
+#Test(s) specifically for Villara AquaThermAire model
+foreach (model ${VillaraModels})
+    foreach (test "${model}_Tests")
+        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (model)
+
+## Yearly tests
 #Add small compressor yearly tests to the list
 foreach (test ${yearTests})
     foreach (model ${yearTestsModels})
@@ -459,8 +409,6 @@ foreach (test ${yearLargeTests})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
-
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 #Add regression test for yearly file
 add_test(NAME "RegressionTest.YearRuns" COMMAND ${CMAKE_COMMAND} -E compare_files "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv" "${CMAKE_CURRENT_SOURCE_DIR}/ref/DHW_YRLY.csv")
