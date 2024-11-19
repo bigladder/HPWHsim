@@ -45,11 +45,10 @@ def retrieve_line_type(variable_type):
 
 class Plotter:
 	def __init__(self):
-		self.fig = {}
+		self.plot = {}
 		self.energy_data = {}
 		self.df_measured = {}
 		self.df_simulated = {}
-		self.is_dirty = True
 
 		self.variables = {
 			"Y-Variables": {
@@ -206,7 +205,7 @@ class Plotter:
 		self.df_measured = self.organize_tank_temperatures("Measured")
 		self.df_simulated = self.organize_tank_temperatures("Simulated")
  					
-	def plot_graphs(self, plot, variable_type, variable, value, row):
+	def plot_graphs(self, variable_type, variable, value, row):
 		df = self.retrieve_dataframe(variable_type)
 
 		if (value in [1, 2]) and (variable_type == "Measured"):
@@ -225,7 +224,7 @@ class Plotter:
 			marker_fill_color = None
 			marker_line_color = None
 
-		plot.add_time_series(
+		self.plot.add_time_series(
 		    dimes.TimeSeriesData(
 		        df[
 		            self.variables["Y-Variables"][variable]["Column Names"][variable_type][value]
@@ -246,8 +245,8 @@ class Plotter:
 		    axis_name=variable,
 	  )
 
-	def plot(self):		   
-		plot = dimes.TimeSeriesPlot(
+	def draw(self):		   
+		self.plot = dimes.TimeSeriesPlot(
 	      self.df_measured[self.variables["X-Variables"]["Time"]["Column Names"]["Measured"]]
 	  )
 	  
@@ -256,10 +255,16 @@ class Plotter:
 				for value in range(
 					len(self.variables["Y-Variables"][variable]["Column Names"][variable_type])
 				):
-					self.plot_graphs(plot, variable_type, variable, value, row + 1)
+					self.plot_graphs(variable_type, variable, value, row + 1)
 
-		plot.finalize_plot()  
-		self.fig = plot.figure
+		self.plot.finalize_plot() 
 		
 		print("Drew the plot.")
 		return self
+
+def plot(measured_path, simulated_path, plot_path):
+	plotter = Plotter()
+	plotter.read(measured_path, simulated_path)
+	plotter.draw()
+	plotter.plot.figure.write_json(plot_path)
+	return plotter
