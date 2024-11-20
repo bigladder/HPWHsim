@@ -12,18 +12,33 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 import threading
 import plotly
 import time
+import psutil
+
+DASH_PORT1 = 8050
+DASH_PORT2 = 8051
+
+dash_port = DASH_PORT1
 
 class dash_thread(threading.Thread):
-	def __init__(self, fig):
+	def __init__(self, name, port, fig):
 		super().__init__()
+		self.name = name
+		self.port = port
 		self.fig = fig
 		
 	def run(self):
 		app = Dash(__name__)
+		app.layout = dcc.Graph(id='test-graph', figure=self.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )	
+		app.run_server(debug=True, use_reloader=False, port=self.port)
 
-		app.layout = dcc.Graph(id='test-graph', figure=self.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )
-		app.run_server(debug=True, use_reloader=False)
-
+def get_port():
+	if get_port.port_num == DASH_PORT1:
+		get_port.port_num = DASH_PORT2
+	else:
+		get_port.port_num = DASH_PORT1
+	return get_port.port_num
+			
+get_port.port_num = DASH_PORT2		
 		
 # Runs a simulation and generates plot
 def call_test(model_spec, model_name, test_dir, build_dir):
@@ -51,16 +66,28 @@ def call_test(model_spec, model_name, test_dir, build_dir):
 
 	plotter = plot(measured_path, simulated_path)
 
-	thread = dash_thread(plotter.plot.figure)
+	for proc in psutil.process_iter(attrs=['pid', 'name']):
+		if 'dash-thread' in proc.info['name']:
+			proc.kill()
+					
+	time.sleep(1)	
+	
+	port = get_port()			
+	thread = dash_thread('dash-thread', port, plotter.plot.figure)
+		
 	thread.start()
 	#threading.Thread(target=dash_thread, args=(plot_path, ), name='dash_thread')
 	time.sleep(1)
-
+	
+	
 	#thread.join()
 	   
 	#plot_list = ['poetry','run', 'python', 'plot_server.py', plot_path]
 	#result =  mp.Process(target=plot_list, stdout=subprocess.PIPE, text=True)
-	return plotter.energy_data
+	test_results = {}
+	test_results["energy_data"] = plotter.energy_data
+	test_results["port_num"] = port
+	return test_results
 
 # Calls the 24-hr test function.
 def call_measure(model_spec, model_name, build_dir, draw_profile):
