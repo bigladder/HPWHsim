@@ -14,15 +14,14 @@ import plotly
 import time
 
 class dash_thread(threading.Thread):
-	def __init__(self, plot_path):
+	def __init__(self, fig):
 		super().__init__()
-		self.plot_path = plot_path
+		self.fig = fig
 		
 	def run(self):
 		app = Dash(__name__)
-		fig = plotly.io.read_json(self.plot_path)
 
-		app.layout = dcc.Graph(id='test-graph', figure=fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )
+		app.layout = dcc.Graph(id='test-graph', figure=self.fig, style ={'width': '1200px', 'height': '800px', 'display': 'block'} )
 		app.run_server(debug=True, use_reloader=False)
 
 		
@@ -50,17 +49,15 @@ def call_test(model_spec, model_name, test_dir, build_dir):
 	simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
 	plot_path =  os.path.join(output_dir, "plot.json") 
 
-	plotter = plot(measured_path, simulated_path, plot_path)
-   
+	plotter = plot(measured_path, simulated_path)
 
-	thread = dash_thread(plot_path)
+	thread = dash_thread(plotter.plot.figure)
 	thread.start()
 	#threading.Thread(target=dash_thread, args=(plot_path, ), name='dash_thread')
 	time.sleep(1)
 
 	#thread.join()
-	
-      
+	   
 	#plot_list = ['poetry','run', 'python', 'plot_server.py', plot_path]
 	#result =  mp.Process(target=plot_list, stdout=subprocess.PIPE, text=True)
 	return plotter.energy_data

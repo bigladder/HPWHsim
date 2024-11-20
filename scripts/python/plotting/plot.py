@@ -258,13 +258,12 @@ class Plotter:
 					self.plot_graphs(variable_type, variable, value, row + 1)
 
 		self.plot.finalize_plot() 
-		
+		self.fig = self.plot.figure
 		print("Drew the plot.")
 		return self
 
-def plot(measured_path, simulated_path, plot_path):
+def plot(measured_path, simulated_path):
 	plotter = Plotter()
 	plotter.read(measured_path, simulated_path)
 	plotter.draw()
-	plotter.plot.figure.write_json(plot_path)
 	return plotter
