@@ -90,8 +90,9 @@ body {font-family: Arial;}
 		}
 	  );
 
-    const data = await response.json();
-    const energy_data = data["energy_data"];
+    const test_results = await response.json();
+    const energy_data = test_results["energy_data"];
+		const dash_port = test_results["port_num"];
 
     measE = energy_data["measuredE_Wh"].toFixed(2);
     simE = energy_data["simulatedE_Wh"].toFixed(2);
@@ -116,7 +117,8 @@ body {font-family: Arial;}
     localStorage.setItem("test_dir", test_dir);
     localStorage.setItem("build_dir", build_dir);
 
-    document.getElementById("plots").src = "http://localhost:8050"
+		const port_string = "http://localhost:" + dash_port
+    document.getElementById("plots").src = port_string
     document.getElementById("plots").style = "display:block;"
   
     document.getElementById("test_btn").disabled = false;
