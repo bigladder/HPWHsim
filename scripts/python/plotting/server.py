@@ -28,7 +28,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 					response = main.call_test(model_spec, model_name, test_dir, build_dir)
 
-					print('test done')	
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")
 					self.send_header("Content-Length", str(len(dumps(response))))
@@ -43,9 +42,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				model_spec = query_components.get('model_spec', [None])[0]
 				model_name = query_components.get('model_name', [None])[0]
-				build_dir= query_components.get('build_dir', [None])[0]
+				build_dir = query_components.get('build_dir', [None])[0]
+				draw_profile = query_components.get('draw_profile', [None])[0]
 
-				do_measure(model_spec, model_name, build_dir)
+				main.call_measure(model_spec, model_name, build_dir, draw_profile)
 
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
