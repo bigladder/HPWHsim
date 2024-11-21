@@ -1,3 +1,5 @@
+import os
+import sys
 import dimes  # type: ignore
 from dimes import LineProperties
 import pandas as pd  # type: ignore
@@ -258,7 +260,6 @@ class Plotter:
 					self.plot_graphs(variable_type, variable, value, row + 1)
 
 		self.plot.finalize_plot() 
-		#self.plot.figure.write_json('plot.json')
 		return self
 
 def plot(measured_path, simulated_path):
@@ -266,3 +267,19 @@ def plot(measured_path, simulated_path):
 	plotter.read(measured_path, simulated_path)
 	plotter.draw()
 	return plotter
+
+def write_plot(measured_path, simulated_path, plot_path):
+	plotter = Plotter()
+	plotter.read(measured_path, simulated_path)
+	plotter.draw()
+	plotter.plot.write_html_plot(plot_path)
+	
+# main
+if __name__ == "__main__":
+    n_args = len(sys.argv) - 1
+
+    if n_args > 2:
+        measured_path = sys.argv[1]
+        simulated_path = sys.argv[2]
+        plot_path = sys.argv[3]
+        write_plot(measured_path, simulated_path, plot_path)
