@@ -363,7 +363,7 @@ foreach (test ${stateOfChargeTests})
 endforeach (test)
 
 ## Plot test
-#add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
 ## Regression tests
 #Add max temp tests to the regression list
