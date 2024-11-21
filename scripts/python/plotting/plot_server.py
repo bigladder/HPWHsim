@@ -6,6 +6,9 @@ import json
 from dash import Dash, dcc, html, Input, Output, State, callback, set_props
 import plotly.express as px
 import plotly.graph_objects as go
+from scipy.optimize import least_squares
+import numpy as np
+import math
 
 def dash_proc(fig):
 
@@ -60,7 +63,7 @@ def dash_proc(fig):
 				hidden = True
 			)
 	]
-
+	
 	@callback(
 		Output('get-ua-btn', 'disabled'),
 		Output('ua-div', 'hidden'),
@@ -75,12 +78,10 @@ def dash_proc(fig):
 			return True, True, ""
 		
 		if not selectedData:
-			print("not selected.")
 			return True, True, ""
 		
 		if not "range" in selectedData:
-				print("no range.")
-				return True, True, ""
+			return True, True, ""
 				
 		range = selectedData["range"]
 		if not "y3" in range:
@@ -109,7 +110,6 @@ def dash_proc(fig):
 		if n < 2:
 			return True, True, ""
 
-		print("selected")
 		return False, False, ""
 
 	@callback(
@@ -135,12 +135,30 @@ def dash_proc(fig):
 		sWater_kJ_per_kgC = 4.180
 		
 		cTank_kJ_per_C = rhoWater_kg_per_L * float(tankVol_L) * sWater_kJ_per_kgC 
-		ambientT = (ambient_T_i + ambient_T_f) / 2
+		ambientT_avg = (ambient_T_i + ambient_T_f) / 2
 		
-		temp_ratio = (tank_T_i - tank_T_f)  / (tank_T_i - ambientT)
+		temp_ratio = (tank_T_i - tank_T_f)  / (tank_T_i - ambientT_avg)
 		t_h = (t_min_f - t_min_i) / 60
 		
+
 		UA = cTank_kJ_per_C * temp_ratio / t_h
+		tau_min = UA / cTank_kJ_per_C * 60
+		
+		t_minV = np.array(dash_proc.t_minV)
+		t_minV -= t_min_i
+		
+		tank_TV = np.array(dash_proc.tank_TV)
+	
+		def T_t(params, t_min):
+			return ambientT_avg + (tank_T_i - ambientT_avg) * np.exp(-t_min / params[0])
+
+		def diffT_t(params):
+			return T_t(params, t_minV) - tank_TV
+		
+		paramV = [tau_min]
+		res = least_squares(diffT_t, paramV)
+
+		UA = paramV[0] / 60 * cTank_kJ_per_C
 		
 		return fig, "{:.4f} kJ/hC".format(UA)
 
