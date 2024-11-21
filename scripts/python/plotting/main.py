@@ -18,6 +18,7 @@ import plot_server
 # Runs a simulation and generates plot
 def call_test(model_spec, model_name, test_dir, build_dir):
 
+	print("running simulation...")
 	simulate(model_spec, model_name, test_dir, build_dir)
 
 	orig_dir = str(Path.cwd())
@@ -38,15 +39,18 @@ def call_test(model_spec, model_name, test_dir, build_dir):
 
 	simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
 
+	print("creating plot...")
 	plotter = plot(measured_path, simulated_path)
 
 	time.sleep(1)	
 	
 	if call_test.proc != -1:
+		print("killing current dash...")
 		call_test.proc.kill()
 		time.sleep(1)
 		
-	call_test.proc = mp.Process(target=plot_server.dash_proc, args=(plotter.plot.figure, ))	
+	call_test.proc = mp.Process(target=plot_server.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
+	print("launching dash...")
 	call_test.proc.start()
 	time.sleep(1)
 	   

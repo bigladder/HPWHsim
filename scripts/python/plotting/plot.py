@@ -197,7 +197,7 @@ class Plotter:
 			i = i + 1
 
 		self.energy_data['measuredE_Wh'] = self.df_measured[power_col_label_meas].sum()/60
-		self.energy_data['simulatedE_Wh'] = self.df_simulated[power_col_label_sim].sum()/60
+		self.energy_data['simulatedE_Wh'] = self.df_simulated[power_col_label_sim].sum()
 
 	  # convert simulated energy consumption (Wh) for every minute to power (W)
 		self.df_simulated[power_col_label_sim] = convert_values(self.df_simulated[power_col_label_sim], "Wh/min", "W")
@@ -258,7 +258,7 @@ class Plotter:
 					self.plot_graphs(variable_type, variable, value, row + 1)
 
 		self.plot.finalize_plot() 
-
+		#self.plot.figure.write_json('plot.json')
 		return self
 
 def plot(measured_path, simulated_path):
