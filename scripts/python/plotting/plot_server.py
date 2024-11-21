@@ -64,27 +64,27 @@ def dash_proc(fig):
 	@callback(
 		Output('get-ua-btn', 'disabled'),
 		Output('ua-div', 'hidden'),
+		Output('ua', 'children', allow_duplicate=True),
 		Input('test-graph', 'selectedData'),
 		State('test-graph', 'figure'),
 		State('tank-volume', 'value'),
 		prevent_initial_call=True
 	)
 	def select_temperature_data(selectedData, fig, tank_vol_L):
-		#print(json.dumps(selectedData, indent=2))
 		if float(tank_vol_L) <= 0:
-			return True, True
+			return True, True, ""
 		
 		if not selectedData:
 			print("not selected.")
-			return True, True
+			return True, True, ""
 		
 		if not "range" in selectedData:
 				print("no range.")
-				return True, True
+				return True, True, ""
 				
 		range = selectedData["range"]
 		if not "y3" in range:
-			return True, True
+			return True, True, ""
 		
 		t_min_i = range["x3"][0]
 		t_min_f = range["x3"][1]
@@ -107,10 +107,10 @@ def dash_proc(fig):
 			n += 1	
 					
 		if n < 2:
-			return True, True
+			return True, True, ""
 
 		print("selected")
-		return False, False
+		return False, False, ""
 
 	@callback(
 		Output('test-graph', 'figure'),
