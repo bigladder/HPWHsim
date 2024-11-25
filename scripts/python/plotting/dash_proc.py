@@ -29,9 +29,9 @@ def dash_proc(fig):
 	    "tank volume (L)",
 	)
 
-	dash_proc.t_minV = []
-	dash_proc.tank_TV = []
-	dash_proc.ambient_TV = []
+	dash_proc.selected_t_minV = []
+	dash_proc.selected_tank_TV = []
+	dash_proc.selected_ambient_TV = []
 
 	fig.update_layout(clickmode='event+select')
 		
@@ -57,10 +57,10 @@ def dash_proc(fig):
 
 					html.Button('Get UA', id='get-ua-btn', n_clicks=0, disabled = True),
 
-					html.P(id='ua-p', style = {'fontSize': 18}), html.Br()
+					html.P(id='ua-p', style = {'fontSize': 18, 'display': 'inline'}), html.Br()
 				],
 				id = 'ua-div',
-				className='four columns',
+				className='six columns',
 				hidden = True
 			)
 	]
@@ -117,17 +117,22 @@ def dash_proc(fig):
 					new_data.pop(i)
 					new_fig.data = new_data	
 		new_fig.update_layout()	
-									
-		dash_proc.t_minV = []
-		dash_proc.tank_TV = []
-		dash_proc.ambient_TV = []
+				
+		selected_t_minL = []
+		selected_tank_TL = []
+		selected_ambient_TL = []		
+
 		n = 0
 		for t_min in measured_tank_T["x"]:
 			if t_min_i <= t_min and t_min <= t_min_f:
-				dash_proc.t_minV.append(t_min)
-				dash_proc.tank_TV.append(measured_tank_T["y"][n])
-				dash_proc.ambient_TV.append(ambient_T["y"][n])
+				selected_t_minL.append(t_min)
+				selected_tank_TL.append(measured_tank_T["y"][n])
+				selected_ambient_TL.append(ambient_T["y"][n])
 			n += 1	
+			
+		dash_proc.selected_t_minV = np.array(selected_t_minL)
+		dash_proc.selected_tank_TV = np.array(selected_tank_TL)
+		dash_proc.selected_ambient_TV = np.array(selected_ambient_TL)
 					
 		if n < 2:
 			return True, True, "", fig
@@ -151,14 +156,14 @@ def dash_proc(fig):
 					new_data.pop(i)
 					new_fig.data = new_data	
 		
-		t_min_i = dash_proc.t_minV[0]	
-		t_min_f = dash_proc.t_minV[-1]
+		t_min_i = dash_proc.selected_t_minV[0]	
+		t_min_f = dash_proc.selected_t_minV[-1]
 		
-		tank_T_i = dash_proc.tank_TV[0]
-		tank_T_f = dash_proc.tank_TV[-1]
+		tank_T_i = dash_proc.selected_tank_TV[0]
+		tank_T_f = dash_proc.selected_tank_TV[-1]
 
-		ambient_T_i = dash_proc.ambient_TV[0]
-		ambient_T_f = dash_proc.ambient_TV[-1]
+		ambient_T_i = dash_proc.selected_ambient_TV[0]
+		ambient_T_f = dash_proc.selected_ambient_TV[-1]
 		
 		rhoWater_kg_per_L = 0.995
 		sWater_kJ_per_kgC = 4.180
@@ -172,31 +177,26 @@ def dash_proc(fig):
 
 		UA = cTank_kJ_per_C * temp_ratio / dt_h
 		tau_min0 = dt_min / temp_ratio
-		
-		t_minV = np.array(dash_proc.t_minV)	
-		tank_TV = np.array(dash_proc.tank_TV)
 
 		def T_t(params, t_min):
 			return ambientT_avg + (tank_T_i - ambientT_avg) * np.exp(-(t_min - t_min_i) / params[0])
 
 		def diffT_t(params, t_min):
-			return T_t(params, t_min) - tank_TV
-		
+			return T_t(params, t_min) - dash_proc.selected_tank_TV
+	
 		tau_min = tau_min0
-		res = least_squares(diffT_t, t_minV, args=(tau_min, ))
+		res = least_squares(diffT_t, dash_proc.selected_t_minV, args=(tau_min, ))
 		UA = cTank_kJ_per_C / (tau_min / 60)
 		
-		fit_tank_TV = tank_TV
-		for i, t_min in enumerate(t_minV):
+		fit_tank_TV = dash_proc.selected_tank_TV
+		for i, t_min in enumerate(dash_proc.selected_t_minV):
 			fit_tank_TV[i] = T_t([tau_min], t_min)
-		#print(fit_tank_TV)	
 		
-		trace = go.Scatter(name = "temperature fit", x=t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
+		trace = go.Scatter(name = "temperature fit", x=dash_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
 		new_fig = go.Figure(fig)	
 		new_fig.add_trace(trace)
 		new_fig.update_layout()		
-		#new_fig.show()
 		
-		return new_fig, "{:.4f} kJ/hC".format(UA)
+		return new_fig, " {:.4f} kJ/hC".format(UA)
 
 	app.run(debug=True, use_reloader=False)
