@@ -41,14 +41,16 @@ body {font-family: Arial;}
 <body>
 
 <form id="model_form">
+    <label for="model_name">model name:</label>
+		<select name="model_name" id="model_name" style="width: 400px" > 
+ 		</select><br><br>
+
     <label for="model_spec">model spec:</label>
 	  <select name="model_spec" id="model_spec">    
 	    <option selected="selected" value="File">File</option>
 			<option value="Preset">Preset</option>
+			<option value="JSON">JSON</option>
 	  </select><br><br>
-
-    <label for="model_name">model name:</label>
-    <input type="text" id="model_name" name="model_name" style="width: 400px" required><br><br>
 </form>
 
 <form id="build_form">
@@ -57,12 +59,56 @@ body {font-family: Arial;}
 </form>
 
 <script>
-  const model_form = document.getElementById('model_form');
-  model_form.model_spec.value = "Preset";
-  model_form.model_name.value = "BradfordWhiteAeroThermRE2H65";
+	async function get_json(filename) {
+    fst = 'filename=' +  filename;
+	  const response = await fetch('http://localhost:8000/read_json?' + fst,
+		{
+			method: 'GET'
+		}
+	  );
+		json_data = await response.json();
+		return json_data
+	}
 
-  const build_form = document.getElementById('build_form');
-  build_form.build_dir.value = "../../../build";
+	async function get_models() {
+		model_list = await get_json('./model_index.json')
+		let select = document.querySelector("#model_name")
+		for (let model of model_list["models"]){
+		  let option = document.createElement("option");
+		  option.text = model["name"];
+		  option.value = model["name"];
+		  select.appendChild(option);
+		}
+		return model_list
+	}
+
+	var pref_model_name = "BradfordWhiteAeroThermRE2H65"
+	var pref_model_spec = "File"
+
+	async function get_prefs() {
+		prefs_list = await get_json('./prefs.json')
+		if ("model_name" in prefs_list)
+		{
+			pref_model_name = prefs_list["model_name"]
+		}
+		if ("model_spec" in prefs_list)
+		{
+			pref_model_spec= prefs_list["model_spec"]
+		}
+		return prefs_list
+	}
+
+	async function fill_prefs()
+	{
+		model_list = await get_models()
+		prefs_list = await get_prefs()
+	  const model_form = document.getElementById('model_form');
+	  model_form.model_name.value = pref_model_name;
+	  model_form.model_spec.value = pref_model_spec
+
+	  const build_form = document.getElementById('build_form');
+	  build_form.build_dir.value = "../../../build";
+	}
 </script>
 
 <script>
@@ -221,6 +267,7 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
+	fill_prefs()
   const test_form = document.getElementById('test_form');
   test_form.test_dir.value = "BradfordWhite/AeroThermRE2H50/RE2H50_UEF50";
 
