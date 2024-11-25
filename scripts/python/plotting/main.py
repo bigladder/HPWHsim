@@ -13,7 +13,7 @@ import threading
 import plotly
 import time
 import psutil	
-import plot_server
+import dash_proc
 
 # Runs a simulation and generates plot
 def call_test(model_spec, model_name, test_dir, build_dir):
@@ -49,7 +49,7 @@ def call_test(model_spec, model_name, test_dir, build_dir):
 		call_test.proc.kill()
 		time.sleep(1)
 		
-	call_test.proc = mp.Process(target=plot_server.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
+	call_test.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
 	print("launching dash...")
 	call_test.proc.start()
 	time.sleep(1)
