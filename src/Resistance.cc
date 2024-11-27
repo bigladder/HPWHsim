@@ -49,7 +49,8 @@ void HPWH::Resistance::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
             metadata.schema);
 
     auto& perf = res_ptr->performance;
-    checkTo(power_kW, perf.input_power_is_set, perf.input_power);
+    checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
+    checkTo(hysteresis_dC, perf.resistance_lockout_temperature_hysteresis_is_set, perf.resistance_lockout_temperature_hysteresis);
 }
 
 void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CONDENSITY_SIZE*/)

@@ -195,6 +195,9 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
     }
     }
 
+    checkTo(hysteresis_dC, perf.compressor_lockout_temperature_hysteresis_is_set, perf.compressor_lockout_temperature_hysteresis);
+
+
     if (useBtwxtGrid)
     {
         auto& map = perf.performance_map;

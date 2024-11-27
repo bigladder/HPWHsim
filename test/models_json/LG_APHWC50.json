@@ -5,8 +5,11 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "followed_by_heat_source_id": "resistiveElementBottom",
+        "companion_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
         "heat_distribution": [
+          0.0,
+          0.0,
           0.0,
           0.0,
           0.0,
@@ -16,8 +19,6 @@
           1.0,
           0.0,
           0.0,
-          0.0,
-          0.0,
           0.0
         ],
         "heat_source": {
@@ -25,7 +26,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
+            "input_power": 5000.0,
             "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
@@ -35,7 +36,7 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 22.22222222222222,
+              "differential_temperature": 18.88888888888889,
               "temperature_weight_distribution": [
                 0.0,
                 0.0,
@@ -68,54 +69,26 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
+            "input_power": 5000.0,
             "resistance_lockout_temperature_hysteresis": 1.1111111111111112
           }
         },
         "heat_source_type": "RESISTANCE",
-        "id": "resistiveElementBottom",
-        "shut_off_logic": [
-          {
-            "comparison_type": "GREATER_THAN",
-            "heating_logic": {
-              "absolute_temperature": 310.92777777777775,
-              "temperature_weight_distribution": [
-                1.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0
-              ]
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ],
-        "turn_on_logic": [
-          {
-            "comparison_type": "LESS_THAN",
-            "heating_logic": {
-              "differential_temperature": 44.44444444444444,
-              "temperature_weight_distribution": [
-                1.0,
-                0.0,
-                0.0
-              ]
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ]
+        "id": "resistiveElementBottom"
       },
       {
         "backup_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
-          1.0,
+          0.17,
+          0.166,
+          0.166,
+          0.166,
+          0.166,
+          0.166,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
           0.0,
           0.0
         ],
@@ -125,30 +98,35 @@
           },
           "performance": {
             "coil_configuration": "WRAPPED",
-            "compressor_lockout_temperature_hysteresis": 1.1111111111111112,
+            "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
             "performance_map": {
               "grid_variables": {
                 "evaporator_environment_dry_bulb_temperature": [
                   283.15,
-                  292.59444444444443
+                  292.8722222222222,
+                  308.15
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  344.26111111111106
+                  373.15
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  1148.982167246432,
-                  454.0546759204806,
-                  1426.5035130750978,
-                  680.106119898241
+                  638.4,
+                  1709.3999999999999,
+                  660.4400000000002,
+                  -448.36000000000206,
+                  675.1974737400002,
+                  -3604.678407659998
                 ],
                 "input_power": [
-                  339.57496000000003,
-                  607.5301599999998,
-                  323.72053999999997,
-                  660.3566999999999
+                  182.4,
+                  488.4,
+                  83.59999999999997,
+                  407.6,
+                  42.07800000000001,
+                  457.69800000000004
                 ]
               }
             }
@@ -156,26 +134,11 @@
         },
         "heat_source_type": "CONDENSER",
         "id": "compressor",
-        "shut_off_logic": [
-          {
-            "comparison_type": "LESS_THAN",
-            "heating_logic": {
-              "absolute_temperature": 288.7055555555555,
-              "temperature_weight_distribution": [
-                1.0,
-                0.0,
-                0.0,
-                0.0
-              ]
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ],
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 22.22222222222222,
+              "differential_temperature": 29.27777777777778,
               "temperature_weight_distribution": [
                 1.0,
                 0.0,
@@ -187,7 +150,7 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 5.555555555555555,
+              "differential_temperature": 5.0,
               "tank_node_specification": "TOP_NODE"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
@@ -201,12 +164,12 @@
         "schema": "RSTANK"
       },
       "performance": {
-        "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "bottom_fraction_of_tank_mixing_on_draw": 0.0,
         "fittings_ua": 0.0,
         "fixed_volume": true,
         "number_of_nodes": 12,
-        "ua": 2.0833333333333335,
-        "volume": 0.1892705
+        "ua": 2.161111111111111,
+        "volume": 0.19986964799999998
       }
     }
   }

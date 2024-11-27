@@ -25,7 +25,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
+            "input_power": 4000.0,
             "resistance_lockout_temperature_hysteresis": 0.0
           }
         },
@@ -35,11 +35,14 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 22.22222222222222,
+              "differential_temperature": 17.77777777777778,
               "temperature_weight_distribution": [
                 0.0,
                 0.0,
-                1.0
+                0.0,
+                1.0,
+                0.0,
+                0.0
               ]
             },
             "heating_logic_type": "TEMPERATURE_BASED"
@@ -50,9 +53,9 @@
         "backup_heat_source_id": "compressor",
         "followed_by_heat_source_id": "compressor",
         "heat_distribution": [
-          1.0,
           0.0,
-          0.0,
+          0.2,
+          0.8,
           0.0,
           0.0,
           0.0,
@@ -68,7 +71,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
+            "input_power": 4000.0,
             "resistance_lockout_temperature_hysteresis": 1.1111111111111112
           }
         },
@@ -78,7 +81,7 @@
           {
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
-              "absolute_temperature": 310.92777777777775,
+              "absolute_temperature": 303.2055555555555,
               "temperature_weight_distribution": [
                 1.0,
                 0.0,
@@ -90,20 +93,6 @@
                 0.0,
                 0.0,
                 0.0,
-                0.0,
-                0.0
-              ]
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ],
-        "turn_on_logic": [
-          {
-            "comparison_type": "LESS_THAN",
-            "heating_logic": {
-              "differential_temperature": 44.44444444444444,
-              "temperature_weight_distribution": [
-                1.0,
                 0.0,
                 0.0
               ]
@@ -130,7 +119,7 @@
               "grid_variables": {
                 "evaporator_environment_dry_bulb_temperature": [
                   283.15,
-                  292.59444444444443
+                  294.26111111111106
                 ],
                 "heat_source_temperature": [
                   273.15,
@@ -139,16 +128,16 @@
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  1148.982167246432,
-                  454.0546759204806,
-                  1426.5035130750978,
-                  680.106119898241
+                  1083.744,
+                  954.7200000000005,
+                  1095.616,
+                  832.3200000000008
                 ],
                 "input_power": [
-                  339.57496000000003,
-                  607.5301599999998,
-                  323.72053999999997,
-                  660.3566999999999
+                  212.0,
+                  467.99999999999994,
+                  190.00000000000006,
+                  509.9999999999998
                 ]
               }
             }
@@ -156,26 +145,11 @@
         },
         "heat_source_type": "CONDENSER",
         "id": "compressor",
-        "shut_off_logic": [
-          {
-            "comparison_type": "LESS_THAN",
-            "heating_logic": {
-              "absolute_temperature": 288.7055555555555,
-              "temperature_weight_distribution": [
-                1.0,
-                0.0,
-                0.0,
-                0.0
-              ]
-            },
-            "heating_logic_type": "TEMPERATURE_BASED"
-          }
-        ],
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 22.22222222222222,
+              "differential_temperature": 16.666666666666668,
               "temperature_weight_distribution": [
                 1.0,
                 0.0,
@@ -187,7 +161,7 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 5.555555555555555,
+              "differential_temperature": 6.884444444444444,
               "tank_node_specification": "TOP_NODE"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
@@ -201,12 +175,12 @@
         "schema": "RSTANK"
       },
       "performance": {
-        "bottom_fraction_of_tank_mixing_on_draw": 0.3333333333333333,
+        "bottom_fraction_of_tank_mixing_on_draw": 0.0,
         "fittings_ua": 0.0,
         "fixed_volume": true,
         "number_of_nodes": 12,
-        "ua": 2.0833333333333335,
-        "volume": 0.1892705
+        "ua": 1.8692222222222221,
+        "volume": 0.24226624000000002
       }
     }
   }
