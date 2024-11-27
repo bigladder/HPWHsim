@@ -3520,9 +3520,9 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
             {
                 line_ss >> tempString;
                 if (tempString == "true")
-                    j_heatsourceconfigs[heatsource]["is_vip"] = true;
+                    j["primary_heat_source_id"] = heatsource;
                 else if (tempString == "false")
-                    j_heatsourceconfigs[heatsource]["is_vip"] = false;
+                {}
                 else
                 {
                     send_error(fmt::format(
@@ -4100,6 +4100,8 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     setNumNodes(j_tank["number_of_nodes"]);
     checkFrom(tank->volume_L, j_tank, "volume", 0.);
     checkFrom(tank->UA_kJperHrC, j_tank, "ua", 0.);
+    checkFrom(tank->hasHeatExchanger, j_tank, "has_heat_exchanger", false);
+    checkFrom(tank->heatExchangerEffectiveness, j_tank, "heat_exchanger_effectiveness", 0.9);
 
     checkFrom(doTempDepression, j_tank, "do_temperature_depression", false);
     checkFrom(tank->mixesOnDraw, j_tank, "mix_on_draw", false);
@@ -4133,6 +4135,8 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             resistance->setPower_W(
                 j_heatsourceconfig["performance_points"][0]["power_coefficients"][0]);
+
+            resistance->hysteresis_dC = j_heatsourceconfig["temperature_hysteresis_dC"];
         }
         else if (j_heatsourceconfig["heat_source_type"] == "CONDENSER")
         {
@@ -4168,6 +4172,8 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
                       j_heatsourceconfig,
                       "external_outlet_height",
                       getNumNodes() - 1);
+
+            compressor->hysteresis_dC = j_heatsourceconfig["temperature_hysteresis_dC"];
         }
         else
             send_error("Invalid data.");
