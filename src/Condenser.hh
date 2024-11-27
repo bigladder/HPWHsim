@@ -159,15 +159,13 @@ class HPWH::Condenser : public HPWH::HeatSource
     regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
 
-    static void getCapacityFromMap(const std::vector<PerfPoint>& perfMap,
-                                   double environmentT_C,
-                                   double heatSourceT_C,
-                                   double& input_BTUperHr,
-                                   double& cop);
+    void getCapacityFromMap(double environmentT_C,
+                            double heatSourceT_C,
+                            double& input_BTUperHr,
+                            double& cop) const;
 
-    static void convertMapToGrid(const std::vector<PerfPoint>& perfMap,
-                                 std::vector<std::vector<double>>& tempGrid,
-                                 std::vector<std::vector<double>>& tempGridValues);
+    void convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
+                          std::vector<std::vector<double>>& tempGridValues) const;
 
     double standbyPower_kW;
 
