@@ -242,7 +242,7 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
         std::vector<std::vector<double>> tempGrid = {};
         std::vector<std::vector<double>> tempGridValues = {};
 
-        convertMapToGrid(perfMap, tempGrid, tempGridValues);
+        convertMapToGrid(tempGrid, tempGridValues);
 
         auto& map = perf.performance_map;
 
@@ -353,8 +353,7 @@ void HPWH::Condenser::getCapacity(double externalT_C,
         }
         else if (perfMap.size() > 1)
         {
-            getCapacityFromMap(perfMap,
-                               externalT_C,
+            getCapacityFromMap(externalT_C,
                                condenserTemp_C +
                                    secondaryHeatExchanger.coldSideTemperatureOffest_dC,
                                input_BTUperHr,
@@ -813,12 +812,10 @@ void HPWH::Condenser::regressedMethodMP(double& ynew,
            coefficents[4] * x2 * x2 + coefficents[5] * x1 * x2;
 }
 
-/*static*/
-void HPWH::Condenser::getCapacityFromMap(const std::vector<HPWH::Condenser::PerfPoint>& perfMap,
-                                         double environmentT_C,
+void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
                                          double heatSourceT_C,
                                          double& input_BTUperHr,
-                                         double& cop)
+                                         double& cop) const
 {
     double environmentT_F = C_TO_F(environmentT_C);
     double heatSourceT_F = C_TO_F(heatSourceT_C);
@@ -891,12 +888,11 @@ void HPWH::Condenser::getCapacityFromMap(const std::vector<HPWH::Condenser::Perf
 }
 
 // convert to grid
-/*static*/
-void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPoint>& perfMap,
-                                       std::vector<std::vector<double>>& tempGrid,
-                                       std::vector<std::vector<double>>& tempGridValues)
+void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
+                                       std::vector<std::vector<double>>& tempGridValues) const
 {
-    if (perfMap.size() < 2)
+    std::size_t nEnvTempsOrig = perfMap.size();
+    if (nEnvTempsOrig < 2)
         return;
 
     tempGrid.reserve(2);       // envT, heatSourceT
@@ -904,70 +900,68 @@ void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPo
 
     double maxPowerCurvature = 0.; // curvature used to determine # of points
     double maxCOPCurvature = 0.;
-    std::vector<double> envTemps_K = {};
-    envTemps_K.reserve(perfMap.size());
+    std::vector<double> envTempsOrig_K = {};
+    envTempsOrig_K.reserve(nEnvTempsOrig);
     for (auto& perfPoint : perfMap)
     {
-        envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
+        envTempsOrig_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
         double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
         double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
         maxPowerCurvature =
             magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
         maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
     }
+
+    // adjust environment temperature vector
+    std::vector<double> envTemps_K = envTempsOrig_K;
+    envTempsOrig_K.front() = C_TO_K(minT);
+    envTempsOrig_K.back() = C_TO_K(maxT);
     tempGrid.push_back(envTemps_K);
 
-    // relate to reference values (from Rheem2020Build50)
-    constexpr std::size_t minPoints = 2;
-    constexpr std::size_t refPowerPoints = 13;
-    constexpr std::size_t refCOP_points = 13;
-    constexpr double refPowerCurvature = 0.01571;
+    // relate to reference values (from AOSmithPHPT60)
+    const double minHeatSourceTemp_C = 0.;
+    const double maxHeatSourceTemp_C = maxSetpoint_C;
+    const double heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
+    const double heatSourceTempRangeRef_dC = 100. - 0.;
+    const double rangeFac = heatSourceTempRange_dC / heatSourceTempRangeRef_dC;
+
+    constexpr std::size_t minVals = 2;
+    constexpr std::size_t refPowerVals = 11;
+    constexpr std::size_t refCOP_vals = 11;
+    constexpr double refPowerCurvature = 0.0176;
     constexpr double refCOP_curvature = 0.0002;
 
-    auto nPowerPoints = static_cast<std::size_t>(
-        (maxPowerCurvature / refPowerCurvature) * (refPowerPoints - minPoints) + minPoints);
-    auto nCOPPoints = static_cast<std::size_t>(
-        (maxCOPCurvature / refCOP_curvature) * (refCOP_points - minPoints) + minPoints);
-    std::size_t nPoints = std::max(nPowerPoints, nCOPPoints);
-
-    std::vector<double> heatSourceTemps_C(nPoints);
+    auto nPowerVals = static_cast<std::size_t>(
+        rangeFac * (maxPowerCurvature / refPowerCurvature) * (refPowerVals - minVals) + minVals);
+    auto nCOP_vals = static_cast<std::size_t>(
+        rangeFac * (maxCOPCurvature / refCOP_curvature) * (refCOP_vals - minVals) + minVals);
+    std::size_t nVals = std::max(nPowerVals, nCOP_vals);
+    std::vector<double> heatSourceTemps_K(nVals);
     {
-        double T_C = 0;
-        double dT_C = 100. / static_cast<double>(nPoints - 1);
-        for (auto& heatSourceTemp_C : heatSourceTemps_C)
+        double T_K = C_TO_K(0.);
+        double dT_K = heatSourceTempRange_dC / static_cast<double>(nVals - 1);
+        for (auto& heatSourceTemp_K : heatSourceTemps_K)
         {
-            heatSourceTemp_C = T_C;
-            T_C += dT_C;
+            heatSourceTemp_K = T_K;
+            T_K += dT_K;
         }
-    }
-
-    std::vector<double> heatSourceTemps_K = {};
-    heatSourceTemps_K.reserve(heatSourceTemps_C.size());
-
-    for (auto T_C : heatSourceTemps_C)
-    {
-        heatSourceTemps_K.push_back(C_TO_K(T_C));
     }
     tempGrid.push_back(heatSourceTemps_K);
 
-    std::size_t nVals = envTemps_K.size() * heatSourceTemps_K.size();
-
-    std::vector<double> inputPowers_W = {};
-    inputPowers_W.reserve(nVals);
-
-    std::vector<double> cops = {};
-    cops.reserve(nVals);
-
+    // fill grid
+    std::size_t nTotVals = envTemps_K.size() * heatSourceTemps_K.size();
+    std::vector<double> inputPowers_W(nTotVals), heatingCapacities_W(nTotVals);
+    std::size_t i = 0;
     double input_BTUperHr, cop;
     for (auto& envTemp_K : envTemps_K)
         for (auto& heatSourceTemp_K : heatSourceTemps_K)
         {
-            getCapacityFromMap(
-                perfMap, K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
-            inputPowers_W.push_back(1000. * BTUperH_TO_KW(input_BTUperHr));
-            cops.push_back(cop);
+            getCapacityFromMap(K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
+            inputPowers_W[i] = 1000. * BTUperH_TO_KW(input_BTUperHr);
+            heatingCapacities_W[i] = cop * inputPowers_W[i];
+            ++i;
         }
 
     tempGridValues.push_back(inputPowers_W);
-    tempGridValues.push_back(cops);
+    tempGridValues.push_back(heatingCapacities_W);
 }
