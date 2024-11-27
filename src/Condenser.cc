@@ -955,8 +955,8 @@ void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPo
     std::vector<double> inputPowers_W = {};
     inputPowers_W.reserve(nVals);
 
-    std::vector<double> cops = {};
-    cops.reserve(nVals);
+    std::vector<double> heatingCapacities_W = {};
+    heatingCapacities_W.reserve(nVals);
 
     double input_BTUperHr, cop;
     for (auto& envTemp_K : envTemps_K)
@@ -964,10 +964,11 @@ void HPWH::Condenser::convertMapToGrid(const std::vector<HPWH::Condenser::PerfPo
         {
             getCapacityFromMap(
                 perfMap, K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
-            inputPowers_W.push_back(1000. * BTUperH_TO_KW(input_BTUperHr));
-            cops.push_back(cop);
+            double inputPower_W = 1000. * BTUperH_TO_KW(input_BTUperHr);
+            inputPowers_W.push_back(inputPower_W);
+            heatingCapacities_W.push_back(cop * inputPower_W);
         }
 
     tempGridValues.push_back(inputPowers_W);
-    tempGridValues.push_back(cops);
+    tempGridValues.push_back(heatingCapacities_W);
 }
