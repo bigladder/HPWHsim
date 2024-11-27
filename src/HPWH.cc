@@ -2148,7 +2148,7 @@ double HPWH::getCompressorMinRuntime(UNITS units /*=UNITS_MIN*/) const
     return minimumRuntime;
 }
 
-int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
+void HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
 {
     double aFract = 1.;
     double useFract = 1.;
@@ -2204,8 +2204,6 @@ int HPWH::getSizingFractions(double& aquaFract, double& useableFract) const
     {
         useableFract = 1. - aquaFract + TOL_MINVALUE;
     }
-
-    return 0;
 }
 
 void HPWH::setInletByFraction(double fractionalHeight)
