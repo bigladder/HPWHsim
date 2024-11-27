@@ -2934,6 +2934,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_AOSmithHPTU80;
     }
+    else if (modelName == "AOSmithHPTS40")
+    {
+        model = HPWH::MODELS_AOSmithHPTS40;
+    }
     else if (modelName == "AOSmithHPTS50")
     {
         model = HPWH::MODELS_AOSmithHPTS50;
@@ -3296,6 +3300,10 @@ void HPWH::checkInputs()
     else if (modelName == "BradfordWhiteAeroThermRE2H80")
     {
         model = HPWH::MODELS_BradfordWhiteAeroThermRE2H80;
+    }
+    else if (modelName == "LG_APHWC50")
+    {
+        model = HPWH::MODELS_LG_APHWC50;
     }
     else
     {
