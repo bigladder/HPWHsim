@@ -180,6 +180,33 @@ void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourc
         checkTo(companionHeatSource->name,
                 heatsourceconfiguration.companion_heat_source_id_is_set,
                 heatsourceconfiguration.companion_heat_source_id);
+
+    switch (typeOfHeatSource())
+    {
+    case TYPE_compressor:
+    {
+        heatsourceconfiguration.heat_source_type =
+            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER;
+        heatsourceconfiguration.heat_source = std::make_unique<
+            hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
+        to(heatsourceconfiguration.heat_source);
+        break;
+    }
+
+    case TYPE_resistance:
+    {
+        heatsourceconfiguration.heat_source_type =
+            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE;
+        heatsourceconfiguration.heat_source = std::make_unique<
+            hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
+        to(heatsourceconfiguration.heat_source);
+        break;
+    }
+
+    default:
+        return;
+        break;
+    }
 }
 
 void HPWH::HeatSource::setCondensity(const std::vector<double>& condensity_in)

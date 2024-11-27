@@ -46,7 +46,7 @@ body {font-family: Arial;}
  		</select><br><br>
 
     <label for="model_spec">model spec:</label>
-	  <select name="model_spec" id="model_spec">    
+	  <select name="model_spec" id="model_spec" style="width: 150px" >    
 	    <option selected="selected" value="File">File</option>
 			<option value="Preset">Preset</option>
 			<option value="JSON">JSON</option>
@@ -57,59 +57,6 @@ body {font-family: Arial;}
     <label for="build_dir">build directory:</label>
     <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
 </form>
-
-<script>
-	async function get_json(filename) {
-    fst = 'filename=' +  filename;
-	  const response = await fetch('http://localhost:8000/read_json?' + fst,
-		{
-			method: 'GET'
-		}
-	  );
-		json_data = await response.json();
-		return json_data
-	}
-
-	async function get_models() {
-		model_list = await get_json('./model_index.json')
-		let select = document.querySelector("#model_name")
-		for (let model of model_list["models"]){
-		  let option = document.createElement("option");
-		  option.text = model["name"];
-		  option.value = model["name"];
-		  select.appendChild(option);
-		}
-		return model_list
-	}
-
-	var pref_model_name = "BradfordWhiteAeroThermRE2H65"
-	var pref_model_spec = "File"
-
-	async function get_prefs() {
-		prefs_list = await get_json('./prefs.json')
-		if ("model_name" in prefs_list)
-		{
-			pref_model_name = prefs_list["model_name"]
-		}
-		if ("model_spec" in prefs_list)
-		{
-			pref_model_spec= prefs_list["model_spec"]
-		}
-		return prefs_list
-	}
-
-	async function fill_prefs()
-	{
-		model_list = await get_models()
-		prefs_list = await get_prefs()
-	  const model_form = document.getElementById('model_form');
-	  model_form.model_name.value = pref_model_name;
-	  model_form.model_spec.value = pref_model_spec
-
-	  const build_form = document.getElementById('build_form');
-	  build_form.build_dir.value = "../../../build";
-	}
-</script>
 
 <script>
   async function test() {
@@ -267,11 +214,121 @@ for (i = 0; i < coll.length; i++) {
 </body>
 
 <script>
-	fill_prefs()
-  const test_form = document.getElementById('test_form');
-  test_form.test_dir.value = "BradfordWhite/AeroThermRE2H50/RE2H50_UEF50";
+	async function get_json(filename) {
+    fst = 'filename=' +  filename;
+	  const response = await fetch('http://localhost:8000/read_json?' + fst,
+		{
+			method: 'GET'
+		}
+	  );
+		json_data = await response.json();
+		return json_data
+	}
 
-  //var test_btn = document.getElementById("test_btn");
+	function set_models_menu(model_list)
+	{
+		let select_model = document.querySelector("#model_name")
+		for (let model of model_list["models"]){
+		  let option = document.createElement("option");
+		  option.text = model["name"];
+		  option.value = model["name"];
+		  select_model.appendChild(option);
+		}
+	}
+ 
+	function get_prefs(prefs_list)
+	{
+	  const model_form = document.getElementById('model_form');
+	  const build_form = document.getElementById('build_form');
+	  const test_form = document.getElementById('test_form');
+
+		if ("model_name" in prefs_list)
+		{
+			model_form.model_name.value = prefs_list["model_name"]
+		}
+		if ("model_spec" in prefs_list)
+		{
+			model_form.model_spec.value = prefs_list["model_spec"]
+		}
+		if ("build_dir" in prefs_list)
+		{
+			build_form.build_dir.value = prefs_list["build_dir"]
+		}
+		if ("test_dir" in prefs_list)
+		{
+			test_form.test_dir.value = prefs_list["test_dir"]
+		}
+	}
+
+	async function set_menus()
+	{
+		var pref_index = await get_json("./prefs.json")
+		var pref_model_name = ("model_name" in pref_index) ? pref_index["model_name"] : "";
+		var pref_model_spec = ("model_spec" in pref_index) ? pref_index["model_spec"]	: "Preset";
+		var pref_build_dir = ("build_dir" in pref_index) ? pref_index["build_dir"]	: "Preset";
+
+		const model_index = await get_json("./model_index.json")
+		var model_names = []
+		var model_specs = []
+
+		// find pref_model in model_index; get model_specs list from model_index
+		var found_pref_model = false;
+		for (let model of model_index["models"]){
+			if ("name" in model)
+			{
+				const model_name = model["name"];
+				model_names.push(model_name);
+				if (model_name == pref_model_name)
+				{
+					found_pref_model = true;
+					if ("specs" in model)
+						for (let model_spec in model["specs"])
+							model_specs.push(model_spec);
+				}
+		}
+
+		if (!(model_names.includes(pref_model_name)))
+			model_names = [model_names, pref_model_name];
+			
+		if (!(model_specs.includes(pref_model_spec)))
+			model_specs = [model_specs, pref_model_spec];
+
+		// set model_name control
+		let select_model = document.getElementById('model_name');//document.querySelector("#model_name")
+		while (select_model.hasChildNodes()) {
+		  select_model.removeChild(select_model.firstChild);
+		}
+		for (let model_name of model_names){
+		  let option = document.createElement("option");
+		  option.text = model_name;
+		  option.value = model_name;
+		  select_model.appendChild(option);
+		}
+
+		// set model_spec control
+		let select_model_spec = document.getElementById('model_spec');//document.querySelector("#model_spec")
+		while (select_model_spec.hasChildNodes()) {
+		  select_model_spec.removeChild(select_model_spec.firstChild);
+		}
+		for (let model_spec of model_specs){
+		  let option = document.createElement("option");
+		  option.text = model_spec;
+		  option.value = model_spec;
+		  select_model_spec.appendChild(option);
+		}
+
+	  const model_form = document.getElementById('model_form');
+	  const build_form = document.getElementById('build_form');
+	  const test_form = document.getElementById('test_form');
+
+		document.getElementById("model_name").value = pref_model_name;
+		document.getElementById("model_spec").value = pref_model_spec;
+
+		document.getElementById("build_dir").value = pref_build_dir;
+	}
+}
+
+set_menus().then({},{})
 
 </script>
 

@@ -1,28 +1,28 @@
 {
   "models": [
 
-    {"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H50", "name": "BradfordWhiteAeroThermRE2H50"},
-		{"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "name": "BradfordWhiteAeroThermRE2H65"},
-		{"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "name": "BradfordWhiteAeroThermRE2H80"},
+    {"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H50", "name": "BradfordWhiteAeroThermRE2H50", "specs": ["Preset", "File", "JSON"]},
+		{"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "name": "BradfordWhiteAeroThermRE2H65", "specs": ["Preset", "File", "JSON"]},
+		{"series": "AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "name": "BradfordWhiteAeroThermRE2H80", "specs": ["Preset", "File", "JSON"]},
 
-		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS45", "name": "AOSmithHPTS45"},
-		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS50", "name": "AOSmithHPTS50"},
-		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS65", "name": "AOSmithHPTS65"},
-		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS80", "name": "AOSmithHPTS80"},
+		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS45", "name": "AOSmithHPTS45", "specs": ["Preset", "File", "JSON"]},
+		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS50", "name": "AOSmithHPTS50", "specs": ["Preset", "File", "JSON"]},
+		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS65", "name": "AOSmithHPTS65", "specs": ["Preset", "File", "JSON"]},
+		{"series": "HPTS", "manufacturer": "AOSmith", "model": "HPTS80", "name": "AOSmithHPTS80", "specs": ["Preset", "File", "JSON"]},
 
-		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem45", "name": "Rheem2020Prem45"},
-		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem50", "name": "Rheem2020Prem50"},
-		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem65", "name": "Rheem2020Prem65"},
-		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem80", "name": "Rheem2020Prem80"},
+		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem45", "name": "Rheem2020Prem45", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem50", "name": "Rheem2020Prem50", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem65", "name": "Rheem2020Prem65", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem80", "name": "Rheem2020Prem80", "specs": ["Preset", "File", "JSON"]},
 
-		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build45", "name": "Rheem2020Build45"},
-		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build50", "name": "Rheem2020Build50"},
-		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build65", "name": "Rheem2020Build65"},
-		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build80", "name": "Rheem2020Build80"},
+		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build45", "name": "Rheem2020Build45", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build50", "name": "Rheem2020Build50", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build65", "name": "Rheem2020Build65", "specs": ["Preset", "File", "JSON"]},
+		{"series": "2020Build", "manufacturer": "Rheem", "model": "2020Build80", "name": "Rheem2020Build80", "specs": ["Preset", "File", "JSON"]},
 
-		{"manufacturer": "Villara", "model": "AquaThermAire", "name": "AquaThermAire"},
+		{"manufacturer": "Villara", "model": "AquaThermAire", "name": "AquaThermAire", "specs": ["Preset", "File", "JSON"]},
 
- 		{"manufacturer": "LG", "model": "APHWC50", "name": "LG_APHWC50"}
+ 		{"manufacturer": "LG", "model": "APHWC50", "name": "LG_APHWC50", "specs": ["Preset", "File", "JSON"]}
 
   ]
 }

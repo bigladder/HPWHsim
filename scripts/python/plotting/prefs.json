@@ -1,4 +1,6 @@
 {
   "model_name": "BradfordWhiteAeroThermRE2H50",
-	"model_spec": "File"
+	"model_spec": "Preset",
+	"build_dir": "../../../build",
+	"test_dir": "BradfordWhite/AeroThermRE2H50/RE2H50_UEF50"
 }
