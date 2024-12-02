@@ -615,17 +615,20 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRAT
 
         if (heat_source_config.backup_heat_source_id_is_set)
         {
-            j_heat_source_config["backup_heat_source_id"] = heat_source_config.backup_heat_source_id;
+            j_heat_source_config["backup_heat_source_id"] =
+                heat_source_config.backup_heat_source_id;
         }
 
         if (heat_source_config.followed_by_heat_source_id_is_set)
         {
-            j_heat_source_config["followed_by_heat_source_id"] = heat_source_config.followed_by_heat_source_id;
+            j_heat_source_config["followed_by_heat_source_id"] =
+                heat_source_config.followed_by_heat_source_id;
         }
 
         if (heat_source_config.companion_heat_source_id_is_set)
         {
-            j_heat_source_config["companion_heat_source_id"] = heat_source_config.companion_heat_source_id;
+            j_heat_source_config["companion_heat_source_id"] =
+                heat_source_config.companion_heat_source_id;
         }
 
         j_heat_source_configs.push_back(j_heat_source_config);

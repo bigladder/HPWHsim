@@ -195,8 +195,15 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
     }
     }
 
-    checkTo(hysteresis_dC, perf.compressor_lockout_temperature_hysteresis_is_set, perf.compressor_lockout_temperature_hysteresis);
+    checkTo(hysteresis_dC,
+            perf.compressor_lockout_temperature_hysteresis_is_set,
+            perf.compressor_lockout_temperature_hysteresis);
 
+    checkTo(C_TO_K(minT), perf.minimum_temperature_is_set, perf.minimum_temperature);
+    checkTo(C_TO_K(maxT), perf.maximum_temperature_is_set, perf.maximum_temperature);
+    checkTo(C_TO_K(maxSetpoint_C),
+            perf.maximum_refrigerant_temperature_is_set,
+            perf.maximum_refrigerant_temperature);
 
     if (useBtwxtGrid)
     {
