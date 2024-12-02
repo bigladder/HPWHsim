@@ -3514,20 +3514,13 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
             }
             line_ss >> heatsource >> token;
 
-            j_heatsourceconfigs[heatsource]["id"] = heatsource;
+            if (!j_heatsourceconfigs[heatsource].contains("index"))
+                j_heatsourceconfigs[heatsource]["index"] = heatsource;
 
             if (token == "isVIP")
             {
                 line_ss >> tempString;
-                if (tempString == "true")
-                    j["primary_heat_source_id"] = heatsource;
-                else if (tempString == "false")
-                {}
-                else
-                {
-                    send_error(fmt::format(
-                        "Improper value for for heat source.", token.c_str(), heatsource));
-                }
+                j_heatsourceconfigs[heatsource]["is_vip"] = (tempString == "true") ? true : false;
             }
             else if (token == "isOn")
             {
@@ -4059,17 +4052,17 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
             else if (token == "backupSource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfigs[heatsource]["backup_heat_source_id"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["backup_heat_source_index"] = sourceNum;
             }
             else if (token == "companionSource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfigs[heatsource]["companion_heat_source_id"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["companion_heat_source_index"] = sourceNum;
             }
             else if (token == "followedBySource")
             {
                 line_ss >> sourceNum;
-                j_heatsourceconfigs[heatsource]["followed_by_heat_source_id"] = sourceNum;
+                j_heatsourceconfigs[heatsource]["followed_by_heat_source_index"] = sourceNum;
             }
             else
             {
@@ -4112,20 +4105,21 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     auto num_heat_sources = j_heatsourceconfigs.size();
     heatSources.reserve(num_heat_sources);
 
-    std::unordered_map<std::size_t, std::size_t> heat_source_lookup;
+    std::unordered_map<int, int> heat_source_lookup;
     heat_source_lookup.reserve(num_heat_sources);
 
     for (std::size_t iconfig = 0; iconfig < num_heat_sources; ++iconfig)
     {
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
-        int heatsource_id = j_heatsourceconfig["id"];
-        heat_source_lookup[heatsource_id] = iconfig;
+        int heatsource_index = j_heatsourceconfig["index"];
+        heat_source_lookup[heatsource_index] = iconfig;
     }
 
-    for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
+    for (std::size_t heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
     {
-        auto iconfig = heat_source_lookup[heatsource_id];
+        int iconfig = heat_source_lookup[heatsource_index];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
+        std::string heatsource_id = fmt::format("{:d}", heatsource_index);
 
         HeatSource* element = nullptr;
         if (j_heatsourceconfig["heat_source_type"] == "RESISTANCE")
@@ -4156,6 +4150,10 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             checkFrom(compressor->minT, j_heatsourceconfig, "minimum_temperature_C", -273.15);
             checkFrom(compressor->maxT, j_heatsourceconfig, "maximum_temperature_C", 100.);
+            checkFrom(compressor->maxSetpoint_C,
+                      j_heatsourceconfig,
+                      "maximum_refrigerant_temperature",
+                      MAXOUTLET_R134A);
 
             if (j_heatsourceconfig["coil_configuration"] == "WRAPPED")
                 compressor->configuration = Condenser::CONFIG_WRAPPED;
@@ -4278,23 +4276,23 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     }
 
     //
-    for (std::size_t heatsource_id = 0; heatsource_id < num_heat_sources; ++heatsource_id)
+    for (std::size_t heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
     {
-        auto iconfig = heat_source_lookup[heatsource_id];
+        auto iconfig = heat_source_lookup[heatsource_index];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
 
-        int id;
-        if (checkFrom(id, j_heatsourceconfig, "backup_heat_source_id", 0))
+        int other_index;
+        if (checkFrom(other_index, j_heatsourceconfig, "backup_heat_source_index", 0))
         {
-            heatSources[heatsource_id]->backupHeatSource = heatSources[id].get();
+            heatSources[heatsource_index]->backupHeatSource = heatSources[other_index].get();
         }
-        if (checkFrom(id, j_heatsourceconfig, "followed_by_heat_source_id", 0))
+        if (checkFrom(other_index, j_heatsourceconfig, "followed_by_heat_source_index", 0))
         {
-            heatSources[heatsource_id]->followedByHeatSource = heatSources[id].get();
+            heatSources[heatsource_index]->followedByHeatSource = heatSources[other_index].get();
         }
-        if (checkFrom(id, j_heatsourceconfig, "companion_heat_source_id", 0))
+        if (checkFrom(other_index, j_heatsourceconfig, "companion_heat_source_index", 0))
         {
-            heatSources[heatsource_id]->companionHeatSource = heatSources[id].get();
+            heatSources[heatsource_index]->companionHeatSource = heatSources[other_index].get();
         }
     }
 
