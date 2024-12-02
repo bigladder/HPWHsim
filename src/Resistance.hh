@@ -29,5 +29,6 @@ class HPWH::Resistance : public HPWH::HeatSource
     void setPower_W(double watts) { power_kW = watts / 1000.; }
 
     void addHeat(double minutesToRun);
+
 };
 #endif

@@ -50,9 +50,6 @@ void HPWH::Resistance::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
 
     auto& perf = res_ptr->performance;
     checkTo(1000. * power_kW, perf.input_power_is_set, perf.input_power);
-    checkTo(hysteresis_dC,
-            perf.resistance_lockout_temperature_hysteresis_is_set,
-            perf.resistance_lockout_temperature_hysteresis);
 }
 
 void HPWH::Resistance::setup(int node, double Watts, int condensitySize /* = CONDENSITY_SIZE*/)
@@ -70,7 +67,7 @@ void HPWH::Resistance::addHeat(double minutesToRun)
     calcHeatDist(heatDistribution);
 
     double cap_kJ = power_kW * (minutesToRun * sec_per_min);
-    double leftoverCap_kJ = heat(cap_kJ);
+    double leftoverCap_kJ = heat(cap_kJ, 100.);
 
     runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;
     if (runtime_min < -TOL_MINVALUE)
@@ -82,3 +79,5 @@ void HPWH::Resistance::addHeat(double minutesToRun)
     energyInput_kWh += power_kW * (runtime_min / min_per_hr);
     energyOutput_kWh += power_kW * (runtime_min / min_per_hr);
 }
+
+
