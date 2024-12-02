@@ -542,11 +542,6 @@ void HPWH::to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRAT
 
     auto& tank = perf.tank;
 
-    if (perf.fixed_setpoint_is_set && perf.fixed_setpoint)
-    {
-        j_perf["fixed_setpoint"] = true;
-    }
-
     nlohmann::json j_tank;
     to_json(tank, j_tank);
     j_perf["tank"] = j_tank;
@@ -767,12 +762,6 @@ void HPWH::to_json(
     nlohmann::json j_perf;
     j_perf["input_power"] = perf.input_power;
 
-    if (perf.resistance_lockout_temperature_hysteresis_is_set)
-    {
-        j_perf["resistance_lockout_temperature_hysteresis"] =
-            perf.resistance_lockout_temperature_hysteresis;
-    }
-
     j["performance"] = j_perf;
 }
 
@@ -810,18 +799,18 @@ void HPWH::to_json(
         j["temperature_weight_distribution"] = tempLogic.temperature_weight_distribution;
     }
 
-    if (tempLogic.tank_node_specification_is_set)
+    if (tempLogic.standby_temperature_location_is_set)
     {
-        switch (tempLogic.tank_node_specification)
+        switch (tempLogic.standby_temperature_location)
         {
-        case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+        case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::TOP_OF_TANK:
         {
-            j["tank_node_specification"] = "TOP_NODE";
+            j["standby_temperature_location"] = "TOP_OF_TANK";
             break;
         }
-        case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+        case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::BOTTOM_OF_TANK:
         {
-            j["tank_node_specification"] = "BOTTOM_NODE";
+            j["standby_temperature_location"] = "BOTTOM_OF_TANK";
         }
         default:
         {

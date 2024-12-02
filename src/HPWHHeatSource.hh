@@ -38,30 +38,23 @@ class HPWH::HeatSource : public Sender
     void disengageHeatSource();
     /**< turn heat source off, i.e. set isEngaged to FALSE */
 
-    bool isLockedOut() const;
-    /**< return whether or not the heat source is locked out */
-    void lockOutHeatSource();
-    /**< lockout heat source, i.e. set isLockedOut to TRUE */
-    void unlockHeatSource();
-    /**< unlock heat source, i.e. set isLockedOut to FALSE */
+    virtual bool maxedOut() const { return false;}
+    /**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at
+     * setpoint. */
 
-    bool shouldLockOut(double heatSourceAmbientT_C) const;
-    /**< queries the heat source as to whether it should lock out */
-    bool shouldUnlock(double heatSourceAmbientT_C) const;
-    /**< queries the heat source as to whether it should unlock */
+    bool lockedOut;
+    /**< is the condenser locked out	 */
 
-    bool toLockOrUnlock(double heatSourceAmbientT_C);
-    /**< combines shouldLockOut and shouldUnlock to one master function which locks or unlocks the
-     * heatsource. Return boolean lockedOut (true if locked, false if unlocked)*/
+    bool isLockedOut() const { return lockedOut; };
+
+    void lockOutHeatSource() { lockedOut = true; }
+
+    void unlockHeatSource() { lockedOut = false; }
 
     bool shouldHeat() const;
     /**< queries the heat source as to whether or not it should turn on */
     bool shutsOff() const;
     /**< queries the heat source whether should shut off */
-
-    bool maxedOut() const;
-    /**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at
-     * setpoint. */
 
     [[nodiscard]] int findParent() const;
     /**< returns the index of the heat source where this heat source is a backup.
@@ -88,9 +81,6 @@ class HPWH::HeatSource : public Sender
     // these are the heat source state/output variables
     bool isOn;
     /**< is the heat source running or not	 */
-
-    bool lockedOut;
-    /**< is the heat source locked out	 */
 
     // some outputs
     double runtime_min;
@@ -149,14 +139,6 @@ class HPWH::HeatSource : public Sender
     double maxT;
     /**<  maximum operating temperature of HPWH environment */
 
-    double maxSetpoint_C;
-    /**< the maximum setpoint of the heat source can create, used for compressors predominately */
-
-    double hysteresis_dC;
-    /**< a hysteresis term that prevents short cycling due to heat pump self-interaction
-      when the heat source is engaged, it is subtracted from lowT cutoffs and
-      added to lowTreheat cutoffs */
-
     bool depressesTemperature;
     /**<  heat pumps can depress the temperature of their space in certain instances -
       whether or not this occurs is a bool in HPWH, but a heat source must
@@ -182,7 +164,7 @@ class HPWH::HeatSource : public Sender
     /**< returns the tank temperature weighted by the condensity for this heat source */
 
   protected:
-    double heat(double cap_kJ);
+    double heat(double cap_kJ, double maxSetpointT_C);
 
   public:
 }; // end of HeatSource class

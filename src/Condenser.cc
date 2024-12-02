@@ -15,6 +15,8 @@ HPWH::Condenser::Condenser(HPWH* hpwh_in,
                            const std::shared_ptr<Courier::Courier> courier,
                            const std::string& name_in)
     : HeatSource(hpwh_in, courier, name_in)
+    , hysteresis_dC(0)
+    , maxSetpoint_C(100.)
     , useBtwxtGrid(false)
     , extrapolationMethod(EXTRAP_LINEAR)
     , doDefrost(false)
@@ -31,6 +33,7 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     HPWH::HeatSource::operator=(cond_in);
 
     Tshrinkage_C = cond_in.Tshrinkage_C;
+    lockedOut = cond_in.lockedOut;
 
     perfMap = cond_in.perfMap;
 
@@ -53,7 +56,118 @@ HPWH::Condenser& HPWH::Condenser::operator=(const HPWH::Condenser& cond_in)
     extrapolationMethod = cond_in.extrapolationMethod;
     secondaryHeatExchanger = cond_in.secondaryHeatExchanger;
 
+    hysteresis_dC = cond_in.hysteresis_dC;
+    maxSetpoint_C = cond_in.maxSetpoint_C;
+
     return *this;
+}
+
+bool HPWH::Condenser::toLockOrUnlock(double heatSourceAmbientT_C)
+{
+    if (shouldLockOut(heatSourceAmbientT_C))
+    {
+        lockOutHeatSource();
+    }
+    if (shouldUnlock(heatSourceAmbientT_C))
+    {
+        unlockHeatSource();
+    }
+
+    return isLockedOut();
+}
+
+bool HPWH::Condenser::maxedOut() const
+{
+    bool maxed = false;
+
+    // If the heat source can't produce water at the setpoint and the control logics are saying to
+    // shut off
+    if (hpwh->setpoint_C > maxSetpoint_C)
+    {
+        if (hpwh->tank->nodeTs_C[0] >= maxSetpoint_C || shutsOff())
+        {
+            maxed = true;
+        }
+    }
+    return maxed;
+}
+
+
+bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
+{
+    // if it's already locked out, keep it locked out
+    if (isLockedOut())
+    {
+        return true;
+    }
+    else
+    {
+        // when the "external" temperature is too cold - typically used for compressor low temp.
+        // cutoffs when running, use hysteresis
+        bool lock = false;
+        if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
+        {
+            lock = true;
+        }
+        // when not running, don't use hysteresis
+        else if (!isEngaged() && (heatSourceAmbientT_C < minT))
+        {
+            lock = true;
+        }
+
+        // when the "external" temperature is too warm - typically used for resistance lockout
+        // when running, use hysteresis
+        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
+        {
+            lock = true;
+        }
+        // when not running, don't use hysteresis
+        else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
+        {
+            lock = true;
+        }
+
+        if (maxedOut())
+        {
+            lock = true;
+            send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
+                                     maxSetpoint_C));
+        }
+
+        return lock;
+    }
+}
+
+bool HPWH::Condenser::shouldUnlock(double heatSourceAmbientT_C) const
+{
+
+    // if it's already unlocked, keep it unlocked
+    if (!isLockedOut())
+    {
+        return true;
+    }
+    // if the heat source is capped and can't produce hotter water
+    else if (maxedOut())
+    {
+        return false;
+    }
+    else
+    {
+        // when the "external" temperature is no longer too cold or too warm
+        // when running, use hysteresis
+        bool unlock = false;
+        if (isEngaged() && (heatSourceAmbientT_C > minT + hysteresis_dC) &&
+            (heatSourceAmbientT_C < maxT - hysteresis_dC))
+        {
+            unlock = true;
+        }
+        // when not running, don't use hysteresis
+        else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
+        {
+            unlock = true;
+        }
+        return unlock;
+    }
 }
 
 void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
@@ -288,7 +402,7 @@ void HPWH::Condenser::addHeat(double externalT_C, double minutesToRun)
 
         double cap_kJ = BTU_TO_KJ(cap_BTUperHr * minutesToRun / min_per_hr);
 
-        double leftoverCap_kJ = heat(cap_kJ);
+        double leftoverCap_kJ = heat(cap_kJ, maxSetpoint_C);
 
         // compute actual runtime
         runtime_min = (1. - (leftoverCap_kJ / cap_kJ)) * minutesToRun;

@@ -360,6 +360,7 @@ void HPWH::runOneStep(double drawVolume_L,
         double minutesToRun = minutesPerStep;
         for (int i = 0; i < getNumHeatSources(); i++)
         {
+
             // check/apply lock-outs
             if (shouldDRLockOut(heatSources[i]->typeOfHeatSource(), DRstatus))
             {
@@ -368,7 +369,11 @@ void HPWH::runOneStep(double drawVolume_L,
             else
             {
                 // locks or unlocks the heat source
-                heatSources[i]->toLockOrUnlock(heatSourceAmbientT_C);
+                if (heatSources[i]->typeOfHeatSource() == TYPE_compressor)
+                {
+                    auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
+                    condenser->toLockOrUnlock(heatSourceAmbientT_C);
+                }
             }
             if (heatSources[i]->isLockedOut() && heatSources[i]->backupHeatSource == NULL)
             {
@@ -385,10 +390,14 @@ void HPWH::runOneStep(double drawVolume_L,
 
                     // Check that the backup isn't locked out too or already engaged then it will
                     // heat on its own.
-                    if (heatSources[i]->backupHeatSource->toLockOrUnlock(heatSourceAmbientT_C) ||
-                        shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
-                                        DRstatus) || //){
-                        heatSources[i]->backupHeatSource->isEngaged())
+                    bool shouldLockOut = heatSources[i]->backupHeatSource->isEngaged();
+                    if (heatSources[i]->backupHeatSource->typeOfHeatSource() == TYPE_compressor)
+                    {
+                        auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
+                        shouldLockOut |= condenser->toLockOrUnlock(heatSourceAmbientT_C);
+                    }
+                    if(shouldLockOut || shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
+                                        DRstatus) )
                     {
                         continue;
                     }
@@ -432,25 +441,26 @@ void HPWH::runOneStep(double drawVolume_L,
                     // timestep to make sure tank is above the max temperature for the compressor.
                     else if (heatSources[i]->maxedOut() && heatSources[i]->backupHeatSource != NULL)
                     {
-
+                        auto backupHeatSource = heatSources[i]->backupHeatSource;
                         // Check that the backup isn't locked out or already engaged then it will
                         // heat or already heated on its own.
-                        if (!heatSources[i]->backupHeatSource->toLockOrUnlock(
-                                heatSourceAmbientT_C) && // If not locked out
-                            !shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
-                                             DRstatus) && // and not DR locked out
-                            !heatSources[i]->backupHeatSource->isEngaged())
-                        { // and not already engaged
-
-                            HeatSource* backupHeatSourcePtr = heatSources[i]->backupHeatSource;
+                        bool isUnvailable = !backupHeatSource->isEngaged();
+                        if (backupHeatSource->typeOfHeatSource() == TYPE_compressor)
+                        {
+                            auto condenser = reinterpret_cast<Condenser*>(backupHeatSource);
+                            isUnvailable &= !condenser->toLockOrUnlock(heatSourceAmbientT_C);
+                        }
+                        isUnvailable &= !shouldDRLockOut(backupHeatSource->typeOfHeatSource(), DRstatus);
+                        if (!isUnvailable)
+                        {
                             // turn it on
-                            backupHeatSourcePtr->engageHeatSource(DRstatus);
+                            backupHeatSource->engageHeatSource(DRstatus);
                             // add heat if it hasn't heated up this whole minute already
-                            if (backupHeatSourcePtr->runtime_min >= 0.)
+                            if (backupHeatSource->runtime_min >= 0.)
                             {
-                                addHeatParent(backupHeatSourcePtr,
+                                addHeatParent(backupHeatSource,
                                               heatSourceAmbientT_C,
-                                              minutesToRun - backupHeatSourcePtr->runtime_min);
+                                              minutesToRun - backupHeatSource->runtime_min);
                             }
                         }
                     }
@@ -784,7 +794,8 @@ double HPWH::getMaxCompressorSetpoint(UNITS units /*=UNITS_C*/) const
         send_error("Unit does not have a compressor.");
     }
 
-    double returnVal = heatSources[compressorIndex]->maxSetpoint_C;
+    auto condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    double returnVal = condenser->getMaxSetpointT_C();
     if (units == UNITS_C)
     {
     }
@@ -853,8 +864,8 @@ bool HPWH::isNewSetpointPossible(double newSetpoint,
         if (lowestElementIndex >= 0)
         { // If there's a resistance element lets check the new setpoint against the its max
           // setpoint
-            maxAllowedSetpoint_C = heatSources[lowestElementIndex]->maxSetpoint_C;
 
+            maxAllowedSetpoint_C = 100.;
             if (newSetpoint_C > maxAllowedSetpoint_C)
             {
                 why = "The resistance elements cannot produce water this hot.";
@@ -2613,7 +2624,6 @@ void HPWH::mapResRelativePosToHeatSources()
 
 bool HPWH::shouldDRLockOut(HEATSOURCE_TYPE hs, DRMODES DR_signal) const
 {
-
     if (hs == TYPE_compressor && (DR_signal & DR_LOC) != 0)
     {
         return true;
@@ -4129,8 +4139,6 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             resistance->setPower_W(
                 j_heatsourceconfig["performance_points"][0]["power_coefficients"][0]);
-
-            resistance->hysteresis_dC = j_heatsourceconfig["temperature_hysteresis_dC"];
         }
         else if (j_heatsourceconfig["heat_source_type"] == "CONDENSER")
         {
@@ -4150,10 +4158,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             checkFrom(compressor->minT, j_heatsourceconfig, "minimum_temperature_C", -273.15);
             checkFrom(compressor->maxT, j_heatsourceconfig, "maximum_temperature_C", 100.);
-            checkFrom(compressor->maxSetpoint_C,
-                      j_heatsourceconfig,
-                      "maximum_refrigerant_temperature",
-                      MAXOUTLET_R134A);
+            checkFrom(compressor->maxSetpoint_C, j_heatsourceconfig, "maximum_refrigerant_temperature", MAXOUTLET_R134A);
 
             if (j_heatsourceconfig["coil_configuration"] == "WRAPPED")
                 compressor->configuration = Condenser::CONFIG_WRAPPED;
@@ -4180,7 +4185,6 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
         checkFrom(element->isVIP, j_heatsourceconfig, "is_vip", false);
 
         element->setCondensity(j_heatsourceconfig["heat_distribution"]);
-        checkFrom(element->hysteresis_dC, j_heatsourceconfig, "temperature_hysteresis_dC", 0.);
 
         for (auto& j_logic : j_heatsourceconfig["turn_on_logic"])
         {
@@ -4344,9 +4348,6 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     auto& rstank = performance.tank;
     tank->from(rstank);
 
-    setpointFixed = performance.fixed_setpoint;
-    checkFrom(setpointFixed, performance.fixed_setpoint_is_set, performance.fixed_setpoint, false);
-
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
@@ -4441,11 +4442,6 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEAT
 
     auto& rstank = performance.tank;
     tank->to(rstank);
-
-    checkTo(setpointFixed,
-            performance.fixed_setpoint_is_set,
-            performance.fixed_setpoint,
-            setpointFixed);
 
     // heat-source priority is retained from the entry order
     auto& configurations = performance.heat_source_configurations;

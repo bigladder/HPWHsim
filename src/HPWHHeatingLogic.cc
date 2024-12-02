@@ -327,17 +327,17 @@ HPWH::HeatingLogic::make(const hpwh_data_model::rsintegratedwaterheater_ns::Heat
 
         std::vector<HPWH::NodeWeight> nodeWeights = {};
 
-        if (temp_based_logic->tank_node_specification_is_set)
+        if (temp_based_logic->standby_temperature_location_is_set)
         {
-            switch (temp_based_logic->tank_node_specification)
+            switch (temp_based_logic->standby_temperature_location)
             {
-            case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE:
+            case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::TOP_OF_TANK:
             {
                 label = "top node";
                 nodeWeights.emplace_back(LOGIC_SIZE + 1);
                 break;
             }
-            case hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE:
+            case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::BOTTOM_OF_TANK:
             {
                 label = "bottom node";
                 nodeWeights.emplace_back(0);
@@ -446,25 +446,25 @@ void HPWH::TempBasedHeatingLogic::to(
 
     if (description == "standby")
     {
-        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
-                logic.tank_node_specification_is_set,
-                logic.tank_node_specification);
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::TOP_OF_TANK,
+                logic.standby_temperature_location_is_set,
+                logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
     }
     else if (description == "top node")
     {
-        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::TOP_NODE,
-                logic.tank_node_specification_is_set,
-                logic.tank_node_specification);
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::TOP_OF_TANK,
+                logic.standby_temperature_location_is_set,
+                logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
     }
     else if (description == "bottom node")
     {
-        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::TankNodeSpecification::BOTTOM_NODE,
-                logic.tank_node_specification_is_set,
-                logic.tank_node_specification);
+        checkTo(hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::BOTTOM_OF_TANK,
+                logic.standby_temperature_location_is_set,
+                logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
     }
