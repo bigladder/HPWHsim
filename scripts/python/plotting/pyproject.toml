@@ -5,15 +5,11 @@ description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 pandas = "*"
 plotly = "*"
 koozie = "*"
 dimes = { git = "https://github.com/bigladder/dimes" }
-dash = "^2.18.2"
-promptlib = "^1.0.0"
-psutil = "^6.1.0"
-numpy = "^1.26.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
