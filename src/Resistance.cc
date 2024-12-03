@@ -80,4 +80,17 @@ void HPWH::Resistance::addHeat(double minutesToRun)
     energyOutput_kWh += power_kW * (runtime_min / min_per_hr);
 }
 
+bool HPWH::Resistance::toLockOrUnlock()
+{
+    if (isLockedOut())
+    {
+        lockOutHeatSource();
+    }
+    if (!isLockedOut())
+    {
+        unlockHeatSource();
+    }
+
+    return isLockedOut();
+}
 
