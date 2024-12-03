@@ -38,7 +38,7 @@ class HPWH::HeatSource : public Sender
     void disengageHeatSource();
     /**< turn heat source off, i.e. set isEngaged to FALSE */
 
-    virtual bool maxedOut() const { return false;}
+    virtual bool maxedOut() const { return false; }
     /**< queries the heat source as to if it shouldn't produce hotter water and the tank isn't at
      * setpoint. */
 

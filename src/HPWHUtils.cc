@@ -808,7 +808,8 @@ void HPWH::to_json(
             j["standby_temperature_location"] = "TOP_OF_TANK";
             break;
         }
-        case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::BOTTOM_OF_TANK:
+        case hpwh_data_model::rsintegratedwaterheater_ns::StandbyTemperatureLocation::
+            BOTTOM_OF_TANK:
         {
             j["standby_temperature_location"] = "BOTTOM_OF_TANK";
         }

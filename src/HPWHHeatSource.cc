@@ -224,7 +224,6 @@ int HPWH::HeatSource::findParent() const
 
 bool HPWH::HeatSource::isEngaged() const { return isOn; }
 
-
 void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal)
 {
     isOn = true;

@@ -92,7 +92,6 @@ bool HPWH::Condenser::maxedOut() const
     return maxed;
 }
 
-
 bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
 {
     // if it's already locked out, keep it locked out
