@@ -3242,7 +3242,8 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
-        resistiveElementBottom->setup(0, 4500);;
+        resistiveElementBottom->setup(0, 4500);
+        ;
 
         // logic conditions
         double compStart = dF_TO_dC(32);

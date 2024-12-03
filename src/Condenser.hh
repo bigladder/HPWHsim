@@ -213,7 +213,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     void addHeat(double externalT_C, double minutesToRun);
 
-    double getMaxSetpointT_C() const {return maxSetpoint_C;}
+    double getMaxSetpointT_C() const { return maxSetpoint_C; }
 };
 
 #endif

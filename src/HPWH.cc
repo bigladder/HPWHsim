@@ -395,9 +395,10 @@ void HPWH::runOneStep(double drawVolume_L,
 
                     // Check that the backup isn't locked out too or already engaged then it will
                     // heat on its own.
-                    bool shouldLockOut = heatSources[i]->backupHeatSource->isEngaged()
-                                         || shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
-                                                            DRstatus);
+                    bool shouldLockOut =
+                        heatSources[i]->backupHeatSource->isEngaged() ||
+                        shouldDRLockOut(heatSources[i]->backupHeatSource->typeOfHeatSource(),
+                                        DRstatus);
                     if (heatSources[i]->backupHeatSource->typeOfHeatSource() == TYPE_compressor)
                     {
                         auto condenser = reinterpret_cast<Condenser*>(heatSources[i].get());
@@ -408,7 +409,7 @@ void HPWH::runOneStep(double drawVolume_L,
                         auto resistance = reinterpret_cast<Resistance*>(heatSources[i].get());
                         shouldLockOut |= resistance->toLockOrUnlock();
                     }
-                    if(shouldLockOut)
+                    if (shouldLockOut)
                     {
                         continue;
                     }
@@ -455,20 +456,20 @@ void HPWH::runOneStep(double drawVolume_L,
                         auto backupHeatSource = heatSources[i]->backupHeatSource;
                         // Check that the backup isn't locked out or already engaged then it will
                         // heat or already heated on its own.
-                        bool isUnvailable = !backupHeatSource->isEngaged()
-                                             && !shouldDRLockOut(backupHeatSource->typeOfHeatSource(),
-                                                               DRstatus);
+                        bool isBackupAvailable =
+                            !backupHeatSource->isEngaged() &&
+                            !shouldDRLockOut(backupHeatSource->typeOfHeatSource(), DRstatus);
                         if (backupHeatSource->typeOfHeatSource() == TYPE_compressor)
                         {
                             auto condenser = reinterpret_cast<Condenser*>(backupHeatSource);
-                            isUnvailable &= !condenser->toLockOrUnlock(heatSourceAmbientT_C);
+                            isBackupAvailable &= !condenser->toLockOrUnlock(heatSourceAmbientT_C);
                         }
                         else if (heatSources[i]->typeOfHeatSource() == TYPE_resistance)
                         {
                             auto resistance = reinterpret_cast<Resistance*>(heatSources[i].get());
-                            isUnvailable &= !resistance->toLockOrUnlock();
+                            isBackupAvailable &= !resistance->toLockOrUnlock();
                         }
-                        if (!isUnvailable)
+                        if (isBackupAvailable)
                         {
                             // turn it on
                             backupHeatSource->engageHeatSource(DRstatus);
@@ -4175,7 +4176,10 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             checkFrom(compressor->minT, j_heatsourceconfig, "minimum_temperature_C", -273.15);
             checkFrom(compressor->maxT, j_heatsourceconfig, "maximum_temperature_C", 100.);
-            checkFrom(compressor->maxSetpoint_C, j_heatsourceconfig, "maximum_refrigerant_temperature", MAXOUTLET_R134A);
+            checkFrom(compressor->maxSetpoint_C,
+                      j_heatsourceconfig,
+                      "maximum_refrigerant_temperature",
+                      MAXOUTLET_R134A);
 
             if (j_heatsourceconfig["coil_configuration"] == "WRAPPED")
                 compressor->configuration = Condenser::CONFIG_WRAPPED;
