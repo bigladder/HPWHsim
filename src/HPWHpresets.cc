@@ -261,7 +261,6 @@ void HPWH::initGeneric(double tankVol_L, double energyFactor, double resUse_C)
     // bottom resistor values
     resistiveElementBottom->setup(0, 4000);
     resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
     // logic conditions
     // this is set customly, from input
@@ -476,8 +475,6 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementBottom->setup(0, 4500);
         resistiveElementTop->setup(9, 4500);
 
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
-
         // standard logic conditions
         resistiveElementBottom->addTurnOnLogic(bottomThird(20));
         resistiveElementBottom->addTurnOnLogic(standby(15));
@@ -635,7 +632,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 2000);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
@@ -708,7 +704,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 2000);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(43.6);
@@ -781,7 +776,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4200);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
         //     double compStart = dF_TO_dC(24.4);
@@ -2314,7 +2308,6 @@ void HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom->setup(0, 4500);
         }
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2419,7 +2412,6 @@ void HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom->setup(0, 4500);
         }
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2517,7 +2509,6 @@ void HPWH::initPreset(MODELS presetNum)
         {
             resistiveElementBottom->setup(0, 4500);
         }
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(35);
@@ -2595,7 +2586,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(34.1636);
@@ -2675,7 +2665,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, wattRE);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
         resistiveElementBottom->setCondensity(
             {0.2, 0.8, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.}); // Based of CMP test
 
@@ -2772,7 +2761,6 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->isVIP = true;
 
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(30.2);
@@ -2842,7 +2830,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
@@ -2902,7 +2889,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(19.6605)));
@@ -2971,7 +2957,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -3040,7 +3025,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -3110,7 +3094,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird_absolute(F_TO_C(87)));
@@ -3178,7 +3161,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -3261,7 +3243,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
+        ;
 
         // logic conditions
         double compStart = dF_TO_dC(32);
@@ -3349,7 +3331,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(4);
 
         // logic conditions
         double compStart = dF_TO_dC(30);
@@ -3539,7 +3520,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 2250);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         double compStart = dF_TO_dC(38);
@@ -3578,7 +3558,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->isVIP = false;
 
         resistiveElement->setup(0, 1500);
-        resistiveElement->hysteresis_dC = dF_TO_dC(0);
 
         compressor->setCondensity({0, 0.12, 0.22, 0.22, 0.22, 0.22, 0, 0, 0, 0, 0, 0});
 
@@ -3656,7 +3635,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40.0)));
@@ -3723,7 +3701,6 @@ void HPWH::initPreset(MODELS presetNum)
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
@@ -3793,7 +3770,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
         resistiveElementBottom->setCondensity({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         compressor->addTurnOnLogic(bottomThird(dF_TO_dC(40)));
@@ -3860,7 +3836,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(18.6605)));
@@ -3951,7 +3926,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(20)));
@@ -4350,12 +4324,10 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         resistiveElementTop->setup(8, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(0.);
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
         resistiveElementBottom->setup(0, 4500);
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2.);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(12.0)));
@@ -4436,7 +4408,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 4000);
         resistiveElementBottom->setCondensity({0, 0.2, 0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         // logic conditions
         resistiveElementTop->addTurnOnLogic(fourthSixth(dF_TO_dC(32)));
@@ -4511,7 +4482,6 @@ void HPWH::initPreset(MODELS presetNum)
         // bottom resistor values
         resistiveElementBottom->setup(0, 5000.);
         resistiveElementBottom->isVIP = false;
-        resistiveElementBottom->hysteresis_dC = dF_TO_dC(2);
 
         resistiveElementTop->followedByHeatSource = compressor;
         resistiveElementBottom->followedByHeatSource = compressor;

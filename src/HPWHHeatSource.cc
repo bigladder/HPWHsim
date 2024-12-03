@@ -19,17 +19,15 @@ HPWH::HeatSource::HeatSource(
     const std::shared_ptr<Courier::Courier> courier_in /*std::make_shared<DefaultCourier>()*/,
     const std::string& name_in)
     : Sender("HeatSource", name_in, courier_in)
+    , lockedOut(false)
     , hpwh(hpwh_in)
     , isOn(false)
-    , lockedOut(false)
     , backupHeatSource(NULL)
     , companionHeatSource(NULL)
     , followedByHeatSource(NULL)
     , standbyLogic(NULL)
     , minT(-273.15)
     , maxT(100.)
-    , maxSetpoint_C(100.)
-    , hysteresis_dC(0)
     , airflowFreedom(1.0)
     , externalInletHeight(-1)
     , externalOutletHeight(-1)
@@ -49,7 +47,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
     hpwh = hSource.hpwh;
 
     isOn = hSource.isOn;
-    lockedOut = hSource.lockedOut;
 
     runtime_min = hSource.runtime_min;
     energyInput_kWh = hSource.energyInput_kWh;
@@ -79,9 +76,6 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 
     minT = hSource.minT;
     maxT = hSource.maxT;
-
-    hysteresis_dC = hSource.hysteresis_dC;
-    maxSetpoint_C = hSource.maxSetpoint_C;
 
     depressesTemperature = hSource.depressesTemperature;
     airflowFreedom = hSource.airflowFreedom;
@@ -230,105 +224,6 @@ int HPWH::HeatSource::findParent() const
 
 bool HPWH::HeatSource::isEngaged() const { return isOn; }
 
-bool HPWH::HeatSource::isLockedOut() const { return lockedOut; }
-
-void HPWH::HeatSource::lockOutHeatSource() { lockedOut = true; }
-
-void HPWH::HeatSource::unlockHeatSource() { lockedOut = false; }
-
-bool HPWH::HeatSource::shouldLockOut(double heatSourceAmbientT_C) const
-{
-
-    // if it's already locked out, keep it locked out
-    if (isLockedOut())
-    {
-        return true;
-    }
-    else
-    {
-        // when the "external" temperature is too cold - typically used for compressor low temp.
-        // cutoffs when running, use hysteresis
-        bool lock = false;
-        if (isEngaged() && (heatSourceAmbientT_C < minT - hysteresis_dC))
-        {
-            lock = true;
-        }
-        // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C < minT))
-        {
-            lock = true;
-        }
-
-        // when the "external" temperature is too warm - typically used for resistance lockout
-        // when running, use hysteresis
-        if (isEngaged() && (heatSourceAmbientT_C > maxT + hysteresis_dC))
-        {
-            lock = true;
-        }
-        // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C > maxT))
-        {
-            lock = true;
-        }
-
-        if (maxedOut())
-        {
-            lock = true;
-            send_warning(fmt::format("lock-out: condenser water temperature above max: {:0.2f}",
-                                     maxSetpoint_C));
-        }
-
-        return lock;
-    }
-}
-
-bool HPWH::HeatSource::shouldUnlock(double heatSourceAmbientT_C) const
-{
-
-    // if it's already unlocked, keep it unlocked
-    if (!isLockedOut())
-    {
-        return true;
-    }
-    // if the heat source is capped and can't produce hotter water
-    else if (maxedOut())
-    {
-        return false;
-    }
-    else
-    {
-        // when the "external" temperature is no longer too cold or too warm
-        // when running, use hysteresis
-        bool unlock = false;
-        if (isEngaged() && (heatSourceAmbientT_C > minT + hysteresis_dC) &&
-            (heatSourceAmbientT_C < maxT - hysteresis_dC))
-        {
-            unlock = true;
-        }
-        // when not running, don't use hysteresis
-        else if (!isEngaged() && (heatSourceAmbientT_C > minT) && (heatSourceAmbientT_C < maxT))
-        {
-            unlock = true;
-        }
-        return unlock;
-    }
-}
-
-bool HPWH::HeatSource::toLockOrUnlock(double heatSourceAmbientT_C)
-{
-
-    if (shouldLockOut(heatSourceAmbientT_C))
-    {
-        lockOutHeatSource();
-    }
-    if (shouldUnlock(heatSourceAmbientT_C))
-    {
-        unlockHeatSource();
-    }
-
-    return isLockedOut();
-}
-
 void HPWH::HeatSource::engageHeatSource(DRMODES DR_signal)
 {
     isOn = true;
@@ -414,22 +309,6 @@ bool HPWH::HeatSource::shutsOff() const
     return shutOff;
 }
 
-bool HPWH::HeatSource::maxedOut() const
-{
-    bool maxed = false;
-
-    // If the heat source can't produce water at the setpoint and the control logics are saying to
-    // shut off
-    if (hpwh->setpoint_C > maxSetpoint_C)
-    {
-        if (hpwh->tank->nodeTs_C[0] >= maxSetpoint_C || shutsOff())
-        {
-            maxed = true;
-        }
-    }
-    return maxed;
-}
-
 double HPWH::HeatSource::fractToMeetComparisonExternal() const
 {
     double fracTemp;
@@ -443,7 +322,7 @@ double HPWH::HeatSource::fractToMeetComparisonExternal() const
     return frac;
 }
 
-double HPWH::HeatSource::heat(double cap_kJ)
+double HPWH::HeatSource::heat(double cap_kJ, const double maxSetpointT_C)
 {
     std::vector<double> heatDistribution;
 
@@ -459,7 +338,7 @@ double HPWH::HeatSource::heat(double cap_kJ)
         {
             double heatToAdd_kJ = nodeCap_kJ + leftoverCap_kJ;
             // add leftoverCap to the next run, and keep passing it on
-            leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpoint_C);
+            leftoverCap_kJ = hpwh->addHeatAboveNode(heatToAdd_kJ, i, maxSetpointT_C);
         }
     }
     return leftoverCap_kJ;

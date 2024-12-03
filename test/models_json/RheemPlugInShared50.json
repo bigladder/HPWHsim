@@ -106,7 +106,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 5.0,
-              "tank_node_specification": "TOP_NODE"
+              "standby_temperature_location": "TOP_OF_TANK"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }

@@ -4,6 +4,10 @@
    "number": 108
  },
  {
+   "name": "AOSmithHPTS40",
+   "number": 1100
+ },
+ {
    "name": "AOSmithHPTS50",
    "number": 1101
  },
@@ -218,5 +222,21 @@
  {
    "name": "UEF2generic",
    "number": 173
- }
+ },
+ {
+   "name": "LG_APHWC50",
+   "number": 600
+ },
+ {
+		"name": "BradfordWhiteAeroThermRE2H50", 
+		"number": 500
+ },
+	{
+		"name": "BradfordWhiteAeroThermRE2H65",
+		"number": 501
+	},
+	{
+		"name": "BradfordWhiteAeroThermRE2H80",
+		"number": 502
+	}
 ]
