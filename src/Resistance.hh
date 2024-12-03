@@ -31,6 +31,5 @@ class HPWH::Resistance : public HPWH::HeatSource
     void addHeat(double minutesToRun);
 
     bool toLockOrUnlock();
-
 };
 #endif
