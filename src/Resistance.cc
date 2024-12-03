@@ -93,4 +93,3 @@ bool HPWH::Resistance::toLockOrUnlock()
 
     return isLockedOut();
 }
-
