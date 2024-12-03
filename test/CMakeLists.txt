@@ -32,23 +32,6 @@ set(modelNames
         Rheem2020Build50
         #  RheemPlugInDedicated50
         )
-set(testNamesJSON
-        test30
-        test50
-        test70
-        test95
-        )
-set(modelNamesJSON
-        AOSmithHPTS50
-        AOSmithPHPT60
-        AOSmithHPTU80
-        RheemHB50
-        Stiebel220e
-        GE502014
-        Rheem2020Prem40
-        Rheem2020Prem50
-        Rheem2020Build50
-        )
 set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
@@ -56,7 +39,6 @@ set(lockoutTestModels
         Stiebel220e
         GE502014
         )
-
 set(yearTestsModels
         AOSmithHPTU80
         Sanden80
@@ -178,8 +160,8 @@ set(stateOfChargeCompressorNames
         )
 
 #
-set(Villara_AquaThermAireDir "Villara/AquaThermAire")
-set(Villara_AquaThermAireTests
+set(Villara_Models "AquaThermAire")
+set(Villara_AquaThermAire_Tests
         villara_24hr67
         )
 
@@ -258,11 +240,11 @@ endfunction()
 # Tests for regression differences against reference results
 function(add_regression_test)
     set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME COMPARE_SPEC_TYPE)
+    set(oneValueArgs TEST_NAME SPEC_TYPE MODEL_NAME COMPARE_SPEC_TYPE)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if (${ARG_COMPARE_SPEC_TYPE})
+    if (DEFINED ARG_COMPARE_SPEC_TYPE)
         set(compareSpecType ${ARG_COMPARE_SPEC_TYPE})
     else()
         set(compareSpecType ${ARG_SPEC_TYPE})
@@ -274,9 +256,18 @@ function(add_regression_test)
 
     set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}.${compareSpecType}")
 
+    # get subfolder name
+    string(REPLACE "/" ";" test_name_list "${ARG_TEST_NAME}")
+    list(LENGTH test_name_list ntest_name_terms)
+    if (ntest_name_terms GREATER 0)
+        list(GET test_name_list -1 test_prefix)
+    else()
+        set(test_prefix "${ARG_TEST_NAME}")
+    endif()
+
     add_test(NAME "${TEST_TITLE}" COMMAND ${CMAKE_COMMAND} -E compare_files
-            "${CMAKE_CURRENT_BINARY_DIR}/output/${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
-            "${CMAKE_CURRENT_SOURCE_DIR}/ref/${ARG_TEST_NAME}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
+            "${CMAKE_CURRENT_BINARY_DIR}/output/${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}.csv"
+            "${CMAKE_CURRENT_SOURCE_DIR}/ref/${test_prefix}_${compareSpecType}_${ARG_MODEL_NAME}.csv"
             )
     #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.File")
     #set_property(TEST "${TEST_TITLE}" APPEND PROPERTY DEPENDS "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.Preset")
@@ -291,7 +282,17 @@ function(add_plot_test)
 
     set(measurementsPath "${CMAKE_CURRENT_SOURCE_DIR}/${ARG_TEST_NAME}/measured.csv")
     if (EXISTS ${measurementsPath})
-        set(simulationOutputName "${ARG_TEST_NAME}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
+
+        # get subfolder name
+        string(REPLACE "/" ";" test_name_list "${ARG_TEST_NAME}")
+        list(LENGTH test_name_list ntest_name_terms)
+        if (ntest_name_terms GREATER 0)
+            list(GET test_name_list -1 test_prefix)
+        else()
+            set(test_prefix "${ARG_TEST_NAME}")
+        endif()
+
+        set(simulationOutputName "${test_prefix}_${ARG_SPEC_TYPE}_${ARG_MODEL_NAME}")
         set(simulationOutputPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.csv")
         set(simulationPlotPath "${CMAKE_CURRENT_BINARY_DIR}/output/${simulationOutputName}.html")
 
@@ -312,18 +313,23 @@ foreach (test ${testNames})
 endforeach (test)
 
 #Test(s) specifically for Villara AquaThermAire model
-foreach (model ${VillaraModels})
-    foreach (test "${model}_Tests")
+foreach (model ${Villara_Models})
+    foreach (test "${Villara_${model}_Tests}")
         add_model_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
+
+## Plot test
+add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
 
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
         add_model_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
 
@@ -332,14 +338,9 @@ foreach (model ${LG_Models})
     foreach (test "${LG_${model}_Tests}")
         add_model_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
-
-foreach (test ${testNamesJSON})
-    foreach (model ${modelNamesJSON})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
-    endforeach (model)
-endforeach (test)
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
@@ -362,10 +363,15 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-## Plot test
-add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
-
 ## Regression tests
+#Add general 24-h tests
+foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
 #Add max temp tests to the regression list
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
@@ -387,11 +393,30 @@ foreach (test ${stateOfChargeTests})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for Villara AquaThermAire model
-foreach (model ${VillaraModels})
-    foreach (test "${model}_Tests")
-        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "AquaThermAire" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+#Regression test(s) specifically for Villara model(s)
+foreach (model ${Villara_Models})
+    foreach (test "${Villara_${model}_Tests}")
+        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "Villara/${model}/${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (model)
+
+#Regression test(s) specifically for BradfordWhite model(s)
+foreach (model ${BradfordWhiteModels})
+    foreach (test "${BradfordWhite${model}_Tests}")
+        add_regression_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "BradfordWhite/${model}/${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+    endforeach (test)
+endforeach (model)
+
+#Regression test(s) specifically for LG model(s)
+foreach (model ${LG_Models})
+    foreach (test "${LG_${model}_Tests}")
+        add_regression_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "LG/${model}/${test}" MODEL_NAME "LG_${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
     endforeach (test)
 endforeach (model)
 

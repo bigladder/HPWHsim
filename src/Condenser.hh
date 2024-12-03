@@ -38,6 +38,22 @@ class HPWH::Condenser : public HPWH::HeatSource
     void defrostDerate(double& to_derate, double airT_C);
     /**< Derates the COP of a system based on the air temperature */
 
+    bool maxedOut() const override;
+
+    bool toLockOrUnlock(double heatSourceAmbientT_C);
+
+    bool shouldLockOut(double heatSourceAmbientT_C) const;
+
+    bool shouldUnlock(double heatSourceAmbientT_C) const;
+
+    double hysteresis_dC;
+    /**< a hysteresis term that prevents short cycling due to heat pump self-interaction
+      when the heat source is engaged, it is subtracted from lowT cutoffs and
+      added to lowTreheat cutoffs */
+
+    double maxSetpoint_C;
+    /**< the maximum setpoint of the heat source can create, used for compressors predominately */
+
     bool useBtwxtGrid;
 
     // start with a few type definitions
@@ -196,6 +212,8 @@ class HPWH::Condenser : public HPWH::HeatSource
     /**< sorts the Performance Map by increasing external temperatures */
 
     void addHeat(double externalT_C, double minutesToRun);
+
+    double getMaxSetpointT_C() const { return maxSetpoint_C; }
 };
 
 #endif

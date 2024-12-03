@@ -26,8 +26,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 2250.0,
-            "resistance_lockout_temperature_hysteresis": 0.0
+            "input_power": 2250.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -72,8 +71,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 2250.0,
-            "resistance_lockout_temperature_hysteresis": 1.1111111111111112
+            "input_power": 2250.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -180,7 +178,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 5.0,
-              "tank_node_specification": "TOP_NODE"
+              "standby_temperature_location": "TOP_OF_TANK"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }
