@@ -25,8 +25,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
-            "resistance_lockout_temperature_hysteresis": 0.0
+            "input_power": 4500.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -68,8 +67,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4000.0,
-            "resistance_lockout_temperature_hysteresis": 1.1111111111111112
+            "input_power": 4000.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -112,6 +110,9 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 0.0,
+            "maximum_refrigerant_temperature": 344.26111111111106,
+            "maximum_temperature": 373.15,
+            "minimum_temperature": 275.92777777777775,
             "performance_map": {
               "grid_variables": {
                 "evaporator_environment_dry_bulb_temperature": [
@@ -159,7 +160,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 6.884444444444444,
-              "tank_node_specification": "TOP_NODE"
+              "standby_temperature_location": "TOP_OF_TANK"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }
