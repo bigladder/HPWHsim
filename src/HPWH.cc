@@ -4130,20 +4130,20 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     checkFrom(setpoint_C, j_tank, "setpoint_C", 51.7);
     checkFrom(setpointFixed, j_tank, "setpoint_fixed", false);
 
-    auto num_heat_sources = j_heatsourceconfigs.size();
+    int num_heat_sources = j_heatsourceconfigs.size();
     heatSources.reserve(num_heat_sources);
 
     std::unordered_map<int, int> heat_source_lookup;
     heat_source_lookup.reserve(num_heat_sources);
 
-    for (std::size_t iconfig = 0; iconfig < num_heat_sources; ++iconfig)
+    for (int iconfig = 0; iconfig < num_heat_sources; ++iconfig)
     {
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
         int heatsource_index = j_heatsourceconfig["index"];
         heat_source_lookup[heatsource_index] = iconfig;
     }
 
-    for (std::size_t heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
+    for (int heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
     {
         int iconfig = heat_source_lookup[heatsource_index];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
@@ -4301,7 +4301,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
     }
 
     //
-    for (std::size_t heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
+    for (int heatsource_index = 0; heatsource_index < num_heat_sources; ++heatsource_index)
     {
         auto iconfig = heat_source_lookup[heatsource_index];
         auto& j_heatsourceconfig = j_heatsourceconfigs[iconfig];
@@ -4443,7 +4443,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     checkInputs();
     resetTankToSetpoint();
     isHeating = false;
-    for (int i = 0; i < getNumHeatSources(); i++)
+    for (auto i = 0; i < getNumHeatSources(); i++)
     {
         if (heatSources[i]->isOn)
         {
