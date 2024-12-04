@@ -54,7 +54,6 @@ heatsource 1 copT1quad 0.0
 heatsource 1 copT2const 1.0
 heatsource 1 copT2lin 0.0
 heatsource 1 copT2quad 0.0
-heatsource 1 hysteresis 0 F
 heatsource 1 coilConfig submerged
 
 

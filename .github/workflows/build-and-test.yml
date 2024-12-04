@@ -79,11 +79,11 @@ jobs:
           echo "STATIC_LIB=ON" >> $GITHUB_OUTPUT
           fi
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Install Poetry
-        run: pipx install poetry==1.7.1
+        run: pipx install poetry==1.8.1 --python python3.10
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE="${{ matrix.config }}" -D${{ env.REPOSITORY_NAME }}_BUILD_TESTING="ON" -D${{ env.REPOSITORY_NAME }}_STATIC_LIB="${{ steps.cov.outputs.STATIC_LIB }}" -D${{ env.REPOSITORY_NAME }}_COVERAGE="${{ steps.cov.outputs.COVERAGE }}"
       - name: Build
