@@ -61,7 +61,7 @@ body {font-family: Arial;}
 	  );
 	}
  
-	function set_menus(prefs)
+	function set_menu_values(prefs)
 	{
 	  const model_form = document.getElementById('model_form');
 	  const build_form = document.getElementById('build_form');
@@ -73,7 +73,7 @@ body {font-family: Arial;}
 		test_form.test_dir.value = ("test_dir" in prefs) ? prefs["test_dir"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
 	}
 
-	function get_menus()
+	function get_menu_values()
 	{
 	  const model_form = document.getElementById('model_form');
 	  const build_form = document.getElementById('build_form');
@@ -86,20 +86,9 @@ body {font-family: Arial;}
 		return prefs;
 	}
 
-	async function set_elements()
+	async function set_elements(prefs)
 	{
-		var prefs = await read_json_file("./prefs.json")
-		get_menus(prefs);
-
-		const model_index = await get_json("./model_index.json")
-
-		let select_model = document.querySelector("#model_name")
-		for (let model of model_index["models"]){
-		  let option = document.createElement("option");
-		  option.text = model["name"];
-		  option.value = model["name"];
-		  select_model.appendChild(option);
-		}
+		const model_index = await read_json_file("./model_index.json")
 
 		var model_names = []
 		var model_specs = []
@@ -113,16 +102,17 @@ body {font-family: Arial;}
 				if (model_name == prefs["model_name"])
 				{
 					if ("specs" in model)
-						for (let model_spec in model["specs"])
-							model_specs.push(model_spec);
+						for(let i = 0; i < model["specs"].length; i++)
+							model_specs.push(model["specs"][i]);
 				}
+			}
 		}
 
 		if (!(model_names.includes(prefs["model_name"])))
 			model_names = [model_names, prefs["model_name"]];
 			
-		if (!(model_specs.includes(pref_model_spec)))
-			model_specs = [model_specs, pref_model_spec];
+		if (!(model_specs.includes(prefs["model_spec"])))
+			prefs["model_spec"] = model_specs[0];
 
 		// set model_name control
 		let select_model = document.getElementById('model_name');//document.querySelector("#model_name")
@@ -148,28 +138,22 @@ body {font-family: Arial;}
 		  select_model_spec.appendChild(option);
 		}
 
-		set_menus(prefs);
+		set_menu_values(prefs);
+		await write_json_file("./prefs.json", prefs)
 	}
-}
+
+	async function change_menu_value()
+	{
+		prefs = get_menu_values();
+		set_elements(prefs)
+	}
+
+	async function init_elements()
+	{
+		var prefs = await read_json_file("./prefs.json")
+		set_elements(prefs)
+	}
 </script>
-
-<form id="model_form">
-    <label for="model_name">model name:</label>
-		<select name="model_name" id="model_name" style="width: 400px" onclick="select_model"> 
- 		</select><br><br>
-
-    <label for="model_spec">model spec:</label>
-	  <select name="model_spec" id="model_spec" style="width: 150px" onclick="select_model_spec">    
-	    <option selected="selected" value="File">File</option>
-			<option value="Preset">Preset</option>
-			<option value="JSON">JSON</option>
-	  </select><br><br>
-</form>
-
-<form id="build_form">
-    <label for="build_dir">build directory:</label>
-    <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
-</form>
 
 <script>
   async function test() {
@@ -268,6 +252,24 @@ body {font-family: Arial;}
 
 
 <!-- content -->
+<form id="model_form">
+    <label for="model_name">model name:</label>
+		<select name="model_name" id="model_name" style="width: 400px" onclick="change_menu_value();"> 
+ 		</select><br><br>
+
+    <label for="model_spec">model spec:</label>
+	  <select name="model_spec" id="model_spec" style="width: 150px">    
+	    <option selected="selected" value="File">File</option>
+			<option value="Preset">Preset</option>
+			<option value="JSON">JSON</option>
+	  </select><br><br>
+</form>
+
+<form id="build_form">
+    <label for="build_dir">build directory:</label>
+    <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
+</form>
+
 <button id="test_tab" class="collapsible">Test</button>
 <div class="content">
   <form id="test_form">
@@ -326,8 +328,8 @@ for (i = 0; i < coll.length; i++) {
 
 </body>
 
-set_elements().then({},{})
-
+<script>
+init_elements().then({},{})
 </script>
 
 </html>
