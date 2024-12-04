@@ -259,7 +259,7 @@ class Plotter:
 				):
 					self.plot_graphs(variable_type, variable, value, row + 1)
 
-		self.plot.finalize_plot() 
+		self.plot.finalize_plot()
 		return self
 
 def plot(measured_path, simulated_path):
