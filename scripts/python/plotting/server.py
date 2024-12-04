@@ -57,20 +57,36 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			elif self.path.startswith('/read_json'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
-				response = {}
-				with open(filename) as json_file:
-					response = json.load(json_file)
+				content = {}
+				with open(filename, "r") as json_file:
+					content = json.load(json_file)
 					json_file.close()
 
 				self.send_response(200)
 				self.send_header("Content-type", "application/json")
-				self.send_header("Content-Length", str(len(dumps(response))))
+				self.send_header("Content-Length", str(len(dumps(content))))
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				
-				self.wfile.write(dumps(response).encode('utf-8'))
+				self.wfile.write(dumps(content).encode('utf-8'))
 				return
-			
+
+			elif self.path.startswith('/write_json'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+				filename = query_components.get('filename', [None])[0]
+				content = query_components.get('content', [None])[0]
+				response = {}
+				with open(filename, "w") as json_file:
+					json.write(content, json_file)
+					json_file.close()
+
+				self.send_response(200)
+				self.send_header("Content-type", "text/html")
+				self.send_header("Content-Length", 0)
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
+				return
+						
 			else:
 				super().do_GET()
 
