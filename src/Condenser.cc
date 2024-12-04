@@ -1023,22 +1023,22 @@ void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGri
 
     double maxPowerCurvature = 0.; // curvature used to determine # of points
     double maxCOPCurvature = 0.;
-    std::vector<double> envTempsOrig_K = {};
-    envTempsOrig_K.reserve(nEnvTempsOrig);
+    std::vector<double> envTemps_K = {};
+    envTemps_K.reserve(nEnvTempsOrig + 2);
+    envTemps_K.push_back(C_TO_K(minT));
     for (auto& perfPoint : perfMap)
     {
-        envTempsOrig_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
-        double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
-        double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
-        maxPowerCurvature =
-            magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
-        maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
+        if ((F_TO_C(perfPoint.T_F) > minT) && (F_TO_C(perfPoint.T_F) < maxT))
+        {
+            envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
+            double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
+            double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
+            maxPowerCurvature =
+                magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
+            maxCOPCurvature = magCOPCurvature > maxCOPCurvature ? magCOPCurvature : maxCOPCurvature;
+        }
     }
-
-    // adjust environment temperature vector
-    std::vector<double> envTemps_K = envTempsOrig_K;
-    envTempsOrig_K.front() = C_TO_K(minT);
-    envTempsOrig_K.back() = C_TO_K(maxT);
+    envTemps_K.push_back(C_TO_K(maxT));
     tempGrid.push_back(envTemps_K);
 
     // relate to reference values (from AOSmithPHPT60)

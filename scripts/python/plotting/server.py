@@ -74,10 +74,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			elif self.path.startswith('/write_json'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
-				content = query_components.get('content', [None])[0]
+				json_data = query_components.get('json_data', [None])[0]
 				response = {}
 				with open(filename, "w") as json_file:
-					json.write(content, json_file)
+					json.dump(json_data, json_file)
 					json_file.close()
 
 				self.send_response(200)
