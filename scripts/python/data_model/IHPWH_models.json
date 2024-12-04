@@ -116,12 +116,8 @@
    "number": 172
  },
  {
-   "name": "genericCustomUEF",
-   "number": 174
- },
- {
    "name": "GenericUEF217",
-   "number": 410
+   "number": 179
  },
  {
    "name": "restankRealistic",
@@ -214,10 +210,6 @@
  {
    "name": "Stiebel220E",
    "number": 160
- },
- {
-   "name": "StorageTank",
-   "number": 180
  },
  {
    "name": "UEF2generic",

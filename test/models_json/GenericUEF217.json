@@ -25,8 +25,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
-            "resistance_lockout_temperature_hysteresis": 0.0
+            "input_power": 4500.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -68,8 +67,7 @@
             "schema": "RSRESISTANCEWATERHEATSOURCE"
           },
           "performance": {
-            "input_power": 4500.0,
-            "resistance_lockout_temperature_hysteresis": 0.0
+            "input_power": 4500.0
           }
         },
         "heat_source_type": "RESISTANCE",
@@ -135,8 +133,10 @@
             "performance_map": {
               "grid_variables": {
                 "evaporator_environment_dry_bulb_temperature": [
+                  280.3722222222222,
                   283.15,
-                  292.59444444444443
+                  292.59444444444443,
+                  322.0388888888889
                 ],
                 "heat_source_temperature": [
                   273.15,
@@ -145,16 +145,24 @@
               },
               "lookup_variables": {
                 "heating_capacity": [
+                  1160.575832218223,
+                  570.1279412014787,
                   1175.9598211818447,
                   207.01305585570836,
                   1214.1043839120757,
-                  -1288.60737407244
+                  -1288.60737407244,
+                  1192.5515793278037,
+                  -8540.78398524378
                 ],
                 "input_power": [
+                  254.8386503529412,
+                  571.5113691764708,
                   249.136028,
                   598.2904880000001,
                   229.747112,
-                  689.3394920000002
+                  689.3394920000002,
+                  169.2993150588235,
+                  973.1981515294119
                 ]
               }
             }
@@ -179,7 +187,7 @@
             "comparison_type": "LESS_THAN",
             "heating_logic": {
               "differential_temperature": 6.111111111111111,
-              "tank_node_specification": "TOP_NODE"
+              "standby_temperature_location": "TOP_OF_TANK"
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }
