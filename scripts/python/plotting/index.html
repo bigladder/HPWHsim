@@ -191,6 +191,13 @@ body {font-family: Arial;}
 </script>
 
 <script>
+	async function callPyServer(cmd, fst)
+	{
+	  const response = await fetch('http://localhost:8000/' + cmd + 'test?' + fst);
+		data = await response.json();
+		return data;
+	}
+
   async function test() {
 
     const build_form = document.getElementById('build_form');
@@ -217,20 +224,14 @@ body {font-family: Arial;}
 					}
 
 		}
+    document.getElementById("test_btn").disabled = true;
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
     fst += '&test_dir=' + test_path + "/" + test_name;
     fst += '&build_dir=' + build_dir;
-    document.getElementById("test_btn").disabled = true;
 
-	  const response = await fetch('http://localhost:8000/test?' + fst,
-		{
-			method: 'GET'
-		}
-	  );
-
-    const test_results = await response.json();
+    let test_results = await callPyServer("test", fst)
     const energy_data = test_results["energy_data"];
 		const dash_port = test_results["port_num"];
 
@@ -260,7 +261,7 @@ body {font-family: Arial;}
 		const port_string = "http://localhost:" + dash_port
     document.getElementById("plots").src = port_string
     document.getElementById("plots").style = "display:block;"
-  
+
     document.getElementById("test_btn").disabled = false;
   }
 
@@ -292,11 +293,12 @@ body {font-family: Arial;}
     document.getElementById("build_dir").value = build_dir; 
     document.getElementById("draw_profile").value = draw_profile; 
 
-    document.getElementById("results").style="display:block;"
-		document.getElementById("results").height="1800px;"
-    document.getElementById("results").data = build_dir + "/test/output/results.txt";
+    document.getElementById("measure_results").style="display:block;"
+		document.getElementById("measure_results").height="1800px;"
+    document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
 
     document.getElementById("measure_btn").disabled = false;
+		document.getElementById("test_div").style = false;
   }
 </script>
 
@@ -315,6 +317,7 @@ body {font-family: Arial;}
 	  </select><br><br>
 </form>
 
+<!-- content -->
 <form id="build_form">
     <label for="build_dir">build directory:</label>
     <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
@@ -332,12 +335,11 @@ body {font-family: Arial;}
     <button type="button" id="test_btn" onclick="test();">test</button>
   </form>
 
-  <iframe title="plots" src="" id="plots" width=1200 height=1800 style="display:none;"></iframe>
+  <iframe title="plots" src="" id="plots" width=1200 height=1000 style="display:none;"></iframe>
 
   <p id="energy_measured"></p>
-  <p id="energy_simulated"></p> 
-
- </div>
+  <p id="energy_simulated"></p>
+</div>
 
 <!-- content -->
 <button id="measure_tab" class="collapsible">Measure</button>
@@ -355,7 +357,7 @@ body {font-family: Arial;}
     <button type="button" id="measure_btn" onclick="measure();">measure</button>
   </form>
 
-  <object id="results" data="" width=800 height=1800 style="display:none;"></object>
+  <object id="measure_results" data="" width=800 height=1800 style="display:none;"></object>
 </div>
 
 <script>
@@ -370,7 +372,7 @@ for (i = 0; i < coll.length; i++) {
       content.style.maxHeight = null;
     } else {
       if(this.id == "test_tab")
-        content.style.maxHeight = "1020px";
+        content.style.maxHeight = "2200px";
       else if(this.id == "measure_tab")
         content.style.maxHeight = "320px";
     } 
