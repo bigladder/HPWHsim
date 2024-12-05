@@ -1,18 +1,18 @@
 {
   "tests": [
-		{"group": "General tests", "test": "test30", "desc": "24h; 30F"},
-		{"group": "General tests", "test": "test50", "desc": "24h; 50F"},
-		{"group": "General tests", "test": "test70", "desc": "24h; 70F"},
-		{"group": "General tests", "test": "test95", "desc": "24h; 95F"},
-    {"group": "General tests", "test": "testLockout", "desc": "lockout"},
-		{"group": "General  tests", "test": "testSandenCombi", "desc": "SandenCombi"},
+		{"group": "General tests", "name": "test30", "desc": "24h; 30F"},
+		{"group": "General tests", "name": "test50", "desc": "24h; 50F"},
+		{"group": "General tests", "name": "test70", "desc": "24h; 70F"},
+		{"group": "General tests", "name": "test95", "desc": "24h; 95F"},
+    {"group": "General tests", "name": "testLockout", "desc": "lockout"},
+		{"group": "General  tests", "name": "testSandenCombi", "desc": "SandenCombi"},
 
-    {"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H50", "test": "RE2H50_UEF50", "desc": "24h; 50F"},
-		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H50", "test": "RE2H50_UEF67", "desc": "24h; 67F"},
-    {"group": "BradfordWhite_AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "test": "RE2H65_UEF50", "desc": "24h; 50F"},
-    {"group": "BradfordWhite_AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "test": "RE2H65_UEF67", "desc": "24h; 67F"},
-		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "test": "RE2H80_UEF50", "desc": "24h; 50F"},
-		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "test": "RE2H680_UEF67", "desc": "24h; 67F"},
+    {"group": "BradfordWhite AeroThermRE2H", "models": ["BradfordWhiteAeroThermRE2H50"], "name": "RE2H50_UEF50", "desc": "24h; 50F"},
+		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H50", "name": "RE2H50_UEF67", "desc": "24h; 67F"},
+    {"group": "BradfordWhite_AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "name": "RE2H65_UEF50", "desc": "24h; 50F"},
+    {"group": "BradfordWhite_AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H65", "name": "RE2H65_UEF67", "desc": "24h; 67F"},
+		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "name": "RE2H80_UEF50", "desc": "24h; 50F"},
+		{"group": "BradfordWhite AeroThermRE2H", "manufacturer": "BradfordWhite", "model": "AeroThermRE2H80", "name": "RE2H680_UEF67", "desc": "24h; 67F"},
 
 		{"group": "Villara_AquaThermAire", "manufacturer": "Villara", "model": "AquaThermAire", "test": "villara_24hr67", "desc": "24h; 67F"},
 
