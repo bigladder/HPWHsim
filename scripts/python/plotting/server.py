@@ -74,15 +74,16 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			elif self.path.startswith('/write_json'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 				filename = query_components.get('filename', [None])[0]
-				json_data = query_components.get('json_data', [None])[0]
-				response = {}
+				json_str = query_components.get('json_data', [None])[0]
+				print(json_str)
+				json_data = json.loads(json_str)
 				with open(filename, "w") as json_file:
+					#json_file.write(json_data)
 					json.dump(json_data, json_file)
 					json_file.close()
 
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
-				self.send_header("Content-Length", 0)
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return

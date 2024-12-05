@@ -53,8 +53,8 @@ body {font-family: Arial;}
 
 	async function write_json_file(filename, json_data) {
     fst = 'filename=' +  filename;
-		fst += '&json_data' + json_data;
-	  const response = await fetch('http://localhost:8000/write_json?' + fst,
+		fst += '&json_data=' + JSON.stringify(json_data);
+	  await fetch('http://localhost:8000/write_json?' + fst,
 		{
 			method: 'GET'
 		}
@@ -254,11 +254,11 @@ body {font-family: Arial;}
 <!-- content -->
 <form id="model_form">
     <label for="model_name">model name:</label>
-		<select name="model_name" id="model_name" style="width: 400px" onclick="change_menu_value();"> 
+		<select name="model_name" id="model_name" style="width: 400px" onchange="change_menu_value();"> 
  		</select><br><br>
 
     <label for="model_spec">model spec:</label>
-	  <select name="model_spec" id="model_spec" style="width: 150px">    
+	  <select name="model_spec" id="model_spec" style="width: 150px" onchange="change_menu_value();">    
 	    <option selected="selected" value="File">File</option>
 			<option value="Preset">Preset</option>
 			<option value="JSON">JSON</option>
