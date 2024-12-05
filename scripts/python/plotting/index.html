@@ -70,7 +70,7 @@ body {font-family: Arial;}
 		model_form.model_name.value = ("model_name" in prefs) ? prefs["model_name"] : "LG_APHWC50"
 		model_form.model_spec.value = ("model_spec" in prefs) ? prefs["model_spec"] : "Preset";
 		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
-		test_form.test_dir.value = ("test_dir" in prefs) ? prefs["test_dir"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
+		test_form.test_name.value = ("test_name" in prefs) ? prefs["test_name"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
 	}
 
 	function get_menu_values()
@@ -83,6 +83,7 @@ body {font-family: Arial;}
 		prefs["model_name"] = model_form.model_name.value;
 		prefs["model_spec"] = model_form.model_spec.value;
 		prefs["build_dir"] = build_form.build_dir.value;
+		prefs["test_name"] = test_form.test_name.value;
 		return prefs;
 	}
 
@@ -138,6 +139,40 @@ body {font-family: Arial;}
 		  select_model_spec.appendChild(option);
 		}
 
+		// get available tests
+		const test_index = await read_json_file("./test_index.json")
+		var test_names = []
+		// get test list from model_index
+		for (let test of test_index["tests"]){
+			if ("name" in test)
+			{
+				const test_name = test["name"];
+				if ("model" in test)
+				{
+					const model_name = test["model"];
+					if (model_name == prefs["model_name"])
+						test_names.push(test_name);
+				}
+				else
+					test_names.push(test_name);
+			}
+		}
+
+		if (!(test_names.includes(prefs["test_name"])))
+			prefs["test_name"] = test_names[0];
+
+		// set test_name control
+		let select_test = document.getElementById('test_name');//document.querySelector("#model_name")
+		while (select_test.hasChildNodes()) {
+		  select_test.removeChild(select_test.firstChild);
+		}
+		for (let test_name of test_names){
+		  let option = document.createElement("option");
+		  option.text = test_name;
+		  option.value = test_name;
+		  select_test.appendChild(option);
+		}
+
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
 	}
@@ -166,11 +201,26 @@ body {font-family: Arial;}
     const model_name = model_form.model_name.value;
 
     const test_form = document.getElementById('test_form');
-    const test_dir = test_form.test_dir.value;
+    const test_name = test_form.test_name.value;
+
+		// get test path
+		const test_index = await read_json_file("./test_index.json")
+		var test_path = ""
+		// get test list from model_index
+		for (let test of test_index["tests"]){
+			if ("name" in test)
+				if (test["name"] == test_name)
+					if("path" in test)
+					{
+						test_path = test["path"];
+						break;
+					}
+
+		}
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
-    fst += '&test_dir=' + test_dir;
+    fst += '&test_dir=' + test_path + "/" + test_name;
     fst += '&build_dir=' + build_dir;
     document.getElementById("test_btn").disabled = true;
 
@@ -194,18 +244,18 @@ body {font-family: Arial;}
 
     document.getElementById("model_spec").value = model_spec; 
     document.getElementById("model_name").value = model_name;
-    document.getElementById("test_dir").value = test_dir; 
+    document.getElementById("test_name").value = test_name; 
     document.getElementById("build_dir").value = build_dir; 
 
     document.getElementById("model_spec").defaultValue = model_spec; 
     document.getElementById("model_name").defaultValue = model_name; 
-    document.getElementById("test_dir").defaultValue = test_dir; 
+    document.getElementById("test_name").defaultValue = test_name; 
     document.getElementById("build_dir").defaultValue = build_dir; 
  
     localStorage.setItem("model_spec", model_spec);
     localStorage.setItem("model_name", model_name);
-    localStorage.setItem("test_dir", test_dir);
     localStorage.setItem("build_dir", build_dir);
+    localStorage.setItem("test_name", test_name);
 
 		const port_string = "http://localhost:" + dash_port
     document.getElementById("plots").src = port_string
@@ -270,12 +320,14 @@ body {font-family: Arial;}
     <input type="text" id="build_dir" name="build_dir" style="width: 400px" required><br><br>
 </form>
 
+<!-- content -->
 <button id="test_tab" class="collapsible">Test</button>
 <div class="content">
   <form id="test_form">
 
-    <label for="test_dir">test directory:</label>
-    <input type="text" id="test_dir" name="test_dir" style="width: 400px" required><br><br>
+    <label for="test_name">test name:</label>
+    <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
+		</select><br><br>
 
     <button type="button" id="test_btn" onclick="test();">test</button>
   </form>
