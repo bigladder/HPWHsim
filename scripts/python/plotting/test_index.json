@@ -7,18 +7,18 @@
     {"group": "General tests", "name": "testLockout", "desc": "lockout"},
 		{"group": "General  tests", "name": "testSandenCombi", "desc": "SandenCombi"},
 
-    {"group": "BradfordWhite AeroThermRE2H50", "model": "BradfordWhiteAeroThermRE2H50", "name": "RE2H50_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50"},
-		{"group": "BradfordWhite AeroThermRE2H50", "model": "BradfordWhiteAeroThermRE2H50", "name": "RE2H50_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H50"},
-    {"group": "BradfordWhite_AeroThermRE2H65", "model": "BradfordWhiteAeroThermRE2H65", "name": "RE2H65_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H65"},
-    {"group": "BradfordWhite_AeroThermRE2H65", "model": "BradfordWhiteAeroThermRE2H65", "name": "RE2H65_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H65"},
-		{"group": "BradfordWhite AeroThermRE2H80", "model": "BradfordWhiteAeroThermRE2H80", "name": "RE2H80_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H80"},
-		{"group": "BradfordWhite AeroThermRE2H80", "model": "BradfordWhiteAeroThermRE2H80", "name": "RE2H80_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H80"},
+    {"group": "BradfordWhite AeroThermRE2H50", "model": "BradfordWhiteAeroThermRE2H50", "name": "RE2H50_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50", "measured": "measured.csv"},
+		{"group": "BradfordWhite AeroThermRE2H50", "model": "BradfordWhiteAeroThermRE2H50", "name": "RE2H50_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H50", "measured": "measured.csv"},
+    {"group": "BradfordWhite_AeroThermRE2H65", "model": "BradfordWhiteAeroThermRE2H65", "name": "RE2H65_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H65", "measured": "measured.csv"},
+    {"group": "BradfordWhite_AeroThermRE2H65", "model": "BradfordWhiteAeroThermRE2H65", "name": "RE2H65_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H65", "measured": "measured.csv"},
+		{"group": "BradfordWhite AeroThermRE2H80", "model": "BradfordWhiteAeroThermRE2H80", "name": "RE2H80_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H80", "measured": "measured.csv"},
+		{"group": "BradfordWhite AeroThermRE2H80", "model": "BradfordWhiteAeroThermRE2H80", "name": "RE2H80_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H80", "measured": "measured.csv"},
 
-		{"group": "Villara_AquaThermAire", "name": "villara_24hr67", "model": "AquaThermAire", "desc": "24h; 67F", "path": "Villara/AquaThermAire"},
+		{"group": "Villara_AquaThermAire", "name": "villara_24hr67", "model": "AquaThermAire", "desc": "24h; 67F", "path": "Villara/AquaThermAire", "measured": "measured.csv"},
 
-		{"group": "LG", "name": "DOE2014_LGC50_24hr50", "model": "LG_APHWC50", "desc": "24h; 50F", "path": "LG/APHWC50"},
-		{"group": "LG", "name": "DOE2014_LGC50_24hr67", "model": "LG_APHWC50", "desc": "24h; 67F", "path": "LG/APHWC50"},
-		{"group": "LG", "name": "DOE2014_LGC50_24hr95", "model": "LG_APHWC50", "desc": "24h; 95F", "path": "LG/APHWC50"},
+		{"group": "LG", "name": "DOE2014_LGC50_24hr50", "model": "LG_APHWC50", "desc": "24h; 50F", "path": "LG/APHWC50", "measured": "measured.csv"},
+		{"group": "LG", "name": "DOE2014_LGC50_24hr67", "model": "LG_APHWC50", "desc": "24h; 67F", "path": "LG/APHWC50", "measured": "measured.csv"},
+		{"group": "LG", "name": "DOE2014_LGC50_24hr95", "model": "LG_APHWC50", "desc": "24h; 95F", "path": "LG/APHWC50", "measured": "measured.csv"},
 
 		{"group": "Custom tests", "name": "testA", "path": "custom_tests"},
 		{"group": "Custom tests", "name": "testB", "path": "custom_tests"},

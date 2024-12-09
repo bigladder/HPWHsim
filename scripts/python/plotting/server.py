@@ -26,6 +26,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					model_name = query_components.get('model_name', [None])[0]
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
+					print(model_name)
+					print(test_dir)
 
 					response = main.call_test(model_spec, model_name, test_dir, build_dir)
 
