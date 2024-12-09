@@ -18,7 +18,7 @@ def call_test(model_spec, model_name, test_dir, build_dir):
     abs_build_dir = str(Path.cwd())
     os.chdir(orig_dir)
     
-    os.chdir("../../test")
+    os.chdir("../../../test")
     abs_test_dir = str(Path.cwd())
     os.chdir(orig_dir)
     

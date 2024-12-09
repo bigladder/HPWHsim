@@ -63,19 +63,19 @@ heatsource 2 condensity 1 0 0
 
 heatsource 2 nTemps 2
 heatsource 2 T1 50 F
-heatsource 2 inPowT1const 148
-heatsource 2 inPowT1lin 2
+heatsource 2 inPowT1const 120
+heatsource 2 inPowT1lin 2.45
 heatsource 2 inPowT1quad 0
-heatsource 2 copT1const 5.88
-heatsource 2 copT1lin -0.024
+heatsource 2 copT1const 6.3
+heatsource 2 copT1lin -0.030
 heatsource 2 copT1quad 0.0
 
 heatsource 2 T2 70 F
-heatsource 2 inPowT2const 110
-heatsource 2 inPowT2lin 2.5
+heatsource 2 inPowT2const 124
+heatsource 2 inPowT2lin 2.45
 heatsource 2 inPowT2quad 0
 heatsource 2 copT2const 6.8
-heatsource 2 copT2lin -0.0323
+heatsource 2 copT2lin -0.030
 heatsource 2 copT2quad 0.0
 
 heatsource 2 minT 37 F
@@ -88,7 +88,7 @@ heatsource 0 onlogic fourthSixth 32 F
 
 heatsource 1 offlogic bottomTwelfthMaxTemp 86.1 F
 
-heatsource 2 onlogic bottomThird 30 F
+heatsource 2 onlogic bottomThird 25 F
 heatsource 2 onlogic standby 12.392 F
 
 #relative
