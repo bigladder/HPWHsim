@@ -5,8 +5,8 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "companion_heat_source_id": "compressor",
-        "followed_by_heat_source_id": "compressor",
+        "companion_heat_source_id": "2",
+        "followed_by_heat_source_id": "2",
         "heat_distribution": [
           0.0,
           0.0,
@@ -30,12 +30,12 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "id": "resistiveElementTop",
+        "id": "0",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 18.88888888888889,
+              "differential_temperature": 20.555555555555554,
               "temperature_weight_distribution": [
                 0.0,
                 0.0,
@@ -47,8 +47,8 @@
         ]
       },
       {
-        "backup_heat_source_id": "compressor",
-        "followed_by_heat_source_id": "compressor",
+        "backup_heat_source_id": "2",
+        "followed_by_heat_source_id": "2",
         "heat_distribution": [
           1.0,
           0.0,
@@ -72,10 +72,10 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "id": "resistiveElementBottom"
+        "id": "1"
       },
       {
-        "backup_heat_source_id": "resistiveElementBottom",
+        "backup_heat_source_id": "1",
         "heat_distribution": [
           0.17,
           0.166,
@@ -97,7 +97,7 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
-            "maximum_refrigerant_temperature": 373.15,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 268.15,
             "performance_map": {
@@ -111,45 +111,45 @@
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  373.15
+                  344.26111111111106
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  -1101.1264653061226,
-                  6496.714677551023,
-                  638.4,
-                  1709.3999999999999,
-                  660.4400000000002,
-                  -448.36000000000206,
-                  675.1974737400002,
-                  -3604.678407659998,
-                  101.56458214330486,
-                  -7063.182565769093
+                  401.1877877551019,
+                  785.6600816326526,
+                  557.6,
+                  1427.9999999999995,
+                  393.86,
+                  1536.8999999999999,
+                  413.44,
+                  2067.1999999999994,
+                  347.413553719008,
+                  2465.4644628099168
                 ],
                 "input_power": [
-                  334.83428571428567,
-                  613.0628571428572,
-                  182.4,
-                  488.4,
-                  83.59999999999997,
-                  407.6,
-                  42.07800000000001,
-                  457.69800000000004,
-                  4.330727272727231,
-                  503.24163636363653
+                  287.7371428571429,
+                  563.4857142857142,
+                  164.0,
+                  419.9999999999999,
+                  83.79999999999998,
+                  326.9999999999999,
+                  60.8,
+                  303.9999999999999,
+                  39.890909090909055,
+                  283.09090909090895
                 ]
               }
             }
           }
         },
         "heat_source_type": "CONDENSER",
-        "id": "compressor",
+        "id": "2",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 29.27777777777778,
+              "differential_temperature": 29.388888888888886,
               "temperature_weight_distribution": [
                 1.0,
                 0.0,
@@ -169,7 +169,7 @@
         ]
       }
     ],
-    "primary_heat_source_id": "resistiveElementTop",
+    "primary_heat_source_id": "0",
     "tank": {
       "metadata": {
         "schema": "RSTANK"

@@ -14,7 +14,7 @@ def measure(model_spec, model_name, build_dir):
     abs_build_dir = str(Path.cwd())
     os.chdir(orig_dir)
 
-    os.chdir("../../test")
+    os.chdir("../../../test")
         
     app_cmd = os.path.join(abs_build_dir , 'src', 'hpwh', 'hpwh')
     output_dir = os.path.join(abs_build_dir , "test", "output")

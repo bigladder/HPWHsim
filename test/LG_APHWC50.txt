@@ -71,28 +71,28 @@ heatsource 2 T1 50 F
 heatsource 2 T2 67.5 F
 heatsource 2 T3 95 F
 
-heatsource 2 inPowT1const 128
-heatsource 2 inPowT1lin 1.7
+heatsource 2 inPowT1const 100
+heatsource 2 inPowT1lin 2.0
 heatsource 2 inPowT1quad 0
 
-heatsource 2 copT1const 3.5
+heatsource 2 copT1const 3.4
 heatsource 2 copT1lin 0
 heatsource 2 copT1quad 0
 
-heatsource 2 inPowT2const 26
-heatsource 2 inPowT2lin 1.8
+heatsource 2 inPowT2const 23
+heatsource 2 inPowT2lin 1.9
 heatsource 2 inPowT2quad 0
 
-heatsource 2 copT2const 9.5
-heatsource 2 copT2lin -0.05
+heatsource 2 copT2const 4.7
+heatsource 2 copT2lin 0
 heatsource 2 copT2quad 0.0
 
-heatsource 2 inPowT3const -31.81
-heatsource 2 inPowT3lin 2.309
+heatsource 2 inPowT3const 0
+heatsource 2 inPowT3lin 1.9
 heatsource 2 inPowT3quad 0
 
-heatsource 2 copT3const 20.29913
-heatsource 2 copT3lin -0.1329
+heatsource 2 copT3const 6.8
+heatsource 2 copT3lin 0
 heatsource 2 copT3quad 0.0
 
 heatsource 2 minT 23 F
@@ -102,9 +102,9 @@ heatsource 2 coilConfig wrapped
 
 
 #this might be better as the 5/6 layer at 20F below setpoint
-heatsource 0 onlogic topThird 34.0 F
+heatsource 0 onlogic topThird 37.0 F
 
-heatsource 2 onlogic bottomThird 52.7 F 
+heatsource 2 onlogic bottomThird 52.9 F
 heatsource 2 onlogic standby 9.0 F
 
 heatsource 1 backupSource 2
