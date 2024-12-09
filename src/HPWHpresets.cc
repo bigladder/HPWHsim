@@ -4448,26 +4448,46 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->perfMap.reserve(3);
 
+        double dPin_dT = 2.5;
+        double dcop_dT = -0.01;
+        double Ts_op = 60.;
+
+        double Pin50_op = 200;
+        double cop50_op = 3.8;
+        double Pin50_0 = Pin50_op - dPin_dT * (Ts_op);
+        double cop50_0 = cop50_op - dcop_dT * (Ts_op);
+
+        double Pin67_op = 130;
+        double cop67_op = 4.7;
+        double Pin67_0 = Pin67_op - dPin_dT * (Ts_op);
+        double cop67_0 = cop67_op - dcop_dT * (Ts_op);
+
+        double Pin95_op = 120;
+        double cop95_op = 7.0;
+        double Pin95_0 = Pin95_op - dPin_dT * (Ts_op);
+        double cop95_0 = cop95_op - dcop_dT * (Ts_op);
+
         compressor->perfMap.push_back({
             50,             // Temperature (F)
-            {100, 2.0, 0.}, // Input Power Coefficients (kW)
-            {3.4, 0., 0.}   // COP Coefficients
+            {Pin50_0, dPin_dT, 0.}, // Input Power Coefficients (W)
+            {cop50_0, dcop_dT, 0.}   // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             67.5,           // Temperature (F)
-            {23., 1.9, 0.}, // Input Power Coefficients (kW)
-            {4.7, 0., 0.}   // COP Coefficients
+            {Pin67_0, dPin_dT, 0.}, // Input Power Coefficients (W)
+            {cop67_0, dcop_dT, 0.}   // COP Coefficients
         });
 
         compressor->perfMap.push_back({
             95,            // Temperature (F)
-            {0., 1.9, 0.}, // Input Power Coefficients (kW)
-            {6.8, 0., 0.}  // COP Coefficients
+            {Pin95_0, dPin_dT, 0.}, // Input Power Coefficients (W)
+            {cop95_0, dcop_dT, 0.}  // COP Coefficients
         });
 
         compressor->minT = F_TO_C(23);
         compressor->maxT = F_TO_C(120.);
+        compressor->maxSetpoint_C = MAXOUTLET_R134A;
         compressor->hysteresis_dC = dF_TO_dC(1);
         compressor->configuration = Condenser::CONFIG_WRAPPED;
 
@@ -4476,7 +4496,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         // top resistor values
         resistiveElementTop->setup(8, 5000.);
-        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(37.)));
+        resistiveElementTop->addTurnOnLogic(topThird(dF_TO_dC(39.)));
         resistiveElementTop->isVIP = true;
 
         // bottom resistor values
