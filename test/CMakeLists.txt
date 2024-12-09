@@ -367,6 +367,11 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
     endforeach (test)
 endforeach (size)
 
+#Test(s) specifically for Bradford White AeroTherm model
+foreach (test ${LG_APHWC50_Tests})
+	add_regression_test(TEST_NAME "${test}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
+endforeach (test)
+
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
