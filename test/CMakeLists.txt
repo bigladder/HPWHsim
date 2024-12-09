@@ -178,6 +178,7 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         )
 
 #
+set(LG_models LG_APHWC50 LG_APHWC80)
 set(LG_APHWC50Dir "LG/LG_APHWC50")
 set(LG_APHWC50_Tests
         DOE2014_LGC50_24hr50
@@ -276,11 +277,13 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
 endforeach (size)
 
 #Test(s) specifically for LG APHWC50 model
-foreach (test ${LG_APHWC50_Tests})
+foreach(model ${LG_Models})
+	foreach (test ${LG_APHWC50_Tests})
     set(fullTestName "${LG_APHWC50Dir}/${test}")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
-    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "File")
-endforeach (test)
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+    add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+	endforeach (test)
+endforeach (model)
 
 add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "villara_24hr67" )
 
