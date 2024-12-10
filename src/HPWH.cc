@@ -4120,6 +4120,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_LG_APHWC50;
     }
+    else if (modelName == "LG_APHWC80")
+    {
+        model = HPWH::MODELS_LG_APHWC80;
+    }
     else
     {
         model = HPWH::MODELS_basicIntegrated;
