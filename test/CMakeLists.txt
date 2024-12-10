@@ -178,9 +178,9 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         )
 
 #
-set(LG_models LG_APHWC50 LG_APHWC80)
-set(LG_APHWC50Dir "LG/LG_APHWC50")
-set(LG_APHWC50_Tests
+set(LG_Models LG_APHWC50 LG_APHWC80)
+set(LG_TestDir "LG/LG_APHWC50")
+set(LG_Tests
         DOE2014_LGC50_24hr50
         DOE2014_LGC50_24hr67
         DOE2014_LGC50_24hr95
@@ -278,8 +278,8 @@ endforeach (size)
 
 #Test(s) specifically for LG APHWC50 model
 foreach(model ${LG_Models})
-	foreach (test ${LG_APHWC50_Tests})
-    set(fullTestName "${LG_APHWC50Dir}/${test}")
+	foreach (test ${LG_Tests})
+    set(fullTestName "${LG_TestDir}/${test}")
     add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
 	endforeach (test)
@@ -327,9 +327,11 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
 endforeach (size)
 
 #Test(s) for heat-exchange models
-foreach (test ${LG_APHWC50Tests})
-    add_file_test(TEST_NAME "${test}" MODEL_NAME "LG_APHWC50")
-endforeach (test)
+foreach(model ${LG_Models})
+	foreach (test ${LG_Tests})
+    add_file_test(TEST_NAME "${test}" MODEL_NAME "${model}")
+	endforeach (test)
+endforeach (model)
 
 # Tests for regression differences against reference results
 function(add_regression_test)
@@ -371,9 +373,11 @@ foreach (size ${BradfordWhiteAeroThermRE2HSizes})
 endforeach (size)
 
 #Test(s) specifically for Bradford White AeroTherm model
-foreach (test ${LG_APHWC50_Tests})
-	add_regression_test(TEST_NAME "${test}" MODEL_NAME "LG_APHWC50" SPEC_TYPE "Preset")
-endforeach (test)
+foreach(model ${LG_Models})
+	foreach (test ${LG_Tests})
+		add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+	endforeach (test)
+endforeach (model)	
 
 #Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
