@@ -4490,13 +4490,21 @@ void HPWH::initPreset(MODELS presetNum)
         resistiveElementTop->followedByHeatSource = resistiveElementBottom;
         resistiveElementBottom->followedByHeatSource = compressor;
     }
-    else if (presetNum == MODELS_LG_APHWC50)
+    else if ((presetNum == MODELS_LG_APHWC50) || (presetNum == MODELS_LG_APHWC80))
     { //
         setNumNodes(12);
         setpoint_C = F_TO_C(125.);
 
-        tankVolume_L = GAL_TO_L(52.8);
-        tankUA_kJperHrC = 7.78;
+        if (presetNum == MODELS_LG_APHWC50)
+        {
+            tankVolume_L = GAL_TO_L(52.8);
+            tankUA_kJperHrC = 7.78;
+        }
+        else if (presetNum == MODELS_LG_APHWC80)
+        {
+            tankVolume_L = GAL_TO_L(72.0);
+            tankUA_kJperHrC = 10.83;
+        }
 
         doTempDepression = false;
         tankMixesOnDraw = false;
