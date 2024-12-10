@@ -5,8 +5,8 @@
   "performance": {
     "heat_source_configurations": [
       {
-        "companion_heat_source_id": "2",
-        "followed_by_heat_source_id": "2",
+        "companion_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
         "heat_distribution": [
           0.0,
           0.0,
@@ -30,12 +30,12 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "id": "0",
+        "id": "resistiveElementTop",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 20.555555555555554,
+              "differential_temperature": 21.666666666666668,
               "temperature_weight_distribution": [
                 0.0,
                 0.0,
@@ -47,8 +47,8 @@
         ]
       },
       {
-        "backup_heat_source_id": "2",
-        "followed_by_heat_source_id": "2",
+        "backup_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
         "heat_distribution": [
           1.0,
           0.0,
@@ -72,10 +72,10 @@
           }
         },
         "heat_source_type": "RESISTANCE",
-        "id": "1"
+        "id": "resistiveElementBottom"
       },
       {
-        "backup_heat_source_id": "1",
+        "backup_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
           0.17,
           0.166,
@@ -116,35 +116,35 @@
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  401.1877877551019,
-                  785.6600816326526,
-                  557.6,
-                  1427.9999999999995,
-                  393.86,
-                  1536.8999999999999,
-                  413.44,
-                  2067.1999999999994,
-                  347.413553719008,
-                  2465.4644628099168
+                  668.7649616326531,
+                  566.939133061225,
+                  658.5299999999999,
+                  1194.9779999999998,
+                  408.9719999999998,
+                  1359.116,
+                  455.39199999999977,
+                  2046.8159999999993,
+                  425.7407603305781,
+                  2600.146578512397
                 ],
                 "input_power": [
-                  287.7371428571429,
-                  563.4857142857142,
-                  164.0,
-                  419.9999999999999,
-                  83.79999999999998,
-                  326.9999999999999,
-                  60.8,
-                  303.9999999999999,
-                  39.890909090909055,
-                  283.09090909090895
+                  291.8914285714285,
+                  560.6914285714284,
+                  162.59999999999997,
+                  431.39999999999986,
+                  78.79999999999995,
+                  347.59999999999985,
+                  60.79999999999997,
+                  329.59999999999985,
+                  44.43636363636357,
+                  313.2363636363635
                 ]
               }
             }
           }
         },
         "heat_source_type": "CONDENSER",
-        "id": "2",
+        "id": "compressor",
         "turn_on_logic": [
           {
             "comparison_type": "LESS_THAN",
@@ -169,7 +169,7 @@
         ]
       }
     ],
-    "primary_heat_source_id": "0",
+    "primary_heat_source_id": "resistiveElementTop",
     "tank": {
       "metadata": {
         "schema": "RSTANK"
