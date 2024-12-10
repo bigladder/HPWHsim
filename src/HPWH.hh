@@ -289,7 +289,8 @@ class HPWH : public Courier::Sender
         MODELS_BradfordWhiteAeroThermRE2H65 = 501,
         MODELS_BradfordWhiteAeroThermRE2H80 = 502,
 
-        MODELS_LG_APHWC50 = 600
+        MODELS_LG_APHWC50 = 600,
+        MODELS_LG_APHWC80 = 601
     };
 
     /// specifies the modes for writing output
