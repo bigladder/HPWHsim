@@ -186,10 +186,9 @@ set(BradfordWhiteAeroThermRE2H80_Tests
         )
 
 #
-set(LG_Models
-       LG_APHWC50)
-set(LG_TestDir "LG/APHWC50")
-set(LG_APHWC50_Tests
+set(LG_Models LG_APHWC50 LG_APHWC80)
+set(LG_TestDir "LG/LG_APHWC50")
+set(LG_Tests
         DOE2014_LGC50_24hr50
         DOE2014_LGC50_24hr67
         DOE2014_LGC50_24hr95
@@ -329,7 +328,7 @@ add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/A
 #Test(s) specifically for Bradford White AeroTherm model
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
-				set(fullTestName "BradfordWhite/${model}/${test}")
+		set(fullTestName "BradfordWhite/${model}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "File")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "JSON")
@@ -337,12 +336,11 @@ foreach (model ${BradfordWhiteModels})
 endforeach (model)
 
 #Test(s) specifically for LG APHWC50 model
-foreach (model ${LG_Models})
-    foreach (test ${LG_APHWC50_Tests})
-				set(fullTestName "${LG_TestDir}/${test}")
+foreach(model ${LG_Models})
+    foreach (test ${LG_Tests})
+        set(fullTestName "${LG_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
 
@@ -417,7 +415,7 @@ endforeach (model)
 
 #Regression test(s) specifically for LG model(s)
 foreach (model ${LG_Models})
-    foreach (test ${LG_APHWC50_Tests})
+    foreach (test ${LG_Tests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
