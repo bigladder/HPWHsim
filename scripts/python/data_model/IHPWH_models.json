@@ -116,12 +116,8 @@
    "number": 172
  },
  {
-   "name": "genericCustomUEF",
-   "number": 174
- },
- {
    "name": "GenericUEF217",
-   "number": 410
+   "number": 179
  },
  {
    "name": "restankRealistic",
@@ -216,16 +212,16 @@
    "number": 160
  },
  {
-   "name": "StorageTank",
-   "number": 180
- },
- {
    "name": "UEF2generic",
    "number": 173
  },
  {
    "name": "LG_APHWC50",
    "number": 600
+ },
+ {
+   "name": "LG_APHWC80",
+   "number": 601
  },
  {
 		"name": "BradfordWhiteAeroThermRE2H50", 
