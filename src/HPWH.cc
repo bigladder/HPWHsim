@@ -4983,7 +4983,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    0.,                      // inlet-2 volume (L)
                    inletT_C,                // inlet-2 Temp (C)
                    NULL);                   // no extra heat
-
     }
 }
 
