@@ -181,8 +181,6 @@ class Plotter:
 		try:
 			self.df_measured = call_csv(measured_path, 0)
 		except:
-			print("measured failed.")
-			print(measured_path)
 			return
 
 	  # remove rows from dataframes outside of inclusive range [1,1440]
@@ -197,8 +195,6 @@ class Plotter:
 		try:
 			self.df_simulated = call_csv(simulated_path, 0)
 		except:
-			print("simulated failed.")
-			print(simulated_path)
 			return
 
 		# remove rows from dataframes outside of inclusive range [1,1440]
@@ -291,12 +287,13 @@ class Plotter:
 			return
 		
 		for row, variable in enumerate(self.variables["Y-Variables"].keys()):
-			print(variable)
+			
 			for variable_type in self.variables["Y-Variables"][variable]["Column Names"].keys():
-				for value in range(
-					len(self.variables["Y-Variables"][variable]["Column Names"][variable_type])
-				):
-					self.plot_graphs(variable_type, variable, value, row + 1)
+				if (variable_type == "Measured" and self.have_measured) or (variable_type == "Simulated" and self.have_simulated):
+					for value in range(
+						len(self.variables["Y-Variables"][variable]["Column Names"][variable_type])
+					):
+						self.plot_graphs(variable_type, variable, value, row + 1)
 
 		self.plot.finalize_plot()
 		return self

@@ -165,12 +165,19 @@ body {font-family: Arial;}
 
 		// clear test_select control
 		let select_test = document.getElementById('test_name');//document.querySelector("#model_name")
+		let show_measurement_checkbox = document.getElementById('show_measurement');
+
 		while (select_test.hasChildNodes()) {
 		  select_test.removeChild(select_test.firstChild);
 		}
 
 		if (test_names.length == 0)
+		{
 			select_test.disabled = true;
+			show_measurement_checkbox.checked = false;
+			show_measurement_checkbox.disabled = true;
+			document.getElementById('test_btn').disabled = true;
+		}
 		else
 		{
 			// set test_name control
@@ -185,6 +192,8 @@ body {font-family: Arial;}
 				prefs["test_name"] = test_names[0];
 
 			select_test.disabled = false;
+			document.getElementById('show_measurement').disabled = false;
+			document.getElementById('test_btn').disabled = false;
 		}
 
 
@@ -225,35 +234,59 @@ body {font-family: Arial;}
     const test_form = document.getElementById('test_form');
     const test_name = test_form.test_name.value;
 
+		var measurement_filename = "";
+
+		var prefs = await read_json_file("./prefs.json")
+
 		// get test path
 		const test_index = await read_json_file("./test_index.json")
 		var test_path = ""
+
 		// get test list from model_index
-		for (let test of test_index["tests"]){
+		for (let test of test_index["tests"])
 			if ("name" in test)
 				if (test["name"] == test_name)
 					if("path" in test)
 					{
 						test_path = test["path"];
-						break;
-					}
 
-		}
+						if (document.getElementById('show_measurement').checked)
+							if ("measured" in test)
+							{
+								const measurements = test["measured"]
+								for (let measurement of measurements){
+									if ("model" in measurement)
+										if (measurement["model"] == prefs["model_name"])
+											if ("filename" in measurement)
+												measurement_filename = measurement["filename"];
+												break;
+								}
+							}
+				}
+
     document.getElementById("test_btn").disabled = true;
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
     fst += '&test_dir=' + test_path + "/" + test_name;
     fst += '&build_dir=' + build_dir;
+		fst += '&measurement_filename=' + measurement_filename;
 
     let test_results = await callPyServer("test", fst)
     const energy_data = test_results["energy_data"];
 		const dash_port = test_results["port_num"];
 
-    measE = energy_data["measuredE_Wh"].toFixed(2);
-    simE = energy_data["simulatedE_Wh"].toFixed(2);
-    document.getElementById("energy_measured").innerHTML = "Measured energy consumption (Wh): " + measE;
-    document.getElementById("energy_simulated").innerHTML = "Simulated energy consumption (Wh): " + simE;
+		let energy_measured_p = document.getElementById("energy_measured")
+		if ("measuredE_Wh" in energy_data)
+    	energy_measured_p.innerHTML = "Measured energy consumption (Wh): " + energy_data["measuredE_Wh"].toFixed(2);
+		else
+			energy_measured_p.innerHTML = ""
+
+		let energy_simulated_p = document.getElementById("energy_simulated")
+		if ("simulatedE_Wh" in energy_data)
+    	energy_simulated_p.innerHTML = "Simulated consumption (Wh): " + energy_data["simulatedE_Wh"].toFixed(2);
+		else
+			energy_simulated_p.innerHTML = ""
 
     model_form.model_spec.value = model_spec;
     model_form.model_name.value = model_name;
@@ -345,6 +378,10 @@ body {font-family: Arial;}
     <label for="test_name">test name:</label>
     <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
+
+		<label for="show_measurement">show measurement</label>
+		<input type="checkbox" id="show_measurement" name="show_measurement" value="show" checked="false">
+		<br><br>
 
     <button type="button" id="test_btn" onclick="test();">test</button>
   </form>

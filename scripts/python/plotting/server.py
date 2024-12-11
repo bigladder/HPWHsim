@@ -13,10 +13,6 @@ from json import dumps
 
 PORT = 8000
 
-def do_measure(model_spec, model_name, build_dir):
-    main.call_measure(model_spec, model_name, build_dir)
-    return 'do_measure done'
-
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
 			if self.path.startswith('/test'):
@@ -26,10 +22,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					model_name = query_components.get('model_name', [None])[0]
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
-					print(model_name)
-					print(test_dir)
+					measurement_filename= query_components.get('measurement_filename', [None])[0]
 
-					response = main.call_test(model_spec, model_name, test_dir, build_dir)
+					response = main.call_test(model_spec, model_name, test_dir, build_dir, measurement_filename)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")
