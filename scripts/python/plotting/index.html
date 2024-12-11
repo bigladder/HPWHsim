@@ -163,10 +163,8 @@ body {font-family: Arial;}
 			}
 		}
 
-		// clear test_select control
+		// clear select_test control
 		let select_test = document.getElementById('test_name');//document.querySelector("#model_name")
-		let show_measurement_checkbox = document.getElementById('show_measurement');
-
 		while (select_test.hasChildNodes()) {
 		  select_test.removeChild(select_test.firstChild);
 		}
@@ -192,10 +190,15 @@ body {font-family: Arial;}
 				prefs["test_name"] = test_names[0];
 
 			select_test.disabled = false;
-			document.getElementById('show_measurement').disabled = false;
+			document.getElementById('show_type').disabled = false;
 			document.getElementById('test_btn').disabled = false;
 		}
 
+		// clear select_show_type control
+		let select_show_type = document.getElementById('show_type');
+		while (select_show_type.hasChildNodes()) {
+		  select_show_type.removeChild(select_show_type.firstChild);
+		}
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
@@ -379,9 +382,12 @@ body {font-family: Arial;}
     <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
 
-		<label for="show_measurement">show measurement</label>
-		<input type="checkbox" id="show_measurement" name="show_measurement" value="show" checked="false">
-		<br><br>
+		<label for="show_type">show</label>
+		<select name="show_type" id="show_type" style="width: 200px" onchange="change_menu_value();">
+      <option value="all">simulated and measured</option>
+      <option value="simulated">simulated only</option>
+      <option value="measured">measured only</option>
+		</select><br><br>
 
     <button type="button" id="test_btn" onclick="test();">test</button>
   </form>
@@ -402,7 +408,7 @@ body {font-family: Arial;}
       <option value="High">High</option>
       <option value="Medium">Medium</option>
       <option value="Low">Low</option>
-      <option label="Very Small", value="VerySmall">Very Small</option>
+      <option value="VerySmall">Very Small</option>
     </select><br><br>
 
     <button type="button" id="measure_btn" onclick="measure();">measure</button>
