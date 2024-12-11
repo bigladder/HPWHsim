@@ -30,19 +30,12 @@ jobs:
             cxx: cl
             experimental: false
           - os: macos
-            os_ver: "12"
+            os_ver: "13"
             config: Release
             coverage: false
             cc: clang
             cxx: clang++
             experimental: false
-          - os: macos
-            os_ver: "11"
-            config: Release
-            coverage: false
-            cc: clang
-            cxx: clang++
-            experimental: true
           - os: ubuntu
             os_ver: "20.04"
             config: Debug
