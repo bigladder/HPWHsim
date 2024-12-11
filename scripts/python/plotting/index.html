@@ -163,20 +163,30 @@ body {font-family: Arial;}
 			}
 		}
 
-		if (!(test_names.includes(prefs["test_name"])))
-			prefs["test_name"] = test_names[0];
-
-		// set test_name control
+		// clear test_select control
 		let select_test = document.getElementById('test_name');//document.querySelector("#model_name")
 		while (select_test.hasChildNodes()) {
 		  select_test.removeChild(select_test.firstChild);
 		}
-		for (let test_name of test_names){
-		  let option = document.createElement("option");
-		  option.text = test_name;
-		  option.value = test_name;
-		  select_test.appendChild(option);
+
+		if (test_names.length == 0)
+			select_test.disabled = true;
+		else
+		{
+			// set test_name control
+			for (let test_name of test_names){
+			  let option = document.createElement("option");
+			  option.text = test_name;
+			  option.value = test_name;
+			  select_test.appendChild(option);
+			}
+
+			if (!(test_names.includes(prefs["test_name"])))
+				prefs["test_name"] = test_names[0];
+
+			select_test.disabled = false;
 		}
+
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
