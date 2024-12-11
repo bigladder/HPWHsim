@@ -187,7 +187,7 @@ set(BradfordWhiteAeroThermRE2H80_Tests
 
 #
 set(LG_Models LG_APHWC50 LG_APHWC80)
-set(LG_TestDir "LG/LG_APHWC50")
+set(LG_TestDir "LG/APHWC50")
 set(LG_Tests
         DOE2014_LGC50_24hr50
         DOE2014_LGC50_24hr67
@@ -341,6 +341,7 @@ foreach(model ${LG_Models})
         set(fullTestName "${LG_TestDir}/${test}")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
     endforeach (test)
 endforeach (model)
 
