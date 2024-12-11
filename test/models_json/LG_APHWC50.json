@@ -35,7 +35,7 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 18.88888888888889,
+              "differential_temperature": 21.666666666666668,
               "temperature_weight_distribution": [
                 0.0,
                 0.0,
@@ -97,37 +97,47 @@
           "performance": {
             "coil_configuration": "WRAPPED",
             "compressor_lockout_temperature_hysteresis": 0.5555555555555556,
-            "maximum_refrigerant_temperature": 373.15,
+            "maximum_refrigerant_temperature": 344.26111111111106,
             "maximum_temperature": 322.0388888888889,
             "minimum_temperature": 268.15,
             "performance_map": {
               "grid_variables": {
                 "evaporator_environment_dry_bulb_temperature": [
+                  268.15,
                   283.15,
                   292.8722222222222,
-                  308.15
+                  308.15,
+                  322.0388888888889
                 ],
                 "heat_source_temperature": [
                   273.15,
-                  373.15
+                  344.26111111111106
                 ]
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  638.4,
-                  1709.3999999999999,
-                  660.4400000000002,
-                  -448.36000000000206,
-                  675.1974737400002,
-                  -3604.678407659998
+                  677.7718971428568,
+                  584.2404685714286,
+                  658.5299999999999,
+                  1194.9779999999998,
+                  407.39599999999984,
+                  1352.164,
+                  503.4039999999997,
+                  2083.8199999999993,
+                  544.5794545454543,
+                  2702.8572727272726
                 ],
                 "input_power": [
-                  182.4,
-                  488.4,
-                  83.59999999999997,
-                  407.6,
-                  42.07800000000001,
-                  457.69800000000004
+                  291.8914285714285,
+                  560.6914285714284,
+                  162.59999999999997,
+                  431.39999999999986,
+                  78.79999999999995,
+                  347.59999999999985,
+                  67.29999999999997,
+                  336.09999999999985,
+                  56.8454545454545,
+                  325.64545454545436
                 ]
               }
             }
@@ -139,7 +149,7 @@
           {
             "comparison_type": "LESS_THAN",
             "heating_logic": {
-              "differential_temperature": 29.27777777777778,
+              "differential_temperature": 29.388888888888886,
               "temperature_weight_distribution": [
                 1.0,
                 0.0,
