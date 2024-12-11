@@ -4120,6 +4120,10 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_LG_APHWC50;
     }
+    else if (modelName == "LG_APHWC80")
+    {
+        model = HPWH::MODELS_LG_APHWC80;
+    }
     else
     {
         model = HPWH::MODELS_basicIntegrated;
@@ -4929,7 +4933,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
     bool isDrawing = false;
     bool done = false;
     int step = 0;
-    int time_min = 0;
     while (!done)
     {
         switch (step)
@@ -4980,8 +4983,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
                    0.,                      // inlet-2 volume (L)
                    inletT_C,                // inlet-2 Temp (C)
                    NULL);                   // no extra heat
-
-        ++time_min;
     }
 }
 
