@@ -18,7 +18,7 @@
 
 		{"group": "LG", "name": "DOE2014_LGC50_24hr50", "desc": "24h; 50F", "path": "LG/APHWC50", "measured": [{"model": "LG_APHWC50", "filename": "measured.csv"}]},
 		{"group": "LG", "name": "DOE2014_LGC50_24hr67", "desc": "24h; 67F", "path": "LG/APHWC50", "measured": [{"model": "LG_APHWC50", "filename": "measured.csv"}]},
-		{"group": "LG", "name": "DOE2014_LGC50_24hr95", "desc": "24h; 95F", "path": "LG/APHWC50", "measured": [{"model": "LG_APHWC50", "filename": "measured.csv"}],
+		{"group": "LG", "name": "DOE2014_LGC50_24hr95", "desc": "24h; 95F", "path": "LG/APHWC50", "measured": [{"model": "LG_APHWC50", "filename": "measured.csv"}]},
 
 		{"group": "Custom tests", "name": "testA", "path": "custom_tests"},
 		{"group": "Custom tests", "name": "testB", "path": "custom_tests"},

@@ -149,17 +149,17 @@ body {font-family: Arial;}
 				const test_name = test["name"];
 				if ("measured" in test)
 				{
-					const measured_files = test["measured"]
-					for (let measured of test["measured"]){
-						if ("model" in measured){
-							const model_name = test["model"];
-							if (model_name == prefs["model_name"])
+					const measurements = test["measured"]
+					for (let measurement of measurements){
+						if ("model" in measurement){
+							if (measurement["model"] == prefs["model_name"])
 								test_names.push(test_name);
+								break;
 						}
 					}
 				}
-				else
-					test_names.push(test_name);
+				//else
+					//test_names.push(test_name);
 			}
 		}
 
@@ -303,7 +303,6 @@ body {font-family: Arial;}
     document.getElementById("measure_results").data = build_dir + "/test/output/results.txt";
 
     document.getElementById("measure_btn").disabled = false;
-		document.getElementById("test_div").style = false;
   }
 </script>
 
@@ -356,7 +355,7 @@ body {font-family: Arial;}
       <option value="High">High</option>
       <option value="Medium">Medium</option>
       <option value="Low">Low</option>
-      <option value="Very Small">Very Small</option>
+      <option label="Very Small", value="VerySmall">Very Small</option>
     </select><br><br>
 
     <button type="button" id="measure_btn" onclick="measure();">measure</button>
