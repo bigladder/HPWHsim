@@ -4933,7 +4933,6 @@ void HPWH::prepForTest(StandardTestOptions& testOptions)
     bool isDrawing = false;
     bool done = false;
     int step = 0;
-    int time_min = 0;
     while (!done)
     {
         switch (step)
