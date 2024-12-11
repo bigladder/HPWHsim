@@ -147,11 +147,16 @@ body {font-family: Arial;}
 			if ("name" in test)
 			{
 				const test_name = test["name"];
-				if ("model" in test)
+				if ("measured" in test)
 				{
-					const model_name = test["model"];
-					if (model_name == prefs["model_name"])
-						test_names.push(test_name);
+					const measured_files = test["measured"]
+					for (let measured of test["measured"]){
+						if ("model" in measured){
+							const model_name = test["model"];
+							if (model_name == prefs["model_name"])
+								test_names.push(test_name);
+						}
+					}
 				}
 				else
 					test_names.push(test_name);
