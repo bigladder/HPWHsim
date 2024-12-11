@@ -4543,19 +4543,19 @@ void HPWH::initPreset(MODELS presetNum)
         double cop95_0 = cop95_op - dcop_dTs * (Ts_op - 0.);
 
         compressor->perfMap.push_back({
-            50,                     // Temperature (F)
+            50,                      // Temperature (F)
             {Pin50_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
             {cop50_0, dcop_dTs, 0.}  // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            67.5,                   // Temperature (F)
+            67.5,                    // Temperature (F)
             {Pin67_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
             {cop67_0, dcop_dTs, 0.}  // COP Coefficients
         });
 
         compressor->perfMap.push_back({
-            95,                     // Temperature (F)
+            95,                      // Temperature (F)
             {Pin95_0, dPin_dTs, 0.}, // Input Power Coefficients (W)
             {cop95_0, dcop_dTs, 0.}  // COP Coefficients
         });
