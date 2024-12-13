@@ -23,9 +23,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
 					show_types  = int(query_components.get('show_types', [None])[0])
-					measurement_filename= query_components.get('measurement_filename', [None])[0]
+					measured_filename= query_components.get('measured_filename', [None])[0]
 
-					response = main.call_test(model_spec, model_name, test_dir, build_dir, show_types, measurement_filename)
+					response = main.call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_filename)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")

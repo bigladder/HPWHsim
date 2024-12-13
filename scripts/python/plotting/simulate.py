@@ -22,6 +22,7 @@ def simulate(model_spec, model_name, test_name, build_dir):
         os.mkdir(output_dir)
     	
     run_list = [app_cmd, 'run', '-s', model_spec, '-m', model_name, '-t', test_name, '-d', output_dir]
+    print(run_list)
     
     result = subprocess.run(run_list, stdout=subprocess.PIPE, text=True)
 
