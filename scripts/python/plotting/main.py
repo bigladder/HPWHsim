@@ -27,7 +27,7 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 	os.chdir(orig_dir)
 
 	os.chdir("../../../test")
-	abs_test_dir = str(Path.cwd())
+	abs_repo_test_dir = str(Path.cwd())
 	os.chdir(orig_dir)
 
 	output_dir = os.path.join(abs_build_dir, "test", "output") 
@@ -35,15 +35,18 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 		os.mkdir(output_dir)
 	 
 	test_name = Path(test_dir).name
-	
 	measured_path = ""
 	simulated_path = ""
 	if show_types & 1:
-		measured_path = os.path.join(abs_test_dir, test_dir, measured_filename)   
+		print("show measured")
+		measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)   
 	if show_types & 2:
+		print("show simulated")
 		simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")		 
 
 	print("creating plot...")
+	print(f"measured_path: {measured_path}")
+	print(f"simulated__path: {simulated_path}")
 	plotter = plot(measured_path, simulated_path)
 	time.sleep(1)
 	

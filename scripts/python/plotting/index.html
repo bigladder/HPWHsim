@@ -70,9 +70,11 @@ body {font-family: Arial;}
 		model_form.model_name.value = ("model_name" in prefs) ? prefs["model_name"] : "LG_APHWC50"
 		model_form.model_spec.value = ("model_spec" in prefs) ? prefs["model_spec"] : "Preset";
 		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
+		test_form.test_list.value = ("test_list" in prefs) ? prefs["test_list"] : "All tests";
 		test_form.test_name.value = ("test_name" in prefs) ? prefs["test_name"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
 		test_form.show_simulated.value = ("show_simulated" in prefs) ? prefs["show_simulated"] : true;
 		test_form.show_measured.value = ("show_measured" in prefs) ? prefs["show_measured"] : true;
+
 	}
 
 	function get_menu_values()
@@ -85,6 +87,7 @@ body {font-family: Arial;}
 		prefs["model_name"] = model_form.model_name.value;
 		prefs["model_spec"] = model_form.model_spec.value;
 		prefs["build_dir"] = build_form.build_dir.value;
+		prefs["test_list"] = test_form.test_list.value;
 		prefs["test_name"] = test_form.test_name.value;
 		prefs["show_simulated"] = test_form.show_simulated.checked;
 		prefs["show_measured"] = test_form.show_measured.checked;
@@ -104,7 +107,7 @@ body {font-family: Arial;}
 			{
 				const model_name = model["name"];
 				model_names.push(model_name);
-				if (model_name == prefs["model_name"])
+				if (!model_name.localeCompare(prefs["model_name"]))
 				{
 					if ("specs" in model)
 						for(let i = 0; i < model["specs"].length; i++)
@@ -145,43 +148,64 @@ body {font-family: Arial;}
 
 		// get available tests
 		var have_test = false;
-		var have_measured = false;
+
 		const test_index = await read_json_file("./test_index.json")
 		var test_names = []
-		// get test list from model_index
+		var show_all_tests = !prefs["test_list"].localeCompare("All tests");
 		for (let test of test_index["tests"]){
 			if ("name" in test)
 			{
 				const test_name = test["name"];
+				var show_test = show_all_tests;
 				if ("measured" in test)
-				{
-					const measurements = test["measured"]
+				{	 // get test list from model_index
+					const measurements = test["measured"];
 					for (let measurement of measurements){
 						if ("model" in measurement){
-							if (measurement["model"] == prefs["model_name"])
-								test_names.push(test_name);
-								have_test = true;
-								have_measured = true;
+							if (!measurement["model"].localeCompare(prefs["model_name"]))
+							{
+								show_test = true;
 								break;
+							}
 						}
 					}
 				}
+				if(show_test)
+				{
+					test_names.push(test_name);
+					have_test = true;
+				}
 			}
 		}
-		
 
-		let select_test = document.getElementById('test_name');
+		if (have_test && !(test_names.includes(prefs["test_name"])))
+			prefs["test_name"] = test_names[0];
+
+		var have_measured = false;
+		for (let test of test_index["tests"])
+			if ("name" in test)
+				if (test["name"] == prefs["test_name"])
+					if ("measured" in test)
+						for (let measured of test["measured"])
+							if ("model" in measured)
+								if (measured["model"] == prefs["model_name"])
+								{
+									have_measured = true;
+									break;
+								}
 
 		// set select_test control
+		let select_test = document.getElementById('test_name');
 		while (select_test.hasChildNodes()) {
 		  select_test.removeChild(select_test.firstChild);
 		}
-
+					
+		var show_simulated = (prefs["show_simulated"] && have_test);
+		var show_measured = (prefs["show_measured"] && have_measured);
 		if (!have_test)
 		{
+			prefs["test_name"]  = "";
 			select_test.disabled = true;
-			show_measurement_checkbox.checked = false;
-			show_measurement_checkbox.disabled = true;
 			document.getElementById('test_btn').disabled = true;
 		}
 		else
@@ -194,18 +218,18 @@ body {font-family: Arial;}
 			  select_test.appendChild(option);
 			}
 
-			if (!(test_names.includes(prefs["test_name"])))
-				prefs["test_name"] = test_names[0];
-
 			select_test.disabled = false;
-			document.getElementById('show_measured').disabled = false;
 			document.getElementById('test_btn').disabled = false;
 		}
 
 		// set select_show_type control
-		document.getElementById('show_simulated').checked = prefs["show_simulated"];
-		document.getElementById('show_measured').checked = prefs["show_measured"];
-		document.getElementById('show_measured').disabled = !have_measured;
+		let show_measured_checkbox= document.getElementById('show_measured');
+		let show_simulated_checkbox = document.getElementById('show_simulated');
+
+		show_simulated_checkbox.checked = prefs["show_simulated"] = show_simulated;
+		show_simulated_checkbox.disabled = !have_test;
+		show_measured_checkbox.checked = prefs["show_measured"] = show_measured;
+		show_measured_checkbox.disabled = !have_measured;
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
@@ -244,33 +268,35 @@ body {font-family: Arial;}
     const test_form = document.getElementById('test_form');
     const test_name = test_form.test_name.value;
 
-		var measurement_filename = "";
+		var measured_filename = "";
 
 		var prefs = await read_json_file("./prefs.json")
 
 		// get test path
 		const test_index = await read_json_file("./test_index.json")
-		var test_path = ""
-
+		var test_dir = ""
+		
 		// get test list from model_index
 		for (let test of test_index["tests"])
 			if ("name" in test)
 				if (test["name"] == test_name)
+				{
 					if("path" in test)
-					{
-						test_path = test["path"];
-						if ("measured" in test)
-						{
-							const measurements = test["measured"]
-							for (let measurement of measurements){
-								if ("model" in measurement)
-									if (measurement["model"] == prefs["model_name"])
-										if ("filename" in measurement)
-											measurement_filename = measurement["filename"];
-											break;
-							}
-						}
-				}
+						test_dir = test["path"] + "/" + test_name;
+					else
+						test_dir = test_name;
+
+					if ("measured" in test)
+						for (let measured of test["measured"]){
+							if ("model" in measured)
+								if (measured["model"] == prefs["model_name"])
+									if ("filename" in measured)
+									{
+										measured_filename = measured["filename"];										
+										break;
+									}
+					}
+			}
 
     document.getElementById("test_btn").disabled = true;
 		var checkbox_show_sim = document.getElementById("show_simulated");
@@ -284,10 +310,10 @@ body {font-family: Arial;}
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
-    fst += '&test_dir=' + test_path + "/" + test_name;
+    fst += '&test_dir=' + test_dir;
     fst += '&build_dir=' + build_dir;
 		fst += '&show_types=' + show_types;
-		fst += '&measurement_filename=' + measurement_filename;
+		fst += '&measured_filename=' + measured_filename;
 
     let test_results = await callPyServer("test", fst)
     const energy_data = test_results["energy_data"];
@@ -391,6 +417,11 @@ body {font-family: Arial;}
 <button id="test_tab" class="collapsible">Test</button>
 <div class="content">
   <form id="test_form">
+
+    <select name="test_list" id="test_list" style="width: 200px" onchange="change_menu_value();">
+			<option selected="All tests" value="All tests">All tests</option>
+      <option value="Model tests only">Model tests only</option>
+		</select><br><br>
 
     <label for="test_name">test name:</label>
     <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
