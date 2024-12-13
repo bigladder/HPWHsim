@@ -32,6 +32,7 @@ def dash_proc(fig):
 	dash_proc.selected_t_minV = []
 	dash_proc.selected_tank_TV = []
 	dash_proc.selected_ambient_TV = []
+	dash_proc.variable_type = "";
 
 	fig.update_layout(clickmode='event+select')
 		
@@ -91,17 +92,33 @@ def dash_proc(fig):
 		
 		t_min_i = range["x3"][0]
 		t_min_f = range["x3"][1]
-		
-		found_avgT = False
+
+		have_measured = False
+		have_simulated = False
 		for trace in fig["data"]:
 			if "name" in trace:
 				if trace["name"] == "Storage Tank Average Temperature - Measured":
+					have_measured = True
+				elif trace["name"] == "Storage Tank Average Temperature - Simulated":
+					have_simulated = True
+					
+		if have_measured:
+			dash_proc.variable_type = "Measured"
+		elif have_simulated:
+			dash_proc.variable_type = "Simulated"
+		else:
+			return True, True, "", fig
+			
+		found_avgT = False
+		for trace in fig["data"]:
+			if "name" in trace:
+				if trace["name"] == f"Storage Tank Average Temperature - {dash_proc.variable_type}":
 					measured_tank_T = trace
 					found_avgT = True
-				
+		
 		found_ambientT = False		
 		for trace in fig["data"]:				
-			if trace["name"] == "Ambient Temperature - Measured":
+			if trace["name"] == f"Ambient Temperature - {dash_proc.variable_type}":
 				if "name" in trace:
 					ambient_T = trace
 					found_ambientT = True
@@ -112,7 +129,7 @@ def dash_proc(fig):
 		new_fig = go.Figure(fig)
 		for i, trace in enumerate(fig["data"]):
 			if "name" in trace:	
-				if trace["name"] == "temperature fit":
+				if trace["name"] == f"temperature fit - {dash_proc.variable_type}":
 					new_data = list(new_fig.data)
 					new_data.pop(i)
 					new_fig.data = new_data	
@@ -192,7 +209,7 @@ def dash_proc(fig):
 		for i, t_min in enumerate(dash_proc.selected_t_minV):
 			fit_tank_TV[i] = T_t([tau_min], t_min)
 		
-		trace = go.Scatter(name = "temperature fit", x=dash_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
+		trace = go.Scatter(name = f"temperature fit - {dash_proc.variable_type}", x=dash_proc.selected_t_minV, y=fit_tank_TV, xaxis="x3", yaxis="y3", mode="lines", line={'width': 3})
 		new_fig = go.Figure(fig)	
 		new_fig.add_trace(trace)
 		new_fig.update_layout()		
