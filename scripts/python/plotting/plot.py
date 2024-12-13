@@ -307,7 +307,8 @@ def plot(measured_path, simulated_path):
 
 def write_plot(measured_path, simulated_path, plot_path):
 	plotter = Plotter()
-	plotter.read(measured_path, simulated_path)
+	plotter.read_measured(measured_path)
+	plotter.read_simulated(simulated_path)
 	plotter.draw()
 	plotter.plot.write_html_plot(plot_path)
 	
