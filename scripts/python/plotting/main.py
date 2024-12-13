@@ -45,7 +45,7 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 
 	print("creating plot...")
 	plotter = plot(measured_path, simulated_path)
-	time.sleep(1)	
+	time.sleep(1)
 	
 	if call_test.proc != -1:
 		print("killing current dash...")
