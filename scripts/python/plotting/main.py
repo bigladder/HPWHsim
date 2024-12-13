@@ -16,7 +16,7 @@ import psutil
 import dash_proc
 
 # Runs a simulation and generates plot
-def call_test(model_spec, model_name, test_dir, build_dir, measured_filename):
+def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_filename):
 
 	print("running simulation...")
 	simulate(model_spec, model_name, test_dir, build_dir)
@@ -34,17 +34,17 @@ def call_test(model_spec, model_name, test_dir, build_dir, measured_filename):
 	if not os.path.exists(output_dir):
 		os.mkdir(output_dir)
 	 
-	measured_path = ""
-	print(measured_filename)
-	if measured_filename:
-		measured_path = os.path.join(abs_test_dir, test_dir, measured_filename)    
 	test_name = Path(test_dir).name
-
-	simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")
+	
+	measured_path = ""
+	simulated_path = ""
+	if show_types & 1:
+		measured_path = os.path.join(abs_test_dir, test_dir, measured_filename)   
+	if show_types & 2:
+		simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")		 
 
 	print("creating plot...")
 	plotter = plot(measured_path, simulated_path)
-
 	time.sleep(1)	
 	
 	if call_test.proc != -1:

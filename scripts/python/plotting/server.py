@@ -22,9 +22,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					model_name = query_components.get('model_name', [None])[0]
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
+					show_types  = int(query_components.get('show_types', [None])[0])
 					measurement_filename= query_components.get('measurement_filename', [None])[0]
 
-					response = main.call_test(model_spec, model_name, test_dir, build_dir, measurement_filename)
+					response = main.call_test(model_spec, model_name, test_dir, build_dir, show_types, measurement_filename)
 
 					self.send_response(200)
 					self.send_header("Content-type", "application/json")

@@ -71,6 +71,8 @@ body {font-family: Arial;}
 		model_form.model_spec.value = ("model_spec" in prefs) ? prefs["model_spec"] : "Preset";
 		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
 		test_form.test_name.value = ("test_name" in prefs) ? prefs["test_name"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
+		test_form.show_simulated.value = ("show_simulated" in prefs) ? prefs["show_simulated"] : true;
+		test_form.show_measured.value = ("show_measured" in prefs) ? prefs["show_measured"] : true;
 	}
 
 	function get_menu_values()
@@ -84,6 +86,8 @@ body {font-family: Arial;}
 		prefs["model_spec"] = model_form.model_spec.value;
 		prefs["build_dir"] = build_form.build_dir.value;
 		prefs["test_name"] = test_form.test_name.value;
+		prefs["show_simulated"] = test_form.show_simulated.checked;
+		prefs["show_measured"] = test_form.show_measured.checked;
 		return prefs;
 	}
 
@@ -116,7 +120,7 @@ body {font-family: Arial;}
 			prefs["model_spec"] = model_specs[0];
 
 		// set model_name control
-		let select_model = document.getElementById('model_name');//document.querySelector("#model_name")
+		let select_model = document.getElementById('model_name');
 		while (select_model.hasChildNodes()) {
 		  select_model.removeChild(select_model.firstChild);
 		}
@@ -128,7 +132,7 @@ body {font-family: Arial;}
 		}
 
 		// set model_spec control
-		let select_model_spec = document.getElementById('model_spec');//document.querySelector("#model_spec")
+		let select_model_spec = document.getElementById('model_spec');
 		while (select_model_spec.hasChildNodes()) {
 		  select_model_spec.removeChild(select_model_spec.firstChild);
 		}
@@ -140,6 +144,8 @@ body {font-family: Arial;}
 		}
 
 		// get available tests
+		var have_test = false;
+		var have_measured = false;
 		const test_index = await read_json_file("./test_index.json")
 		var test_names = []
 		// get test list from model_index
@@ -154,22 +160,24 @@ body {font-family: Arial;}
 						if ("model" in measurement){
 							if (measurement["model"] == prefs["model_name"])
 								test_names.push(test_name);
+								have_test = true;
+								have_measured = true;
 								break;
 						}
 					}
 				}
-				//else
-					//test_names.push(test_name);
 			}
 		}
+		
 
-		// clear select_test control
-		let select_test = document.getElementById('test_name');//document.querySelector("#model_name")
+		let select_test = document.getElementById('test_name');
+
+		// set select_test control
 		while (select_test.hasChildNodes()) {
 		  select_test.removeChild(select_test.firstChild);
 		}
 
-		if (test_names.length == 0)
+		if (!have_test)
 		{
 			select_test.disabled = true;
 			show_measurement_checkbox.checked = false;
@@ -190,15 +198,14 @@ body {font-family: Arial;}
 				prefs["test_name"] = test_names[0];
 
 			select_test.disabled = false;
-			document.getElementById('show_type').disabled = false;
+			document.getElementById('show_measured').disabled = false;
 			document.getElementById('test_btn').disabled = false;
 		}
 
-		// clear select_show_type control
-		let select_show_type = document.getElementById('show_type');
-		while (select_show_type.hasChildNodes()) {
-		  select_show_type.removeChild(select_show_type.firstChild);
-		}
+		// set select_show_type control
+		document.getElementById('show_simulated').checked = prefs["show_simulated"];
+		document.getElementById('show_measured').checked = prefs["show_measured"];
+		document.getElementById('show_measured').disabled = !have_measured;
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
@@ -252,27 +259,34 @@ body {font-family: Arial;}
 					if("path" in test)
 					{
 						test_path = test["path"];
-
-						if (document.getElementById('show_measurement').checked)
-							if ("measured" in test)
-							{
-								const measurements = test["measured"]
-								for (let measurement of measurements){
-									if ("model" in measurement)
-										if (measurement["model"] == prefs["model_name"])
-											if ("filename" in measurement)
-												measurement_filename = measurement["filename"];
-												break;
-								}
+						if ("measured" in test)
+						{
+							const measurements = test["measured"]
+							for (let measurement of measurements){
+								if ("model" in measurement)
+									if (measurement["model"] == prefs["model_name"])
+										if ("filename" in measurement)
+											measurement_filename = measurement["filename"];
+											break;
 							}
+						}
 				}
 
     document.getElementById("test_btn").disabled = true;
+		var checkbox_show_sim = document.getElementById("show_simulated");
+		var checkbox_show_meas = document.getElementById("show_measured");
+
+		var show_types = 0;
+		if (!checkbox_show_meas.disabled && checkbox_show_meas.checked)
+				show_types += 1;
+		if (!checkbox_show_sim.disabled && checkbox_show_sim.checked)
+				show_types += 2;
 
     fst = 'model_spec=' +  model_spec;
     fst += '&model_name=' + model_name;
     fst += '&test_dir=' + test_path + "/" + test_name;
     fst += '&build_dir=' + build_dir;
+		fst += '&show_types=' + show_types;
 		fst += '&measurement_filename=' + measurement_filename;
 
     let test_results = await callPyServer("test", fst)
@@ -382,11 +396,12 @@ body {font-family: Arial;}
     <select name="test_name" id="test_name" style="width: 400px" onchange="change_menu_value();">
 		</select><br><br>
 
-		<label for="show_type">show</label>
-		<select name="show_type" id="show_type" style="width: 200px" onchange="change_menu_value();">
-      <option value="all">simulated and measured</option>
-      <option value="simulated">simulated only</option>
-      <option value="measured">measured only</option>
+		<label for="show_simulated">show simulated</label>
+		<input type="checkbox" id="show_simulated" style="width: 200px" onchange="change_menu_value();">
+		</select><br><br>
+
+		<label for="show_measured">show measured</label>
+		<input type="checkbox" id="show_measured" style="width: 200px" onchange="change_menu_value();">
 		</select><br><br>
 
     <button type="button" id="test_btn" onclick="test();">test</button>

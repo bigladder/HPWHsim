@@ -303,6 +303,7 @@ def plot(measured_path, simulated_path):
 	plotter.read_measured(measured_path)
 	plotter.read_simulated(simulated_path)
 	plotter.draw()
+	print(simulated_path)
 	return plotter
 
 def write_plot(measured_path, simulated_path, plot_path):
