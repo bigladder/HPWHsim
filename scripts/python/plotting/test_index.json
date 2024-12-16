@@ -1,11 +1,11 @@
 {
   "tests": [
-		{"group": "General tests", "name": "test30", "desc": "24h; 30F"},
-		{"group": "General tests", "name": "test50", "desc": "24h; 50F"},
-		{"group": "General tests", "name": "test70", "desc": "24h; 70F"},
-		{"group": "General tests", "name": "test95", "desc": "24h; 95F"},
-    {"group": "General tests", "name": "testLockout", "desc": "lockout"},
-		{"group": "General  tests", "name": "testSandenCombi", "desc": "SandenCombi"},
+		{"group": "General tests", "name": "test30", "desc": "24h; 30F", "path": "general_tests"},
+		{"group": "General tests", "name": "test50", "desc": "24h; 50F", "path": "general_tests"},
+		{"group": "General tests", "name": "test70", "desc": "24h; 70F", "path": "general_tests"},
+		{"group": "General tests", "name": "test95", "desc": "24h; 95F", "path": "general_tests"},
+    {"group": "General tests", "name": "testLockout", "desc": "lockout", "path": "general_tests"},
+		{"group": "General tests", "name": "testSandenCombi", "desc": "SandenCombi", "path": "general_tests"},
 
     {"group": "BradfordWhite AeroThermRE2H50", "name": "RE2H50_UEF50", "desc": "24h; 50F", "path": "BradfordWhite/AeroThermRE2H50", "measured": [{"model": "BradfordWhiteAeroThermRE2H50", "filename": "measured.csv"}]},
 		{"group": "BradfordWhite AeroThermRE2H50", "name": "RE2H50_UEF67", "desc": "24h; 67F", "path": "BradfordWhite/AeroThermRE2H50", "measured": [{"model": "BradfordWhiteAeroThermRE2H50", "filename": "measured.csv"}]},
