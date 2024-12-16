@@ -16,10 +16,7 @@ import psutil
 import dash_proc
 
 # Runs a simulation and generates plot
-def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_filename):
-
-	print("running simulation...")
-	simulate(model_spec, model_name, test_dir, build_dir)
+def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename):
 
 	orig_dir = str(Path.cwd())
 	os.chdir(build_dir)
@@ -34,16 +31,17 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 	if not os.path.exists(output_dir):
 		os.mkdir(output_dir)
 	 
-	test_name = Path(test_dir).name
 	measured_path = ""
 	simulated_path = ""
+
 	if show_types & 1:
-		print("show measured")
-		
-		measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)   
+		if test_dir != "none":
+			print("show measured")
+			measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)  
+			 
 	if show_types & 2:
 		print("show simulated")
-		simulated_path = os.path.join(output_dir, test_name + "_" + model_spec + "_" + model_name + ".csv")		 
+		simulated_path = os.path.join(output_dir, simulated_filename)		 
 
 	print("creating plot...")
 	print(f"measured_path: {measured_path}")
@@ -51,14 +49,14 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 	plotter = plot(measured_path, simulated_path)
 	time.sleep(1)
 	
-	if call_test.proc != -1:
+	if dash_plot.proc != -1:
 		print("killing current dash...")
-		call_test.proc.kill()
+		dash_plot.proc.kill()
 		time.sleep(1)
 		
-	call_test.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
+	dash_plot.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
 	print("launching dash...")
-	call_test.proc.start()
+	dash_plot.proc.start()
 	time.sleep(1)
 	   
 	test_results = {}
@@ -66,10 +64,4 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 	test_results["port_num"] = 8050
 	return test_results
 
-call_test.proc = -1
-
-# Calls the 24-hr test function.
-def call_measure(model_spec, model_name, build_dir, draw_profile):
-
-    measure(model_spec, model_name, build_dir, draw_profile)
-    return 'success'
+dash_plot.proc = -1

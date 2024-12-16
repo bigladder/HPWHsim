@@ -203,7 +203,7 @@ body {font-family: Arial;}
 			var is_standard_test = false;
 			for (let test of test_index["tests"])
 				if (("name" in test) && ("group" in test))
-					if (test["name"].localeCompare(prefs["test_name"]) && test["group"].localeCompare("Standard tests"))
+					if (!test["name"].localeCompare(prefs["test_name"]) && !test["group"].localeCompare("Standard tests"))
 					{
 						is_standard_test = true;
 						break;
@@ -249,7 +249,7 @@ body {font-family: Arial;}
 		// set draw_profile dropdown
 		let draw_profile_dropdown = document.getElementById('draw_profile');
 		draw_profile_dropdown.value = prefs["draw_profile"];
-		draw_profile_dropdown.visible = is_standard_test;	
+		draw_profile_dropdown.disabled= !is_standard_test;	
 
 		set_menu_values(prefs);
 		await write_json_file("./prefs.json", prefs)
@@ -271,6 +271,11 @@ body {font-family: Arial;}
 <script>
 	async function callPyServer(cmd, fst)
 	{
+	  await fetch('http://localhost:8000/' + cmd + '?' + fst);
+	}
+
+	async function callPyServerJSON(cmd, fst)
+	{
 	  const response = await fetch('http://localhost:8000/' + cmd + '?' + fst);
 		data = await response.json();
 		return data;
@@ -288,7 +293,7 @@ body {font-family: Arial;}
     const test_form = document.getElementById('test_form');
     const test_name = test_form.test_name.value;
 
-		var measured_filename = "";
+		var measured_filename = "none";
 
 		var prefs = await read_json_file("./prefs.json")
 
@@ -303,6 +308,7 @@ body {font-family: Arial;}
 				if (("group" in test) && !test["group"].localeCompare("Standard tests"))
 				{
 					is_standard_test = true;
+					test_dir = "none";
 				}
 				else
 				{
@@ -340,8 +346,8 @@ body {font-family: Arial;}
 	    fst += '&model_name=' + model_name;
 	    fst += '&build_dir=' + build_dir;
 	    fst += '&draw_profile=' + draw_profile;
-	   	measure_results = await callPyServer("measure", fst)
-			simulated_filename = "test24hr_" + model_spec + "_" + model_name + ".csv";
+	   	await callPyServer("measure", fst)
+			simulated_filename = "test24hr_" + model_spec + "_" + model_name  + ".csv";
 
 	    document.getElementById("measure_results").style="display:block;"
 			document.getElementById("measure_results").height="1800px;"
@@ -353,15 +359,19 @@ body {font-family: Arial;}
 	    fst += '&model_name=' + model_name;
 	    fst += '&test_dir=' + test_dir;
 	    fst += '&build_dir=' + build_dir;
-	    simulate_results = await callPyServer("simulate", fst)
+	    await callPyServer("simulate", fst)
 			simulated_filename = test_name + "_" + model_spec + "_" + model_name + ".csv";
 		}
 	
-    fst = 'simulated_filename=' + simulated_filename;
+    fst = 'test_dir=' +  test_dir;
+    fst += '&build_dir=' + build_dir;
+		fst += '&show_types=' + show_types;
+    fst += '&simulated_filename=' + simulated_filename;
     fst += '&measured_filename=' + measured_filename;
 
-	 	plot_results = await callPyServer("plot", fst);
-		let energy_data = plot_results
+	 	plot_results = await callPyServerJSON("plot", fst);
+		let energy_data = plot_results["energy_data"];
+		const dash_port = plot_results["port_num"];
 
 		let energy_measured_p = document.getElementById("energy_measured")
 		if ("measuredE_Wh" in energy_data)
@@ -393,9 +403,11 @@ body {font-family: Arial;}
     localStorage.setItem("build_dir", build_dir);
     localStorage.setItem("test_name", test_name);
 
-		const port_string = "http://localhost:8050"
+		const port_string = "http://localhost:" + dash_port
     document.getElementById("plots").src = port_string
     document.getElementById("plots").style = "display:block;"
+
+    document.getElementById("test_btn").disabled = false;
   }
 </script>
 
@@ -462,17 +474,6 @@ body {font-family: Arial;}
 
   <object id="measure_results" data="" width=800 height=1800 style="display:none;"></object>
 
-</div>
-
-<!-- content -->
-<button id="measure_tab" class="collapsible">Measure</button>
-<div class="content">
-  <form id="measure_form">
-
-
-  </form>
-
-  <object id="measure_results" data="" width=800 height=1800 style="display:none;"></object>
 </div>
 
 <script>
