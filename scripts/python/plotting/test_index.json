@@ -26,7 +26,9 @@
 		{"group": "Demand-response tests", "name": "testDr_LO", "path": "DR_tests"},
 		{"group": "Demand-response tests", "name": "testDr_TOO", "path": "DR_tests"},
 		{"group": "Demand-response tests", "name": "testDr_TOO2", "path": "DR_tests"},
-		{"group": "Demand-response tests", "name": "testDR_TOTLOR", "path": "DR_tests"}
+		{"group": "Demand-response tests", "name": "testDR_TOTLOR", "path": "DR_tests"},
+
+		{"group": "Standard tests", "name": "Standard 24-hr test"}
  
   ]
 }
