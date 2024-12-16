@@ -363,6 +363,7 @@ body {font-family: Arial;}
 			simulated_filename = test_name + "_" + model_spec + "_" + model_name + ".csv";
 		}
 	
+		document.getElementById("plots").src	 = "";
     fst = 'test_dir=' +  test_dir;
     fst += '&build_dir=' + build_dir;
 		fst += '&show_types=' + show_types;
@@ -403,8 +404,7 @@ body {font-family: Arial;}
     localStorage.setItem("build_dir", build_dir);
     localStorage.setItem("test_name", test_name);
 
-		const port_string = "http://localhost:" + dash_port
-    document.getElementById("plots").src = port_string
+    document.getElementById("plots").src = "http://localhost:" + dash_port
     document.getElementById("plots").style = "display:block;"
 
     document.getElementById("test_btn").disabled = false;
