@@ -1,1 +1,1 @@
-{"model_name": "AquaThermAire", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Tests with data", "test_name": "villara_24hr67", "show_simulated": true, "show_measured": true, "draw_profile": "auto"}
+{"model_name": "AquaThermAire", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Standard tests", "test_name": "Standard 24-hr test", "show_simulated": true, "show_measured": false, "draw_profile": "auto"}

@@ -11,12 +11,18 @@ set(testNames
         test95
         testLockout
         testSandenCombi
+        )
+
+# Demand-response tests
+set(DR_TestDir "DR_tests")
+set(DR_Tests
         testDr_LO
         testDr_TOO
         testDr_TOT
         testDr_TOO2
         testDR_TOTLOR
         )
+
 set(modelNames
         #  StorageTank
         AOSmithHPTS40
@@ -312,6 +318,15 @@ foreach (test ${testNames})
     endforeach (model)
 endforeach (test)
 
+## DR tests
+foreach (test ${DR_Tests})
+    foreach (model ${modelNames})
+				set(fullTestName "${DR_TestDir}/${test}")
+				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
+    endforeach (model)
+endforeach (test)
+
 #Test(s) specifically for Villara AquaThermAire model
 foreach (model ${Villara_Models})
     foreach (test ${Villara_Tests})
@@ -369,6 +384,14 @@ endforeach (test)
 ## Regression tests
 #Add general 24-h tests
 foreach (test ${testNames})
+    foreach (model ${modelNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
+#Add DR tests
+foreach (test ${DR_Tests})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")

@@ -54,7 +54,8 @@ def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_file
 		dash_plot.proc.kill()
 		time.sleep(1)
 		
-	dash_plot.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')	
+	dash_plot.proc = mp.Process(target=dash_proc.dash_proc, args=(plotter.plot.figure, ), name='dash-proc')
+	time.sleep(1)
 	print("launching dash...")
 	dash_plot.proc.start()
 	time.sleep(1)

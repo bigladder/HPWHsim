@@ -88,23 +88,16 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.send_header("Content-Length", "")
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
-				print("sent measure response")
 				return
 
 							
-			if self.path.startswith('/plot'):
+			elif self.path.startswith('/plot'):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 					test_dir = query_components.get('test_dir', [None])[0]
 					build_dir = query_components.get('build_dir', [None])[0]
 					show_types  = int(query_components.get('show_types', [None])[0])
 					simulated_filename  = query_components.get('simulated_filename', [None])[0]
 					measured_filename= query_components.get('measured_filename', [None])[0]
-					print(test_dir)
-					print(build_dir)
-					print(show_types)
-					print(simulated_filename)
-					print(measured_filename)
-					print("call dash plot")
 					response = dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_filename)
 
 					self.send_response(200)
