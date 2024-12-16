@@ -22,7 +22,7 @@ def measure(model_spec, model_name, build_dir, draw_profile):
 		os.mkdir(output_dir)
          
 	results_file = os.path.join(output_dir, "results.txt")
-	run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_file, '-n']
+	run_list = [app_cmd, 'measure', '-s', model_spec, '-m', model_name, '-d', output_dir, '-r', results_file]
 	if draw_profile != "auto":
 		run_list.append('-p')
 		run_list.append(draw_profile)
