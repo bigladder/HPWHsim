@@ -39,6 +39,7 @@ def call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_
 	simulated_path = ""
 	if show_types & 1:
 		print("show measured")
+		
 		measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)   
 	if show_types & 2:
 		print("show simulated")

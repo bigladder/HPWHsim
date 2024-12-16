@@ -7,7 +7,9 @@
 import http.server
 import socketserver
 import urllib.parse as urlparse
-import main
+from simulate import simulate
+from plot import plot
+from measure import measure
 import json
 from json import dumps
 
@@ -15,27 +17,25 @@ PORT = 8000
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
-			if self.path.startswith('/test'):
-					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+			if self.path.startswith('/simulate'):
+				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
 
-					model_spec = query_components.get('model_spec', [None])[0]
-					model_name = query_components.get('model_name', [None])[0]
-					test_dir = query_components.get('test_dir', [None])[0]
-					build_dir = query_components.get('build_dir', [None])[0]
-					show_types  = int(query_components.get('show_types', [None])[0])
-					measured_filename= query_components.get('measured_filename', [None])[0]
+				model_spec = query_components.get('model_spec', [None])[0]
+				model_name = query_components.get('model_name', [None])[0]
+				test_dir = query_components.get('test_dir', [None])[0]
+				build_dir = query_components.get('build_dir', [None])[0]
 
-					response = main.call_test(model_spec, model_name, test_dir, build_dir, show_types, measured_filename)
+				response = simulate(model_spec, model_name, test_dir, build_dir)
 
-					self.send_response(200)
-					self.send_header("Content-type", "application/json")
-					self.send_header("Content-Length", str(len(dumps(response))))
-					#self.send_header("Content-type", "text/html")
-					self.send_header("Access-Control-Allow-Origin", "*")
-					self.end_headers()
+				self.send_response(200)
+				self.send_header("Content-type", "application/json")
+				self.send_header("Content-Length", str(len(dumps(response))))
+				#self.send_header("Content-type", "text/html")
+				self.send_header("Access-Control-Allow-Origin", "*")
+				self.end_headers()
 
-					self.wfile.write(dumps(response).encode('utf-8'))
-					return
+				self.wfile.write(dumps(response).encode('utf-8'))
+				return
 
 			elif self.path.startswith('/measure'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
@@ -44,10 +44,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				build_dir = query_components.get('build_dir', [None])[0]
 				draw_profile = query_components.get('draw_profile', [None])[0]
 
-				main.call_measure(model_spec, model_name, build_dir, draw_profile)
+				response = measure(model_spec, model_name, build_dir, draw_profile)
 
 				self.send_response(200)
 				self.send_header("Content-type", "text/html")
+				self.send_header("Content-Length", "")
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return
@@ -68,6 +69,24 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				
 				self.wfile.write(dumps(content).encode('utf-8'))
 				return
+				
+			if self.path.startswith('/plot'):
+					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
+
+					simulated_filename  = query_components.get('simulated_filename', [None])[0]
+					measured_filename= query_components.get('measured_filename', [None])[0]
+
+					response = plot(measured_filename, simulated_filename)
+
+					self.send_response(200)
+					self.send_header("Content-type", "application/json")
+					self.send_header("Content-Length", str(len(dumps(response))))
+					#self.send_header("Content-type", "text/html")
+					self.send_header("Access-Control-Allow-Origin", "*")
+					self.end_headers()
+
+					self.wfile.write(dumps(response).encode('utf-8'))
+					return
 
 			elif self.path.startswith('/write_json'):
 				query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
@@ -85,7 +104,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return
-						
+
 			else:
 				super().do_GET()
 
