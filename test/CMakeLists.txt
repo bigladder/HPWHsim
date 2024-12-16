@@ -4,7 +4,24 @@ add_custom_target(results_directory ALL COMMAND ${CMAKE_COMMAND} -E make_directo
 add_test(NAME "Ready.Output.Files" COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_BINARY_DIR}/output/DHW_YRLY.csv")
 
 # Run model tests and unit tests on models
-set(testNames
+set(modelNames
+        #  StorageTank
+        AOSmithHPTS40
+        AOSmithHPTS50
+        AOSmithPHPT60
+        AOSmithHPTU80
+        Sanden80
+        RheemHB50
+        Stiebel220e
+        GE502014
+        Rheem2020Prem40
+        Rheem2020Prem50
+        Rheem2020Build50
+        #  RheemPlugInDedicated50
+        )
+
+set(general_TestDir "general_tests")
+set(general_Tests
         test30
         test50
         test70
@@ -23,21 +40,7 @@ set(DR_Tests
         testDR_TOTLOR
         )
 
-set(modelNames
-        #  StorageTank
-        AOSmithHPTS40
-        AOSmithHPTS50
-        AOSmithPHPT60
-        AOSmithHPTU80
-        Sanden80
-        RheemHB50
-        Stiebel220e
-        GE502014
-        Rheem2020Prem40
-        Rheem2020Prem50
-        Rheem2020Build50
-        #  RheemPlugInDedicated50
-        )
+
 set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
@@ -45,6 +48,7 @@ set(lockoutTestModels
         Stiebel220e
         GE502014
         )
+
 set(yearTestsModels
         AOSmithHPTU80
         Sanden80
@@ -58,9 +62,15 @@ set(yearTestsModels
         AOSmithCAHP120
         AWHSTier3Generic80
         )
+
 set(yearTests
         testCA_3BR_CTZ15
         testCA_3BR_CTZ16
+        )
+
+set(maxTempTests
+        testREGoesTo93C
+        testREGoesTo93CCold
         )
 
 set(maxTempModels
@@ -71,11 +81,6 @@ set(maxTempModels
         GE502014
         TamScalable_SP
         AOSmithCAHP120
-        )
-
-set(maxTempTests
-        testREGoesTo93C
-        testREGoesTo93CCold
         )
 
 set(largeCompressorTests
@@ -154,15 +159,17 @@ set(yearLargeTests
         testCA_36Unit_CTZ12
         )
 
-set(stateOfChargeTests
+#
+set(SoC_Models
+        Sanden120
+        NyleC25A_SP
+        )
+set(SoC_TestDir "SoC_tests")
+set(SoC_Tests
         testSoC70
         testSoCLockout
         testSoCHighEnteringWater
         testSoCSetpointChange
-        )
-set(stateOfChargeCompressorNames
-        Sanden120
-        NyleC25A_SP
         )
 
 #
@@ -311,10 +318,11 @@ function(add_plot_test)
 endfunction()
 
 ## Model tests
-foreach (test ${testNames})
+foreach (test ${general_Tests})
     foreach (model ${modelNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File")
+				set(fullTestName "${general_TestDir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "File")
     endforeach (model)
 endforeach (test)
 
@@ -375,15 +383,16 @@ foreach (test ${largeCompressorTests})
 endforeach (test)
 
 #Add State of Charge tests to the list
-foreach (test ${stateOfChargeTests})
-    foreach (model ${stateOfChargeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+foreach (test ${SoC_Tests})
+    foreach (model ${SoC_Models})
+			set(fullTestName "${SoC_TestDir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
 ## Regression tests
-#Add general 24-h tests
-foreach (test ${testNames})
+#Add general tests
+foreach (test ${general_Tests})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
@@ -413,8 +422,8 @@ foreach (test ${largeCompressorTests})
 endforeach (test)
 
 #Add State of Charge tests to the list
-foreach (test ${stateOfChargeTests})
-    foreach (model ${stateOfChargeCompressorNames})
+foreach (test ${SoC_Tests})
+    foreach (model ${SoC_Models})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
