@@ -26,7 +26,6 @@ set(general_Tests
         test50
         test70
         test95
-        testLockout
         testSandenCombi
         )
 
@@ -40,7 +39,7 @@ set(DR_Tests
         testDR_TOTLOR
         )
 
-
+# lockout test
 set(lockoutTestModels
         AOSmithPHPT60
         AOSmithHPTU80
@@ -219,28 +218,15 @@ endif ()
 #Tests for successful runs
 function(add_model_test)
     set(options)
-    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME)
+    set(oneValueArgs SPEC_TYPE MODEL_NAME TEST_NAME AIR_T_F)
     set(multValueArgs)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(hpwhArgs run -s ${ARG_SPEC_TYPE} -m ${ARG_MODEL_NAME} -t ${ARG_TEST_NAME} -d ${CMAKE_CURRENT_BINARY_DIR}/output)
 
-    if (${ARG_TEST_NAME} STREQUAL "testLockout")
-        if (${ARG_MODEL_NAME} STREQUAL "AOSmithPHPT60")
-            set(airTemp "48")
-        elseif (${ARG_MODEL_NAME} STREQUAL "AOSmithHPTU80")
-            set(airTemp "45")
-        elseif (${ARG_MODEL_NAME} STREQUAL "RheemHB50")
-            set(airTemp "43")
-        elseif (${ARG_MODEL_NAME} STREQUAL "Stiebel220e")
-            set(airTemp "35")
-        elseif (${ARG_MODEL_NAME} STREQUAL "GE502014")
-            set(airTemp "40")
-        else ()
-            return()
-        endif ()
-        set(hpwhArgs ${hpwhArgs} -a ${airTemp})
-    endif ()
+    if (DEFINED ARG_AIR_T_F)
+        set(hpwhArgs ${hpwhArgs} -a ${ARG_AIR_T_F})
+    endif()
 
     set(TEST_TITLE "ModelTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}")
 
@@ -262,10 +248,6 @@ function(add_regression_test)
     else()
         set(compareSpecType ${ARG_SPEC_TYPE})
     endif()
-
-    if ((${ARG_TEST_NAME} STREQUAL "testLockout") AND (NOT ${ARG_MODEL_NAME} IN_LIST lockoutTestModels))
-        return()
-    endif ()
 
     set(TEST_TITLE "RegressionTest.${ARG_TEST_NAME}.${ARG_MODEL_NAME}.${ARG_SPEC_TYPE}.${compareSpecType}")
 
@@ -318,6 +300,7 @@ function(add_plot_test)
 endfunction()
 
 ## Model tests
+# general tests
 foreach (test ${general_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${general_TestDir}/${test}")
@@ -326,7 +309,27 @@ foreach (test ${general_Tests})
     endforeach (model)
 endforeach (test)
 
-## DR tests
+# lockout tests
+foreach (model ${lockoutTestModels})
+  if (${model} STREQUAL "AOSmithPHPT60")
+      set(airT_F "48")
+  elseif (${model} STREQUAL "AOSmithHPTU80")
+      set(airT_F "45")
+  elseif (${model} STREQUAL "RheemHB50")
+      set(airT_F "43")
+  elseif (${model} STREQUAL "Stiebel220e")
+      set(airT_F "35")
+  elseif (${model} STREQUAL "GE502014")
+      set(airT_F "40")
+	else ()
+		continue()
+  endif ()
+
+	add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "Preset" AIR_T_F "${airT_F}")
+  add_model_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "File" AIR_T_F "${airT_F}")
+endforeach (model)
+
+# DR tests
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
 				set(fullTestName "${DR_TestDir}/${test}")
@@ -335,7 +338,7 @@ foreach (test ${DR_Tests})
     endforeach (model)
 endforeach (test)
 
-#Test(s) specifically for Villara AquaThermAire model
+# Villara AquaThermAire tests
 foreach (model ${Villara_Models})
     foreach (test ${Villara_Tests})
 				set(fullTestName "${Villara_TestDir}/${test}")
@@ -348,7 +351,7 @@ endforeach (model)
 ## Plot test
 add_plot_test(SPEC_TYPE "Preset" MODEL_NAME "AquaThermAire" TEST_NAME "Villara/AquaThermAire/villara_24hr67" )
 
-#Test(s) specifically for Bradford White AeroTherm model
+# Bradford White AeroTherm tests
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
 		set(fullTestName "BradfordWhite/${model}/${test}")
@@ -358,7 +361,7 @@ foreach (model ${BradfordWhiteModels})
     endforeach (test)
 endforeach (model)
 
-#Test(s) specifically for LG APHWC50 model
+# LG tests
 foreach(model ${LG_Models})
     foreach (test ${LG_Tests})
         set(fullTestName "${LG_TestDir}/${test}")
@@ -368,21 +371,21 @@ foreach(model ${LG_Models})
     endforeach (test)
 endforeach (model)
 
-#Test models follow control logic with max temperatures.
+# Test models follow control logic with max temperatures.
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
-#Add large compressor tests to the list
+# Large-compressor tests
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
-#Add State of Charge tests to the list
+# State-of-Charge tests 
 foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
 			set(fullTestName "${SoC_TestDir}/${test}")
@@ -391,7 +394,7 @@ foreach (test ${SoC_Tests})
 endforeach (test)
 
 ## Regression tests
-#Add general tests
+# general regression tests
 foreach (test ${general_Tests})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
@@ -399,7 +402,13 @@ foreach (test ${general_Tests})
     endforeach (model)
 endforeach (test)
 
-#Add DR tests
+# lockout test regressions
+foreach (model ${lockoutTestModels})
+  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "Preset")
+  add_regression_test(TEST_NAME testLockout MODEL_NAME "${model}" SPEC_TYPE "File" COMPARE_SPEC_TYPE "Preset")
+endforeach (model)
+
+# DR regression tests
 foreach (test ${DR_Tests})
     foreach (model ${modelNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
@@ -407,28 +416,28 @@ foreach (test ${DR_Tests})
     endforeach (model)
 endforeach (test)
 
-#Add max temp tests to the regression list
+# Max temp regression tests
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
-#Add large compressor tests to the regression list
+# Large-compressor regression tests
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
-#Add State of Charge tests to the list
+# State-of-charge regression tests
 foreach (test ${SoC_Tests})
     foreach (model ${SoC_Models})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 
-#Regression test(s) specifically for Villara model(s)
+# Villara Aerotherm regression tests
 foreach (model ${Villara_Models})
     foreach (test ${Villara_Tests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
@@ -437,7 +446,7 @@ foreach (model ${Villara_Models})
     endforeach (test)
 endforeach (model)
 
-#Regression test(s) specifically for BradfordWhite model(s)
+# BradfordWhite regression tests
 foreach (model ${BradfordWhiteModels})
     foreach (test "${BradfordWhite${model}_Tests}")
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "BradfordWhite${model}" SPEC_TYPE "Preset")
@@ -446,7 +455,7 @@ foreach (model ${BradfordWhiteModels})
     endforeach (test)
 endforeach (model)
 
-#Regression test(s) specifically for LG model(s)
+# LG regressiontests
 foreach (model ${LG_Models})
     foreach (test ${LG_Tests})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
