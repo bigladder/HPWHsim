@@ -23,7 +23,11 @@
 		{"name": "AquaThermAire", "manufacturer": "Villara", "model": "AquaThermAire", "specs": ["Preset", "File", "JSON"]},
 
  		{"name": "LG_APHWC50", "manufacturer": "LG", "model": "APHWC50", "specs": ["Preset", "File", "JSON"]},
-		{"name": "LG_APHWC80", "manufacturer": "LG", "model": "APHWC80", "specs": ["Preset", "File", "JSON"]}
+		{"name": "LG_APHWC80", "manufacturer": "LG", "model": "APHWC80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "Stiebel220e", "manufacturer": "Stiebel", "model": "Stiebel220e", "specs": ["Preset", "File", "JSON"]},
+		{"name": "GE502014", "manufacturer": "GE", "model": "GE502014", "specs": ["Preset", "File", "JSON"]}
+
 
   ]
 }

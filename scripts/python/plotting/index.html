@@ -156,41 +156,57 @@ body {font-family: Arial;}
 		var show_tests_with_data = !prefs["test_list"].localeCompare("Tests with data");
 		var show_standard_tests = show_all_tests || !prefs["test_list"].localeCompare("Standard tests");
 		for (let test of test_index["tests"])
-			if ("name" in test)
+		{
+			var show_test = false;
+			var test_name = "";
+			if ("test" in test)
+				test_name = ("name" in test)? test["name"] :test["test"];
+			else if ("name" in test)
+				test_name = test["name"];
+			else
+				continue;
+
+			show_test = show_all_tests;
+			if ("group" in test)
 			{
-				const test_name = test["name"];
-				var show_test = show_all_tests;
-				if ("group" in test)
-				{
-					const test_group = test["group"];
-					show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
-					if (show_all_tests || show_tests_with_data)
-						if ("measured" in test)
-						{	 // get test list from model_index
-							const measureds = test["measured"];
-							for (let measured of measureds)
-								if ("model" in measured)
-									if (!measured["model"].localeCompare(prefs["model_name"]))
-									{
-										show_test = true;
-										break;
-									}
-							}
-				}
-				if(show_test)
-				{
-					test_names.push(test_name);
-					have_test = true;
-				}
+				const test_group = test["group"];
+				show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
+				if (show_all_tests || show_tests_with_data)
+					if ("measured" in test)
+					{	 // get test list from model_index
+						const measureds = test["measured"];
+						for (let measured of measureds)
+							if ("model" in measured)
+								if (!measured["model"].localeCompare(prefs["model_name"]))
+								{
+									show_test = true;
+									break;
+								}
+					}
 			}
+
+			if(show_test)
+			{
+				test_names.push(test_name);
+				have_test = true;
+			}
+		}
 
 		if (have_test && !(test_names.includes(prefs["test_name"])))
 			prefs["test_name"] = test_names[0];
 
 		var have_measured = false;
 		for (let test of test_index["tests"])
-			if ("name" in test)
-				if (test["name"] == prefs["test_name"])
+		{
+				var test_name = "";
+				if ("test" in test)
+					test_name = ("name" in test)? test["name"] :test["test"];
+				else if ("name" in test)
+					test_name = test["name"];
+				else
+					continue;
+
+				if (test_name == prefs["test_name"])
 					if ("measured" in test)
 						for (let measured of test["measured"])
 							if ("model" in measured)
@@ -199,34 +215,39 @@ body {font-family: Arial;}
 									have_measured = true;
 									break;
 								}
+			}
 
-			var is_standard_test = false;
-			for (let test of test_index["tests"])
-				if (("name" in test) && ("group" in test))
-					if (!test["name"].localeCompare(prefs["test_name"]) && !test["group"].localeCompare("Standard tests"))
-					{
-						is_standard_test = true;
-						break;
-					}
+		var is_standard_test = false;
+		for (let test of test_index["tests"])
+			if (("test" in test) && ("group" in test))
+			{
+				const test_dir = test["test"];
+				const test_name = ("name" in test) ? test["name"] : test_dir;
+				if (!test_name.localeCompare(prefs["test_name"]) && !test["group"].localeCompare("Standard tests"))
+				{
+					is_standard_test = true;
+					break;
+				}
+			}
 
 		// set select_test control
 		let select_test = document.getElementById('test_name');
-		while (select_test.hasChildNodes()) {
+		while (select_test.hasChildNodes())
 		  select_test.removeChild(select_test.firstChild);
-		}
 					
 		var show_simulated = (prefs["show_simulated"] && have_test);
 		var show_measured = (prefs["show_measured"] && have_measured);
 		if (!have_test)
 		{
-			prefs["test_name"]  = "";
+			prefs["test_name"] = "";
 			select_test.disabled = true;
 			document.getElementById('test_btn').disabled = true;
 		}
 		else
 		{
 			// set test_name control
-			for (let test_name of test_names){
+			for (let test_name of test_names)
+			{
 			  let option = document.createElement("option");
 			  option.text = test_name;
 			  option.value = test_name;
@@ -300,42 +321,52 @@ body {font-family: Arial;}
 		// get test path
 		const test_index = await read_json_file("./test_index.json")
 		var test_dir = ""
+		var core_test_name = "";
 		
 		// get test list from model_index
 		var is_standard_test = false;
 		for (let test of test_index["tests"])
-			if (("name" in test) && !test["name"].localeCompare(test_name))
-				if (("group" in test) && !test["group"].localeCompare("Standard tests"))
-				{
-					is_standard_test = true;
-					test_dir = "none";
-				}
+		{
+				var comp_test_name = "";
+				if ("test" in test)
+					comp_test_name = ("name" in test)? test["name"] :test["test"];
+				else if ("name" in test)
+					comp_test_name = test["name"];
 				else
-				{
-					if("path" in test)
-						test_dir = test["path"] + "/" + test_name;
-					else
-						test_dir = test_name;
+					continue;
 
-					if ("measured" in test)
-						for (let measured of test["measured"]){
-							if (("model" in measured) && !measured["model"].localeCompare(prefs["model_name"]))
-								if ("filename" in measured)
-								{
-									measured_filename = measured["filename"];										
-									break;
-								}
-							}
+				if (!comp_test_name.localeCompare(test_name))
+				{
+					if (("group" in test) && !test["group"].localeCompare("Standard tests"))
+					{
+						is_standard_test = true;
+						test_dir = "none";
 					}
+					else if ("test" in test)
+					{
+						core_test_name = test["test"];
+						test_dir = core_test_name;
+						if("path" in test)
+							test_dir = test["path"] + "/" + core_test_name;
+
+						if ("measured" in test)
+							for (let measured of test["measured"])
+								if (("model" in measured) && !measured["model"].localeCompare(prefs["model_name"]))
+									if ("filename" in measured)
+									{
+										measured_filename = measured["filename"];										
+										break;
+									}
+					}
+			}
+		}
 
     document.getElementById("test_btn").disabled = true;
-		var checkbox_show_sim = document.getElementById("show_simulated");
-		var checkbox_show_meas = document.getElementById("show_measured");
 
 		var show_types = 0;
-		if ((!checkbox_show_meas.disabled && checkbox_show_meas.checked) || !is_standard_test)
+		if (prefs["show_measured"])
 				show_types += 1;
-		if (!checkbox_show_sim.disabled && checkbox_show_sim.checked)
+		if (prefs["show_simulated"])
 				show_types += 2;
 
 		if(is_standard_test)
@@ -360,7 +391,7 @@ body {font-family: Arial;}
 	    fst += '&test_dir=' + test_dir;
 	    fst += '&build_dir=' + build_dir;
 	    await callPyServer("simulate", fst)
-			simulated_filename = test_name + "_" + model_spec + "_" + model_name + ".csv";
+			simulated_filename = core_test_name + "_" + model_spec + "_" + model_name + ".csv";
 		}
 	
 		document.getElementById("plots").src	 = "";

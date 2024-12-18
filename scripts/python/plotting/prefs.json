@@ -1,1 +1,1 @@
-{"model_name": "LG_APHWC50", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_name": "testSandenCombi", "show_simulated": true, "show_measured": false, "draw_profile": "auto"}
+{"model_name": "LG_APHWC50", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Tests with data", "test_name": "DOE2014_LGC50_24hr50", "show_simulated": true, "show_measured": false, "draw_profile": "auto"}
