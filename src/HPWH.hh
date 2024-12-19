@@ -91,28 +91,51 @@ class HPWH : public Courier::Sender
     HPWH& operator=(const HPWH& hpwh);         /**< assignment operator  */
     ~HPWH(); /**< destructor just a couple dynamic arrays to destroy - could be replaced by vectors
                                                      eventually?   */
+
+    void from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi);
+    void to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const;
+
     void from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh);
     void to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const;
+
+    void from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs);
+    void
+    to(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs) const;
+
+    static void to_json(const hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi,
+                        nlohmann::json& j);
 
     static void
     to_json(const hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh,
             nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs,
+            nlohmann::json& j);
+
     static void to_json(const hpwh_data_model::rstank_ns::RSTANK& rshs, nlohmann::json& j);
+
     static void
     to_json(const hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE& rshs,
             nlohmann::json& j);
+
     static void to_json(
         const hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE& rshs,
         nlohmann::json& j);
+
     static void
-    to_json(const hpwh_data_model::rsintegratedwaterheater_ns::HeatingLogic& heating_logic,
+    to_json(const hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heating_logic,
             nlohmann::json& j);
-    static void to_json(
-        const hpwh_data_model::rsintegratedwaterheater_ns::StateOfChargeBasedHeatingLogic& soclogic,
-        nlohmann::json& j);
-    static void to_json(
-        const hpwh_data_model::rsintegratedwaterheater_ns::TemperatureBasedHeatingLogic& templogic,
-        nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::heat_source_configuration_ns::StateOfChargeBasedHeatingLogic&
+                soclogic,
+            nlohmann::json& j);
+
+    static void
+    to_json(const hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic&
+                templogic,
+            nlohmann::json& j);
 
     /// specifies the various modes for the Demand Response (DR) abilities
     /// values may vary - names should be used

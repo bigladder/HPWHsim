@@ -89,10 +89,9 @@ HPWH::HeatSource& HPWH::HeatSource::operator=(const HeatSource& hSource)
 }
 
 void HPWH::HeatSource::from(
-    const hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
-        heatsourceconfiguration)
+    const hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc)
 {
-    auto& config = heatsourceconfiguration;
+    auto& config = hsc;
     checkFrom(name, config.id_is_set, config.id, std::string("heatsource"));
     setCondensity(config.heat_distribution);
 
@@ -130,70 +129,69 @@ void HPWH::HeatSource::from(
     }
 }
 
-void HPWH::HeatSource::to(hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceConfiguration&
-                              heatsourceconfiguration) const
+void HPWH::HeatSource::to(
+    hpwh_data_model::heat_source_configuration_ns::HeatSourceConfiguration& hsc) const
 {
-    heatsourceconfiguration.heat_distribution = condensity;
-    heatsourceconfiguration.id = name;
+    hsc.heat_distribution = condensity;
+    hsc.id = name;
 
-    heatsourceconfiguration.shut_off_logic.resize(shutOffLogicSet.size());
+    hsc.shut_off_logic.resize(shutOffLogicSet.size());
     std::size_t i = 0;
     for (auto& shutOffLogic : shutOffLogicSet)
     {
-        shutOffLogic->to(heatsourceconfiguration.shut_off_logic[i]);
-        heatsourceconfiguration.shut_off_logic_is_set = true;
+        shutOffLogic->to(hsc.shut_off_logic[i]);
+        hsc.shut_off_logic_is_set = true;
         ++i;
     }
 
-    heatsourceconfiguration.turn_on_logic.resize(turnOnLogicSet.size());
+    hsc.turn_on_logic.resize(turnOnLogicSet.size());
     i = 0;
     for (auto& turnOnLogic : turnOnLogicSet)
     {
-        turnOnLogic->to(heatsourceconfiguration.turn_on_logic[i]);
-        heatsourceconfiguration.turn_on_logic_is_set = true;
+        turnOnLogic->to(hsc.turn_on_logic[i]);
+        hsc.turn_on_logic_is_set = true;
         ++i;
     }
 
     if (standbyLogic != NULL)
     {
-        standbyLogic->to(heatsourceconfiguration.standby_logic);
-        heatsourceconfiguration.standby_logic_is_set = true;
+        standbyLogic->to(hsc.standby_logic);
+        hsc.standby_logic_is_set = true;
     }
 
     if (backupHeatSource != NULL)
-        checkTo(backupHeatSource->name,
-                heatsourceconfiguration.backup_heat_source_id_is_set,
-                heatsourceconfiguration.backup_heat_source_id);
+        checkTo(
+            backupHeatSource->name, hsc.backup_heat_source_id_is_set, hsc.backup_heat_source_id);
 
     if (followedByHeatSource != NULL)
         checkTo(followedByHeatSource->name,
-                heatsourceconfiguration.followed_by_heat_source_id_is_set,
-                heatsourceconfiguration.followed_by_heat_source_id);
+                hsc.followed_by_heat_source_id_is_set,
+                hsc.followed_by_heat_source_id);
 
     if (companionHeatSource != NULL)
         checkTo(companionHeatSource->name,
-                heatsourceconfiguration.companion_heat_source_id_is_set,
-                heatsourceconfiguration.companion_heat_source_id);
+                hsc.companion_heat_source_id_is_set,
+                hsc.companion_heat_source_id);
 
     switch (typeOfHeatSource())
     {
     case TYPE_compressor:
     {
-        heatsourceconfiguration.heat_source_type =
-            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER;
-        heatsourceconfiguration.heat_source = std::make_unique<
+        hsc.heat_source_type =
+            hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER;
+        hsc.heat_source = std::make_unique<
             hpwh_data_model::rscondenserwaterheatsource_ns::RSCONDENSERWATERHEATSOURCE>();
-        to(heatsourceconfiguration.heat_source);
+        to(hsc.heat_source);
         break;
     }
 
     case TYPE_resistance:
     {
-        heatsourceconfiguration.heat_source_type =
-            hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE;
-        heatsourceconfiguration.heat_source = std::make_unique<
+        hsc.heat_source_type =
+            hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE;
+        hsc.heat_source = std::make_unique<
             hpwh_data_model::rsresistancewaterheatsource_ns::RSRESISTANCEWATERHEATSOURCE>();
-        to(heatsourceconfiguration.heat_source);
+        to(hsc.heat_source);
         break;
     }
 
