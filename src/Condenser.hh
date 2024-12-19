@@ -15,8 +15,10 @@ class HPWH::Condenser : public HPWH::HeatSource
     Condenser& operator=(const Condenser& hSource);
 
     HEATSOURCE_TYPE typeOfHeatSource() const override { return TYPE_compressor; }
+
     void to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const override;
     void from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr) override;
+
     void calcHeatDist(std::vector<double>& heatDistribution) override;
 
     std::vector<std::vector<double>> perfGrid;
@@ -35,7 +37,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     void setupDefrostMap(double derate35 = 0.8865);
     /**< configure the heat source with a default for the defrost derating */
-    void defrostDerate(double& to_derate, double airT_C);
+    void defrostDerate(double& to_derate, double airT_C) const;
     /**< Derates the COP of a system based on the air temperature */
 
     bool maxedOut() const override;
@@ -168,12 +170,18 @@ class HPWH::Condenser : public HPWH::HeatSource
     /**< Does a simple linear interpolation between two points to the xnew point */
 
     static void regressedMethod(
-        double& ynew, std::vector<double>& coefficents, double x1, double x2, double x3);
+        double& ynew, const std::vector<double>& coefficents, double x1, double x2, double x3);
     /**< Does a calculation based on the ten term regression equation  */
 
     static void
-    regressedMethodMP(double& ynew, std::vector<double>& coefficents, double x1, double x2);
+    regressedMethodMP(double& ynew, const std::vector<double>& coefficents, double x1, double x2);
     /**< Does a calculation based on the five term regression equation for MP split systems  */
+
+    void getCapacityFromMap(double environmentT_C,
+                            double heatSourceT_C,
+                            double outletT_C,
+                            double& input_BTUperHr,
+                            double& cop) const;
 
     void getCapacityFromMap(double environmentT_C,
                             double heatSourceT_C,

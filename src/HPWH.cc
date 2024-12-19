@@ -4358,12 +4358,55 @@ void HPWH::initFromJSON(string sModelName)
     std::ifstream inputFile(sInputFileName);
     nlohmann::json j = nlohmann::json::parse(inputFile);
     hpwh_data_model::init(get_courier());
-    hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER rswh;
-    hpwh_data_model::rsintegratedwaterheater_ns::from_json(j, rswh);
-    from(rswh);
+
+    hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
+    hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi);
+    from(hsi);
 }
 
 #endif
+
+void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
+{
+    checkFrom(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature, false);
+
+    int number_of_nodes;
+    checkFrom(number_of_nodes, hsi.number_of_nodes_is_set, hsi.number_of_nodes, 12);
+    tank->setNumNodes(number_of_nodes);
+    if (hsi.system_type_is_set)
+        switch (hsi.system_type)
+        {
+        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED:
+        {
+            if (hsi.integrated_system_is_set)
+                from(hsi.integrated_system);
+            break;
+        }
+        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
+        {
+            if (hsi.central_system_is_set)
+            {
+                from(hsi.central_system);
+                auto compressor =
+                    reinterpret_cast<Condenser*>(heatSources[getCompressorIndex()].get());
+                compressor->externalInletHeight = static_cast<int>(
+                    hsi.central_system.external_inlet_height * hsi.number_of_nodes);
+                compressor->externalOutletHeight = static_cast<int>(
+                    hsi.central_system.external_outlet_height * hsi.number_of_nodes);
+                if (hsi.central_system.multipass_flow_rate > 0.)
+                {
+                    compressor->isMultipass = true;
+                    compressor->mpFlowRate_LPS = 1000. * hsi.central_system.multipass_flow_rate;
+                }
+            }
+            break;
+        }
+        case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::UNKNOWN:
+            return;
+        }
+
+    checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
+}
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
@@ -4387,13 +4430,13 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
         auto& config = configurations[iHeatSource];
         switch (config.heat_source_type)
         {
-        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::CONDENSER:
+        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
         {
             heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
             break;
         }
-        case hpwh_data_model::rsintegratedwaterheater_ns::HeatSourceType::RESISTANCE:
+        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
         {
             heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
             heatSources[iHeatSource]->from(config.heat_source);
@@ -4456,6 +4499,122 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     }
 }
 
+void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs)
+{
+    setpoint_C = F_TO_C(135.0);
+
+    auto& rstank = cwhs.tank;
+    tank->from(rstank);
+
+    auto& configurations = cwhs.heat_source_configurations;
+    std::size_t num_heat_sources = configurations.size();
+
+    heatSources.reserve(num_heat_sources);
+
+    std::unordered_map<std::string, std::size_t> heat_source_lookup;
+    heat_source_lookup.reserve(num_heat_sources);
+
+    // heat-source priority is retained from the entry order
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        auto& config = configurations[iHeatSource];
+        switch (config.heat_source_type)
+        {
+        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
+        {
+            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
+            heatSources[iHeatSource]->from(config.heat_source);
+            break;
+        }
+        case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
+        {
+            heatSources.push_back(std::make_shared<Resistance>(this, get_courier(), config.id));
+            heatSources[iHeatSource]->from(config.heat_source);
+            break;
+        }
+        default:
+        {
+        }
+        }
+
+        heatSources[iHeatSource]->from(config);
+        heat_source_lookup[config.id] = iHeatSource;
+    }
+
+    std::string sPrimaryHeatSource_id = {};
+    checkFrom(sPrimaryHeatSource_id,
+              cwhs.primary_heat_source_id_is_set,
+              cwhs.primary_heat_source_id,
+              sPrimaryHeatSource_id);
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        heatSources[iHeatSource]->isVIP = (heatSources[iHeatSource]->name == sPrimaryHeatSource_id);
+    }
+
+    // set associations between heat sources
+    for (std::size_t iHeatSource = 0; iHeatSource < num_heat_sources; ++iHeatSource)
+    {
+        auto& configuration = configurations[iHeatSource];
+
+        if (configuration.backup_heat_source_id_is_set)
+        {
+            auto iBackup = heat_source_lookup[configuration.backup_heat_source_id];
+            heatSources[iHeatSource]->backupHeatSource = heatSources[iBackup].get();
+        }
+
+        if (configuration.followed_by_heat_source_id_is_set)
+        {
+            auto iFollowedBy = heat_source_lookup[configuration.followed_by_heat_source_id];
+            heatSources[iHeatSource]->followedByHeatSource = heatSources[iFollowedBy].get();
+        }
+
+        if (configuration.companion_heat_source_id_is_set)
+        {
+            auto iCompanion = heat_source_lookup[configuration.companion_heat_source_id];
+            heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
+        }
+    }
+
+    // calculate oft-used derived values
+    calcDerivedValues();
+    checkInputs();
+    resetTankToSetpoint();
+    isHeating = false;
+    for (auto i = 0; i < getNumHeatSources(); i++)
+    {
+        if (heatSources[i]->isOn)
+        {
+            isHeating = true;
+        }
+    }
+}
+
+void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
+{
+    checkTo(doTempDepression, hsi.depresses_temperature_is_set, hsi.depresses_temperature);
+
+    checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
+
+    checkTo(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume);
+
+    if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
+    {
+        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL,
+                hsi.system_type_is_set,
+                hsi.system_type);
+        to(hsi.central_system);
+        hsi.central_system_is_set = true;
+    }
+    else
+    {
+        checkTo(hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED,
+                hsi.system_type_is_set,
+                hsi.system_type);
+        to(hsi.integrated_system);
+        hsi.integrated_system_is_set = true;
+    }
+}
+
 void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh) const
 {
     auto& metadata = rswh.metadata;
@@ -4487,6 +4646,47 @@ void HPWH::to(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEAT
             performance.primary_heat_source_id_is_set,
             performance.primary_heat_source_id,
             hasPrimaryHeatSource);
+}
+
+void HPWH::to(
+    hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs) const
+{
+    tank->to(cwhs.tank);
+
+    // heat-source priority is retained from the entry order
+    auto& configurations = cwhs.heat_source_configurations;
+    configurations.resize(getNumHeatSources());
+    bool hasPrimaryHeatSource = false;
+    std::string sPrimaryHeatSource_id = {};
+    for (int iHeatSource = 0; iHeatSource < getNumHeatSources(); ++iHeatSource)
+    {
+        auto& configuration = configurations[iHeatSource];
+        heatSources[iHeatSource]->to(configuration);
+        if (heatSources[iHeatSource]->isVIP)
+        {
+            hasPrimaryHeatSource = true;
+            sPrimaryHeatSource_id = heatSources[iHeatSource]->name;
+        }
+    }
+    checkTo(sPrimaryHeatSource_id,
+            cwhs.primary_heat_source_id_is_set,
+            cwhs.primary_heat_source_id,
+            hasPrimaryHeatSource);
+
+    auto condenser = reinterpret_cast<Condenser*>(heatSources[getCompressorIndex()].get());
+
+    checkTo(static_cast<double>(condenser->externalInletHeight / tank->getNumNodes()),
+            cwhs.external_inlet_height_is_set,
+            cwhs.external_inlet_height);
+
+    checkTo(static_cast<double>(condenser->externalOutletHeight / tank->getNumNodes()),
+            cwhs.external_outlet_height_is_set,
+            cwhs.external_outlet_height);
+
+    if (condenser->isMultipass)
+        checkTo(1000. * condenser->mpFlowRate_LPS,
+                cwhs.multipass_flow_rate_is_set,
+                cwhs.multipass_flow_rate);
 }
 
 //-----------------------------------------------------------------------------
