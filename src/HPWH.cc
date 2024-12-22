@@ -3144,7 +3144,6 @@ void HPWH::checkInputs()
     {
         model = HPWH::MODELS_ColmacCxA_30_SP;
     }
-
     else if (modelName == "ColmacCxV_5_MP")
     {
         model = HPWH::MODELS_ColmacCxV_5_MP;
@@ -4522,8 +4521,29 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         {
         case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::CONDENSER:
         {
-            heatSources.push_back(std::make_shared<Condenser>(this, get_courier(), config.id));
-            heatSources[iHeatSource]->from(config.heat_source);
+            auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
+            heatSources.push_back(condenser);
+            condenser->from(config.heat_source);
+
+            double ratio;
+            checkFrom(ratio,
+                      cwhs.external_inlet_height_is_set,
+                      cwhs.external_inlet_height,
+                      1.);
+            condenser->externalInletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
+
+            checkFrom(ratio,
+                      cwhs.external_outlet_height_is_set,
+                      cwhs.external_outlet_height,
+                      1.);
+            condenser->externalOutletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
+
+            if (cwhs.multipass_flow_rate_is_set)
+            {
+                condenser->isMultipass = true;
+                condenser->mpFlowRate_LPS = 1000. * cwhs.multipass_flow_rate;
+            }
+
             break;
         }
         case hpwh_data_model::heat_source_configuration_ns::HeatSourceType::RESISTANCE:
@@ -4604,6 +4624,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
                 hsi.system_type);
         to(hsi.central_system);
         hsi.central_system_is_set = true;
+        hsi.integrated_system_is_set = false;
     }
     else
     {
@@ -4612,6 +4633,7 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
                 hsi.system_type);
         to(hsi.integrated_system);
         hsi.integrated_system_is_set = true;
+        hsi.central_system_is_set = false;
     }
 }
 
@@ -4675,11 +4697,11 @@ void HPWH::to(
 
     auto condenser = reinterpret_cast<Condenser*>(heatSources[getCompressorIndex()].get());
 
-    checkTo(static_cast<double>(condenser->externalInletHeight / tank->getNumNodes()),
+    checkTo(static_cast<double>(condenser->externalInletHeight) / tank->getNumNodes(),
             cwhs.external_inlet_height_is_set,
             cwhs.external_inlet_height);
 
-    checkTo(static_cast<double>(condenser->externalOutletHeight / tank->getNumNodes()),
+    checkTo(static_cast<double>(condenser->externalOutletHeight) / tank->getNumNodes(),
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 

@@ -532,6 +532,10 @@ void setCondenserHeatSource(nlohmann::json& j)
 /*static*/
 void HPWH::to_json(const hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi, nlohmann::json& j)
 {
+    nlohmann::json j_metadata;
+    j_metadata["schema"] = "HPWHSimInput";
+    j["metadata"] = j_metadata;
+
     j["number_of_nodes"] = hsi.number_of_nodes;
     j["fixed_volume"] = hsi.fixed_volume;
     j["depresses_temperature"] = hsi.depresses_temperature;
@@ -539,11 +543,13 @@ void HPWH::to_json(const hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi, 
     switch (hsi.system_type)
     {
     case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
+        j["system_type"] = "CENTRAL";
         to_json(hsi.central_system, j["central_system"]);
         break;
 
     case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::INTEGRATED:
-        to_json(hsi.central_system, j["integrated_system"]);
+        j["system_type"] = "INTEGRATED";
+        to_json(hsi.integrated_system, j["integrated_system"]);
         break;
 
     default:
@@ -837,6 +843,8 @@ void HPWH::to_json(
         j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
             grid_vars.evaporator_environment_dry_bulb_temperature;
         j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
+        if (j_grid_vars.contains("outlet_temperature"))
+            j_grid_vars["outlet_temperature"] = grid_vars.outlet_temperature;
         j_perf_map["grid_variables"] = j_grid_vars;
 
         auto& lookup_vars = perf.performance_map.lookup_variables;
