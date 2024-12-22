@@ -216,20 +216,33 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
         auto& perf_map = perf.performance_map;
 
         auto& grid_variables = perf_map.grid_variables;
-        perfGrid.reserve(2);
 
-        std::vector<double> evapTs_F = {};
-        evapTs_F.reserve(grid_variables.evaporator_environment_dry_bulb_temperature.size());
-        for (auto& T : grid_variables.evaporator_environment_dry_bulb_temperature)
-            evapTs_F.push_back(C_TO_F(K_TO_C(T)));
+        perfGrid.reserve(3);
 
-        std::vector<double> heatSourceTs_F = {};
-        evapTs_F.reserve(grid_variables.heat_source_temperature.size());
-        for (auto& T : grid_variables.heat_source_temperature)
-            heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
+        if(grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
+        {
+            std::vector<double> evapTs_F = {};
+            evapTs_F.reserve(grid_variables.evaporator_environment_dry_bulb_temperature.size());
+            for (auto& T : grid_variables.evaporator_environment_dry_bulb_temperature)
+                evapTs_F.push_back(C_TO_F(K_TO_C(T)));
+            perfGrid.push_back(evapTs_F);
+        }
 
-        perfGrid.push_back(evapTs_F);
-        perfGrid.push_back(heatSourceTs_F);
+        if(grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
+        {
+            std::vector<double> heatSourceTs_F = {};
+            heatSourceTs_F.reserve(grid_variables.heat_source_temperature.size());
+            for (auto& T : grid_variables.heat_source_temperature)
+                heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
+        }
+
+        if(grid_variables.outlet_temperature_is_set)
+        {
+            std::vector<double> outletTs_F = {};
+            outletTs_F.reserve(grid_variables.outlet_temperature.size());
+            for (auto& T : grid_variables.outlet_temperature)
+                outletTs_F.push_back(C_TO_F(K_TO_C(T)));
+        }
 
         auto& lookup_variables = perf_map.lookup_variables;
         perfGridValues.reserve(2);
@@ -1053,6 +1066,7 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
     return getCapacityFromMap(
         environmentT_C, heatSourceT_C, hpwh->getSetpoint(), input_BTUperHr, cop);
 }
+
 // convert to grid
 void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
                                        std::vector<std::vector<double>>& tempGridValues) const
@@ -1074,19 +1088,19 @@ void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGri
         envTemps_K.resize(nEnvTs);
         for (std::size_t i = 0; i < nEnvTs; ++i)
         {
-            envTemps_K[i] = C_TO_K(minT + static_cast<double>(i / nEnvTs) * dEnvT_dC);
+            envTemps_K[i] = C_TO_K(minT + static_cast<double>(i) / nEnvTs * dEnvT_dC);
         }
 
         const double minHeatSourceTemp_C = 0.;
         const double maxHeatSourceTemp_C = maxSetpoint_C;
         auto heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
         auto nHeatSourceTs = std::size_t(5 * heatSourceTempRange_dC / 100.);
-        auto dHeatSourceT_dC = static_cast<double>(heatSourceTempRange_dC / nHeatSourceTs);
+        auto dHeatSourceT_dC = heatSourceTempRange_dC / static_cast<double>(nHeatSourceTs);
         heatSourceTemps_K.resize(nHeatSourceTs);
         for (std::size_t i = 0; i < nHeatSourceTs; ++i)
         {
             heatSourceTemps_K[i] = C_TO_K(minHeatSourceTemp_C +
-                                          static_cast<double>(i / nHeatSourceTs) * dHeatSourceT_dC);
+                                          static_cast<double>(i) / nHeatSourceTs * dHeatSourceT_dC);
         }
 
         if (isMultipass)
