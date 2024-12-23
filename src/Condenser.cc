@@ -957,8 +957,8 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
                                          double& cop) const
 {
     double environmentT_F = C_TO_F(environmentT_C);
-    double heatSourceT_F = C_TO_F(heatSourceT_C);
-    double outletT_F = C_TO_F(outletT_C);
+    double heatSourceT_F = C_TO_F(heatSourceT_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
+    double outletT_F = C_TO_F(outletT_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
     input_BTUperHr = 0.;
     cop = 0.;
 
