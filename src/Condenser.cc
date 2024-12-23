@@ -228,12 +228,13 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
             perfGrid.push_back(evapTs_F);
         }
 
-        if(grid_variables.evaporator_environment_dry_bulb_temperature_is_set)
+        if(grid_variables.heat_source_temperature_is_set)
         {
             std::vector<double> heatSourceTs_F = {};
             heatSourceTs_F.reserve(grid_variables.heat_source_temperature.size());
             for (auto& T : grid_variables.heat_source_temperature)
                 heatSourceTs_F.push_back(C_TO_F(K_TO_C(T)));
+            perfGrid.push_back(heatSourceTs_F);
         }
 
         if(grid_variables.outlet_temperature_is_set)
@@ -242,6 +243,7 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
             outletTs_F.reserve(grid_variables.outlet_temperature.size());
             for (auto& T : grid_variables.outlet_temperature)
                 outletTs_F.push_back(C_TO_F(K_TO_C(T)));
+            perfGrid.push_back(outletTs_F);
         }
 
         auto& lookup_variables = perf_map.lookup_variables;
@@ -337,6 +339,7 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
 
         auto& grid_vars = map.grid_variables;
 
+        //
         std::vector<double> envTemp_K = {};
         envTemp_K.reserve(perfGrid[0].size());
         for (auto T : perfGrid[0])
@@ -347,6 +350,7 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
                 grid_vars.evaporator_environment_dry_bulb_temperature_is_set,
                 grid_vars.evaporator_environment_dry_bulb_temperature);
 
+        //
         std::vector<double> heatSourceTemp_K = {};
         heatSourceTemp_K.reserve(perfGrid[1].size());
         for (auto T : perfGrid[1])
@@ -356,6 +360,20 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
         checkTo(heatSourceTemp_K,
                 grid_vars.heat_source_temperature_is_set,
                 grid_vars.heat_source_temperature);
+
+        //
+        if (perfGrid.size() == 3)
+        {
+            std::vector<double> outletTemp_K = {};
+            outletTemp_K.reserve(perfGrid[2].size());
+            for (auto T : perfGrid[2])
+            {
+                outletTemp_K.push_back(C_TO_K(F_TO_C(T)));
+            }
+            checkTo(outletTemp_K,
+                    grid_vars.outlet_temperature_is_set,
+                    grid_vars.outlet_temperature);
+        }
 
         auto& lookup_vars = map.lookup_variables;
 
@@ -368,8 +386,7 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
         }
 
         checkTo(inputPowers_W, lookup_vars.input_power_is_set, lookup_vars.input_power);
-        checkTo(
-            perfGridValues[1], lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
+        checkTo(heatingCapacity_W, lookup_vars.heating_capacity_is_set, lookup_vars.heating_capacity);
 
         perf.performance_map_is_set = true;
     }
@@ -389,6 +406,10 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
         checkTo(tempGrid[1],
                 grid_vars.heat_source_temperature_is_set,
                 grid_vars.heat_source_temperature);
+        if(tempGrid.size() == 3)
+            checkTo(tempGrid[2],
+                    grid_vars.outlet_temperature_is_set,
+                    grid_vars.outlet_temperature);
 
         auto& lookup_vars = map.lookup_variables;
         checkTo(tempGridValues[0], lookup_vars.input_power_is_set, lookup_vars.input_power);
@@ -1114,14 +1135,13 @@ void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGri
             double input_BTUperHr, cop;
             for (auto& envTemp_K : envTemps_K)
                 for (auto& heatSourceTemp_K : heatSourceTemps_K)
-                    if (outletTemps_K.empty())
-                    {
+                {
                         getCapacityFromMap(
                             K_TO_C(envTemp_K), K_TO_C(heatSourceTemp_K), input_BTUperHr, cop);
                         inputPowers_W[i] = 1000. * BTUperH_TO_KW(input_BTUperHr);
                         heatingCapacities_W[i] = cop * inputPowers_W[i];
                         ++i;
-                    }
+                }
 
             tempGridValues.push_back(inputPowers_W);
             tempGridValues.push_back(heatingCapacities_W);

@@ -45,6 +45,11 @@
                   273.15,
                   281.0512345679012,
                   288.95246913580246
+                ],
+                "outlet_temperature": [
+                  273.15,
+                  281.0512345679012,
+                  288.95246913580246
                 ]
               },
               "lookup_variables": {
@@ -255,7 +260,6 @@
         ]
       }
     ],
-    "multipass_flow_rate": 5.21501997680633e-310,
     "primary_heat_source_id": "compressor",
     "tank": {
       "metadata": {
