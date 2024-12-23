@@ -957,7 +957,8 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
                                          double& cop) const
 {
     double environmentT_F = C_TO_F(environmentT_C);
-    double heatSourceT_F = C_TO_F(heatSourceT_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
+    double heatSourceT_F =
+        C_TO_F(heatSourceT_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC);
     double outletT_F = C_TO_F(outletT_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
     input_BTUperHr = 0.;
     cop = 0.;
@@ -1062,12 +1063,6 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
                      inputPower_T1_W,
                      inputPower_T2_W);
         input_BTUperHr = KWH_TO_BTU(input_BTUperHr / 1000.0); // 1000 converts w to kw;
-    }
-
-    if (doDefrost)
-    {
-        // adjust COP by the defrost factor
-        defrostDerate(cop, environmentT_F);
     }
 
     // For accounting add the resistance defrost to the input energy
