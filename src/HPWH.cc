@@ -4520,16 +4520,10 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
             condenser->from(config.heat_source);
 
             double ratio;
-            checkFrom(ratio,
-                      cwhs.external_inlet_height_is_set,
-                      cwhs.external_inlet_height,
-                      1.);
+            checkFrom(ratio, cwhs.external_inlet_height_is_set, cwhs.external_inlet_height, 1.);
             condenser->externalInletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
 
-            checkFrom(ratio,
-                      cwhs.external_outlet_height_is_set,
-                      cwhs.external_outlet_height,
-                      1.);
+            checkFrom(ratio, cwhs.external_outlet_height_is_set, cwhs.external_outlet_height, 1.);
             condenser->externalOutletHeight = static_cast<int>(ratio * (tank->getNumNodes() - 1));
 
             if (cwhs.multipass_flow_rate_is_set)
@@ -4701,7 +4695,8 @@ void HPWH::to(
 
     checkTo(1000. * condenser->mpFlowRate_LPS,
             cwhs.multipass_flow_rate_is_set,
-            cwhs.multipass_flow_rate, condenser->isMultipass);
+            cwhs.multipass_flow_rate,
+            condenser->isMultipass);
 }
 
 //-----------------------------------------------------------------------------

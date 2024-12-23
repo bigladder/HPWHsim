@@ -840,13 +840,13 @@ void HPWH::to_json(
         auto& grid_vars = perf.performance_map.grid_variables;
         nlohmann::json j_grid_vars;
 
-        if(grid_vars.evaporator_environment_dry_bulb_temperature_is_set)
+        if (grid_vars.evaporator_environment_dry_bulb_temperature_is_set)
         {
             j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
                 grid_vars.evaporator_environment_dry_bulb_temperature;
         }
 
-        if(grid_vars.heat_source_temperature_is_set)
+        if (grid_vars.heat_source_temperature_is_set)
         {
             j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
         }
@@ -854,7 +854,6 @@ void HPWH::to_json(
         if (grid_vars.outlet_temperature_is_set)
         {
             j_grid_vars["outlet_temperature"] = grid_vars.outlet_temperature;
-
         }
         j_perf_map["grid_variables"] = j_grid_vars;
 
