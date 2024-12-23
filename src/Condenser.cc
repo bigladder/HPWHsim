@@ -380,7 +380,7 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
         std::vector<double> inputPowers_W(nVals), heatingCapacity_W(nVals);
         for (std::size_t i = 0; i < nVals; ++i)
         {
-            inputPowers_W[i] = (1000. * BTUperH_TO_KW(perfGridValues[0][i]));
+            inputPowers_W[i] = 1000. * perfGridValues[0][i];
             heatingCapacity_W[i] = perfGridValues[1][i] * inputPowers_W[i];
         }
 

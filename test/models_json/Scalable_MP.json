@@ -4,6 +4,77 @@
     "external_outlet_height": 0.0,
     "heat_source_configurations": [
       {
+        "companion_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "resistiveElementBottom",
+        "heat_distribution": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 30000.0
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementTop",
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 16.666666666666668,
+              "temperature_weight_distribution": [
+                0.0,
+                0.0,
+                1.0
+              ]
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          }
+        ]
+      },
+      {
+        "backup_heat_source_id": "compressor",
+        "followed_by_heat_source_id": "compressor",
+        "heat_distribution": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSRESISTANCEWATERHEATSOURCE"
+          },
+          "performance": {
+            "input_power": 30000.0
+          }
+        },
+        "heat_source_type": "RESISTANCE",
+        "id": "resistiveElementBottom"
+      },
+      {
+        "backup_heat_source_id": "resistiveElementBottom",
         "heat_distribution": [
           0.0,
           0.0,
@@ -43,26 +114,26 @@
               },
               "lookup_variables": {
                 "heating_capacity": [
-                  45131.56170437189,
-                  43839.57415079144,
-                  42987.0778260109,
-                  50726.92084367795,
-                  49144.239655548394,
-                  48043.12775949896,
-                  56518.63045667381,
-                  54668.1440129267,
-                  53340.52735345061
+                  30565.688231424014,
+                  28774.623979098782,
+                  27714.747620381862,
+                  34589.1581490905,
+                  32283.939017905454,
+                  30752.553124168047,
+                  39016.95701323632,
+                  36198.55199875677,
+                  34202.23636762488
                 ],
                 "input_power": [
-                  15007.498173600003,
-                  15215.835456444445,
-                  15671.791777155559,
-                  15163.77806488395,
-                  15409.166495580244,
-                  15902.173964143212,
-                  15289.630997958026,
-                  15572.070576506174,
-                  16102.129192920991
+                  12064.560000000001,
+                  12164.064987654321,
+                  12497.395950617285,
+                  12134.01755555556,
+                  12240.671580246915,
+                  12581.151580246913,
+                  12203.47511111111,
+                  12317.278172839502,
+                  12664.907209876543
                 ]
               }
             }
@@ -118,7 +189,7 @@
         ]
       }
     ],
-    "multipass_flow_rate": 2271.246,
+    "multipass_flow_rate": 1577.2541666666666,
     "primary_heat_source_id": "compressor",
     "tank": {
       "metadata": {
@@ -127,8 +198,8 @@
       "performance": {
         "bottom_fraction_of_tank_mixing_on_draw": 0.0,
         "fittings_ua": 0.0,
-        "ua": 8.791381193505783,
-        "volume": 3.028328
+        "ua": 7.257125279564129,
+        "volume": 2.271246
       }
     }
   },

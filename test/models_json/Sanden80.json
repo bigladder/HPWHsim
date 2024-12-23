@@ -1,0 +1,183 @@
+{
+  "central_system": {
+    "external_inlet_height": 0.9895833333333334,
+    "external_outlet_height": 0.0,
+    "heat_source_configurations": [
+      {
+        "heat_distribution": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "heat_source": {
+          "metadata": {
+            "schema": "RSCONDENSERWATERHEATSOURCE"
+          },
+          "performance": {
+            "coil_configuration": "EXTERNAL",
+            "compressor_lockout_temperature_hysteresis": 4.0,
+            "maximum_refrigerant_temperature": 360.92777777777775,
+            "maximum_temperature": 373.15,
+            "minimum_temperature": 241.48333333333332,
+            "performance_map": {
+              "grid_variables": {
+                "evaporator_environment_dry_bulb_temperature": [
+                  241.48333333333332,
+                  264.81666666666666,
+                  274.81666666666666,
+                  283.15,
+                  292.59444444444443,
+                  308.15,
+                  373.15
+                ],
+                "heat_source_temperature": [
+                  273.15,
+                  360.92777777777775
+                ]
+              },
+              "lookup_variables": {
+                "heating_capacity": [
+                  5003.804444444446,
+                  -3792.0555555555525,
+                  4966.719999999998,
+                  943.2500000000023,
+                  3954.1600000000017,
+                  1580.999999999998,
+                  4357.4400000000005,
+                  734.4999999999999,
+                  4548.320000000001,
+                  749.9999999999985,
+                  5012.9800000000005,
+                  -526.5000000000002,
+                  6763.7387499999995,
+                  923.3896683673469
+                ],
+                "input_power": [
+                  3221.333333333333,
+                  4643.333333333332,
+                  1825.9999999999989,
+                  2694.999999999998,
+                  1227.9999999999993,
+                  1859.999999999999,
+                  979.2,
+                  1468.9999999999998,
+                  868.0,
+                  1499.9999999999998,
+                  854.0,
+                  1170.0,
+                  795.5,
+                  -208.92857142857136
+                ]
+              }
+            }
+          }
+        },
+        "heat_source_type": "CONDENSER",
+        "id": "compressor",
+        "shut_off_logic": [
+          {
+            "comparison_type": "GREATER_THAN",
+            "heating_logic": {
+              "absolute_temperature": 330.3722222222222,
+              "temperature_weight_distribution": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          }
+        ],
+        "standby_logic": {
+          "comparison_type": "GREATER_THAN",
+          "heating_logic": {
+            "absolute_temperature": 318.15,
+            "temperature_weight_distribution": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "heating_logic_type": "TEMPERATURE_BASED"
+        },
+        "turn_on_logic": [
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "absolute_temperature": 318.15,
+              "temperature_weight_distribution": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          },
+          {
+            "comparison_type": "LESS_THAN",
+            "heating_logic": {
+              "differential_temperature": 4.591055555555555,
+              "standby_temperature_location": "TOP_OF_TANK"
+            },
+            "heating_logic_type": "TEMPERATURE_BASED"
+          }
+        ]
+      }
+    ],
+    "primary_heat_source_id": "compressor",
+    "tank": {
+      "metadata": {
+        "schema": "RSTANK"
+      },
+      "performance": {
+        "bottom_fraction_of_tank_mixing_on_draw": 0.0,
+        "fittings_ua": 0.0,
+        "ua": 1.9444444444444444,
+        "volume": 0.315
+      }
+    }
+  },
+  "depresses_temperature": false,
+  "fixed_volume": true,
+  "metadata": {
+    "schema": "HPWHSimInput"
+  },
+  "number_of_nodes": 96,
+  "system_type": "CENTRAL"
+}
