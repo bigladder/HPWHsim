@@ -4392,11 +4392,13 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
                     hsi.central_system.external_inlet_height * hsi.number_of_nodes);
                 compressor->externalOutletHeight = static_cast<int>(
                     hsi.central_system.external_outlet_height * hsi.number_of_nodes);
-                if (hsi.central_system.multipass_flow_rate > 0.)
+                if (hsi.central_system.multipass_flow_rate_is_set)
                 {
                     compressor->isMultipass = true;
                     compressor->mpFlowRate_LPS = 1000. * hsi.central_system.multipass_flow_rate;
                 }
+                else
+                    compressor->isMultipass = false;
             }
             break;
         }
@@ -4705,10 +4707,9 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
-    if (condenser->isMultipass)
-        checkTo(1000. * condenser->mpFlowRate_LPS,
-                cwhs.multipass_flow_rate_is_set,
-                cwhs.multipass_flow_rate);
+    checkTo(1000. * condenser->mpFlowRate_LPS,
+            cwhs.multipass_flow_rate_is_set,
+            cwhs.multipass_flow_rate, condenser->isMultipass);
 }
 
 //-----------------------------------------------------------------------------

@@ -773,7 +773,7 @@ void HPWH::to_json(
     {
         j["external_outlet_height"] = cwhs.external_outlet_height;
     }
-    if (cwhs.multipass_flow_rate > 0.)
+    if (cwhs.multipass_flow_rate_is_set)
     {
         j["multipass_flow_rate"] = cwhs.multipass_flow_rate;
     }
@@ -840,11 +840,22 @@ void HPWH::to_json(
         auto& grid_vars = perf.performance_map.grid_variables;
         nlohmann::json j_grid_vars;
 
-        j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
-            grid_vars.evaporator_environment_dry_bulb_temperature;
-        j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
-        if (j_grid_vars.contains("outlet_temperature"))
+        if(grid_vars.evaporator_environment_dry_bulb_temperature_is_set)
+        {
+            j_grid_vars["evaporator_environment_dry_bulb_temperature"] =
+                grid_vars.evaporator_environment_dry_bulb_temperature;
+        }
+
+        if(grid_vars.heat_source_temperature_is_set)
+        {
+            j_grid_vars["heat_source_temperature"] = grid_vars.heat_source_temperature;
+        }
+
+        if (grid_vars.outlet_temperature_is_set)
+        {
             j_grid_vars["outlet_temperature"] = grid_vars.outlet_temperature;
+
+        }
         j_perf_map["grid_variables"] = j_grid_vars;
 
         auto& lookup_vars = perf.performance_map.lookup_variables;
