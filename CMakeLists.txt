@@ -52,34 +52,39 @@ add_subdirectory(vendor)
 add_subdirectory(src)
 
 #generate hpwh-data-model source
-set(genCodeDir "${PROJECT_BINARY_DIR}/hpwh_data_model")
-if (NOT ${PROJECT_NAME}_DATA_MODEL_GENERATED)
-    set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
-    set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
+if (${PROJECT_NAME}_USE_DATA_MODEL_GENERATION)
+    set(srcCodeDir "${PROJECT_BINARY_DIR}/hpwh_data_model")
+    if (NOT ${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
+        set(pythonScriptDir "${PROJECT_SOURCE_DIR}/scripts/python/data_model")
+        set(dataModelDir "${PROJECT_SOURCE_DIR}/vendor/hpwh_data_model")
 
-    include(poetry-install)
-    poetry_install(${pythonScriptDir})
-    execute_process(
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${genCodeDir}"
+        include(poetry-install)
+        poetry_install(${pythonScriptDir})
+        execute_process(
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${genCodeDir}"
 
-            COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT
+                COMMAND ${GIT_EXECUTABLE} submodule update --init "${dataModelDir}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                RESULT_VARIABLE GIT_SUBMOD_RESULT
 
-            COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${genCodeDir}"
-            WORKING_DIRECTORY "${pythonScriptDir}"
-            RESULT_VARIABLE build_data_model_result)
+                COMMAND poetry run python "build_data_model.py" "${PROJECT_SOURCE_DIR}" "${dataModelDir}" "${srcCodeDir}"
+                WORKING_DIRECTORY "${pythonScriptDir}"
+                RESULT_VARIABLE build_data_model_result)
 
-    if (build_data_model_result EQUAL 0)
-        set(${PROJECT_NAME}_DATA_MODEL_GENERATED TRUE CACHE BOOL "Python data-model source code has been generated" FORCE)
-        message(STATUS "Data-model source-code generation succeeded")
-    else()
-        message(STATUS "Data-model source-code generation failed")
+        if (build_data_model_result EQUAL 0)
+            set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
+            message(STATUS "Data-model source-code generation succeeded")
+        else()
+            message(STATUS "Data-model source-code generation failed")
+        endif()
     endif()
+else()
+    set(srcCodeDir "${PROJECT_SOURCE_DIR}/hpwh_data_model")
+    set(${PROJECT_NAME}_DATA_MODEL_AVAILABLE TRUE CACHE BOOL "Python data-model source code is available" FORCE)
 endif()
 
-if (${PROJECT_NAME}_DATA_MODEL_GENERATED)
-    add_subdirectory("${genCodeDir}/cpp")
+if (${PROJECT_NAME}_DATA_MODEL_AVAILABLE)
+    add_subdirectory("${srcCodeDir}/cpp")
 endif ()
 
 if (${PROJECT_NAME}_BUILD_TESTING)
