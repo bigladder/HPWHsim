@@ -1793,16 +1793,25 @@ double HPWH::getCompressorCapacity(double airTemp /*=19.722*/,
         send_error("Inputted outlet temperature of the compressor is higher than can be produced.");
     }
 
-    if (cond_ptr->isExternalMultipass())
+
+    if (cond_ptr->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL)
     {
-        double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
-        cond_ptr->getCapacityMP(
-            airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        if (cond_ptr->isExternalMultipass())
+        {
+            double averageTemp_C = (outTemp_C + inletTemp_C) / 2.;
+            cond_ptr->getCapacityMP(
+                airTemp_C, averageTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        }
+        else
+        {
+            cond_ptr->getCapacity(
+                airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+        }
     }
     else
     {
         cond_ptr->getCapacity(
-            airTemp_C, inletTemp_C, outTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
+            airTemp_C, inletTemp_C, inputTemp_BTUperHr, capTemp_BTUperHr, copTemp);
     }
 
     double outputCapacity = capTemp_BTUperHr;
@@ -4517,7 +4526,6 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         {
             auto condenser = std::make_shared<Condenser>(this, get_courier(), config.id);
             heatSources.push_back(condenser);
-            condenser->from(config.heat_source);
 
             double ratio;
             checkFrom(ratio, cwhs.external_inlet_height_is_set, cwhs.external_inlet_height, 1.);
@@ -4531,6 +4539,9 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
                 condenser->isMultipass = true;
                 condenser->mpFlowRate_LPS = 1000. * cwhs.multipass_flow_rate;
             }
+            else
+                condenser->isMultipass = false;
+            condenser->from(config.heat_source);
 
             break;
         }
@@ -4582,6 +4593,11 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
             heatSources[iHeatSource]->companionHeatSource = heatSources[iCompanion].get();
         }
     }
+
+    checkFrom(setpoint_C,
+              cwhs.standard_setpoint_is_set,
+              K_TO_C(cwhs.standard_setpoint), 53.);
+
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -4693,12 +4709,90 @@ void HPWH::to(
             cwhs.external_outlet_height_is_set,
             cwhs.external_outlet_height);
 
-    checkTo(1000. * condenser->mpFlowRate_LPS,
+    checkTo(condenser->mpFlowRate_LPS / 1000.,
             cwhs.multipass_flow_rate_is_set,
             cwhs.multipass_flow_rate,
             condenser->isMultipass);
+
+    checkTo(C_TO_K(setpoint_C),
+            cwhs.standard_setpoint_is_set,
+            cwhs.standard_setpoint);
 }
 
+// convert to grid
+void HPWH::convertMapToGrid()
+{
+    if (!hasACompressor())
+    {
+        send_error("Current model does not have a compressor.");
+    }
+
+    auto condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
+    if (!condenser->useBtwxtGrid)
+    {
+        std::vector<std::vector<double>> tempGrid;
+        std::vector<std::vector<double>> tempGridValues;
+        condenser->convertMapToGrid(tempGrid, tempGridValues);
+        condenser->perfGrid.reserve(tempGrid.size());
+        for (auto& tempGridAxis: tempGrid)
+        {
+            std::vector<double> gridAxis;
+            gridAxis.reserve(tempGridAxis.size());
+            for (auto& point: tempGridAxis)
+                gridAxis.push_back(C_TO_F(K_TO_C(point)));
+            condenser->perfGrid.push_back(gridAxis);
+        }
+
+        condenser->perfGridValues.resize(2);
+        condenser->perfGridValues[0].reserve(tempGridValues[0].size());
+        for (auto& point: tempGridValues[0])
+            condenser->perfGridValues[0].push_back(KW_TO_BTUperH(point / 1000.));
+
+        condenser->perfGridValues[1].reserve(tempGridValues[1].size());
+        for (std::size_t i = 0; i < tempGridValues[1].size(); ++i)
+            condenser->perfGridValues[1].push_back(tempGridValues[1][i] / tempGridValues[0][i]);
+
+
+        // Set up regular grid interpolator
+        int iElem = 0;
+        std::vector<Btwxt::GridAxis> gx = {};
+        Btwxt::GridAxis gExt(condenser->perfGrid[iElem],
+                           Btwxt::InterpolationMethod::linear,
+                           Btwxt::ExtrapolationMethod::constant,
+                           {-DBL_MAX, DBL_MAX},
+                           "TAir",
+                           get_courier());
+
+        gx.push_back(gExt);
+        ++iElem;
+
+        if (condenser->perfGrid.size() == 3)
+        {
+            Btwxt::GridAxis gOut(condenser->perfGrid[iElem],
+                               Btwxt::InterpolationMethod::cubic,
+                               Btwxt::ExtrapolationMethod::constant,
+                               {-DBL_MAX, DBL_MAX},
+                               "TOut",
+                               get_courier());
+            gx.push_back(gOut);
+            ++iElem;
+        }
+
+        Btwxt::GridAxis gHeatSource(condenser->perfGrid[iElem],
+                           Btwxt::InterpolationMethod::cubic,
+                           Btwxt::ExtrapolationMethod::linear,
+                           {-DBL_MAX, DBL_MAX},
+                           "Tin",
+                           get_courier());
+        gx.push_back(gHeatSource);
+
+        condenser->perfRGI =
+            std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
+                gx, condenser->perfGridValues, "RegularGridInterpolator", get_courier()));
+
+        condenser->useBtwxtGrid = true;
+    }
+}
 //-----------------------------------------------------------------------------
 ///	@brief	Performs a draw/heat cycle to prep for test
 /// @return	true (success), false (failure).

@@ -10,6 +10,17 @@ struct PerformanceMapTest : public testing::Test
     const double tInOffsetQAHV_dF = 10.;
     const double tOutOffsetQAHV_dF = 15.;
 
+    struct PerformancePoint
+    {
+        double externalT_F;
+        double condenserT_F;
+        double outletT_F;
+        double input_kW;
+        double output_kW;
+        double cop;
+    };
+
+
     struct performancePointMP
     {
         double tairF;
@@ -698,3 +709,27 @@ TEST_F(PerformanceMapTest, Sanden120)
     EXPECT_ANY_THROW(hpwh.getCompressorCapacity(
         checkPoint.tairF, checkPoint.tinF, checkPoint.toutF, HPWH::UNITS_BTUperHr, HPWH::UNITS_F));
 }
+
+/*
+ * ConvertMapToGrid tests
+ */
+TEST_F(PerformanceMapTest, ConvertMapToGrid)
+{
+    HPWH hpwh;
+    const std::string sModelName = "Rheem2020Prem50";
+    hpwh.initPreset(sModelName);
+
+    PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+
+    // using polynomial map
+    checkPoint = {67, 127, 41.0, 0., 1.4451, 0.};
+    double output_kW = hpwh.getCompressorCapacity(
+        checkPoint.externalT_F, checkPoint.condenserT_F, checkPoint.outletT_F, HPWH::UNITS_KW, HPWH::UNITS_F);
+    EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+
+    hpwh.convertMapToGrid();
+    output_kW = hpwh.getCompressorCapacity(
+        checkPoint.externalT_F, checkPoint.condenserT_F, checkPoint.outletT_F, HPWH::UNITS_KW, HPWH::UNITS_F);
+    EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+}
+

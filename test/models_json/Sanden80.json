@@ -78,7 +78,8 @@
                   -208.92857142857136
                 ]
               }
-            }
+            },
+            "use_defrost_map": false
           }
         },
         "heat_source_type": "CONDENSER",
@@ -110,6 +111,7 @@
           "comparison_type": "GREATER_THAN",
           "heating_logic": {
             "absolute_temperature": 318.15,
+            "standby_temperature_location": "TOP_OF_TANK",
             "temperature_weight_distribution": [
               1.0,
               0.0,
@@ -161,6 +163,7 @@
       }
     ],
     "primary_heat_source_id": "compressor",
+    "standard_setpoint": 338.15,
     "tank": {
       "metadata": {
         "schema": "RSTANK"

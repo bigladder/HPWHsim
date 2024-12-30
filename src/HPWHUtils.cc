@@ -777,6 +777,10 @@ void HPWH::to_json(
     {
         j["multipass_flow_rate"] = cwhs.multipass_flow_rate;
     }
+    if (cwhs.standard_setpoint_is_set)
+    {
+        j["standard_setpoint"] = cwhs.standard_setpoint;
+    }
 }
 
 /*static*/
@@ -883,6 +887,7 @@ void HPWH::to_json(
         {
             j_perf["coil_configuration"] = "EXTERNAL";
             break;
+
         }
         default:
         {
@@ -893,6 +898,12 @@ void HPWH::to_json(
     if (perf.standby_power_is_set)
     {
         j_perf["standby_power"] = perf.standby_power;
+    }
+
+
+    if (perf.use_defrost_map_is_set)
+    {
+        j_perf["use_defrost_map"] = perf.use_defrost_map;
     }
 
     j["performance"] = j_perf;
