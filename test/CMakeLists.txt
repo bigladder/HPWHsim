@@ -304,6 +304,22 @@ function(add_plot_test)
 
 endfunction()
 
+#Add large compressor tests to the list
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+				add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
+
+#Add large compressor tests to the regression list
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+				add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE  "JSON" COMPARE_SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
+
 ## Model tests
 foreach (test ${testNames})
     foreach (model ${modelNames})
@@ -352,14 +368,6 @@ foreach (test ${maxTempTests})
     endforeach (model)
 endforeach (test)
 
-#Add large compressor tests to the list
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-        add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-				add_model_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
-    endforeach (model)
-endforeach (test)
-
 #Add State of Charge tests to the list
 foreach (test ${stateOfChargeTests})
     foreach (model ${stateOfChargeCompressorNames})
@@ -380,14 +388,6 @@ endforeach (test)
 foreach (test ${maxTempTests})
     foreach (model ${maxTempModels})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
-#Add large compressor tests to the regression list
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-				add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE  "JSON" COMPARE_SPEC_TYPE "Preset")
     endforeach (model)
 endforeach (test)
 

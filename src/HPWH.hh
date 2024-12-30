@@ -1078,6 +1078,8 @@ class HPWH : public Courier::Sender
 
     void makeGeneric(const double targetUEF);
 
+    void convertMapToGrid();
+
   private:
     void setAllDefaults(); /**< sets all the defaults default */
 

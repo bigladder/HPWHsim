@@ -125,15 +125,9 @@ void run(const std::string& sSpecType,
         sSpecType_mod = "JSON";
 
     // Parse the model
-    newSetpoint = 0;
     if (sSpecType_mod == "Preset")
     {
         hpwh.initPreset(sModelName);
-        model = static_cast<HPWH::MODELS>(hpwh.getModel());
-        if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
-        {
-            newSetpoint = (149 - 32) / 1.8;
-        }
     }
     else if (sSpecType_mod == "File")
     {
@@ -148,6 +142,13 @@ void run(const std::string& sSpecType,
         cout << "Invalid argument, received '" << sSpecType_mod
              << "', expected 'Preset', 'File', or 'JSON'.\n";
         exit(1);
+    }
+
+    newSetpoint = 0;
+    model = static_cast<HPWH::MODELS>(hpwh.getModel());
+    if (model == HPWH::MODELS_Sanden80 || model == HPWH::MODELS_Sanden40)
+    {
+        newSetpoint = (149 - 32) / 1.8;
     }
 
     std::string sTestName = sFullTestName; // remove path prefixes

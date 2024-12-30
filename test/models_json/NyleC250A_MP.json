@@ -99,7 +99,8 @@
                   30020.0
                 ]
               }
-            }
+            },
+            "use_defrost_map": true
           }
         },
         "heat_source_type": "CONDENSER",
@@ -152,8 +153,9 @@
         ]
       }
     ],
-    "multipass_flow_rate": 3154.508333333333,
+    "multipass_flow_rate": 0.003154508333333333,
     "primary_heat_source_id": "compressor",
+    "standard_setpoint": 330.3722222222222,
     "tank": {
       "metadata": {
         "schema": "RSTANK"
