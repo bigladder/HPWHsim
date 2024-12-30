@@ -1104,24 +1104,24 @@ void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGri
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
         auto envTempRange_dC = maxT - minT;
-        auto nEnvTs = static_cast<std::size_t>(20 * envTempRange_dC / 100.);
+        auto nEnvTs = static_cast<std::size_t>(41. * envTempRange_dC / 100.);
         auto dEnvT_dC = static_cast<double>(envTempRange_dC / nEnvTs);
         envTemps_K.resize(nEnvTs);
         for (std::size_t i = 0; i < nEnvTs; ++i)
         {
-            envTemps_K[i] = C_TO_K(minT + static_cast<double>(i) / nEnvTs * dEnvT_dC);
+            envTemps_K[i] = C_TO_K(minT + static_cast<double>(i) * dEnvT_dC);
         }
 
         const double minHeatSourceTemp_C = 0.;
         const double maxHeatSourceTemp_C = maxSetpoint_C;
         auto heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
-        auto nHeatSourceTs = std::size_t(10 * heatSourceTempRange_dC / 100.);
+        auto nHeatSourceTs = std::size_t(41. * heatSourceTempRange_dC / 100.);
         auto dHeatSourceT_dC = heatSourceTempRange_dC / static_cast<double>(nHeatSourceTs);
         heatSourceTemps_K.resize(nHeatSourceTs);
         for (std::size_t i = 0; i < nHeatSourceTs; ++i)
         {
             heatSourceTemps_K[i] = C_TO_K(minHeatSourceTemp_C +
-                                          static_cast<double>(i) / nHeatSourceTs * dHeatSourceT_dC);
+                                          static_cast<double>(i) * dHeatSourceT_dC);
         }
 
         if (isMultipass)
@@ -1149,8 +1149,6 @@ void HPWH::Condenser::convertMapToGrid(std::vector<std::vector<double>>& tempGri
         else
         {
             outletTemps_K = heatSourceTemps_K;
-            for (auto& outletTemp_K : outletTemps_K)
-                outletTemp_K += 30.;
             tempGrid.reserve(3);
             tempGrid.push_back(envTemps_K);
             tempGrid.push_back(outletTemps_K);

@@ -4756,8 +4756,12 @@ void HPWH::convertMapToGrid()
         // Set up regular grid interpolator
         int iElem = 0;
         std::vector<Btwxt::GridAxis> gx = {};
+
+        auto externTempInterpMethod =  (condenser->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL) ?
+            Btwxt::InterpolationMethod::cubic : Btwxt::InterpolationMethod::linear;
+
         Btwxt::GridAxis gExt(condenser->perfGrid[iElem],
-                           Btwxt::InterpolationMethod::linear,
+                             externTempInterpMethod,
                            Btwxt::ExtrapolationMethod::constant,
                            {-DBL_MAX, DBL_MAX},
                            "TAir",
