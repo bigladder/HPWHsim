@@ -716,20 +716,53 @@ TEST_F(PerformanceMapTest, Sanden120)
 TEST_F(PerformanceMapTest, ConvertMapToGrid)
 {
     HPWH hpwh;
-    const std::string sModelName = "Rheem2020Prem50";
-    hpwh.initPreset(sModelName);
 
-    PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+    {
+        const std::string sModelName = "Rheem2020Prem50";
+        hpwh.initPreset(sModelName);
 
-    // using polynomial map
-    checkPoint = {67, 127, 41.0, 0., 1.4451, 0.};
-    double output_kW = hpwh.getCompressorCapacity(
-        checkPoint.externalT_F, checkPoint.condenserT_F, checkPoint.outletT_F, HPWH::UNITS_KW, HPWH::UNITS_F);
-    EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
-    hpwh.convertMapToGrid();
-    output_kW = hpwh.getCompressorCapacity(
-        checkPoint.externalT_F, checkPoint.condenserT_F, checkPoint.outletT_F, HPWH::UNITS_KW, HPWH::UNITS_F);
-    EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+        // using polynomial map
+        checkPoint = {67, 127, 41.0, 0., 1.4451, 0.};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+
+        hpwh.convertMapToGrid();
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+    }
+
+    {
+        const std::string sModelName = "ColmacCxA_20_SP";
+        hpwh.initPreset(sModelName);
+
+        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+
+        // using polynomial map
+        checkPoint = {45., 40., 135, 0., 43.3513, 0.};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+
+        hpwh.convertMapToGrid();
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW);
+    }
 }
 
