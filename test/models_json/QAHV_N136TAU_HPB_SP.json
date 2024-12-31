@@ -1116,7 +1116,20 @@
             "comparison_type": "GREATER_THAN",
             "heating_logic": {
               "differential_temperature": 8.333333333333334,
-              "standby_temperature_location": "BOTTOM_OF_TANK"
+              "temperature_weight_distribution": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
             },
             "heating_logic_type": "TEMPERATURE_BASED"
           }

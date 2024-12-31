@@ -4359,6 +4359,8 @@ void HPWH::initFromJSON(string sModelName)
     nlohmann::json j = nlohmann::json::parse(inputFile);
     hpwh_data_model::init(get_courier());
 
+    mapNameToPreset(sModelName, model);
+
     hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi;
     hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi);
     from(hsi);
@@ -4408,6 +4410,7 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
         }
 
     checkFrom(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume, false);
+
 }
 
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
@@ -4754,15 +4757,19 @@ void HPWH::convertMapToGrid()
 
 
         // Set up regular grid interpolator
-        int iElem = 0;
         std::vector<Btwxt::GridAxis> gx = {};
 
-        auto externTempInterpMethod =  (condenser->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL) ?
-            Btwxt::InterpolationMethod::cubic : Btwxt::InterpolationMethod::linear;
+        auto isExternal = condenser->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL;
+
+        int iElem = 0;
+        auto interpMethod = ((model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) ||
+                             (isExternal))
+                                ? Btwxt::InterpolationMethod::linear
+                                : Btwxt::InterpolationMethod::cubic;
+        auto extrapMethod = Btwxt::ExtrapolationMethod::linear;
 
         Btwxt::GridAxis gExt(condenser->perfGrid[iElem],
-                             externTempInterpMethod,
-                           Btwxt::ExtrapolationMethod::constant,
+                           interpMethod, extrapMethod,
                            {-DBL_MAX, DBL_MAX},
                            "TAir",
                            get_courier());
@@ -4772,9 +4779,13 @@ void HPWH::convertMapToGrid()
 
         if (condenser->perfGrid.size() == 3)
         {
+            interpMethod = (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+                               ? Btwxt::InterpolationMethod::linear
+                               : Btwxt::InterpolationMethod::cubic;
+            extrapMethod = Btwxt::ExtrapolationMethod::constant;
             Btwxt::GridAxis gOut(condenser->perfGrid[iElem],
-                               Btwxt::InterpolationMethod::cubic,
-                               Btwxt::ExtrapolationMethod::constant,
+                                 interpMethod,
+                                 extrapMethod,
                                {-DBL_MAX, DBL_MAX},
                                "TOut",
                                get_courier());
@@ -4782,9 +4793,13 @@ void HPWH::convertMapToGrid()
             ++iElem;
         }
 
+       interpMethod = (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+                          ? Btwxt::InterpolationMethod::linear
+                          : Btwxt::InterpolationMethod::cubic;
+        extrapMethod = Btwxt::ExtrapolationMethod::linear;
         Btwxt::GridAxis gHeatSource(condenser->perfGrid[iElem],
-                           Btwxt::InterpolationMethod::cubic,
-                           Btwxt::ExtrapolationMethod::linear,
+                                    interpMethod,
+                                    extrapMethod,
                            {-DBL_MAX, DBL_MAX},
                            "Tin",
                            get_courier());
