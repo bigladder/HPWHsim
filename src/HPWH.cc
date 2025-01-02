@@ -4375,6 +4375,10 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
     int number_of_nodes;
     checkFrom(number_of_nodes, hsi.number_of_nodes_is_set, hsi.number_of_nodes, 12);
     tank->setNumNodes(number_of_nodes);
+    checkFrom(setpoint_C,
+              hsi.standard_setpoint_is_set,
+              K_TO_C(hsi.standard_setpoint), F_TO_C(135.));
+
     if (hsi.system_type_is_set)
         switch (hsi.system_type)
         {
@@ -4416,7 +4420,6 @@ void HPWH::from(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi)
 void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER& rswh)
 {
     auto& performance = rswh.performance;
-    setpoint_C = F_TO_C(135.0);
 
     auto& rstank = performance.tank;
     tank->from(rstank);
@@ -4599,10 +4602,6 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         }
     }
 
-    checkFrom(setpoint_C,
-              cwhs.standard_setpoint_is_set,
-              K_TO_C(cwhs.standard_setpoint), 53.);
-
 
     // calculate oft-used derived values
     calcDerivedValues();
@@ -4625,6 +4624,10 @@ void HPWH::to(hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi) const
     checkTo(tank->getNumNodes(), hsi.number_of_nodes_is_set, hsi.number_of_nodes);
 
     checkTo(tank->volumeFixed, hsi.fixed_volume_is_set, hsi.fixed_volume);
+
+    checkTo(C_TO_K(setpoint_C),
+            hsi.standard_setpoint_is_set,
+            hsi.standard_setpoint);
 
     if (hasACompressor() && (getCompressorCoilConfig() == Condenser::COIL_CONFIG::CONFIG_EXTERNAL))
     {
@@ -4719,9 +4722,6 @@ void HPWH::to(
             cwhs.multipass_flow_rate,
             condenser->isMultipass);
 
-    checkTo(C_TO_K(setpoint_C),
-            cwhs.standard_setpoint_is_set,
-            cwhs.standard_setpoint);
 }
 
 // convert to grid
