@@ -194,7 +194,8 @@ void HPWH::Condenser::makeBtwxt()
     {
         auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
                                             : Btwxt::InterpolationMethod::linear;
-        auto extrapMethod = Btwxt::ExtrapolationMethod::constant;
+        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
+                                            : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                            interpMethod,
                            extrapMethod,
@@ -208,7 +209,8 @@ void HPWH::Condenser::makeBtwxt()
         auto interpMethod = (is_Mitsubishi)
                         ? Btwxt::InterpolationMethod::linear
                         : Btwxt::InterpolationMethod::cubic;
-        auto extrapMethod = Btwxt::ExtrapolationMethod::linear;
+        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
+                                            : Btwxt::ExtrapolationMethod::linear;
 
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                            interpMethod,
@@ -1175,7 +1177,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             const double minHeatSourceTemp_C = 0.;
             const double maxHeatSourceTemp_C = maxSetpoint_C;
             auto heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(41. * heatSourceTempRange_dC / 100., 3.));
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(81. * heatSourceTempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = heatSourceTempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
