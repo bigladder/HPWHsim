@@ -285,15 +285,6 @@ class Plotter:
 				self.draw_variable_type("Measured")
 		else:
 			return
-		
-		for row, variable in enumerate(self.variables["Y-Variables"].keys()):
-			
-			for variable_type in self.variables["Y-Variables"][variable]["Column Names"].keys():
-				if (variable_type == "Measured" and self.have_measured) or (variable_type == "Simulated" and self.have_simulated):
-					for value in range(
-						len(self.variables["Y-Variables"][variable]["Column Names"][variable_type])
-					):
-						self.plot_graphs(variable_type, variable, value, row + 1)
 
 		self.plot.finalize_plot()
 		return self
