@@ -4510,8 +4510,6 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
 
 void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHeatingSystem& cwhs)
 {
-    setpoint_C = F_TO_C(135.0);
-
     auto& rstank = cwhs.tank;
     tank->from(rstank);
 

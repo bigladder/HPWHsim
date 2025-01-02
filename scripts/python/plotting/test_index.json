@@ -28,6 +28,6 @@
 
 		{"test": "testLockout", "name": "Lockout test"},
  
-		{"group": "Demand-response tests", "test": "testDR_TOTLOR", "path": "DR_tests"},
+		{"group": "Central-system tests", "test": "testLargeComp45", "path": "large_compressor_tests"}
   ]
 }
