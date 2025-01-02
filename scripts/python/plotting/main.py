@@ -58,7 +58,7 @@ def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_file
 	time.sleep(1)
 	print("launching dash...")
 	dash_plot.proc.start()
-	time.sleep(1)
+	time.sleep(2)
 	   
 	test_results = {}
 	test_results["energy_data"] = plotter.energy_data
