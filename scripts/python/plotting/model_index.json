@@ -30,7 +30,5 @@
 
 		{"name": "ColmacCxA_20_SP", "manufacturer": "Colmac", "model": "ColmacCxA_20_SP", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
 		{"name": "ColmacCxA_20_MP", "manufacturer": "Colmac", "model": "ColmacCxA_20_MP", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"}
-
-
   ]
 }
