@@ -4424,6 +4424,7 @@ void HPWH::from(hpwh_data_model::rsintegratedwaterheater_ns::RSINTEGRATEDWATERHE
     auto& configurations = performance.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
+    heatSources.clear();
     heatSources.reserve(num_heat_sources);
 
     std::unordered_map<std::string, std::size_t> heat_source_lookup;
@@ -4514,6 +4515,7 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
     auto& configurations = cwhs.heat_source_configurations;
     std::size_t num_heat_sources = configurations.size();
 
+    heatSources.clear();
     heatSources.reserve(num_heat_sources);
 
     std::unordered_map<std::string, std::size_t> heat_source_lookup;
@@ -4733,83 +4735,7 @@ void HPWH::convertMapToGrid()
     auto condenser = reinterpret_cast<Condenser*>(heatSources[compressorIndex].get());
     if (!condenser->useBtwxtGrid)
     {
-        std::vector<std::vector<double>> tempGrid;
-        std::vector<std::vector<double>> tempGridValues;
-        condenser->convertMapToGrid(tempGrid, tempGridValues);
-        condenser->perfGrid.reserve(tempGrid.size());
-        for (auto& tempGridAxis: tempGrid)
-        {
-            std::vector<double> gridAxis;
-            gridAxis.reserve(tempGridAxis.size());
-            for (auto& point: tempGridAxis)
-                gridAxis.push_back(C_TO_F(K_TO_C(point)));
-            condenser->perfGrid.push_back(gridAxis);
-        }
-
-        condenser->perfGridValues.resize(2);
-        condenser->perfGridValues[0].reserve(tempGridValues[0].size());
-        for (auto& point: tempGridValues[0])
-            condenser->perfGridValues[0].push_back(KW_TO_BTUperH(point / 1000.));
-
-        condenser->perfGridValues[1].reserve(tempGridValues[1].size());
-        for (std::size_t i = 0; i < tempGridValues[1].size(); ++i)
-            condenser->perfGridValues[1].push_back(tempGridValues[1][i] / tempGridValues[0][i]);
-
-
-        // Set up regular grid interpolator
-        std::vector<Btwxt::GridAxis> gx = {};
-
-        auto isExternal = condenser->configuration == Condenser::COIL_CONFIG::CONFIG_EXTERNAL;
-
-        int iElem = 0;
-        auto interpMethod = ((model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP) ||
-                             (isExternal))
-                                ? Btwxt::InterpolationMethod::linear
-                                : Btwxt::InterpolationMethod::cubic;
-        auto extrapMethod = Btwxt::ExtrapolationMethod::linear;
-
-        Btwxt::GridAxis gExt(condenser->perfGrid[iElem],
-                           interpMethod, extrapMethod,
-                           {-DBL_MAX, DBL_MAX},
-                           "TAir",
-                           get_courier());
-
-        gx.push_back(gExt);
-        ++iElem;
-
-        if (condenser->perfGrid.size() == 3)
-        {
-            interpMethod = (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
-                               ? Btwxt::InterpolationMethod::linear
-                               : Btwxt::InterpolationMethod::cubic;
-            extrapMethod = Btwxt::ExtrapolationMethod::constant;
-            Btwxt::GridAxis gOut(condenser->perfGrid[iElem],
-                                 interpMethod,
-                                 extrapMethod,
-                               {-DBL_MAX, DBL_MAX},
-                               "TOut",
-                               get_courier());
-            gx.push_back(gOut);
-            ++iElem;
-        }
-
-       interpMethod = (model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
-                          ? Btwxt::InterpolationMethod::linear
-                          : Btwxt::InterpolationMethod::cubic;
-        extrapMethod = Btwxt::ExtrapolationMethod::linear;
-        Btwxt::GridAxis gHeatSource(condenser->perfGrid[iElem],
-                                    interpMethod,
-                                    extrapMethod,
-                           {-DBL_MAX, DBL_MAX},
-                           "Tin",
-                           get_courier());
-        gx.push_back(gHeatSource);
-
-        condenser->perfRGI =
-            std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
-                gx, condenser->perfGridValues, "RegularGridInterpolator", get_courier()));
-
-        condenser->useBtwxtGrid = true;
+        condenser->convertMapToGrid();
     }
 }
 //-----------------------------------------------------------------------------
