@@ -115,5 +115,6 @@
     "schema": "HPWHSimInput"
   },
   "number_of_nodes": 12,
+  "standard_setpoint": 325.92777777777775,
   "system_type": "INTEGRATED"
 }

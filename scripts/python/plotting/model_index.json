@@ -26,7 +26,10 @@
 		{"name": "LG_APHWC80", "manufacturer": "LG", "model": "APHWC80", "specs": ["Preset", "File", "JSON"]},
 
 		{"name": "Stiebel220e", "manufacturer": "Stiebel", "model": "Stiebel220e", "specs": ["Preset", "File", "JSON"]},
-		{"name": "GE502014", "manufacturer": "GE", "model": "GE502014", "specs": ["Preset", "File", "JSON"]}
+		{"name": "GE502014", "manufacturer": "GE", "model": "GE502014", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "ColmacCxA_20_SP", "manufacturer": "Colmac", "model": "ColmacCxA_20_SP", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"},
+		{"name": "ColmacCxA_20_MP", "manufacturer": "Colmac", "model": "ColmacCxA_20_MP", "series": "ColmacCx", "specs": ["Preset", "JSON"], "type": "Central"}
 
 
   ]

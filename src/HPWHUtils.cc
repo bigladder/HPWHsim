@@ -539,7 +539,10 @@ void HPWH::to_json(const hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput& hsi, 
     j["number_of_nodes"] = hsi.number_of_nodes;
     j["fixed_volume"] = hsi.fixed_volume;
     j["depresses_temperature"] = hsi.depresses_temperature;
-
+    if (hsi.standard_setpoint_is_set)
+    {
+        j["standard_setpoint"] = hsi.standard_setpoint;
+    }
     switch (hsi.system_type)
     {
     case hpwh_data_model::hpwh_sim_input_ns::HPWHSystemType::CENTRAL:
@@ -776,10 +779,6 @@ void HPWH::to_json(
     if (cwhs.multipass_flow_rate_is_set)
     {
         j["multipass_flow_rate"] = cwhs.multipass_flow_rate;
-    }
-    if (cwhs.standard_setpoint_is_set)
-    {
-        j["standard_setpoint"] = cwhs.standard_setpoint;
     }
 }
 

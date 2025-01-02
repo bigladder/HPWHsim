@@ -26,7 +26,8 @@
 
 		{"group": "Standard tests", "name": "Standard 24-hr test"},
 
-		{"test": "testLockout", "name": "Lockout test"}
+		{"test": "testLockout", "name": "Lockout test"},
  
+		{"group": "Demand-response tests", "test": "testDR_TOTLOR", "path": "DR_tests"},
   ]
 }
