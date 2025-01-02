@@ -18,7 +18,7 @@ namespace hpwh_data_model  {
 			json_get<bool>(j, logger.get(), "depresses_temperature", x.depresses_temperature, x.depresses_temperature_is_set, false);
 			json_get<bool>(j, logger.get(), "fixed_volume", x.fixed_volume, x.fixed_volume_is_set, false);
 			json_get<hpwh_sim_input_ns::HPWHSystemType>(j, logger.get(), "system_type", x.system_type, x.system_type_is_set, true);
-			json_get<rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER>(j, logger.get(), "integrated_system", x.integrated_system, x.integrated_system_is_set, true);
+			json_get<rsintegratedwaterheater_ns::RSINTEGRATEDWATERHEATER>(j, logger.get(), "integrated_system", x.integrated_system, x.integrated_system_is_set, false);
 			json_get<central_water_heating_system_ns::CentralWaterHeatingSystem>(j, logger.get(), "central_system", x.central_system, x.central_system_is_set, true);
 		}
 		const std::string_view HPWHSimInput::number_of_nodes_units = "";

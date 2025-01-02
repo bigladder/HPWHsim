@@ -1,6 +1,8 @@
 #ifndef CONDENSER_hh
 #define CONDENSER_hh
 
+#include <btwxt/btwxt.h>
+
 #include "HPWH.hh"
 #include "HPWHHeatSource.hh"
 #include "HPWHTank.hh"
@@ -188,8 +190,10 @@ class HPWH::Condenser : public HPWH::HeatSource
                             double& input_BTUperHr,
                             double& cop) const;
 
-    void convertMapToGrid(std::vector<std::vector<double>>& tempGrid,
-                          std::vector<std::vector<double>>& tempGridValues) const;
+    void makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
+                                          std::vector<std::vector<double>>& tempGridValues) const;
+
+    void convertMapToGrid();
 
     double standbyPower_kW;
 
@@ -222,6 +226,9 @@ class HPWH::Condenser : public HPWH::HeatSource
     void addHeat(double externalT_C, double minutesToRun);
 
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
+
+    void makeBtwxt();
+
 };
 
 #endif
