@@ -862,9 +862,15 @@ void HPWH::to_json(
         j_perf_map["grid_variables"] = j_grid_vars;
 
         auto& lookup_vars = perf.performance_map.lookup_variables;
+        std::vector<double> copV;
+        copV.reserve(lookup_vars.input_power.size());
+        for (std::size_t i = 0; i < lookup_vars.heating_capacity.size(); ++i)
+            copV.push_back(lookup_vars.heating_capacity[i] / lookup_vars.input_power[i]);
+
         nlohmann::json j_lookup_vars;
         j_lookup_vars["input_power"] = lookup_vars.input_power;
         j_lookup_vars["heating_capacity"] = lookup_vars.heating_capacity;
+        j_lookup_vars["cop"] = copV;
         j_perf_map["lookup_variables"] = j_lookup_vars;
 
         j_perf["performance_map"] = j_perf_map;
