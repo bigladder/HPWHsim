@@ -1,0 +1,33 @@
+{
+  "models": [
+
+    {"name": "BradfordWhiteAeroThermRE2H50", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "model": "AeroThermRE2H50", "specs": ["Preset", "File", "JSON"]},
+		{"name": "BradfordWhiteAeroThermRE2H65", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "model": "AeroThermRE2H65", "specs": ["Preset", "File", "JSON"]},
+		{"name": "BradfordWhiteAeroThermRE2H80", "manufacturer": "BradfordWhite", "series": "AeroThermRE2H", "model": "AeroThermRE2H80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "AOSmithHPTS45", "manufacturer": "AOSmith", "series": "HPTS", "model": "HPTS45", "specs": ["Preset", "File", "JSON"]},
+		{"name": "AOSmithHPTS50", "manufacturer": "AOSmith", "series": "HPTS", "model": "HPTS50", "specs": ["Preset", "File", "JSON"]},
+		{"name": "AOSmithHPTS65", "manufacturer": "AOSmith", "series": "HPTS", "model": "HPTS65", "specs": ["Preset", "File", "JSON"]},
+		{"name": "AOSmithHPTS80", "manufacturer": "AOSmith", "series": "HPTS", "model": "HPTS80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "Rheem2020Prem45", "series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem45", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Prem50", "series": "2020Prem", "manufacturer": "Rheem", "model": "2020Prem50", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Prem65", "manufacturer": "Rheem", "series": "2020Prem", "model": "2020Prem65", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Prem80", "manufacturer": "Rheem", "series": "2020Prem", "model": "2020Prem80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "Rheem2020Build45", "manufacturer": "Rheem", "series": "2020Build", "model": "2020Build45", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Build50", "manufacturer": "Rheem", "series": "2020Build", "model": "2020Build50", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Build65", "manufacturer": "Rheem", "series": "2020Build", "model": "2020Build65", "specs": ["Preset", "File", "JSON"]},
+		{"name": "Rheem2020Build80", "manufacturer": "Rheem", "series": "2020Build", "model": "2020Build80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "AquaThermAire", "manufacturer": "Villara", "model": "AquaThermAire", "specs": ["Preset", "File", "JSON"]},
+
+ 		{"name": "LG_APHWC50", "manufacturer": "LG", "model": "APHWC50", "specs": ["Preset", "File", "JSON"]},
+		{"name": "LG_APHWC80", "manufacturer": "LG", "model": "APHWC80", "specs": ["Preset", "File", "JSON"]},
+
+		{"name": "Stiebel220e", "manufacturer": "Stiebel", "model": "Stiebel220e", "specs": ["Preset", "File", "JSON"]},
+		{"name": "GE502014", "manufacturer": "GE", "model": "GE502014", "specs": ["Preset", "File", "JSON"]}
+
+
+  ]
+}
