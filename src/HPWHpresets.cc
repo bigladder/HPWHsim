@@ -838,7 +838,7 @@ void HPWH::initPreset(MODELS presetNum)
         std::vector<NodeWeight> nodeWeights1;
         nodeWeights1.emplace_back(1);
         compressor->addShutOffLogic(std::make_shared<TempBasedHeatingLogic>(
-            "bottom node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
+            "lowest node", nodeWeights1, dF_TO_dC(15.), this, false, std::greater<double>(), true));
         compressor->depressesTemperature = false; // no temp depression
 
         // Defrost Derate
