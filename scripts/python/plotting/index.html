@@ -464,6 +464,16 @@ body {font-family: Arial;}
 </form>
 
 <!-- content -->
+<button id="perf_tab" class="collapsible">Performance</button>
+<div class="content">
+  <form id="perf_form">
+    <button type="button" id="perf_btn" onclick="show_performance();">performance</button>
+  </form>
+
+  <iframe title="perf_plot" src="" id="perf_plot" width=600 height=600 style="display:none;"></iframe>
+</div>
+
+<!-- content -->
 <button id="test_tab" class="collapsible">Test</button>
 <div class="content">
   <form id="test_form">

@@ -182,11 +182,11 @@ void HPWH::Condenser::makeBtwxt()
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
                                             : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                           interpMethod,
-                           extrapMethod,
-                           {-DBL_MAX, DBL_MAX},
-                           "TAir",
-                           get_courier()));
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "TAir",
+                                            get_courier()));
         ++iAxis;
     }
 
@@ -197,36 +197,33 @@ void HPWH::Condenser::makeBtwxt()
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
                                             : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                           interpMethod,
-                           extrapMethod,
-                           {-DBL_MAX, DBL_MAX},
-                           "TOut",
-                           get_courier()));
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "TOut",
+                                            get_courier()));
         ++iAxis;
     }
 
     {
-        auto interpMethod = (is_Mitsubishi)
-                        ? Btwxt::InterpolationMethod::linear
-                        : Btwxt::InterpolationMethod::cubic;
+        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
+                                            : Btwxt::InterpolationMethod::cubic;
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
                                             : Btwxt::ExtrapolationMethod::linear;
 
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
-                           interpMethod,
-                           extrapMethod,
-                           {-DBL_MAX, DBL_MAX},
-                           "Tin",
-                           get_courier()));
+                                            interpMethod,
+                                            extrapMethod,
+                                            {-DBL_MAX, DBL_MAX},
+                                            "Tin",
+                                            get_courier()));
         ++iAxis;
-     }
+    }
 
-     perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
-         grid_axes, perfGridValues, "RegularGridInterpolator", get_courier()));
+    perfRGI = std::make_shared<Btwxt::RegularGridInterpolator>(Btwxt::RegularGridInterpolator(
+        grid_axes, perfGridValues, "RegularGridInterpolator", get_courier()));
 
-     useBtwxtGrid = true;
-
-
+    useBtwxtGrid = true;
 }
 
 void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
@@ -1149,41 +1146,71 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
 
 // convert to grid
 void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
-                                       std::vector<std::vector<double>>& tempGridValues) const
+                                      std::vector<std::vector<double>>& tempGridValues) const
 {
     std::size_t nEnvTempsOrig = perfMap.size();
     if (nEnvTempsOrig < 1)
         return;
 
     tempGridValues.reserve(2); // inputPower, cop
+/*
+    struct FWeight
+    {
+        double minT, maxT, setpointT;
+        double pTot = 0.;
+        double f(double T)
+        {
+            double r = (T - minT) / (maxT - minT);
+            double rSetpoint = (T - setpointT) / (maxT - minT);
+            double q = r / rSetpoint;
+            double qMax = (maxT - minT) / (maxT - setpointT);
+            return std::atan(q) / std::atan(qMax);
+        }
+
+        FWeight(double x, double y, double z) : minT(x), maxT(y), setpointT(z) {}
+    };
+ */
 
     std::vector<double> envTemps_K = {};
     std::vector<double> heatSourceTemps_K = {};
     std::vector<double> outletTemps_K = {};
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
+        for (std::size_t i = 0; i <= 15; ++i)
         {
-            auto envTempRange_dC = maxT - minT;
-            auto nEnvTs = static_cast<std::size_t>(std::max(41. * envTempRange_dC / 100., 3.));
-            auto dEnvT_dC = envTempRange_dC / static_cast<double>(nEnvTs);
-            envTemps_K.resize(nEnvTs);
-            for (std::size_t i = 0; i < nEnvTs; ++i)
-            {
-                envTemps_K[i] = C_TO_K(minT + static_cast<double>(i) * dEnvT_dC);
-            }
+            double envTemp_C = static_cast<double>(i) * 0.5; // from large-compressor tests
+           // if ((envTemp_C > minT) && (envTemp_C < maxT))
+           envTemps_K.push_back(C_TO_K(envTemp_C));
         }
+        envTemps_K.push_back(C_TO_K(7.2223));
+        envTemps_K.push_back(C_TO_K(15.5555556));
 
-        {
-            const double minHeatSourceTemp_C = 0.;
-            const double maxHeatSourceTemp_C = maxSetpoint_C;
-            auto heatSourceTempRange_dC = maxHeatSourceTemp_C - minHeatSourceTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(81. * heatSourceTempRange_dC / 100., 3.));
-            auto dHeatSourceT_dC = heatSourceTempRange_dC / static_cast<double>(nHeatSourceTs);
+        std::sort(envTemps_K.begin(),
+                  envTemps_K.end(),
+                  [](double a, double b)
+                  {
+                      return a < b;
+                  });
+        if (C_TO_K(minT) < envTemps_K.front()) envTemps_K.push_back(C_TO_K(minT));
+        if (C_TO_K(maxT) > envTemps_K.back()) envTemps_K.push_back(C_TO_K(maxT));
+        std::sort(envTemps_K.begin(),
+                  envTemps_K.end(),
+                  [](double a, double b)
+                  {
+                      return a < b;
+                  });
+
+        { // HeatSource
+            const double minTemp_C = 0.;
+            const double maxTemp_C = maxSetpoint_C;
+            auto tempRange_dC = maxTemp_C - minTemp_C;
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
+            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
             {
-                heatSourceTemps_K[i] =
-                    C_TO_K(minHeatSourceTemp_C + static_cast<double>(i) * dHeatSourceT_dC);
+                double heatSourceTemp_C = minTemp_C + dHeatSourceT_dC * static_cast<double>(i) / nHeatSourceTs;
+                heatSourceTemps_K[i] = C_TO_K(heatSourceTemp_C);
             }
         }
 
@@ -1343,12 +1370,12 @@ void HPWH::Condenser::convertMapToGrid()
     perfGridValues.resize(2);
     perfGridValues[0].reserve(tempGridValues[0].size());
     for (auto& point : tempGridValues[0])
-        if(is_integrated)
+        if (is_integrated)
             perfGridValues[0].push_back(KW_TO_BTUperH(point / 1000.));
         else
         {
             if (isMultipass)
-                perfGridValues[0].push_back(point / 1000.); // in MP in KW
+                perfGridValues[0].push_back(point / 1000.); // MP in KW
             else
                 perfGridValues[0].push_back(KW_TO_BTUperH(point / 1000.)); // others in Btu/h
         }
