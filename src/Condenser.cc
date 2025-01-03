@@ -1176,40 +1176,30 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     std::vector<double> outletTemps_K = {};
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
-        for (std::size_t i = 0; i <= 15; ++i)
-        {
-            double envTemp_C = static_cast<double>(i) * 0.5; // from large-compressor tests
-           // if ((envTemp_C > minT) && (envTemp_C < maxT))
-           envTemps_K.push_back(C_TO_K(envTemp_C));
+        { // env
+            const double minTemp_C = minT;
+            const double maxTemp_C = maxT;
+            auto tempRange_dC = maxTemp_C - minTemp_C;
+            auto nTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
+            auto dT_dC = tempRange_dC / static_cast<double>(nTs);
+            envTemps_K.resize(nTs);
+            for (std::size_t i = 0; i < nTs; ++i)
+            {
+                double temp_C = minTemp_C + dT_dC * static_cast<double>(i);
+                envTemps_K[i] = C_TO_K(temp_C);
+            }
         }
-        envTemps_K.push_back(C_TO_K(7.2223));
-        envTemps_K.push_back(C_TO_K(15.5555556));
-
-        std::sort(envTemps_K.begin(),
-                  envTemps_K.end(),
-                  [](double a, double b)
-                  {
-                      return a < b;
-                  });
-        if (C_TO_K(minT) < envTemps_K.front()) envTemps_K.push_back(C_TO_K(minT));
-        if (C_TO_K(maxT) > envTemps_K.back()) envTemps_K.push_back(C_TO_K(maxT));
-        std::sort(envTemps_K.begin(),
-                  envTemps_K.end(),
-                  [](double a, double b)
-                  {
-                      return a < b;
-                  });
 
         { // HeatSource
             const double minTemp_C = 0.;
             const double maxTemp_C = maxSetpoint_C;
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(21. * tempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
             {
-                double heatSourceTemp_C = minTemp_C + dHeatSourceT_dC * static_cast<double>(i) / nHeatSourceTs;
+                double heatSourceTemp_C = minTemp_C + dHeatSourceT_dC * static_cast<double>(i);
                 heatSourceTemps_K[i] = C_TO_K(heatSourceTemp_C);
             }
         }
