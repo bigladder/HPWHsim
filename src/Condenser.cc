@@ -1177,24 +1177,25 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
         { // env
-            const double minTemp_C = minT;
-            const double maxTemp_C = maxT;
-            auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
-            auto dT_dC = tempRange_dC / static_cast<double>(nTs);
-            envTemps_K.resize(nTs);
-            for (std::size_t i = 0; i < nTs; ++i)
-            {
-                double temp_C = minTemp_C + dT_dC * static_cast<double>(i);
-                envTemps_K[i] = C_TO_K(temp_C);
-            }
+            envTemps_K = {0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5,
+                          7., 7.2223, 7.5, 8., 8.5, 9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5,
+                          13., 13.5, 14., 14.5, 15., 15.5, 15.5555556};
+            for (auto& T_K: envTemps_K)
+                T_K = C_TO_K(T_K);
+
+            if (C_TO_K(minT) < envTemps_K.front())
+                envTemps_K.push_back(C_TO_K(minT));
+            if (C_TO_K(maxT) > envTemps_K.back())
+                envTemps_K.push_back(C_TO_K(maxT));
+
+            std::sort(envTemps_K.begin(), envTemps_K.end(), [](double a, double b) { return a < b; });
         }
 
         { // HeatSource
             const double minTemp_C = 0.;
-            const double maxTemp_C = maxSetpoint_C;
+            const double maxTemp_C = std::max(maxSetpoint_C, 65.);
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(21. * tempRange_dC / 100., 3.));
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(321. * tempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
@@ -1231,9 +1232,12 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             {
                 double standardOutletT_K =
                     C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
-                outletTemps_K.resize(2);
+                outletTemps_K.resize(3);
                 outletTemps_K[0] = standardOutletT_K - 0.7;
                 outletTemps_K[1] = standardOutletT_K;
+
+                outletTemps_K[2] = C_TO_K(65.);
+
                 // outletTemps_K[2] = standardOutletT_K + 0.7;
             }
 
