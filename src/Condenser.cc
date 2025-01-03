@@ -1195,7 +1195,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             const double minTemp_C = 0.;
             const double maxTemp_C = std::max(maxSetpoint_C, 65.);
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(321. * tempRange_dC / 100., 3.));
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
