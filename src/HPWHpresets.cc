@@ -1505,6 +1505,7 @@ void HPWH::initPreset(MODELS presetNum)
 
         compressor->isOn = false;
         compressor->isVIP = true;
+        compressor->isMultipass = true;
         compressor->setCondensity({0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0});
         compressor->extrapolationMethod = Condenser::EXTRAP_NEAREST;
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
@@ -2209,7 +2210,6 @@ void HPWH::initPreset(MODELS presetNum)
         compressor->configuration = Condenser::CONFIG_EXTERNAL;
         compressor->isMultipass = false;
         compressor->maxSetpoint_C = MAXOUTLET_R744;
-
         std::vector<NodeWeight> nodeWeights;
         nodeWeights.emplace_back(4);
         std::vector<NodeWeight> nodeWeightStandby;

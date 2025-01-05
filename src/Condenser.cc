@@ -173,13 +173,14 @@ void HPWH::Condenser::makeBtwxt()
 {
     auto is_integrated = (configuration != CONFIG_EXTERNAL);
     auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
+    auto is_NyleMP =  ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
     {
-        auto interpMethod = (is_Mitsubishi || is_integrated) ? Btwxt::InterpolationMethod::linear
+        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated) ? Btwxt::InterpolationMethod::linear
                                                              : Btwxt::InterpolationMethod::cubic;
-        auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::constant
+        auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
                                             : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                                             interpMethod,
@@ -206,10 +207,11 @@ void HPWH::Condenser::makeBtwxt()
     }
 
     {
-        auto interpMethod = (is_Mitsubishi) ? Btwxt::InterpolationMethod::linear
+        auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
                                             : Btwxt::InterpolationMethod::cubic;
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
-                                            : Btwxt::ExtrapolationMethod::linear;
+                                : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
+                                            : Btwxt::ExtrapolationMethod::linear);
 
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                                             interpMethod,
@@ -348,9 +350,31 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
         standbyPower_kW = perf.standby_power / 1000.;
     }
 
+    // hard-coded fixes pending data model incorporation
     if (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
     {
         secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
+    }
+    // hard-coded fixes pending data model incorporation
+    if ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP))
+    {
+        double inputPower_KW = 0;
+        if ((hpwh->model == MODELS_NyleC60A_MP) || (hpwh->model == MODELS_NyleC60A_C_MP))
+            inputPower_KW = 4.5;
+        else if ((hpwh->model == MODELS_NyleC90A_MP) || (hpwh->model == MODELS_NyleC90A_C_MP))
+            inputPower_KW = 5.4;
+        else if ((hpwh->model == MODELS_NyleC125A_MP) || (hpwh->model == MODELS_NyleC125A_C_MP))
+            inputPower_KW = 9.0;
+        else if ((hpwh->model == MODELS_NyleC185A_MP) || (hpwh->model == MODELS_NyleC185A_C_MP))
+            inputPower_KW = 7.2;
+        else if ((hpwh->model == MODELS_NyleC250A_MP) || (hpwh->model == MODELS_NyleC250A_C_MP))
+            inputPower_KW = 18.0;
+
+        resDefrost = {
+            inputPower_KW,
+            5.0, // constTempLift_dF
+            40.0 // onBelowTemp_F
+        };
     }
 }
 
@@ -1153,23 +1177,6 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         return;
 
     tempGridValues.reserve(2); // inputPower, cop
-/*
-    struct FWeight
-    {
-        double minT, maxT, setpointT;
-        double pTot = 0.;
-        double f(double T)
-        {
-            double r = (T - minT) / (maxT - minT);
-            double rSetpoint = (T - setpointT) / (maxT - minT);
-            double q = r / rSetpoint;
-            double qMax = (maxT - minT) / (maxT - setpointT);
-            return std::atan(q) / std::atan(qMax);
-        }
-
-        FWeight(double x, double y, double z) : minT(x), maxT(y), setpointT(z) {}
-    };
- */
 
     std::vector<double> envTemps_K = {};
     std::vector<double> heatSourceTemps_K = {};
@@ -1195,7 +1202,7 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             const double minTemp_C = 0.;
             const double maxTemp_C = std::max(maxSetpoint_C, 65.);
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(41. * tempRange_dC / 100., 3.));
+            auto nHeatSourceTs = static_cast<std::size_t>(std::max(61. * tempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
             heatSourceTemps_K.resize(nHeatSourceTs);
             for (std::size_t i = 0; i < nHeatSourceTs; ++i)
