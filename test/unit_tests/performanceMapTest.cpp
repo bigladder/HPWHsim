@@ -20,7 +20,6 @@ struct PerformanceMapTest : public testing::Test
         double cop;
     };
 
-
     struct performancePointMP
     {
         double tairF;
@@ -730,7 +729,7 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW)<< sModelName << ": polynomial";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
 
         hpwh.convertMapToGrid();
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -754,7 +753,7 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW)<< sModelName << ": polynomial";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
 
         hpwh.convertMapToGrid();
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -802,8 +801,7 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW)<< sModelName << ": original";
-
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": original";
 
         hpwh_data_model::init(hpwh.get_courier());
         nlohmann::json j;
@@ -822,4 +820,3 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
     }
 }
-

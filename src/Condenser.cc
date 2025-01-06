@@ -173,15 +173,17 @@ void HPWH::Condenser::makeBtwxt()
 {
     auto is_integrated = (configuration != CONFIG_EXTERNAL);
     auto is_Mitsubishi = (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP);
-    auto is_NyleMP =  ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
+    auto is_NyleMP =
+        ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP));
 
     std::vector<Btwxt::GridAxis> grid_axes = {};
     std::size_t iAxis = 0;
     {
-        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated) ? Btwxt::InterpolationMethod::linear
-                                                             : Btwxt::InterpolationMethod::cubic;
+        auto interpMethod = (is_Mitsubishi || is_NyleMP || is_integrated)
+                                ? Btwxt::InterpolationMethod::linear
+                                : Btwxt::InterpolationMethod::cubic;
         auto extrapMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
-                                            : Btwxt::ExtrapolationMethod::linear;
+                                                         : Btwxt::ExtrapolationMethod::linear;
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                                             interpMethod,
                                             extrapMethod,
@@ -208,10 +210,10 @@ void HPWH::Condenser::makeBtwxt()
 
     {
         auto interpMethod = (is_Mitsubishi || is_NyleMP) ? Btwxt::InterpolationMethod::linear
-                                            : Btwxt::InterpolationMethod::cubic;
+                                                         : Btwxt::InterpolationMethod::cubic;
         auto extrapMethod = (is_Mitsubishi) ? Btwxt::ExtrapolationMethod::linear
-                                : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
-                                            : Btwxt::ExtrapolationMethod::linear);
+                                            : ((is_NyleMP) ? Btwxt::ExtrapolationMethod::constant
+                                                           : Btwxt::ExtrapolationMethod::linear);
 
         grid_axes.push_back(Btwxt::GridAxis(perfGrid[iAxis],
                                             interpMethod,
@@ -660,7 +662,7 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
     {
         if (externalT_C < F_TO_C(resDefrost.onBelowT_F))
         {
-            externalT_C += F_TO_C(resDefrost.constTempLift_dF);
+            externalT_C += dF_TO_dC(resDefrost.constTempLift_dF);
             resDefrostHeatingOn = true;
         }
     }
@@ -1174,10 +1176,10 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
         { // env
-            envTemps_K = {0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5,
-                          7., 7.2223, 7.5, 8., 8.5, 9., 9.5, 10., 10.5, 11., 11.5, 12., 12.5,
-                          13., 13.5, 14., 14.5, 15., 15.5, 15.5555556};
-            for (auto& T_K: envTemps_K)
+            envTemps_K = {0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
+                          6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
+                          11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556};
+            for (auto& T_K : envTemps_K)
                 T_K = C_TO_K(T_K);
 
             if (C_TO_K(minT) < envTemps_K.front())
@@ -1185,7 +1187,8 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             if (C_TO_K(maxT) > envTemps_K.back())
                 envTemps_K.push_back(C_TO_K(maxT));
 
-            std::sort(envTemps_K.begin(), envTemps_K.end(), [](double a, double b) { return a < b; });
+            std::sort(
+                envTemps_K.begin(), envTemps_K.end(), [](double a, double b) { return a < b; });
         }
 
         { // HeatSource
