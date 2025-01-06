@@ -15,9 +15,7 @@ struct PerformanceMapTest : public testing::Test
         double externalT_F;
         double condenserT_F;
         double outletT_F;
-        double input_kW;
         double output_kW;
-        double cop;
     };
 
     struct performancePointMP
@@ -734,13 +732,13 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {50., 50.2857, 135, 0., 1.380352139038755, 0.};
+        checkPoint = {50., 50.2857, 135, 1.380352139038755};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -751,7 +749,6 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
     }
 }
-
 
 /*
  * ReloadFromDataModel_CWHS tests
@@ -766,13 +763,13 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {45., 40., 135, 0., 44.443129130038741, 0.};
+        checkPoint = {45., 40., 135, 44.443129130038741};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -789,13 +786,13 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {45., 40., 135, 0., 43.3512668504586, 0.};
+        checkPoint = {45., 40., 135, 43.3512668504586};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -812,13 +809,13 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {45., 40., 135, 0., 40.195550598336204, 0.};
+        checkPoint = {45., 40., 135, 40.195550598336204};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": Preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
