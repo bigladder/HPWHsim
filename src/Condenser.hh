@@ -191,7 +191,7 @@ class HPWH::Condenser : public HPWH::HeatSource
                             double& cop) const;
 
     void makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
-                                          std::vector<std::vector<double>>& tempGridValues) const;
+                         std::vector<std::vector<double>>& tempGridValues) const;
 
     void convertMapToGrid();
 
@@ -228,7 +228,6 @@ class HPWH::Condenser : public HPWH::HeatSource
     double getMaxSetpointT_C() const { return maxSetpoint_C; }
 
     void makeBtwxt();
-
 };
 
 #endif

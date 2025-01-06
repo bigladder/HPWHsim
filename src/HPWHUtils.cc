@@ -887,7 +887,6 @@ void HPWH::to_json(
         {
             j_perf["coil_configuration"] = "EXTERNAL";
             break;
-
         }
         default:
         {
@@ -899,7 +898,6 @@ void HPWH::to_json(
     {
         j_perf["standby_power"] = perf.standby_power;
     }
-
 
     if (perf.use_defrost_map_is_set)
     {
