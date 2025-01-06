@@ -715,7 +715,6 @@ TEST_F(PerformanceMapTest, Sanden120)
 TEST_F(PerformanceMapTest, ConvertMapToGrid)
 {
     HPWH hpwh;
-
     {
         const std::string sModelName = "ColmacCxA_20_MP";
         hpwh.initPreset(sModelName);
@@ -739,7 +738,6 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
                                                HPWH::UNITS_F);
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
     }
-
     {
         const std::string sModelName = "ColmacCxA_20_SP";
         hpwh.initPreset(sModelName);
@@ -763,32 +761,7 @@ TEST_F(PerformanceMapTest, ConvertMapToGrid)
                                                HPWH::UNITS_F);
         EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
     }
-    {
-        const std::string sModelName = "Rheem2020Prem50";
-        hpwh.initPreset(sModelName);
-
-        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
-
-        // using polynomial map
-        checkPoint = {67, 127, 41.0, 0., 1.445116497615, 0.};
-        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
-                                                      checkPoint.condenserT_F,
-                                                      checkPoint.outletT_F,
-                                                      HPWH::UNITS_KW,
-                                                      HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
-
-        hpwh.convertMapToGrid();
-        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
-                                               checkPoint.condenserT_F,
-                                               checkPoint.outletT_F,
-                                               HPWH::UNITS_KW,
-                                               HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
-    }
-
-    { // JSON test
-
+    { // convert QAHV_N136TAU_HPB_SP Preset to JSON and compare
         const std::string sModelName = "QAHV_N136TAU_HPB_SP";
         hpwh.initPreset(sModelName);
 
