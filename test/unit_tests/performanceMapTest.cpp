@@ -18,6 +18,14 @@ struct PerformanceMapTest : public testing::Test
         double output_kW;
     };
 
+    struct PerformancePointSP
+    {
+        double externalT_F;
+        double condenserT_F;
+        double outletT_F;
+        double output_kW;
+    };
+
     struct performancePointMP
     {
         double tairF;
@@ -783,7 +791,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         const std::string sModelName = "ColmacCxA_20_SP";
         hpwh.initPreset(sModelName);
 
-        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+        PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
         checkPoint = {45., 40., 135, 43.3512668504586};
@@ -806,7 +814,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
         const std::string sModelName = "QAHV_N136TAU_HPB_SP";
         hpwh.initPreset(sModelName);
 
-        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+        PerformancePointSP checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
         checkPoint = {45., 40., 135, 40.195550598336204};
