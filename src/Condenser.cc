@@ -139,7 +139,6 @@ bool HPWH::Condenser::shouldLockOut(double heatSourceAmbientT_C) const
 
 bool HPWH::Condenser::shouldUnlock(double heatSourceAmbientT_C) const
 {
-
     // if it's already unlocked, keep it unlocked
     if (!isLockedOut())
     {

@@ -907,8 +907,9 @@ void HPWH::to_json(
     if (perf.secondary_heat_exchanger_is_set)
     {
         nlohmann::json j_secondary_heat_exchanger;
-        auto &shs = perf.secondary_heat_exchanger;
-        j_secondary_heat_exchanger["cold_side_temperature_offset"] = shs.cold_side_temperature_offset;
+        auto& shs = perf.secondary_heat_exchanger;
+        j_secondary_heat_exchanger["cold_side_temperature_offset"] =
+            shs.cold_side_temperature_offset;
         j_secondary_heat_exchanger["hot_side_temperature_offset"] = shs.hot_side_temperature_offset;
         j_secondary_heat_exchanger["extra_pump_power"] = shs.extra_pump_power;
         j_perf["secondary_heat_exchanger"] = j_secondary_heat_exchanger;
