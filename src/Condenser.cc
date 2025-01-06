@@ -352,10 +352,12 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
         standbyPower_kW = perf.standby_power / 1000.;
     }
 
-    // hard-coded fixes pending data model incorporation
-    if (hpwh->model == MODELS_MITSUBISHI_QAHV_N136TAU_HPB_SP)
+    if (perf.secondary_heat_exchanger_is_set)
     {
-        secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
+        auto& shs = perf.secondary_heat_exchanger;
+        secondaryHeatExchanger = {shs.cold_side_temperature_offset,
+                                  shs.hot_side_temperature_offset,
+                                  shs.extra_pump_power};
     }
 
     if (hpwh->model == MODELS_NyleC60A_C_MP)
@@ -430,6 +432,20 @@ void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
             perf.maximum_refrigerant_temperature_is_set,
             perf.maximum_refrigerant_temperature);
 
+    if (secondaryHeatExchanger.extraPumpPower_W > 0.)
+    {
+        auto& shs = perf.secondary_heat_exchanger;
+        checkTo(secondaryHeatExchanger.coldSideTemperatureOffset_dC,
+                shs.cold_side_temperature_offset_is_set,
+                shs.cold_side_temperature_offset);
+        checkTo(secondaryHeatExchanger.hotSideTemperatureOffset_dC,
+                shs.hot_side_temperature_offset_is_set,
+                shs.hot_side_temperature_offset);
+        checkTo(secondaryHeatExchanger.extraPumpPower_W,
+                shs.extra_pump_power_is_set,
+                shs.extra_pump_power);
+        perf.secondary_heat_exchanger_is_set = true;
+    }
     if (useBtwxtGrid)
     {
         auto& map = perf.performance_map;
@@ -595,7 +611,7 @@ void HPWH::Condenser::getCapacity(double externalT_C,
     // Add an offset to the condenser temperature (or incoming coldwater temperature) to approximate
     // a secondary heat exchange in line with the compressor
     double adjCondenserTemp_C =
-        condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC;
+        condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffset_dC;
     double adjOutletT_C = setpointTemp_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC;
 
     if (useBtwxtGrid)
@@ -661,7 +677,7 @@ void HPWH::Condenser::getCapacityMP(double externalT_C,
 {
     bool resDefrostHeatingOn = false;
     double adjCondenserTemp_C =
-        condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffest_dC;
+        condenserTemp_C + secondaryHeatExchanger.coldSideTemperatureOffset_dC;
 
     // Check if we have resistance elements to turn on for defrost and add the constant lift.
     if (resDefrost.inputPwr_kW > 0)
@@ -1238,14 +1254,13 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             {
                 double standardOutletT_K =
                     C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
-                outletTemps_K.reserve(4);
-                outletTemps_K.push_back(standardOutletT_K - 0.7);
+                outletTemps_K.reserve(3);
                 outletTemps_K.push_back(standardOutletT_K);
 
                 if (maxOut_at_LowT.airT_C > K_TO_C(envTemps_K.front()))
                     outletTemps_K.push_back(C_TO_K(maxOut_at_LowT.outT_C));
 
-                outletTemps_K.push_back(C_TO_K(65.));
+                outletTemps_K.push_back(C_TO_K(65.)); // from testLargeCompHot
 
                 std::sort(outletTemps_K.begin(),
                           outletTemps_K.end(),

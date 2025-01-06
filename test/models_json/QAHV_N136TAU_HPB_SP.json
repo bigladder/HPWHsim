@@ -1106,6 +1106,11 @@
                 ]
               }
             },
+            "secondary_heat_exchanger": {
+              "cold_side_temperature_offset": 5.555555555555555,
+              "extra_pump_power": 27.0,
+              "hot_side_temperature_offset": 8.333333333333334
+            },
             "use_defrost_map": false
           }
         },

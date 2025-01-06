@@ -135,7 +135,7 @@ class HPWH::Condenser : public HPWH::HeatSource
 
     struct SecondaryHeatExchanger
     {
-        double coldSideTemperatureOffest_dC;
+        double coldSideTemperatureOffset_dC;
         double hotSideTemperatureOffset_dC;
         double extraPumpPower_W;
     };
