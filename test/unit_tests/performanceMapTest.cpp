@@ -740,7 +740,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
 
         reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
@@ -748,7 +748,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
     }
 }
 
@@ -772,15 +772,15 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
 
-        hpwh.convertMapToGrid();
+        reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                checkPoint.condenserT_F,
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
     }
     {
         const std::string sModelName = "ColmacCxA_20_SP";
@@ -795,17 +795,17 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
 
-        hpwh.convertMapToGrid();
+        reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                checkPoint.condenserT_F,
                                                checkPoint.outletT_F,
                                                HPWH::UNITS_KW,
                                                HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": data model";
     }
-    { // convert QAHV_N136TAU_HPB_SP Preset to JSON and compare
+    {
         const std::string sModelName = "QAHV_N136TAU_HPB_SP";
         hpwh.initPreset(sModelName);
 
@@ -818,17 +818,9 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
                                                       checkPoint.outletT_F,
                                                       HPWH::UNITS_KW,
                                                       HPWH::UNITS_F);
-        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": original";
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": preset";
 
-        hpwh_data_model::init(hpwh.get_courier());
-        nlohmann::json j;
-        hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi0, hsi1;
-        hpwh.to(hsi0);
-        HPWH::to_json(hsi0, j);
-
-        hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi1);
-        hpwh.from(hsi1);
-
+        reloadFromDataModel(hpwh);
         output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                checkPoint.condenserT_F,
                                                checkPoint.outletT_F,

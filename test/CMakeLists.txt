@@ -300,23 +300,6 @@ function(add_plot_test)
 
 endfunction()
 
-# Large-compressor tests
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-				set(fullTestName "${largeCompressor_TestDir}/${test}")
-        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-				add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
-    endforeach (model)
-endforeach (test)
-
-# Large-compressor regression tests
-foreach (test ${largeCompressorTests})
-    foreach (model ${largeCompressorNames})
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
-        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
-    endforeach (model)
-endforeach (test)
-
 ## Model tests
 # general tests
 foreach (test ${general_Tests})
@@ -404,6 +387,16 @@ foreach (test ${SoC_Tests})
     endforeach (model)
 endforeach (test)
 
+
+# Large-compressor tests
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        set(fullTestName "${largeCompressor_TestDir}/${test}")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_model_test(TEST_NAME "${fullTestName}" MODEL_NAME "${model}" SPEC_TYPE "JSON")
+    endforeach (model)
+endforeach (test)
+
 ## Regression tests
 # general regression tests
 foreach (test ${general_Tests})
@@ -468,6 +461,14 @@ foreach (model ${LG_Models})
         add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
     endforeach (test)
 endforeach (model)
+
+# Large-compressor regression tests
+foreach (test ${largeCompressorTests})
+    foreach (model ${largeCompressorNames})
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "Preset")
+        add_regression_test(TEST_NAME "${test}" MODEL_NAME "${model}" SPEC_TYPE "JSON" COMPARE_SPEC_TYPE "Preset")
+    endforeach (model)
+endforeach (test)
 
 ## Yearly tests
 #Add small compressor yearly tests to the list
