@@ -58,6 +58,18 @@ struct PerformanceMapTest : public testing::Test
                                           HPWH::UNITS_BTUperHr,
                                           HPWH::UNITS_F);
     }
+
+    void reloadFromDataModel(HPWH& hpwh)
+    {
+        hpwh_data_model::init(hpwh.get_courier());
+        nlohmann::json j;
+        hpwh_data_model::hpwh_sim_input_ns::HPWHSimInput hsi0, hsi1;
+        hpwh.to(hsi0);
+        HPWH::to_json(hsi0, j);
+
+        hpwh_data_model::hpwh_sim_input_ns::from_json(j, hsi1);
+        hpwh.from(hsi1);
+    }
 };
 
 /*
@@ -710,9 +722,41 @@ TEST_F(PerformanceMapTest, Sanden120)
 }
 
 /*
- * ConvertMapToGrid tests
+ * ReloadFromDataModel_IHPWH tests
  */
-TEST_F(PerformanceMapTest, ConvertMapToGrid)
+TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
+{
+    HPWH hpwh;
+    {
+        const std::string sModelName = "Rheem2020Prem50";
+        hpwh.initPreset(sModelName);
+
+        PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
+
+        // using polynomial map
+        checkPoint = {50., 50.2857, 135, 0., 1.380352139038755, 0.};
+        double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                                      checkPoint.condenserT_F,
+                                                      checkPoint.outletT_F,
+                                                      HPWH::UNITS_KW,
+                                                      HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": polynomial";
+
+        reloadFromDataModel(hpwh);
+        output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
+                                               checkPoint.condenserT_F,
+                                               checkPoint.outletT_F,
+                                               HPWH::UNITS_KW,
+                                               HPWH::UNITS_F);
+        EXPECT_NEAR_REL(checkPoint.output_kW, output_kW) << sModelName << ": grid";
+    }
+}
+
+
+/*
+ * ReloadFromDataModel_CWHS tests
+ */
+TEST_F(PerformanceMapTest, ReloadFromDataModel_CWHS)
 {
     HPWH hpwh;
     {
