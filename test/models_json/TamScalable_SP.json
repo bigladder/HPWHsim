@@ -9279,7 +9279,7 @@
         ]
       }
     ],
-    "primary_heat_source_id": "resistiveElementTop",
+    "primary_heat_source_id": "compressor",
     "tank": {
       "metadata": {
         "schema": "RSTANK"

@@ -368,6 +368,12 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
         resDefrost = {7.25, 5.0, 40.0};
     else if (hpwh->model == MODELS_NyleC250A_C_MP)
         resDefrost = {18.0, 5.0, 40.0};
+
+    if ((MODELS_NyleC25A_SP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_SP))
+    {
+        maxOut_at_LowT.outT_C = F_TO_C(140.);
+        maxOut_at_LowT.airT_C = F_TO_C(40.);
+    }
 }
 
 void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
@@ -1232,13 +1238,18 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             {
                 double standardOutletT_K =
                     C_TO_K(hpwh->setpoint_C + secondaryHeatExchanger.hotSideTemperatureOffset_dC);
-                outletTemps_K.resize(3);
-                outletTemps_K[0] = standardOutletT_K - 0.7;
-                outletTemps_K[1] = standardOutletT_K;
+                outletTemps_K.reserve(4);
+                outletTemps_K.push_back(standardOutletT_K - 0.7);
+                outletTemps_K.push_back(standardOutletT_K);
 
-                outletTemps_K[2] = C_TO_K(65.);
+                if (maxOut_at_LowT.airT_C > K_TO_C(envTemps_K.front()))
+                    outletTemps_K.push_back(C_TO_K(maxOut_at_LowT.outT_C));
 
-                // outletTemps_K[2] = standardOutletT_K + 0.7;
+                outletTemps_K.push_back(C_TO_K(65.));
+
+                std::sort(outletTemps_K.begin(),
+                          outletTemps_K.end(),
+                          [](double a, double b) { return a < b; });
             }
 
             tempGrid.reserve(3);
