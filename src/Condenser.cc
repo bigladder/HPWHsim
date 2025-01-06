@@ -355,27 +355,17 @@ void HPWH::Condenser::from(const std::unique_ptr<HeatSourceTemplate>& rshs_ptr)
     {
         secondaryHeatExchanger = {dF_TO_dC(10.), dF_TO_dC(15.), 27.};
     }
-    // hard-coded fixes pending data model incorporation
-    if ((MODELS_NyleC60A_MP <= hpwh->model) && (hpwh->model <= MODELS_NyleC250A_C_MP))
-    {
-        double inputPower_KW = 0;
-        if ((hpwh->model == MODELS_NyleC60A_MP) || (hpwh->model == MODELS_NyleC60A_C_MP))
-            inputPower_KW = 4.5;
-        else if ((hpwh->model == MODELS_NyleC90A_MP) || (hpwh->model == MODELS_NyleC90A_C_MP))
-            inputPower_KW = 5.4;
-        else if ((hpwh->model == MODELS_NyleC125A_MP) || (hpwh->model == MODELS_NyleC125A_C_MP))
-            inputPower_KW = 9.0;
-        else if ((hpwh->model == MODELS_NyleC185A_MP) || (hpwh->model == MODELS_NyleC185A_C_MP))
-            inputPower_KW = 7.2;
-        else if ((hpwh->model == MODELS_NyleC250A_MP) || (hpwh->model == MODELS_NyleC250A_C_MP))
-            inputPower_KW = 18.0;
 
-        resDefrost = {
-            inputPower_KW,
-            5.0, // constTempLift_dF
-            40.0 // onBelowTemp_F
-        };
-    }
+    if (hpwh->model == MODELS_NyleC60A_C_MP)
+        resDefrost = {4.5, 5.0, 40.0}; // inputPower_KW, constTempLift_dF, onBelowTemp_F;
+    else if (hpwh->model == MODELS_NyleC90A_C_MP)
+        resDefrost = {5.4, 5.0, 40.0};
+    else if (hpwh->model == MODELS_NyleC125A_C_MP)
+        resDefrost = {9.0, 5.0, 40.0};
+    else if (hpwh->model == MODELS_NyleC185A_C_MP)
+        resDefrost = {7.25, 5.0, 40.0};
+    else if (hpwh->model == MODELS_NyleC250A_C_MP)
+        resDefrost = {18.0, 5.0, 40.0};
 }
 
 void HPWH::Condenser::to(std::unique_ptr<HeatSourceTemplate>& rshs_ptr) const
