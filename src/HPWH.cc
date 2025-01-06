@@ -4597,6 +4597,10 @@ void HPWH::from(hpwh_data_model::central_water_heating_system_ns::CentralWaterHe
         }
     }
 
+    // hard-code fix: two VIPs assigned in preset
+    if ((MODELS_TamScalable_SP <= model) && (model <= MODELS_TamScalable_SP_Half))
+        heatSources[0]->isVIP = heatSources[2]->isVIP = true;
+
     // calculate oft-used derived values
     calcDerivedValues();
     checkInputs();
