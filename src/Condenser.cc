@@ -1197,24 +1197,27 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
     if (nEnvTempsOrig == 1) // uses regression or regressionMP methods
     {
         { // env
-            envTemps_K = {0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
-                          6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
-                          11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556};
-            for (auto& T_K : envTemps_K)
-                T_K = C_TO_K(T_K);
+            std::vector<double> testEnvTemps_C = {
+                0.,   0.5, 1.,   1.5,    2.,   2.5, 3.,   3.5, 4.,   4.5,       5.,   5.5,
+                6.,   6.5, 7.,   7.2223, 7.5,  8.,  8.5,  9.,  9.5,  10.,       10.5, 11.,
+                11.5, 12., 12.5, 13.,    13.5, 14., 14.5, 15., 15.5, 15.5555556};
 
-            if (C_TO_K(minT) < envTemps_K.front())
-                envTemps_K.push_back(C_TO_K(minT));
-            if (C_TO_K(maxT) > envTemps_K.back())
-                envTemps_K.push_back(C_TO_K(maxT));
+            envTemps_K.push_back(C_TO_K(minT));
+            for (auto& T_C : testEnvTemps_C)
+            {
+                if ((T_C > minT) && (T_C < maxT))
+                    envTemps_K.push_back(C_TO_K(T_C));
+            }
+            envTemps_K.push_back(C_TO_K(maxT));
 
             std::sort(
                 envTemps_K.begin(), envTemps_K.end(), [](double a, double b) { return a < b; });
         }
 
         { // HeatSource
+            const double highestTestSetpoint_C = 65.;
             const double minTemp_C = 0.;
-            const double maxTemp_C = std::max(maxSetpoint_C, 65.);
+            const double maxTemp_C = std::max(maxSetpoint_C, highestTestSetpoint_C);
             auto tempRange_dC = maxTemp_C - minTemp_C;
             auto nHeatSourceTs = static_cast<std::size_t>(std::max(51. * tempRange_dC / 100., 3.));
             auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
