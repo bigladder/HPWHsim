@@ -387,7 +387,6 @@ foreach (test ${SoC_Tests})
     endforeach (model)
 endforeach (test)
 
-
 # Large-compressor tests
 foreach (test ${largeCompressorTests})
     foreach (model ${largeCompressorNames})

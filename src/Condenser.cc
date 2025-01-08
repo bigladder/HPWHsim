@@ -1181,6 +1181,24 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
         environmentT_C, heatSourceT_C, hpwh->getSetpoint(), input_BTUperHr, cop);
 }
 
+void arrangeGridVector(std::vector<double>& V)
+{
+
+    std::sort(V.begin(), V.end(), [](double a, double b) { return a < b; });
+
+    std::vector<double> copyV(V);
+    V.clear();
+    bool first = true;
+    double x_prev;
+    for (auto& x : copyV)
+    {
+        if (first || (x > x_prev))
+            V.push_back(x);
+        first = false;
+        x_prev = x;
+    }
+}
+
 // convert to grid
 void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid,
                                       std::vector<std::vector<double>>& tempGridValues) const
@@ -1209,24 +1227,22 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                     envTemps_K.push_back(C_TO_K(T_C));
             }
             envTemps_K.push_back(C_TO_K(maxT));
-
-            std::sort(
-                envTemps_K.begin(), envTemps_K.end(), [](double a, double b) { return a < b; });
+            arrangeGridVector(envTemps_K);
         }
 
         { // HeatSource
-            const double highestTestSetpoint_C = 65.;
             const double minTemp_C = 0.;
-            const double maxTemp_C = std::max(maxSetpoint_C, highestTestSetpoint_C);
+            const double maxTemp_C = maxSetpoint_C;
             auto tempRange_dC = maxTemp_C - minTemp_C;
-            auto nHeatSourceTs = static_cast<std::size_t>(std::max(51. * tempRange_dC / 100., 3.));
-            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nHeatSourceTs);
-            heatSourceTemps_K.resize(nHeatSourceTs);
-            for (std::size_t i = 0; i < nHeatSourceTs; ++i)
+            auto nSteps = static_cast<std::size_t>(std::max(51. * tempRange_dC / 100., 2.));
+            auto dHeatSourceT_dC = tempRange_dC / static_cast<double>(nSteps);
+            heatSourceTemps_K.reserve(nSteps + 1);
+            for (std::size_t i = 0; i <= nSteps; ++i)
             {
                 double heatSourceTemp_C = minTemp_C + dHeatSourceT_dC * static_cast<double>(i);
-                heatSourceTemps_K[i] = C_TO_K(heatSourceTemp_C);
+                heatSourceTemps_K.push_back(C_TO_K(heatSourceTemp_C));
             }
+            arrangeGridVector(heatSourceTemps_K);
         }
 
         if (isMultipass)
@@ -1262,11 +1278,13 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
                 if (maxOut_at_LowT.airT_C > K_TO_C(envTemps_K.front()))
                     outletTemps_K.push_back(C_TO_K(maxOut_at_LowT.outT_C));
 
-                outletTemps_K.push_back(C_TO_K(65.)); // from testLargeCompHot
+                const double highestTestSetpoint_C = 65.; // from testLargeCompHot
+                if (highestTestSetpoint_C < maxSetpoint_C)
+                    outletTemps_K.push_back(
+                        C_TO_K(highestTestSetpoint_C +
+                               secondaryHeatExchanger.hotSideTemperatureOffset_dC));
 
-                std::sort(outletTemps_K.begin(),
-                          outletTemps_K.end(),
-                          [](double a, double b) { return a < b; });
+                arrangeGridVector(outletTemps_K);
             }
 
             tempGrid.reserve(3);
