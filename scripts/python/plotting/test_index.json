@@ -28,6 +28,8 @@
 
 		{"test": "testLockout", "name": "Lockout test"},
  
-		{"group": "Central-system tests", "test": "testLargeComp45", "path": "large_compressor_tests"}
+		{"group": "Central-system tests", "test": "testLargeComp45", "path": "large_compressor_tests"},
+		{"group": "Central-system tests", "test": "testLargeComp60", "path": "large_compressor_tests"},
+		{"group": "Central-system tests", "test": "testLargeCompHot", "path": "large_compressor_tests"}
   ]
 }
