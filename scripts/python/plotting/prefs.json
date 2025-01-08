@@ -1,1 +1,1 @@
-{"model_name": "ColmacCxA_20_SP", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "All tests", "test_name": "testLargeComp45", "show_simulated": true, "show_measured": false, "draw_profile": "auto"}
+{"model_name": "BradfordWhiteAeroThermRE2H65", "model_spec": "Preset", "build_dir": "../../../build", "test_list": "Tests with data", "test_name": "RE2H65_UEF50", "show_simulated": true, "show_measured": true, "draw_profile": "auto"}
