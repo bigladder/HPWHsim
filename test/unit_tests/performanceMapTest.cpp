@@ -740,7 +740,7 @@ TEST_F(PerformanceMapTest, ReloadFromDataModel_IHPWH)
         PerformancePoint checkPoint; // tairF, toutF, tinF, outputW
 
         // using polynomial map
-        checkPoint = {50., 50.2857, 135, 1.380352139038755};
+        checkPoint = {67., 50.2857, 135, 1.66080299485364};
         double output_kW = hpwh.getCompressorCapacity(checkPoint.externalT_F,
                                                       checkPoint.condenserT_F,
                                                       checkPoint.outletT_F,

@@ -1183,14 +1183,13 @@ void HPWH::Condenser::getCapacityFromMap(double environmentT_C,
 
 void arrangeGridVector(std::vector<double>& V)
 {
-
     std::sort(V.begin(), V.end(), [](double a, double b) { return a < b; });
 
-    std::vector<double> copyV(V);
+    auto copyV = V;
     V.clear();
     bool first = true;
-    double x_prev;
-    for (auto& x : copyV)
+    double x_prev = 0.;
+    for (auto& x : copyV) // skip duplicates
     {
         if (first || (x > x_prev))
             V.push_back(x);
