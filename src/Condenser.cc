@@ -1324,8 +1324,8 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
             if ((F_TO_C(perfPoint.T_F) > minT) && (F_TO_C(perfPoint.T_F) < maxT))
             {
                 envTemps_K.push_back(C_TO_K(F_TO_C(perfPoint.T_F)));
-                double magPowerCurvature = abs(perfPoint.inputPower_coeffs[2]);
-                double magCOPCurvature = abs(perfPoint.COP_coeffs[2]);
+                double magPowerCurvature = fabs(perfPoint.inputPower_coeffs[2]);
+                double magCOPCurvature = fabs(perfPoint.COP_coeffs[2]);
                 maxPowerCurvature =
                     magPowerCurvature > maxPowerCurvature ? magPowerCurvature : maxPowerCurvature;
                 maxCOPCurvature =
@@ -1341,9 +1341,9 @@ void HPWH::Condenser::makeGridFromMap(std::vector<std::vector<double>>& tempGrid
         const double heatSourceTempRangeRef_dC = 100. - 0.;
         const double rangeFac = heatSourceTempRange_dC / heatSourceTempRangeRef_dC;
 
-        constexpr std::size_t minVals = 2;
-        constexpr std::size_t refPowerVals = 11;
-        constexpr std::size_t refCOP_vals = 11;
+        constexpr double minVals = 2;
+        constexpr double refPowerVals = 11;
+        constexpr double refCOP_vals = 11;
         constexpr double refPowerCurvature = 0.0176;
         constexpr double refCOP_curvature = 0.0002;
 
