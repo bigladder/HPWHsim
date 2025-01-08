@@ -111,6 +111,7 @@
           "comparison_type": "GREATER_THAN",
           "heating_logic": {
             "absolute_temperature": 318.15,
+            "standby_temperature_location": "TOP_OF_TANK",
             "temperature_weight_distribution": [
               1.0,
               0.0,
