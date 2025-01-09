@@ -67,11 +67,11 @@ body {font-family: Arial;}
 	  const build_form = document.getElementById('build_form');
 	  const test_form = document.getElementById('test_form');
 
-		model_form.model_name.value = ("model_name" in prefs) ? prefs["model_name"] : "LG_APHWC50"
+		model_form.model_name.value = ("model_id" in prefs) ? prefs["model_id"] : "LG_APHWC50"
 		model_form.model_spec.value = ("model_spec" in prefs) ? prefs["model_spec"] : "Preset";
 		build_form.build_dir.value = ("build_dir" in prefs) ? prefs["build_dir"] : "../../build";
 		test_form.test_list.value = ("test_list" in prefs) ? prefs["test_list"] : "All tests";
-		test_form.test_name.value = ("test_name" in prefs) ? prefs["test_name"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
+		test_form.test_name.value = ("test_id" in prefs) ? prefs["test_id"] : "LG/APHWC50/DOE2014_LGC50_24hr67";
 		test_form.show_simulated.value = ("show_simulated" in prefs) ? prefs["show_simulated"] : true;
 		test_form.show_measured.value = ("show_measured" in prefs) ? prefs["show_measured"] : true;
 		test_form.draw_profile.value = ("draw_profile" in prefs) ? prefs["draw_profile"] : "auto";
@@ -84,11 +84,11 @@ body {font-family: Arial;}
 	  const test_form = document.getElementById('test_form');
 
 		prefs = {}
-		prefs["model_name"] = model_form.model_name.value;
+		prefs["model_id"] = model_form.model_name.value;
 		prefs["model_spec"] = model_form.model_spec.value;
 		prefs["build_dir"] = build_form.build_dir.value;
 		prefs["test_list"] = test_form.test_list.value;
-		prefs["test_name"] = test_form.test_name.value;
+		prefs["test_id"] = test_form.test_name.value;
 		prefs["show_simulated"] = test_form.show_simulated.checked;
 		prefs["show_measured"] = test_form.show_measured.checked;
 		prefs["draw_profile"] = test_form.draw_profile.value;
@@ -104,11 +104,11 @@ body {font-family: Arial;}
 
 		// get model_specs list from model_index
 		for (let model of model_index["models"]){
-			if ("name" in model)
+			if ("id" in model)
 			{
-				const model_name = model["name"];
-				model_names.push(model_name);
-				if (!model_name.localeCompare(prefs["model_name"]))
+				const model_id = model["id"];
+				model_names.push(model_id);
+				if (!model_id.localeCompare(prefs["model_id"]))
 				{
 					if ("specs" in model)
 						for(let i = 0; i < model["specs"].length; i++)
@@ -117,8 +117,8 @@ body {font-family: Arial;}
 			}
 		}
 
-		if (!(model_names.includes(prefs["model_name"])))
-			model_names = [model_names, prefs["model_name"]];
+		if (!(model_names.includes(prefs["model_id"])))
+			model_names = [model_names, prefs["model_id"]];
 			
 		if (!(model_specs.includes(prefs["model_spec"])))
 			prefs["model_spec"] = model_specs[0];
@@ -159,71 +159,63 @@ body {font-family: Arial;}
 		{
 			var show_test = false;
 			var test_name = "";
-			if ("test" in test)
-				test_name = ("name" in test)? test["name"] :test["test"];
-			else if ("name" in test)
-				test_name = test["name"];
-			else
-				continue;
-
-			show_test = show_all_tests;
-			if ("group" in test)
+			if ("id" in test)
 			{
-				const test_group = test["group"];
-				show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
-				if (show_all_tests || show_tests_with_data)
-					if ("measured" in test)
-					{	 // get test list from model_index
-						const measureds = test["measured"];
-						for (let measured of measureds)
-							if ("model" in measured)
-								if (!measured["model"].localeCompare(prefs["model_name"]))
-								{
-									show_test = true;
-									break;
-								}
-					}
-			}
+				const test_id = test["id"];
+				test_name = test_id;
+				show_test = show_all_tests;
+				if ("group" in test)
+				{
+					const test_group = test["group"];
+					show_test |= show_standard_tests && !test_group.localeCompare("Standard tests");
+					if (show_all_tests || show_tests_with_data)
+						if ("measured" in test)
+						{	 // get test list from model_index
+							const measureds = test["measured"];
+							for (let measured of measureds)
+								if ("id" in measured)
+									if (!measured["id"].localeCompare(prefs["model_id"]))
+									{
+										show_test = true;
+										break;
+									}
+						}
+				}
 
-			if(show_test)
-			{
-				test_names.push(test_name);
-				have_test = true;
+				if(show_test)
+				{
+					test_names.push(test_name);
+					have_test = true;
+				}
 			}
 		}
 
-		if (have_test && !(test_names.includes(prefs["test_name"])))
-			prefs["test_name"] = test_names[0];
+		if (have_test && !(test_names.includes(prefs["test_id"])))
+			prefs["test_id"] = test_names[0];
 
 		var have_measured = false;
 		for (let test of test_index["tests"])
 		{
-				var test_name = "";
-				if ("test" in test)
-					test_name = ("name" in test)? test["name"] :test["test"];
-				else if ("name" in test)
-					test_name = test["name"];
-				else
-					continue;
-
-				if (test_name == prefs["test_name"])
-					if ("measured" in test)
-						for (let measured of test["measured"])
-							if ("model" in measured)
-								if (measured["model"] == prefs["model_name"])
-								{
-									have_measured = true;
-									break;
-								}
+				var test_id = "";
+				if ("id" in test)
+					test_id = test["id"];
+					if (test_id == prefs["test_id"])
+						if ("measured" in test)
+							for (let measured of test["measured"])
+								if ("id" in measured)
+									if (measured["id"] == prefs["model_id"])
+									{
+										have_measured = true;
+										break;
+									}
 			}
 
 		var is_standard_test = false;
 		for (let test of test_index["tests"])
-			if (("test" in test) && ("group" in test))
+			if (("id" in test) && ("group" in test))
 			{
-				const test_dir = test["test"];
-				const test_name = ("name" in test) ? test["name"] : test_dir;
-				if (!test_name.localeCompare(prefs["test_name"]) && !test["group"].localeCompare("Standard tests"))
+				const test_dir = test["id"];
+				if (!test_id.localeCompare(prefs["test_id"]) && !test["group"].localeCompare("Standard tests"))
 				{
 					is_standard_test = true;
 					break;
@@ -235,11 +227,14 @@ body {font-family: Arial;}
 		while (select_test.hasChildNodes())
 		  select_test.removeChild(select_test.firstChild);
 					
-		var show_simulated = (prefs["show_simulated"] && have_test);
-		var show_measured = (prefs["show_measured"] && have_measured);
+		var show_simulated = prefs["show_simulated"] && have_test;
+		var show_measured = prefs["show_measured"] && have_measured;
+		show_simulated = show_simulated || (have_test && !show_measured);
+		show_measured = show_measured ||(have_measured && !show_simulated);
+ 		
 		if (!have_test)
 		{
-			prefs["test_name"] = "";
+			prefs["test_id"] = "";
 			select_test.disabled = true;
 			document.getElementById('test_btn').disabled = true;
 		}
@@ -328,37 +323,32 @@ body {font-family: Arial;}
 		for (let test of test_index["tests"])
 		{
 				var comp_test_name = "";
-				if ("test" in test)
-					comp_test_name = ("name" in test)? test["name"] :test["test"];
-				else if ("name" in test)
-					comp_test_name = test["name"];
-				else
-					continue;
-
-				if (!comp_test_name.localeCompare(test_name))
+				if ("id" in test)
 				{
-					if (("group" in test) && !test["group"].localeCompare("Standard tests"))
-					{
-						is_standard_test = true;
-						test_dir = "none";
-					}
-					else if ("test" in test)
-					{
-						core_test_name = test["test"];
-						test_dir = core_test_name;
-						if("path" in test)
-							test_dir = test["path"] + "/" + core_test_name;
+					comp_test_name = test["id"];
+					if (!comp_test_name.localeCompare(test_name))
+						if (("group" in test) && !test["group"].localeCompare("Standard tests"))
+						{
+							is_standard_test = true;
+							test_dir = "none";
+						}
+						else if ("id" in test)
+						{
+							core_test_name = test["id"];
+							test_dir = core_test_name;
+							if("path" in test)
+								test_dir = test["path"] + "/" + core_test_name;
 
-						if ("measured" in test)
-							for (let measured of test["measured"])
-								if (("model" in measured) && !measured["model"].localeCompare(prefs["model_name"]))
-									if ("filename" in measured)
-									{
-										measured_filename = measured["filename"];										
-										break;
-									}
-					}
-			}
+							if ("measured" in test)
+								for (let measured of test["measured"])
+									if (("model" in measured) && !measured["model"].localeCompare(prefs["model_name"]))
+										if ("filename" in measured)
+										{
+											measured_filename = measured["filename"];										
+											break;
+										}
+						}
+				}
 		}
 
     document.getElementById("test_btn").disabled = true;

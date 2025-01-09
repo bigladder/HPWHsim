@@ -36,16 +36,14 @@ def dash_plot(test_dir, build_dir, show_types, measured_filename, simulated_file
 
 	if show_types & 1:
 		if test_dir != "none":
-			print("show measured")
 			measured_path = os.path.join(abs_repo_test_dir, test_dir, measured_filename)  
 			 
 	if show_types & 2:
-		print("show simulated")
 		simulated_path = os.path.join(output_dir, simulated_filename)		 
 
 	print("creating plot...")
-	print(f"measured_path: {measured_path}")
-	print(f"simulated__path: {simulated_path}")
+	#print(f"measured_path: {measured_path}")
+	#print(f"simulated__path: {simulated_path}")
 	plotter = plot(measured_path, simulated_path)
 	time.sleep(1)
 	
