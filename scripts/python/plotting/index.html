@@ -212,15 +212,12 @@ body {font-family: Arial;}
 
 		var is_standard_test = false;
 		for (let test of test_index["tests"])
-			if (("id" in test) && ("group" in test))
-			{
-				const test_dir = test["id"];
-				if (!test_id.localeCompare(prefs["test_id"]) && !test["group"].localeCompare("Standard tests"))
+			if (("id" in test) && !test["id"].localeCompare(prefs["test_id"]))
+				if(("group" in test) && !test["group"].localeCompare("Standard tests"))
 				{
 					is_standard_test = true;
 					break;
 				}
-			}
 
 		// set select_test control
 		let select_test = document.getElementById('test_name');
@@ -307,7 +304,6 @@ body {font-family: Arial;}
     const model_name = model_form.model_name.value;
 
     const test_form = document.getElementById('test_form');
-    const test_name = test_form.test_name.value;
 
 		var measured_filename = "none";
 
@@ -316,38 +312,32 @@ body {font-family: Arial;}
 		// get test path
 		const test_index = await read_json_file("./test_index.json")
 		var test_dir = ""
-		var core_test_name = "";
+		var test_name = prefs["test_id"];
 		
 		// get test list from model_index
 		var is_standard_test = false;
 		for (let test of test_index["tests"])
 		{
-				var comp_test_name = "";
-				if ("id" in test)
+				if (("id" in test) && (!test["id"].localeCompare(test_name)))
 				{
-					comp_test_name = test["id"];
-					if (!comp_test_name.localeCompare(test_name))
 						if (("group" in test) && !test["group"].localeCompare("Standard tests"))
 						{
 							is_standard_test = true;
 							test_dir = "none";
 						}
-						else if ("id" in test)
-						{
-							core_test_name = test["id"];
-							test_dir = core_test_name;
-							if("path" in test)
-								test_dir = test["path"] + "/" + core_test_name;
+						else
+							test_dir = test_name;
+						if("path" in test)
+							test_dir = test["path"] + "/" + test_name;
 
-							if ("measured" in test)
-								for (let measured of test["measured"])
-									if (("model" in measured) && !measured["model"].localeCompare(prefs["model_name"]))
-										if ("filename" in measured)
-										{
-											measured_filename = measured["filename"];										
-											break;
-										}
-						}
+						if ("measured" in test)
+							for (let measured of test["measured"])
+								if (("id" in measured) && !measured["id"].localeCompare(prefs["model_name"]))
+									if ("filename" in measured)
+									{
+										measured_filename = measured["filename"];										
+										break;
+									}
 				}
 		}
 
@@ -381,7 +371,7 @@ body {font-family: Arial;}
 	    fst += '&test_dir=' + test_dir;
 	    fst += '&build_dir=' + build_dir;
 	    await callPyServer("simulate", fst)
-			simulated_filename = core_test_name + "_" + model_spec + "_" + model_name + ".csv";
+			simulated_filename = test_name + "_" + model_spec + "_" + model_name + ".csv";
 		}
 	
 		document.getElementById("plots").src	 = "";
