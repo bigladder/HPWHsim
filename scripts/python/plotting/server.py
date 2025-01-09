@@ -10,9 +10,9 @@ import urllib.parse as urlparse
 from simulate import simulate
 from plot import plot
 from measure import measure
+from dash_plot import dash_plot
 import json
 from json import dumps
-from main import dash_plot
 
 PORT = 8000
 
@@ -89,7 +89,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				self.send_header("Access-Control-Allow-Origin", "*")
 				self.end_headers()
 				return
-
 							
 			elif self.path.startswith('/plot'):
 					query_components = urlparse.parse_qs(urlparse.urlparse(self.path).query)
