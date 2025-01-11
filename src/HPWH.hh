@@ -378,6 +378,60 @@ class HPWH : public Courier::Sender
         CSVOPT_IS_DRAWING = 1 << 1
     };
 
+    struct DistributionPoint
+    {
+        double coord, weight;
+    };
+    struct WeightedDistribution:public std::vector<DistributionPoint>
+    {
+      public:
+
+        WeightedDistribution(std::vector<double> coords, std::vector<double> weights)
+        {
+            clear();
+            reserve(coords.size());
+            auto weight = weights.begin();
+            for(auto& coord: coords)
+                if(weight != weights.end())
+                {
+                    push_back({coord, *weight});
+                    ++weight;
+                }
+        }
+        double coord_range() const
+        {
+            return back().coord;
+        }
+        double total_weight() const
+        {
+            double total = 0.;
+            double prevCoord = 0.;
+            for(auto distPoint: (*this))
+            {
+               double& coord = distPoint.coord;
+               double& weight = distPoint.weight;
+               total += weight * (coord - prevCoord);
+               prevCoord = coord;
+            }
+            return total;
+        }
+        double norm_coord(std::size_t i) const
+        {
+            return (*this)[i].coord / coord_range();
+        }
+        double norm_weight(std::size_t i) const
+        {
+            return (*this)[i].weight / total_weight();
+        }
+
+    };
+    enum class DistributionType
+    {
+        Weighted,
+        TopTankNode,
+        BottomTankNode
+    };
+    /*
     struct NodeWeight
     {
         int nodeNum;
@@ -386,7 +440,7 @@ class HPWH : public Courier::Sender
 
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
     };
-
+*/
     std::shared_ptr<SoCBasedHeatingLogic> shutOffSoC(std::string desc,
                                                      double targetSoC,
                                                      double hystFract,
