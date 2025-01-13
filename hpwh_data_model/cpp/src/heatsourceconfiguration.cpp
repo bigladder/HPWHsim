@@ -130,51 +130,51 @@ namespace hpwh_data_model  {
 
 		const std::string_view HeatSourceConfiguration::companion_heat_source_id_name = "companion_heat_source_id";
 
-		void from_json(const nlohmann::json& j, WeightedDistribution& x) {
-			json_get<std::vector<double>>(j, logger.get(), "normalized_height", x.normalized_height, x.normalized_height_is_set, true);
-			json_get<std::vector<double>>(j, logger.get(), "weight", x.weight, x.weight_is_set, true);
-		}
-		const std::string_view WeightedDistribution::normalized_height_units = "-";
+        void from_json(const nlohmann::json& j, WeightedDistribution& x) {
+            json_get<std::vector<double>>(j, logger.get(), "normalized_height", x.normalized_height, x.normalized_height_is_set, true);
+            json_get<std::vector<double>>(j, logger.get(), "weight", x.weight, x.weight_is_set, true);
+        }
+        const std::string_view WeightedDistribution::normalized_height_units = "-";
 
-		const std::string_view WeightedDistribution::weight_units = "-";
+        const std::string_view WeightedDistribution::weight_units = "-";
 
-		const std::string_view WeightedDistribution::normalized_height_description = "Normalized heights within the tank where the weight is defined between the bottom (0.0), and the top (1.0)";
+        const std::string_view WeightedDistribution::normalized_height_description = "Normalized heights within the tank where the weight is defined between the bottom (0.0), and the top (1.0)";
 
-		const std::string_view WeightedDistribution::weight_description = "Fraction of weight at the corresponding normalized height";
+        const std::string_view WeightedDistribution::weight_description = "Weight at the corresponding normalized height";
 
-		const std::string_view WeightedDistribution::normalized_height_name = "normalized_height";
+        const std::string_view WeightedDistribution::normalized_height_name = "normalized_height";
 
-		const std::string_view WeightedDistribution::weight_name = "weight";
+        const std::string_view WeightedDistribution::weight_name = "weight";
 
-		void from_json(const nlohmann::json& j, TemperatureBasedHeatingLogic& x) {
-			json_get<double>(j, logger.get(), "absolute_temperature", x.absolute_temperature, x.absolute_temperature_is_set, true);
-			json_get<double>(j, logger.get(), "differential_temperature", x.differential_temperature, x.differential_temperature_is_set, true);
-			json_get<heat_source_configuration_ns::StandbyTemperatureLocation>(j, logger.get(), "standby_temperature_location", x.standby_temperature_location, x.standby_temperature_location_is_set, true);
-			json_get<std::vector<double>>(j, logger.get(), "temperature_weight_distribution", x.temperature_weight_distribution, x.temperature_weight_distribution_is_set, true);
-		}
-		const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_units = "K";
+        void from_json(const nlohmann::json& j, TemperatureBasedHeatingLogic& x) {
+            json_get<double>(j, logger.get(), "absolute_temperature", x.absolute_temperature, x.absolute_temperature_is_set, true);
+            json_get<double>(j, logger.get(), "differential_temperature", x.differential_temperature, x.differential_temperature_is_set, true);
+            json_get<heat_source_configuration_ns::StandbyTemperatureLocation>(j, logger.get(), "standby_temperature_location", x.standby_temperature_location, x.standby_temperature_location_is_set, true);
+            json_get<heat_source_configuration_ns::WeightedDistribution>(j, logger.get(), "temperature_weight_distribution", x.temperature_weight_distribution, x.temperature_weight_distribution_is_set, true);
+        }
+        const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_units = "K";
 
-		const std::string_view TemperatureBasedHeatingLogic::differential_temperature_units = "K";
+        const std::string_view TemperatureBasedHeatingLogic::differential_temperature_units = "K";
 
-		const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_units = "";
+        const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_units = "";
 
-		const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_units = "";
+        const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_units = "";
 
-		const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_description = "Absolute temperature for activation";
+        const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_description = "Absolute temperature for activation";
 
-		const std::string_view TemperatureBasedHeatingLogic::differential_temperature_description = "Temperature difference for activation";
+        const std::string_view TemperatureBasedHeatingLogic::differential_temperature_description = "Temperature difference for activation";
 
-		const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_description = "Standby temperature location";
+        const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_description = "Standby temperature location";
 
-		const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_description = "Weighted distribution for comparison, by division, in order";
+        const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_description = "Weighted distribution for comparison, by division, in order";
 
-		const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_name = "absolute_temperature";
+        const std::string_view TemperatureBasedHeatingLogic::absolute_temperature_name = "absolute_temperature";
 
-		const std::string_view TemperatureBasedHeatingLogic::differential_temperature_name = "differential_temperature";
+        const std::string_view TemperatureBasedHeatingLogic::differential_temperature_name = "differential_temperature";
 
-		const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_name = "standby_temperature_location";
+        const std::string_view TemperatureBasedHeatingLogic::standby_temperature_location_name = "standby_temperature_location";
 
-		const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_name = "temperature_weight_distribution";
+        const std::string_view TemperatureBasedHeatingLogic::temperature_weight_distribution_name = "temperature_weight_distribution";
 
 		void from_json(const nlohmann::json& j, StateOfChargeBasedHeatingLogic& x) {
 			json_get<double>(j, logger.get(), "decision_point", x.decision_point, x.decision_point_is_set, true);

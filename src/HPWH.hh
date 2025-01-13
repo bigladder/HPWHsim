@@ -380,44 +380,44 @@ class HPWH : public Courier::Sender
 
     struct DistributionPoint
     {
-        double coord, weight;
+        double height, weight;
     };
     struct WeightedDistribution:public std::vector<DistributionPoint>
     {
       public:
 
-        WeightedDistribution(std::vector<double> coords, std::vector<double> weights)
+        WeightedDistribution(std::vector<double> heights, std::vector<double> weights)
         {
             clear();
-            reserve(coords.size());
+            reserve(heights.size());
             auto weight = weights.begin();
-            for(auto& coord: coords)
+            for(auto& height: heights)
                 if(weight != weights.end())
                 {
-                    push_back({coord, *weight});
+                    push_back({height, *weight});
                     ++weight;
                 }
         }
-        double coord_range() const
+        double height_range() const
         {
-            return back().coord;
+            return back().height;
         }
         double total_weight() const
         {
             double total = 0.;
-            double prevCoord = 0.;
+            double prevHeight = 0.;
             for(auto distPoint: (*this))
             {
-               double& coord = distPoint.coord;
+               double& height = distPoint.height;
                double& weight = distPoint.weight;
-               total += weight * (coord - prevCoord);
-               prevCoord = coord;
+               total += weight * (height - prevHeight);
+               prevHeight = height;
             }
             return total;
         }
-        double norm_coord(std::size_t i) const
+        double norm_height(std::size_t i) const
         {
-            return (*this)[i].coord / coord_range();
+            return (*this)[i].height / height_range();
         }
         double norm_weight(std::size_t i) const
         {
@@ -428,10 +428,20 @@ class HPWH : public Courier::Sender
     enum class DistributionType
     {
         Weighted,
-        TopTankNode,
-        BottomTankNode
+        TopOfTank,
+        BottomOfTank
     };
-    /*
+
+    struct Distribution
+    {
+        public:
+        DistributionType distribType;
+        WeightedDistribution weightedDist;
+        Distribution(DistributionType distribType_in = DistributionType::Weighted, WeightedDistribution weightedDist_in = {{}, {}}):
+            distribType(distribType_in), weightedDist(weightedDist_in )
+        {}
+    };
+
     struct NodeWeight
     {
         int nodeNum;
@@ -440,7 +450,7 @@ class HPWH : public Courier::Sender
 
         NodeWeight(int n) : nodeNum(n), weight(1.0) {};
     };
-*/
+
     std::shared_ptr<SoCBasedHeatingLogic> shutOffSoC(std::string desc,
                                                      double targetSoC,
                                                      double hystFract,
@@ -930,12 +940,14 @@ class HPWH : public Courier::Sender
 
     /// returns the tank temperature averaged uniformly
     double getAverageTankTemp_C() const;
-
     /// returns the tank temperature averaged over a distribution
     double getAverageTankTemp_C(const std::vector<double>& dist) const;
 
     /// returns the tank temperature averaged using weighted logic nodes
     double getAverageTankTemp_C(const std::vector<NodeWeight>& nodeWeights) const;
+
+    /// returns the tank temperature averaged using weighted logic nodes
+    double getAverageTankTemp_C(const Distribution& dist) const;
 
     void setMaxTempDepression(double maxDepression, UNITS units = UNITS_C);
 
@@ -1262,6 +1274,9 @@ class HPWH : public Courier::Sender
 
     /// Generates a vector of logical nodes
     std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
+
+    /// Generate a distribution
+    Distribution getRangeDistribution(double bottomFraction, double topFraction);
 
   public:
     static double getResampledValue(const std::vector<double>& sampleValues,
