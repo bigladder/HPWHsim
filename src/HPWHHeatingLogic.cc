@@ -119,6 +119,30 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 }
 
 /* Temperature Based Heating Logic*/
+HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
+                      std::vector<NodeWeight> n,
+                      double decisionPoint,
+                      HPWH* hpwh,
+                      bool a,
+                      std::function<bool(double, double)> c,
+                      bool isHTS)
+    : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a)
+{
+    dist = {DistributionType::Weighted, {{}, {}}};
+    auto prev_height = 0.;
+    for (auto& node: n)
+    {
+        double height_front = node.nodeNum - 1;
+        if (height_front > prev_height)
+            dist.weightedDist.push_back({height_front, 0.});
+        dist.weightedDist.push_back({height_front + 1., node.weight});
+        prev_height = height_front + 1.;
+    }
+    if (prev_height < LOGIC_SIZE)
+        dist.weightedDist.push_back({LOGIC_SIZE, 0.});
+}
+
+
 bool HPWH::TempBasedHeatingLogic::isValid()
 {
     bool isValid = true;
@@ -131,7 +155,7 @@ bool HPWH::TempBasedHeatingLogic::isValid()
 
 bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
 {
-
+/*
     for (auto nodeWeight : nodeWeights)
     {
         if (nodeWeight.nodeNum > 13 || nodeWeight.nodeNum < 0)
@@ -139,6 +163,7 @@ bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
             return false;
         }
     }
+    */
     return true;
 }
 
@@ -204,7 +229,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     resample(resampledTankTemps, hpwh->tank->nodeTs_C);
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
-    double nodeDensity = 1. / hpwh->getNumNodes();
+    double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
     switch(dist.distribType)
     {
     case DistributionType::BottomOfTank:
@@ -226,20 +251,27 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     case DistributionType::Weighted:
     {
         for (auto& distPoint : dist.weightedDist)
+        {
             if (distPoint.weight > 0.)
+            {
+                firstNode = 0;
+                calcNode = nodeDensity - 1;        // last tank node in logic node
+                break;
+            }
+            else
             {
                 double norm_dist_height = distPoint.height / dist.weightedDist.height_range();
                 firstNode =
                     norm_dist_height * hpwh->getNumNodes(); // first tank node with non-zero weight
                 calcNode = firstNode + nodeDensity - 1;        // last tank node in logic node
-
-                for (int i = firstNode; i <= calcNode; ++i)
-                {
-                    sum += distPoint.weight * hpwh->tank->nodeTs_C[i];
-                    totWeight = distPoint.weight;
-                }
                 break;
             }
+        }
+        for (int i = firstNode; i <= calcNode; ++i)
+        {
+            sum += hpwh->tank->nodeTs_C[i];
+            totWeight += 1.;
+        }
     }}
 
     double averageT_C = sum / totWeight;

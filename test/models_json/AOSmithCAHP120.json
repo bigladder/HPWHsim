@@ -39,14 +39,18 @@
               "comparison_type": "GREATER_THAN",
               "heating_logic": {
                 "absolute_temperature": 320.3722222222222,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  1.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.6666666666666666,
+                    0.8333333333333334,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    5.999999999999997,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -56,11 +60,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 12.0,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  1.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.6666666666666666,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    2.9999999999999996
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -99,14 +108,18 @@
               "comparison_type": "GREATER_THAN",
               "heating_logic": {
                 "absolute_temperature": 315.92777777777775,
-                "temperature_weight_distribution": [
-                  0.0,
-                  1.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.16666666666666666,
+                    0.3333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    6.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -116,11 +129,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 12.0,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  1.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.6666666666666666,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    2.9999999999999996
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -675,14 +693,18 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 2.9166666666666665,
-                "temperature_weight_distribution": [
-                  0.0,
-                  1.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.16666666666666666,
+                    0.3333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    6.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             },

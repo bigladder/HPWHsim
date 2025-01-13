@@ -131,11 +131,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 17.77777777777778,
-                "temperature_weight_distribution": [
-                  1.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.3333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    3.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             },

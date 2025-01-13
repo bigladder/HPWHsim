@@ -39,11 +39,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 6.666666666666666,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  1.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.6666666666666666,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    2.9999999999999996
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -81,20 +86,16 @@
               "comparison_type": "GREATER_THAN",
               "heating_logic": {
                 "absolute_temperature": 299.81666666666666,
-                "temperature_weight_distribution": [
-                  1.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.08333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    12.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -104,14 +105,18 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 33.333333333333336,
-                "temperature_weight_distribution": [
-                  0.0,
-                  0.0,
-                  1.0,
-                  0.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.3333333333333333,
+                    0.5,
+                    1.0
+                  ],
+                  "weight": [
+                    0.0,
+                    5.999999999999999,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             }
@@ -188,11 +193,16 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "differential_temperature": 16.666666666666668,
-                "temperature_weight_distribution": [
-                  1.0,
-                  0.0,
-                  0.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    0.3333333333333333,
+                    1.0
+                  ],
+                  "weight": [
+                    3.0,
+                    0.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             },
