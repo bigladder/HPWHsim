@@ -256,6 +256,51 @@ double HPWH::Tank::getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWe
     return sum / totWeight;
 }
 
+double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
+{
+
+    switch(dist.distribType)
+    {
+    case DistributionType::BottomOfTank:
+    {
+        return hpwh->tank->nodeTs_C.front();
+    }
+
+    case DistributionType::TopOfTank:
+    {
+        return hpwh->tank->nodeTs_C.back();
+    }
+
+    case DistributionType::Weighted:
+    {
+        const double nodeDensity = 1. / hpwh->getNumNodes();
+        double sum = 0;
+        double totWeight = 0;
+        auto distPoint = dist.weightedDist.begin();
+        for (int i = 0; i < hpwh->getNumNodes(); ++i)
+        {
+            double norm_node_height = static_cast<double>(i) * nodeDensity;
+            double prev_norm_dist_height = norm_node_height;
+            double norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+            double nodeT_C = hpwh->tank->nodeTs_C[i];
+            while (norm_node_height > norm_dist_height)
+            {
+                if (distPoint == dist.weightedDist.end())
+                    break;
+
+                sum += distPoint->weight * (norm_dist_height - prev_norm_dist_height) * nodeT_C;
+                totWeight += distPoint->weight * (norm_dist_height - prev_norm_dist_height);
+                prev_norm_dist_height = norm_dist_height;
+
+                ++distPoint;
+                norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+            }
+        }
+        return sum / totWeight;
+    }}
+    return 0;
+}
+
 // returns tank heat content relative to 0 C using kJ
 double HPWH::Tank::getHeatContent_kJ() const
 {

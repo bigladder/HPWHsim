@@ -146,6 +146,8 @@ class HPWH::Tank : public Sender
 
     double getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWeights) const;
 
+    double getAverageNodeT_C(const Distribution& dist) const;
+
     double getHeatContent_kJ() const;
 
     double getNthSimTcouple(int iTCouple, int nTCouple) const;

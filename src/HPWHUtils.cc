@@ -966,7 +966,13 @@ void HPWH::to_json(
     }
     if (tempLogic.temperature_weight_distribution_is_set)
     {
-        j["temperature_weight_distribution"] = tempLogic.temperature_weight_distribution;
+        nlohmann::json heights = tempLogic.temperature_weight_distribution.normalized_height;
+        nlohmann::json weights = tempLogic.temperature_weight_distribution.weight;
+        nlohmann::json j_weight_dist;
+        j_weight_dist["normalized_height"] = heights;
+        j_weight_dist["weight"] = weights;
+
+        j["temperature_weight_distribution"] = j_weight_dist;
     }
 
     if (tempLogic.standby_temperature_location_is_set)
