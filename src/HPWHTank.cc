@@ -288,8 +288,11 @@ double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
                 if (distPoint == dist.weightedDist.end())
                     break;
 
-                sum += distPoint->weight * (norm_dist_height - prev_norm_dist_height) * nodeT_C;
-                totWeight += distPoint->weight * (norm_dist_height - prev_norm_dist_height);
+                if (distPoint->weight > 0.)
+                {
+                    sum += distPoint->weight * (norm_dist_height - prev_norm_dist_height) * nodeT_C;
+                    totWeight += distPoint->weight * (norm_dist_height - prev_norm_dist_height);
+                }
                 prev_norm_dist_height = norm_dist_height;
 
                 ++distPoint;

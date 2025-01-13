@@ -1635,16 +1635,16 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
 {
-    auto dist = getRangeDistribution(11./12., 1.);
+    HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
     return std::make_shared<HPWH::TempBasedHeatingLogic>(
-        "top node", dist, decisionPoint, this, true, std::greater<double>());
+        "top if tank", dist, decisionPoint, this, true, std::greater<double>());
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic>
 HPWH::bottomNodeMaxTemp(double decisionPoint, bool isEnteringWaterHighTempShutoff /*=false*/)
 {
     HPWH::Distribution dist = {DistributionType::BottomOfTank, {{}, {}}};
-    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom node",
+    return std::make_shared<HPWH::TempBasedHeatingLogic>("bottom of tank",
                                                          dist,
                                                          decisionPoint,
                                                          this,
@@ -3832,10 +3832,14 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    for (auto& node : logic->nodeWeights)
+                    std::vector<double> heights = {}, weights = {};
+                    for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
                     {
-                        j_logic["node_weights"].push_back({node.nodeNum, node.weight});
+                        heights.push_back(logic->dist.weightedDist[i].height);
+                        weights.push_back(logic->dist.weightedDist[i].weight);
                     }
+                    j_logic["normalized_height"]  = heights;
+                    j_logic["weight"]  = weights;
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
@@ -3890,10 +3894,15 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                         send_error(fmt::format(
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
-                    for (auto& node : logic->nodeWeights)
+                    std::vector<double> heights = {}, weights = {};
+                    for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
                     {
-                        j_logic["node_weights"].push_back({node.nodeNum, node.weight});
+                        heights.push_back(logic->dist.weightedDist[i].height);
+                        weights.push_back(logic->dist.weightedDist[i].weight);
                     }
+                    j_logic["normalized_height"]  = heights;
+                    j_logic["weight"]  = weights;
+
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else

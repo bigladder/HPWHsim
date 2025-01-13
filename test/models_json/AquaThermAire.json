@@ -76,9 +76,14 @@
               "comparison_type": "LESS_THAN",
               "heating_logic": {
                 "absolute_temperature": 317.0388888888889,
-                "temperature_weight_distribution": [
-                  1.0
-                ]
+                "temperature_weight_distribution": {
+                  "normalized_height": [
+                    1.0
+                  ],
+                  "weight": [
+                    1.0
+                  ]
+                }
               },
               "heating_logic_type": "TEMPERATURE_BASED"
             },
