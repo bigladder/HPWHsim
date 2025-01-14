@@ -204,16 +204,18 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 
     case DistributionType::Weighted:
     {
-        double tot_weight_height = 0.;
-        double tot_weight = 0.;
+        double tot_weight = 0., tot_weight_avg = 0.;
         double prev_height = 0.;
         for (auto distPoint : dist.weightedDist)
         {
-            tot_weight_height += 0.5 * distPoint.weight * (std::pow(distPoint.height, 2.) - std::pow(prev_height, 2.));
-            tot_weight += distPoint.weight * (distPoint.height - prev_height);
+            double weight = distPoint.weight * (distPoint.height - prev_height);
+            double node_avg = 0.5 * (distPoint.height + prev_height);
+            tot_weight_avg += weight * node_avg;
+            tot_weight += weight;
             prev_height = distPoint.height;
         }
-        return tot_weight_height / tot_weight / prev_height;
+        double frac = tot_weight_avg / tot_weight / prev_height;
+        return frac + 0.5 / LOGIC_SIZE;
     }}
     return 0.;
 }
