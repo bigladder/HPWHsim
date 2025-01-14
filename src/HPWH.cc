@@ -3714,6 +3714,21 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                     std::shared_ptr<HPWH::TempBasedHeatingLogic> logic =
                         std::make_shared<HPWH::TempBasedHeatingLogic>(
                             "custom", nodeWeights, tempDouble, this, absolute, compare);
+
+                    if(logic->dist.distribType == DistributionType::Weighted)
+                    {
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
+                    }
+
                     if (token == "onlogic")
                     {
                         j_heatsourceconfigs[heatsource]["turn_on_logic"].push_back(j_logic);
@@ -3832,14 +3847,20 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
 
-                    std::vector<double> heights = {}, weights = {};
-                    for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                    if(logic->dist.distribType == DistributionType::Weighted)
                     {
-                        heights.push_back(logic->dist.weightedDist[i].height);
-                        weights.push_back(logic->dist.weightedDist[i].weight);
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
                     }
-                    j_logic["normalized_height"]  = heights;
-                    j_logic["weight"]  = weights;
+
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
                     else
@@ -3894,14 +3915,20 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
                         send_error(fmt::format(
                             "Improper {} for heat source {:d}", token.c_str(), heatsource));
                     }
-                    std::vector<double> heights = {}, weights = {};
-                    for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+
+                    if(logic->dist.distribType == DistributionType::Weighted)
                     {
-                        heights.push_back(logic->dist.weightedDist[i].height);
-                        weights.push_back(logic->dist.weightedDist[i].weight);
+                        std::vector<double> distHeights = {}, distWeights = {};
+                        for (std::size_t i = 0; i < logic->dist.weightedDist.size(); ++i)
+                        {
+                            distHeights.push_back(logic->dist.weightedDist[i].height);
+                            distWeights.push_back(logic->dist.weightedDist[i].weight);
+                        }
+                        nlohmann::json j_weighted_dist;
+                        j_weighted_dist["normalized_height"] = distHeights;
+                        j_weighted_dist["weight"] = distWeights;
+                        j_logic["weighted_distribution"] = j_weighted_dist;
                     }
-                    j_logic["normalized_height"]  = heights;
-                    j_logic["weight"]  = weights;
 
                     if (logic->isAbsolute)
                         j_logic["absolute_temperature_C"] = tempDouble;
@@ -4142,6 +4169,7 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
 
 void HPWH::initFromFileJSON(nlohmann::json& j)
 {
+    std::cout << j.dump(2);
     auto& j_tank = j["tank"];
     auto& j_heatsourceconfigs = j["heat_source_configurations"];
 
@@ -4239,10 +4267,19 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
         for (auto& j_logic : j_heatsourceconfig["turn_on_logic"])
         {
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
+            std::string desc;
+            checkFrom(desc, j_logic, "description", std::string("none"));
+
+            Distribution dist({DistributionType::Weighted, {{}, {}}});
+            if (desc == "standby")
+                dist = {DistributionType::TopOfTank, {{}, {}}};
+
+            if (j_logic.contains("weighted_distribution"))
             {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
+                auto& j_dist = j_logic["weighted_distribution"];
+                auto& distHeights = j_dist["normalized_height"];
+                auto& distWeights = j_dist["weight"];
+                dist = {DistributionType::Weighted, {distHeights, distWeights}};
             }
 
             bool is_absolute = false;
@@ -4255,26 +4292,24 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             else
                 checkFrom(temp, j_logic, "differential_temperature_dC", 0.);
 
-            std::string desc;
-            checkFrom(desc, j_logic, "description", std::string("none"));
+
             std::function<bool(double, double)> compare = std::less<>();
             if (j_logic["comparison_type"] == "GREATER_THAN")
                 compare = std::greater<>();
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc, nodeWeights, temp, this, is_absolute, compare);
+                desc, dist, temp, this, is_absolute, compare);
 
             element->addTurnOnLogic(heatingLogic);
         }
 
         for (auto& j_logic : j_heatsourceconfig["shut_off_logic"])
         {
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
-            {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
-            }
+            auto& j_dist = j_logic["weighted_distribution"];
+            auto& distHeights = j_dist["normalized_height"];
+            auto& distWeights = j_dist["weight"];
+            Distribution dist({DistributionType::Weighted, {distHeights,distWeights}});
 
             bool is_absolute = false;
             double temp = 0.;
@@ -4294,7 +4329,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc, nodeWeights, temp, this, is_absolute, compare);
+                desc, dist, temp, this, is_absolute, compare);
 
             element->addShutOffLogic(heatingLogic);
         }
@@ -4302,11 +4337,11 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
         if (j_heatsourceconfig.contains("standby_logic"))
         {
             auto& j_logic = j_heatsourceconfig["standby_logic"];
-            std::vector<NodeWeight> nodeWeights = {};
-            for (auto& node_weight : j_logic["node_weights"])
-            {
-                nodeWeights.emplace_back(node_weight[0], node_weight[1]);
-            }
+             //std::vector<NodeWeight> nodeWeights = {};
+            auto& j_dist = j_logic["weighted_distribution"];
+            auto& distHeights = j_dist["normalized_height"];
+            auto& distWeights = j_dist["weight"];
+            Distribution dist({DistributionType::Weighted, {distHeights,distWeights}});
 
             bool is_absolute = false;
             double temp = 0.;
@@ -4324,7 +4359,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                "name", nodeWeights, temp, this, is_absolute, compare);
+                "name", dist, temp, this, is_absolute, compare);
 
             element->standbyLogic = heatingLogic;
         }
