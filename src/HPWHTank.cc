@@ -259,7 +259,7 @@ double HPWH::Tank::getAverageNodeT_C(const std::vector<HPWH::NodeWeight>& nodeWe
 double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
 {
 
-    switch(dist.distribType)
+    switch (dist.distribType)
     {
     case DistributionType::BottomOfTank:
     {
@@ -273,34 +273,44 @@ double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
 
     case DistributionType::Weighted:
     {
-        const double nodeDensity = 1. / hpwh->getNumNodes();
+        const int numNodes = hpwh->getNumNodes();
         double sum = 0;
         double totWeight = 0;
         auto distPoint = dist.weightedDist.begin();
-        for (int i = 0; i < hpwh->getNumNodes(); ++i)
+        for (int i = 0; i < numNodes; ++i)
         {
-            double norm_node_height = static_cast<double>(i) * nodeDensity;
-            double prev_norm_dist_height = norm_node_height;
+            double norm_node_height = static_cast<double>(i) / numNodes;
             double norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+
+            double next_norm_node_height = static_cast<double>(i + 1) / numNodes;
             double nodeT_C = hpwh->tank->nodeTs_C[i];
-            while (norm_node_height > norm_dist_height)
+            double norm_height = norm_node_height;
+            while (norm_dist_height < next_norm_node_height)
             {
+                double weight = distPoint->weight * (norm_dist_height - norm_height);
+                if (weight > 0.)
+                {
+                    sum += weight * nodeT_C;
+                    totWeight += weight;
+                }
+
+                ++distPoint;
                 if (distPoint == dist.weightedDist.end())
                     break;
 
-                if (distPoint->weight > 0.)
-                {
-                    sum += distPoint->weight * (norm_dist_height - prev_norm_dist_height) * nodeT_C;
-                    totWeight += distPoint->weight * (norm_dist_height - prev_norm_dist_height);
-                }
-                prev_norm_dist_height = norm_dist_height;
-
-                ++distPoint;
+                norm_height = norm_dist_height;
                 norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+            }
+            double weight = distPoint->weight * (next_norm_node_height - norm_height);
+            if (weight > 0.)
+            {
+                sum += weight * nodeT_C;
+                totWeight += weight;
             }
         }
         return sum / totWeight;
-    }}
+    }
+    }
     return 0;
 }
 
