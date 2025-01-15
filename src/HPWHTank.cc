@@ -280,7 +280,7 @@ double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
         for (int i = 0; i < numNodes; ++i)
         {
             double norm_node_height = static_cast<double>(i) / numNodes;
-            double norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+            double norm_dist_height = distPoint->height / dist.weightedDist.heightRange();
 
             double next_norm_node_height = static_cast<double>(i + 1) / numNodes;
             double nodeT_C = hpwh->tank->nodeTs_C[i];
@@ -299,7 +299,7 @@ double HPWH::Tank::getAverageNodeT_C(const Distribution& dist) const
                     break;
 
                 norm_height = norm_dist_height;
-                norm_dist_height = distPoint->height / dist.weightedDist.height_range();
+                norm_dist_height = distPoint->height / dist.weightedDist.heightRange();
             }
             double weight = distPoint->weight * (next_norm_node_height - norm_height);
             if (weight > 0.)
