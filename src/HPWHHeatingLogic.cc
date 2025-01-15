@@ -125,8 +125,9 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
                                                    HPWH* hpwh,
                                                    bool a,
                                                    std::function<bool(double, double)> c,
-                                                   bool isHTS)
-    : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a)
+                                                   bool isHTS,
+                                                   bool checksStandby_in)
+    : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS, checksStandby_in), isAbsolute(a)
 {
     dist = {DistributionType::Weighted, {{}, {}}};
     auto prev_height = 0.;
@@ -367,7 +368,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
         else
             break;
 
-        // std::vector<HPWH::NodeWeight> nodeWeights = {};
+        bool checksStandby_in = false;
         Distribution dist;
         if (temp_based_logic->standby_temperature_location_is_set)
         {
@@ -377,7 +378,8 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
                 TOP_OF_TANK:
             {
                 dist = {DistributionType::TopOfTank, {{}, {}}};
-                label = "standby";
+                label = "top of tank";
+                checksStandby_in = true;
                 break;
             }
             case hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
@@ -409,7 +411,8 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
             temp,
             hpwh,
             temp_based_logic->absolute_temperature_is_set,
-            comparison_type);
+            comparison_type,
+            checksStandby_in);
         break;
     }
     }
