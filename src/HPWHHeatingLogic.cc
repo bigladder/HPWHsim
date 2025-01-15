@@ -258,15 +258,16 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             if (distPoint.weight > 0.)
             {
                 firstNode = 0;
-                calcNode = nodeDensity - 1; // last tank node in logic node
+                calcNode = static_cast<int>(nodeDensity) - 1; // last tank node in logic node
                 break;
             }
             else
             {
                 double norm_dist_height = distPoint.height / dist.weightedDist.heightRange();
-                firstNode =
-                    norm_dist_height * hpwh->getNumNodes(); // first tank node with non-zero weight
-                calcNode = firstNode + nodeDensity - 1;     // last tank node in logic node
+                firstNode = static_cast<int>(
+                    norm_dist_height * hpwh->getNumNodes()); // first tank node with non-zero weight
+                calcNode =
+                    firstNode + static_cast<int>(nodeDensity); // last tank node in logic node
                 break;
             }
         }
@@ -376,7 +377,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
                 TOP_OF_TANK:
             {
                 dist = {DistributionType::TopOfTank, {{}, {}}};
-                label = "top of tank";
+                label = "standby";
                 break;
             }
             case hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
