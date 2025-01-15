@@ -397,8 +397,8 @@ class HPWH : public Courier::Sender
                     ++weight;
                 }
         }
-        double height_range() const { return back().height; }
-        double total_weight() const
+        double heightRange() const { return back().height; }
+        double totalWeight() const
         {
             double total = 0.;
             double prevHeight = 0.;
@@ -411,16 +411,31 @@ class HPWH : public Courier::Sender
             }
             return total;
         }
-        double max_weight() const
+        double maxWeight() const
         {
             double res = 0.;
             for (auto distPoint : (*this))
                 res = std::max(distPoint.weight, res);
             return res;
         }
-        double norm_height(std::size_t i) const { return (*this)[i].height / height_range(); }
-        double norm_weight(std::size_t i) const { return (*this)[i].weight / total_weight(); }
-        double unitary_weight(std::size_t i) const { return (*this)[i].weight / max_weight(); }
+        double normHeight(std::size_t i) const { return (*this)[i].height / heightRange(); }
+        double normWeight(std::size_t i) const { return (*this)[i].weight / totalWeight(); }
+        double unitaryWeight(std::size_t i) const { return (*this)[i].weight / maxWeight(); }
+        bool isValid() const
+        {
+            bool isNotEmpty = (size() > 0);
+            bool hasWeight = false;
+            bool isSorted = true;
+            double prevHeight = 0.;
+            for (auto distPoint = begin(); distPoint != end(); ++distPoint)
+            {
+                if (distPoint->height <= prevHeight)
+                    isSorted = false;
+                if (distPoint->weight > 0.)
+                    hasWeight = true;
+            }
+            return isNotEmpty && hasWeight && isSorted;
+        }
     };
     enum class DistributionType
     {
@@ -438,6 +453,18 @@ class HPWH : public Courier::Sender
                      WeightedDistribution weightedDist_in = {{}, {}})
             : distribType(distribType_in), weightedDist(weightedDist_in)
         {
+        }
+        bool isValid() const
+        {
+            switch (distribType)
+            {
+            case DistributionType::TopOfTank:
+            case DistributionType::BottomOfTank:
+                return true;
+
+            case DistributionType::Weighted:
+                return weightedDist.isValid();
+            }
         }
     };
 
@@ -1271,10 +1298,7 @@ class HPWH : public Courier::Sender
     /**< A map from index of an resistance element in heatSources to position in the tank, its
     is sorted by height from lowest to highest*/
 
-    /// Generates a vector of logical nodes
-    std::vector<HPWH::NodeWeight> getNodeWeightRange(double bottomFraction, double topFraction);
-
-    /// Generate a distribution
+    /// Generates a top-hat distribution
     Distribution getRangeDistribution(double bottomFraction, double topFraction);
 
   public:

@@ -163,25 +163,11 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
 bool HPWH::TempBasedHeatingLogic::isValid()
 {
     bool isValid = true;
-    if (!areNodeWeightsValid())
+    if (!dist.isValid())
     {
         isValid = false;
     }
     return isValid;
-}
-
-bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
-{
-    /*
-        for (auto nodeWeight : nodeWeights)
-        {
-            if (nodeWeight.nodeNum > 13 || nodeWeight.nodeNum < 0)
-            {
-                return false;
-            }
-        }
-        */
-    return true;
 }
 
 double HPWH::TempBasedHeatingLogic::getComparisonValue()
@@ -277,7 +263,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             }
             else
             {
-                double norm_dist_height = distPoint.height / dist.weightedDist.height_range();
+                double norm_dist_height = distPoint.height / dist.weightedDist.heightRange();
                 firstNode =
                     norm_dist_height * hpwh->getNumNodes(); // first tank node with non-zero weight
                 calcNode = firstNode + nodeDensity - 1;     // last tank node in logic node
@@ -525,8 +511,8 @@ void HPWH::TempBasedHeatingLogic::to(
         std::vector<double> heights = {}, weights = {};
         for (std::size_t i = 0; i < dist.weightedDist.size(); ++i)
         {
-            heights.push_back(dist.weightedDist.norm_height(i));
-            weights.push_back(dist.weightedDist.unitary_weight(i));
+            heights.push_back(dist.weightedDist.normHeight(i));
+            weights.push_back(dist.weightedDist.unitaryWeight(i));
         }
 
         hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;

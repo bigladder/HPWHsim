@@ -101,7 +101,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           std::function<bool(double, double)> c = std::less<double>(),
                           bool isHTS = false);
 
-        //: HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n)  {}
+    //: HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n)  {}
 
     TempBasedHeatingLogic(std::string desc,
                           Distribution dist_in,
@@ -110,7 +110,9 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           bool a = false,
                           std::function<bool(double, double)> c = std::less<double>(),
                           bool isHTS = false)
-        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), dist(dist_in) {}
+        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), dist(dist_in)
+    {
+    }
 
     bool isValid() override;
 
@@ -126,11 +128,10 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     to(hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heatingLogic) const override;
 
     bool isAbsolute;
-    //std::vector<NodeWeight> nodeWeights;
     Distribution dist;
 
   private:
-    bool areNodeWeightsValid();
+    bool areDistributionValid();
 };
 
 #endif
