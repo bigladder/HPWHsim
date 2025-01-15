@@ -120,18 +120,28 @@ double HPWH::SoCBasedHeatingLogic::getFractToMeetComparisonExternal()
 
 /* Temperature Based Heating Logic*/
 HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
-                      std::vector<NodeWeight> n,
-                      double decisionPoint,
-                      HPWH* hpwh,
-                      bool a,
-                      std::function<bool(double, double)> c,
-                      bool isHTS)
+                                                   std::vector<NodeWeight> n,
+                                                   double decisionPoint,
+                                                   HPWH* hpwh,
+                                                   bool a,
+                                                   std::function<bool(double, double)> c,
+                                                   bool isHTS)
     : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a)
 {
     dist = {DistributionType::Weighted, {{}, {}}};
     auto prev_height = 0.;
-    for (auto& node: n)
+    for (auto& node : n)
     {
+        if (node.nodeNum == 0)
+        {
+            dist = {DistributionType::BottomOfTank, {{}, {}}};
+            return;
+        }
+        if (node.nodeNum == LOGIC_SIZE + 1)
+        {
+            dist = {DistributionType::TopOfTank, {{}, {}}};
+            return;
+        }
         double height_front = node.nodeNum - 1;
         if (height_front > prev_height)
             dist.weightedDist.push_back({height_front, 0.});
@@ -141,7 +151,6 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
     if (prev_height < LOGIC_SIZE)
         dist.weightedDist.push_back({LOGIC_SIZE, 0.});
 }
-
 
 bool HPWH::TempBasedHeatingLogic::isValid()
 {
@@ -155,15 +164,15 @@ bool HPWH::TempBasedHeatingLogic::isValid()
 
 bool HPWH::TempBasedHeatingLogic::areNodeWeightsValid()
 {
-/*
-    for (auto nodeWeight : nodeWeights)
-    {
-        if (nodeWeight.nodeNum > 13 || nodeWeight.nodeNum < 0)
+    /*
+        for (auto nodeWeight : nodeWeights)
         {
-            return false;
+            if (nodeWeight.nodeNum > 13 || nodeWeight.nodeNum < 0)
+            {
+                return false;
+            }
         }
-    }
-    */
+        */
     return true;
 }
 
@@ -180,10 +189,7 @@ double HPWH::TempBasedHeatingLogic::getComparisonValue()
     }
 }
 
-double HPWH::TempBasedHeatingLogic::getTankValue()
-{
-    return hpwh->getAverageTankTemp_C(dist);
-}
+double HPWH::TempBasedHeatingLogic::getTankValue() { return hpwh->getAverageTankTemp_C(dist); }
 
 void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value) { decisionPoint = value; }
 void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
@@ -194,7 +200,7 @@ void HPWH::TempBasedHeatingLogic::setDecisionPoint(double value, bool absolute)
 
 double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
 {
-    switch(dist.distribType)
+    switch (dist.distribType)
     {
     case DistributionType::BottomOfTank:
         return 1. / (double)hpwh->getNumNodes();
@@ -216,7 +222,8 @@ double HPWH::TempBasedHeatingLogic::nodeWeightAvgFract()
         }
         double frac = tot_weight_avg / tot_weight / prev_height;
         return frac + 0.5 / LOGIC_SIZE;
-    }}
+    }
+    }
     return 0.;
 }
 
@@ -232,7 +239,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
     double comparisonT_C = getComparisonValue() + HPWH::TOL_MINVALUE; // slightly over heat
 
     double nodeDensity = static_cast<double>(hpwh->getNumNodes()) / LOGIC_SIZE;
-    switch(dist.distribType)
+    switch (dist.distribType)
     {
     case DistributionType::BottomOfTank:
     {
@@ -257,7 +264,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             if (distPoint.weight > 0.)
             {
                 firstNode = 0;
-                calcNode = nodeDensity - 1;        // last tank node in logic node
+                calcNode = nodeDensity - 1; // last tank node in logic node
                 break;
             }
             else
@@ -265,7 +272,7 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
                 double norm_dist_height = distPoint.height / dist.weightedDist.height_range();
                 firstNode =
                     norm_dist_height * hpwh->getNumNodes(); // first tank node with non-zero weight
-                calcNode = firstNode + nodeDensity - 1;        // last tank node in logic node
+                calcNode = firstNode + nodeDensity - 1;     // last tank node in logic node
                 break;
             }
         }
@@ -274,7 +281,8 @@ double HPWH::TempBasedHeatingLogic::getFractToMeetComparisonExternal()
             sum += hpwh->tank->nodeTs_C[i];
             totWeight += 1.;
         }
-    }}
+    }
+    }
 
     double averageT_C = sum / totWeight;
     double targetT_C = (calcNode < hpwh->getNumNodes() - 1) ? hpwh->tank->nodeTs_C[calcNode + 1]
@@ -364,7 +372,7 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
         else
             break;
 
-        //std::vector<HPWH::NodeWeight> nodeWeights = {};
+        // std::vector<HPWH::NodeWeight> nodeWeights = {};
         Distribution dist;
         if (temp_based_logic->standby_temperature_location_is_set)
         {
@@ -393,10 +401,10 @@ HPWH::HeatingLogic::make(const hpwh_data_model::heat_source_configuration_ns::He
         if (temp_based_logic->temperature_weight_distribution_is_set)
         {
             auto& weight_dist = temp_based_logic->temperature_weight_distribution;
-            if(weight_dist.normalized_height_is_set
-                && weight_dist.weight_is_set)
+            if (weight_dist.normalized_height_is_set && weight_dist.weight_is_set)
             {
-                dist = {DistributionType::Weighted, {weight_dist.normalized_height, weight_dist.weight}};
+                dist = {DistributionType::Weighted,
+                        {weight_dist.normalized_height, weight_dist.weight}};
             }
         }
 
@@ -482,7 +490,9 @@ void HPWH::TempBasedHeatingLogic::to(
                 heating_logic.comparison_type);
     }
 
-    if (description == "standby")
+    switch (dist.distribType)
+    {
+    case DistributionType::TopOfTank:
     {
         checkTo(
             hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::TOP_OF_TANK,
@@ -490,17 +500,9 @@ void HPWH::TempBasedHeatingLogic::to(
             logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
+        break;
     }
-    else if (description == "top of tank")
-    {
-        checkTo(
-            hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::TOP_OF_TANK,
-            logic.standby_temperature_location_is_set,
-            logic.standby_temperature_location);
-
-        logic.temperature_weight_distribution_is_set = false;
-    }
-    else if (description == "bottom of tank")
+    case DistributionType::BottomOfTank:
     {
         checkTo(hpwh_data_model::heat_source_configuration_ns::StandbyTemperatureLocation::
                     BOTTOM_OF_TANK,
@@ -508,28 +510,26 @@ void HPWH::TempBasedHeatingLogic::to(
                 logic.standby_temperature_location);
 
         logic.temperature_weight_distribution_is_set = false;
+        break;
     }
-    else
+    case DistributionType::Weighted:
     {
-        std::vector<double> heights = {}, weights  = {};
-        for(std::size_t i = 0; i < dist.weightedDist.size(); ++i)
+        std::vector<double> heights = {}, weights = {};
+        for (std::size_t i = 0; i < dist.weightedDist.size(); ++i)
         {
             heights.push_back(dist.weightedDist.norm_height(i));
             weights.push_back(dist.weightedDist.norm_weight(i));
         }
 
         hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;
-        checkTo(heights,
-                wd.normalized_height_is_set,
-                wd.normalized_height);
-        checkTo(weights,
-                wd.weight_is_set,
-                wd.weight);
+        checkTo(heights, wd.normalized_height_is_set, wd.normalized_height);
+        checkTo(weights, wd.weight_is_set, wd.weight);
         checkTo(wd,
                 logic.temperature_weight_distribution_is_set,
                 logic.temperature_weight_distribution);
+        break;
     }
-
+    }
     heating_logic.heating_logic = std::make_unique<
         hpwh_data_model::heat_source_configuration_ns::TemperatureBasedHeatingLogic>(logic);
 
