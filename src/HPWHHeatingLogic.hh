@@ -16,12 +16,16 @@ struct HPWH::HeatingLogic
                  double decisionPoint_in,
                  HPWH* hpwh_in,
                  std::function<bool(double, double)> c,
-                 bool isHTS)
+                 bool isHTS,
+                 bool checkStandby_in)
         : description(desc)
         , compare(c)
         , decisionPoint(decisionPoint_in)
         , hpwh(hpwh_in)
-        , isEnteringWaterHighTempShutoff(isHTS) {};
+        , isEnteringWaterHighTempShutoff(isHTS)
+        , checkStandby(checkStandby_in)
+    {
+    }
 
     virtual ~HeatingLogic() = default;
 
@@ -46,10 +50,13 @@ struct HPWH::HeatingLogic
     virtual void
     to(hpwh_data_model::heat_source_configuration_ns::HeatingLogic& heatingLogic) const = 0;
 
+    bool checksStandby() { return checkStandby; }
+
   protected:
     double decisionPoint;
     HPWH* hpwh;
     bool isEnteringWaterHighTempShutoff;
+    bool checkStandby = false;
 };
 
 struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
@@ -62,8 +69,9 @@ struct HPWH::SoCBasedHeatingLogic : HPWH::HeatingLogic
                          double tM_C = 43.333,
                          bool constMains = false,
                          double mains_C = 18.333,
-                         std::function<bool(double, double)> c = std::less<double>())
-        : HeatingLogic(desc, decisionPoint, hpwh, c, false)
+                         std::function<bool(double, double)> c = std::less<double>(),
+                         bool checkStandby = false)
+        : HeatingLogic(desc, decisionPoint, hpwh, c, false, checkStandby)
         , tempMinUseful_C(tM_C)
         , hysteresisFraction(hF)
         , useCostantMains(constMains)
@@ -99,7 +107,8 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           HPWH* hpwh,
                           bool a = false,
                           std::function<bool(double, double)> c = std::less<double>(),
-                          bool isHTS = false);
+                          bool isHTS = false,
+                          bool checkStandby = false);
 
     //: HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), nodeWeights(n)  {}
 
@@ -109,8 +118,11 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
                           HPWH* hpwh,
                           bool a = false,
                           std::function<bool(double, double)> c = std::less<double>(),
-                          bool isHTS = false)
-        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS), isAbsolute(a), dist(dist_in)
+                          bool isHTS = false,
+                          bool checkStandby = false)
+        : HeatingLogic(desc, decisionPoint, hpwh, c, isHTS, checkStandby)
+        , isAbsolute(a)
+        , dist(dist_in)
     {
     }
 
@@ -131,7 +143,7 @@ struct HPWH::TempBasedHeatingLogic : HPWH::HeatingLogic
     Distribution dist;
 
   private:
-    bool areDistributionValid();
+    bool isDistributionValid();
 };
 
 #endif

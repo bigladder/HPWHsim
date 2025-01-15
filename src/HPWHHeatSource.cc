@@ -249,7 +249,7 @@ bool HPWH::HeatSource::shouldHeat() const
 
         if (turnOnLogicSet[i]->compare(average, comparison))
         {
-            if (turnOnLogicSet[i]->description == "standby" && standbyLogic != NULL)
+            if (turnOnLogicSet[i]->checksStandby() && standbyLogic != NULL)
             {
                 double avgStandby = standbyLogic->getTankValue();
                 double comparisonStandby = standbyLogic->getComparisonValue();

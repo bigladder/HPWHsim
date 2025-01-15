@@ -1601,7 +1601,8 @@ std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::bottomTwelfth(double decision
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::standby(double decisionPoint)
 {
     HPWH::Distribution dist = {DistributionType::TopOfTank, {{}, {}}};
-    return std::make_shared<HPWH::TempBasedHeatingLogic>("standby", dist, decisionPoint, this);
+    return std::make_shared<HPWH::TempBasedHeatingLogic>(
+        "standby", dist, decisionPoint, this, false, std::less<double>(), false, true);
 }
 
 std::shared_ptr<HPWH::TempBasedHeatingLogic> HPWH::topNodeMaxTemp(double decisionPoint)
@@ -4167,7 +4168,6 @@ void HPWH::readFileAsJSON(string modelName, nlohmann::json& j)
 
 void HPWH::initFromFileJSON(nlohmann::json& j)
 {
-    std::cout << j.dump(2);
     auto& j_tank = j["tank"];
     auto& j_heatsourceconfigs = j["heat_source_configurations"];
 
@@ -4271,9 +4271,13 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
             std::string distType;
             checkFrom(distType, j_logic, "distribution_type", std::string("weighted"));
 
+            bool checkStandby = false;
             Distribution dist;
             if (distType == "top of tank")
+            {
                 dist = {DistributionType::TopOfTank, {{}, {}}};
+                checkStandby = true;
+            }
 
             else if (distType == "bottom of tank")
                 dist = {DistributionType::BottomOfTank, {{}, {}}};
@@ -4302,7 +4306,7 @@ void HPWH::initFromFileJSON(nlohmann::json& j)
 
             std::shared_ptr<HPWH::HeatingLogic> heatingLogic;
             heatingLogic = std::make_shared<HPWH::TempBasedHeatingLogic>(
-                desc, dist, temp, this, is_absolute, compare);
+                desc, dist, temp, this, is_absolute, compare, false, checkStandby);
 
             element->addTurnOnLogic(heatingLogic);
         }
