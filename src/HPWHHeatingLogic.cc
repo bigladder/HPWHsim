@@ -130,22 +130,30 @@ HPWH::TempBasedHeatingLogic::TempBasedHeatingLogic(std::string desc,
 {
     dist = {DistributionType::Weighted, {{}, {}}};
     auto prev_height = 0.;
-    for (auto& node : n)
+    for (auto node = n.begin(); node != n.end(); ++node)
     {
-        if (node.nodeNum == 0)
+        if (node->nodeNum == 0)
         {
             dist = {DistributionType::BottomOfTank, {{}, {}}};
             return;
         }
-        if (node.nodeNum == LOGIC_SIZE + 1)
+        if (node->nodeNum == LOGIC_SIZE + 1)
         {
             dist = {DistributionType::TopOfTank, {{}, {}}};
             return;
         }
-        double height_front = node.nodeNum - 1;
+        double height_front = node->nodeNum - 1;
         if (height_front > prev_height)
             dist.weightedDist.push_back({height_front, 0.});
-        dist.weightedDist.push_back({height_front + 1., node.weight});
+        while (node + 1 != n.end())
+        {
+            if ((node + 1)->weight == node->weight)
+                ++node;
+            else
+                break;
+        }
+        height_front = node->nodeNum - 1;
+        dist.weightedDist.push_back({height_front + 1., node->weight});
         prev_height = height_front + 1.;
     }
     if (prev_height < LOGIC_SIZE)
@@ -518,7 +526,7 @@ void HPWH::TempBasedHeatingLogic::to(
         for (std::size_t i = 0; i < dist.weightedDist.size(); ++i)
         {
             heights.push_back(dist.weightedDist.norm_height(i));
-            weights.push_back(dist.weightedDist.norm_weight(i));
+            weights.push_back(dist.weightedDist.unitary_weight(i));
         }
 
         hpwh_data_model::heat_source_configuration_ns::WeightedDistribution wd;

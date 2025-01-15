@@ -382,48 +382,45 @@ class HPWH : public Courier::Sender
     {
         double height, weight;
     };
-    struct WeightedDistribution:public std::vector<DistributionPoint>
+    struct WeightedDistribution : public std::vector<DistributionPoint>
     {
       public:
-
         WeightedDistribution(std::vector<double> heights, std::vector<double> weights)
         {
             clear();
             reserve(heights.size());
             auto weight = weights.begin();
-            for(auto& height: heights)
-                if(weight != weights.end())
+            for (auto& height : heights)
+                if (weight != weights.end())
                 {
                     push_back({height, *weight});
                     ++weight;
                 }
         }
-        double height_range() const
-        {
-            return back().height;
-        }
+        double height_range() const { return back().height; }
         double total_weight() const
         {
             double total = 0.;
             double prevHeight = 0.;
-            for(auto distPoint: (*this))
+            for (auto distPoint : (*this))
             {
-               double& height = distPoint.height;
-               double& weight = distPoint.weight;
-               total += weight * (height - prevHeight);
-               prevHeight = height;
+                double& height = distPoint.height;
+                double& weight = distPoint.weight;
+                total += weight * (height - prevHeight);
+                prevHeight = height;
             }
             return total;
         }
-        double norm_height(std::size_t i) const
+        double max_weight() const
         {
-            return (*this)[i].height / height_range();
+            double res = 0.;
+            for (auto distPoint : (*this))
+                res = std::max(distPoint.weight, res);
+            return res;
         }
-        double norm_weight(std::size_t i) const
-        {
-            return (*this)[i].weight / total_weight();
-        }
-
+        double norm_height(std::size_t i) const { return (*this)[i].height / height_range(); }
+        double norm_weight(std::size_t i) const { return (*this)[i].weight / total_weight(); }
+        double unitary_weight(std::size_t i) const { return (*this)[i].weight / max_weight(); }
     };
     enum class DistributionType
     {
@@ -434,12 +431,14 @@ class HPWH : public Courier::Sender
 
     struct Distribution
     {
-        public:
+      public:
         DistributionType distribType;
         WeightedDistribution weightedDist;
-        Distribution(DistributionType distribType_in = DistributionType::Weighted, WeightedDistribution weightedDist_in = {{}, {}}):
-            distribType(distribType_in), weightedDist(weightedDist_in )
-        {}
+        Distribution(DistributionType distribType_in = DistributionType::Weighted,
+                     WeightedDistribution weightedDist_in = {{}, {}})
+            : distribType(distribType_in), weightedDist(weightedDist_in)
+        {
+        }
     };
 
     struct NodeWeight
